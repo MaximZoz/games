@@ -4164,6 +4164,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showDone = _canDone(view);
     final showThrowAll = _canThrowAll(view);
     final showPass = _canPass(view);
+    // Пауза показа стола — та же «кнопка» в фиксированном слоте 52px.
+    final showTakeReveal = view.isTakeReveal;
+    final showBitoReveal = view.isBitoReveal;
+    final showActionOrReveal = showTake ||
+        showBito ||
+        showDone ||
+        showThrowAll ||
+        showPass ||
+        showTakeReveal ||
+        showBitoReveal;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
@@ -4187,9 +4197,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       )
                     : _multiOpponentsArea(view, tableSize),
               ),
-              if (view.isOver ||
-                  view.iAmFinished ||
-                  view.isTableReveal) ...[
+              // Пауза «Беру»/«Бито» — в слоте кнопки действия (ниже), не здесь:
+              // иначе статус в колонке двигает стол и веер.
+              if (view.isOver || view.iAmFinished) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
@@ -4399,36 +4409,43 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 child: SizedBox(
                   height: 52,
                   child: Center(
-                    child: (showTake ||
-                                showBito ||
-                                showDone ||
-                                showThrowAll ||
-                                showPass) &&
+                    child: showActionOrReveal &&
                             !_holdingFanCard &&
                             !_cardFlightActive
-                        ? _PulsingActionButton(
-                            label: showTake
-                                ? context.l10n.durakActionTake
-                                : showPass
-                                    ? context.l10n.durakActionPass
-                                    : showThrowAll
-                                        ? context.l10n.durakActionAll
-                                        : (showDone
-                                            ? context.l10n.durakActionDone
-                                            : context.l10n.durakActionBito),
-                            icon: showTake
-                                ? Icons.south_rounded
-                                : showPass
-                                    ? Icons.skip_next_rounded
+                        ? (showTakeReveal || showBitoReveal)
+                            ? _RevealStatusChip(
+                                label: showTakeReveal
+                                    ? context.l10n.durakStatusTaking
+                                    : context.l10n.durakActionBito,
+                                icon: showTakeReveal
+                                    ? Icons.south_rounded
                                     : Icons.check_rounded,
-                            onPressed: showTake
-                                ? _take
-                                : showPass
-                                    ? _pass
-                                    : showThrowAll
-                                        ? _confirmThrowAll
-                                        : (showDone ? _confirmTakeDone : _bito),
-                          )
+                              )
+                            : _PulsingActionButton(
+                                label: showTake
+                                    ? context.l10n.durakActionTake
+                                    : showPass
+                                        ? context.l10n.durakActionPass
+                                        : showThrowAll
+                                            ? context.l10n.durakActionAll
+                                            : (showDone
+                                                ? context.l10n.durakActionDone
+                                                : context.l10n.durakActionBito),
+                                icon: showTake
+                                    ? Icons.south_rounded
+                                    : showPass
+                                        ? Icons.skip_next_rounded
+                                        : Icons.check_rounded,
+                                onPressed: showTake
+                                    ? _take
+                                    : showPass
+                                        ? _pass
+                                        : showThrowAll
+                                            ? _confirmThrowAll
+                                            : (showDone
+                                                ? _confirmTakeDone
+                                                : _bito),
+                              )
                         : const SizedBox.shrink(),
                   ),
                 ),
@@ -5489,6 +5506,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 }
 
 /// Плавное мигание кнопки «Взять» / «Бито» между колодой и веером.
+/// Пульс только свечением — без scale, чтобы слот 52px не «дышал».
 class _PulsingActionButton extends StatefulWidget {
   const _PulsingActionButton({
     required this.label,
@@ -5530,23 +5548,19 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
       animation: _ctrl,
       builder: (context, child) {
         final t = Curves.easeInOut.transform(_ctrl.value);
-        final scale = 1.0 + 0.04 * t;
         final glow = 0.22 + 0.28 * t;
-        return Transform.scale(
-          scale: scale,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentStart.withValues(alpha: glow),
-                  blurRadius: 14 + 8 * t,
-                  spreadRadius: 0.5,
-                ),
-              ],
-            ),
-            child: child,
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accentStart.withValues(alpha: glow),
+                blurRadius: 14 + 8 * t,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
+          child: child,
         );
       },
       child: FilledButton.icon(
@@ -5562,7 +5576,8 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
               },
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accentStart,
-          disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.55),
+          disabledBackgroundColor:
+              AppColors.accentStart.withValues(alpha: 0.55),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -5577,6 +5592,57 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
             fontSize: 15,
             letterSpacing: 0.2,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Неинтерактивный чип «Беру» / «Бито» в том же слоте, что кнопка действия.
+class _RevealStatusChip extends StatelessWidget {
+  const _RevealStatusChip({
+    required this.label,
+    required this.icon,
+  });
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.accentStart, AppColors.accentEnd],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentStart.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
