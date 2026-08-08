@@ -3772,37 +3772,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
-            toolbarHeight: showGroupChat ? 96 : kToolbarHeight,
+            toolbarHeight: kToolbarHeight,
             leadingWidth: 48,
             centerTitle: true,
             titleSpacing: 0,
-            leading: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 44, minHeight: 44),
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: _busy ? null : _onClosePressed,
-                ),
-                if (showGroupChat && view != null)
-                  GameIconWithBadge(
-                    icon: Icons.forum_rounded,
-                    badge: groupUnread,
-                    tooltip: 'Чат группы',
-                    onPressed: () => _openGroupChat(view),
-                  ),
-              ],
+            // Крестик на одной линии с «правилами» (как в 1×1).
+            leading: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              icon: const Icon(Icons.close_rounded),
+              onPressed: _busy ? null : _onClosePressed,
             ),
             title: const Text('Дурак'),
             actions: view == null
                 ? const []
                 : buildGameAppBarActions(
                     context: context,
-                    onSurrender:
-                        showSurrender && isMulti ? _confirmSurrender : null,
-                    surrenderTooltip: context.l10n.gameSurrender,
+                    onSurrender: null, // сдача — overlay под правилами
                     onOfferDraw: null,
                     onShowRules: () => _showRules(view),
                     rulesTooltip: context.l10n.gamesRulesTitle,
@@ -3870,26 +3856,39 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     view.loserIndex >= 0 &&
                     view.loserIndex != view.myIndex)
                   const Positioned.fill(child: GameConfettiOverlay()),
-                if (showSurrender && !isMulti)
+                // Групповой чат — отдельно под крестиком.
+                if (showGroupChat && view != null)
+                  Positioned(
+                    left: 4,
+                    top: 0,
+                    child: GameIconWithBadge(
+                      icon: Icons.forum_rounded,
+                      badge: groupUnread,
+                      tooltip: 'Чат группы',
+                      onPressed: () => _openGroupChat(view),
+                    ),
+                  ),
+                // «Сдаться» под «правилами» (1×1 и multi), как в одиночной.
+                if (showSurrender && view != null)
                   Positioned(
                     right: 4,
                     top: topPad + 4,
                     child: GameActionsOverlay(
-                    canDraw: view.playerIds.length == 2,
-                    iOfferedDraw: _iOfferedDraw(view),
-                    opponentOfferedDraw: _opponentOfferedDraw(view),
-                    onSurrender: _confirmSurrender,
-                    onDraw: () {
-                      if (_opponentOfferedDraw(view)) {
-                        unawaited(_acceptDraw());
-                      } else {
-                        unawaited(_offerDraw(view));
-                      }
-                    },
-                    surrenderTooltip: context.l10n.gameSurrender,
-                    drawTooltip: context.l10n.gameOfferDraw,
-                    acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-                    drawOfferedTooltip: context.l10n.gameDrawOffered,
+                      canDraw: !isMulti && view.playerIds.length == 2,
+                      iOfferedDraw: _iOfferedDraw(view),
+                      opponentOfferedDraw: _opponentOfferedDraw(view),
+                      onSurrender: _confirmSurrender,
+                      onDraw: () {
+                        if (_opponentOfferedDraw(view)) {
+                          unawaited(_acceptDraw());
+                        } else {
+                          unawaited(_offerDraw(view));
+                        }
+                      },
+                      surrenderTooltip: context.l10n.gameSurrender,
+                      drawTooltip: context.l10n.gameOfferDraw,
+                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+                      drawOfferedTooltip: context.l10n.gameDrawOffered,
                     ),
                   ),
               ],
