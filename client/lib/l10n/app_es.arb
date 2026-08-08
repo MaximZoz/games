@@ -210,11 +210,11 @@
       }
     }
   },
-  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
-  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
-  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakAttack": "El atacante juega cartas; el defensor las cubre (mismo palo más alto, o un triunfo). Un triunfo solo se cubre con un triunfo mayor.",
+  "rulesDurakBeat": "Cuando todas las cartas están cubiertas, el atacante dice «Bito» y van al descarte. Si no, el defensor se lleva todo de la mesa.",
+  "rulesDurakLoser": "Pierde quien se queda con cartas al final: el «tonto».",
   "rulesDurakMode": "Modo: {mode}",
-  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakOfflineBot": "Juega contra un bot, sin apuestas ni límite de tiempo.",
   "rulesDurakPlayersDeck": "Jugadores: {players}. Baraja: {deck}.",
   "settingsAppVersion": "Versión {version}",
   "@settingsAppVersion": {

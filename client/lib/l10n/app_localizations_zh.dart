@@ -607,16 +607,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => '与机器人对战，无赌注、无回合时限。';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => '进攻方出牌；防守方用同花色更大的牌或王牌盖住。王牌只能被更大的王牌盖住。';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => '全部盖住后，进攻方说「打完」，牌进入弃牌堆；否则防守方收走桌上所有牌。';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => '终局仍有手牌的人落败——「傻瓜」。';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

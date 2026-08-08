@@ -582,41 +582,41 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Bijleggen';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Doorschuiven';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 kaarten';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 kaarten';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 kaarten';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Modus: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Spelers: $players. Deck: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Speel tegen een bot, zonder inzet of tijdslimiet.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'De aanvaller speelt kaarten; de verdediger slaat ze (zelfde kleur hoger, of een troef). Een troef wordt alleen geslagen door een hogere troef.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Als alle kaarten geslagen zijn, zegt de aanvaller «Bito» en gaan ze naar de aflegstapel. Anders neemt de verdediger alles van tafel.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Verliezer is wie aan het eind nog kaarten heeft — de «dwaas».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

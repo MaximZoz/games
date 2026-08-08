@@ -607,16 +607,16 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Gra przeciwko botowi, bez stawek i limitu czasu.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'Atakujący kładzie karty; obrońca je bije (tym samym kolorem wyższą lub atutem). Atut bije tylko wyższy atut.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Gdy wszystkie karty są bite, atakujący mówi «Bito», a karty idą na stos. W przeciwnym razie obrońca bierze wszystko ze stołu.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Przegrywa ten, kto na końcu ma karty — «dureń».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

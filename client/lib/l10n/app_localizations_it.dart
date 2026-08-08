@@ -582,41 +582,41 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Rinforzo';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Trasferimento';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 carte';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 carte';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 carte';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Modalità: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Giocatori: $players. Mazzo: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Gioca contro un bot, senza puntate né limite di tempo.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'L’attaccante gioca le carte; il difensore le batte (stesso seme più alto, oppure un briscola). Una briscola si batte solo con una briscola più alta.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Quando tutte le carte sono battute, l’attaccante dice «Bito» e le carte vanno nello scarto. Altrimenti il difensore prende tutto dal tavolo.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Perde chi resta con le carte alla fine — il «durak».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

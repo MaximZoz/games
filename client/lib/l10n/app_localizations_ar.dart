@@ -582,41 +582,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'إضافة';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'نقل';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 ورقة';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 ورقة';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 ورقة';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'الوضع: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'اللاعبون: $players. المجموعة: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'العب ضد بوت بلا رهانات ولا مهلة زمنية.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'المهاجم يلعب أوراقًا؛ والمدافع يرد (نفس النوع أعلى، أو ورقة رابحة). الورقة الرابحة تُرد فقط برابحة أعلى.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'عندما تُرد كل الأوراق يقول المهاجم «بيتو» وتذهب إلى المهمل. وإلا يأخذ المدافع كل ما على الطاولة.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'الخاسر من تبقى معه أوراق في النهاية — «الأحمق».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

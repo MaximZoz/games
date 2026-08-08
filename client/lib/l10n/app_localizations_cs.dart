@@ -582,41 +582,41 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Přihazovaný';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Převáděný';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 karet';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 karet';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 karet';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Režim: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Hráči: $players. Balíček: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Hra proti botovi, bez sázek a limitu času.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'Útočník pokládá karty; obránce je bije (stejná barva vyšší, nebo trumf). Trumf se bije jen vyšším trumfem.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Když jsou všechny karty bity, útočník řekne «Bito» a karty jdou do odhozu. Jinak si obránce vezme všechno ze stolu.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Prohrává ten, komu na konci zůstanou karty — «hlupák».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

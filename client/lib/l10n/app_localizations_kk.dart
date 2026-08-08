@@ -582,41 +582,41 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Тастамалы';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Аударылмалы';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 карта';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 карта';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 карта';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Режим: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Ойыншылар: $players. Колода: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Ботқа қарсы ойын, ставка мен уақыт шектеуінсіз.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'Шабуылшы карта салады, қорғаушы ұрады (сол масть жоғарырақ немесе козырь). Козырь тек жоғарырақ козырьмен ұрылады.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Барлық карта ұрылғанда шабуылшы «Бита» дейді, карталар отбойға кетеді. Әйтпесе қорғаушы үстелдегінің бәрін алады.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Жеңілген — партия соңында карталары қалған ойыншы, «дурак».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

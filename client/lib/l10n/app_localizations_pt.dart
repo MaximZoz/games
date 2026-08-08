@@ -582,41 +582,41 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Apoio';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Transferência';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 cartas';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 cartas';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 cartas';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Modo: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Jogadores: $players. Baralho: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Jogue contra um bot, sem apostas nem limite de tempo.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'O atacante joga cartas; o defensor cobre (mesmo naipe mais alto, ou um trunfo). Um trunfo só é coberto por um trunfo maior.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Quando todas as cartas estão cobertas, o atacante diz «Bito» e vão para o descarte. Senão o defensor leva tudo da mesa.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Perde quem fica com cartas no fim — o «durak».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

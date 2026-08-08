@@ -582,41 +582,41 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'Προσθήκη';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'Μεταφορά';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 φύλλα';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 φύλλα';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 φύλλα';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'Λειτουργία: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'Παίκτες: $players. Τράπουλα: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'Παίξτε εναντίον μποτ, χωρίς ποντάρισμα ή όριο χρόνου.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'Ο επιτιθέμενος παίζει φύλλα· ο αμυνόμενος τα καλύπτει (ίδιο χρώμα πιο δυνατό ή ατού). Το ατού καλύπτεται μόνο με πιο δυνατό ατού.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'Όταν όλα τα φύλλα καλυφθούν, ο επιτιθέμενος λέει «Bito» και πάνε στην απόρριψη. Αλλιώς ο αμυνόμενος παίρνει όλα από το τραπέζι.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'Χάνει όποιος έχει φύλλα στο τέλος — ο «κάλπης».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

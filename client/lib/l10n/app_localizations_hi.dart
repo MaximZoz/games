@@ -582,41 +582,41 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'फेंक वाला';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'ट्रांसफर';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 पत्ते';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 पत्ते';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 पत्ते';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'मोड: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'खिलाड़ी: $players. डेक: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'बॉट के खिलाफ खेलें, बिना दांव और समय सीमा के।';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'आक्रमणकारी पत्ते खेलता है; रक्षक उन्हें काटता है (उसी सूट का ऊँचा, या ट्रंप)। ट्रंप केवल ऊँचे ट्रंप से कटता है।';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'जब सभी पत्ते कट जाएँ, आक्रमणकारी «बीटो» कहता है और पत्ते डिसकार्ड में जाते हैं। वरना रक्षक मेज़ से सब ले लेता है।';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'हारने वाला वही है जिसके पास अंत में पत्ते रह जाएँ — «मूर्ख».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

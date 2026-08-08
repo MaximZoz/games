@@ -582,41 +582,41 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => 'הוספה';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => 'העברה';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24 קלפים';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36 קלפים';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52 קלפים';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return 'מצב: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return 'שחקנים: $players. חפיסה: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'שחקו נגד בוט, בלי הימורים ובלי מגבלת זמן.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => 'התוקף מניח קלפים; המגן מכסה אותם (אותה סדרה גבוהה יותר, או קלף שליט). שליט מכוסה רק בשליט גבוה יותר.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'כשכל הקלפים מכוסים, התוקף אומר «ביטו» והקלפים הולכים לערימת הפסילה. אחרת המגן לוקח הכול מהשולחן.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => 'המפסיד הוא מי שנשאר עם קלפים בסוף — ה«טיפש».';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

@@ -210,11 +210,11 @@
       }
     }
   },
-  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
-  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
-  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakAttack": "Atakujący kładzie karty; obrońca je bije (tym samym kolorem wyższą lub atutem). Atut bije tylko wyższy atut.",
+  "rulesDurakBeat": "Gdy wszystkie karty są bite, atakujący mówi «Bito», a karty idą na stos. W przeciwnym razie obrońca bierze wszystko ze stołu.",
+  "rulesDurakLoser": "Przegrywa ten, kto na końcu ma karty — «dureń».",
   "rulesDurakMode": "Tryb: {mode}",
-  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakOfflineBot": "Gra przeciwko botowi, bez stawek i limitu czasu.",
   "rulesDurakPlayersDeck": "Gracze: {players}. Talia: {deck}.",
   "settingsAppVersion": "Wersja {version}",
   "@settingsAppVersion": {

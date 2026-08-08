@@ -210,11 +210,11 @@
       }
     }
   },
-  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
-  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
-  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakAttack": "L’attaquant pose des cartes ; le défenseur les bat (même couleur plus haute, ou un atout). Un atout ne se bat que par un atout plus haut.",
+  "rulesDurakBeat": "Quand toutes les cartes sont battues, l’attaquant dit « Battu » et les cartes vont au discard. Sinon le défenseur prend tout sur la table.",
+  "rulesDurakLoser": "Le perdant est celui qui a encore des cartes à la fin — le « durak ».",
   "rulesDurakMode": "Mode : {mode}",
-  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakOfflineBot": "Jouez contre un bot, sans mise ni limite de temps.",
   "rulesDurakPlayersDeck": "Joueurs : {players}. Jeu : {deck}.",
   "settingsAppVersion": "Version {version}",
   "@settingsAppVersion": {

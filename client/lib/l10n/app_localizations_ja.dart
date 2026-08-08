@@ -607,16 +607,16 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => 'ボット対戦。賭け金も制限時間もありません。';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => '攻撃側がカードを出し、守備側が打ちます（同スートのより強い札、または切り札）。切り札はより強い切り札でのみ打てます。';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => 'すべて打てたら攻撃側が「ビト」と言い、カードは捨て札へ。できなければ守備側が場の札をすべて取ります。';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => '最後に手札が残った人が負け — 「愚か者」です。';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {

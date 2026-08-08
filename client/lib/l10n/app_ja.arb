@@ -210,11 +210,11 @@
       }
     }
   },
-  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
-  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
-  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakAttack": "攻撃側がカードを出し、守備側が打ちます（同スートのより強い札、または切り札）。切り札はより強い切り札でのみ打てます。",
+  "rulesDurakBeat": "すべて打てたら攻撃側が「ビト」と言い、カードは捨て札へ。できなければ守備側が場の札をすべて取ります。",
+  "rulesDurakLoser": "最後に手札が残った人が負け — 「愚か者」です。",
   "rulesDurakMode": "モード: {mode}",
-  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakOfflineBot": "ボット対戦。賭け金も制限時間もありません。",
   "rulesDurakPlayersDeck": "人数: {players}。デッキ: {deck}。",
   "settingsAppVersion": "バージョン {version}",
   "@settingsAppVersion": {

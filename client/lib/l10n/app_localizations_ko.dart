@@ -582,41 +582,41 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Throw-in';
+  String get gamesDurakModePodkidnoi => '추가';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Transfer';
+  String get gamesDurakModePerevodnoi => '전달';
 
   @override
-  String get gamesDurakDeck24 => '24 cards';
+  String get gamesDurakDeck24 => '24장';
 
   @override
-  String get gamesDurakDeck36 => '36 cards';
+  String get gamesDurakDeck36 => '36장';
 
   @override
-  String get gamesDurakDeck52 => '52 cards';
+  String get gamesDurakDeck52 => '52장';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Mode: $mode';
+    return '모드: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Players: $players. Deck: $deck.';
+    return '인원: $players. 덱: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+  String get rulesDurakOfflineBot => '봇과 플레이합니다. 판돈과 시간 제한이 없습니다.';
 
   @override
-  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+  String get rulesDurakAttack => '공격자가 카드를 내고, 수비자가 막습니다(같은 무늬의 더 높은 카드 또는 트럼프). 트럼프는 더 높은 트럼프로만 막습니다.';
 
   @override
-  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+  String get rulesDurakBeat => '모든 카드가 막히면 공격자가 «비토»를 말하고 카드는 버림 더미로 갑니다. 아니면 수비자가 테이블의 카드를 모두 가져갑니다.';
 
   @override
-  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+  String get rulesDurakLoser => '마지막에 카드가 남은 사람이 패배 — «바보»입니다.';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
