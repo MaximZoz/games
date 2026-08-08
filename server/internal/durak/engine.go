@@ -1107,6 +1107,11 @@ func (s *State) checkOver() {
 	if len(s.Deck) > 0 {
 		return
 	}
+	// Пока стол не разобран — выход «в ноль» не фиксируем:
+	// атакующий мог выложить последние карты, защитник ещё бьёт (возможна ничья).
+	if len(s.Table) > 0 {
+		return
+	}
 	before := len(s.FinishedIndices)
 	for i := range s.Hands {
 		s.markFinishedIfEmpty(i)

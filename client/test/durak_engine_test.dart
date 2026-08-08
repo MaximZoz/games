@@ -249,6 +249,28 @@ void main() {
       expect(game.table[0].defense, isNull);
     });
 
+    test('last attack cards: no finish until defend; both empty → draw', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.ten, Suit.hearts)],
+          [PlayingCard(Rank.jack, Suit.hearts)],
+        ],
+        deck: Deck([]),
+        trump: Suit.clubs,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+      );
+      game.attack(PlayingCard(Rank.ten, Suit.hearts), playerIndex: 0);
+      expect(game.finishedIndices, isEmpty);
+      expect(game.isOver, isFalse);
+      expect(game.turn, DurakTurn.defender);
+      game.defend(PlayingCard(Rank.jack, Suit.hearts), playerIndex: 1);
+      // Защитник тоже в ноль → сразу resolveDefenderEmpty → ничья.
+      expect(game.isOver, isTrue);
+      expect(game.endedInDraw, isTrue);
+      expect(game.finishedIndices, containsAll([0, 1]));
+    });
+
     test('take: defender collects all cards and loses turn', () {
       final game = DurakGame(
         hands: [

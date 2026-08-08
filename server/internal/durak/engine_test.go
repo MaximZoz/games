@@ -1233,6 +1233,32 @@ func TestThrowInGoesStraightToDefend(t *testing.T) {
 	}
 }
 
+// checkOver не должен помечать finished, пока карты ещё на столе.
+func TestCheckOverSkipsWhileTableUnresolved(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{}, // атакующий уже выложил всё
+			{{11, Hearts}},
+		},
+		Table:         []Pair{{Attack: Card{10, Hearts}}},
+		Deck:          nil,
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	st.checkOver()
+	if len(st.FinishedIndices) != 0 {
+		t.Fatalf("finished=%v want empty while table unresolved", st.FinishedIndices)
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("status=%s want active", st.Status)
+	}
+}
+
 // Атакующий выложил последние карты — не «finished», пока отбой не закрыт.
 // Если защитник тоже выходит в ноль — ничья, без промежуточной победы.
 func TestAttackerEmptyNotFinishedUntilRoundEnds(t *testing.T) {
