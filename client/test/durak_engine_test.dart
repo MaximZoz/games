@@ -290,9 +290,7 @@ void main() {
         turn: DurakTurn.attacker,
       );
       game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
-      // Есть что подкинуть → throwIn; «Все» → ход защитнику.
-      expect(game.turn, DurakTurn.throwIn);
-      game.confirmThrowAll(playerIndex: 0);
+      // Сразу ход защитнику — без кнопки «Все».
       expect(game.turn, DurakTurn.defender);
       game.take();
       expect(game.turn, DurakTurn.takeFollowUp);
@@ -373,9 +371,7 @@ void main() {
         turn: DurakTurn.attacker,
       );
       game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
-      if (game.turn == DurakTurn.throwIn) {
-        game.confirmThrowAll(playerIndex: 0);
-      }
+      expect(game.turn, DurakTurn.defender);
       const bot = DurakBot(index: 1);
       bot.step(game);
       // Нечего подкинуть → bito_reveal, затем стол в биту.

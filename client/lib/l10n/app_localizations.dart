@@ -368,13 +368,13 @@ abstract class AppLocalizations {
   /// No description provided for @durakHintThrowInFirst.
   ///
   /// In ru, this message translates to:
-  /// **'Подкиньте карты или «Все» (макс. 5 в первом отбое)'**
+  /// **'Подкиньте карты (макс. 5 в первом отбое)'**
   String get durakHintThrowInFirst;
 
   /// No description provided for @durakHintThrowIn.
   ///
   /// In ru, this message translates to:
-  /// **'Подкиньте карты или нажмите «Все»'**
+  /// **'Подкиньте карты или ждите отбоя'**
   String get durakHintThrowIn;
 
   /// No description provided for @durakHintOpponentThrows.

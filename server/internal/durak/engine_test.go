@@ -251,13 +251,13 @@ func TestAttackManySameRank(t *testing.T) {
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase = %v", st.Phase)
 	}
-	// Во время защиты можно подкинуть карту того же ранга (пачка throw_in).
+	// Во время защиты можно подкинуть карту того же ранга → снова defend.
 	st.Hands[0] = append(st.Hands[0], Card{9, Diamonds}, Card{9, Clubs})
 	if err := st.AttackMany(0, []Card{{9, Diamonds}}); err != nil {
 		t.Fatalf("throw-in during defend: %v", err)
 	}
-	if st.Phase != PhaseThrowIn {
-		t.Fatalf("phase after throw-in=%v want throw_in", st.Phase)
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase after throw-in=%v want defend", st.Phase)
 	}
 	if len(st.Table) != 3 {
 		t.Fatalf("table after throw-in = %d, want 3", len(st.Table))
@@ -601,20 +601,17 @@ func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
 	if err := st.Attack(0, Card{6, Clubs}); err != nil {
 		t.Fatalf("attack1: %v", err)
 	}
-	if st.Phase != PhaseThrowIn {
-		t.Fatalf("phase=%s want throw_in after first card", st.Phase)
-	}
-	if st.LegalDefendCards(1) != nil {
-		t.Fatal("defender must wait until batch ends")
+	// Сразу defend — доп. карты того же ранга подкидываются уже в defend.
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after first card", st.Phase)
 	}
 	for _, c := range []Card{{6, Spades}, {6, Diamonds}, {6, Hearts}} {
 		if err := st.Attack(0, c); err != nil {
 			t.Fatalf("throw %v: %v", c, err)
 		}
 	}
-	// 4 шестёрки, больше того же ранга нет → пауза подкида, затем defend.
 	if st.Phase != PhaseDefend {
-		t.Fatalf("phase=%s want defend when no more same rank", st.Phase)
+		t.Fatalf("phase=%s want defend after throw-ins", st.Phase)
 	}
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase=%s want defend after throw reveal", st.Phase)
@@ -1190,8 +1187,8 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 	}
 }
 
-// Подкид пачкой с остатком карт: «Все» отдаёт ход защитнику.
-func TestThrowInDoneWhileMoreCardsLeft(t *testing.T) {
+// Подкид без «Все»: после каждой карты сразу ход защитнику; можно кинуть ещё в defend.
+func TestThrowInGoesStraightToDefend(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},
 		Hands: [][]Card{
@@ -1213,35 +1210,78 @@ func TestThrowInDoneWhileMoreCardsLeft(t *testing.T) {
 	if err := st.Attack(0, Card{6, Hearts}); err != nil {
 		t.Fatalf("throw1: %v", err)
 	}
-	if st.Phase != PhaseThrowIn {
-		t.Fatalf("phase=%s want throw_in", st.Phase)
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after throw", st.Phase)
 	}
-	if st.LegalDefendCards(1) != nil {
-		t.Fatal("defender must wait until Все")
+	if st.LegalDefendCards(1) == nil {
+		t.Fatal("defender should act immediately (no Все)")
 	}
 	if err := st.Attack(0, Card{6, Diamonds}); err != nil {
-		t.Fatalf("throw2: %v", err)
+		t.Fatalf("throw2 during defend: %v", err)
 	}
-	if st.Phase != PhaseThrowIn {
-		t.Fatalf("phase=%s want throw_in", st.Phase)
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after second throw", st.Phase)
 	}
 	if len(st.LegalAttackCards(0)) == 0 {
-		t.Fatal("want more throw-in cards for Все button")
-	}
-	if err := st.Done(0); err != nil {
-		t.Fatalf("done/Все: %v", err)
-	}
-	if st.Phase != PhaseDefend {
-		t.Fatalf("phase=%s want defend after Все", st.Phase)
-	}
-	if st.Phase != PhaseDefend {
-		t.Fatalf("phase=%s want defend after throw reveal", st.Phase)
+		t.Fatal("want more throw-in cards available in defend")
 	}
 	if got := st.UndefendedIndex(); got < 0 {
 		t.Fatal("table must have undefended attacks for defender")
 	}
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
+	}
+}
+
+// Атакующий выложил последние карты — не «finished», пока отбой не закрыт.
+// Если защитник тоже выходит в ноль — ничья, без промежуточной победы.
+func TestAttackerEmptyNotFinishedUntilRoundEnds(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{10, Hearts}},
+			{{11, Hearts}},
+		},
+		Deck:          nil,
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseAttack,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{10, Hearts}); err != nil {
+		t.Fatalf("attack last: %v", err)
+	}
+	if len(st.FinishedIndices) != 0 {
+		t.Fatalf("finished=%v want empty while table unresolved", st.FinishedIndices)
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("status=%s want active", st.Status)
+	}
+	if err := st.Defend(1, Card{11, Hearts}, 0); err != nil {
+		t.Fatalf("defend last: %v", err)
+	}
+	// Защитник тоже в ноль → resolveDefenderEmpty / bito path → draw.
+	if st.Status != StatusOver {
+		// После последнего отбоя может быть bito_reveal — дожимаем.
+		if st.Phase == PhaseBitoReveal {
+			if err := st.FinishBitoReveal(); err != nil {
+				t.Fatalf("FinishBitoReveal: %v", err)
+			}
+		}
+	}
+	if st.Status != StatusOver {
+		t.Fatalf("status=%s want over", st.Status)
+	}
+	if st.LoserIndex != -1 {
+		t.Fatalf("loser=%d want -1 (draw)", st.LoserIndex)
+	}
+	if st.TiedLeaders < 2 && len(st.FinishedIndices) < 2 {
+		t.Fatalf("want both finished / tied, finished=%v tied=%d",
+			st.FinishedIndices, st.TiedLeaders)
 	}
 }
 

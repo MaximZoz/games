@@ -117,10 +117,10 @@ class AppLocalizationsEl extends AppLocalizations {
   String get durakHintOpponentDefends => 'Ο αντίπαλος αμύνεται';
 
   @override
-  String get durakHintThrowInFirst => 'Ρίξτε κάρτες ή «Όλα» (μέγ. 5 στην πρώτη άμυνα)';
+  String get durakHintThrowInFirst => 'Ρίξτε φύλλα (μέγ. 5 στην πρώτη κάλυψη)';
 
   @override
-  String get durakHintThrowIn => 'Ρίξτε κάρτες ή πατήστε «Όλα»';
+  String get durakHintThrowIn => 'Ρίξτε φύλλα ή περιμένετε την άμυνα';
 
   @override
   String get durakHintOpponentThrows => 'Ο αντίπαλος ρίχνει';

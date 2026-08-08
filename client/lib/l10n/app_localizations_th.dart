@@ -117,10 +117,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get durakHintOpponentDefends => 'คู่แข่งป้องกัน';
 
   @override
-  String get durakHintThrowInFirst => 'ทิ้งการ์ดหรือ «ทั้งหมด» (สูงสุด 5 ในการป้องกันครั้งแรก)';
+  String get durakHintThrowInFirst => 'ทิ้งไพ่เพิ่ม (สูงสุด 5 ในตาแรก)';
 
   @override
-  String get durakHintThrowIn => 'ทิ้งการ์ดหรือกด «ทั้งหมด»';
+  String get durakHintThrowIn => 'ทิ้งไพ่เพิ่มหรือรอการป้องกัน';
 
   @override
   String get durakHintOpponentThrows => 'คู่แข่งทิ้งเพิ่ม';

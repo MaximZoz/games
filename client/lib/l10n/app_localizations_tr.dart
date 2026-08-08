@@ -117,10 +117,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get durakHintOpponentDefends => 'Rakip savunuyor';
 
   @override
-  String get durakHintThrowInFirst => 'Kart atın veya «Tümü» (ilk savunmada max 5)';
+  String get durakHintThrowInFirst => 'Kart atın (ilk turda en fazla 5)';
 
   @override
-  String get durakHintThrowIn => 'Kart atın veya «Tümü»ne dokunun';
+  String get durakHintThrowIn => 'Kart atın veya savunmayı bekleyin';
 
   @override
   String get durakHintOpponentThrows => 'Rakip atıyor';

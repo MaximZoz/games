@@ -374,12 +374,10 @@ class DurakGame {
       throwerIndex = pIndex;
       return;
     }
-    // Пачка подкида: ход остаётся у текущего до «Все» / лимита.
+    // После каждой атаки/подкида — сразу защитнику (без кнопки «Все»).
+    // Доп. подкид возможен в фазе defender.
     throwerIndex = pIndex;
-    turn = DurakTurn.throwIn;
-    if (!_canThrowMore(pIndex)) {
-      _finishThrowIn();
-    }
+    _finishThrowIn();
   }
 
   bool _canThrowMore(int playerIndex) {
