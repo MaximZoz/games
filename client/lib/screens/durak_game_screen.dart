@@ -1759,61 +1759,65 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final snapshot = List<DurakTablePairApi>.of(
       _prevTable.isNotEmpty ? _prevTable : view.table,
     );
-    _prevTable = const [];
     final froms = _tableCardGlobalRects(snapshot);
     final freezeCount = view.bitoCount;
     final flown = _flattenTableCards(snapshot).length;
     List<CardFlyTicket> tickets = const [];
-    if (snapshot.isNotEmpty) {
-      setState(() {
-        _hidingTable = true;
-        _busy = true;
-        _suppressRemoteBitoFx = true;
-        _bitoCountFreeze = freezeCount;
-      });
-      if (_gameUiActive) {
-        tickets = await _animateTableToBito(
-          snapshot,
-          fromOverrides: froms,
-        );
-      }
-      // Пока overlay на бите — сразу показать новую кучу, затем снять fly.
-      if (mounted) {
-        setState(() {
-          _bitoCountFreeze = freezeCount + flown;
-        });
-        await WidgetsBinding.instance.endOfFrame;
-      }
-      for (final t in tickets) {
-        t.dismiss();
-      }
-      tickets = const [];
-    }
-    if (!mounted) return;
+    setState(() => _busy = true);
     try {
       await ref
           .read(durakRepositoryProvider)
           .move(widget.gameId, type: 'bito');
-      // Сначала узнаём добор и прячем карты, потом invalidate — без мигания в веере.
       DurakGameView? fresh;
       try {
         fresh =
             await ref.read(durakRepositoryProvider).getGame(widget.gameId);
       } catch (_) {}
       if (!mounted) return;
+
+      // Очередь подкида: «Бито» только сдвигает thrower — стол остаётся.
+      // Анимация биты — только когда стол реально ушёл в отбой.
+      final resolvedBito =
+          snapshot.isNotEmpty && (fresh == null || fresh.table.isEmpty);
+
+      if (resolvedBito) {
+        _prevTable = const [];
+        _suppressRemoteBitoFx = true;
+        if (snapshot.isNotEmpty && mounted) {
+          setState(() {
+            _hidingTable = true;
+            _bitoCountFreeze = freezeCount;
+          });
+          if (_gameUiActive) {
+            tickets = await _animateTableToBito(
+              snapshot,
+              fromOverrides: froms,
+            );
+          }
+          if (mounted) {
+            setState(() => _bitoCountFreeze = freezeCount + flown);
+            await WidgetsBinding.instance.endOfFrame;
+          }
+          for (final t in tickets) {
+            t.dismiss();
+          }
+          tickets = const [];
+        }
+      }
+
       if (fresh != null) {
         final hand = _apiCardsToPlaying(
           fresh.hands.length > fresh.myIndex && fresh.myIndex >= 0
               ? (fresh.hands[fresh.myIndex].cards ?? const [])
               : const [],
         );
-        // Дельта по длине руки — не «все карты, которых нет в order».
         final prevLen = _prevHandLen >= 0
             ? _prevHandLen
             : (_handOrder?.length ?? 0);
         final dealtN = (hand.length - prevLen).clamp(0, hand.length);
         final dealt = _incomingDealCards(hand, dealtN);
-        final deckBefore = _prevDeckCount >= 0 ? _prevDeckCount : fresh.deckCount;
+        final deckBefore =
+            _prevDeckCount >= 0 ? _prevDeckCount : fresh.deckCount;
         final oppDeals = _opponentDealDeltas(fresh);
         if (dealt.isNotEmpty) {
           _pendingDealCards.addAll(dealt);
@@ -1839,7 +1843,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _prevAttackerIndex = fresh.attackerIndex;
         _prevDefenderIndex = fresh.defenderIndex;
         _syncPrevOppHandCounts(fresh);
-        if (_gameUiActive && (dealt.isNotEmpty || oppDeals.isNotEmpty)) {
+        if (resolvedBito &&
+            _gameUiActive &&
+            (dealt.isNotEmpty || oppDeals.isNotEmpty)) {
           await _animateRefillDeals(
             view: fresh,
             myIncoming: dealt,
