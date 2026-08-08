@@ -977,8 +977,12 @@ class _GamesPageContent extends StatelessWidget {
                         child: GradientCard(
                           padding: const EdgeInsets.all(16),
                           child: InkWell(
-                            onTap: () => context.push(
-                                '/games/tictactoe/game/${obs.gameId}'),
+                            onTap: () {
+                              final path = obs.gameType == 'durak'
+                                  ? '/games/durak/game/${obs.gameId}'
+                                  : '/games/tictactoe/game/${obs.gameId}';
+                              context.push(path);
+                            },
                             borderRadius: BorderRadius.circular(16),
                             child: const Row(
                               children: [
@@ -999,7 +1003,7 @@ class _GamesPageContent extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        'Вы выбыли — можно смотреть',
+                                        'Можно смотреть до конца партии',
                                         style: TextStyle(
                                             fontSize: 13,
                                             color: AppColors.textSecondary),

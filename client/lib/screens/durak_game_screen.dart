@@ -109,6 +109,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _isFindingGame = false;
   String? _prevGameStatus;
   bool _balanceGainPlayed = false;
+  /// Mid-game выход «в ноль»: observation + салют/монеты — один раз.
+  bool _midFinishedHandled = false;
   final GlobalKey _winRewardKey = GlobalKey();
   final GlobalKey<CardFanState> _fanKey = GlobalKey<CardFanState>();
   final GlobalKey _defendTargetKey = GlobalKey();
@@ -169,6 +171,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
       _balanceGainPlayed = false;
+      _midFinishedHandled = false;
       _prevDeckCount = -1;
       _prevBitoCount = -1;
       _prevHandLen = -1;
@@ -3401,7 +3404,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         final next = await ref.read(durakGameProvider(widget.gameId).future);
         final multi = next.playerIds.length > 2;
         if (multi && !next.isOver) {
-          enterGameObservation(ref, widget.gameId);
+          enterGameObservation(ref, widget.gameId, gameType: 'durak');
         }
       } catch (_) {}
       unawaited(ref.read(activeGameProvider.notifier).refresh());
@@ -3542,6 +3545,33 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   void _maybeSettleGame(DurakGameView view) {
+    // Mid-game: вышел «в ноль» — сразу observation, монеты, салют (не ждать конца).
+    if (!view.isOver && view.iAmFinished && !view.iAmEliminated) {
+      if (_midFinishedHandled) {
+        _prevGameStatus = view.status;
+        return;
+      }
+      _midFinishedHandled = true;
+      final credit = _rewardBronze(view);
+      final displayReward = credit > 0 ? credit : 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        final alreadyObs =
+            ref.read(observationGameProvider)?.gameId == widget.gameId;
+        if (!alreadyObs) {
+          enterGameObservation(ref, widget.gameId, gameType: 'durak');
+        }
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
+        // Монеты + анимация пополнения сразу (как в крестиках после выбывания-победы).
+        unawaited(_onGameSettled(
+          creditBronze: credit,
+          displayRewardBronze: displayReward,
+        ));
+      });
+      _prevGameStatus = view.status;
+      return;
+    }
     if (!view.isOver) {
       _prevGameStatus = view.status;
       return;
@@ -3552,18 +3582,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       for (final peerId in _peerIds(view)) {
         ref.read(gameInvitesProvider.notifier).removeByCreatorId(peerId);
       }
-      final playersN = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-      final placesFilled = view.winnerPlaceOrder.length.clamp(1, playersN);
       final credit = view.isDraw
           ? view.stakeBronze
-          : (view.myPlace > 0
-              ? durakPlaceCredit(
-                  stake: view.stakeBronze,
-                  playerCount: playersN,
-                  place: view.myPlace,
-                  placesFilled: placesFilled,
-                )
-              : 0);
+          : _rewardBronze(view);
       // Показываем начисление всем, кто получил хоть что-то (кредит > 0).
       final displayReward = credit > 0 ? credit : 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3577,6 +3598,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _isRematching = false;
           _isFindingGame = false;
         });
+        // Если mid-game уже начислили — только обновить баланс без повторной анимации.
         unawaited(_onGameSettled(
           creditBronze: credit,
           displayRewardBronze: displayReward,
@@ -3909,10 +3931,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   ),
                 ),
                 if (view != null &&
-                    view.isOver &&
                     !view.isDraw &&
-                    view.loserIndex >= 0 &&
-                    view.loserIndex != view.myIndex)
+                    !view.iAmEliminated &&
+                    ((view.isOver &&
+                            view.loserIndex >= 0 &&
+                            view.loserIndex != view.myIndex &&
+                            view.myPlace > 0) ||
+                        (!view.isOver &&
+                            view.iAmFinished &&
+                            view.myPlace > 0)))
                   const Positioned.fill(child: GameConfettiOverlay()),
                 // Групповой чат — отдельно под крестиком.
                 if (showGroupChat && view != null)
@@ -4058,12 +4085,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       )
                     : _multiOpponentsArea(view, tableSize),
               ),
-              if (view.isOver || view.iAmFinished || view.isBitoReveal) ...[
+              if (view.isOver ||
+                  view.iAmFinished ||
+                  view.isTableReveal) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
                     statusText: _turnHint(view),
-                    showReward: view.isOver && _showRewardChip(view),
+                    showReward: _showRewardChip(view),
                     rewardBronze: _rewardBronze(view),
                     rewardKey: _winRewardKey,
                     fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
@@ -5224,7 +5253,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       view.myPlace > 0;
 
   bool _showRewardChip(DurakGameView view) {
-    if (!view.isOver || view.stakeBronze <= 0) return false;
+    if (view.stakeBronze <= 0) return false;
+    // Mid-game после выхода «в ноль» или итог партии.
+    if (!view.isOver && !view.iAmFinished) return false;
     return _rewardBronze(view) > 0;
   }
 
@@ -5232,7 +5263,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (view.isDraw) return view.stakeBronze;
     if (view.myPlace <= 0) return 0;
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-    final placesFilled = view.winnerPlaceOrder.length.clamp(1, n);
+    // Mid-game: фиксированная доля места (без roll-up) — как CreditForPlace на сервере.
+    // В конце партии — с roll-up по реально занятым местам.
+    final placesFilled = (!view.isOver && view.iAmFinished)
+        ? durakPlaceShareNumerators(n).length.clamp(1, n)
+        : view.winnerPlaceOrder.length.clamp(1, n);
     // Показываем фактическое начисление (кредит), не только «чистый» плюс.
     return durakPlaceCredit(
       stake: view.stakeBronze,
@@ -5297,6 +5332,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     if (view.isBitoReveal) {
       return 'Бито';
+    }
+    if (view.isTakeReveal) {
+      return 'Беру';
     }
     if (view.phase == 'take_follow') {
       if (view.attackerIndex == view.myIndex ||

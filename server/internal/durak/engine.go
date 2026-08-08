@@ -34,10 +34,14 @@ const (
 	PhaseAttackFollow TurnPhase = "attack_follow" // подкид после полного отбоя или «Бито»
 	PhaseTakeFollow   TurnPhase = "take_follow"   // защитник берёт; атакующий может подкинуть вдогонку
 	PhaseBitoReveal   TurnPhase = "bito_reveal"   // всё отбито, нечего подкинуть — пауза, затем отбой
+	PhaseTakeReveal   TurnPhase = "take_reveal"   // подкид вдогонку / перед «Беру» — пауза, затем карты защитнику
 )
 
 // BitoRevealDelay — сколько держим стол на экране перед авто-отбоем.
 const BitoRevealDelay = 2 * time.Second
+
+// TakeRevealDelay — пауза перед взятием, чтобы все увидели подкинутые карты.
+const TakeRevealDelay = 2 * time.Second
 
 // Status — статус партии.
 type Status string
@@ -244,14 +248,14 @@ func (s *State) skipThrowersWithoutCards() error {
 		next := s.nextThrowerAfter(s.ThrowerIndex)
 		if next < 0 {
 			if s.Phase == PhaseTakeFollow {
-				return s.resolveTake()
+				return s.beginTakeReveal()
 			}
 			return s.beginBitoReveal()
 		}
 		s.ThrowerIndex = next
 	}
 	if s.Phase == PhaseTakeFollow {
-		return s.resolveTake()
+		return s.beginTakeReveal()
 	}
 	return s.beginBitoReveal()
 }
@@ -334,7 +338,7 @@ func (s *State) advanceThrowerOrFinish() error {
 	next := s.nextThrowerAfter(s.ThrowerIndex)
 	if next < 0 {
 		if s.Phase == PhaseTakeFollow {
-			return s.resolveTake()
+			return s.beginTakeReveal()
 		}
 		return s.beginBitoReveal()
 	}
@@ -598,6 +602,7 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 }
 
 // finishThrowIn — подкидывающий закончил пачку («Все» или авто) → бьёт защитник.
+// Паузу здесь не делаем: она нужна только перед взятием (take_reveal).
 func (s *State) finishThrowIn() error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -609,6 +614,30 @@ func (s *State) finishThrowIn() error {
 	}
 	s.Phase = PhaseDefend
 	return nil
+}
+
+// beginTakeReveal — конец подкида вдогонку / нечего подкинуть после «Беру»:
+// стол остаётся на паузу, затем FinishTakeReveal отдаёт карты защитнику.
+func (s *State) beginTakeReveal() error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if len(s.Table) == 0 {
+		return ErrCannotTake
+	}
+	s.Phase = PhaseTakeReveal
+	return nil
+}
+
+// FinishTakeReveal — конец паузы показа стола → карты в руку защитнику.
+func (s *State) FinishTakeReveal() error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if s.Phase != PhaseTakeReveal {
+		return ErrCannotTake
+	}
+	return s.resolveTake()
 }
 
 // Defend — отбить неотбитую пару. pairIndex < 0 — первая, которую карта реально бьёт.

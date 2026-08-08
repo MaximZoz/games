@@ -977,12 +977,22 @@ class ObservationItem {
   final String gameId;
   final String? lobbyId;
 
-  const ObservationItem({required this.gameId, this.lobbyId});
+  /// Тип игры для роутинга карточки «Наблюдение».
+  final String gameType;
+
+  const ObservationItem({
+    required this.gameId,
+    this.lobbyId,
+    this.gameType = 'tictactoe',
+  });
 
   factory ObservationItem.fromJson(Map<String, dynamic> json) {
     return ObservationItem(
       gameId: json['game_id'] as String? ?? '',
       lobbyId: json['lobby_id'] as String?,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
     );
   }
 }

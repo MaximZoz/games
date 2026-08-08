@@ -629,6 +629,17 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 			return
 		}
 	}
+	// Пауза перед взятием истекла — карты защитнику.
+	if h.healDurakTakeReveal(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
+	// Вышедшие «в ноль» (миграция / reconnect) → observation + ранняя выплата.
+	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	// Застрявшее: у защитника 0 карт, стол не пуст — закрыть раунд.
 	if h.healDurakDefenderEmpty(ctx, gameID, m, state) {
 		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
@@ -692,6 +703,7 @@ func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m
 		"game_id":   gameID,
 		"game_type": durakGameType,
 	})
+	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
 			m["draw"] = "1"
@@ -719,6 +731,114 @@ func (h *GamesHandler) scheduleDurakBitoReveal(gameID string) {
 		}
 		_ = h.healDurakBitoReveal(ctx, gameID, m, state)
 	}()
+}
+
+// healDurakTakeReveal — если фаза take_reveal и время паузы вышло → карты защитнику.
+func (h *GamesHandler) healDurakTakeReveal(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
+	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseTakeReveal {
+		return false
+	}
+	revealAt, err := strconv.ParseInt(m["take_reveal_at"], 10, 64)
+	if err != nil || revealAt <= 0 {
+		revealAt = 0
+	}
+	if time.Now().UTC().Unix() < revealAt {
+		return false
+	}
+	if err := state.FinishTakeReveal(); err != nil {
+		return false
+	}
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return false
+	}
+	fields := []any{"state", encoded, "take_reveal_at", "0", "throw_reveal_at", "0"}
+	if state.Status == durak.StatusOver {
+		fields = append(fields, durakOverRedisFields(state)...)
+	} else if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
+		fields = append(fields,
+			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+		)
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
+	if state.Status == durak.StatusOver {
+		if state.LoserIndex < 0 {
+			m["draw"] = "1"
+		}
+		h.onDurakGameFinished(ctx, gameID, m, state)
+	}
+	return true
+}
+
+// scheduleDurakTakeReveal — через 2с после подкида→«Беру» отдать карты защитнику.
+func (h *GamesHandler) scheduleDurakTakeReveal(gameID string) {
+	delay := durak.TakeRevealDelay
+	go func() {
+		timer := time.NewTimer(delay + 50*time.Millisecond)
+		defer timer.Stop()
+		<-timer.C
+		ctx := context.Background()
+		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+			return
+		}
+		state, err := durak.Decode(m["state"])
+		if err != nil || state.Phase != durak.PhaseTakeReveal {
+			return
+		}
+		_ = h.healDurakTakeReveal(ctx, gameID, m, state)
+	}()
+}
+
+// promoteDurakFinishedPlayers — вышедший «в ноль» → observation; ранняя выплата доли места.
+func (h *GamesHandler) promoteDurakFinishedPlayers(ctx context.Context, gameID string, m map[string]string, state *durak.State) {
+	if state == nil || h.Rdb == nil || len(state.FinishedIndices) == 0 {
+		return
+	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	n := len(state.PlayerIDs)
+	for placeIdx, idx := range state.FinishedIndices {
+		if idx < 0 || idx >= n {
+			continue
+		}
+		pid := state.PlayerIDs[idx]
+		if isBot(pid) {
+			continue
+		}
+		u, err := uuid.Parse(pid)
+		if err != nil {
+			continue
+		}
+		// Как сдача в multi: active → observation, пока партия идёт.
+		if state.Status == durak.StatusActive {
+			moveActiveToObserving(ctx, h.Rdb, u, gameID)
+		}
+		// Монеты при конце партии — в settleDurakCoins (с учётом early_paid).
+		if state.Status != durak.StatusActive || stakeBronze <= 0 || h.Pool == nil {
+			continue
+		}
+		credit := durak.CreditForPlace(stakeBronze, n, placeIdx)
+		if credit <= 0 {
+			continue
+		}
+		ok, err := h.Rdb.HSetNX(ctx, "game:"+gameID, "early_paid:"+pid, strconv.Itoa(credit)).Result()
+		if err != nil || !ok {
+			continue
+		}
+		if err := store.AddCoins(ctx, h.Pool, u, credit); err != nil {
+			// Откатить флаг, чтобы финальный settle мог выплатить.
+			h.Rdb.HDel(ctx, "game:"+gameID, "early_paid:"+pid)
+		}
+	}
 }
 
 // healDurakShortHands — добрать карты, если стол пуст, а у кого-то меньше HandSize
@@ -774,6 +894,7 @@ func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string
 		"game_id":   gameID,
 		"game_type": durakGameType,
 	})
+	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
 			m["draw"] = "1"
@@ -1051,6 +1172,18 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		revealAt := time.Now().UTC().Unix() + int64(durak.BitoRevealDelay/time.Second)
 		fields = append(fields,
 			"bito_reveal_at", strconv.FormatInt(revealAt, 10),
+			"take_reveal_at", "0",
+			"throw_reveal_at", "0",
+			"turn_deadline", "0",
+			"turn_actor_idx", "-1",
+		)
+	} else if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
+		// Пауза перед взятием: все видят подкид, через 2с — карты защитнику.
+		revealAt := time.Now().UTC().Unix() + int64(durak.TakeRevealDelay/time.Second)
+		fields = append(fields,
+			"take_reveal_at", strconv.FormatInt(revealAt, 10),
+			"bito_reveal_at", "0",
+			"throw_reveal_at", "0",
 			"turn_deadline", "0",
 			"turn_actor_idx", "-1",
 		)
@@ -1059,15 +1192,20 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
 			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
 			"bito_reveal_at", "0",
+			"take_reveal_at", "0",
+			"throw_reveal_at", "0",
 		)
 	} else {
-		fields = append(fields, "bito_reveal_at", "0")
+		fields = append(fields, "bito_reveal_at", "0", "take_reveal_at", "0", "throw_reveal_at", "0")
 	}
 	if state.Status == durak.StatusOver {
 		fields = append(fields, durakOverRedisFields(state)...)
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+
+	// Вышедшие «в ноль» сразу → observation + монеты (не ждать конца партии).
+	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 
 	// Broadcast.
 	humans := durakHumans(m)
@@ -1078,6 +1216,9 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	})
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
 		h.scheduleDurakBitoReveal(gameID)
+	}
+	if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
+		h.scheduleDurakTakeReveal(gameID)
 	}
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
@@ -1482,7 +1623,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 // durakTurnActorIdx — чей таймер хода (защитник / атакующий / текущий подкидывающий).
 // Вышедших «в ноль» и сдавшихся пропускаем — иначе таймер залипает на победителе.
 func durakTurnActorIdx(state *durak.State) int {
-	if state.Phase == durak.PhaseBitoReveal {
+	if state.Phase == durak.PhaseBitoReveal || state.Phase == durak.PhaseTakeReveal {
 		return -1 // пауза показа стола — ничей таймер
 	}
 	pick := func(idx int) int {
@@ -1512,13 +1653,19 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if m["status"] != gameStatusActive {
 		return
 	}
-	// Пауза показа отбоя — не сдача, а дожать стол в биту по таймеру reveal.
-	if st, err := durak.Decode(m["state"]); err == nil && st.Phase == durak.PhaseBitoReveal {
-		_ = h.healDurakBitoReveal(ctx, gameID, m, st)
-		return
+	// Пауза показа отбоя / взятия — не сдача, а дожать по таймеру reveal.
+	if st, err := durak.Decode(m["state"]); err == nil {
+		if st.Phase == durak.PhaseBitoReveal {
+			_ = h.healDurakBitoReveal(ctx, gameID, m, st)
+			return
+		}
+		if st.Phase == durak.PhaseTakeReveal {
+			_ = h.healDurakTakeReveal(ctx, gameID, m, st)
+			return
+		}
 	}
 	turnDeadline, err := strconv.ParseInt(m["turn_deadline"], 10, 64)
-	// 0 = нет лимита / пауза bito_reveal — не считаем просрочкой.
+	// 0 = нет лимита / пауза reveal — не считаем просрочкой.
 	if err != nil || turnDeadline <= 0 {
 		return
 	}
@@ -1543,9 +1690,13 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if err != nil || state.Status != durak.StatusActive {
 		return
 	}
-	// Пауза показа стола — только отбой, без сдачи по таймеру.
+	// Пауза показа стола — только отбой / взятие, без сдачи по таймеру.
 	if state.Phase == durak.PhaseBitoReveal {
 		_ = h.healDurakBitoReveal(ctx, gameID, fresh, state)
+		return
+	}
+	if state.Phase == durak.PhaseTakeReveal {
+		_ = h.healDurakTakeReveal(ctx, gameID, fresh, state)
 		return
 	}
 	phaseActor := durakTurnActorIdx(state)
@@ -1578,22 +1729,37 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 			return
 		}
 		fields := []any{"state", encoded}
-		if state.Status == durak.StatusOver {
+		if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
+			revealAt := time.Now().UTC().Unix() + int64(durak.TakeRevealDelay/time.Second)
+			fields = append(fields,
+				"take_reveal_at", strconv.FormatInt(revealAt, 10),
+				"bito_reveal_at", "0",
+				"throw_reveal_at", "0",
+				"turn_deadline", "0",
+				"turn_actor_idx", "-1",
+			)
+		} else if state.Status == durak.StatusOver {
 			fields = append(fields, durakOverRedisFields(state)...)
 		} else if turnT, e := strconv.Atoi(fresh["turn_time_sec"]); e == nil && turnT > 0 {
 			fields = append(fields,
 				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
 				"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+				"take_reveal_at", "0",
+				"throw_reveal_at", "0",
 			)
 		}
 		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 		h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+		h.promoteDurakFinishedPlayers(ctx, gameID, fresh, state)
 		humans := durakHumans(fresh)
 		h.broadcast(humans, map[string]any{
 			"type":      "game_state",
 			"game_id":   gameID,
 			"game_type": durakGameType,
 		})
+		if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
+			h.scheduleDurakTakeReveal(gameID)
+		}
 		if state.Status == durak.StatusOver {
 			if state.LoserIndex < 0 {
 				fresh["draw"] = "1"
@@ -1703,9 +1869,42 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	h.recordDurakGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
 }
 
+// durakEarlyPaid — сколько уже начислено mid-game за место (early_paid:<userId>).
+func (h *GamesHandler) durakEarlyPaid(ctx context.Context, gameID, playerID string) int {
+	if h.Rdb == nil || playerID == "" {
+		return 0
+	}
+	v, err := h.Rdb.HGet(ctx, "game:"+gameID, "early_paid:"+playerID).Int()
+	if err != nil {
+		return 0
+	}
+	if v < 0 {
+		return 0
+	}
+	return v
+}
+
+// durakPayCreditDelta — доплатить credit − early_paid (не списываем лишнее).
+func (h *GamesHandler) durakPayCreditDelta(ctx context.Context, gameID, playerID string, credit int) {
+	if credit <= 0 || isBot(playerID) || h.Pool == nil {
+		return
+	}
+	u, err := uuid.Parse(playerID)
+	if err != nil {
+		return
+	}
+	already := h.durakEarlyPaid(ctx, gameID, playerID)
+	delta := credit - already
+	if delta <= 0 {
+		return
+	}
+	_ = store.AddCoins(ctx, h.Pool, u, delta)
+}
+
 // settleDurakCoins — банк stake×N по местам выхода:
 // 3 игрока: 1-е 2/3, 2-е 1/3; 4 игрока: 1-е 2/4, 2-е и 3-е по 1/4; дурак — 0.
 // Сдавшиеся долю не получают. 1×1 — весь банк победителю.
+// Учитывает mid-game early_paid, чтобы не начислить дважды.
 func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int) {
 	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1724,7 +1923,12 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 	}
 	isDraw := m["draw"] == "1" || state.LoserIndex < 0 || state.LoserIndex >= len(ids)
 	if isDraw {
-		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, nil, true, isBot)
+		for _, pid := range ids {
+			if isBot(pid) {
+				continue
+			}
+			h.durakPayCreditDelta(ctx, gameID, pid, stakeBronze)
+		}
 		return
 	}
 	placeIdx := state.WinnerPlaceOrder()
@@ -1743,19 +1947,50 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 	// 1×1 vs бот: человек проиграл — без выплат; победил — банк stake×2.
 	if len(ids) == 2 {
 		winner := placeIDs[0]
-		loser := ids[state.LoserIndex]
 		if isBot(winner) {
 			return
 		}
-		if isBot(loser) {
-			_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winner}, false, isBot)
-			return
-		}
-		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winner}, false, isBot)
+		h.durakPayCreditDelta(ctx, gameID, winner, stakeBronze*2)
 		return
 	}
 	nums := durak.PlaceShareNumerators(len(ids))
-	_ = store.SettleStakePotByShares(ctx, h.Pool, stakeBronze, ids, placeIDs, nums, len(ids), isBot)
+	if len(nums) == 0 {
+		return
+	}
+	// Как SettleStakePotByShares: лишние доли → 1-му месту.
+	shareNums := append([]int(nil), nums...)
+	if len(placeIDs) < len(shareNums) {
+		extra := 0
+		for i := len(placeIDs); i < len(shareNums); i++ {
+			extra += shareNums[i]
+		}
+		shareNums = shareNums[:len(placeIDs)]
+		shareNums[0] += extra
+	}
+	pot := stakeBronze * len(ids)
+	denom := len(ids)
+	credits := make([]int, len(placeIDs))
+	paidTotal := 0
+	for i := range placeIDs {
+		if i >= len(shareNums) {
+			break
+		}
+		credits[i] = pot * shareNums[i] / denom
+		paidTotal += credits[i]
+	}
+	// Остаток от целочисленного деления — первому месту (человеку).
+	if rem := pot - paidTotal; rem > 0 && len(credits) > 0 {
+		for i, pid := range placeIDs {
+			if isBot(pid) {
+				continue
+			}
+			credits[i] += rem
+			break
+		}
+	}
+	for i, pid := range placeIDs {
+		h.durakPayCreditDelta(ctx, gameID, pid, credits[i])
+	}
 }
 
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {

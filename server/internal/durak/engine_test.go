@@ -56,7 +56,7 @@ func TestAttackDefendBito(t *testing.T) {
 		t.Fatalf("attack: %v", err)
 	}
 	if st.Phase != PhaseDefend {
-		t.Fatalf("phase = %v", st.Phase)
+		t.Fatalf("phase = %v, want defend", st.Phase)
 	}
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
@@ -246,6 +246,9 @@ func TestAttackManySameRank(t *testing.T) {
 		t.Fatalf("table = %d, want 2", len(st.Table))
 	}
 	if st.Phase != PhaseDefend {
+		t.Fatalf("phase = %v, want defend", st.Phase)
+	}
+	if st.Phase != PhaseDefend {
 		t.Fatalf("phase = %v", st.Phase)
 	}
 	// Во время защиты можно подкинуть карту того же ранга (пачка throw_in).
@@ -387,6 +390,12 @@ func TestRefillAfterTakeThreePlayers(t *testing.T) {
 	}
 	if err := st.Done(0); err != nil {
 		t.Fatalf("Done: %v", err)
+	}
+	if st.Phase != PhaseTakeReveal {
+		t.Fatalf("phase=%s want take_reveal", st.Phase)
+	}
+	if err := st.FinishTakeReveal(); err != nil {
+		t.Fatalf("FinishTakeReveal: %v", err)
 	}
 	// Защитник взял → ход следующему (c=2).
 	if st.AttackerIndex != 2 {
@@ -553,9 +562,12 @@ func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
 			t.Fatalf("throw %v: %v", c, err)
 		}
 	}
-	// 4 шестёрки, больше того же ранга нет → авто defend (слот 5 свободен, но нечем).
+	// 4 шестёрки, больше того же ранга нет → пауза подкида, затем defend.
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase=%s want defend when no more same rank", st.Phase)
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after throw reveal", st.Phase)
 	}
 	if len(st.Table) != 4 {
 		t.Fatalf("table=%d want 4", len(st.Table))
@@ -598,6 +610,9 @@ func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
 	}
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase=%s want defend after hitting first-round cap", st.Phase)
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after throw reveal", st.Phase)
 	}
 	st.Phase = PhaseThrowIn
 	st.ThrowerIndex = 0
@@ -776,6 +791,12 @@ func TestTakeAndFinish(t *testing.T) {
 	if err := st.Take(1); err != nil {
 		t.Fatalf("take: %v", err)
 	}
+	if st.Phase != PhaseTakeReveal {
+		t.Fatalf("phase=%s want take_reveal after take", st.Phase)
+	}
+	if err := st.FinishTakeReveal(); err != nil {
+		t.Fatalf("FinishTakeReveal: %v", err)
+	}
 	if st.Hands[1][0].Rank != 6 && st.Hands[1][1].Rank != 11 {
 		// после сортировки: 6D 11H
 		t.Logf("hand after take: %v", st.Hands[1])
@@ -819,9 +840,18 @@ func TestThrowInAfterTake(t *testing.T) {
 	if err := st.Attack(0, Card{9, Diamonds}); err != nil {
 		t.Fatalf("throw-in after take: %v", err)
 	}
-	// Больше подкидывать нечего (осталась 10♣) — авто-Done / взятие.
+	// Больше подкидывать нечего — пауза показа стола, затем взятие.
+	if st.Phase != PhaseTakeReveal {
+		t.Fatalf("phase after throw-in=%v, want take_reveal", st.Phase)
+	}
+	if len(st.Table) == 0 {
+		t.Fatalf("table should stay visible during take_reveal")
+	}
+	if err := st.FinishTakeReveal(); err != nil {
+		t.Fatalf("FinishTakeReveal: %v", err)
+	}
 	if st.Phase != PhaseAttack {
-		t.Fatalf("phase after throw-in=%v, want attack (auto done)", st.Phase)
+		t.Fatalf("phase after reveal=%v, want attack", st.Phase)
 	}
 	if len(st.Table) != 0 {
 		t.Fatalf("table should be clear")
@@ -1154,6 +1184,9 @@ func TestThrowInDoneWhileMoreCardsLeft(t *testing.T) {
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase=%s want defend after Все", st.Phase)
 	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after throw reveal", st.Phase)
+	}
 	if got := st.UndefendedIndex(); got < 0 {
 		t.Fatal("table must have undefended attacks for defender")
 	}
@@ -1223,9 +1256,10 @@ func TestThrowInAutoFinishWhenNoMoreCards(t *testing.T) {
 		t.Fatalf("phase=%s want defend (auto finish, no more 6s)", st.Phase)
 	}
 	if st.LegalDefendCards(1) == nil {
-		t.Fatal("defender should act immediately")
+		t.Fatal("defender should act after throw-in")
 	}
 }
+
 
 // Если атакующему нечего подкинуть после отбоя — авто-пас, ход сразу третьему с картами.
 func TestAutoSkipThrowerWithoutMatchingCards(t *testing.T) {
@@ -1263,7 +1297,7 @@ func TestAutoSkipThrowerWithoutMatchingCards(t *testing.T) {
 	}
 }
 
-// После «Беру», если никому нечего подкинуть — сразу забираем стол (без фазы «Подкид»).
+// После «Беру», если никому нечего подкинуть — пауза показа стола, затем взятие.
 func TestTakeAutoResolveWhenNothingToThrow(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
@@ -1289,8 +1323,17 @@ func TestTakeAutoResolveWhenNothingToThrow(t *testing.T) {
 	if err := st.Take(1); err != nil {
 		t.Fatalf("take: %v", err)
 	}
+	if st.Phase != PhaseTakeReveal {
+		t.Fatalf("phase=%s want take_reveal", st.Phase)
+	}
+	if len(st.Table) == 0 {
+		t.Fatalf("table should stay during take_reveal")
+	}
+	if err := st.FinishTakeReveal(); err != nil {
+		t.Fatalf("FinishTakeReveal: %v", err)
+	}
 	if st.Phase != PhaseAttack {
-		t.Fatalf("phase=%s want attack (auto resolve take)", st.Phase)
+		t.Fatalf("phase=%s want attack after reveal", st.Phase)
 	}
 	if len(st.Table) != 0 {
 		t.Fatalf("table should be cleared, got %d", len(st.Table))

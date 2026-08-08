@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
@@ -4024,13 +4025,29 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
 	}
-	if markForUserID(m, userID.String()) == "" {
+	gt := strings.TrimSpace(m["game_type"])
+	if gt == "" {
+		gt = "tictactoe"
+	}
+	inGame := false
+	if gt == durakGameType {
+		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
+			if p == userID.String() {
+				inGame = true
+				break
+			}
+		}
+	} else {
+		inGame = markForUserID(m, userID.String()) != ""
+	}
+	if !inGame {
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
 	}
 	return map[string]any{
-		"game_id":  gameID,
-		"lobby_id": m["lobby_id"],
+		"game_id":   gameID,
+		"lobby_id":  m["lobby_id"],
+		"game_type": gt,
 	}
 }
 
@@ -4087,6 +4104,20 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				}
 				if !inGame {
 					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if st, serr := durak.Decode(m["state"]); serr == nil {
+					idx := st.PlayerIndex(userID.String())
+					// Вышел «в ноль» или сдался — observation, не active.
+					if idx >= 0 && !st.IsAlive(idx) {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+						h.promoteDurakFinishedPlayers(ctx, gameID, m, st)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": durakGameType,
+						}
+					}
 				} else {
 					active = map[string]any{
 						"type":      "game",

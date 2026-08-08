@@ -262,9 +262,15 @@ class DurakGameView {
   /// Пауза после полного отбоя, когда подкидывать нечего (стол ещё на экране).
   bool get isBitoReveal => phase == 'bito_reveal';
 
+  /// Пауза перед взятием — стол на экране, затем карты защитнику.
+  bool get isTakeReveal => phase == 'take_reveal';
+
+  /// Пауза показа стола (бито или перед взятием).
+  bool get isTableReveal => isBitoReveal || isTakeReveal;
+
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
-    if (isOver || iAmEliminated || iAmFinished || isBitoReveal) return false;
+    if (isOver || iAmEliminated || iAmFinished || isTableReveal) return false;
     if (turnActorIdx >= 0) return turnActorIdx == myIndex;
     if (phase == 'defend') return defenderIndex == myIndex;
     return attackerIndex == myIndex;
@@ -272,7 +278,7 @@ class DurakGameView {
 
   /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
-    if (isOver || iAmEliminated || iAmFinished || isBitoReveal) return false;
+    if (isOver || iAmEliminated || iAmFinished || isTableReveal) return false;
     if (defenderIndex == myIndex && phase == 'defend') return true;
     if (canThrowIn || legalAttack.isNotEmpty) return true;
     if (phase == 'defend') {
