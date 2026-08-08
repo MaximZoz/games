@@ -968,6 +968,10 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
 		return
 	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
 	state, err := durak.Decode(m["state"])
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
@@ -978,23 +982,52 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 		WriteErr(w, r, http.StatusForbidden, "not a player")
 		return
 	}
-	state.Forfeit(idx)
+	if state.IsEliminated(idx) {
+		WriteErr(w, r, http.StatusBadRequest, "already forfeited")
+		return
+	}
+	continues := state.Eliminate(idx)
 	encoded, _ := durak.Encode(state)
-	h.Rdb.HSet(ctx, "game:"+gameID,
-		"state", encoded,
-		"status", durakStatusOver,
-		"forfeit", "1",
-		"loser", state.PlayerIDs[state.LoserIndex],
-	)
 	humans := durakHumans(m)
+	if continues {
+		// Как в крестиках multi: партия идёт, сдавшийся → observation.
+		fields := []any{"state", encoded, "forfeit", "1"}
+		if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
+			fields = append(fields,
+				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+				"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+			)
+		}
+		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+		moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+		h.broadcast(humans, map[string]any{
+			"type":      "game_state",
+			"game_id":   gameID,
+			"game_type": durakGameType,
+			"forfeit":   true,
+			"eliminated": true,
+			"left_user_id": userID.String(),
+		})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"ok": true, "status": gameStatusActive, "eliminated": true, "forfeit": true,
+		})
+		return
+	}
+	fields := []any{"state", encoded, "status", durakStatusOver, "forfeit", "1"}
+	if state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
+		fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.broadcast(humans, map[string]any{
 		"type":      "game_state",
 		"game_id":   gameID,
 		"game_type": durakGameType,
+		"forfeit":   true,
 	})
 	h.onDurakGameFinished(ctx, gameID, m, state)
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": durakStatusOver, "forfeit": true})
 }
 
 // ---- Ничья (только 1×1) ----
@@ -1294,6 +1327,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"turn_actor_idx":  durakTurnActorIdx(s),
 		"loser_index":     s.LoserIndex,
 		"finished":        s.FinishedIndices,
+		"eliminated":      s.EliminatedIndices,
 		"turn_time_sec":   turnT,
 		"turn_deadline":   turnDeadline,
 		"stake_bronze":    func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
@@ -1305,7 +1339,7 @@ func durakTurnActorIdx(state *durak.State) int {
 	switch state.Phase {
 	case durak.PhaseDefend:
 		return state.DefenderIndex()
-	case durak.PhaseAttackFollow, durak.PhaseTakeFollow:
+	case durak.PhaseThrowIn, durak.PhaseAttackFollow, durak.PhaseTakeFollow:
 		if state.ThrowerIndex >= 0 && state.ThrowerIndex < len(state.PlayerIDs) {
 			return state.ThrowerIndex
 		}
@@ -1353,10 +1387,10 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if timedOutIdx < 0 || timedOutIdx >= len(state.PlayerIDs) {
 		return
 	}
-	// Вдогонку: по таймауту атакующего просто завершаем взятие, без сдачи.
-	if state.Phase == durak.PhaseTakeFollow {
+	// Пачка подкида («Все») или вдогонка после «Беру»: по таймауту — Done, без сдачи.
+	if state.Phase == durak.PhaseTakeFollow || state.Phase == durak.PhaseThrowIn {
 		if err := state.Done(timedOutIdx); err != nil {
-			_ = state.Done(state.AttackerIndex)
+			_ = state.Done(state.ThrowerIndex)
 		}
 		encoded, err := durak.Encode(state)
 		if err != nil {
@@ -1387,9 +1421,35 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		}
 		return
 	}
-	state.Forfeit(timedOutIdx)
+	continues := state.Eliminate(timedOutIdx)
 	encoded, err := durak.Encode(state)
 	if err != nil {
+		return
+	}
+	humans := durakHumans(fresh)
+	if continues {
+		fields := []any{"state", encoded, "timeout", "1"}
+		if turnT, e := strconv.Atoi(fresh["turn_time_sec"]); e == nil && turnT > 0 {
+			fields = append(fields,
+				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+				"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+			)
+		}
+		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+		h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+		if timedOutIdx >= 0 && timedOutIdx < len(state.PlayerIDs) {
+			if u, err := uuid.Parse(state.PlayerIDs[timedOutIdx]); err == nil && !isBot(state.PlayerIDs[timedOutIdx]) {
+				moveActiveToObserving(ctx, h.Rdb, u, gameID)
+			}
+		}
+		h.broadcast(humans, map[string]any{
+			"type":       "game_state",
+			"game_id":    gameID,
+			"game_type":  durakGameType,
+			"timeout":    true,
+			"eliminated": true,
+			"status":     gameStatusActive,
+		})
 		return
 	}
 	fields := []any{
@@ -1402,8 +1462,6 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-
-	humans := durakHumans(fresh)
 	h.broadcast(humans, map[string]any{
 		"type":      "game_state",
 		"game_id":   gameID,
@@ -1464,7 +1522,8 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	h.recordDurakGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
 }
 
-// settleDurakCoins — тот же банк, что в крестиках (SettleStakePot): stake×N победителям.
+// settleDurakCoins — банк stake×N, как в крестиках (SettleStakePot).
+// Выбывшие сдачей долю не получают; при одном победителе — весь банк ему.
 func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int) {
 	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1488,10 +1547,13 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 	}
 	winners := make([]string, 0, len(ids)-1)
 	for i, pid := range ids {
-		if i == state.LoserIndex {
+		if i == state.LoserIndex || state.IsEliminated(i) {
 			continue
 		}
 		winners = append(winners, pid)
+	}
+	if len(winners) == 0 {
+		return
 	}
 	// 1×1 vs бот: человек проиграл — без выплат; победил — банк stake×2.
 	if len(ids) == 2 {
@@ -1505,7 +1567,9 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 			return
 		}
 	}
-	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, winners, false, isBot)
+	// Как multi-крестики: банк stake×N целиком одному победителю
+	// (выбывшие сдачей уже отфильтрованы; при нескольких вышедших — первый).
+	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winners[0]}, false, isBot)
 }
 
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {

@@ -141,6 +141,7 @@ class DurakGameView {
     required this.legalDefend,
     required this.loserIndex,
     required this.finished,
+    this.eliminated = const [],
     required this.turnTimeSec,
     required this.turnDeadline,
     required this.stakeBronze,
@@ -190,6 +191,9 @@ class DurakGameView {
   final int turnActorIdx;
   final int loserIndex;
   final List<int> finished;
+
+  /// Сдались / выбыли (наблюдатели) — без доли банка.
+  final List<int> eliminated;
   final int turnTimeSec;
   final int turnDeadline;
   final int stakeBronze;
@@ -214,9 +218,16 @@ class DurakGameView {
 
   bool get isOver => status != 'active';
 
+  bool isEliminated(int idx) => eliminated.contains(idx);
+
+  bool get iAmEliminated => myIndex >= 0 && isEliminated(myIndex);
+
+  /// Число победителей для банка: как в крестиках — один забирает весь pot.
+  int get stakeWinnerCount => 1;
+
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
-    if (isOver) return false;
+    if (isOver || iAmEliminated) return false;
     if (turnActorIdx >= 0) return turnActorIdx == myIndex;
     if (phase == 'defend') return defenderIndex == myIndex;
     return attackerIndex == myIndex;
@@ -224,12 +235,13 @@ class DurakGameView {
 
   /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
-    if (isOver) return false;
+    if (isOver || iAmEliminated) return false;
     if (defenderIndex == myIndex && phase == 'defend') return true;
     if (canThrowIn || legalAttack.isNotEmpty) return true;
     if (phase == 'defend') {
       return defenderIndex == myIndex || attackerIndex == myIndex;
     }
+    if (phase == 'throw_in') return throwerIndex == myIndex || canThrowIn;
     if (phase == 'take_follow') return attackerIndex == myIndex || canThrowIn;
     return attackerIndex == myIndex;
   }
@@ -306,6 +318,10 @@ class DurakGameView {
       turnActorIdx: (json['turn_actor_idx'] as num?)?.toInt() ?? -1,
       loserIndex: loserIdx,
       finished: (json['finished'] as List?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
+      eliminated: (json['eliminated'] as List?)
               ?.map((e) => (e as num).toInt())
               .toList() ??
           const [],

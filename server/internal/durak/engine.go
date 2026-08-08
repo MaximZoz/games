@@ -30,7 +30,8 @@ type TurnPhase string
 const (
 	PhaseAttack       TurnPhase = "attack"        // атакующий кладёт первую карту
 	PhaseDefend       TurnPhase = "defend"        // защитник бьёт
-	PhaseAttackFollow TurnPhase = "attack_follow" // атакующий подкидывает или «Бито»
+	PhaseThrowIn      TurnPhase = "throw_in"      // очередь подкида: кладёт карты, затем «Все»
+	PhaseAttackFollow TurnPhase = "attack_follow" // подкид после полного отбоя или «Бито»
 	PhaseTakeFollow   TurnPhase = "take_follow"   // защитник берёт; атакующий может подкинуть вдогонку
 )
 
@@ -68,8 +69,10 @@ type State struct {
 
 	Status     Status `json:"status"`
 	LoserIndex int    `json:"loser_index,omitempty"` // «дурак»
-	// Кто уже вышел (руки пусты и колода пуста).
+	// Кто уже вышел успешно (рука пуста, колода пуста) — претендует на банк.
 	FinishedIndices []int `json:"finished_indices,omitempty"`
+	// Кто сдался / выбыл — наблюдатель, долю банка не получает.
+	EliminatedIndices []int `json:"eliminated_indices,omitempty"`
 
 	// Кто сейчас может подкидывать / жать «Бито» (очередь по часовой).
 	ThrowerIndex int `json:"thrower_index"`
@@ -114,7 +117,31 @@ func (s *State) isAlive(idx int) bool {
 			return false
 		}
 	}
+	for _, e := range s.EliminatedIndices {
+		if e == idx {
+			return false
+		}
+	}
 	return true
+}
+
+// IsEliminated — сдался / выбыл (наблюдатель, без доли банка).
+func (s *State) IsEliminated(idx int) bool {
+	for _, e := range s.EliminatedIndices {
+		if e == idx {
+			return true
+		}
+	}
+	return false
+}
+
+func appendUniqueIndex(dst []int, idx int) []int {
+	for _, x := range dst {
+		if x == idx {
+			return dst
+		}
+	}
+	return append(dst, idx)
 }
 
 func (s *State) aliveCount() int {
@@ -232,9 +259,9 @@ func (s *State) CanThrowIn(idx int) bool {
 	}
 	switch s.Phase {
 	case PhaseDefend:
-		// Пока защитник бьёт — подкидывает только атакующий (первый в очереди).
-		return idx == s.AttackerIndex
-	case PhaseAttackFollow, PhaseTakeFollow:
+		// Пока защитник бьёт — подкид может начать только атакующий (первая очередь).
+		return idx == s.AttackerIndex && len(s.legalThrowInCards(idx)) > 0
+	case PhaseThrowIn, PhaseAttackFollow, PhaseTakeFollow:
 		return idx == s.ThrowerIndex && len(s.legalThrowInCards(idx)) > 0
 	default:
 		return false
@@ -430,12 +457,14 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if !s.CanThrowIn(playerIdx) {
 		return ErrNotYourTurn
 	}
-	// Подкид: во время защиты, после отбоя, или вдогонку после «Беру».
+	// Подкид: защита, пачка throw_in, после отбоя, или вдогонку после «Беру».
 	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow &&
-		s.Phase != PhaseDefend && s.Phase != PhaseTakeFollow {
+		s.Phase != PhaseDefend && s.Phase != PhaseThrowIn &&
+		s.Phase != PhaseTakeFollow {
 		return ErrNotYourTurn
 	}
-	if (s.Phase == PhaseDefend || s.Phase == PhaseTakeFollow) && len(s.Table) == 0 {
+	if (s.Phase == PhaseDefend || s.Phase == PhaseThrowIn ||
+		s.Phase == PhaseTakeFollow) && len(s.Table) == 0 {
 		return ErrBadAttack
 	}
 	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
@@ -475,21 +504,48 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
-	// После подкида снова бьёт защитник; очередь подкида с атакующего.
-	if s.Phase != PhaseTakeFollow {
+	// Первая атака на пустой стол — сразу бьёт защитник.
+	if len(s.Table) == len(cards) {
 		s.Phase = PhaseDefend
 		s.resetThrowerToAttacker()
 		return nil
 	}
-	// Вдогонку: после подкида очередь на текущем; если карт больше нет — авто дальше.
-	s.clearPassed()
-	return s.skipThrowersWithoutCards()
+	if s.Phase == PhaseTakeFollow {
+		// Вдогонку: очередь на текущем; если карт больше нет — авто дальше.
+		s.clearPassed()
+		return s.skipThrowersWithoutCards()
+	}
+	// Подкид пачкой: ход остаётся у подкидывающего до «Все».
+	s.Phase = PhaseThrowIn
+	s.ThrowerIndex = playerIdx
+	// Нечего больше класть / стол заполнен — сразу отдаём защитнику (без кнопки «Все»).
+	if len(s.legalThrowInCards(playerIdx)) == 0 {
+		return s.finishThrowIn()
+	}
+	return nil
+}
+
+// finishThrowIn — подкидывающий закончил пачку («Все» или авто) → бьёт защитник.
+func (s *State) finishThrowIn() error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if len(s.Table) == 0 {
+		s.Phase = PhaseAttack
+		s.ThrowerIndex = s.AttackerIndex
+		return nil
+	}
+	s.Phase = PhaseDefend
+	return nil
 }
 
 // Defend — отбить неотбитую пару. pairIndex < 0 — первая, которую карта реально бьёт.
 func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
+	}
+	if s.Phase != PhaseDefend {
+		return ErrNotYourTurn
 	}
 	if playerIdx != s.DefenderIndex() {
 		return ErrNotYourTurn
@@ -570,6 +626,9 @@ func (s *State) Transfer(playerIdx int, card Card) error {
 	if s.Mode != ModePerevodnoi {
 		return ErrCannotTransfer
 	}
+	if s.Phase != PhaseDefend {
+		return ErrNotYourTurn
+	}
 	def := s.DefenderIndex()
 	if playerIdx != def {
 		return ErrNotYourTurn
@@ -600,6 +659,9 @@ func (s *State) Pass(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
 	}
+	if s.Phase == PhaseThrowIn {
+		return s.Done(playerIdx)
+	}
 	if s.Phase == PhaseAttackFollow {
 		return s.SayBito(playerIdx)
 	}
@@ -621,7 +683,7 @@ func (s *State) Take(playerIdx int) error {
 	if len(s.Table) == 0 {
 		return ErrCannotTake
 	}
-	if s.Phase == PhaseTakeFollow {
+	if s.Phase == PhaseTakeFollow || s.Phase == PhaseThrowIn {
 		return ErrCannotTake
 	}
 	// Рука пуста: это не «взять», а закрытие раунда (бита + возврат неотбитых).
@@ -634,16 +696,19 @@ func (s *State) Take(playerIdx int) error {
 	return s.beginThrowerQueue()
 }
 
-// Done — текущий подкидывающий закончил вдогонку → следующий или взятие.
+// Done — «Все» в пачке подкида → защитник; или конец вдогонки после «Беру».
 func (s *State) Done(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
 	}
-	if s.Phase != PhaseTakeFollow {
-		return ErrCannotDone
-	}
 	if playerIdx != s.ThrowerIndex {
 		return ErrNotYourTurn
+	}
+	if s.Phase == PhaseThrowIn {
+		return s.finishThrowIn()
+	}
+	if s.Phase != PhaseTakeFollow {
+		return ErrCannotDone
 	}
 	return s.advanceThrowerOrFinish()
 }
@@ -769,15 +834,52 @@ func (s *State) resolveBito() error {
 	return nil
 }
 
-// Forfeit — сдача: игрок [playerIdx] становится «дураком» (loser), даже если
-// колода не пуста. Простое правило для MVP; при 3+ игроках выходит и партия
-// продолжается — но пока трактуем как конец партии в 2 игрока.
+// Forfeit — сдача. При 2 живых — сразу конец (сдавшийся = дурак).
+// При 3+ — выбывание (наблюдатель), партия продолжается между оставшимися
+// (как eliminated_marks в крестиках).
 func (s *State) Forfeit(playerIdx int) {
+	_ = s.Eliminate(playerIdx)
+}
+
+// Eliminate — вывести игрока из партии. continues=true, если игра ещё идёт.
+func (s *State) Eliminate(playerIdx int) (continues bool) {
 	if s.Status != StatusActive {
-		return
+		return false
 	}
-	s.Status = StatusOver
-	s.LoserIndex = playerIdx
+	if playerIdx < 0 || playerIdx >= len(s.Hands) || !s.isAlive(playerIdx) {
+		return s.Status == StatusActive
+	}
+	s.EliminatedIndices = appendUniqueIndex(s.EliminatedIndices, playerIdx)
+	s.Hands[playerIdx] = nil
+	// Стол сбрасываем в отбой — раунд с выбывшим не продолжаем.
+	if len(s.Table) > 0 {
+		for _, p := range s.Table {
+			s.BitoPile = append(s.BitoPile, p.Attack)
+			if p.Defense != nil {
+				s.BitoPile = append(s.BitoPile, *p.Defense)
+			}
+		}
+		s.Table = nil
+	}
+	s.clearPassed()
+	if s.aliveCount() <= 1 {
+		s.Status = StatusOver
+		if s.aliveCount() == 1 {
+			// Последний сдавшийся при двух живых — «дурак»; оставшийся забирает банк.
+			s.LoserIndex = playerIdx
+		} else {
+			s.LoserIndex = -1
+		}
+		return false
+	}
+	if !s.isAlive(s.AttackerIndex) {
+		s.AttackerIndex = s.nextAliveAfter(playerIdx)
+	}
+	s.ThrowerIndex = s.AttackerIndex
+	s.Phase = PhaseAttack
+	s.LastWasTake = false
+	s.checkOver()
+	return s.Status == StatusActive
 }
 
 // ---- Вспомогательные ----
@@ -889,7 +991,7 @@ func (s *State) LegalDefendCards(idx int) []Card {
 	if s.Status != StatusActive {
 		return nil
 	}
-	if s.Phase == PhaseTakeFollow {
+	if s.Phase != PhaseDefend {
 		return nil
 	}
 	if idx != s.DefenderIndex() {
@@ -913,7 +1015,7 @@ func (s *State) LegalTransferCards(idx int) []Card {
 	if s.Status != StatusActive || s.Mode != ModePerevodnoi {
 		return nil
 	}
-	if s.Phase == PhaseTakeFollow {
+	if s.Phase != PhaseDefend {
 		return nil
 	}
 	if idx != s.DefenderIndex() {

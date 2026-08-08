@@ -13,6 +13,7 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -921,6 +922,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           view.legalAttack.isNotEmpty) &&
       (view.phase == 'attack' ||
           view.phase == 'attack_follow' ||
+          view.phase == 'throw_in' ||
           view.phase == 'defend' ||
           view.phase == 'take_follow');
 
@@ -1694,6 +1696,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       view.phase == 'take_follow' &&
       view.table.isNotEmpty;
 
+  /// «Все» — закончить пачку подкида (только если ещё есть что кинуть).
+  bool _canThrowAll(DurakGameView view) =>
+      !view.isOver &&
+      !_busy &&
+      !_cardFlightActive &&
+      _isCurrentThrower(view) &&
+      view.phase == 'throw_in' &&
+      view.legalAttack.isNotEmpty;
+
   /// Пас = то же «Бито»/«Готово» для текущего в очереди (сервер advance).
   bool _canPass(DurakGameView view) => false;
 
@@ -1720,6 +1731,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _confirmTakeDone() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || !_canDone(view)) return;
+    await _sendDone();
+  }
+
+  /// «Все» — отдать стол защитнику после пачки подкида.
+  Future<void> _confirmThrowAll() async {
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (view == null || !_canThrowAll(view)) return;
+    await _sendDone();
+  }
+
+  Future<void> _sendDone() async {
     try {
       await ref
           .read(durakRepositoryProvider)
@@ -3328,10 +3350,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  /// Флажок «сдаться» — остаёмся на экране итога (как в крестиках).
+  /// Флажок «сдаться» — как в крестиках: при multi → observation, иначе итог.
   Future<void> _confirmSurrender() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
-    if (view == null || view.isOver) return;
+    if (view == null || view.isOver || view.iAmEliminated) return;
     final ok = await confirmGameActionDialog(
       context: context,
       title: context.l10n.gameSurrenderTitle,
@@ -3340,7 +3362,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       confirmLabel: context.l10n.gameSurrender,
     );
     if (!ok || !mounted) return;
-    // Не выходим: после forfeit покажем итог + «Повторить» / «Другой соперник».
     unawaited(() async {
       try {
         clearBlockingGamePin(ref, ifGameId: widget.gameId);
@@ -3348,6 +3369,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       } catch (_) {}
       if (!mounted) return;
       ref.invalidate(durakGameProvider(widget.gameId));
+      try {
+        final next = await ref.read(durakGameProvider(widget.gameId).future);
+        final multi = next.playerIds.length > 2;
+        if (multi && !next.isOver) {
+          enterGameObservation(ref, widget.gameId);
+        }
+      } catch (_) {}
       unawaited(ref.read(activeGameProvider.notifier).refresh());
     }());
   }
@@ -3355,9 +3383,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Крестик / свайп — общая логика с крестиками-ноликами: диалог → сдача → /games.
   Future<void> _onClosePressed() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    final eliminated = view?.iAmEliminated == true;
     await handleGameScreenClose(
       context: context,
-      isActive: view != null && !view.isOver,
+      isActive: view != null && !view.isOver && !eliminated,
+      canLeaveFreely: eliminated,
       onLeaveFinished: () async {
         if (!mounted) return;
         _navigateToGames();
@@ -3495,10 +3525,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
       final iWon = !view.isDraw &&
           view.loserIndex >= 0 &&
-          view.loserIndex != view.myIndex;
+          view.loserIndex != view.myIndex &&
+          !view.iAmEliminated;
       final playersN = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-      final winnersN = (playersN - 1).clamp(1, playersN);
-      // Как в крестиках: банк stake×N, делится между победителями.
+      // Как в крестиках: при одном победителе — весь банк stake×N.
+      final winnersN = view.stakeWinnerCount;
       final netProfit = view.isDraw
           ? 0
           : (iWon
@@ -3751,7 +3782,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final gameAsync = ref.watch(durakGameProvider(widget.gameId));
     final view = gameAsync.valueOrNull;
     if (view != null) _maybeSettleGame(view);
-    final showSurrender = view != null && !view.isOver;
+    final showSurrender =
+        view != null && !view.isOver && !view.iAmEliminated;
     final isMulti = (view?.playerIds.length ?? 0) > 2;
     final topPad = MediaQuery.paddingOf(context).top;
     final groupChatId = (view?.chatId ?? '').trim();
@@ -3981,6 +4013,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showTake = _canTake(view);
     final showBito = _canBito(view);
     final showDone = _canDone(view);
+    final showThrowAll = _canThrowAll(view);
     final showPass = _canPass(view);
 
     return Padding(
@@ -4204,6 +4237,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     child: (showTake ||
                                 showBito ||
                                 showDone ||
+                                showThrowAll ||
                                 showPass) &&
                             !_holdingFanCard &&
                             !_cardFlightActive
@@ -4212,7 +4246,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                 ? 'Взять'
                                 : showPass
                                     ? 'Пас'
-                                    : (showDone ? 'Готово' : 'Бито'),
+                                    : showThrowAll
+                                        ? 'Все'
+                                        : (showDone ? 'Готово' : 'Бито'),
                             icon: showTake
                                 ? Icons.south_rounded
                                 : showPass
@@ -4222,7 +4258,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                 ? _take
                                 : showPass
                                     ? _pass
-                                    : (showDone ? _confirmTakeDone : _bito),
+                                    : showThrowAll
+                                        ? _confirmThrowAll
+                                        : (showDone ? _confirmTakeDone : _bito),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -4335,7 +4373,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final oppId = view.playerIds[idx];
     final isBot = oppId.startsWith('bot:');
     final meta = view.playerMeta(oppId);
-    final finished = view.finished.contains(idx);
+    final finished =
+        view.finished.contains(idx) || view.eliminated.contains(idx);
     final actor = view.turnActorIdx >= 0 ? view.turnActorIdx : view.attackerIndex;
     final theirTurn = !view.isOver && !finished && actor == idx;
     final isDefender = !view.isOver &&
@@ -4352,7 +4391,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } else if (theirTurn) {
       if (view.phase == 'defend' && isDefender) {
         roleLabel = 'Бьёт';
-      } else if (view.phase == 'attack_follow' || view.phase == 'take_follow') {
+      } else if (view.phase == 'attack_follow' ||
+          view.phase == 'take_follow' ||
+          view.phase == 'throw_in') {
         roleLabel = 'Подкид';
       } else {
         roleLabel = 'Ход';
@@ -4831,6 +4872,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         view.attackerIndex == view.myIndex &&
         (view.phase == 'attack' ||
             view.phase == 'attack_follow' ||
+            view.phase == 'throw_in' ||
             view.phase == 'defend' ||
             view.phase == 'take_follow') &&
         !_busy &&
@@ -5154,23 +5196,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _iWon(DurakGameView view) =>
       !view.isDraw &&
       view.loserIndex >= 0 &&
-      view.loserIndex != view.myIndex;
+      view.loserIndex != view.myIndex &&
+      !view.iAmEliminated;
 
   bool _showRewardChip(DurakGameView view) =>
       view.isOver && _iWon(view) && view.stakeBronze > 0;
 
   int _rewardBronze(DurakGameView view) {
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-    final winnersN = (n - 1).clamp(1, n);
     return stakeWinnerNetProfit(
       stake: view.stakeBronze,
       playerCount: n,
-      winnerCount: winnersN,
+      winnerCount: view.stakeWinnerCount,
     );
   }
 
   /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог со сдачей/таймаутом.
   String _turnHint(DurakGameView view) {
+    if (!view.isOver && view.iAmEliminated) {
+      return 'Вы выбыли';
+    }
     if (view.isOver) {
       if (view.isDraw) return context.l10n.gameDraw;
       final isMulti = view.playerIds.length > 2;
@@ -5200,15 +5245,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return context.l10n.gameOpponentWon(opp);
     }
     if (view.phase == 'take_follow') {
-      if (view.attackerIndex == view.myIndex) {
+      if (view.attackerIndex == view.myIndex ||
+          view.throwerIndex == view.myIndex) {
         return 'Подкиньте вдогонку или нажмите «Готово»';
       }
       return 'Соперник может подкинуть вдогонку';
     }
+    if (view.phase == 'throw_in') {
+      if (view.throwerIndex == view.myIndex) {
+        return view.legalAttack.isNotEmpty
+            ? 'Подкиньте карты или нажмите «Все»'
+            : 'Ход защитника';
+      }
+      return 'Соперник подкидывает';
+    }
     if (view.isMyTurn) return context.l10n.gamesMyTurn;
     final turnIdx = view.phase == 'defend'
         ? view.defenderIndex
-        : view.attackerIndex;
+        : (view.turnActorIdx >= 0 ? view.turnActorIdx : view.attackerIndex);
     final turnId = (turnIdx >= 0 && turnIdx < view.playerIds.length)
         ? view.playerIds[turnIdx]
         : '';

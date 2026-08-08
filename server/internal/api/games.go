@@ -3676,30 +3676,6 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	return gid
 }
 
-// moveActiveToObserving — выбывание в multi: active снимаем, observation держим до конца партии.
-func moveActiveToObserving(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
-	clearUserActiveGame(ctx, rdb, userID)
-	setUserObservingGame(ctx, rdb, userID, gameID)
-}
-
-// clearUsersFinishedGame — снять active/observation/lobby по оконченной партии.
-func clearUsersFinishedGame(ctx context.Context, rdb *redis.Client, users []uuid.UUID, gameID string) {
-	if rdb == nil {
-		return
-	}
-	lobbyID := ""
-	if gm, _ := rdb.HGetAll(ctx, "game:"+gameID).Result(); len(gm) > 0 {
-		lobbyID = strings.TrimSpace(gm["lobby_id"])
-	}
-	for _, u := range users {
-		clearUserActiveGame(ctx, rdb, u)
-		clearUserObservingGameIfMatch(ctx, rdb, u, gameID)
-		if lobbyID != "" {
-			clearUserActiveLobbyIfMatch(ctx, rdb, u, lobbyID)
-		}
-	}
-}
-
 // onGameFinished — монеты + счётчик партий/достижения для людей (не ботов) +
 // запись результата в историю game_results (для статистики и head-to-head).
 func (h *GamesHandler) onGameFinished(

@@ -239,10 +239,13 @@ func TestAttackManySameRank(t *testing.T) {
 	if st.Phase != PhaseDefend {
 		t.Fatalf("phase = %v", st.Phase)
 	}
-	// Во время защиты можно подкинуть карту того же ранга.
-	st.Hands[0] = append(st.Hands[0], Card{9, Diamonds})
+	// Во время защиты можно подкинуть карту того же ранга (пачка throw_in).
+	st.Hands[0] = append(st.Hands[0], Card{9, Diamonds}, Card{9, Clubs})
 	if err := st.AttackMany(0, []Card{{9, Diamonds}}); err != nil {
 		t.Fatalf("throw-in during defend: %v", err)
+	}
+	if st.Phase != PhaseThrowIn {
+		t.Fatalf("phase after throw-in=%v want throw_in", st.Phase)
 	}
 	if len(st.Table) != 3 {
 		t.Fatalf("table after throw-in = %d, want 3", len(st.Table))
@@ -746,6 +749,123 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 	}
 	if err := st.Attack(2, Card{7, Diamonds}); err != nil {
 		t.Fatalf("right throw-in: %v", err)
+	}
+}
+
+// Подкид пачкой с остатком карт: «Все» отдаёт ход защитнику.
+func TestThrowInDoneWhileMoreCardsLeft(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Hearts}, {6, Diamonds}, {6, Clubs}, {9, Hearts}},
+			{{7, Hearts}, {10, Clubs}, {11, Clubs}, {12, Clubs}, {8, Diamonds}, {7, Diamonds}},
+		},
+		Table: []Pair{
+			{Attack: Card{6, Spades}, Defense: &Card{Rank: 7, Suit: Spades}},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseAttackFollow,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{6, Hearts}); err != nil {
+		t.Fatalf("throw1: %v", err)
+	}
+	if st.Phase != PhaseThrowIn {
+		t.Fatalf("phase=%s want throw_in", st.Phase)
+	}
+	if st.LegalDefendCards(1) != nil {
+		t.Fatal("defender must wait until Все")
+	}
+	if err := st.Attack(0, Card{6, Diamonds}); err != nil {
+		t.Fatalf("throw2: %v", err)
+	}
+	if st.Phase != PhaseThrowIn {
+		t.Fatalf("phase=%s want throw_in", st.Phase)
+	}
+	if len(st.LegalAttackCards(0)) == 0 {
+		t.Fatal("want more throw-in cards for Все button")
+	}
+	if err := st.Done(0); err != nil {
+		t.Fatalf("done/Все: %v", err)
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after Все", st.Phase)
+	}
+	if got := st.UndefendedIndex(); got < 0 {
+		t.Fatal("table must have undefended attacks for defender")
+	}
+	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+}
+
+// Сдача при 3 игроках: выбывший — наблюдатель, партия продолжается.
+func TestEliminateContinuesWithThreePlayers(t *testing.T) {
+	st := &State{
+		PlayerIDs:     []string{"a", "b", "c"},
+		Hands:         [][]Card{{{6, Hearts}}, {{7, Hearts}}, {{8, Hearts}}},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if !st.Eliminate(0) {
+		t.Fatal("want continue after first eliminate")
+	}
+	if st.Status != StatusActive {
+		t.Fatalf("status=%s", st.Status)
+	}
+	if !st.IsEliminated(0) {
+		t.Fatal("player 0 must be eliminated")
+	}
+	if st.aliveCount() != 2 {
+		t.Fatalf("alive=%d", st.aliveCount())
+	}
+	// Второй сдаётся — остаётся один победитель.
+	if st.Eliminate(1) {
+		t.Fatal("want game over when one remains")
+	}
+	if st.Status != StatusOver || st.LoserIndex != 1 {
+		t.Fatalf("status=%s loser=%d", st.Status, st.LoserIndex)
+	}
+}
+
+// Нечего больше подкинуть — авто-переход к защитнику без «Все».
+func TestThrowInAutoFinishWhenNoMoreCards(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Hearts}, {9, Clubs}},
+			{{7, Hearts}, {10, Clubs}, {11, Clubs}},
+		},
+		Table: []Pair{
+			{Attack: Card{6, Spades}, Defense: &Card{Rank: 7, Suit: Spades}},
+		},
+		Trump:         Diamonds,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseAttackFollow,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{6, Hearts}); err != nil {
+		t.Fatalf("throw: %v", err)
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend (auto finish, no more 6s)", st.Phase)
+	}
+	if st.LegalDefendCards(1) == nil {
+		t.Fatal("defender should act immediately")
 	}
 }
 
