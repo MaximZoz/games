@@ -4407,13 +4407,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                             !_holdingFanCard &&
                             !_cardFlightActive
                         ? (showTakeReveal || showBitoReveal)
-                            ? _RevealStatusChip(
-                                label: showTakeReveal
+                            // Просто текст (как раньше в статусе), без «кнопки» —
+                            // слот 52px уже зарезервирован, стол/веер не прыгают.
+                            ? Text(
+                                showTakeReveal
                                     ? context.l10n.durakStatusTaking
                                     : context.l10n.durakActionBito,
-                                icon: showTakeReveal
-                                    ? Icons.south_rounded
-                                    : Icons.check_rounded,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
                               )
                             : _PulsingActionButton(
                                 label: showTake
@@ -5593,57 +5598,6 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
             fontSize: 15,
             letterSpacing: 0.2,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Неинтерактивный чип «Беру» / «Бито» в том же слоте, что кнопка действия.
-class _RevealStatusChip extends StatelessWidget {
-  const _RevealStatusChip({
-    required this.label,
-    required this.icon,
-  });
-
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.accentStart, AppColors.accentEnd],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
         ),
       ),
     );
