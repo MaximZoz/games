@@ -245,7 +245,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: duration,
-            curve: Curves.easeOutCubic,
+            curve: kDurakFlyCurve,
             onEnd: () {
               entry.remove();
               if (!completer.isCompleted) completer.complete();
@@ -303,8 +303,10 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     double beginAngle = 0,
     double endAngle = 0,
     VoidCallback? onHandoff,
-    Duration flyDuration = const Duration(milliseconds: 320),
-    int settleMs = 180,
+    Duration flyDuration = const Duration(milliseconds: 300),
+    int settleMs = 120,
+    /// Не ждать опускание peek — следующая карта может стартовать раньше.
+    bool awaitSettle = true,
   }) async {
     if (!mounted || _docking) return;
     _docking = true;
@@ -341,7 +343,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       from: from,
       to: peekRect,
       duration: flyDuration,
-      curve: Curves.easeOutCubic,
+      curve: kDurakFlyCurve,
       faceDown: flipToFace,
       flipToFace: flipToFace,
       beginScale: fromScale,
@@ -365,22 +367,35 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     }
     await WidgetsBinding.instance.endOfFrame;
     ticket.dismiss();
-    await _animatePeekTTo(0, ms: settleMs);
-    if (!mounted || gen != _gestureGen) {
-      _docking = false;
-      return;
+    // Слот свободен сразу после handoff — следующая карта не ждёт settle.
+    _docking = false;
+    final settleGen = gen;
+    Future<void> settle() async {
+      await _animatePeekTTo(0, ms: settleMs, gen: settleGen);
+      if (!mounted || settleGen != _gestureGen) return;
+      // Не затирать peek следующей карты.
+      if (_peekCard != card) return;
+      setState(() {
+        _peekCard = null;
+        _peekT = 0;
+        _hidePeekUnderOverlay = false;
+        _hoverIndex = null;
+      });
+      _syncHolding();
     }
-    setState(() {
-      _peekCard = null;
-      _peekT = 0;
-      _docking = false;
-      _hidePeekUnderOverlay = false;
-      _hoverIndex = null;
-    });
-    _syncHolding();
+
+    if (awaitSettle) {
+      await settle();
+    } else {
+      unawaited(settle());
+    }
   }
 
-  Future<void> _animatePeekTTo(double to, {int ms = 300}) async {
+  Future<void> _animatePeekTTo(
+    double to, {
+    int ms = 260,
+    int? gen,
+  }) async {
     final from = _peekT;
     if ((from - to).abs() < 0.01) {
       _peekT = to;
@@ -390,11 +405,12 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       vsync: this,
       duration: Duration(milliseconds: ms),
     );
-    final curved = CurvedAnimation(parent: ctrl, curve: Curves.easeOutCubic);
+    final curved = CurvedAnimation(parent: ctrl, curve: kDurakLayoutCurve);
     final anim = Tween<double>(begin: from, end: to).animate(curved);
     final completer = Completer<void>();
     void tick() {
       if (!mounted) return;
+      if (gen != null && gen != _gestureGen) return;
       setState(() => _peekT = anim.value);
     }
 
@@ -409,7 +425,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     });
     await ctrl.forward();
     await completer.future;
-    if (mounted) setState(() => _peekT = to);
+    if (!mounted) return;
+    if (gen != null && gen != _gestureGen) return;
+    setState(() => _peekT = to);
   }
 
   void _clearLift({bool keepPointer = false, bool keepHover = false}) {
@@ -1144,14 +1162,14 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     // Peek — без duration; перестановка после сортировки — плавная.
     final animMs =
-        peeking || !widget.animateLayout ? 0 : 280;
+        peeking || !widget.animateLayout ? 0 : 340;
     final left = _cardLeft(i, n, baseSpacing, totalW) + extraX;
     final top = widget.invertFan ? extraY + edgeLift : null;
     final bottom = widget.invertFan ? null : extraY + edgeLift;
     final scaled = AnimatedScale(
       scale: scale,
-      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 220),
-      curve: Curves.easeOutCubic,
+      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 280),
+      curve: kDurakLayoutCurve,
       child: Transform.rotate(
         angle: angle,
         alignment:
@@ -1173,7 +1191,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     return AnimatedPositioned(
       key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
       duration: Duration(milliseconds: animMs),
-      curve: Curves.easeOutCubic,
+      curve: kDurakLayoutCurve,
       left: left,
       top: top,
       bottom: bottom,

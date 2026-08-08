@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- CI: передавать BUILD_ID (git sha) в fly deploy
+- Дурак: плавные анимации без рывков
 
 ## en
 - After leaving, invites go to a new lobby only — not the opponent’s old game
