@@ -442,7 +442,7 @@ class DurakLobbyView {
         ? parsedPlayers
         : [
             for (final id in ids)
-              LobbyPlayer(id: id, displayName: 'Игрок'),
+              LobbyPlayer(id: id, displayName: 'Player'),
           ];
     return DurakLobbyView(
       id: (json['id'] ?? json['lobby_id'] ?? '').toString(),

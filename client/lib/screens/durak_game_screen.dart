@@ -4049,7 +4049,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     child: GameIconWithBadge(
                       icon: Icons.forum_rounded,
                       badge: groupUnread,
-                      tooltip: 'Чат группы',
+                      tooltip: context.l10n.chatGroupTooltip,
                       onPressed: () => _openGroupChat(view),
                     ),
                   ),
@@ -4408,12 +4408,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                             !_cardFlightActive
                         ? _PulsingActionButton(
                             label: showTake
-                                ? 'Взять'
+                                ? context.l10n.durakActionTake
                                 : showPass
-                                    ? 'Пас'
+                                    ? context.l10n.durakActionPass
                                     : showThrowAll
-                                        ? 'Все'
-                                        : (showDone ? 'Готово' : 'Бито'),
+                                        ? context.l10n.durakActionAll
+                                        : (showDone
+                                            ? context.l10n.durakActionDone
+                                            : context.l10n.durakActionBito),
                             icon: showTake
                                 ? Icons.south_rounded
                                 : showPass
@@ -4525,24 +4527,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         view.defenderIndex == idx &&
         view.table.isNotEmpty;
     // После «Беру» у защитника — «Забрал», а не «Отбивается»/«Бьёт».
+    final l10n = context.l10n;
     final String? roleLabel;
     if (!view.isOver &&
         !finished &&
         view.phase == 'take_follow' &&
         view.defenderIndex == idx) {
-      roleLabel = 'Забрал';
+      roleLabel = l10n.durakRoleTook;
     } else if (theirTurn) {
       if (view.phase == 'defend' && isDefender) {
-        roleLabel = 'Бьёт';
+        roleLabel = l10n.durakRoleBeats;
       } else if (view.phase == 'attack_follow' ||
           view.phase == 'take_follow' ||
           view.phase == 'throw_in') {
-        roleLabel = 'Подкид';
+        roleLabel = l10n.durakRoleThrowIn;
       } else {
-        roleLabel = 'Ход';
+        roleLabel = l10n.durakRoleTurn;
       }
     } else if (isDefender) {
-      roleLabel = 'Отбивается';
+      roleLabel = l10n.durakRoleDefends;
     } else {
       roleLabel = null;
     }
@@ -5400,55 +5403,57 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог со сдачей/таймаутом.
   String _turnHint(DurakGameView view) {
+    final l10n = context.l10n;
     if (!view.isOver && view.iAmEliminated) {
-      return 'Вы выбыли';
+      return l10n.gameYouEliminated;
     }
     // Вышел «в ноль», пока остальные ещё играют — сразу победа / место.
     if (!view.isOver && view.iAmFinished) {
       final place = view.myPlace;
-      if (place <= 1) return context.l10n.gameYouWon;
-      return 'Вы заняли $place-е место';
+      if (place <= 1) return l10n.gameYouWon;
+      return l10n.gameYouPlaced(place);
     }
     if (view.isOver) {
-      if (view.isDraw) return context.l10n.gameDraw;
+      if (view.isDraw) return l10n.gameDraw;
       final iWon = _iWon(view);
       final winnerName = _winnerName(view);
       if (iWon && view.myPlace == 1) {
-        if (view.isForfeit) return context.l10n.gameYouWonOpponentForfeit;
-        if (view.isTimeout) return context.l10n.gameYouWonOpponentTimeout;
-        return context.l10n.gameYouWon;
+        if (view.isForfeit) return l10n.gameYouWonOpponentForfeit;
+        if (view.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        return l10n.gameYouWon;
       }
       if (iWon && view.myPlace > 1) {
-        return 'Вы заняли ${view.myPlace}-е место';
+        return l10n.gameYouPlaced(view.myPlace);
       }
       // Проигравший / остальные: «Победил {логин}».
       if (view.isTimeout) {
-        return context.l10n.gameOpponentWonTimeout(winnerName);
+        return l10n.gameOpponentWonTimeout(winnerName);
       }
-      return context.l10n.gameOpponentWon(winnerName);
+      return l10n.gameOpponentWon(winnerName);
     }
     if (view.isBitoReveal) {
-      return 'Бито';
+      return l10n.durakActionBito;
     }
     if (view.isTakeReveal) {
-      return 'Беру';
+      return l10n.durakStatusTaking;
     }
     if (view.phase == 'take_follow') {
       if (view.attackerIndex == view.myIndex ||
           view.throwerIndex == view.myIndex) {
-        return 'Подкиньте вдогонку или нажмите «Готово»';
+        return l10n.durakHintTakeFollow;
       }
-      return 'Соперник может подкинуть вдогонку';
+      return l10n.durakHintOpponentTakeFollow;
     }
     if (view.phase == 'throw_in') {
       if (view.throwerIndex == view.myIndex) {
-        if (view.legalAttack.isEmpty) return 'Ход защитника';
-        final cap = view.firstRound ? ' (макс. 5 в первом отбое)' : '';
-        return 'Подкиньте карты или нажмите «Все»$cap';
+        if (view.legalAttack.isEmpty) return l10n.durakHintDefenderTurn;
+        return view.firstRound
+            ? l10n.durakHintThrowInFirst
+            : l10n.durakHintThrowIn;
       }
-      return 'Соперник подкидывает';
+      return l10n.durakHintOpponentThrows;
     }
-    if (view.isMyTurn) return context.l10n.gamesMyTurn;
+    if (view.isMyTurn) return l10n.gamesMyTurn;
     final turnIdx = view.phase == 'defend'
         ? view.defenderIndex
         : (view.turnActorIdx >= 0 ? view.turnActorIdx : view.attackerIndex);
@@ -5457,8 +5462,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         : '';
     final meta = view.playerMeta(turnId);
     final fromMeta = meta?.displayName?.trim() ?? '';
-    if (fromMeta.isNotEmpty) return 'Ход $fromMeta';
-    return context.l10n.gamesOpponentTurn;
+    if (fromMeta.isNotEmpty) return l10n.gameTurnOf(fromMeta);
+    return l10n.gamesOpponentTurn;
   }
 
   String _opponentName(DurakGameView view) {

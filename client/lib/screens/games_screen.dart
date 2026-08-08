@@ -1207,7 +1207,7 @@ class _LobbiesPageContent extends StatelessWidget {
                                                   const SizedBox(width: 4),
                                                   Text(
                                                     lobby.isDurak
-                                                        ? '${durakModeLabel(lobby.gameMode)} · ${lobby.deckSize}'
+                                                        ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
                                                         : variantShortLabel(
                                                             lobby.variant),
                                                     style: TextStyle(
@@ -2340,7 +2340,7 @@ class _InviteCard extends ConsumerWidget {
                                 color: AppColors.textSecondary,
                               ),
                               Text(
-                                '${inv.deckSize}',
+                                durakDeckLabel(inv.deckSize, context.l10n),
                                 style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary),

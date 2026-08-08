@@ -647,8 +647,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           ?.displayName
                           ?.trim() ??
                       opponentName;
-                  statusText =
-                      iWon ? context.l10n.gameYouWon : 'Победил $winnerName';
+                  statusText = iWon
+                      ? context.l10n.gameYouWon
+                      : context.l10n.gameOpponentWon(winnerName);
                 } else {
                   statusText = iWon
                       ? (game.forfeit
@@ -665,11 +666,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               } else if (game.status == 'draw') {
                 // В multi значка/режима ничьей нет — нейтральный итог.
                 statusText = isMultiGame
-                    ? 'Партия окончена'
+                    ? context.l10n.gameOverNeutral
                     : context.l10n.gameDraw;
               }
             } else if (eliminatedNow) {
-              statusText = 'Вы выбыли';
+              statusText = context.l10n.gameYouEliminated;
               statusMark = myMark;
             } else if (isMyTurn) {
               statusText = context.l10n.gamesMyTurn;
@@ -688,7 +689,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       chatId: game.chatId,
                     );
               statusText = turnName.isNotEmpty
-                  ? 'Ход $turnName'
+                  ? context.l10n.gameTurnOf(turnName)
                   : context.l10n.gamesOpponentTurn;
               statusMark = game.turn.trim().isEmpty ? null : game.turn;
             }
@@ -2163,7 +2164,7 @@ class _MultiOpponentsCard extends StatelessWidget {
             _IconWithBadge(
               icon: Icons.forum_rounded,
               badge: groupBadge,
-              tooltip: 'Чат группы',
+              tooltip: context.l10n.chatGroupTooltip,
               onPressed: onGroupChatTap,
             ),
         ],

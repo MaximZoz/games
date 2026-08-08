@@ -162,6 +162,68 @@
   "gamesWaiting": "Čekání",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Piškvorky",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Pravidla",
   "gamesRulesTitle": "Herní pravidla",
   "gamesCreate": "Vytvořit hru",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Bylo vám připsáno {amount} mincí",
   "coinsDeductedTitle": "Bylo odečteno {amount} mincí",
   "coinsCreditCardTitle": "Byly vám připsány mince",
-  "coinsClaim": "Vyzvednout"
+  "coinsClaim": "Vyzvednout",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Bere",
+  "durakRoleBeats": "Přebíjí",
+  "durakRoleThrowIn": "Přihaz",
+  "durakRoleTurn": "Tah",
+  "durakRoleDefends": "Brání",
+  "durakStatusTaking": "Bere",
+  "durakHintDefenderTurn": "Tah obránce",
+  "gameYouEliminated": "Jste venku",
+  "gameYouPlaced": "Umístili jste se na {place}. místě",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Hra skončila",
+  "gameTurnOf": "Tah hráče {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Skupinový chat",
+  "lobbyChatNotReady": "Chat lobby ještě není připraven",
+  "chatsGroupChat": "Skupinový chat",
+  "chatsMembersCount": "Členové: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} os.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(ty)",
+  "chatTitleDurak3": "Durak · 3 hráči",
+  "chatTitleDurak4": "Durak · 4 hráči",
+  "rulesTttUltimate": "Ultimate: devět miniplanů 3×3. Tah pošle soupeře na daný miniplán. Vyhrává linie na meta-plánu.",
+  "rulesTttMulti3": "3 hráči: plán 3×3, tři hráči (X, O, △). Vyhrajte řadou vlastních znaků.",
+  "rulesTttMulti4": "4 hráči: plán 4×4, čtyři hráči (X, O, △, □). Vyhrajte řadou vlastních znaků."
 }

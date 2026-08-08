@@ -162,6 +162,68 @@
   "gamesWaiting": "待機中",
   "gamesLobbyTab": "ロビー",
   "gamesTicTacToe": "三目並べ",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "更新",
+  "appUpdateTitle": "アップデートがあります",
+  "appUpdateWhatsNew": "新着情報",
+  "durakActionAll": "すべて",
+  "durakActionBito": "ビト",
+  "durakActionDone": "完了",
+  "durakActionTake": "取る",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "ドゥラック",
+  "gamesDurakDeck24": "24枚",
+  "gamesDurakDeck36": "36枚",
+  "gamesDurakDeck52": "52枚",
+  "gamesDurakModePerevodnoi": "転送",
+  "gamesDurakModePodkidnoi": "追加出し",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "観戦",
+  "gamesObservationHint": "終了まで観戦できます",
+  "gamesVariantClassic": "クラシック",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3人",
+  "gamesVariantMulti4": "4人",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "ロビー {name}",
+  "lobbyPlayersCount": "プレイヤー {count}/{maxPlayers}",
+  "offlineBotName": "ボット {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "モード: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "人数: {players}。デッキ: {deck}。",
+  "settingsAppVersion": "バージョン {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "ルール",
   "gamesRulesTitle": "ゲームルール",
   "gamesCreate": "ゲームを作成",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "{amount} コインが付与されました",
   "coinsDeductedTitle": "{amount} コインが差し引かれました",
   "coinsCreditCardTitle": "コインが付与されました",
-  "coinsClaim": "受け取る"
+  "coinsClaim": "受け取る",
+  "durakActionPass": "パス",
+  "durakRoleTook": "取り",
+  "durakRoleBeats": "防御中",
+  "durakRoleThrowIn": "追加",
+  "durakRoleTurn": "手番",
+  "durakRoleDefends": "防御中",
+  "durakStatusTaking": "取る",
+  "durakHintDefenderTurn": "守り手の番",
+  "gameYouEliminated": "脱落しました",
+  "gameYouPlaced": "{place}位でした",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "対局終了",
+  "gameTurnOf": "{name}の番",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "グループチャット",
+  "lobbyChatNotReady": "ロビーチャットはまだありません",
+  "chatsGroupChat": "グループチャット",
+  "chatsMembersCount": "メンバー: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count}人",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(あなた)",
+  "chatTitleDurak3": "ドゥラック・3人",
+  "chatTitleDurak4": "ドゥラック・4人",
+  "rulesTttUltimate": "アルティメット：3×3のミニ盤が9つ。手番で相手をそのミニ盤へ送ります。メタ盤で揃えた方が勝ちです。",
+  "rulesTttMulti3": "3人用：3×3盤で3人（X・O・△）。自分の記号で揃えると勝ちです。",
+  "rulesTttMulti4": "4人用：4×4盤で4人（X・O・△・□）。自分の記号で揃えると勝ちです。"
 }

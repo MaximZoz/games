@@ -162,6 +162,68 @@
   "gamesWaiting": "Đang chờ",
   "gamesLobbyTab": "Sảnh",
   "gamesTicTacToe": "Cờ caro",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Luật",
   "gamesRulesTitle": "Luật chơi",
   "gamesCreate": "Tạo trận",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Bạn đã được cộng {amount} xu",
   "coinsDeductedTitle": "Đã trừ {amount} xu",
   "coinsCreditCardTitle": "Bạn đã được cộng xu",
-  "coinsClaim": "Nhận"
+  "coinsClaim": "Nhận",
+  "durakActionPass": "Bỏ",
+  "durakRoleTook": "Nhận",
+  "durakRoleBeats": "Chắn",
+  "durakRoleThrowIn": "Đánh thêm",
+  "durakRoleTurn": "Lượt",
+  "durakRoleDefends": "Đang chắn",
+  "durakStatusTaking": "Đang nhận",
+  "durakHintDefenderTurn": "Lượt người chắn",
+  "gameYouEliminated": "Bạn đã bị loại",
+  "gameYouPlaced": "Bạn xếp hạng {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Ván đã kết thúc",
+  "gameTurnOf": "Lượt của {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Chat nhóm",
+  "lobbyChatNotReady": "Chat sảnh chưa sẵn sàng",
+  "chatsGroupChat": "Chat nhóm",
+  "chatsMembersCount": "Thành viên: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} ng.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(bạn)",
+  "chatTitleDurak3": "Durak · 3 người",
+  "chatTitleDurak4": "Durak · 4 người",
+  "rulesTttUltimate": "Ultimate: chín bàn 3×3. Một nước đưa đối thủ sang bàn đó. Thắng khi hoàn thành một hàng trên bàn meta.",
+  "rulesTttMulti3": "3 người: bàn 3×3, ba người (X, O, △). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.",
+  "rulesTttMulti4": "4 người: bàn 4×4, bốn người (X, O, △, □). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn."
 }

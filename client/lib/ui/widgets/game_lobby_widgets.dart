@@ -312,7 +312,7 @@ class LobbyMultiPlayersCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            tooltip: 'Чат группы',
+            tooltip: context.l10n.chatGroupTooltip,
             onPressed: canOpenChat ? onOpenChat : null,
             icon: Badge(
               isLabelVisible: chatUnread > 0,

@@ -162,6 +162,68 @@
   "gamesWaiting": "ממתין",
   "gamesLobbyTab": "לובי",
   "gamesTicTacToe": "איקס־עיגול",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "חוקים",
   "gamesRulesTitle": "חוקי המשחק",
   "gamesCreate": "יצירת משחק",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "זוכו לכם {amount} מטבעות",
   "coinsDeductedTitle": "נוכו {amount} מטבעות",
   "coinsCreditCardTitle": "זוכו לכם מטבעות",
-  "coinsClaim": "לקבל"
+  "coinsClaim": "לקבל",
+  "durakActionPass": "פס",
+  "durakRoleTook": "לוקח",
+  "durakRoleBeats": "מכסה",
+  "durakRoleThrowIn": "תוספת",
+  "durakRoleTurn": "תור",
+  "durakRoleDefends": "מתגונן",
+  "durakStatusTaking": "לוקח",
+  "durakHintDefenderTurn": "תור המגן",
+  "gameYouEliminated": "הודחת",
+  "gameYouPlaced": "סיימת במקום {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "המשחק נגמר",
+  "gameTurnOf": "תור של {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "צ'אט קבוצתי",
+  "lobbyChatNotReady": "צ'אט הלובי עדיין לא מוכן",
+  "chatsGroupChat": "צ'אט קבוצתי",
+  "chatsMembersCount": "משתתפים: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} משת'",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(את/ה)",
+  "chatTitleDurak3": "דוראק · 3 שחקנים",
+  "chatTitleDurak4": "דוראק · 4 שחקנים",
+  "rulesTttUltimate": "Ultimate: תשעה לוחות 3×3. מהלך שולח את היריב ללוח הזה. מנצחים עם שורה בלוח העל.",
+  "rulesTttMulti3": "3 שחקנים: לוח 3×3, שלושה שחקנים (X, O, △). השלימו שורה בסימנים שלכם כדי לנצח.",
+  "rulesTttMulti4": "4 שחקנים: לוח 4×4, ארבעה שחקנים (X, O, △, □). השלימו שורה בסימנים שלכם כדי לנצח."
 }

@@ -162,6 +162,68 @@
   "gamesWaiting": "Күту",
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Ережелер",
   "gamesRulesTitle": "Ойын ережелері",
   "gamesCreate": "Ойын жасау",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Сізге {amount} тиын есептелді",
   "coinsDeductedTitle": "{amount} тиын шегерілді",
   "coinsCreditCardTitle": "Сізге тиындар есептелді",
-  "coinsClaim": "Алу"
+  "coinsClaim": "Алу",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Алды",
+  "durakRoleBeats": "Ұрады",
+  "durakRoleThrowIn": "Тастау",
+  "durakRoleTurn": "Жүріс",
+  "durakRoleDefends": "Қорғанады",
+  "durakStatusTaking": "Аламын",
+  "durakHintDefenderTurn": "Қорғаушының жүрісі",
+  "gameYouEliminated": "Сіз шықтыңыз",
+  "gameYouPlaced": "Сіз {place}-орын алдыңыз",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Ойын аяқталды",
+  "gameTurnOf": "{name} жүрісі",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Топ чаты",
+  "lobbyChatNotReady": "Лобби чаты әлі жасалмаған",
+  "chatsGroupChat": "Топтық чат",
+  "chatsMembersCount": "Қатысушылар: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} қат.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(сіз)",
+  "chatTitleDurak3": "Дурак · 3 ойыншы",
+  "chatTitleDurak4": "Дурак · 4 ойыншы",
+  "rulesTttUltimate": "Ultimate: тоғыз 3×3 мини-тақта. Жүріс қарсыласты сол мини-тақтаға жібереді. Мета-тақтадағы сызық жеңеді.",
+  "rulesTttMulti3": "3 ойыншы: 3×3 тақта, үш ойыншы (X, O, △). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз.",
+  "rulesTttMulti4": "4 ойыншы: 4×4 тақта, төрт ойыншы (X, O, △, □). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз."
 }

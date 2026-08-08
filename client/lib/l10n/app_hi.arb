@@ -162,6 +162,68 @@
   "gamesWaiting": "प्रतीक्षा",
   "gamesLobbyTab": "लॉबी",
   "gamesTicTacToe": "टिक-टैक-टो",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "नियम",
   "gamesRulesTitle": "गेम के नियम",
   "gamesCreate": "गेम बनाएँ",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "आपको {amount} सिक्के जमा किए गए",
   "coinsDeductedTitle": "{amount} सिक्के काटे गए",
   "coinsCreditCardTitle": "आपको सिक्के जमा किए गए",
-  "coinsClaim": "प्राप्त करें"
+  "coinsClaim": "प्राप्त करें",
+  "durakActionPass": "पास",
+  "durakRoleTook": "ले लिया",
+  "durakRoleBeats": "काटता है",
+  "durakRoleThrowIn": "फेंकना",
+  "durakRoleTurn": "चाल",
+  "durakRoleDefends": "बचाव",
+  "durakStatusTaking": "ले रहा हूँ",
+  "durakHintDefenderTurn": "रक्षक की बारी",
+  "gameYouEliminated": "आप बाहर हो गए",
+  "gameYouPlaced": "आपका स्थान {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "खेल समाप्त",
+  "gameTurnOf": "{name} की बारी",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "समूह चैट",
+  "lobbyChatNotReady": "लॉबी चैट अभी तैयार नहीं",
+  "chatsGroupChat": "समूह चैट",
+  "chatsMembersCount": "सदस्य: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} लोग",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(आप)",
+  "chatTitleDurak3": "दुरक · 3 खिलाड़ी",
+  "chatTitleDurak4": "दुरक · 4 खिलाड़ी",
+  "rulesTttUltimate": "अल्टीमेट: नौ 3×3 मिनी-बोर्ड। चाल विरोधी को उस मिनी-बोर्ड पर भेजती है। मेटा-बोर्ड पर रेखा पूरी करें।",
+  "rulesTttMulti3": "3 खिलाड़ी: 3×3 बोर्ड, तीन खिलाड़ी (X, O, △)। अपनी चिह्नों की रेखा पूरी करें।",
+  "rulesTttMulti4": "4 खिलाड़ी: 4×4 बोर्ड, चार खिलाड़ी (X, O, △, □)। अपनी चिह्नों की रेखा पूरी करें।"
 }

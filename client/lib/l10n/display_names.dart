@@ -17,6 +17,43 @@ String localizeDisplayName(String? name, [AppLocalizations? l10n]) {
     case 'игрок':
     case 'player':
       return t.commonPlayer;
+    case 'поддержка':
+    case 'support':
+      return t.supportTitle;
+    default:
+      return n;
+  }
+}
+
+/// Локализует заголовки групповых чатов игр (в БД исторически на русском).
+String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  final n = (title ?? '').trim();
+  if (n.isEmpty) return t.chatsGroupChat;
+  switch (n) {
+    case 'Дурак':
+    case 'Durak':
+      return t.gamesDurak;
+    case 'Дурак на троих':
+      return t.chatTitleDurak3;
+    case 'Дурак на четверых':
+      return t.chatTitleDurak4;
+    case 'Крестики-нолики':
+    case 'Tic-tac-toe':
+      return t.gamesTicTacToe;
+    case 'На троих':
+      return t.gamesVariantMulti3;
+    case 'На четверых':
+      return t.gamesVariantMulti4;
+    case 'Групповой чат':
+    case 'Group chat':
+      return t.chatsGroupChat;
+    case 'Поддержка':
+    case 'Support':
+      return t.supportTitle;
+    case 'Игра':
+    case 'Game':
+      return t.gamesTitle;
     default:
       return n;
   }

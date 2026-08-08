@@ -162,6 +162,68 @@
   "gamesWaiting": "Очікування",
   "gamesLobbyTab": "Лобі",
   "gamesTicTacToe": "Хрестики-нулики",
+  "appUpdateBody": "Вийшла нова версія застосунку. Оновіться, щоб продовжити.",
+  "appUpdateLaterBanner": "Після партії оновимо застосунок",
+  "appUpdateOk": "Оновити",
+  "appUpdateTitle": "Доступне оновлення",
+  "appUpdateWhatsNew": "Що нового",
+  "durakActionAll": "Усі",
+  "durakActionBito": "Бито",
+  "durakActionDone": "Готово",
+  "durakActionTake": "Взяти",
+  "durakHintBito": "Підкиньте карту або скажіть «Бито»",
+  "durakHintDefend": "Відбивайтеся",
+  "durakHintDefendOrTransfer": "Відбивайтеся або переведіть",
+  "durakHintDrawAllOut": "Нічия — усі вийшли",
+  "durakHintOpponentAttack": "Атакує суперник",
+  "durakHintOpponentBito": "Суперник підкидає або каже «Бито»",
+  "durakHintOpponentDefends": "Суперник відбивається",
+  "durakHintOpponentTakeFollow": "Суперник може підкинути вдогонку",
+  "durakHintOpponentThrows": "Суперник підкидає",
+  "durakHintTakeFollow": "Підкиньте вдогонку або натисніть «Готово»",
+  "durakHintThrowIn": "Підкиньте карти або натисніть «Усі»",
+  "durakHintThrowInFirst": "Підкиньте карти або «Усі» (макс. 5 у першому відбої)",
+  "durakHintYouFinished": "Ви вийшли — чекаємо кінця партії",
+  "durakHintYouLost": "Ви програли — ви дурак",
+  "durakHintYourAttack": "Ваш хід — атакуйте",
+  "gamesDurak": "Дурак",
+  "gamesDurakDeck24": "24 карти",
+  "gamesDurakDeck36": "36 карт",
+  "gamesDurakDeck52": "52 карти",
+  "gamesDurakModePerevodnoi": "Переводний",
+  "gamesDurakModePodkidnoi": "Підкидний",
+  "gamesFinishCurrentFirst": "Спочатку завершіть поточну гру",
+  "gamesObservation": "Спостереження",
+  "gamesObservationHint": "Можна дивитися до кінця партії",
+  "gamesVariantClassic": "Класика",
+  "gamesVariantGomoku": "Гомоку",
+  "gamesVariantMulti3": "На трьох",
+  "gamesVariantMulti4": "На чотирьох",
+  "gamesVariantUltimate": "Ультимейт",
+  "lobbyNamed": "Лобі {name}",
+  "lobbyPlayersCount": "Гравці {count}/{maxPlayers}",
+  "offlineBotName": "Бот {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Атакувальник кладе карти, захисник б'є (тієї ж масті старшою або козирем). Козир б'ється лише старшим козирем.",
+  "rulesDurakBeat": "Коли всі карти биті — атакувальник каже «Бито», карти йдуть у відбій. Інакше захисник бере все зі столу.",
+  "rulesDurakLoser": "Програє той, у кого в кінці лишилися карти, — «дурак».",
+  "rulesDurakMode": "Режим: {mode}",
+  "rulesDurakOfflineBot": "Гра проти бота, без ставок і ліміту часу.",
+  "rulesDurakPlayersDeck": "Гравці: {players}. Колода: {deck}.",
+  "settingsAppVersion": "Версія {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила гри",
   "gamesCreate": "Створити гру",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Вам нараховано {amount} монет",
   "coinsDeductedTitle": "Списано {amount} монет",
   "coinsCreditCardTitle": "Вам нараховано монети",
-  "coinsClaim": "Забрати"
+  "coinsClaim": "Забрати",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Забрав",
+  "durakRoleBeats": "Б'є",
+  "durakRoleThrowIn": "Підкид",
+  "durakRoleTurn": "Хід",
+  "durakRoleDefends": "Відбивається",
+  "durakStatusTaking": "Беру",
+  "durakHintDefenderTurn": "Хід захисника",
+  "gameYouEliminated": "Ви вибули",
+  "gameYouPlaced": "Ви посіли {place}-е місце",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Партію завершено",
+  "gameTurnOf": "Хід {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Чат групи",
+  "lobbyChatNotReady": "Чат лобі ще не створено",
+  "chatsGroupChat": "Груповий чат",
+  "chatsMembersCount": "Учасники: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} уч.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(ви)",
+  "chatTitleDurak3": "Дурак на трьох",
+  "chatTitleDurak4": "Дурак на чотирьох",
+  "rulesTttUltimate": "Ультимейт: 9 міні-полів 3×3. Хід у клітинку надсилає суперника на відповідне міні-поле. Перемагає той, хто зібрав лінію на мета-полі.",
+  "rulesTttMulti3": "На трьох: поле 3×3, троє гравців (X, O, △). Хто зібрав лінію зі своїх знаків — перемагає.",
+  "rulesTttMulti4": "На чотирьох: поле 4×4, четверо гравців (X, O, △, □). Хто зібрав лінію зі своїх знаків — перемагає."
 }

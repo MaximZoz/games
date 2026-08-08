@@ -331,15 +331,7 @@ List<String> _variantRulesBody(
 ) {
   switch (cfg.variant) {
     case variantUltimate:
-      return const [
-        'Девять малых полей 3×3 объединены в одно большое. Ходят по очереди, X начинает.',
-        'Ход в клетку малого поля указывает, в какое малое поле обязан ходить соперник '
-            '(по той же позиции клетки: центр → центр, угол → угол и т.д.). '
-            'Если это поле уже выиграно или заполнено — соперник может выбрать любое открытое.',
-        'Малое поле выигрывает тот, кто собрал в нём 3 в ряд; при заполнении без победителя поле закрывается ничьей.',
-        'Победа в партии: выиграть три малых поля в ряд на большом поле '
-            '(горизонталь, вертикаль или диагональ).',
-      ];
+      return [l10n.rulesTttUltimate];
     case variantGomoku:
       return [
         l10n.rulesIntro(formatGridSize(resolvedGridSize)),
@@ -347,14 +339,12 @@ List<String> _variantRulesBody(
       ];
     case variantMulti3:
       return [
-        'Трое игроков на поле ${formatGridSize(resolvedGridSize)}. '
-            'Знаки: крестик (X), нолик (O) и треугольник. Ходят по кругу, X начинает.',
+        l10n.rulesTttMulti3,
         l10n.rulesWin(cfg.winLength),
       ];
     case variantMulti4:
       return [
-        'Четверо игроков на поле ${formatGridSize(resolvedGridSize)}. '
-            'Знаки: крестик (X), нолик (O), треугольник и квадрат. Ходят по кругу, X начинает.',
+        l10n.rulesTttMulti4,
         l10n.rulesWin(cfg.winLength),
       ];
     case variantClassic:

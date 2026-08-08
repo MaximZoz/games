@@ -162,6 +162,68 @@
   "gamesWaiting": "Warten",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Tic-Tac-Toe",
+  "appUpdateBody": "Eine neue Version der App ist verfügbar. Bitte aktualisieren.",
+  "appUpdateLaterBanner": "Wir aktualisieren die App nach diesem Spiel",
+  "appUpdateOk": "Aktualisieren",
+  "appUpdateTitle": "Update verfügbar",
+  "appUpdateWhatsNew": "Neuigkeiten",
+  "durakActionAll": "Alle",
+  "durakActionBito": "Bito",
+  "durakActionDone": "Fertig",
+  "durakActionTake": "Nehmen",
+  "durakHintBito": "Karte nachlegen oder „Bito“ sagen",
+  "durakHintDefend": "Verteidigen",
+  "durakHintDefendOrTransfer": "Verteidigen oder übergeben",
+  "durakHintDrawAllOut": "Unentschieden — alle sind raus",
+  "durakHintOpponentAttack": "Gegner greift an",
+  "durakHintOpponentBito": "Gegner legt nach oder sagt „Bito“",
+  "durakHintOpponentDefends": "Gegner verteidigt",
+  "durakHintOpponentTakeFollow": "Gegner kann nach dem Nehmen nachlegen",
+  "durakHintOpponentThrows": "Gegner legt nach",
+  "durakHintTakeFollow": "Nach dem Nehmen nachlegen oder „Fertig“",
+  "durakHintThrowIn": "Karten nachlegen oder „Alle“ tippen",
+  "durakHintThrowInFirst": "Karten nachlegen oder „Alle“ (max. 5 im ersten Schlag)",
+  "durakHintYouFinished": "Du bist raus — warte aufs Ende",
+  "durakHintYouLost": "Du hast verloren — du bist der Narr",
+  "durakHintYourAttack": "Dein Zug — angreifen",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 Karten",
+  "gamesDurakDeck36": "36 Karten",
+  "gamesDurakDeck52": "52 Karten",
+  "gamesDurakModePerevodnoi": "Übergeben",
+  "gamesDurakModePodkidnoi": "Nachlegen",
+  "gamesFinishCurrentFirst": "Beende zuerst dein aktuelles Spiel",
+  "gamesObservation": "Zuschauen",
+  "gamesObservationHint": "Du kannst bis zum Ende zuschauen",
+  "gamesVariantClassic": "Klassisch",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 Spieler",
+  "gamesVariantMulti4": "4 Spieler",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Spieler {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Der Angreifer legt Karten; der Verteidiger schlägt sie (gleiche Farbe höher oder Trumpf). Trumpf nur durch höheren Trumpf.",
+  "rulesDurakBeat": "Sind alle Karten geschlagen, sagt der Angreifer „Bito“, und die Karten gehen auf den Ablagestapel. Sonst nimmt der Verteidiger alles.",
+  "rulesDurakLoser": "Verlierer ist, wer am Ende noch Karten hat — der „Narr“.",
+  "rulesDurakMode": "Modus: {mode}",
+  "rulesDurakOfflineBot": "Gegen einen Bot spielen, ohne Einsatz und Zeitlimit.",
+  "rulesDurakPlayersDeck": "Spieler: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Regeln",
   "gamesRulesTitle": "Spielregeln",
   "gamesCreate": "Spiel erstellen",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Ihnen wurden {amount} Münzen gutgeschrieben",
   "coinsDeductedTitle": "{amount} Münzen wurden abgezogen",
   "coinsCreditCardTitle": "Ihnen wurden Münzen gutgeschrieben",
-  "coinsClaim": "Abholen"
+  "coinsClaim": "Abholen",
+  "durakActionPass": "Passen",
+  "durakRoleTook": "Nimmt",
+  "durakRoleBeats": "Schlägt",
+  "durakRoleThrowIn": "Nachlegen",
+  "durakRoleTurn": "Zug",
+  "durakRoleDefends": "Verteidigt",
+  "durakStatusTaking": "Nimmt",
+  "durakHintDefenderTurn": "Zug des Verteidigers",
+  "gameYouEliminated": "Du bist ausgeschieden",
+  "gameYouPlaced": "Du bist {place}. geworden",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Spiel beendet",
+  "gameTurnOf": "Zug von {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Gruppenchat",
+  "lobbyChatNotReady": "Lobby-Chat ist noch nicht bereit",
+  "chatsGroupChat": "Gruppenchat",
+  "chatsMembersCount": "Mitglieder: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} Pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(du)",
+  "chatTitleDurak3": "Durak · 3 Spieler",
+  "chatTitleDurak4": "Durak · 4 Spieler",
+  "rulesTttUltimate": "Ultimate: neun 3×3-Mini-Felder. Ein Zug schickt den Gegner auf dieses Mini-Feld. Gewonnen wird mit einer Linie auf dem Meta-Brett.",
+  "rulesTttMulti3": "3 Spieler: 3×3-Feld, drei Spieler (X, O, △). Wer eine Linie aus eigenen Zeichen bildet, gewinnt.",
+  "rulesTttMulti4": "4 Spieler: 4×4-Feld, vier Spieler (X, O, △, □). Wer eine Linie aus eigenen Zeichen bildet, gewinnt."
 }

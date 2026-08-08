@@ -360,7 +360,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
       if (mounted) {
         showAppSnackBar(
           context,
-          message: 'Чат лобби ещё не создан',
+          message: context.l10n.lobbyChatNotReady,
           kind: AppSnackKind.error,
         );
       }
@@ -586,7 +586,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                           Text(
                             (f.user.displayName?.trim().isNotEmpty ?? false)
                                 ? f.user.displayName!
-                                : 'Игрок',
+                                : context.l10n.commonPlayer,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
@@ -646,7 +646,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
         ),
         error: (e, _) => Center(
           child: Text(
-            formatUserError(e, fallback: 'Не удалось загрузить друзей'),
+            formatUserError(e, fallback: context.l10n.friendsLoadFailed),
             style: const TextStyle(color: Colors.red),
           ),
         ),

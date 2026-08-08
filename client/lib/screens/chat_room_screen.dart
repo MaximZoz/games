@@ -43,6 +43,7 @@ import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1700,8 +1701,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String _chatTitle(ChatPreviewItem? item, String fallback) {
     if (item?.isGroup == true) {
       final title = item?.title?.trim();
-      if (title != null && title.isNotEmpty) return title;
-      return 'Групповой чат';
+      if (title != null && title.isNotEmpty) {
+        return localizeChatTitle(title, context.l10n);
+      }
+      return context.l10n.chatsGroupChat;
     }
     final user = item?.user;
     return user == null ? fallback : _peerTitle(user);
@@ -2106,7 +2109,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 ),
                           ),
                           Text(
-                            '${chat?.members.length ?? 0} уч.',
+                            context.l10n.chatsMembersShort(
+                              chat?.members.length ?? 0,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -2295,7 +2300,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 children: [
                   Text(
                     (chat.title ?? '').trim().isNotEmpty
-                        ? chat.title!.trim()
+                        ? localizeChatTitle(chat.title, context.l10n)
                         : context.l10n.navChats,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppColors.textPrimary,
@@ -2304,7 +2309,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Участники: ${members.length}',
+                    context.l10n.chatsMembersCount(members.length),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -2332,7 +2337,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               radius: 20,
                             ),
                             title: Text(
-                              isMe ? '$title (вы)' : title,
+                              isMe
+                                  ? '$title ${context.l10n.chatsYouSuffix}'
+                                  : title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

@@ -162,6 +162,68 @@
   "gamesWaiting": "等待中",
   "gamesLobbyTab": "大厅",
   "gamesTicTacToe": "井字棋",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "更新",
+  "appUpdateTitle": "有可用更新",
+  "appUpdateWhatsNew": "更新内容",
+  "durakActionAll": "全部",
+  "durakActionBito": "打完",
+  "durakActionDone": "完成",
+  "durakActionTake": "拿牌",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "傻瓜牌",
+  "gamesDurakDeck24": "24 张",
+  "gamesDurakDeck36": "36 张",
+  "gamesDurakDeck52": "52 张",
+  "gamesDurakModePerevodnoi": "转攻",
+  "gamesDurakModePodkidnoi": "加牌",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "观战",
+  "gamesObservationHint": "可以观战至对局结束",
+  "gamesVariantClassic": "经典",
+  "gamesVariantGomoku": "五子棋",
+  "gamesVariantMulti3": "三人",
+  "gamesVariantMulti4": "四人",
+  "gamesVariantUltimate": "终极",
+  "lobbyNamed": "大厅 {name}",
+  "lobbyPlayersCount": "玩家 {count}/{maxPlayers}",
+  "offlineBotName": "机器人 {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "模式：{mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "玩家：{players}。牌组：{deck}。",
+  "settingsAppVersion": "版本 {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "规则",
   "gamesRulesTitle": "游戏规则",
   "gamesCreate": "创建对局",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "已为您发放 {amount} 枚金币",
   "coinsDeductedTitle": "已扣除 {amount} 枚金币",
   "coinsCreditCardTitle": "已为您发放金币",
-  "coinsClaim": "领取"
+  "coinsClaim": "领取",
+  "durakActionPass": "过牌",
+  "durakRoleTook": "收下",
+  "durakRoleBeats": "防守",
+  "durakRoleThrowIn": "追加",
+  "durakRoleTurn": "回合",
+  "durakRoleDefends": "防守中",
+  "durakStatusTaking": "收下中",
+  "durakHintDefenderTurn": "防守方回合",
+  "gameYouEliminated": "你已出局",
+  "gameYouPlaced": "你获得第 {place} 名",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "对局结束",
+  "gameTurnOf": "{name} 的回合",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "群聊",
+  "lobbyChatNotReady": "大厅聊天尚未创建",
+  "chatsGroupChat": "群聊",
+  "chatsMembersCount": "成员：{count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count}人",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(你)",
+  "chatTitleDurak3": "傻瓜牌 · 3人",
+  "chatTitleDurak4": "傻瓜牌 · 4人",
+  "rulesTttUltimate": "终极井字棋：九个 3×3 小棋盘。落子会把对手送到对应小盘。在元棋盘连成一线即胜。",
+  "rulesTttMulti3": "三人局：3×3 棋盘，三位玩家（X、O、△）。用自己的符号连成一线即胜。",
+  "rulesTttMulti4": "四人局：4×4 棋盘，四位玩家（X、O、△、□）。用自己的符号连成一线即胜。"
 }

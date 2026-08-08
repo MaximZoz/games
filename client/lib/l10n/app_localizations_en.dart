@@ -1919,4 +1919,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Claim';
+
+  @override
+  String get durakActionPass => 'Pass';
+
+  @override
+  String get durakRoleTook => 'Took';
+
+  @override
+  String get durakRoleBeats => 'Beats';
+
+  @override
+  String get durakRoleThrowIn => 'Throw-in';
+
+  @override
+  String get durakRoleTurn => 'Turn';
+
+  @override
+  String get durakRoleDefends => 'Defending';
+
+  @override
+  String get durakStatusTaking => 'Taking';
+
+  @override
+  String get durakHintDefenderTurn => 'Defender’s turn';
+
+  @override
+  String get gameYouEliminated => 'You’re out';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'You finished $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'Game over';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name’s turn';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Group chat';
+
+  @override
+  String get lobbyChatNotReady => 'Lobby chat is not ready yet';
+
+  @override
+  String get chatsGroupChat => 'Group chat';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Members: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count ppl';
+  }
+
+  @override
+  String get chatsYouSuffix => '(you)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 players';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 players';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: nine 3×3 mini-boards. A move sends the opponent to that mini-board. Win by completing a line on the meta-board.';
+
+  @override
+  String get rulesTttMulti3 => '3 players: 3×3 board, three players (X, O, △). Complete a line of your marks to win.';
+
+  @override
+  String get rulesTttMulti4 => '4 players: 4×4 board, four players (X, O, △, □). Complete a line of your marks to win.';
 }

@@ -792,7 +792,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: 'Чат лобби ещё не создан',
+          message: context.l10n.lobbyChatNotReady,
           kind: AppSnackKind.error,
         );
       }

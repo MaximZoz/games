@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
@@ -263,7 +264,7 @@ class GameCardActionsRow extends StatelessWidget {
       return FilledButton.icon(
         onPressed: onOfflinePlay,
         icon: const Icon(Icons.play_arrow_rounded, size: 22),
-        label: Text(offlinePlayLabel ?? 'Играть'),
+        label: Text(offlinePlayLabel ?? context.l10n.gamesPlay),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accentStart,
           foregroundColor: Colors.white,
@@ -343,8 +344,9 @@ Future<void> showGameRulesDialog({
   required BuildContext context,
   required String title,
   required Widget content,
-  String closeLabel = 'Закрыть',
+  String? closeLabel,
 }) {
+  final resolvedClose = closeLabel ?? context.l10n.commonClose;
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -353,7 +355,7 @@ Future<void> showGameRulesDialog({
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(closeLabel),
+          child: Text(resolvedClose),
         ),
       ],
     ),

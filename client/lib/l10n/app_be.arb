@@ -162,6 +162,68 @@
   "gamesWaiting": "Чаканне",
   "gamesLobbyTab": "Лобі",
   "gamesTicTacToe": "Крыжыкі-нулікі",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Правілы",
   "gamesRulesTitle": "Правілы гульні",
   "gamesCreate": "Стварыць гульню",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Вам налічана {amount} манет",
   "coinsDeductedTitle": "Спісана {amount} манет",
   "coinsCreditCardTitle": "Вам налічаны манеты",
-  "coinsClaim": "Забраць"
+  "coinsClaim": "Забраць",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Забраў",
+  "durakRoleBeats": "Б'е",
+  "durakRoleThrowIn": "Падкід",
+  "durakRoleTurn": "Ход",
+  "durakRoleDefends": "Адбіваецца",
+  "durakStatusTaking": "Бяру",
+  "durakHintDefenderTurn": "Ход абаронцы",
+  "gameYouEliminated": "Вы выбылі",
+  "gameYouPlaced": "Вы занялі {place}-е месца",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Партыя завершана",
+  "gameTurnOf": "Ход {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Чат групы",
+  "lobbyChatNotReady": "Чат лобі яшчэ не створаны",
+  "chatsGroupChat": "Групавы чат",
+  "chatsMembersCount": "Удзельнікі: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} уч.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(вы)",
+  "chatTitleDurak3": "Дурак на траіх",
+  "chatTitleDurak4": "Дурак на чацвярых",
+  "rulesTttUltimate": "Ультымейт: 9 міні-палёў 3×3. Ход у клетку адпраўляе суперніка на адпаведнае міні-поле. Перамагае той, хто сабраў лінію на мета-полі.",
+  "rulesTttMulti3": "На траіх: поле 3×3, трое гульцоў (X, O, △). Хто сабраў лінію са сваіх знакаў — перамагае.",
+  "rulesTttMulti4": "На чацвярых: поле 4×4, чацвёра гульцоў (X, O, △, □). Хто сабраў лінію са сваіх знакаў — перамагае."
 }

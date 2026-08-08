@@ -3652,6 +3652,144 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Забрать'**
   String get coinsClaim;
+
+  /// No description provided for @durakActionPass.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пас'**
+  String get durakActionPass;
+
+  /// No description provided for @durakRoleTook.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забрал'**
+  String get durakRoleTook;
+
+  /// No description provided for @durakRoleBeats.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бьёт'**
+  String get durakRoleBeats;
+
+  /// No description provided for @durakRoleThrowIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкид'**
+  String get durakRoleThrowIn;
+
+  /// No description provided for @durakRoleTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход'**
+  String get durakRoleTurn;
+
+  /// No description provided for @durakRoleDefends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отбивается'**
+  String get durakRoleDefends;
+
+  /// No description provided for @durakStatusTaking.
+  ///
+  /// In ru, this message translates to:
+  /// **'Беру'**
+  String get durakStatusTaking;
+
+  /// No description provided for @durakHintDefenderTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход защитника'**
+  String get durakHintDefenderTurn;
+
+  /// No description provided for @gameYouEliminated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выбыли'**
+  String get gameYouEliminated;
+
+  /// No description provided for @gameYouPlaced.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы заняли {place}-е место'**
+  String gameYouPlaced(int place);
+
+  /// No description provided for @gameOverNeutral.
+  ///
+  /// In ru, this message translates to:
+  /// **'Партия окончена'**
+  String get gameOverNeutral;
+
+  /// No description provided for @gameTurnOf.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход {name}'**
+  String gameTurnOf(String name);
+
+  /// No description provided for @chatGroupTooltip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чат группы'**
+  String get chatGroupTooltip;
+
+  /// No description provided for @lobbyChatNotReady.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чат лобби ещё не создан'**
+  String get lobbyChatNotReady;
+
+  /// No description provided for @chatsGroupChat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Групповой чат'**
+  String get chatsGroupChat;
+
+  /// No description provided for @chatsMembersCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Участники: {count}'**
+  String chatsMembersCount(int count);
+
+  /// No description provided for @chatsMembersShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} уч.'**
+  String chatsMembersShort(int count);
+
+  /// No description provided for @chatsYouSuffix.
+  ///
+  /// In ru, this message translates to:
+  /// **'(вы)'**
+  String get chatsYouSuffix;
+
+  /// No description provided for @chatTitleDurak3.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дурак на троих'**
+  String get chatTitleDurak3;
+
+  /// No description provided for @chatTitleDurak4.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дурак на четверых'**
+  String get chatTitleDurak4;
+
+  /// No description provided for @rulesTttUltimate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.'**
+  String get rulesTttUltimate;
+
+  /// No description provided for @rulesTttMulti3.
+  ///
+  /// In ru, this message translates to:
+  /// **'На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.'**
+  String get rulesTttMulti3;
+
+  /// No description provided for @rulesTttMulti4.
+  ///
+  /// In ru, this message translates to:
+  /// **'На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.'**
+  String get rulesTttMulti4;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

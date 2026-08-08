@@ -162,6 +162,68 @@
   "gamesWaiting": "Αναμονή",
   "gamesLobbyTab": "Λόμπι",
   "gamesTicTacToe": "Τρίλιζα",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Κανόνες",
   "gamesRulesTitle": "Κανόνες παιχνιδιού",
   "gamesCreate": "Δημιουργία παιχνιδιού",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Σας πιστώθηκαν {amount} νομίσματα",
   "coinsDeductedTitle": "Αφαιρέθηκαν {amount} νομίσματα",
   "coinsCreditCardTitle": "Σας πιστώθηκαν νομίσματα",
-  "coinsClaim": "Παραλαβή"
+  "coinsClaim": "Παραλαβή",
+  "durakActionPass": "Πάσο",
+  "durakRoleTook": "Παίρνει",
+  "durakRoleBeats": "Καλύπτει",
+  "durakRoleThrowIn": "Προσθήκη",
+  "durakRoleTurn": "Σειρά",
+  "durakRoleDefends": "Αμύνεται",
+  "durakStatusTaking": "Παίρνει",
+  "durakHintDefenderTurn": "Σειρά αμυνόμενου",
+  "gameYouEliminated": "Αποκλειστήκατε",
+  "gameYouPlaced": "Τερματίσατε {place}οι",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Το παιχνίδι τελείωσε",
+  "gameTurnOf": "Σειρά του/της {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Ομαδική συνομιλία",
+  "lobbyChatNotReady": "Η συνομιλία του λόμπι δεν είναι έτοιμη ακόμη",
+  "chatsGroupChat": "Ομαδική συνομιλία",
+  "chatsMembersCount": "Μέλη: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} μέλη",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(εσείς)",
+  "chatTitleDurak3": "Durak · 3 παίκτες",
+  "chatTitleDurak4": "Durak · 4 παίκτες",
+  "rulesTttUltimate": "Ultimate: εννέα μίνι-πίνακες 3×3. Μια κίνηση στέλνει τον αντίπαλο σε αυτόν τον πίνακα. Νικάτε με γραμμή στο μετα-πίνακα.",
+  "rulesTttMulti3": "3 παίκτες: πίνακας 3×3, τρεις παίκτες (X, O, △). Κερδίζετε με γραμμή από τα σύμβολά σας.",
+  "rulesTttMulti4": "4 παίκτες: πίνακας 4×4, τέσσερις παίκτες (X, O, △, □). Κερδίζετε με γραμμή από τα σύμβολά σας."
 }

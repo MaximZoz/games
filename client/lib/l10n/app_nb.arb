@@ -162,6 +162,68 @@
   "gamesWaiting": "Venter",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Tripp-trapp-tresko",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateLaterBanner": "We'll update the app after this game",
+  "appUpdateOk": "Update",
+  "appUpdateTitle": "Update available",
+  "appUpdateWhatsNew": "What's new",
+  "durakActionAll": "All",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Done",
+  "durakActionTake": "Take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintYourAttack": "Your turn — attack",
+  "gamesDurak": "Durak",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Regler",
   "gamesRulesTitle": "Spillregler",
   "gamesCreate": "Opprett spill",
@@ -1021,5 +1083,56 @@
   "coinsGrantedTitle": "Du har fått {amount} mynter",
   "coinsDeductedTitle": "{amount} mynter ble trukket",
   "coinsCreditCardTitle": "Du har fått mynter",
-  "coinsClaim": "Hent"
+  "coinsClaim": "Hent",
+  "durakActionPass": "Pass",
+  "durakRoleTook": "Tar",
+  "durakRoleBeats": "Slår",
+  "durakRoleThrowIn": "Pålegg",
+  "durakRoleTurn": "Tur",
+  "durakRoleDefends": "Forsvarer",
+  "durakStatusTaking": "Tar",
+  "durakHintDefenderTurn": "Forsvarerens tur",
+  "gameYouEliminated": "Du er ute",
+  "gameYouPlaced": "Du ble nr. {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Spillet er over",
+  "gameTurnOf": "{name}s tur",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Gruppechat",
+  "lobbyChatNotReady": "Lobbychatten er ikke klar ennå",
+  "chatsGroupChat": "Gruppechat",
+  "chatsMembersCount": "Medlemmer: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(deg)",
+  "chatTitleDurak3": "Durak · 3 spillere",
+  "chatTitleDurak4": "Durak · 4 spillere",
+  "rulesTttUltimate": "Ultimate: ni 3×3-minibrett. Et trekk sender motstanderen til det minibrettet. Vinn med en linje på metabbrettet.",
+  "rulesTttMulti3": "3 spillere: 3×3-brett, tre spillere (X, O, △). Lag en linje med dine tegn for å vinne.",
+  "rulesTttMulti4": "4 spillere: 4×4-brett, fire spillere (X, O, △, □). Lag en linje med dine tegn for å vinne."
 }

@@ -92,65 +92,65 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String offlineBotName(int n) {
-    return 'Бот $n';
+    return 'Bot $n';
   }
 
   @override
-  String get durakActionTake => 'Взять';
+  String get durakActionTake => 'Take';
 
   @override
-  String get durakActionAll => 'Все';
+  String get durakActionAll => 'All';
 
   @override
-  String get durakActionDone => 'Готово';
+  String get durakActionDone => 'Done';
 
   @override
-  String get durakActionBito => 'Бито';
+  String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Отбивайтесь';
+  String get durakHintDefend => 'Defend';
 
   @override
-  String get durakHintDefendOrTransfer => 'Отбивайтесь или переведите';
+  String get durakHintDefendOrTransfer => 'Defend or transfer';
 
   @override
-  String get durakHintOpponentDefends => 'Соперник отбивается';
+  String get durakHintOpponentDefends => 'Opponent is defending';
 
   @override
-  String get durakHintThrowInFirst => 'Подкиньте карты или «Все» (макс. 5 в первом отбое)';
+  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
 
   @override
-  String get durakHintThrowIn => 'Подкиньте карты или нажмите «Все»';
+  String get durakHintThrowIn => 'Throw in cards or tap “All”';
 
   @override
-  String get durakHintOpponentThrows => 'Соперник подкидывает';
+  String get durakHintOpponentThrows => 'Opponent is throwing in';
 
   @override
-  String get durakHintTakeFollow => 'Подкиньте вдогонку или нажмите «Готово»';
+  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Соперник может подкинуть вдогонку';
+  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
 
   @override
-  String get durakHintBito => 'Подкиньте карту или скажите «Бито»';
+  String get durakHintBito => 'Throw in a card or say “Beat”';
 
   @override
-  String get durakHintOpponentBito => 'Соперник подкидывает или говорит «Бито»';
+  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
 
   @override
-  String get durakHintYourAttack => 'Ваш ход — атакуйте';
+  String get durakHintYourAttack => 'Your turn — attack';
 
   @override
-  String get durakHintOpponentAttack => 'Атакует соперник';
+  String get durakHintOpponentAttack => 'Opponent is attacking';
 
   @override
-  String get durakHintYouLost => 'Вы проиграли — вы дурак';
+  String get durakHintYouLost => 'You lost — you’re the fool';
 
   @override
-  String get durakHintDrawAllOut => 'Ничья — все вышли';
+  String get durakHintDrawAllOut => 'Draw — everyone went out';
 
   @override
-  String get durakHintYouFinished => 'Вы вышли — ждём конца партии';
+  String get durakHintYouFinished => 'You’re out — waiting for the end';
 
   @override
   String get shopPurchaseQueued => 'Пакупка захавана — прымяніцца ў рэжыме анлайн';
@@ -188,23 +188,23 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Версия $version';
+    return 'Version $version';
   }
 
   @override
-  String get appUpdateTitle => 'Доступно обновление';
+  String get appUpdateTitle => 'Update available';
 
   @override
-  String get appUpdateBody => 'Вышла новая версия приложения. Обновитесь, чтобы продолжить.';
+  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
 
   @override
-  String get appUpdateWhatsNew => 'Что нового';
+  String get appUpdateWhatsNew => 'What\'s new';
 
   @override
-  String get appUpdateOk => 'Обновить';
+  String get appUpdateOk => 'Update';
 
   @override
-  String get appUpdateLaterBanner => 'После партии обновим приложение';
+  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
 
   @override
   String get loginTitle => 'Уваход';
@@ -522,7 +522,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesTicTacToe => 'Крыжыкі-нулікі';
 
   @override
-  String get gamesDurak => 'Дурак';
+  String get gamesDurak => 'Durak';
 
   @override
   String get gamesRules => 'Правілы';
@@ -558,74 +558,74 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesNoCenter => 'Без старту па цэнтры';
 
   @override
-  String get gamesObservation => 'Наблюдение';
+  String get gamesObservation => 'Spectating';
 
   @override
-  String get gamesObservationHint => 'Можно смотреть до конца партии';
+  String get gamesObservationHint => 'You can watch until the game ends';
 
   @override
-  String get gamesFinishCurrentFirst => 'Сначала завершите текущую игру';
+  String get gamesFinishCurrentFirst => 'Finish your current game first';
 
   @override
-  String get gamesVariantClassic => 'Классика';
+  String get gamesVariantClassic => 'Classic';
 
   @override
-  String get gamesVariantGomoku => 'Гомоку';
+  String get gamesVariantGomoku => 'Gomoku';
 
   @override
-  String get gamesVariantUltimate => 'Ультимейт';
+  String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => 'На троих';
+  String get gamesVariantMulti3 => '3 players';
 
   @override
-  String get gamesVariantMulti4 => 'На четверых';
+  String get gamesVariantMulti4 => '4 players';
 
   @override
-  String get gamesDurakModePodkidnoi => 'Подкидной';
+  String get gamesDurakModePodkidnoi => 'Throw-in';
 
   @override
-  String get gamesDurakModePerevodnoi => 'Переводной';
+  String get gamesDurakModePerevodnoi => 'Transfer';
 
   @override
-  String get gamesDurakDeck24 => '24 карты';
+  String get gamesDurakDeck24 => '24 cards';
 
   @override
-  String get gamesDurakDeck36 => '36 карт';
+  String get gamesDurakDeck36 => '36 cards';
 
   @override
-  String get gamesDurakDeck52 => '52 карты';
+  String get gamesDurakDeck52 => '52 cards';
 
   @override
   String rulesDurakMode(String mode) {
-    return 'Режим: $mode';
+    return 'Mode: $mode';
   }
 
   @override
   String rulesDurakPlayersDeck(int players, String deck) {
-    return 'Игроки: $players. Колода: $deck.';
+    return 'Players: $players. Deck: $deck.';
   }
 
   @override
-  String get rulesDurakOfflineBot => 'Игра против бота, без ставок и лимита времени.';
+  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
 
   @override
-  String get rulesDurakAttack => 'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.';
+  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
 
   @override
-  String get rulesDurakBeat => 'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.';
+  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
 
   @override
-  String get rulesDurakLoser => 'Проигравший — у кого в конце партии остались карты, «дурак».';
+  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Игроки $count/$maxPlayers';
+    return 'Players $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Лобби $name';
+    return 'Lobby $name';
   }
 
   @override
@@ -1919,4 +1919,81 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Забраць';
+
+  @override
+  String get durakActionPass => 'Пас';
+
+  @override
+  String get durakRoleTook => 'Забраў';
+
+  @override
+  String get durakRoleBeats => 'Б\'е';
+
+  @override
+  String get durakRoleThrowIn => 'Падкід';
+
+  @override
+  String get durakRoleTurn => 'Ход';
+
+  @override
+  String get durakRoleDefends => 'Адбіваецца';
+
+  @override
+  String get durakStatusTaking => 'Бяру';
+
+  @override
+  String get durakHintDefenderTurn => 'Ход абаронцы';
+
+  @override
+  String get gameYouEliminated => 'Вы выбылі';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Вы занялі $place-е месца';
+  }
+
+  @override
+  String get gameOverNeutral => 'Партыя завершана';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Ход $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Чат групы';
+
+  @override
+  String get lobbyChatNotReady => 'Чат лобі яшчэ не створаны';
+
+  @override
+  String get chatsGroupChat => 'Групавы чат';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Удзельнікі: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count уч.';
+  }
+
+  @override
+  String get chatsYouSuffix => '(вы)';
+
+  @override
+  String get chatTitleDurak3 => 'Дурак на траіх';
+
+  @override
+  String get chatTitleDurak4 => 'Дурак на чацвярых';
+
+  @override
+  String get rulesTttUltimate => 'Ультымейт: 9 міні-палёў 3×3. Ход у клетку адпраўляе суперніка на адпаведнае міні-поле. Перамагае той, хто сабраў лінію на мета-полі.';
+
+  @override
+  String get rulesTttMulti3 => 'На траіх: поле 3×3, трое гульцоў (X, O, △). Хто сабраў лінію са сваіх знакаў — перамагае.';
+
+  @override
+  String get rulesTttMulti4 => 'На чацвярых: поле 4×4, чацвёра гульцоў (X, O, △, □). Хто сабраў лінію са сваіх знакаў — перамагае.';
 }

@@ -1919,4 +1919,81 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Забрать';
+
+  @override
+  String get durakActionPass => 'Пас';
+
+  @override
+  String get durakRoleTook => 'Забрал';
+
+  @override
+  String get durakRoleBeats => 'Бьёт';
+
+  @override
+  String get durakRoleThrowIn => 'Подкид';
+
+  @override
+  String get durakRoleTurn => 'Ход';
+
+  @override
+  String get durakRoleDefends => 'Отбивается';
+
+  @override
+  String get durakStatusTaking => 'Беру';
+
+  @override
+  String get durakHintDefenderTurn => 'Ход защитника';
+
+  @override
+  String get gameYouEliminated => 'Вы выбыли';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Вы заняли $place-е место';
+  }
+
+  @override
+  String get gameOverNeutral => 'Партия окончена';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Ход $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Чат группы';
+
+  @override
+  String get lobbyChatNotReady => 'Чат лобби ещё не создан';
+
+  @override
+  String get chatsGroupChat => 'Групповой чат';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Участники: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count уч.';
+  }
+
+  @override
+  String get chatsYouSuffix => '(вы)';
+
+  @override
+  String get chatTitleDurak3 => 'Дурак на троих';
+
+  @override
+  String get chatTitleDurak4 => 'Дурак на четверых';
+
+  @override
+  String get rulesTttUltimate => 'Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.';
+
+  @override
+  String get rulesTttMulti3 => 'На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.';
+
+  @override
+  String get rulesTttMulti4 => 'На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.';
 }

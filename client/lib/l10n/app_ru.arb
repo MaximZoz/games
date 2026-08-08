@@ -1186,5 +1186,56 @@
     }
   },
   "coinsCreditCardTitle": "Вам начислены монеты",
-  "coinsClaim": "Забрать"
+  "coinsClaim": "Забрать",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Забрал",
+  "durakRoleBeats": "Бьёт",
+  "durakRoleThrowIn": "Подкид",
+  "durakRoleTurn": "Ход",
+  "durakRoleDefends": "Отбивается",
+  "durakStatusTaking": "Беру",
+  "durakHintDefenderTurn": "Ход защитника",
+  "gameYouEliminated": "Вы выбыли",
+  "gameYouPlaced": "Вы заняли {place}-е место",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Партия окончена",
+  "gameTurnOf": "Ход {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Чат группы",
+  "lobbyChatNotReady": "Чат лобби ещё не создан",
+  "chatsGroupChat": "Групповой чат",
+  "chatsMembersCount": "Участники: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} уч.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(вы)",
+  "chatTitleDurak3": "Дурак на троих",
+  "chatTitleDurak4": "Дурак на четверых",
+  "rulesTttUltimate": "Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.",
+  "rulesTttMulti3": "На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.",
+  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает."
 }
