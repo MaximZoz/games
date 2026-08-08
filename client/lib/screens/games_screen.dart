@@ -915,20 +915,36 @@ class _GamesPageContent extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: InkWell(
           onTap: () async {
+            // Сначала Дурак: дефолт observation — tictactoe, а GetGame
+            // крестиков для durak-id раньше «успешно» открывал чужой экран.
             var gt = normalizeGameType(obs.gameType);
             if (gt != 'durak') {
               try {
                 await ref.read(durakRepositoryProvider).getGame(obs.gameId);
                 gt = 'durak';
-                ref.read(activeGameProvider.notifier).setObservationLocal(
-                      ObservationItem(
-                        gameId: obs.gameId,
-                        lobbyId: obs.lobbyId,
-                        gameType: 'durak',
-                      ),
-                    );
-              } catch (_) {}
+              } catch (_) {
+                try {
+                  await ref.read(gamesRepositoryProvider).getGame(obs.gameId);
+                  gt = 'tictactoe';
+                } catch (_) {
+                  return;
+                }
+              }
+            } else {
+              // Подтверждаем, что партия Дурака ещё доступна.
+              try {
+                await ref.read(durakRepositoryProvider).getGame(obs.gameId);
+              } catch (_) {
+                return;
+              }
             }
+            ref.read(activeGameProvider.notifier).setObservationLocal(
+                  ObservationItem(
+                    gameId: obs.gameId,
+                    lobbyId: obs.lobbyId,
+                    gameType: gt,
+                  ),
+                );
             if (!context.mounted) return;
             context.push(gamePathFor(obs.gameId, gameType: gt));
           },

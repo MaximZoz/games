@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -135,6 +137,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       if (!mounted) return;
       // Офлайн с ботами — не пиним и не синкаем active с сервером.
       if (OfflineTttRegistry.instance.isOffline(widget.gameId)) return;
+      // Observation Дурака ошибочно открыли как крестики — вернуть на Дурак.
+      final obs = ref.read(observationGameProvider);
+      if (obs != null &&
+          obs.gameId == widget.gameId &&
+          normalizeGameType(obs.gameType) == 'durak') {
+        context.go(gamePathFor(widget.gameId, gameType: 'durak'));
+        return;
+      }
       final prevActive = ref.read(activeGameProvider).valueOrNull;
       final meId = ref.read(authStateProvider).valueOrNull?.id;
       final knownGame = ref.read(gameStateOverrideProvider(widget.gameId)) ??
@@ -151,7 +161,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         _clearSessionForFinishedGame();
       } else if (elim) {
         clearBlockingGamePin(ref, ifGameId: widget.gameId);
-        enterGameObservation(ref, widget.gameId);
+        enterGameObservation(ref, widget.gameId, gameType: 'tictactoe');
       } else {
         pinBlockingGame(ref, widget.gameId);
         ref.read(activeGameProvider.notifier).setLocal(
@@ -162,6 +172,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 isMyTurn: prevActive?.gameId == widget.gameId
                     ? (prevActive?.isMyTurn ?? false)
                     : false,
+                gameType: 'tictactoe',
               ),
             );
       }
@@ -375,14 +386,32 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           }
         },
         error: (_, __) => WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _waitingForBotMove = false;
-            ref
-                .read(
-                    gameStateInvalidateBlockedProvider(widget.gameId).notifier)
-                .state = false;
-            context.go('/games');
+          if (!mounted) return;
+          _waitingForBotMove = false;
+          ref
+              .read(
+                  gameStateInvalidateBlockedProvider(widget.gameId).notifier)
+              .state = false;
+          // Возможно открыли durak-id на экране крестиков.
+          final obs = ref.read(observationGameProvider);
+          if (obs != null &&
+              obs.gameId == widget.gameId &&
+              normalizeGameType(obs.gameType) == 'durak') {
+            context.go(gamePathFor(widget.gameId, gameType: 'durak'));
+            return;
           }
+          final router = GoRouter.of(context);
+          final gameId = widget.gameId;
+          unawaited(() async {
+            try {
+              await ref.read(durakRepositoryProvider).getGame(gameId);
+              if (!mounted) return;
+              enterGameObservation(ref, gameId, gameType: 'durak');
+              router.go(gamePathFor(gameId, gameType: 'durak'));
+            } catch (_) {
+              if (mounted) router.go('/games');
+            }
+          }());
         }),
       );
     });
@@ -583,7 +612,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
                   clearBlockingGamePin(ref, ifGameId: widget.gameId);
-                  enterGameObservation(ref, widget.gameId);
+                  enterGameObservation(ref, widget.gameId,
+                      gameType: 'tictactoe');
                 });
               }
             }
@@ -1021,7 +1051,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         final multi = (game?.maxPlayers ?? 0) > 2 ||
             (game?.playerUserIds.length ?? 0) > 2;
         if (multi) {
-          enterGameObservation(ref, gameId);
+          enterGameObservation(ref, gameId, gameType: 'tictactoe');
         }
         ref.read(gameStateOverrideProvider(gameId).notifier).state = null;
         ref.invalidate(gameStateProvider(gameId));
@@ -1446,7 +1476,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         if (eliminated && !isOver) {
           // Партия ещё идёт — observation до закрытия.
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
-          enterGameObservation(ref, widget.gameId);
+          enterGameObservation(ref, widget.gameId, gameType: 'tictactoe');
         } else {
           _clearSessionForFinishedGame();
         }
@@ -1475,7 +1505,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             (g?.playerUserIds.length ?? 0) > 2;
         if (multi && g?.status == 'active') {
           // Multi: observation, пока партия не закончится.
-          enterGameObservation(ref, gameId);
+          enterGameObservation(ref, gameId, gameType: 'tictactoe');
         } else {
           ref.read(activeGameProvider.notifier).clearLocal();
           ref

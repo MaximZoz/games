@@ -228,6 +228,7 @@ class DurakGameView {
   bool get iAmEliminated => myIndex >= 0 && isEliminated(myIndex);
 
   /// Места победителей по порядку выхода (finished), затем оставшиеся не-дураки.
+  /// После сдач последний с картами занимает следующее оплачиваемое место.
   List<int> get winnerPlaceOrder {
     final n = playerIds.length;
     final seen = <int>{};
@@ -242,6 +243,13 @@ class DurakGameView {
       if (i == loserIndex || isEliminated(i) || seen.contains(i)) continue;
       out.add(i);
       seen.add(i);
+    }
+    if (eliminated.isNotEmpty &&
+        loserIndex >= 0 &&
+        loserIndex < n &&
+        !isEliminated(loserIndex) &&
+        !seen.contains(loserIndex)) {
+      out.add(loserIndex);
     }
     return out;
   }
@@ -258,7 +266,6 @@ class DurakGameView {
       return fi < 0 ? 0 : fi + 1;
     }
     if (!isOver || isDraw) return 0;
-    if (myIndex == loserIndex) return 0;
     final order = winnerPlaceOrder;
     final idx = order.indexOf(myIndex);
     return idx < 0 ? 0 : idx + 1;

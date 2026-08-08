@@ -298,6 +298,27 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Один сдался, двое доиграли: 1-е и 2-е места (дурак среди оставшихся — 2-е), сдавшийся вне списка.
+func TestWinnerPlaceOrderAfterEliminate(t *testing.T) {
+	st := &State{
+		PlayerIDs:          []string{"a", "b", "c"},
+		Hands:              [][]Card{{}, {{6, Hearts}}, {}},
+		FinishedIndices:    []int{0}, // a вышел в ноль
+		LoserIndex:         1,        // b — дурак
+		EliminatedIndices:  []int{2}, // c сдался раньше
+		Status:             StatusOver,
+		Deck:               nil,
+	}
+	got := st.WinnerPlaceOrder()
+	if len(got) != 2 || got[0] != 0 || got[1] != 1 {
+		t.Fatalf("place order=%v want [0 1] (1st + 2nd; eliminated out)", got)
+	}
+	// Доли банка 3p: 2/3 и 1/3 — без roll-up всего банка первому.
+	if c1, c2 := CreditForPlace(2, 3, 0), CreditForPlace(2, 3, 1); c1 != 4 || c2 != 2 {
+		t.Fatalf("credits want 4/2, got %d/%d", c1, c2)
+	}
+}
+
 // Два выхода «в ноль» одной волной → TiedLeaders=2 (ничья 1–2).
 func TestTiedLeadersOnSimultaneousFinish(t *testing.T) {
 	st := &State{

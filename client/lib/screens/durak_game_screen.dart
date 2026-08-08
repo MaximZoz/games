@@ -3428,16 +3428,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       canLeaveFreely: eliminated || finishedOut,
       onLeaveFinished: () async {
         if (!mounted) return;
-        _navigateToGames();
+        // Уже выбыл / вышел в ноль, партия идёт — observation с типом durak.
+        if ((eliminated || finishedOut) && view != null && !view.isOver) {
+          enterGameObservation(ref, widget.gameId, gameType: 'durak');
+        }
+        _navigateToGames(keepObservation: true);
       },
       onForfeitAndLeave: () async {
         if (!mounted) return;
+        final multi = (view?.playerIds.length ?? 0) > 2;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(durakRepositoryProvider).forfeit(widget.gameId);
         } catch (_) {}
         if (!mounted) return;
-        _navigateToGames();
+        // Сразу локальная observation с типом durak — иначе карточка/роутер
+        // могут увести в крестики до refresh GetActive.
+        if (multi) {
+          enterGameObservation(ref, widget.gameId, gameType: 'durak');
+        }
+        _navigateToGames(keepObservation: multi);
         unawaited(ref.read(activeGameProvider.notifier).refresh());
       },
     );
@@ -3451,12 +3461,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
-  void _navigateToGames() {
+  void _navigateToGames({bool keepObservation = false}) {
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
     _rematchRespondedIds.clear();
     _rematchPollTimer?.cancel();
-    _clearSessionForFinishedGame();
+    // При уходе в observation не трогаем карточку наблюдения.
+    if (!keepObservation) {
+      _clearSessionForFinishedGame();
+    } else {
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      final prev = ref.read(activeGameProvider).valueOrNull;
+      if (prev?.gameId == widget.gameId) {
+        ref.read(activeGameProvider.notifier).clearLocal();
+      }
+    }
     context.go('/games');
     if (rematchLobbyId != null) {
       unawaited(

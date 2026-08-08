@@ -2986,6 +2986,12 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
+	// Не отдаём дурак (и др.) через endpoint крестиков — иначе observation
+	// с дефолтным game_type уводит в чужой экран.
+	if gt := strings.TrimSpace(m["game_type"]); gt != "" && gt != "tictactoe" {
+		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
+		return
+	}
 	if h.applyGameTimeout(ctx, key, m) {
 		m, _ = h.Rdb.HGetAll(ctx, key).Result()
 	}

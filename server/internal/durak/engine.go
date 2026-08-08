@@ -1150,7 +1150,9 @@ func (s *State) checkOver() {
 }
 
 // WinnerPlaceOrder — индексы победителей по местам (1-й вышедший, 2-й, …).
-// Дурак и сдавшиеся не входят. Единственный оставшийся после сдач — 1-е место.
+// Сдавшиеся долю не получают. Обычный «дурак» (LoserIndex) — тоже 0.
+// Если кто-то сдался, а остальные доиграли: последний с картами занимает
+// следующее оплачиваемое место (2-е при 3 игроках и т.п.), а не остаётся без выплаты.
 func (s *State) WinnerPlaceOrder() []int {
 	seen := map[int]bool{}
 	out := make([]int, 0, len(s.PlayerIDs))
@@ -1171,6 +1173,12 @@ func (s *State) WinnerPlaceOrder() []int {
 		// Единственный выживший (ещё с картами) или вышедший без записи.
 		out = append(out, i)
 		seen[i] = true
+	}
+	// После сдач: «дурак» среди оставшихся — последнее оплачиваемое место.
+	if len(s.EliminatedIndices) > 0 &&
+		s.LoserIndex >= 0 && s.LoserIndex < len(s.PlayerIDs) &&
+		!s.IsEliminated(s.LoserIndex) && !seen[s.LoserIndex] {
+		out = append(out, s.LoserIndex)
 	}
 	return out
 }
