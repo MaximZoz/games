@@ -61,14 +61,12 @@ func TestAttackDefendBito(t *testing.T) {
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
-	if st.Phase != PhaseAttackFollow {
-		t.Fatalf("phase after defend = %v", st.Phase)
-	}
-	if err := st.SayBito(0); err != nil {
-		t.Fatalf("bito: %v", err)
-	}
+	// Атакующему нечего подкинуть (8♠ ≠ ранги стола) — авто-бито.
 	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
 		t.Fatalf("bito state: table=%v bito=%v", st.Table, st.BitoPile)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase after auto-bito = %v, want attack", st.Phase)
 	}
 	if st.AttackerIndex != 1 {
 		t.Fatalf("next attacker = %d, want 1", st.AttackerIndex)
@@ -460,17 +458,9 @@ func TestThrowInAfterTake(t *testing.T) {
 	if err := st.Attack(0, Card{9, Diamonds}); err != nil {
 		t.Fatalf("throw-in after take: %v", err)
 	}
-	if st.Phase != PhaseTakeFollow {
-		t.Fatalf("phase after throw-in=%v, want take_follow", st.Phase)
-	}
-	if len(st.Table) != 2 {
-		t.Fatalf("table=%d, want 2", len(st.Table))
-	}
-	if err := st.Done(0); err != nil {
-		t.Fatalf("done: %v", err)
-	}
+	// Больше подкидывать нечего (осталась 10♣) — авто-Done / взятие.
 	if st.Phase != PhaseAttack {
-		t.Fatalf("phase after done=%v, want attack", st.Phase)
+		t.Fatalf("phase after throw-in=%v, want attack (auto done)", st.Phase)
 	}
 	if len(st.Table) != 0 {
 		t.Fatalf("table should be clear")
@@ -759,14 +749,120 @@ func TestThrowInFourPlayersNeighborsOnly(t *testing.T) {
 	}
 }
 
-// Очередь «Бито» по часовой → бита.
+// Если атакующему нечего подкинуть после отбоя — авто-пас, ход сразу третьему с картами.
+func TestAutoSkipThrowerWithoutMatchingCards(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{10, Hearts}, {11, Hearts}},       // attacker — нет ранга 6
+			{{7, Clubs}, {9, Spades}},          // defender (бьёт 6♣), карта в запасе
+			{{6, Diamonds}, {8, Spades}},       // third — есть 6
+		},
+		Table:         []Pair{{Attack: Card{6, Clubs}}},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseDefend,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Defend(1, Card{7, Clubs}, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if st.Phase != PhaseAttackFollow {
+		t.Fatalf("phase=%s want attack_follow", st.Phase)
+	}
+	if st.ThrowerIndex != 2 {
+		t.Fatalf("thrower=%d want 2 (attacker auto-skipped)", st.ThrowerIndex)
+	}
+	if !st.CanThrowIn(2) {
+		t.Fatal("player 2 should be able to throw in")
+	}
+	if st.CanThrowIn(0) {
+		t.Fatal("attacker without matching ranks must not show as thrower")
+	}
+}
+
+// После «Беру», если никому нечего подкинуть — сразу забираем стол (без фазы «Подкид»).
+func TestTakeAutoResolveWhenNothingToThrow(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{10, Hearts}, {11, Hearts}}, // нет ранга 6
+			{{6, Diamonds}, {8, Clubs}},
+			{{9, Spades}, {10, Clubs}}, // нет ранга 6
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Attack(0, Card{10, Hearts}); err != nil {
+		t.Fatalf("attack: %v", err)
+	}
+	// Подменим стол на 6, чтобы у атакующих не было подкида.
+	st.Table = []Pair{{Attack: Card{6, Clubs}}}
+	st.Hands[0] = []Card{{10, Hearts}, {11, Hearts}}
+	if err := st.Take(1); err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase=%s want attack (auto resolve take)", st.Phase)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table should be cleared, got %d", len(st.Table))
+	}
+	if !st.LastWasTake {
+		t.Fatal("LastWasTake should be set")
+	}
+}
+
+// После «Беру» атакующий без карт ранга пропускается — ход сразу тому, кто может подкинуть.
+func TestTakeFollowSkipsThrowerWithoutCards(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{10, Hearts}, {11, Hearts}}, // attacker — нет 7
+			{{6, Diamonds}, {8, Clubs}},
+			{{7, Diamonds}, {9, Spades}}, // third
+		},
+		Table:         []Pair{{Attack: Card{7, Clubs}}},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseDefend,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Take(1); err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if st.Phase != PhaseTakeFollow {
+		t.Fatalf("phase=%s want take_follow", st.Phase)
+	}
+	if st.ThrowerIndex != 2 {
+		t.Fatalf("thrower=%d want 2", st.ThrowerIndex)
+	}
+	if !st.CanThrowIn(2) {
+		t.Fatal("player 2 should throw after take")
+	}
+}
+
+// Очередь «Бито» по часовой → бита (у обоих есть чем подкинуть, но жмут бито).
 func TestPassAllResolvesBito(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{6, Hearts}}, // может подкинуть, но жмёт бито
+			{{6, Hearts}, {9, Spades}}, // может подкинуть, но жмёт бито
 			{{10, Clubs}},
-			{{6, Diamonds}},
+			{{6, Diamonds}, {8, Hearts}},
 		},
 		Table: []Pair{
 			{Attack: Card{6, Clubs}, Defense: &Card{Rank: 7, Suit: Clubs}},
@@ -791,6 +887,36 @@ func TestPassAllResolvesBito(t *testing.T) {
 	}
 	if len(st.Table) != 0 {
 		t.Fatalf("table should be cleared after bito, got %d", len(st.Table))
+	}
+	if st.Phase != PhaseAttack {
+		t.Fatalf("phase=%s want attack", st.Phase)
+	}
+}
+
+// После отбоя, если никому нечего подкинуть — сразу бито без фазы «Подкид».
+func TestAutoBitoWhenNobodyCanThrow(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{10, Hearts}, {11, Hearts}},
+			{{7, Clubs}, {9, Spades}},
+			{{8, Diamonds}, {9, Hearts}},
+		},
+		Table:         []Pair{{Attack: Card{6, Clubs}}},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseDefend,
+		Mode:          ModePodkidnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if err := st.Defend(1, Card{7, Clubs}, 0); err != nil {
+		t.Fatalf("defend: %v", err)
+	}
+	if len(st.Table) != 0 {
+		t.Fatalf("table should be cleared by auto-bito, got %d", len(st.Table))
 	}
 	if st.Phase != PhaseAttack {
 		t.Fatalf("phase=%s want attack", st.Phase)

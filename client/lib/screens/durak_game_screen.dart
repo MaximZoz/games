@@ -4342,13 +4342,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !finished &&
         view.defenderIndex == idx &&
         view.table.isNotEmpty;
-    final roleLabel = theirTurn
-        ? (view.phase == 'defend' && isDefender
-            ? 'Бьёт'
-            : (view.phase == 'attack_follow' || view.phase == 'take_follow'
-                ? 'Подкид'
-                : 'Ход'))
-        : (isDefender ? 'Отбивается' : null);
+    // После «Беру» у защитника — «Забрал», а не «Отбивается»/«Бьёт».
+    final String? roleLabel;
+    if (!view.isOver &&
+        !finished &&
+        view.phase == 'take_follow' &&
+        view.defenderIndex == idx) {
+      roleLabel = 'Забрал';
+    } else if (theirTurn) {
+      if (view.phase == 'defend' && isDefender) {
+        roleLabel = 'Бьёт';
+      } else if (view.phase == 'attack_follow' || view.phase == 'take_follow') {
+        roleLabel = 'Подкид';
+      } else {
+        roleLabel = 'Ход';
+      }
+    } else if (isDefender) {
+      roleLabel = 'Отбивается';
+    } else {
+      roleLabel = null;
+    }
 
     return Consumer(
       builder: (context, ref, _) {
