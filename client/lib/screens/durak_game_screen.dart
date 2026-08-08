@@ -2798,8 +2798,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     final n = view.hands.length;
     const handSize = 6;
-    // По часовой начиная с игрока «над колодой» (слева от меня = myIndex-1).
-    final start = (view.myIndex - 1 + n) % n;
+    // По часовой на экране: я снизу → следующий слева (над колодой) → дальше.
+    final start = (view.myIndex + 1) % n;
     final seatOrder = List<int>.generate(n, (i) => (start + i) % n);
     final myCards = List<PlayingCard>.of(myHand);
     var myIdx = 0;
@@ -4273,7 +4273,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// Индексы соперников по часовой от меня: сначала справа, затем дальше, слева последним.
+  /// Индексы соперников по часовой от меня: [следующий, …, предыдущий].
+  /// На экране (я снизу): следующий слева → дальше сверху → предыдущий справа.
   List<int> _opponentSeatOrder(DurakGameView view) {
     final n = view.playerIds.length;
     if (n < 3 || view.myIndex < 0) return const [];
@@ -4282,25 +4283,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     ];
   }
 
-  /// 3–4 игрока: аватарки + веера (слева / сверху / справа).
+  /// 3–4 игрока: рассадка по часовой для каждого зрителя одинаково.
+  /// Я снизу; ход/отбой на следующего — всегда налево (как часовая стрелка).
   Widget _multiOpponentsArea(DurakGameView view, Size tableSize) {
     final seats = _opponentSeatOrder(view);
     if (seats.isEmpty) return const SizedBox.shrink();
     Widget seat(int idx) => _opponentSeat(view, idx, tableSize);
     if (seats.length == 2) {
-      // Я снизу: seats[0]=справа, seats[1]=слева.
+      // 3 игрока: слева = следующий (my+1), справа = предыдущий (my+2).
       return Padding(
         padding: const EdgeInsets.only(bottom: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: seat(seats[1])),
             Expanded(child: seat(seats[0])),
+            Expanded(child: seat(seats[1])),
           ],
         ),
       );
     }
-    // 4 игрока: top / left / right.
+    // 4 игрока: слева my+1, сверху my+2, справа my+3.
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Column(
@@ -4311,8 +4313,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: seat(seats[2])),
               Expanded(child: seat(seats[0])),
+              Expanded(child: seat(seats[2])),
             ],
           ),
         ],
