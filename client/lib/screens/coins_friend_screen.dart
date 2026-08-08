@@ -47,7 +47,8 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
           ),
         ),
         body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topLeft,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: useDesktopTiles(context) ? 520 : 480,

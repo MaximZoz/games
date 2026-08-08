@@ -166,23 +166,21 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
-                  : DesktopTileGrid(
-                      itemCount: groupKeys.length,
-                      maxCellWidth: 340,
-                      maxContentWidth: 1080,
-                      itemBuilder: (context, index) => _emojiGroupTile(
-                        context,
-                        groupKeys[index],
-                        byGroup[groupKeys[index]]!,
-                      ),
-                      mobileBuilder: (context) => ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        itemCount: groupKeys.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) => _emojiGroupTile(
-                          context,
-                          groupKeys[index],
-                          byGroup[groupKeys[index]]!,
+                  // Одна колонка сверху вниз, к левому краю (не сетка по центру).
+                  : Align(
+                      alignment: Alignment.topLeft,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          itemCount: groupKeys.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) => _emojiGroupTile(
+                            context,
+                            groupKeys[index],
+                            byGroup[groupKeys[index]]!,
+                          ),
                         ),
                       ),
                     ),
