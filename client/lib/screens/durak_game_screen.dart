@@ -5253,9 +5253,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     if (view.phase == 'throw_in') {
       if (view.throwerIndex == view.myIndex) {
-        return view.legalAttack.isNotEmpty
-            ? 'Подкиньте карты или нажмите «Все»'
-            : 'Ход защитника';
+        if (view.legalAttack.isEmpty) return 'Ход защитника';
+        final cap = view.firstRound ? ' (макс. 5 в первом отбое)' : '';
+        return 'Подкиньте карты или нажмите «Все»$cap';
       }
       return 'Соперник подкидывает';
     }

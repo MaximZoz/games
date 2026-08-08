@@ -4,6 +4,7 @@ import 'card.dart';
 enum DurakTurn {
   attacker, // атакующий кладёт первую карту атаки или подкидывает
   defender, // защитник бьёт очередную атаку
+  throwIn, // пачка подкида до «Все» (в т.ч. первый отбой ≤5)
   attackerFollowUp, // атакующий может подкинуть или сказать «Бито»
   takeFollowUp, // защитник берёт; атакующий может подкинуть вдогонку
 }
@@ -198,6 +199,7 @@ class DurakGame {
     if (!_canThrowInSeat(playerIndex)) return false;
     if (turn != DurakTurn.attacker &&
         turn != DurakTurn.attackerFollowUp &&
+        turn != DurakTurn.throwIn &&
         turn != DurakTurn.defender &&
         turn != DurakTurn.takeFollowUp) {
       return false;
@@ -272,10 +274,36 @@ class DurakGame {
       hands[pIndex].remove(c);
       table.add(TablePair(c));
     }
-    if (turn != DurakTurn.takeFollowUp) {
+    if (turn == DurakTurn.takeFollowUp) {
+      return;
+    }
+    // Пачка подкида: ход остаётся у атакующего до «Все» / лимита (первый отбой ≤5).
+    turn = DurakTurn.throwIn;
+    if (!_canThrowMore(pIndex)) {
       turn = DurakTurn.defender;
     }
   }
+
+  bool _canThrowMore(int playerIndex) {
+    if (table.length >= maxAttacksThisRound) return false;
+    final ranks = tableRanks;
+    return hands[playerIndex].any((c) => ranks.contains(c.rank.value));
+  }
+
+  /// «Все» — закончить пачку подкида, ход защитнику.
+  void confirmThrowAll({int? playerIndex}) {
+    final pIndex = playerIndex ?? attackerIndex;
+    if (turn != DurakTurn.throwIn || pIndex != attackerIndex) {
+      throw const DurakRuleError('нельзя подтвердить подкид');
+    }
+    turn = DurakTurn.defender;
+  }
+
+  /// Кнопка «Все» — только если ещё есть что подкинуть (иначе авто-отбой).
+  bool get canConfirmThrowAll =>
+      turn == DurakTurn.throwIn &&
+      table.isNotEmpty &&
+      _canThrowMore(attackerIndex);
 
   /// Бить пару [pairIndex] картой [card]. Если индекс не задан — первая, которую
   /// карта реально бьёт.

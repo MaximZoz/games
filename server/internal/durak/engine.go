@@ -500,25 +500,24 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 			}
 		}
 	}
+	placedOnEmpty := len(s.Table) == 0
 	for _, c := range cards {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
-	}
-	// Первая атака на пустой стол — сразу бьёт защитник.
-	if len(s.Table) == len(cards) {
-		s.Phase = PhaseDefend
-		s.resetThrowerToAttacker()
-		return nil
 	}
 	if s.Phase == PhaseTakeFollow {
 		// Вдогонку: очередь на текущем; если карт больше нет — авто дальше.
 		s.clearPassed()
 		return s.skipThrowersWithoutCards()
 	}
-	// Подкид пачкой: ход остаётся у подкидывающего до «Все».
+	// Первая атака / подкид пачкой: ход у атакующего до «Все».
+	// Первый отбой — не больше 5 карт (MaxAttacksThisRound); без карт — сразу defend.
 	s.Phase = PhaseThrowIn
 	s.ThrowerIndex = playerIdx
-	// Нечего больше класть / стол заполнен — сразу отдаём защитнику (без кнопки «Все»).
+	if placedOnEmpty {
+		s.resetThrowerToAttacker()
+		s.ThrowerIndex = playerIdx
+	}
 	if len(s.legalThrowInCards(playerIdx)) == 0 {
 		return s.finishThrowIn()
 	}

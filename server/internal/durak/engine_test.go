@@ -256,6 +256,95 @@ func TestAttackManySameRank(t *testing.T) {
 	}
 }
 
+// Первый отбой: пачка до 5 карт (лимит), «Все»/авто — потом отбой.
+func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Clubs}, {6, Spades}, {6, Diamonds}, {6, Hearts}, {6, Spades}, {9, Clubs}},
+			{{7, Clubs}, {8, Clubs}, {9, Hearts}, {10, Hearts}, {11, Hearts}, {12, Hearts}},
+		},
+		Trump:         Hearts,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		FirstRound:    true,
+	}
+	// Две 6♠ в руке — AttackMany/remove снимает по одной.
+	st.Hands[0] = []Card{
+		{6, Clubs}, {6, Spades}, {6, Diamonds}, {6, Hearts},
+		{9, Clubs}, {10, Clubs},
+	}
+	if err := st.Attack(0, Card{6, Clubs}); err != nil {
+		t.Fatalf("attack1: %v", err)
+	}
+	if st.Phase != PhaseThrowIn {
+		t.Fatalf("phase=%s want throw_in after first card", st.Phase)
+	}
+	if st.LegalDefendCards(1) != nil {
+		t.Fatal("defender must wait until batch ends")
+	}
+	for _, c := range []Card{{6, Spades}, {6, Diamonds}, {6, Hearts}} {
+		if err := st.Attack(0, c); err != nil {
+			t.Fatalf("throw %v: %v", c, err)
+		}
+	}
+	// 4 шестёрки, больше того же ранга нет → авто defend (слот 5 свободен, но нечем).
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend when no more same rank", st.Phase)
+	}
+	if len(st.Table) != 4 {
+		t.Fatalf("table=%d want 4", len(st.Table))
+	}
+
+	// Явно: 5-я карта ок, 6-я на первом отбое — нет.
+	st = &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{6, Clubs}, {9, Diamonds}},
+			{{7, Hearts}, {8, Hearts}, {9, Hearts}, {10, Hearts}, {11, Hearts}, {12, Hearts}},
+		},
+		Table: []Pair{
+			{Attack: Card{6, Spades}}, {Attack: Card{6, Diamonds}},
+			{Attack: Card{6, Hearts}}, {Attack: Card{6, Clubs}},
+		},
+		Trump:         Clubs,
+		AttackerIndex: 0,
+		ThrowerIndex:  0,
+		Phase:         PhaseThrowIn,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		FirstRound:    true,
+	}
+	// Перезапишем стол/руку: 4 атаки, в руке ещё одна 6 и лишняя.
+	st.Table = []Pair{
+		{Attack: Card{6, Spades}}, {Attack: Card{6, Diamonds}},
+		{Attack: Card{6, Hearts}}, {Attack: Card{9, Spades}},
+	}
+	st.Hands[0] = []Card{{6, Clubs}, {9, Diamonds}}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("MaxAttacksThisRound=%d want 5", got)
+	}
+	if err := st.Attack(0, Card{6, Clubs}); err != nil {
+		t.Fatalf("5th card: %v", err)
+	}
+	if len(st.Table) != 5 {
+		t.Fatalf("table=%d want 5", len(st.Table))
+	}
+	if st.Phase != PhaseDefend {
+		t.Fatalf("phase=%s want defend after hitting first-round cap", st.Phase)
+	}
+	st.Phase = PhaseThrowIn
+	st.ThrowerIndex = 0
+	st.Hands[0] = []Card{{9, Diamonds}}
+	if err := st.Attack(0, Card{9, Diamonds}); err == nil {
+		t.Fatal("expected ErrBadAttack for 6th card on first round")
+	}
+}
+
 // Первый отбой: всего не больше 5 карт на столе (включая первую атаку).
 func TestFirstRoundMaxFiveAttacks(t *testing.T) {
 	st := &State{
@@ -451,6 +540,12 @@ func TestThrowInAfterTake(t *testing.T) {
 	}
 	if err := st.Attack(0, Card{9, Hearts}); err != nil {
 		t.Fatalf("attack: %v", err)
+	}
+	// Ещё есть 9♦ — пачка throw_in; «Все» → отбой, затем «Беру».
+	if st.Phase == PhaseThrowIn {
+		if err := st.Done(0); err != nil {
+			t.Fatalf("Все before take: %v", err)
+		}
 	}
 	if err := st.Take(1); err != nil {
 		t.Fatalf("take: %v", err)

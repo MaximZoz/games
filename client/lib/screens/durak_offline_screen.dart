@@ -180,6 +180,14 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     } on DurakRuleError catch (_) {}
   }
 
+  void _onThrowAll() {
+    try {
+      _game.confirmThrowAll();
+      setState(() {});
+      _scheduleBot();
+    } on DurakRuleError catch (_) {}
+  }
+
   Set<PlayingCard> _legalForMe() {
     if (_game.isOver) return {};
     if (_game.turn == DurakTurn.defender &&
@@ -399,9 +407,22 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     final canDone = !_game.isOver &&
         _game.attackerIndex == _mePlayer &&
         _game.canAttackerConfirmTake;
-    if (!canTake && !canBito && !canDone) return const SizedBox(height: 40);
-    final label = canTake ? 'Взять' : (canDone ? 'Готово' : 'Бито');
-    final onPressed = canTake ? _onTake : (canDone ? _onConfirmTake : _onBito);
+    final canThrowAll = !_game.isOver &&
+        _game.attackerIndex == _mePlayer &&
+        _game.canConfirmThrowAll;
+    if (!canTake && !canBito && !canDone && !canThrowAll) {
+      return const SizedBox(height: 40);
+    }
+    final label = canTake
+        ? 'Взять'
+        : canThrowAll
+            ? 'Все'
+            : (canDone ? 'Готово' : 'Бито');
+    final onPressed = canTake
+        ? _onTake
+        : canThrowAll
+            ? _onThrowAll
+            : (canDone ? _onConfirmTake : _onBito);
     return SizedBox(
       height: 40,
       child: FilledButton.icon(
@@ -441,6 +462,13 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
       return _game.defenderIndex == _mePlayer
           ? 'Отбивайтесь'
           : 'Соперник отбивается';
+    }
+    if (_game.turn == DurakTurn.throwIn) {
+      return _game.attackerIndex == _mePlayer
+          ? (_game.firstRound
+              ? 'Подкиньте карты или «Все» (макс. 5 в первом отбое)'
+              : 'Подкиньте карты или нажмите «Все»')
+          : 'Соперник подкидывает';
     }
     if (_game.turn == DurakTurn.takeFollowUp) {
       return _game.attackerIndex == _mePlayer

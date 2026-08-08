@@ -32,7 +32,8 @@ class DurakBot {
       game.attack(card, playerIndex: index);
       return true;
     }
-    if (game.turn == DurakTurn.attackerFollowUp ||
+    if (game.turn == DurakTurn.throwIn ||
+        game.turn == DurakTurn.attackerFollowUp ||
         game.turn == DurakTurn.takeFollowUp) {
       // Подкидывать: только если у нас есть некозырь с рангом на столе.
       final ranks = game.tableRanks;
@@ -45,6 +46,7 @@ class DurakBot {
       });
       final maxToss = game.maxAttacksThisRound - game.table.length;
       if (maxToss <= 0) {
+        if (game.canConfirmThrowAll) game.confirmThrowAll(playerIndex: index);
         if (game.canAttackerSayBito) game.sayBito();
         if (game.canAttackerConfirmTake) game.confirmTake();
         return true;
@@ -56,6 +58,10 @@ class DurakBot {
           game.attack(c, playerIndex: index);
           return true;
         }
+      }
+      if (game.turn == DurakTurn.throwIn) {
+        game.confirmThrowAll(playerIndex: index);
+        return true;
       }
       if (game.canAttackerSayBito) {
         game.sayBito();
