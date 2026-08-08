@@ -758,6 +758,8 @@ class TurnTimerStyle {
 }
 
 /// Мягкий бордер-прогресс вокруг [child]: линия по периметру укорачивается.
+///
+/// Padding под обводку всегда одинаковый — смена [active] не двигает layout.
 class TurnTimerBorder extends StatefulWidget {
   const TurnTimerBorder({
     super.key,
@@ -768,6 +770,9 @@ class TurnTimerBorder extends StatefulWidget {
     this.borderWidth = 2.5,
     this.radius = 22,
     this.onExpired,
+    /// Рисовать фиолетовую рамку, когда ход не активен (1×1-карточка).
+    /// В multi-сиденьях — false: место под обводку резервируется, линии нет.
+    this.showIdleBorder = true,
   });
 
   final Widget child;
@@ -777,6 +782,7 @@ class TurnTimerBorder extends StatefulWidget {
   final double borderWidth;
   final double radius;
   final VoidCallback? onExpired;
+  final bool showIdleBorder;
 
   @override
   State<TurnTimerBorder> createState() => _TurnTimerBorderState();
@@ -842,6 +848,10 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
       child: widget.child,
     );
     final timed = widget.active && _hasTimer;
+    final paintAnything = widget.active || widget.showIdleBorder;
+    if (!paintAnything) {
+      return padded;
+    }
     final colors = timed
         ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: _fraction)
         : const [AppColors.accentStart, AppColors.accentEnd];
@@ -853,6 +863,7 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
           strokeWidth: widget.borderWidth,
           radius: widget.radius,
           paintTimer: timed,
+          paintBase: widget.showIdleBorder || widget.active,
           baseColors: const [
             AppColors.accentStart,
             AppColors.accentEnd,
@@ -871,6 +882,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
     required this.strokeWidth,
     required this.radius,
     this.paintTimer = true,
+    this.paintBase = true,
     this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
   });
 
@@ -879,6 +891,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
   final double strokeWidth;
   final double radius;
   final bool paintTimer;
+  final bool paintBase;
 
   /// Полная фиолетовая рамка — остаётся, когда таймер исчезает.
   final List<Color> baseColors;
@@ -896,12 +909,14 @@ class _ShrinkingBorderPainter extends CustomPainter {
     final path = Path()..addRRect(rrect);
 
     // 1) Базовая фиолетовая рамка на всём периметре.
-    final basePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..shader = LinearGradient(colors: baseColors).createShader(rect);
-    canvas.drawRRect(rrect, basePaint);
+    if (paintBase) {
+      final basePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..shader = LinearGradient(colors: baseColors).createShader(rect);
+      canvas.drawRRect(rrect, basePaint);
+    }
 
     if (!paintTimer) return;
 
@@ -925,6 +940,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
       old.fraction != fraction ||
       old.strokeWidth != strokeWidth ||
       old.paintTimer != paintTimer ||
+      old.paintBase != paintBase ||
       old.colors != colors ||
       old.baseColors != baseColors;
 }

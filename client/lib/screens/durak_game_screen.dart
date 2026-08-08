@@ -4633,43 +4633,48 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       ),
                     ),
                   ),
-                  if (roleLabel != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      roleLabel,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: theirTurn
-                            ? AppColors.accentStart
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                  // Фиксированный слот роли — появление «Бьёт» не двигает веер.
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    height: 14,
+                    child: roleLabel == null
+                        ? null
+                        : Text(
+                            roleLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.0,
+                              fontWeight: FontWeight.w700,
+                              color: theirTurn
+                                  ? AppColors.accentStart
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                  ),
                 ],
               ),
             ),
           ),
         );
 
-        // Рамка/таймер только у того, чей ход — остальные без обводки.
-        final chip = theirTurn
-            ? TurnTimerBorder(
-                key: ValueKey('seat-timer-$idx-${view.turnDeadline}'),
-                active: true,
-                turnDeadline: view.turnDeadline,
-                turnTimeSec: view.turnTimeSec,
-                borderWidth: 3,
-                radius: 18,
-                onExpired: _onTurnTimeExpired,
-                child: body,
-              )
-            : body;
-
+        // Рамка всегда смонтирована (как в 1×1): padding постоянный,
+        // обводка только на ходе — layout не прыгает при смене хода/таймера.
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            chip,
+            TurnTimerBorder(
+              key: ValueKey('seat-timer-$idx'),
+              active: theirTurn,
+              turnDeadline: view.turnDeadline,
+              turnTimeSec: view.turnTimeSec,
+              borderWidth: 3,
+              radius: 18,
+              showIdleBorder: false,
+              onExpired: theirTurn ? _onTurnTimeExpired : null,
+              child: body,
+            ),
             if (!finished) _opponentFan(view, idx, tableSize),
           ],
         );
