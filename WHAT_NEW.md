@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- WHAT_NEW: полный EN и фикс сохранения секции в скрипте
 - Локализация «Что нового» в диалоге обновления
 - Настройки и ставка отдельно по играм; переводы; пустое лобби
 - Дурак: observation без редиректа в крестики, лобби/инвайты, иконка
@@ -27,9 +28,9 @@
 - Дурак: крестик в линии с правилами, сдача под ними
 - Дурак 3–4: очередь подкида по часовой и явный ход
 - Дурак 3–4: аватары, подкид соседей, общий банк как в крестиках
-- Дурак: выровнять слот перевода по линии с картой на столе
 
 ## en
+- Localized “What’s new” in the update dialog
 - Per-game settings and stakes; translations; empty lobby
 - Durak: spectating no longer opens tic-tac-toe; lobby/invites; icon
 - Durak: four-player opponent icons in one row
@@ -54,5 +55,4 @@
 - Durak 3–4: clockwise throw-in order and clear turn
 - Durak 3–4: avatars, neighbor throw-in, shared pot like tic-tac-toe
 - Durak: transfer slot aligned with the table card
-- Durak: transfer slot in the table grid (next cell)
 

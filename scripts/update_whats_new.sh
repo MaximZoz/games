@@ -29,7 +29,11 @@ if [[ -f "$OUT" ]]; then
     /^##[ \t]+en[ \t]*$/ { in_en=1; next }
     /^##[ \t]+/ { in_en=0 }
     in_en { print }
-  ' "$OUT" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')"
+  ' "$OUT")"
+  # Убрать хвостовые пустые строки.
+  while [[ "$PREV_EN" == *$'\n' ]]; do
+    PREV_EN="${PREV_EN%$'\n'}"
+  done
 fi
 
 # Сообщения коммитов без merge; без технических «Merge:» / chore.
@@ -56,11 +60,10 @@ mapfile -t LINES < <(
   fi
   echo ""
   echo "## en"
-  if [[ -n "$(echo "$PREV_EN" | sed '/^[[:space:]]*$/d')" ]]; then
-    echo "$PREV_EN" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+  if [[ -n "$(printf '%s' "$PREV_EN" | tr -d '[:space:]')" ]]; then
+    printf '%s\n' "$PREV_EN"
   else
     echo "- App update"
-    echo "# Add English bullets here (or rely on server auto-translate fallback)."
   fi
   echo ""
 } > "$OUT"
