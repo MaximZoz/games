@@ -2212,6 +2212,7 @@ class _InviteCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const iconSz = 16.0;
     return GradientCard(
+      animate: false,
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
       child: IntrinsicHeight(
