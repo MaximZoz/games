@@ -7,6 +7,12 @@ import 'package:flutter/scheduler.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
+/// Общая кривая полёта: мягкий разгон и длинное торможение без «щелчка» в конце.
+const Curve kDurakFlyCurve = Curves.easeOutQuint;
+
+/// Кривая перестановок UI (веер, зона руки) — без резкого старта.
+const Curve kDurakLayoutCurve = Curves.easeInOutCubic;
+
 /// Билет на полёт: после [done] при [keepAtEnd] карта остаётся, пока не [dismiss].
 class CardFlyTicket {
   CardFlyTicket._(this._entry, this._controller, this._curved);
@@ -25,15 +31,15 @@ class CardFlyTicket {
 }
 
 /// Плавный полёт карты из [from] в [to] поверх всего UI.
-/// Масштаб/поворот — через [Transform] (без пересчёта layout каждый кадр).
+/// Позиция/масштаб/поворот — только через [Transform] (без layout каждый кадр).
 Future<CardFlyTicket> playCardFlyAnimation({
   required BuildContext context,
   required PlayingCard card,
   required Size cardSize,
   required Rect from,
   required Rect to,
-  Duration duration = const Duration(milliseconds: 340),
-  Curve curve = Curves.easeOutCubic,
+  Duration duration = const Duration(milliseconds: 360),
+  Curve curve = kDurakFlyCurve,
   bool faceDown = false,
   bool flipToFace = false,
   double beginAngle = 0,
@@ -68,11 +74,14 @@ Future<CardFlyTicket> playCardFlyAnimation({
             final angle = lerpDouble(beginAngle, endAngle, t)!;
             final midLift =
                 arcLift == 0 ? 0.0 : -arcLift * math.sin(math.pi * t);
-            return Stack(
-              children: [
-                Positioned(
-                  left: cx - cardSize.width / 2,
-                  top: cy - cardSize.height / 2 + midLift,
+            final left = cx - cardSize.width / 2;
+            final top = cy - cardSize.height / 2 + midLift;
+            // Transform-only: не трогаем Positioned/layout на каждом тике.
+            return Transform.translate(
+              offset: Offset(left, top),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
                   width: cardSize.width,
                   height: cardSize.height,
                   child: RepaintBoundary(
@@ -80,13 +89,13 @@ Future<CardFlyTicket> playCardFlyAnimation({
                       angle: angle,
                       child: Transform.scale(
                         scale: scale,
-                        filterQuality: FilterQuality.low,
+                        filterQuality: FilterQuality.medium,
                         child: child,
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             );
           },
           child: _FlyFace(
@@ -187,10 +196,11 @@ Future<void> playCardsFlyAnimation({
   required Size cardSize,
   required List<Rect> froms,
   required List<Rect> tos,
-  Duration duration = const Duration(milliseconds: 340),
-  Duration stagger = const Duration(milliseconds: 36),
-  Curve curve = Curves.easeOutCubic,
+  Duration duration = const Duration(milliseconds: 360),
+  Duration stagger = const Duration(milliseconds: 28),
+  Curve curve = kDurakFlyCurve,
   bool faceDown = false,
+  bool? flipToFace,
   List<double>? beginAngles,
   List<double>? endAngles,
   double beginScale = 1.0,
@@ -198,10 +208,12 @@ Future<void> playCardsFlyAnimation({
   double arcLift = 0,
   bool keepAtEnd = false,
   void Function(List<CardFlyTicket> tickets)? onTickets,
+  void Function(int index, PlayingCard card)? onCardLaunch,
 }) async {
   if (cards.isEmpty) return;
   final tickets = <CardFlyTicket>[];
   final futures = <Future<void>>[];
+  final doFlip = flipToFace ?? faceDown;
   for (var i = 0; i < cards.length; i++) {
     final delay = stagger * i;
     Future<void> launch() async {
@@ -211,6 +223,7 @@ Future<void> playCardsFlyAnimation({
       final beginA =
           beginAngles != null && i < beginAngles.length ? beginAngles[i] : 0.0;
       final endA = endAngles != null && i < endAngles.length ? endAngles[i] : 0.0;
+      onCardLaunch?.call(i, cards[i]);
       final ticket = await playCardFlyAnimation(
         context: context,
         card: cards[i],
@@ -220,7 +233,7 @@ Future<void> playCardsFlyAnimation({
         duration: duration,
         curve: curve,
         faceDown: faceDown,
-        flipToFace: faceDown,
+        flipToFace: doFlip,
         beginAngle: beginA,
         endAngle: endA,
         beginScale: beginScale,
