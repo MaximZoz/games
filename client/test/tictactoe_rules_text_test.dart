@@ -23,7 +23,7 @@ void main() {
     expect(text, contains('На столько монет идёт игра.'));
   });
 
-  test('buildTictactoeRulesText defaults stake to 1 with coin marker', () {
+  test('buildTictactoeRulesText defaults stake to 2 with coin marker', () {
     final text = buildTictactoeRulesText(
       gridSize: 3,
       turnTimeSec: 30,
@@ -33,7 +33,7 @@ void main() {
 
     expect(
       text,
-      contains('Ставка: 1$kTictactoeRulesStakeIconMarker'),
+      contains('Ставка: 2$kTictactoeRulesStakeIconMarker'),
     );
     expect(text, isNot(contains('бр')));
   });

@@ -14,12 +14,9 @@ import 'package:multigames_client/screens/coins_login_screen.dart';
 import 'package:multigames_client/screens/coins_screen.dart';
 import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
-import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/screens/games_screen.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
-import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
-import 'package:multigames_client/screens/tictactoe_game_screen.dart';
-import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
 import 'package:multigames_client/screens/login_screen.dart';
@@ -55,6 +52,7 @@ const _authRequiredPaths = <String>{
   '/inventory',
   '/achievements',
   '/shop',
+  '/stats',
   '/settings',
   '/coins',
   '/admin',
@@ -107,8 +105,8 @@ bool _preserveStartupPath(String path) {
     return true;
   }
   if (path == '/oauth/callback') return true;
-  if (path.startsWith('/games/tictactoe/')) return true;
-  if (path == '/games/tictactoe/offline') return true;
+  // Любая зарегистрированная игра (лобби / партия / оффлайн).
+  if (gameRegistry.isGameOrLobbyPath(path)) return true;
   // Комната чата /invite из пуша или ссылки.
   if (path.startsWith('/chats/') && path.length > '/chats/'.length) {
     return true;
@@ -116,6 +114,54 @@ bool _preserveStartupPath(String path) {
   if (path.startsWith('/coins/')) return true;
   if (path.startsWith('/shop/')) return true;
   return false;
+}
+
+/// Маршруты лобби/партии/оффлайна из [gameRegistry] — новая игра = новый дескриптор.
+List<GoRoute> _gameRoutesFromRegistry() {
+  final routes = <GoRoute>[];
+  for (final game in gameRegistry.all) {
+    routes.add(
+      GoRoute(
+        path: '/games/${game.id}/lobby/:lobbyId',
+        pageBuilder: (_, state) => _noTransitionPage(
+          state,
+          game.buildLobbyScreen(
+            lobbyId: state.pathParameters['lobbyId'] ?? '',
+            initialMode: state.uri.queryParameters['mode'],
+            fromMessageId: state.uri.queryParameters['from_message'],
+          ),
+        ),
+      ),
+    );
+    routes.add(
+      GoRoute(
+        path: '/games/${game.id}/game/:gameId',
+        pageBuilder: (_, state) => _noTransitionPage(
+          state,
+          game.buildGameScreen(
+            gameId: state.pathParameters['gameId'] ?? '',
+          ),
+        ),
+      ),
+    );
+    if (game.supportsOffline) {
+      routes.add(
+        GoRoute(
+          path: '/games/${game.id}/offline',
+          pageBuilder: (_, state) {
+            final screen = game.buildOfflineScreen(
+              query: state.uri.queryParameters,
+            );
+            return _noTransitionPage(
+              state,
+              screen ?? const GamesScreen(),
+            );
+          },
+        ),
+      );
+    }
+  }
+  return routes;
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -275,6 +321,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         _noTransitionPage(state, const InventoryScreen()),
                   ),
                   GoRoute(
+                    path: 'stats',
+                    pageBuilder: (_, state) {
+                      final uid = state.uri.queryParameters['user_id'];
+                      final name = state.uri.queryParameters['name'];
+                      return _noTransitionPage(
+                        state,
+                        GameStatsScreen(
+                          userId: (uid == null || uid.isEmpty) ? null : uid,
+                          displayName: name,
+                        ),
+                      );
+                    },
+                  ),
+                  GoRoute(
                     path: 'coins',
                     pageBuilder: (_, state) =>
                         _noTransitionPage(state, const CoinsScreen()),
@@ -302,18 +362,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const ProfileScreen()),
                 routes: [
+                  // Совместимость со старыми ссылками → главная статистика.
                   GoRoute(
                     path: 'stats',
-                    pageBuilder: (_, state) {
-                      final uid = state.uri.queryParameters['user_id'];
-                      final name = state.uri.queryParameters['name'];
-                      return _noTransitionPage(
-                        state,
-                        GameStatsScreen(
-                          userId: (uid == null || uid.isEmpty) ? null : uid,
-                          displayName: name,
-                        ),
-                      );
+                    redirect: (context, state) {
+                      final q = state.uri.query;
+                      return q.isEmpty ? '/stats' : '/stats?$q';
                     },
                   ),
                 ],
@@ -408,43 +462,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (_, state) =>
                     _noTransitionPage(state, const GamesScreen()),
               ),
-              GoRoute(
-                path: '/games/tictactoe/lobby/:lobbyId',
-                pageBuilder: (_, state) => _noTransitionPage(
-                  state,
-                  TicTacToeLobbyScreen(
-                    lobbyId: state.pathParameters['lobbyId'] ?? '',
-                    initialMode: state.uri.queryParameters['mode'],
-                    fromMessageId: state.uri.queryParameters['from_message'],
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: '/games/tictactoe/game/:gameId',
-                pageBuilder: (_, state) => _noTransitionPage(
-                  state,
-                  TicTacToeGameScreen(
-                    gameId: state.pathParameters['gameId'] ?? '',
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: '/games/tictactoe/offline',
-                pageBuilder: (_, state) {
-                  final q = state.uri.queryParameters;
-                  final grid = int.tryParse(q['grid'] ?? '') ?? 3;
-                  final variant = parseVariant(q['variant']);
-                  return _noTransitionPage(
-                    state,
-                    OfflineTicTacToeScreen(
-                      variant: variant,
-                      gridSize: grid,
-                      swapRule: q['swap'] == '1',
-                      firstMoveRestriction: q['nocenter'] == '1',
-                    ),
-                  );
-                },
-              ),
+              ..._gameRoutesFromRegistry(),
               GoRoute(
                 path: '/tournaments',
                 pageBuilder: (_, state) =>

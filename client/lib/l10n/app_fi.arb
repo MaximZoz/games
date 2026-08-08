@@ -162,8 +162,81 @@
   "gamesWaiting": "Odottaa",
   "gamesLobbyTab": "Aula",
   "gamesTicTacToe": "Ristinolla",
+  "appUpdateBody": "Uusi versio sovelluksesta on saatavilla. Päivitä jatkaaksesi.",
+  "appUpdateLaterBanner": "Päivitämme sovelluksen tämän pelin jälkeen",
+  "appUpdateOk": "Päivitä",
+  "appUpdateTitle": "Päivitys saatavilla",
+  "appUpdateWhatsNew": "Uutta",
+  "durakActionAll": "Kaikki",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Valmis",
+  "durakActionTake": "Ota",
+  "durakHintBito": "Heitä kortti tai sano «Bito»",
+  "durakHintDefend": "Puolusta",
+  "durakHintDefendOrTransfer": "Puolusta tai siirrä",
+  "durakHintDrawAllOut": "Tasapeli — kaikki ulos",
+  "durakHintOpponentAttack": "Vastustaja hyökkää",
+  "durakHintOpponentBito": "Vastustaja heittää tai sanoo «Bito»",
+  "durakHintOpponentDefends": "Vastustaja puolustaa",
+  "durakHintOpponentTakeFollow": "Vastustaja voit heittää oton jälkeen",
+  "durakHintOpponentThrows": "Vastustaja heittää",
+  "durakHintTakeFollow": "Heitä oton jälkeen tai paina «Valmis»",
+  "durakHintThrowIn": "Heitä kortteja tai paina «Kaikki»",
+  "durakHintThrowInFirst": "Heitä kortteja tai «Kaikki» (max 5 ensimmäisessä lyönnissä)",
+  "durakHintYouFinished": "Olet ulos — odotetaan loppua",
+  "durakHintYouLost": "Hävisit — olet durak",
+  "durakHintYourAttack": "Sinun vuoro — hyökkää",
   "gamesDurak": "Durak",
+  "gamesPoker": "Pokeri",
   "gamesInDevelopment": "Kehityksessä",
+  "rulesPokerPlayers": "Pelaajat: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Jokainen saa 2 taskukorttia; pöytään jaetaan 5 yhteistä korttia.",
+  "rulesPokerPlay": "Panoskierrokset: preflop, flop, turn ja river. Fold, call, bet tai raise.",
+  "rulesPokerWin": "Paras viiden kortin käsi (tasku + yhteiset) voittaa, tai viimeinen foldien jälkeen.",
+  "gamesDurakDeck24": "24 korttia",
+  "gamesDurakDeck36": "36 korttia",
+  "gamesDurakDeck52": "52 korttia",
+  "gamesDurakModePerevodnoi": "Siirto",
+  "gamesDurakModePodkidnoi": "Lisäys",
+  "gamesFinishCurrentFirst": "Viimeistele ensin nykyinen peli",
+  "gamesObservation": "Katsele",
+  "gamesObservationHint": "Voit katsoa pelin loppuun",
+  "gamesVariantClassic": "Klassinen",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 pelaajaa",
+  "gamesVariantMulti4": "4 pelaajaa",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Aula {name}",
+  "lobbyPlayersCount": "Pelaajat {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Hyökkääjä laittaa kortteja; puolustaja lyö ne (samaa maata korkeammalla tai valttilla). Valtti lyödään vain korkeammalla valttilla.",
+  "rulesDurakBeat": "Kun kaikki kortit on lyöty, hyökkääjä sanoo «Bito» ja kortit menevät poistopakkaan. Muuten puolustaja ottaa kaiken pöydästä.",
+  "rulesDurakLoser": "Häviäjä on se, jolla on kortteja lopussa — «durak».",
+  "rulesDurakMode": "Tila: {mode}",
+  "rulesDurakOfflineBot": "Pelaa bottia vastaan ilman panoksia ja aikarajaa.",
+  "rulesDurakPlayersDeck": "Pelaajat: {players}. Pakka: {deck}.",
+  "settingsAppVersion": "Versio {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Säännöt",
   "gamesRulesTitle": "Pelin säännöt",
   "gamesCreate": "Luo peli",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Sinulle on hyvitetty {amount} kolikkoa",
   "coinsDeductedTitle": "{amount} kolikkoa vähennetty",
   "coinsCreditCardTitle": "Sinulle on hyvitetty kolikoita",
-  "coinsClaim": "Nouda"
+  "coinsClaim": "Nouda",
+  "durakActionPass": "Passaa",
+  "durakRoleTook": "Ottaa",
+  "durakRoleBeats": "Lyö",
+  "durakRoleThrowIn": "Lisäys",
+  "durakRoleTurn": "Vuoro",
+  "durakRoleDefends": "Puolustaa",
+  "durakStatusTaking": "Ottaa",
+  "durakHintDefenderTurn": "Puolustajan vuoro",
+  "gameYouEliminated": "Pudotit",
+  "gameYouPlaced": "Sijoituksesi: {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Peli päättyi",
+  "gameTurnOf": "Vuoro: {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Ryhmächat",
+  "lobbyChatNotReady": "Aulan chat ei ole vielä valmis",
+  "chatsGroupChat": "Ryhmächat",
+  "chatsMembersCount": "Jäsenet: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} hlö",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(sinä)",
+  "chatTitleDurak3": "Durak · 3 pelaajaa",
+  "chatTitleDurak4": "Durak · 4 pelaajaa",
+  "rulesTttUltimate": "Ultimate: yhdeksän 3×3-minilautaa. Siirto lähettää vastustajan kyseiselle minilaudalle. Voita meta-laudan viivalla.",
+  "rulesTttMulti3": "3 pelaajaa: 3×3-lauta, kolme pelaajaa (X, O, △). Voita omien merkkien rivillä.",
+  "rulesTttMulti4": "4 pelaajaa: 4×4-lauta, neljä pelaajaa (X, O, △, □). Voita omien merkkien rivillä."
 }

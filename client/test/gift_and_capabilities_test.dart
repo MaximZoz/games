@@ -54,16 +54,16 @@ void main() {
   group('InventoryCapabilities.fromJson', () {
     test('fallback free stakes when empty', () {
       final caps = InventoryCapabilities.fromJson({});
-      expect(caps.allowedStakeBronze, [1, 10, 50]);
+      expect(caps.allowedStakeBronze, [2, 10, 50]);
     });
 
     test('parses stakes and frame', () {
       final caps = InventoryCapabilities.fromJson({
-        'allowed_stake_bronze': [1, 10, 50, 100],
+        'allowed_stake_bronze': [2, 10, 50, 100],
         'frame_color': '#CD7F32',
         'frame_code': 'frame_bronze',
       });
-      expect(caps.allowedStakeBronze, [1, 10, 50, 100]);
+      expect(caps.allowedStakeBronze, [2, 10, 50, 100]);
       expect(caps.frameColor, '#CD7F32');
       expect(caps.frameCode, 'frame_bronze');
     });

@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
+	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
@@ -53,6 +55,15 @@ type GamesHandler struct {
 	Hub         *RealtimeHub
 	Broadcaster *GamesBroadcaster
 	Push        *WebPushSender
+	// Registry — каталог игр (метаданные/политики). Lifecycle пока в этом handler.
+	Registry *gameregistry.Registry
+}
+
+func (h *GamesHandler) games() *gameregistry.Registry {
+	if h.Registry != nil {
+		return h.Registry
+	}
+	return gameregistry.Default()
 }
 
 type CreateLobbyBody struct {
@@ -62,7 +73,7 @@ type CreateLobbyBody struct {
 	GridSize             int    `json:"grid_size"`              // legacy; перекрывается variant
 	SwapRule             bool   `json:"swap_rule"`              // deprecated, игнорируется
 	FirstMoveRestriction bool   `json:"first_move_restriction"` // deprecated, игнорируется
-	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
+	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 2)
 	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`     // в matchmake: через 30 с добавить бота
 }
 
@@ -101,6 +112,12 @@ type LobbyItem struct {
 	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
 	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
 	StakeBronze          int               `json:"stake_bronze,omitempty"`
+
+	// Общие поля по типу игры: клиент роутит и рисует правила по ним.
+	GameType string `json:"game_type,omitempty"`
+	// Durak-специфика.
+	DeckSize int    `json:"deck_size,omitempty"`
+	GameMode string `json:"game_mode,omitempty"`
 }
 
 type GameStateItem struct {
@@ -291,6 +308,15 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !h.requireRedis(w, r) {
 		return
 	}
+	// Активные приглашения текущего пользователя (после reconnect).
+	if r.URL.Path == "/api/games/invites" && r.Method == http.MethodGet {
+		h.ListPendingInvites(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/durak/") {
+		h.serveDurak(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -324,6 +350,8 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
+			h.CancelInvite(w, r, lobbyID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -378,8 +406,8 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	stakeBronze := body.StakeBronze
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	ctx := r.Context()
 	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
@@ -538,6 +566,11 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Публичный поиск появляется во вкладке «Лобби».
+	if mode == "matchmake" || openMultiFind {
+		h.notifyPublicLobbiesChanged()
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]any{
 		"lobby_id":   lobbyID,
@@ -589,8 +622,8 @@ func (h *GamesHandler) findOpenMultiLobbyID(
 			continue
 		}
 		stakes, _ := strconv.Atoi(m["stake_bronze"])
-		if stakes < 1 {
-			stakes = 1
+		if stakes < 2 {
+			stakes = 2
 		}
 		if stakes != stakeBronze {
 			continue
@@ -905,8 +938,8 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	// Для совместимости DeclineInvite/старых клиентов: первый invitee в invite_target_id.
 	pipe := h.Rdb.Pipeline()
@@ -1619,7 +1652,11 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 		swapRule := m["swap_rule"] == "true"
 		firstMoveRestriction := m["first_move_restriction"] == "true"
 		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		lobbies = append(lobbies, LobbyItem{
+		gameType := strings.TrimSpace(m["game_type"])
+		if gameType == "" {
+			gameType = "tictactoe"
+		}
+		item := LobbyItem{
 			ID:                   id,
 			CreatorID:            creatorID,
 			CreatorName:          creatorName,
@@ -1635,7 +1672,24 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			SwapRule:             swapRule,
 			FirstMoveRestriction: firstMoveRestriction,
 			StakeBronze:          stakeBronze,
-		})
+			GameType:             gameType,
+		}
+		// Durak: правила и подписи строятся по колоде/режиму, не по variant.
+		if gameType == durakGameType {
+			deckSize, _ := strconv.Atoi(m["deck_size"])
+			if deckSize == 0 {
+				deckSize = 36
+			}
+			gm := strings.TrimSpace(m["game_mode"])
+			if gm == "" {
+				gm = "podkidnoi"
+			}
+			item.DeckSize = deckSize
+			item.GameMode = gm
+			item.Variant = ""
+			item.GridSize = 0
+		}
+		lobbies = append(lobbies, item)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -1726,6 +1780,14 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 			}
 		}
 	}
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
+	maxPlayers := cfg.MaxPlayers
+	if mp, err := strconv.Atoi(m["max_players"]); err == nil && mp >= 2 {
+		maxPlayers = mp
+	}
 	item := LobbyItem{
 		ID:           lobbyID,
 		CreatorID:    creatorID,
@@ -1736,12 +1798,28 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		TurnTimeSec:  turnTimeSec,
 		Variant:      string(variant),
 		GridSize:     gridSize,
-		MaxPlayers:   cfg.MaxPlayers,
+		MaxPlayers:   maxPlayers,
 		PlayersCount: len(playerIDs),
 		PlayerIDs:    playerIDs,
 		Players:      h.loadLobbyPlayers(ctx, playerIDs),
 		ChatID:       chatIDStr,
 		StakeBronze:  stakeBronze,
+		GameType:     gameType,
+	}
+	// Durak: правила рисуются по колоде и режиму, а не по variant/grid.
+	if gameType == durakGameType {
+		deckSize, _ := strconv.Atoi(m["deck_size"])
+		if deckSize == 0 {
+			deckSize = 36
+		}
+		gm := strings.TrimSpace(m["game_mode"])
+		if gm == "" {
+			gm = "podkidnoi"
+		}
+		item.DeckSize = deckSize
+		item.GameMode = gm
+		item.Variant = ""
+		item.GridSize = 0
 	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
@@ -1811,7 +1889,10 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
-	if m["status"] != lobbyStatusWaitingInvite {
+	// Из открытого поиска тоже можно позвать друга — лобби ждёт игроков
+	// (waiting_matchmake), и приглашение просто добавляет ещё одного.
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
 		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
 		return
 	}
@@ -1887,27 +1968,45 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	firstMoveRestriction := m["first_move_restriction"] == "true"
 
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	cfg, variant := resolveVariantConfig(m["variant"], gridSize)
 	maxPlayers, _ := strconv.Atoi(m["max_players"])
 	if maxPlayers < 2 {
 		maxPlayers = cfg.MaxPlayers
 	}
+	// game_type берём из лобби — handler общий для всех игр (durak и др.).
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
 	inviteData := map[string]any{
 		"type":                   "game_invite",
 		"lobby_id":               lobbyID,
 		"creator_id":             userID.String(),
 		"creator_name":           creatorName,
-		"game_type":              "tictactoe",
+		"game_type":              gameType,
 		"turn_time_sec":          turnTimeSec,
-		"variant":                string(variant),
-		"grid_size":              cfg.GridSize,
 		"max_players":            maxPlayers,
-		"swap_rule":              swapRule,
-		"first_move_restriction": firstMoveRestriction,
 		"stake_bronze":           stakeBronze,
+	}
+	if gameType == durakGameType {
+		deckSize, _ := strconv.Atoi(m["deck_size"])
+		if deckSize == 0 {
+			deckSize = 36
+		}
+		gm := strings.TrimSpace(m["game_mode"])
+		if gm == "" {
+			gm = "podkidnoi"
+		}
+		inviteData["deck_size"] = deckSize
+		inviteData["game_mode"] = gm
+	} else {
+		inviteData["variant"] = string(variant)
+		inviteData["grid_size"] = cfg.GridSize
+		inviteData["swap_rule"] = swapRule
+		inviteData["first_move_restriction"] = firstMoveRestriction
 	}
 	if creatorAvatarKind != "" {
 		inviteData["creator_avatar_kind"] = creatorAvatarKind
@@ -1985,8 +2084,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}())
 	gridSize := cfg.GridSize
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 
 	players := parsePlayerIDsCSV(m["player_ids"])
@@ -2247,7 +2346,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 				})
 			}
 		}
-		h.Rdb.Del(ctx, key+":invited")
+		// Приглашённые (кто не успел войти) — снять карточку.
+		h.notifyAndClearLobbyInvites(ctx, lobbyID)
 	}
 
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
@@ -2386,23 +2486,31 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 
-	// Создатель ушёл или остался один — закрываем лобби и групповой чат.
-	dissolve := creatorID == userID.String()
 	remaining := make([]string, 0, len(players))
 	for _, p := range players {
 		if p != userID.String() {
 			remaining = append(remaining, p)
 		}
 	}
+	// Если ушёл создатель, но в лобби ещё есть игроки — не закрываем:
+	// передаём creator следующему (и «Своя игра» invite, и matchmake).
+	// Иначе у оставшихся «Лобби не найдено» вместо продолжения приглашений.
+	dissolve := creatorID == userID.String()
+	if dissolve && len(remaining) > 0 {
+		newCreator := remaining[0]
+		h.Rdb.HSet(ctx, key, "creator_id", newCreator)
+		creatorID = newCreator
+		dissolve = false
+	}
 	if !dissolve && len(remaining) == 0 {
 		dissolve = true
 	}
 
 	if dissolve {
-		// Сначала собираем аудиторию (включая :invited), потом удаляем ключи.
+		// Сначала аудитория (включая :invited), потом invite_cancelled + Del.
 		notifyIDs := h.lobbyAudienceUUIDs(ctx, key, m, players)
+		h.notifyAndClearLobbyInvites(ctx, lobbyID)
 		h.Rdb.Del(ctx, key)
-		h.Rdb.Del(ctx, key+":invited")
 		if status == lobbyStatusWaitingMatchmake {
 			turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 			stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
@@ -2421,6 +2529,10 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 			"closed":   true,
 		})
 		h.broadcast(notifyIDs, map[string]any{"type": "chat_list_changed"})
+		// Публичный поиск пропал из списка — обновить вкладку «Лобби» у всех.
+		if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+			h.notifyPublicLobbiesChanged()
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": true})
 		return
@@ -2453,15 +2565,24 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	h.broadcast(rest, map[string]any{
 		"type":          "lobby_updated",
 		"lobby_id":      lobbyID,
+		"creator_id":    creatorID,
 		"player_ids":    remaining,
 		"players_count": len(remaining),
 		"players":       h.loadLobbyPlayers(ctx, remaining),
 		"left_user_id":  userID.String(),
 	})
 	h.broadcast(rest, map[string]any{"type": "chat_list_changed"})
+	// Состав публичного поиска изменился — обновить вкладку «Лобби».
+	if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+		h.notifyPublicLobbiesChanged()
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": false})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"left":       true,
+		"closed":     false,
+		"creator_id": creatorID,
+	})
 }
 
 func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
@@ -2479,7 +2600,8 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		return
 	}
 
-	if m["status"] != lobbyStatusWaitingInvite {
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
 		WriteErr(w, r, http.StatusBadRequest, "lobby invite expired")
 		return
 	}
@@ -2492,62 +2614,261 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 
 	creatorID := m["creator_id"]
 	creatorUUID, _ := uuid.Parse(creatorID)
-	maxPlayers, _ := strconv.Atoi(m["max_players"])
-	if maxPlayers < 1 {
-		maxPlayers = 2
+
+	h.Rdb.SRem(ctx, invitedKey, userID.String())
+	if m["invite_target_id"] == userID.String() {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{creatorID}
 	}
 
-	// Multi: один отказ не убивает реванш — убираем отказавшегося из invited.
-	// Лобби закрываем, только если оставшихся приглашённых уже не хватает на состав.
-	if maxPlayers > 2 {
-		h.Rdb.SRem(ctx, invitedKey, userID.String())
-		remaining, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
-		players := parsePlayerIDsCSV(m["player_ids"])
-		if len(players) == 0 {
-			players = []string{creatorID}
-		}
-		canFill := len(players)+len(remaining) >= maxPlayers
-		if canFill {
-			// Частичный отказ: лобби живо, но инициатор реванша должен видеть,
-			// кто уже ответил (зачёркивание в шапке игроков).
-			h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
-				"type":     "invite_declined",
-				"lobby_id": lobbyID,
-				"closed":   false,
-				"user_id":  userID.String(),
-			})
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"declined": true,
-				"closed":   false,
-			})
-			return
+	// Отказ НЕ закрывает лобби (в т.ч. 1×1): создатель может пригласить
+	// другого друга или ждать по той же ссылке. Раньше 1×1 удалял лобби
+	// после первого отказа → «Лобби не найдено» при следующем Invite.
+	notify := []uuid.UUID{creatorUUID}
+	for _, pid := range players {
+		if u, err := uuid.Parse(pid); err == nil && u != creatorUUID {
+			notify = append(notify, u)
 		}
 	}
-
-	h.Rdb.Del(ctx, key)
-	h.Rdb.Del(ctx, invitedKey)
-	// Не трогаем active_game и чужие лобби — отказ от инвайта не должен
-	// сбрасывать текущую партию отказавшегося.
-	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
-	clearUserActiveLobbyIfMatch(ctx, h.Rdb, creatorUUID, lobbyID)
-	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
-	_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
-
-	h.broadcast([]uuid.UUID{creatorUUID}, map[string]any{
+	h.broadcast(notify, map[string]any{
 		"type":     "invite_declined",
 		"lobby_id": lobbyID,
-		"closed":   true,
+		"closed":   false,
 		"user_id":  userID.String(),
+	})
+	// Только у отказавшегося сбрасываем active_lobby; создателя не трогаем.
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lobbyID)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"declined": true,
+		"closed":   false,
+	})
+}
+
+// notifyAndClearLobbyInvites — убрать приглашения: WS invite_cancelled + Del :invited.
+// Вызывать при старте партии / роспуске, чтобы карточка не зависала у приглашённых.
+func (h *GamesHandler) notifyAndClearLobbyInvites(ctx context.Context, lobbyID string) {
+	if h.Rdb == nil || lobbyID == "" {
+		return
+	}
+	key := "lobby:" + lobbyID
+	invitedKey := key + ":invited"
+	members, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
+	m, _ := h.Rdb.HGetAll(ctx, key).Result()
+	seen := map[string]struct{}{}
+	for _, mid := range members {
+		if mid = strings.TrimSpace(mid); mid != "" {
+			seen[mid] = struct{}{}
+		}
+	}
+	if t := strings.TrimSpace(m["invite_target_id"]); t != "" {
+		seen[t] = struct{}{}
+	}
+	uuids := make([]uuid.UUID, 0, len(seen))
+	for id := range seen {
+		u, err := uuid.Parse(id)
+		if err != nil {
+			continue
+		}
+		uuids = append(uuids, u)
+		clearUserActiveLobbyIfMatch(ctx, h.Rdb, u, lobbyID)
+	}
+	if len(uuids) > 0 {
+		h.broadcast(uuids, map[string]any{
+			"type":     "invite_cancelled",
+			"lobby_id": lobbyID,
+			"reason":   "lobby_closed",
+		})
+	}
+	h.Rdb.Del(ctx, invitedKey)
+}
+
+// ListPendingInvites — GET /api/games/invites — лобби, куда меня пригласили и ещё ждут.
+func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*:invited")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	out := make([]map[string]any, 0)
+	uid := userID.String()
+	for _, invitedKey := range keys {
+		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
+		if !okMem {
+			continue
+		}
+		lobbyID := strings.TrimSuffix(strings.TrimPrefix(invitedKey, "lobby:"), ":invited")
+		if lobbyID == "" || lobbyID == invitedKey {
+			continue
+		}
+		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+		if len(m) == 0 {
+			continue
+		}
+		st := m["status"]
+		if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
+			continue
+		}
+		creatorID := strings.TrimSpace(m["creator_id"])
+		if creatorID == "" || creatorID == uid {
+			continue
+		}
+		creatorUUID, err := uuid.Parse(creatorID)
+		if err != nil {
+			continue
+		}
+		creator, _ := store.GetUserByID(ctx, h.Pool, creatorUUID)
+		creatorName := "Игрок"
+		creatorAvatarKind := "letter"
+		creatorAvatarValue := ""
+		if creator != nil {
+			if creator.DisplayName != nil && *creator.DisplayName != "" {
+				creatorName = *creator.DisplayName
+			}
+			if creator.AvatarKind != "" {
+				creatorAvatarKind = creator.AvatarKind
+			}
+			if creator.AvatarValue != nil {
+				creatorAvatarValue = *creator.AvatarValue
+			}
+		}
+		gt := strings.TrimSpace(m["game_type"])
+		if gt == "" {
+			gt = "tictactoe"
+		}
+		turnT, _ := strconv.Atoi(m["turn_time_sec"])
+		stake, _ := strconv.Atoi(m["stake_bronze"])
+		maxP, _ := strconv.Atoi(m["max_players"])
+		item := map[string]any{
+			"lobby_id":            lobbyID,
+			"creator_id":          creatorID,
+			"creator_name":        creatorName,
+			"creator_avatar_kind": creatorAvatarKind,
+			"game_type":           gt,
+			"turn_time_sec":       turnT,
+			"stake_bronze":        stake,
+			"max_players":         maxP,
+		}
+		if creatorAvatarValue != "" {
+			item["creator_avatar_value"] = creatorAvatarValue
+		}
+		if gt == durakGameType {
+			deck, _ := strconv.Atoi(m["deck_size"])
+			if deck <= 0 {
+				deck = 36
+			}
+			item["deck_size"] = deck
+			mode := strings.TrimSpace(m["game_mode"])
+			if mode == "" {
+				mode = "podkidnoi"
+			}
+			item["game_mode"] = mode
+		} else {
+			item["variant"] = m["variant"]
+			gs, _ := strconv.Atoi(m["grid_size"])
+			item["grid_size"] = gs
+			item["swap_rule"] = m["swap_rule"] == "1" || m["swap_rule"] == "true"
+			item["first_move_restriction"] = m["first_move_restriction"] == "1" || m["first_move_restriction"] == "true"
+		}
+		out = append(out, item)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"invites": out})
+}
+
+// CancelInvite — создатель/участник отзывает своё приглашение другу.
+// Лобби остаётся; приглашённый получает invite_cancelled и карточка пропадает.
+func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body InviteBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	friendID, err := uuid.Parse(strings.TrimSpace(body.FriendUserID))
+	if err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid friend_user_id")
+		return
+	}
+
+	ctx := r.Context()
+	key := "lobby:" + lobbyID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
+		return
+	}
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
+		WriteErr(w, r, http.StatusBadRequest, "lobby not in invite mode")
+		return
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{m["creator_id"]}
+	}
+	isMember := false
+	for _, p := range players {
+		if p == userID.String() {
+			isMember = true
+			break
+		}
+	}
+	if !isMember && m["creator_id"] != userID.String() {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+
+	invitedKey := key + ":invited"
+	h.Rdb.SRem(ctx, invitedKey, friendID.String())
+	if m["invite_target_id"] == friendID.String() {
+		h.Rdb.HDel(ctx, key, "invite_target_id")
+	}
+	clearUserActiveLobbyIfMatch(ctx, h.Rdb, friendID, lobbyID)
+
+	h.broadcast([]uuid.UUID{friendID}, map[string]any{
+		"type":     "invite_cancelled",
+		"lobby_id": lobbyID,
+		"user_id":  userID.String(),
+	})
+	// Участникам лобби — чтобы UI мог вернуть кнопку «Пригласить».
+	notify := []uuid.UUID{userID}
+	for _, pid := range players {
+		if u, e := uuid.Parse(pid); e == nil {
+			notify = append(notify, u)
+		}
+	}
+	h.broadcast(notify, map[string]any{
+		"type":      "lobby_updated",
+		"lobby_id":  lobbyID,
+		"cancelled": true,
+		"user_id":   friendID.String(),
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"declined": true, "closed": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"cancelled": true})
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
+// Только крестики-нолики — дурак ходит через applyDurakTurnTimeout.
 func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[string]string) bool {
 	if m["status"] != gameStatusActive {
+		return false
+	}
+	if m["game_type"] == durakGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -2555,8 +2876,9 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		return false
 	}
 	deadline, err := strconv.ParseInt(dl, 10, 64)
+	// 0 / отрицательный — «нет лимита» (напр. пауза bito_reveal в других играх).
 	// При now == deadline время уже вышло (клиент показывает 0 с).
-	if err != nil || time.Now().UTC().Unix() < deadline {
+	if err != nil || deadline <= 0 || time.Now().UTC().Unix() < deadline {
 		return false
 	}
 	turn := m["turn"]
@@ -2674,6 +2996,12 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 		WriteErr(w, r, http.StatusNotFound, "game not found")
 		return
 	}
+	// Не отдаём дурак (и др.) через endpoint крестиков — иначе observation
+	// с дефолтным game_type уводит в чужой экран.
+	if gt := strings.TrimSpace(m["game_type"]); gt != "" && gt != "tictactoe" {
+		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
+		return
+	}
 	if h.applyGameTimeout(ctx, key, m) {
 		m, _ = h.Rdb.HGetAll(ctx, key).Result()
 	}
@@ -2705,8 +3033,8 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	gridSize := cfg.GridSize
 	board := parseBoard(m["board"], gridSize)
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	maxPlayers, _ := strconv.Atoi(m["max_players"])
 	if maxPlayers < 1 {
@@ -3260,7 +3588,12 @@ func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID 
 		gs, _ := strconv.Atoi(m["grid_size"])
 		return gs
 	}())
-	if cfg.MaxPlayers > 2 {
+	mod, _ := h.games().Get(h.games().Normalize(m["game_type"]))
+	if mod != nil && !mod.SupportsDrawOffer(cfg.MaxPlayers) {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
+		return
+	}
+	if mod == nil && cfg.MaxPlayers > 2 {
 		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
 		return
 	}
@@ -3378,12 +3711,37 @@ func (h *GamesHandler) AcceptDraw(w http.ResponseWriter, r *http.Request, gameID
 	writeJSON(w, http.StatusOK, map[string]any{"status": gameStatusDraw, "draw": true})
 }
 
-func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
+// publishGameStartedTyped — как publishGameStarted, но включает game_type в payload,
+// чтобы клиент понял, в какой экран роутить `/games/<gameType>/game/...`.
+func (h *GamesHandler) publishGameStartedTyped(userIDs []uuid.UUID, gameID, lobbyID, gameType string) {
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
 	h.broadcast(userIDs, map[string]any{
-		"type":     "game_started",
-		"game_id":  gameID,
-		"lobby_id": lobbyID,
+		"type":      "game_started",
+		"game_id":   gameID,
+		"lobby_id":  lobbyID,
+		"game_type": gameType,
 	})
+	// Зрители вкладки «Лобби» не в составе партии — обновить список у всех.
+	h.notifyPublicLobbiesChanged()
+}
+
+// notifyPublicLobbiesChanged — сигнал всем онлайн обновить открытые лобби
+// (создание / отмена / старт публичного поиска).
+func (h *GamesHandler) notifyPublicLobbiesChanged() {
+	payload := map[string]any{"type": "lobbies_changed"}
+	if h.Broadcaster != nil && h.Broadcaster.Rdb != nil {
+		h.Broadcaster.PublishAll(payload)
+		return
+	}
+	if h.Hub != nil {
+		h.Hub.PublishToAll(payload)
+	}
+}
+
+func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID string) {
+	h.publishGameStartedTyped(userIDs, gameID, lobbyID, "tictactoe")
 }
 
 // notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
@@ -3429,9 +3787,13 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 		name = i18n.Content(lang, "common.player")
 	}
 	lobbyID, _ := payload["lobby_id"].(string)
+	gameType, _ := payload["game_type"].(string)
+	if strings.TrimSpace(gameType) == "" {
+		gameType = "tictactoe"
+	}
 	url := "/games"
 	if lobbyID != "" {
-		url = "/games/tictactoe/lobby/" + lobbyID
+		url = "/games/" + gameType + "/lobby/" + lobbyID
 	}
 	h.Push.NotifyUsers(userIDs, store.WebPushCategoryGames, PushPayload{
 		Title: i18n.Content(lang, "push.game_invite_title"),
@@ -3459,6 +3821,17 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
+	// Durak: участие определяется по player_ids CSV.
+	if gm["game_type"] == durakGameType {
+		players := parsePlayerIDsCSV(gm["player_ids"])
+		for _, p := range players {
+			if p == userID.String() {
+				return gid
+			}
+		}
+		clearUserActiveGame(ctx, h.Rdb, userID)
+		return ""
+	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
 		clearUserActiveGame(ctx, h.Rdb, userID)
@@ -3467,34 +3840,10 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	// Выбывший не должен оставаться в active_game — переносим в observation.
 	if parseEliminatedMarks(gm["eliminated_marks"])[mark] {
 		clearUserActiveGame(ctx, h.Rdb, userID)
-		setUserObservingGame(ctx, h.Rdb, userID, gid)
+		setUserObservingGame(ctx, h.Rdb, userID, gid, gm["game_type"])
 		return ""
 	}
 	return gid
-}
-
-// moveActiveToObserving — выбывание в multi: active снимаем, observation держим до конца партии.
-func moveActiveToObserving(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
-	clearUserActiveGame(ctx, rdb, userID)
-	setUserObservingGame(ctx, rdb, userID, gameID)
-}
-
-// clearUsersFinishedGame — снять active/observation/lobby по оконченной партии.
-func clearUsersFinishedGame(ctx context.Context, rdb *redis.Client, users []uuid.UUID, gameID string) {
-	if rdb == nil {
-		return
-	}
-	lobbyID := ""
-	if gm, _ := rdb.HGetAll(ctx, "game:"+gameID).Result(); len(gm) > 0 {
-		lobbyID = strings.TrimSpace(gm["lobby_id"])
-	}
-	for _, u := range users {
-		clearUserActiveGame(ctx, rdb, u)
-		clearUserObservingGameIfMatch(ctx, rdb, u, gameID)
-		if lobbyID != "" {
-			clearUserActiveLobbyIfMatch(ctx, rdb, u, lobbyID)
-		}
-	}
 }
 
 // onGameFinished — монеты + счётчик партий/достижения для людей (не ботов) +
@@ -3603,23 +3952,14 @@ func (h *GamesHandler) settleGameCoinsMulti(ctx context.Context, m map[string]st
 	}
 	// N игроков: банк stake*N победителю; при ничьей — возврат ставки каждому.
 	if winnerMark == "" {
-		for _, p := range players {
-			if isBot(p) {
-				continue
-			}
-			if u, e := uuid.Parse(p); e == nil {
-				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
-			}
-		}
+		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, players, nil, true, isBot)
 		return
 	}
 	winnerID := markOwnerUserID(m, winnerMark)
 	if winnerID == "" || isBot(winnerID) {
 		return
 	}
-	if u, e := uuid.Parse(winnerID); e == nil {
-		_ = store.AddCoins(ctx, h.Pool, u, stakeBronze*len(players))
-	}
+	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, players, []string{winnerID}, false, isBot)
 }
 
 // recordGameResult сохраняет результат партии в game_results (для статистики).
@@ -3810,11 +4150,24 @@ func clearUserActiveLobbyIfMatch(ctx context.Context, rdb *redis.Client, userID 
 	rdb.Del(ctx, userActiveLobbyKey(userID))
 }
 
-func setUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
+func userObservingGameTypeKey(userID uuid.UUID) string {
+	return "user:" + userID.String() + ":observing_game_type"
+}
+
+func setUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string, gameType string) {
 	if rdb == nil || gameID == "" {
 		return
 	}
 	rdb.Set(ctx, userObservingGameKey(userID), gameID, 24*time.Hour)
+	gt := strings.TrimSpace(gameType)
+	if gt == "" {
+		if v, err := rdb.HGet(ctx, "game:"+gameID, "game_type").Result(); err == nil {
+			gt = strings.TrimSpace(v)
+		}
+	}
+	if gt != "" {
+		rdb.Set(ctx, userObservingGameTypeKey(userID), gt, 24*time.Hour)
+	}
 }
 
 func clearUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
@@ -3822,6 +4175,7 @@ func clearUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.
 		return
 	}
 	rdb.Del(ctx, userObservingGameKey(userID))
+	rdb.Del(ctx, userObservingGameTypeKey(userID))
 }
 
 func clearUserObservingGameIfMatch(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
@@ -3833,6 +4187,7 @@ func clearUserObservingGameIfMatch(ctx context.Context, rdb *redis.Client, userI
 		return
 	}
 	rdb.Del(ctx, userObservingGameKey(userID))
+	rdb.Del(ctx, userObservingGameTypeKey(userID))
 }
 
 // observationPayload — карточка «Наблюдение», пока партия ещё идёт.
@@ -3849,13 +4204,39 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
 	}
-	if markForUserID(m, userID.String()) == "" {
+	gt := ""
+	if stored, err := h.Rdb.Get(ctx, userObservingGameTypeKey(userID)).Result(); err == nil {
+		gt = strings.TrimSpace(stored)
+	}
+	if gt == "" {
+		gt = strings.TrimSpace(m["game_type"])
+	}
+	if gt == "" {
+		gt = "tictactoe"
+	}
+	inGame := false
+	if gt == durakGameType {
+		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
+			if p == userID.String() {
+				inGame = true
+				break
+			}
+		}
+	} else {
+		inGame = markForUserID(m, userID.String()) != ""
+	}
+	if !inGame {
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
 	}
+	// Подтянуть тип в Redis, если ещё не записан.
+	if stored, _ := h.Rdb.Get(ctx, userObservingGameTypeKey(userID)).Result(); strings.TrimSpace(stored) == "" {
+		h.Rdb.Set(ctx, userObservingGameTypeKey(userID), gt, 24*time.Hour)
+	}
 	return map[string]any{
-		"game_id":  gameID,
-		"lobby_id": m["lobby_id"],
+		"game_id":   gameID,
+		"lobby_id":  m["lobby_id"],
+		"game_type": gt,
 	}
 }
 
@@ -3889,26 +4270,68 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 	if err == nil && gameID != "" {
 		key := "game:" + gameID
 		m, err := h.Rdb.HGetAll(ctx, key).Result()
-		if err == nil && len(m) > 0 {
+		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
 			// Протухший ход применяем и здесь — иначе «Игры» показывает
 			// чужой/старый ход, пока кто-то не откроет GetGame.
-			if m["status"] == gameStatusActive && h.applyGameTimeout(ctx, key, m) {
+			if m["game_type"] == durakGameType {
+				h.armDurakTurnAfterDeal(ctx, gameID, m)
 				m, _ = h.Rdb.HGetAll(ctx, key).Result()
+				h.applyDurakTurnTimeout(ctx, gameID, m)
+			} else if h.applyGameTimeout(ctx, key, m) {
+				// applied
 			}
+			m, _ = h.Rdb.HGetAll(ctx, key).Result()
 		}
 		if err == nil && len(m) > 0 && m["status"] == gameStatusActive {
-			myMark := markForUserID(m, userID.String())
-			if myMark == "" {
-				clearUserActiveGame(ctx, h.Rdb, userID)
-			} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
-				// Миграция: выбывший больше не в active, а в observation.
-				moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+			if m["game_type"] == durakGameType {
+				// Durak: определяем участие по player_ids CSV (нет x/o marks).
+				players := parsePlayerIDsCSV(m["player_ids"])
+				inGame := false
+				for _, p := range players {
+					if p == userID.String() {
+						inGame = true
+						break
+					}
+				}
+				if !inGame {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if st, serr := durak.Decode(m["state"]); serr == nil {
+					idx := st.PlayerIndex(userID.String())
+					// Вышел «в ноль» или сдался — observation, не active.
+					if idx >= 0 && !st.IsAlive(idx) {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+						h.promoteDurakFinishedPlayers(ctx, gameID, m, st)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": durakGameType,
+						}
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": durakGameType,
+					}
+				}
 			} else {
-				active = map[string]any{
-					"type":       "game",
-					"game_id":    gameID,
-					"lobby_id":   m["lobby_id"],
-					"is_my_turn": m["turn"] == myMark,
+				myMark := markForUserID(m, userID.String())
+				if myMark == "" {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if parseEliminatedMarks(m["eliminated_marks"])[myMark] {
+					// Миграция: выбывший больше не в active, а в observation.
+					moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+				} else {
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"is_my_turn": m["turn"] == myMark,
+						"game_type":  "tictactoe",
+					}
 				}
 			}
 		} else {
@@ -3921,9 +4344,14 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		if lerr == nil && lobbyID != "" {
 			m, merr := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
 			if merr == nil && len(m) > 0 {
+				gt := m["game_type"]
+				if gt == "" {
+					gt = "tictactoe"
+				}
 				active = map[string]any{
-					"type":     "lobby",
-					"lobby_id": lobbyID,
+					"type":      "lobby",
+					"lobby_id":  lobbyID,
+					"game_type": gt,
 				}
 			} else {
 				clearUserActiveLobby(ctx, h.Rdb, userID)

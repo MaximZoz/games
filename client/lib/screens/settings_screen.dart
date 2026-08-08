@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/flag_asset_cache.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -22,6 +27,7 @@ class SettingsScreen extends ConsumerWidget {
     final webPushEnabled = ref.watch(webPushEnabledProvider);
     final pushCategories = ref.watch(webPushCategoriesProvider);
     final localeChoice = ref.watch(appLocaleProvider);
+    final appUpdate = ref.watch(appUpdateProvider);
     final narrow = isNarrow(context);
     final padding = narrow ? 24.0 : 32.0;
 
@@ -144,6 +150,7 @@ class SettingsScreen extends ConsumerWidget {
                         await ref
                             .read(pendingPurchasesProvider.notifier)
                             .flush();
+                        await syncPreferredLanguageToServer(ref);
                       },
                     ),
                   ),
@@ -242,6 +249,43 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 28),
+                  Text(
+                    l10n.settingsAppVersion(appBuildId),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary.withValues(alpha: 0.72),
+                          fontSize: 12,
+                          letterSpacing: 0.2,
+                        ),
+                  ),
+                  if (appUpdate.updateAvailable) ...[
+                    const SizedBox(height: 12),
+                    Center(
+                      child: FilledButton.icon(
+                        onPressed: () =>
+                            ref.read(appUpdateProvider.notifier).applyUpdate(),
+                        icon: const Icon(Icons.system_update_alt_rounded, size: 18),
+                        label: Text(l10n.appUpdateOk),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accentStart,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    if (appUpdate.whatsNew.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        appUpdate.whatsNew,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary.withValues(alpha: 0.8),
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
@@ -257,6 +301,11 @@ class SettingsScreen extends ConsumerWidget {
     required Locale? selected,
   }) async {
     final l10n = context.l10n;
+    // Прогрев флагов языков в memory-кэш — нужно для офлайна на Web.
+    await Future.wait(
+      appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso)),
+    );
+    if (!context.mounted) return;
     final chosen = await showModalBottomSheet<Object>(
       context: context,
       isScrollControlled: true,
@@ -338,7 +387,9 @@ class SettingsScreen extends ConsumerWidget {
     } else if (chosen is String) {
       await ref.read(appLocaleProvider.notifier).setLocale(Locale(chosen));
     }
-    await syncPreferredLanguageToServer(ref);
+    if (!ref.read(isOfflineProvider)) {
+      await syncPreferredLanguageToServer(ref);
+    }
   }
 }
 
@@ -349,17 +400,27 @@ class _FlagThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? unicode;
+    for (final info in countryFlagsByName.values) {
+      if (info.iso.toLowerCase() == iso.toLowerCase()) {
+        unicode = info.unicode;
+        break;
+      }
+    }
+    // Memory-кэш FlagAssetCache — на Flutter Web в офлайне Image.asset
+    // снова ходит в сеть за /assets/flags/*.png.
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Image.asset(
-        'assets/flags/$iso.png',
+      child: SizedBox(
         width: 28,
         height: 20,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const SizedBox(
-          width: 28,
-          height: 20,
-          child: Icon(Icons.flag_outlined, size: 18),
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: CountryFlagImage(
+            iso: iso,
+            size: 28,
+            fallbackUnicode: unicode,
+          ),
         ),
       ),
     );

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -44,12 +46,10 @@ bool _activeGameUsable(ActiveGameItem? active) {
   return false;
 }
 
-String? _gameIdFromPath(String path) {
-  const prefix = '/games/tictactoe/game/';
-  if (!path.startsWith(prefix)) return null;
-  final id = path.substring(prefix.length).split('/').first.trim();
-  return id.isEmpty ? null : id;
-}
+/// Одноразовый bootstrap в shell (listen без fireImmediately в этой версии Riverpod).
+bool _shellDidBootstrapSession = false;
+
+String? _gameIdFromPath(String path) => gameIdFromGamePath(path);
 
 /// Для unit-тестов навигации таба «Игры».
 bool activeGameUsableForTest(ActiveGameItem? active) => _activeGameUsable(active);
@@ -64,21 +64,27 @@ void _goGamesTab(
   String currentPath,
   ActiveGameItem? active, {
   String? pinnedLiveGameId,
+  String? pinnedLiveGameType,
   String? observingGameId,
 }) {
   final pathGameId = _gameIdFromPath(currentPath);
   final pinned = pinnedLiveGameId?.trim() ?? '';
   final observing = observingGameId?.trim() ?? '';
 
-  // Активная партия (пин или active) — всегда в неё.
+  // Активная партия (пин или active) — всегда в неё (с учётом gameType).
   String? liveGameId;
+  var liveGameType = 'tictactoe';
   if (hasBlockingActiveMatch(active)) {
     liveGameId = active!.gameId!.trim();
+    liveGameType = normalizeGameType(active.gameType);
   } else if (pinned.isNotEmpty) {
     liveGameId = pinned;
+    liveGameType = normalizeGameType(
+      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
+    );
   }
   if (liveGameId != null && liveGameId.isNotEmpty) {
-    final dest = '/games/tictactoe/game/$liveGameId';
+    final dest = gamePathFor(liveGameId, gameType: liveGameType);
     if (currentPath == dest || currentPath.startsWith('$dest/')) return;
     context.go(dest);
     return;
@@ -101,14 +107,19 @@ void _goGamesTab(
       active.type == 'lobby' &&
       active.lobbyId != null &&
       active.lobbyId!.isNotEmpty) {
-    final dest = '/games/tictactoe/lobby/${active.lobbyId}';
+    final dest = lobbyPathFor(
+      active.lobbyId!,
+      gameType: normalizeGameType(active.gameType),
+    );
     // Уже в этом лобби (с ?mode=… или без) — не уходим на список игр.
     if (currentPath == dest || currentPath.startsWith(dest)) return;
     context.go('$dest?mode=invite');
     return;
   }
   // Пока active подгружается после lobby_updated — не сбрасывать экран лобби.
-  if (active == null && currentPath.startsWith('/games/tictactoe/lobby/')) {
+  if (active == null &&
+      (currentPath.startsWith('/games/tictactoe/lobby/') ||
+          currentPath.startsWith('/games/durak/lobby/'))) {
     return;
   }
   if (currentPath != '/games') {
@@ -221,11 +232,37 @@ class AppShell extends ConsumerWidget {
       ref.watch(shopCatalogProvider);
       ref.watch(inventoryListProvider);
       ref.watch(inventoryCapabilitiesProvider);
-      ref.watch(userGameSettingsProvider);
+      ref.watch(userGameSettingsProvider('tictactoe'));
+      ref.watch(userGameSettingsProvider('durak'));
       ref.watch(achievementsListProvider);
       ref.watch(collectionIncomeProvider);
       ref.watch(dailyRewardStatusProvider);
     }
+    // Версия приложения: сверка с /api/version и WS client_update_available.
+    ref.watch(appUpdateProvider);
+    ref.listen(activeGameProvider, (_, __) {
+      ref.read(appUpdateProvider.notifier).onActiveGameChanged();
+    });
+    ref.listen<AppUpdateState>(appUpdateProvider, (prev, next) {
+      if (!next.updateAvailable) return;
+      if (next.deferredUntilGameEnd) return;
+      if (next.dialogShown) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        final cur = ref.read(appUpdateProvider);
+        if (!cur.updateAvailable ||
+            cur.deferredUntilGameEnd ||
+            cur.dialogShown) {
+          return;
+        }
+        ref.read(appUpdateProvider.notifier).markDialogShown();
+        unawaited(_showAppUpdateDialog(context, ref));
+      });
+    });
+    // Первая проверка при появлении shell (и для гостя на /login).
+    // Всегда пробуем — даже в «офлайне» после возврата сети поймает poll.
+    unawaited(ref.read(appUpdateProvider.notifier).ensureInitialCheck());
+
     // Явно держим realtime WebSocket активным (меню, чаты, друзья, presence)
     if (isAuthorized && !isOffline) {
       ref.watch(realtimeEventsProvider);
@@ -234,6 +271,7 @@ class AppShell extends ConsumerWidget {
       // Бейджи подарков: live WS + синхронизация из непрочитанных чатов.
       ref.watch(giftedCollectionsBadgeSyncProvider);
       // iOS PWA: после рестарта/смены SW заново привязываем Web Push.
+      // Язык → сервер только при логине / смене локали (не из каждого build).
       ref.listen(authStateProvider, (prev, next) {
         if (next.valueOrNull != null && prev?.valueOrNull == null) {
           unawaited(
@@ -241,11 +279,15 @@ class AppShell extends ConsumerWidget {
           );
           unawaited(syncPreferredLanguageToServer(ref));
         }
+        if (next.valueOrNull == null) {
+          _shellDidBootstrapSession = false;
+        }
       });
-      // Язык интерфейса → сервер (для иконки автоперевода в чатах).
-      if (authState.valueOrNull != null) {
+      ref.listen<Locale?>(appLocaleProvider, (prev, next) {
+        if (ref.read(authStateProvider).valueOrNull == null) return;
+        if (prev == next) return;
         unawaited(syncPreferredLanguageToServer(ref));
-      }
+      });
       ref.listen<bool>(webPushEnabledProvider, (prev, next) {
         if (next == true && prev != true) {
           unawaited(
@@ -253,8 +295,10 @@ class AppShell extends ConsumerWidget {
           );
         }
       });
-      // Уже залогинен при первом кадре shell — тоже rebind.
-      if (authState.valueOrNull != null) {
+      // Уже залогинен при первом заходе в shell — один раз, не на каждый rebuild.
+      if (!_shellDidBootstrapSession && authState.valueOrNull != null) {
+        _shellDidBootstrapSession = true;
+        unawaited(syncPreferredLanguageToServer(ref));
         unawaited(
           ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
         );
@@ -267,14 +311,33 @@ class AppShell extends ConsumerWidget {
             unawaited(ref.read(authStateProvider.notifier).logout());
             return;
           }
+          if (type == 'realtime_connected') {
+            unawaited(ref.read(appUpdateProvider.notifier).check());
+          }
+          if (type == 'client_update_available') {
+            final latest =
+                (event['latest_build'] ?? event['build_id'])?.toString();
+            // Текст «Что нового» не берём из WS — он без локали.
+            // Клиент тянет /api/version с Accept-Language.
+            unawaited(
+              ref.read(appUpdateProvider.notifier).check(
+                    latestBuild: latest,
+                  ),
+            );
+          }
           if (type == 'game_started' || type == 'lobby_updated') {
             final router = GoRouter.of(context);
-            final gameId = realtimeGameIdForNavigation(
+            final nav = realtimeGameNavForEvent(
               event,
               currentPath: router.routerDelegate.currentConfiguration.uri.path,
             );
-            if (context.mounted) {
-              navigateToGame(router, gameNavigation, gameId);
+            if (context.mounted && nav != null) {
+              navigateToGame(
+                router,
+                gameNavigation,
+                nav.gameId,
+                gameType: nav.gameType,
+              );
             }
           }
           if (type == 'daily_reward_available' ||
@@ -408,7 +471,8 @@ class AppShell extends ConsumerWidget {
         if (isOffline) {
           Router.neglect(context, () {
             if (currentPath != '/games' &&
-                !currentPath.startsWith('/games/tictactoe/offline')) {
+                !currentPath.startsWith('/games/tictactoe/offline') &&
+                !currentPath.startsWith('/games/durak/offline')) {
               context.go('/games');
             } else {
               navigationShell.goBranch(branch, initialLocation: true);
@@ -420,17 +484,18 @@ class AppShell extends ConsumerWidget {
         final epochAtTap = activeNotifier.epoch;
         final cachedActive = ref.read(activeGameProvider).valueOrNull;
         final cacheUsable = _activeGameUsable(cachedActive);
-        final pinnedLive =
-            ref.read(blockingGamePinProvider)?.trim() ?? '';
+        final pinnedLive = ref.read(blockingGamePinProvider);
+        final pinnedLiveId = pinnedLive?.gameId.trim() ?? '';
         final observingId =
             ref.read(observationGameProvider)?.gameId.trim() ?? '';
         // На экране живой партии — закрепить active, чтобы refresh не «съел» матч.
         final pathGameId = _gameIdFromPath(currentPath);
+        final pathGameType = gameTypeFromGamePath(currentPath);
         final pathIsObserving =
             pathGameId != null && observingId.isNotEmpty && pathGameId == observingId;
         final pathIsLive = pathGameId != null &&
             !pathIsObserving &&
-            (pinnedLive == pathGameId || cachedActive?.gameId == pathGameId);
+            (pinnedLiveId == pathGameId || cachedActive?.gameId == pathGameId);
         final livePathForPin = pathGameId;
         if (pathIsLive &&
             livePathForPin != null &&
@@ -443,6 +508,8 @@ class AppShell extends ConsumerWidget {
               gameId: livePathForPin,
               lobbyId: cachedActive?.lobbyId,
               isMyTurn: cachedActive?.isMyTurn ?? false,
+              gameType: pathGameType ??
+                  normalizeGameType(cachedActive?.gameType),
             ),
           );
         }
@@ -452,9 +519,13 @@ class AppShell extends ConsumerWidget {
             context,
             currentPath,
             activeForNav ?? cachedActive,
-            pinnedLiveGameId: pinnedLive.isNotEmpty
-                ? pinnedLive
+            pinnedLiveGameId: pinnedLiveId.isNotEmpty
+                ? pinnedLiveId
                 : (pathIsLive ? pathGameId : null),
+            pinnedLiveGameType: pinnedLive?.gameType ??
+                pathGameType ??
+                activeForNav?.gameType ??
+                cachedActive?.gameType,
             observingGameId: observingId.isNotEmpty ? observingId : null,
           );
         });
@@ -469,8 +540,11 @@ class AppShell extends ConsumerWidget {
             if (ref.read(activeGameProvider.notifier).epoch != epochAtTap) {
               return;
             }
-            final pinNow =
-                ref.read(blockingGamePinProvider)?.trim() ?? pinnedLive;
+            final pinNowItem = ref.read(blockingGamePinProvider);
+            final pinNow = pinNowItem?.gameId.trim() ?? pinnedLiveId;
+            final pinNowType = pinNowItem?.gameType ??
+                pinnedLive?.gameType ??
+                pathGameType;
             final obsNow =
                 ref.read(observationGameProvider)?.gameId.trim() ?? observingId;
             // Живая партия на экране / в пине важнее лобби-инвайта с GetActive.
@@ -484,6 +558,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
               return;
@@ -498,6 +574,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathId,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
               return;
@@ -525,7 +603,8 @@ class AppShell extends ConsumerWidget {
             if (cacheUsable &&
                 fresh.type == cachedActive?.type &&
                 fresh.gameId == cachedActive?.gameId &&
-                fresh.lobbyId == cachedActive?.lobbyId) {
+                fresh.lobbyId == cachedActive?.lobbyId &&
+                fresh.gameType == cachedActive?.gameType) {
               return;
             }
             final nowPath =
@@ -536,6 +615,7 @@ class AppShell extends ConsumerWidget {
                 nowPath,
                 fresh,
                 pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
+                pinnedLiveGameType: pinNowType,
                 observingGameId: obsNow.isNotEmpty ? obsNow : null,
               );
             });
@@ -547,6 +627,8 @@ class AppShell extends ConsumerWidget {
                       gameId: livePathForPin,
                       lobbyId: cachedActive?.lobbyId,
                       isMyTurn: cachedActive?.isMyTurn ?? false,
+                      gameType: pathGameType ??
+                          normalizeGameType(cachedActive?.gameType),
                     ),
                   );
             }
@@ -857,6 +939,11 @@ class AppShell extends ConsumerWidget {
           )
         : null;
 
+    final updateState = ref.watch(appUpdateProvider);
+    final showUpdateBanner = updateState.updateAvailable &&
+        updateState.deferredUntilGameEnd &&
+        !updateState.bannerDismissed;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -876,7 +963,141 @@ class AppShell extends ConsumerWidget {
             bottomNavigationBar: bottomNav,
           ),
         ),
+        if (showUpdateBanner)
+          Positioned(
+            left: 12,
+            right: 12,
+            top: topInset + kToolbarHeight + 6,
+            child: _AppUpdateBanner(
+              onUpdate: () => ref.read(appUpdateProvider.notifier).applyUpdate(),
+              onDismiss: () =>
+                  ref.read(appUpdateProvider.notifier).dismissBanner(),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final whatsNew = ref.read(appUpdateProvider).whatsNew.trim();
+  final go = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) {
+      return AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          l10n.appUpdateTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360, maxHeight: 360),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.appUpdateBody),
+                if (whatsNew.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    l10n.appUpdateWhatsNew,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    whatsNew,
+                    style: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.95),
+                      height: 1.35,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.appUpdateOk),
+          ),
+        ],
+      );
+    },
+  );
+  if (go == true) {
+    await ref.read(appUpdateProvider.notifier).applyUpdate();
+  }
+}
+
+class _AppUpdateBanner extends StatelessWidget {
+  const _AppUpdateBanner({
+    required this.onUpdate,
+    required this.onDismiss,
+  });
+
+  final VoidCallback onUpdate;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Material(
+      color: Colors.transparent,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          child: Row(
+            children: [
+              Icon(Icons.system_update_alt_rounded,
+                  size: 20, color: AppColors.accentStart),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.appUpdateLaterBanner,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onUpdate,
+                child: Text(l10n.appUpdateOk),
+              ),
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: onDismiss,
+                icon: const Icon(Icons.close_rounded, size: 18),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

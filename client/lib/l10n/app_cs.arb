@@ -162,8 +162,81 @@
   "gamesWaiting": "Čekání",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Piškvorky",
+  "appUpdateBody": "Je k dispozici nová verze aplikace. Aktualizujte pro pokračování.",
+  "appUpdateLaterBanner": "Po partii aplikaci aktualizujeme",
+  "appUpdateOk": "Aktualizovat",
+  "appUpdateTitle": "Dostupná aktualizace",
+  "appUpdateWhatsNew": "Co je nového",
+  "durakActionAll": "Vše",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Hotovo",
+  "durakActionTake": "Vzít",
+  "durakHintBito": "Přihoďte kartu nebo řekněte «Bito»",
+  "durakHintDefend": "Bránit se",
+  "durakHintDefendOrTransfer": "Bránit se nebo převést",
+  "durakHintDrawAllOut": "Remíza — všichni jsou venku",
+  "durakHintOpponentAttack": "Soupeř útočí",
+  "durakHintOpponentBito": "Soupeř přihazuje nebo říká «Bito»",
+  "durakHintOpponentDefends": "Soupeř se brání",
+  "durakHintOpponentTakeFollow": "Soupeř může přihodit po vzeti",
+  "durakHintOpponentThrows": "Soupeř přihazuje",
+  "durakHintTakeFollow": "Přihoďte po vzeti nebo klepněte «Hotovo»",
+  "durakHintThrowIn": "Přihoďte karty nebo klepněte «Vše»",
+  "durakHintThrowInFirst": "Přihoďte karty nebo «Vše» (max. 5 v prvním odhozu)",
+  "durakHintYouFinished": "Jste venku — čekáme na konec",
+  "durakHintYouLost": "Prohráli jste — jste hlupák",
+  "durakHintYourAttack": "Vaše tah — útočte",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "Ve vývoji",
+  "rulesPokerPlayers": "Hráči: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Každý dostane 2 soukromé karty; na stůl přijde 5 společných karet.",
+  "rulesPokerPlay": "Sázková kola: preflop, flop, turn a river. Fold, call, bet nebo raise.",
+  "rulesPokerWin": "Vyhrává nejlepší pětikombinace (soukromé + společné), nebo poslední po foldech.",
+  "gamesDurakDeck24": "24 karet",
+  "gamesDurakDeck36": "36 karet",
+  "gamesDurakDeck52": "52 karet",
+  "gamesDurakModePerevodnoi": "Převáděný",
+  "gamesDurakModePodkidnoi": "Přihazovaný",
+  "gamesFinishCurrentFirst": "Nejdříve dokončete aktuální hru",
+  "gamesObservation": "Sledování",
+  "gamesObservationHint": "Můžete sledovat až do konce partie",
+  "gamesVariantClassic": "Klasický",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 hráči",
+  "gamesVariantMulti4": "4 hráči",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Hráči {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Útočník pokládá karty; obránce je bije (stejná barva vyšší, nebo trumf). Trumf se bije jen vyšším trumfem.",
+  "rulesDurakBeat": "Když jsou všechny karty bity, útočník řekne «Bito» a karty jdou do odhozu. Jinak si obránce vezme všechno ze stolu.",
+  "rulesDurakLoser": "Prohrává ten, komu na konci zůstanou karty — «hlupák».",
+  "rulesDurakMode": "Režim: {mode}",
+  "rulesDurakOfflineBot": "Hra proti botovi, bez sázek a limitu času.",
+  "rulesDurakPlayersDeck": "Hráči: {players}. Balíček: {deck}.",
+  "settingsAppVersion": "Verze {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Pravidla",
   "gamesRulesTitle": "Herní pravidla",
   "gamesCreate": "Vytvořit hru",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Bylo vám připsáno {amount} mincí",
   "coinsDeductedTitle": "Bylo odečteno {amount} mincí",
   "coinsCreditCardTitle": "Byly vám připsány mince",
-  "coinsClaim": "Vyzvednout"
+  "coinsClaim": "Vyzvednout",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Bere",
+  "durakRoleBeats": "Přebíjí",
+  "durakRoleThrowIn": "Přihaz",
+  "durakRoleTurn": "Tah",
+  "durakRoleDefends": "Brání",
+  "durakStatusTaking": "Bere",
+  "durakHintDefenderTurn": "Tah obránce",
+  "gameYouEliminated": "Jste venku",
+  "gameYouPlaced": "Umístili jste se na {place}. místě",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Hra skončila",
+  "gameTurnOf": "Tah hráče {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Skupinový chat",
+  "lobbyChatNotReady": "Chat lobby ještě není připraven",
+  "chatsGroupChat": "Skupinový chat",
+  "chatsMembersCount": "Členové: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} os.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(ty)",
+  "chatTitleDurak3": "Durak · 3 hráči",
+  "chatTitleDurak4": "Durak · 4 hráči",
+  "rulesTttUltimate": "Ultimate: devět miniplanů 3×3. Tah pošle soupeře na daný miniplán. Vyhrává linie na meta-plánu.",
+  "rulesTttMulti3": "3 hráči: plán 3×3, tři hráči (X, O, △). Vyhrajte řadou vlastních znaků.",
+  "rulesTttMulti4": "4 hráči: plán 4×4, čtyři hráči (X, O, △, □). Vyhrajte řadou vlastních znaků."
 }

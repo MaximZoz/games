@@ -11,7 +11,17 @@ void main() {
       expect(s.gridSize, 3);
       expect(s.swapRule, isFalse);
       expect(s.firstMoveRestriction, isFalse);
-      expect(s.stakeBronze, 1);
+      expect(s.stakeBronze, 2);
+    });
+
+    test('durak defaults', () {
+      const s = UserGameSettings.durakDefaults;
+      expect(s.gameType, 'durak');
+      expect(s.turnTimeSec, 60);
+      expect(s.deckSize, 36);
+      expect(s.maxPlayers, 2);
+      expect(s.gameMode, 'podkidnoi');
+      expect(s.stakeBronze, 2);
     });
 
     test('fromJson clamps invalid turn/variant/stake', () {
@@ -27,7 +37,7 @@ void main() {
       expect(s.turnTimeSec, 0);
       expect(s.variant, 'classic');
       expect(s.gridSize, 3);
-      expect(s.stakeBronze, 1);
+      expect(s.stakeBronze, 2);
       expect(s.swapRule, isTrue);
       expect(s.firstMoveRestriction, isTrue);
     });
@@ -46,6 +56,23 @@ void main() {
       expect(s.stakeBronze, 10000);
     });
 
+    test('fromJson durak fields', () {
+      final s = UserGameSettings.fromJson({
+        'game_type': 'durak',
+        'turn_time_sec': 20,
+        'stake_bronze': 50,
+        'deck_size': 52,
+        'max_players': 4,
+        'game_mode': 'perevodnoi',
+      });
+      expect(s.gameType, 'durak');
+      expect(s.turnTimeSec, 20);
+      expect(s.deckSize, 52);
+      expect(s.maxPlayers, 4);
+      expect(s.gameMode, 'perevodnoi');
+      expect(s.stakeBronze, 50);
+    });
+
     test('toJson roundtrip', () {
       const original = UserGameSettings(
         turnTimeSec: 20,
@@ -53,6 +80,23 @@ void main() {
         swapRule: true,
         firstMoveRestriction: true,
         stakeBronze: 50,
+      );
+      final again = UserGameSettings.fromJson(original.toJson());
+      expect(again.gameType, original.gameType);
+      expect(again.turnTimeSec, original.turnTimeSec);
+      expect(again.variant, original.variant);
+      expect(again.stakeBronze, original.stakeBronze);
+    });
+
+    test('toJson durak roundtrip', () {
+      const original = UserGameSettings(
+        gameType: 'durak',
+        turnTimeSec: 60,
+        variant: 'podkidnoi',
+        stakeBronze: 10,
+        deckSize: 24,
+        maxPlayers: 2,
+        gameMode: 'podkidnoi',
       );
       final again = UserGameSettings.fromJson(original.toJson());
       expect(again, original);

@@ -91,6 +91,68 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offlinePlayAgain => '再来一局';
 
   @override
+  String offlineBotName(int n) {
+    return '机器人 $n';
+  }
+
+  @override
+  String get durakActionTake => '拿牌';
+
+  @override
+  String get durakActionAll => '全部';
+
+  @override
+  String get durakActionDone => '完成';
+
+  @override
+  String get durakActionBito => '打完';
+
+  @override
+  String get durakHintDefend => '防守';
+
+  @override
+  String get durakHintDefendOrTransfer => '防守或转攻';
+
+  @override
+  String get durakHintOpponentDefends => '对手正在防守';
+
+  @override
+  String get durakHintThrowInFirst => '追加牌或「全部」（首轮防守最多 5 张）';
+
+  @override
+  String get durakHintThrowIn => '追加牌或点「全部」';
+
+  @override
+  String get durakHintOpponentThrows => '对手正在追加';
+
+  @override
+  String get durakHintTakeFollow => '收下后追加或点「完成」';
+
+  @override
+  String get durakHintOpponentTakeFollow => '对手收下后可追加';
+
+  @override
+  String get durakHintBito => '追加一张牌或说「打完」';
+
+  @override
+  String get durakHintOpponentBito => '对手追加或说「打完」';
+
+  @override
+  String get durakHintYourAttack => '你的回合 — 进攻';
+
+  @override
+  String get durakHintOpponentAttack => '对手正在进攻';
+
+  @override
+  String get durakHintYouLost => '你输了 — 你是傻瓜';
+
+  @override
+  String get durakHintDrawAllOut => '平局 — 所有人都出局';
+
+  @override
+  String get durakHintYouFinished => '你已出局 — 等待结束';
+
+  @override
   String get shopPurchaseQueued => '购买已保存 — 将在在线模式下生效';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsPushRewards => '奖励';
+
+  @override
+  String settingsAppVersion(String version) {
+    return '版本 $version';
+  }
+
+  @override
+  String get appUpdateTitle => '有可用更新';
+
+  @override
+  String get appUpdateBody => '有新版本可用。请更新以继续使用。';
+
+  @override
+  String get appUpdateWhatsNew => '更新内容';
+
+  @override
+  String get appUpdateOk => '更新';
+
+  @override
+  String get appUpdateLaterBanner => '本局结束后将更新应用';
 
   @override
   String get loginTitle => '登录';
@@ -440,10 +522,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesTicTacToe => '井字棋';
 
   @override
-  String get gamesDurak => '杜拉克';
+  String get gamesDurak => '傻瓜牌';
+
+  @override
+  String get gamesPoker => '扑克';
 
   @override
   String get gamesInDevelopment => '开发中';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return '玩家：$players。';
+  }
+
+  @override
+  String get rulesPokerIntro => '德州扑克。每人两张底牌；桌上发出五张公共牌。';
+
+  @override
+  String get rulesPokerPlay => '下注轮次：翻牌前、翻牌、转牌、河牌。可弃牌、跟注、下注或加注。';
+
+  @override
+  String get rulesPokerWin => '用底牌与公共牌组成的最强五张牌获胜；或其余人弃牌后仅剩者获胜。';
 
   @override
   String get gamesRules => '规则';
@@ -477,6 +576,77 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gamesNoCenter => '禁止中心开局';
+
+  @override
+  String get gamesObservation => '观战';
+
+  @override
+  String get gamesObservationHint => '可以观战至对局结束';
+
+  @override
+  String get gamesFinishCurrentFirst => '请先完成当前对局';
+
+  @override
+  String get gamesVariantClassic => '经典';
+
+  @override
+  String get gamesVariantGomoku => '五子棋';
+
+  @override
+  String get gamesVariantUltimate => '终极';
+
+  @override
+  String get gamesVariantMulti3 => '三人';
+
+  @override
+  String get gamesVariantMulti4 => '四人';
+
+  @override
+  String get gamesDurakModePodkidnoi => '加牌';
+
+  @override
+  String get gamesDurakModePerevodnoi => '转攻';
+
+  @override
+  String get gamesDurakDeck24 => '24 张';
+
+  @override
+  String get gamesDurakDeck36 => '36 张';
+
+  @override
+  String get gamesDurakDeck52 => '52 张';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return '模式：$mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return '玩家：$players。牌组：$deck。';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => '与机器人对战，无赌注、无回合时限。';
+
+  @override
+  String get rulesDurakAttack => '进攻方出牌；防守方用同花色更大的牌或王牌盖住。王牌只能被更大的王牌盖住。';
+
+  @override
+  String get rulesDurakBeat => '全部盖住后，进攻方说「打完」，牌进入弃牌堆；否则防守方收走桌上所有牌。';
+
+  @override
+  String get rulesDurakLoser => '终局仍有手牌的人落败——「傻瓜」。';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return '玩家 $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return '大厅 $name';
+  }
 
   @override
   String get lobbyMatchmake => '大厅';
@@ -1769,4 +1939,81 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get coinsClaim => '领取';
+
+  @override
+  String get durakActionPass => '过牌';
+
+  @override
+  String get durakRoleTook => '收下';
+
+  @override
+  String get durakRoleBeats => '防守';
+
+  @override
+  String get durakRoleThrowIn => '追加';
+
+  @override
+  String get durakRoleTurn => '回合';
+
+  @override
+  String get durakRoleDefends => '防守中';
+
+  @override
+  String get durakStatusTaking => '收下中';
+
+  @override
+  String get durakHintDefenderTurn => '防守方回合';
+
+  @override
+  String get gameYouEliminated => '你已出局';
+
+  @override
+  String gameYouPlaced(int place) {
+    return '你获得第 $place 名';
+  }
+
+  @override
+  String get gameOverNeutral => '对局结束';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name 的回合';
+  }
+
+  @override
+  String get chatGroupTooltip => '群聊';
+
+  @override
+  String get lobbyChatNotReady => '大厅聊天尚未创建';
+
+  @override
+  String get chatsGroupChat => '群聊';
+
+  @override
+  String chatsMembersCount(int count) {
+    return '成员：$count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count人';
+  }
+
+  @override
+  String get chatsYouSuffix => '(你)';
+
+  @override
+  String get chatTitleDurak3 => '傻瓜牌 · 3人';
+
+  @override
+  String get chatTitleDurak4 => '傻瓜牌 · 4人';
+
+  @override
+  String get rulesTttUltimate => '终极井字棋：九个 3×3 小棋盘。落子会把对手送到对应小盘。在元棋盘连成一线即胜。';
+
+  @override
+  String get rulesTttMulti3 => '三人局：3×3 棋盘，三位玩家（X、O、△）。用自己的符号连成一线即胜。';
+
+  @override
+  String get rulesTttMulti4 => '四人局：4×4 棋盘，四位玩家（X、O、△、□）。用自己的符号连成一线即胜。';
 }

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -91,14 +92,40 @@ func DeleteSessionsByUserID(ctx context.Context, pool *pgxpool.Pool, userID uuid
 }
 
 // SessionExists возвращает true, если сессия ещё в БД и не истекла.
+// При кратковременных сбоях пула/соединения делает несколько попыток —
+// иначе клиент на каждом деплое видит залипший 503 «temporarily unavailable».
 func SessionExists(ctx context.Context, pool *pgxpool.Pool, sessionID uuid.UUID) (bool, error) {
-	var ok bool
-	err := pool.QueryRow(ctx,
-		`SELECT EXISTS(
-			SELECT 1 FROM sessions
-			WHERE id = $1 AND expires_at > NOW()
-		)`,
-		sessionID,
-	).Scan(&ok)
-	return ok, err
+	const attempts = 3
+	var last error
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			delay := time.Duration(i) * 80 * time.Millisecond
+			timer := time.NewTimer(delay)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				if last != nil {
+					return false, last
+				}
+				return false, ctx.Err()
+			case <-timer.C:
+			}
+		}
+		var ok bool
+		err := pool.QueryRow(ctx,
+			`SELECT EXISTS(
+				SELECT 1 FROM sessions
+				WHERE id = $1 AND expires_at > NOW()
+			)`,
+			sessionID,
+		).Scan(&ok)
+		if err == nil {
+			return ok, nil
+		}
+		if errors.Is(err, context.Canceled) {
+			return false, err
+		}
+		last = err
+	}
+	return false, last
 }

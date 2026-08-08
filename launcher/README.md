@@ -58,6 +58,14 @@
 
 Скрипт подтягивает `origin/develop`, создаёт временный worktree и деплоит именно эту ветку.
 
+**Создать / задеплоить отдельный Fly DEV** (`multigameszozu-dev`):
+
+```powershell
+Copy-Item deploy.dev.env.example deploy.dev.env
+.\launcher\setup_fly_dev.ps1
+.\launcher\deploy_dev.ps1
+```
+
 Если выполнение скриптов запрещено политикой:
 
 ```powershell
@@ -101,6 +109,19 @@ chmod +x launcher/deploy_develop.sh
 ```
 
 Скрипт подтягивает `origin/develop`, создаёт временный worktree и деплоит именно эту ветку.
+
+**Создать / задеплоить отдельный Fly DEV** (`multigameszozu-dev`):
+
+```bash
+cp deploy.dev.env.example deploy.dev.env
+chmod +x launcher/setup_fly_dev.sh launcher/deploy_dev.sh
+./launcher/setup_fly_dev.sh
+./launcher/deploy_dev.sh
+```
+
+Прод остаётся в `fly.toml` / `deploy.cursor.env`. DEV — `fly.dev.toml` / `deploy.dev.env`.  
+Автодеплой: push в `develop` → DEV, push в `main` → прод (см. `.github/workflows/deploy.yml`).  
+Подробнее: [docs/DEPLOY_FLY_DEV.md](../docs/DEPLOY_FLY_DEV.md).
 
 ---
 

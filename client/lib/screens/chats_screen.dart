@@ -27,6 +27,7 @@ import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class ChatsScreen extends ConsumerStatefulWidget {
@@ -1446,8 +1447,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   String _chatTitle(ChatPreviewItem item) {
     if (item.isGroup) {
       final title = item.title?.trim();
-      if (title != null && title.isNotEmpty) return title;
-      return 'Групповой чат';
+      if (title != null && title.isNotEmpty) {
+        return localizeChatTitle(title, context.l10n);
+      }
+      return context.l10n.chatsGroupChat;
     }
     return _peerTitle(item.user);
   }

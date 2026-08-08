@@ -48,6 +48,14 @@ void main() {
         isTrue,
       );
     });
+
+    test('target lobby same as active lobby is allowed', () {
+      final active = ActiveGameItem(type: 'lobby', lobbyId: 'invite-1');
+      expect(
+        isBusyWithOtherSession(active, targetLobbyId: 'invite-1'),
+        isFalse,
+      );
+    });
   });
 
   group('gameIdFromLocation', () {
@@ -56,16 +64,25 @@ void main() {
         gameIdFromLocation('/games/tictactoe/game/abc-123'),
         'abc-123',
       );
+      expect(
+        gameIdFromLocation('/games/durak/game/d-1'),
+        'd-1',
+      );
     });
 
     test('ignores non-game paths', () {
       expect(gameIdFromLocation('/games'), isNull);
       expect(gameIdFromLocation('/games/tictactoe/lobby/x'), isNull);
+      expect(gameIdFromLocation('/games/durak/lobby/x'), isNull);
     });
 
     test('with chat return parses game query value', () {
       expect(
         gameIdFromLocation('/games/tictactoe/game/g9?from=chat'),
+        'g9',
+      );
+      expect(
+        gameIdFromLocation('/games/durak/game/g9?from=chat'),
         'g9',
       );
     });

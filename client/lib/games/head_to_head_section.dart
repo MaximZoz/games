@@ -5,6 +5,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 
 /// Секция счёта head-to-head в попапе профиля при клике на игрока.
 ///
@@ -39,11 +40,73 @@ class HeadToHeadSection extends ConsumerWidget {
           return _HeadToHeadBody(
             games: games,
             showStats: showStats,
-            onTapStats: () => showGameStatsDialog(
-              context,
-              userId: opponentId,
-              displayName: opponentName ?? h2h.displayName,
-            ),
+            onTapStats: () {
+              final name = (opponentName ?? h2h.displayName).trim();
+              // Из попапа профиля — статистика тоже во всплывашке.
+              // С главной (/stats) остаётся полноэкранный виджет.
+              showDialog<void>(
+                context: context,
+                builder: (ctx) {
+                  final title = name.isNotEmpty
+                      ? name
+                      : context.l10n.statsTitle;
+                  return Dialog(
+                    backgroundColor: AppColors.surfaceUnified,
+                    insetPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 24,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 520,
+                        maxHeight: 640,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Text(
+                                      title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: context.l10n.commonClose,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Flexible(
+                            child: GameStatsBody(
+                              userId: opponentId,
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -136,12 +199,15 @@ class GameTypeScoreChip extends StatelessWidget {
   static const _loss = Color(0xFFC62828);
   static const _draw = Color(0xFFF9A825);
 
-  IconData get _gameIcon {
+  Widget _gameIconWidget() {
+    final sz = iconSize * 0.52;
     switch (gameType) {
       case 'tictactoe':
-        return Icons.grid_3x3_rounded;
+        return Icon(Icons.grid_3x3_rounded, color: Colors.white, size: sz);
+      case 'durak':
+        return DurakGameIcon(size: sz, color: Colors.white);
       default:
-        return Icons.sports_esports_rounded;
+        return Icon(Icons.sports_esports_rounded, color: Colors.white, size: sz);
     }
   }
 
@@ -161,11 +227,8 @@ class GameTypeScoreChip extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            _gameIcon,
-            color: Colors.white,
-            size: iconSize * 0.52,
-          ),
+          alignment: Alignment.center,
+          child: _gameIconWidget(),
         ),
         const SizedBox(height: 6),
         Row(

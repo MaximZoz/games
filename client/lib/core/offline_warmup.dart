@@ -76,7 +76,8 @@ class OfflineWarmup {
         _awaitIgnore(ref.read(shopCatalogProvider.future)),
         _awaitIgnore(ref.read(inventoryListProvider.future)),
         _awaitIgnore(ref.read(inventoryCapabilitiesProvider.future)),
-        _awaitIgnore(ref.read(userGameSettingsProvider.future)),
+        _awaitIgnore(ref.read(userGameSettingsProvider('tictactoe').future)),
+        _awaitIgnore(ref.read(userGameSettingsProvider('durak').future)),
         _awaitIgnore(ref.read(achievementsListProvider.future)),
         _awaitIgnore(ref.read(achievementsUnclaimedCountProvider.future)),
         _awaitIgnore(ref.read(collectionIncomeProvider.future)),
@@ -86,7 +87,10 @@ class OfflineWarmup {
       shop ??= ref.read(shopCatalogProvider).valueOrNull;
       inv ??= ref.read(inventoryListProvider).valueOrNull;
       final caps = ref.read(inventoryCapabilitiesProvider).valueOrNull;
-      final settings = ref.read(userGameSettingsProvider).valueOrNull;
+      final tttSettings =
+          ref.read(userGameSettingsProvider('tictactoe')).valueOrNull;
+      final durakSettings =
+          ref.read(userGameSettingsProvider('durak')).valueOrNull;
       final achievements = ref.read(achievementsListProvider).valueOrNull;
       final income = ref.read(collectionIncomeProvider).valueOrNull;
       final daily = ref.read(dailyRewardStatusProvider).valueOrNull;
@@ -96,8 +100,19 @@ class OfflineWarmup {
       }
       if (inv != null) await OfflineDiskCache.saveInventory(uid, inv);
       if (caps != null) await OfflineDiskCache.saveCapabilities(uid, caps);
-      if (settings != null) {
-        await OfflineDiskCache.saveGameSettings(uid, settings);
+      if (tttSettings != null) {
+        await OfflineDiskCache.saveGameSettings(
+          uid,
+          tttSettings,
+          gameType: 'tictactoe',
+        );
+      }
+      if (durakSettings != null) {
+        await OfflineDiskCache.saveGameSettings(
+          uid,
+          durakSettings,
+          gameType: 'durak',
+        );
       }
       if (achievements != null) {
         await OfflineDiskCache.saveAchievements(uid, achievements);

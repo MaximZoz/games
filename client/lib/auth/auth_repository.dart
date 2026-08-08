@@ -38,7 +38,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
-    this.showStatsToOthers = false,
+    this.showStatsToOthers = true,
     this.emailVerified = true,
   });
 
@@ -54,7 +54,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
-      showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
+      showStatsToOthers: json['show_stats_to_others'] as bool? ?? true,
       emailVerified: json['email_verified'] as bool? ?? true,
     );
   }
@@ -786,20 +786,44 @@ class AuthRepository {
       throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
 
-    var response = await request(token);
+    var response = await _withTransientRetry(() => request(token!));
     if (response.statusCode != 401) return response;
 
     token = await _refreshAccessToken();
     if (token == null || token.isEmpty) {
-      throw AuthException(401, LocaleService.l10n.sessionExpired);
+      // Logout уже вызван только при 401/403 refresh.
+      // Сеть/503 — токены на месте, не притворяемся «сессия истекла».
+      final still = await getAccessToken();
+      if (still == null || still.isEmpty) {
+        throw AuthException(401, LocaleService.l10n.sessionExpired);
+      }
+      throw AuthException(503, LocaleService.l10n.commonTryLater);
     }
 
-    response = await request(token);
+    response = await _withTransientRetry(() => request(token!));
     if (response.statusCode == 401) {
       await logout();
       throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
+    if (response.statusCode == 502 || response.statusCode == 503) {
+      throw AuthException(503, LocaleService.l10n.commonTryLater);
+    }
 
+    return response;
+  }
+
+  /// 503/временные сбои БД при деплое — несколько повторов, без logout.
+  Future<http.Response> _withTransientRetry(
+    Future<http.Response> Function() request,
+  ) async {
+    var response = await request();
+    for (var attempt = 0;
+        attempt < 2 &&
+            (response.statusCode == 503 || response.statusCode == 502);
+        attempt++) {
+      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      response = await request();
+    }
     return response;
   }
 
@@ -1000,8 +1024,12 @@ class AuthRepository {
     }
 
     // Только явный отказ в авторизации сбрасывает сессию.
+    // 502/503 (деплой, БД EOF) — сессию не трогаем.
     if (response.statusCode == 401 || response.statusCode == 403) {
       await logout();
+      return null;
+    }
+    if (response.statusCode == 502 || response.statusCode == 503) {
       return null;
     }
     if (response.statusCode != 200) {

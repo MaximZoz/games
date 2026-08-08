@@ -29,7 +29,10 @@ var (
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
-var FreeStakeBronze = []int{1, 10, 50}
+var FreeStakeBronze = []int{2, 10, 50}
+
+// MinStakeBronze — минимальная ставка в играх.
+const MinStakeBronze = 2
 
 type ShopItemView struct {
 	Code           string
@@ -132,7 +135,7 @@ func AllowedStakeBronze(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 	defer rows.Close()
 
 	allowed := append([]int{}, FreeStakeBronze...)
-	seen := map[int]bool{1: true, 10: true, 50: true}
+	seen := map[int]bool{2: true, 10: true, 50: true}
 	for rows.Next() {
 		var raw *string
 		if err := rows.Scan(&raw); err != nil {
@@ -142,7 +145,7 @@ func AllowedStakeBronze(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 			continue
 		}
 		var n int
-		if _, err := fmt.Sscanf(*raw, "%d", &n); err != nil || n < 1 {
+		if _, err := fmt.Sscanf(*raw, "%d", &n); err != nil || n < MinStakeBronze {
 			continue
 		}
 		if !seen[n] {
@@ -166,7 +169,7 @@ func AllowedStakeBronze(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUI
 
 // UserMayStake reports whether stakeBronze is allowed for user.
 func UserMayStake(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, stakeBronze int) (bool, error) {
-	if stakeBronze < 1 {
+	if stakeBronze < MinStakeBronze {
 		return false, nil
 	}
 	for _, s := range FreeStakeBronze {

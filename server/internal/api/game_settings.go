@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/store"
 )
@@ -17,10 +18,13 @@ type gameSettingsBody struct {
 	SwapRule             bool   `json:"swap_rule"`
 	FirstMoveRestriction bool   `json:"first_move_restriction"`
 	StakeBronze          int    `json:"stake_bronze"`
+	DeckSize             int    `json:"deck_size"`
+	MaxPlayers           int    `json:"max_players"`
+	GameMode             string `json:"game_mode"`
 }
 
 func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
-	return map[string]any{
+	out := map[string]any{
 		"game_type":              s.GameType,
 		"turn_time_sec":          s.TurnTimeSec,
 		"grid_size":              s.GridSize,
@@ -29,6 +33,12 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		"first_move_restriction": false,
 		"stake_bronze":           s.StakeBronze,
 	}
+	if s.GameType == store.GameTypeDurak || s.DeckSize > 0 {
+		out["deck_size"] = s.DeckSize
+		out["max_players"] = s.MaxPlayers
+		out["game_mode"] = s.GameMode
+	}
+	return out
 }
 
 func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, string) {
@@ -36,26 +46,78 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 	if gameType == "" {
 		gameType = store.GameTypeTicTacToe
 	}
-	if gameType != store.GameTypeTicTacToe {
+	switch gameType {
+	case store.GameTypeTicTacToe:
+		return normalizeTictactoeSettings(body)
+	case store.GameTypeDurak:
+		return normalizeDurakSettings(body)
+	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
+}
+
+func normalizeTictactoeSettings(body gameSettingsBody) (store.UserGameSettings, string) {
 	if !validTurnTimeSec[body.TurnTimeSec] {
 		return store.UserGameSettings{}, "invalid turn_time_sec"
 	}
 	cfg, variant := resolveVariantConfig(body.Variant, body.GridSize)
 	stake := body.StakeBronze
-	if stake < 1 {
-		stake = 1
+	if stake < 2 {
+		stake = 2
 	}
 	_ = gameengine.Variant(variant)
 	return store.UserGameSettings{
-		GameType:             gameType,
+		GameType:             store.GameTypeTicTacToe,
 		TurnTimeSec:          body.TurnTimeSec,
 		GridSize:             cfg.GridSize,
 		Variant:              string(variant),
 		SwapRule:             false,
 		FirstMoveRestriction: false,
 		StakeBronze:          stake,
+		DeckSize:             36,
+		MaxPlayers:           cfg.MaxPlayers,
+		GameMode:             "podkidnoi",
+	}, ""
+}
+
+func normalizeDurakSettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	maxPlayers := body.MaxPlayers
+	if maxPlayers < 2 || maxPlayers > 4 {
+		maxPlayers = 2
+	}
+	deckSize := body.DeckSize
+	if !validDurakDeckSize[deckSize] {
+		deckSize = 36
+	}
+	// 24 только вдвоём; 52 — от троих.
+	if deckSize == 24 && maxPlayers > 2 {
+		deckSize = 36
+	}
+	if deckSize == 52 && maxPlayers < 3 {
+		deckSize = 36
+	}
+	mode := string(durak.ParseMode(body.GameMode))
+	if mode == "" {
+		mode = "podkidnoi"
+	}
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	return store.UserGameSettings{
+		GameType:             store.GameTypeDurak,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             3,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             deckSize,
+		MaxPlayers:           maxPlayers,
+		GameMode:             mode,
 	}, ""
 }
 
@@ -90,10 +152,16 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	// Нормализуем variant/grid из legacy.
-	cfg, v := resolveVariantConfig(s.Variant, s.GridSize)
-	s.Variant = string(v)
-	s.GridSize = cfg.GridSize
+	if gameType == store.GameTypeTicTacToe {
+		cfg, v := resolveVariantConfig(s.Variant, s.GridSize)
+		s.Variant = string(v)
+		s.GridSize = cfg.GridSize
+	} else if gameType == store.GameTypeDurak {
+		if s.GameMode == "" {
+			s.GameMode = "podkidnoi"
+		}
+		s.Variant = s.GameMode
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")
 	_ = json.NewEncoder(w).Encode(gameSettingsToJSON(s))
@@ -122,7 +190,7 @@ func (h *GamesHandler) putGameSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	if !mayStake {
 		// Не блокируем сохранение целиком — откатываем ставку на бесплатную.
-		s.StakeBronze = 1
+		s.StakeBronze = 2
 	}
 	saved, err := store.UpsertUserGameSettings(r.Context(), h.Pool, uid, s)
 	if err != nil {

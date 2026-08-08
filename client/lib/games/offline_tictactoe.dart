@@ -2,22 +2,26 @@ import 'dart:math';
 
 import 'package:multigames_client/game_engine/game_engine.dart';
 
-/// Локальная партия крестики-нолики против бота (без API).
+/// Локальная партия крестики-нолики против бота(ов) (без API).
+/// Все онлайн-варианты: classic / gomoku / ultimate / multi3 / multi4.
 class OfflineTicTacToeGame {
   OfflineTicTacToeGame({
     String variant = variantClassic,
     int? gridSize,
     this.firstMoveRestriction = false,
     bool humanStarts = true,
-  })  : variant = _offlineVariant(variant, gridSize),
-        engine = newEngine(_offlineVariant(variant, gridSize)) {
+  })  : variant = parseVariant(variant),
+        engine = newEngine(parseVariant(variant)) {
     final initial = engine.newState();
     board = List<String>.from(initial.board);
     this.gridSize = engine.config().gridSize;
     _state = initial;
-    humanMark = humanStarts ? 'x' : 'o';
-    if (humanMark != turn) {
-      // Бот ходит первым.
+    metaBoard = List<String>.from(initial.metaBoard);
+    nextBoard = initial.nextBoard;
+    final marks = engine.config().marks;
+    humanMark = humanStarts ? marks.first : marks[1 % marks.length];
+    // Один стартовый ход бота, если человек не ходит первым (остальные — с задержкой UI).
+    if (turn != humanMark) {
       applyBotMove();
     }
   }
@@ -28,15 +32,20 @@ class OfflineTicTacToeGame {
   final bool firstMoveRestriction;
   late String humanMark;
   late final List<String> board;
+  late List<String> metaBoard;
+  int nextBoard = -1;
   late GameEngineState _state;
-  String status = 'playing'; // playing | x_won | o_won | draw
+  String status = 'playing'; // playing | x_won | o_won | t_won | s_won | draw
   List<int>? winningCells;
+  List<int>? metaWinCells;
 
   String get turn => _state.turn;
-  String get botMark => humanMark == 'x' ? 'o' : 'x';
+  List<String> get marks => engine.config().marks;
   bool get isHumanTurn => status == 'playing' && turn == humanMark;
   bool get isFinished => status != 'playing';
-  bool get humanStarts => humanMark == 'x';
+  bool get humanStarts => humanMark == marks.first;
+  bool get isMulti => marks.length > 2;
+  bool get isUltimate => variant == variantUltimate;
 
   int get winLen => engine.config().winLength;
 
@@ -44,14 +53,11 @@ class OfflineTicTacToeGame {
     if (!isHumanTurn) return false;
     if (!engine.legalCells(_state).contains(cell)) return false;
     _applyMove(cell);
-    if (status == 'playing' && turn == botMark) {
-      applyBotMove();
-    }
     return true;
   }
 
   void applyBotMove() {
-    if (status != 'playing' || turn != botMark) return;
+    if (status != 'playing' || turn == humanMark) return;
     final cell = pickBotCell(
       board: board,
       gridSize: gridSize,
@@ -59,6 +65,9 @@ class OfflineTicTacToeGame {
       firstMoveRestriction: firstMoveRestriction,
       variant: variant,
       legalCells: engine.legalCells(_state),
+      metaBoard: metaBoard,
+      nextBoard: nextBoard,
+      humanMark: humanMark,
     );
     if (cell < 0) return;
     _applyMove(cell);
@@ -70,7 +79,10 @@ class OfflineTicTacToeGame {
     for (var i = 0; i < board.length && i < result.state.board.length; i++) {
       board[i] = result.state.board[i];
     }
+    metaBoard = List<String>.from(result.state.metaBoard);
+    nextBoard = result.state.nextBoard;
     winningCells = result.winningCells.isEmpty ? null : result.winningCells;
+    metaWinCells = result.metaWinCells.isEmpty ? null : result.metaWinCells;
     if (result.state.status == 'won') {
       status = '${result.state.winner}_won';
     } else if (result.state.status == 'draw') {
@@ -81,96 +93,19 @@ class OfflineTicTacToeGame {
   }
 }
 
-String _offlineVariant(String variant, int? gridSize) {
-  final parsed = parseVariant(variant);
-  if (parsed != variantClassic || gridSize == null) return parsed;
-  return variantFromLegacyGrid(gridSize);
-}
-
 bool _cellCompletesWin(
   List<String> board,
   int cell,
   String mark,
   int gridSize,
-  String variant,
+  int winLen,
 ) {
   final next = List<String>.from(board);
   next[cell] = mark;
-  return _findWin(next, mark, gridSize, variant) != null;
+  return findWinLine(next, mark, gridSize, winLen).isNotEmpty;
 }
 
-List<int>? _findWin(
-  List<String> board,
-  String mark,
-  int gridSize,
-  String variant,
-) {
-  final winLen = configForVariant(_offlineVariant(variant, gridSize)).winLength;
-  if (winLen > gridSize) return null;
-  for (var row = 0; row < gridSize; row++) {
-    for (var col = 0; col <= gridSize - winLen; col++) {
-      final line = <int>[];
-      var ok = true;
-      for (var k = 0; k < winLen; k++) {
-        final idx = row * gridSize + col + k;
-        line.add(idx);
-        if (board[idx] != mark) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) return line;
-    }
-  }
-  for (var col = 0; col < gridSize; col++) {
-    for (var row = 0; row <= gridSize - winLen; row++) {
-      final line = <int>[];
-      var ok = true;
-      for (var k = 0; k < winLen; k++) {
-        final idx = (row + k) * gridSize + col;
-        line.add(idx);
-        if (board[idx] != mark) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) return line;
-    }
-  }
-  for (var row = 0; row <= gridSize - winLen; row++) {
-    for (var col = 0; col <= gridSize - winLen; col++) {
-      final line = <int>[];
-      var ok = true;
-      for (var k = 0; k < winLen; k++) {
-        final idx = (row + k) * gridSize + col + k;
-        line.add(idx);
-        if (board[idx] != mark) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) return line;
-    }
-  }
-  for (var row = 0; row <= gridSize - winLen; row++) {
-    for (var col = winLen - 1; col < gridSize; col++) {
-      final line = <int>[];
-      var ok = true;
-      for (var k = 0; k < winLen; k++) {
-        final idx = (row + k) * gridSize + (col - k);
-        line.add(idx);
-        if (board[idx] != mark) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) return line;
-    }
-  }
-  return null;
-}
-
-/// Ход бота: победа → блок → центр → случайный.
+/// Ход бота: победа → блок (всех соперников) → минимакс 3×3 → центр → случайный.
 int pickBotCell({
   required List<String> board,
   required int gridSize,
@@ -178,35 +113,156 @@ int pickBotCell({
   required bool firstMoveRestriction,
   String variant = variantClassic,
   List<int>? legalCells,
+  List<String>? metaBoard,
+  int nextBoard = -1,
+  String? humanMark,
 }) {
-  final resolvedVariant = _offlineVariant(variant, gridSize);
-  final moves = legalCells ??
-      newEngine(resolvedVariant).legalCells(
-        GameEngineState(
-          board: board,
-          turn: turn,
-          status: 'active',
-          nextBoard: -1,
-        ),
-      );
+  final resolved = parseVariant(variant);
+  final cfg = configForVariant(resolved);
+  final engine = newEngine(resolved);
+  final state = GameEngineState(
+    board: board,
+    turn: turn,
+    status: 'active',
+    nextBoard: nextBoard,
+    metaBoard: metaBoard ?? const [],
+  );
+  final moves = legalCells ?? engine.legalCells(state);
   if (moves.isEmpty) return -1;
-  final opponent = turn == 'o' ? 'x' : 'o';
-  final cfg = configForVariant(resolvedVariant);
-  if (cfg.variant == variantClassic || cfg.variant == variantGomoku) {
+
+  final winLen = cfg.winLength;
+  final opponents = cfg.marks.where((m) => m != turn).toList();
+
+  // 1. Своя победа
+  if (resolved != variantUltimate) {
     for (final cell in moves) {
-      if (_cellCompletesWin(board, cell, turn, gridSize, resolvedVariant)) {
+      if (_cellCompletesWin(board, cell, turn, gridSize, winLen)) {
         return cell;
       }
     }
+    // 2. Блок любого соперника (сначала человека)
+    final human = humanMark;
+    final ordered = [
+      if (human != null && opponents.contains(human)) human,
+      ...opponents.where((m) => m != human),
+    ];
+    for (final opp in ordered) {
+      for (final cell in moves) {
+        if (_cellCompletesWin(board, cell, opp, gridSize, winLen)) {
+          return cell;
+        }
+      }
+    }
+  } else {
+    // Ultimate: победа/блок в текущем сабборде + мета.
     for (final cell in moves) {
-      if (_cellCompletesWin(board, cell, opponent, gridSize, resolvedVariant)) {
+      if (_ultimateWouldWin(board, metaBoard ?? const [], cell, turn)) {
         return cell;
+      }
+    }
+    for (final opp in opponents) {
+      for (final cell in moves) {
+        if (_ultimateWouldWin(board, metaBoard ?? const [], cell, opp)) {
+          return cell;
+        }
       }
     }
   }
-  if (cfg.variant != variantUltimate) {
+
+  // 3. Классика 3×3 — минимакс
+  if (resolved == variantClassic && gridSize == 3 && cfg.marks.length == 2) {
+    final cell = _minimaxBest(board, turn, turn);
+    if (cell >= 0 && moves.contains(cell)) return cell;
+  }
+
+  // 4. Центр (не ultimate)
+  if (resolved != variantUltimate) {
     final center = (gridSize ~/ 2) * gridSize + (gridSize ~/ 2);
     if (moves.contains(center)) return center;
   }
+
   return moves[Random().nextInt(moves.length)];
+}
+
+bool _ultimateWouldWin(
+  List<String> board,
+  List<String> meta,
+  int cell,
+  String mark,
+) {
+  final nextBoard = List<String>.from(board);
+  nextBoard[cell] = mark;
+  final sub = cell ~/ 9;
+  final subBoard = List<String>.filled(9, '');
+  final base = sub * 9;
+  for (var i = 0; i < 9; i++) {
+    subBoard[i] = nextBoard[base + i];
+  }
+  if (findWinLine(subBoard, mark, 3, 3).length != 3) return false;
+  final nextMeta = List<String>.filled(9, '');
+  for (var i = 0; i < 9; i++) {
+    nextMeta[i] = i < meta.length ? meta[i] : '';
+  }
+  nextMeta[sub] = mark;
+  return findWinLine(nextMeta, mark, 3, 3).length == 3;
+}
+
+int _minimaxBest(List<String> board, String botMark, String turn) {
+  final moves = <int>[];
+  for (var i = 0; i < board.length; i++) {
+    if (board[i].isEmpty) moves.add(i);
+  }
+  if (moves.isEmpty) return -1;
+  var bestScore = -20;
+  var bestCell = -1;
+  for (final cell in moves) {
+    final cp = List<String>.from(board);
+    cp[cell] = botMark;
+    final score = _minimax(cp, botMark, botMark == 'x' ? 'o' : 'x', false);
+    if (score > bestScore) {
+      bestScore = score;
+      bestCell = cell;
+    }
+  }
+  return bestCell;
+}
+
+int _minimax(
+  List<String> board,
+  String botMark,
+  String turn,
+  bool maximizing,
+) {
+  if (findWinLine(board, 'x', 3, 3).isNotEmpty) {
+    return botMark == 'x' ? 10 : -10;
+  }
+  if (findWinLine(board, 'o', 3, 3).isNotEmpty) {
+    return botMark == 'o' ? 10 : -10;
+  }
+  if (board.every((c) => c.isNotEmpty)) return 0;
+
+  final moves = <int>[];
+  for (var i = 0; i < board.length; i++) {
+    if (board[i].isEmpty) moves.add(i);
+  }
+  if (maximizing) {
+    var best = -20;
+    for (final cell in moves) {
+      final cp = List<String>.from(board);
+      cp[cell] = turn;
+      final next = turn == 'x' ? 'o' : 'x';
+      final s = _minimax(cp, botMark, next, false);
+      if (s > best) best = s;
+    }
+    return best;
+  }
+  var best = 20;
+  for (final cell in moves) {
+    final cp = List<String>.from(board);
+    cp[cell] = turn;
+    final next = turn == 'x' ? 'o' : 'x';
+    final s = _minimax(cp, botMark, next, true);
+    if (s < best) best = s;
+  }
+  return best;
 }

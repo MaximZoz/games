@@ -162,8 +162,81 @@
   "gamesWaiting": "Kutilmoqda",
   "gamesLobbyTab": "Lobi",
   "gamesTicTacToe": "X-O",
+  "appUpdateBody": "Ilovaning yangi versiyasi mavjud. Davom etish uchun yangilang.",
+  "appUpdateLaterBanner": "Bu o‘yindan keyin ilovani yangilaymiz",
+  "appUpdateOk": "Yangilash",
+  "appUpdateTitle": "Yangilanish mavjud",
+  "appUpdateWhatsNew": "Yangiliklar",
+  "durakActionAll": "Hammasi",
+  "durakActionBito": "Bito",
+  "durakActionDone": "Tayyor",
+  "durakActionTake": "Olish",
+  "durakHintBito": "Karta tashlang yoki «Bito» deng",
+  "durakHintDefend": "Himoyalaning",
+  "durakHintDefendOrTransfer": "Himoyalaning yoki o‘tkazing",
+  "durakHintDrawAllOut": "Durang — hamma chiqdi",
+  "durakHintOpponentAttack": "Raqib hujum qilmoqda",
+  "durakHintOpponentBito": "Raqib tashlaydi yoki «Bito» deydi",
+  "durakHintOpponentDefends": "Raqib himoyalanmoqda",
+  "durakHintOpponentTakeFollow": "Raqib olingandan keyin tashlashi mumkin",
+  "durakHintOpponentThrows": "Raqib tashlamoqda",
+  "durakHintTakeFollow": "Olingandan keyin tashlang yoki «Tayyor» bosing",
+  "durakHintThrowIn": "Kartalar tashlang yoki «Hammasi» bosing",
+  "durakHintThrowInFirst": "Kartalar tashlang yoki «Hammasi» (birinchi urinishda max 5)",
+  "durakHintYouFinished": "Siz chiqdingiz — oxirini kutamiz",
+  "durakHintYouLost": "Yutqazdingiz — siz duraksiz",
+  "durakHintYourAttack": "Sizning yurishingiz — hujum qiling",
   "gamesDurak": "Durak",
-  "gamesInDevelopment": "Ishlab chiqilmoqda",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "Ishlanmoqda",
+  "rulesPokerPlayers": "O‘yinchilar: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Har bir o‘yinchiga 2 ta qo‘l kartasi beriladi; stolga 5 ta umumiy karta chiqadi.",
+  "rulesPokerPlay": "Stavka raundlari: preflop, flop, turn va river. Fold, call, bet yoki raise qilish mumkin.",
+  "rulesPokerWin": "G‘olib — beshta kartaning eng yaxshi kombinatsiyasi (qo‘l + umumiy) yoki foldlardan keyin yolg‘iz qolgan o‘yinchi.",
+  "gamesDurakDeck24": "24 karta",
+  "gamesDurakDeck36": "36 karta",
+  "gamesDurakDeck52": "52 karta",
+  "gamesDurakModePerevodnoi": "O‘tkazmali",
+  "gamesDurakModePodkidnoi": "Tashlama",
+  "gamesFinishCurrentFirst": "Avval joriy o‘yiningizni tugating",
+  "gamesObservation": "Kuzatish",
+  "gamesObservationHint": "O‘yin tugaguncha kuzatishingiz mumkin",
+  "gamesVariantClassic": "Klassik",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 o‘yinchi",
+  "gamesVariantMulti4": "4 o‘yinchi",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobi {name}",
+  "lobbyPlayersCount": "O‘yinchilar {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Hujumchi kartalar qo‘yadi, himoyachi uradi (shu mast yuqoriroq yoki kozir). Kozir faqat yuqoriroq kozir bilan uriladi.",
+  "rulesDurakBeat": "Barcha kartalar urilganda hujumchi «Bito» deydi, kartalar otboyga ketadi. Aks holda himoyachi stoldagi hammasini oladi.",
+  "rulesDurakLoser": "Yutqazgan — partiya oxirida kartalari qolgan o‘yinchi, «durak».",
+  "rulesDurakMode": "Rejim: {mode}",
+  "rulesDurakOfflineBot": "Botga qarshi o‘yin, stavka va vaqt cheklovisiz.",
+  "rulesDurakPlayersDeck": "O‘yinchilar: {players}. Koloda: {deck}.",
+  "settingsAppVersion": "Versiya {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Qoidalar",
   "gamesRulesTitle": "O‘yin qoidalari",
   "gamesCreate": "O‘yin yaratish",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Sizga {amount} tanga hisoblandi",
   "coinsDeductedTitle": "{amount} tanga yechildi",
   "coinsCreditCardTitle": "Sizga tangalar hisoblandi",
-  "coinsClaim": "Olish"
+  "coinsClaim": "Olish",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Oldi",
+  "durakRoleBeats": "Uradi",
+  "durakRoleThrowIn": "Tashlash",
+  "durakRoleTurn": "Yurish",
+  "durakRoleDefends": "Himoyalanadi",
+  "durakStatusTaking": "Olaman",
+  "durakHintDefenderTurn": "Himoyachining yurishi",
+  "gameYouEliminated": "Siz chiqdingiz",
+  "gameYouPlaced": "Siz {place}-o‘rinni egalladingiz",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "O‘yin tugadi",
+  "gameTurnOf": "{name} yurishi",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Guruh chati",
+  "lobbyChatNotReady": "Lobi chati hali yaratilmagan",
+  "chatsGroupChat": "Guruh chati",
+  "chatsMembersCount": "Ishtirokchilar: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} kishi",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(siz)",
+  "chatTitleDurak3": "Durak · 3 o‘yinchi",
+  "chatTitleDurak4": "Durak · 4 o‘yinchi",
+  "rulesTttUltimate": "Ultimate: to‘qqizta 3×3 mini-doska. Yurish raqibni shu mini-doskaga yuboradi. Meta-doskada chiziq yig‘gan g‘olib.",
+  "rulesTttMulti3": "3 o‘yinchi: 3×3 doska, uch o‘yinchi (X, O, △). O‘z belgilaringiz bilan chiziq yig‘ing.",
+  "rulesTttMulti4": "4 o‘yinchi: 4×4 doska, to‘rt o‘yinchi (X, O, △, □). O‘z belgilaringiz bilan chiziq yig‘ing."
 }

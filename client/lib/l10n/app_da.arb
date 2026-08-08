@@ -162,8 +162,81 @@
   "gamesWaiting": "Venter",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Kryds og bolle",
+  "appUpdateBody": "En ny version af appen er tilgængelig. Opdater for at fortsætte.",
+  "appUpdateLaterBanner": "Vi opdaterer appen efter dette spil",
+  "appUpdateOk": "Opdater",
+  "appUpdateTitle": "Opdatering tilgængelig",
+  "appUpdateWhatsNew": "Nyheder",
+  "durakActionAll": "Alle",
+  "durakActionBito": "Slået",
+  "durakActionDone": "Færdig",
+  "durakActionTake": "Tag",
+  "durakHintBito": "Læg en kort eller sig «Slået»",
+  "durakHintDefend": "Forsvar dig",
+  "durakHintDefendOrTransfer": "Forsvar dig eller overfør",
+  "durakHintDrawAllOut": "Uafgjort — alle er ude",
+  "durakHintOpponentAttack": "Modstanderen angriber",
+  "durakHintOpponentBito": "Modstanderen lægger på eller siger «Slået»",
+  "durakHintOpponentDefends": "Modstanderen forsvarer",
+  "durakHintOpponentTakeFollow": "Modstanderen kan lægge efter tag",
+  "durakHintOpponentThrows": "Modstanderen lægger på",
+  "durakHintTakeFollow": "Læg efter tag eller tryk «Færdig»",
+  "durakHintThrowIn": "Læg kort eller tryk «Alle»",
+  "durakHintThrowInFirst": "Læg kort eller tryk «Alle» (maks. 5 i første slag)",
+  "durakHintYouFinished": "Du er ude — venter på slutningen",
+  "durakHintYouLost": "Du tabte — du er narren",
+  "durakHintYourAttack": "Din tur — angrib",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "Under udvikling",
+  "rulesPokerPlayers": "Spillere: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Hver spiller får 2 hulkort; 5 fælleskort lægges på bordet.",
+  "rulesPokerPlay": "Indsatserunder: preflop, flop, turn og river. Fold, call, bet eller raise.",
+  "rulesPokerWin": "Den bedste femkorts-hånd (hul + fælles) vinder, eller den sidste spiller efter folds.",
+  "gamesDurakDeck24": "24 kort",
+  "gamesDurakDeck36": "36 kort",
+  "gamesDurakDeck52": "52 kort",
+  "gamesDurakModePerevodnoi": "Overførsel",
+  "gamesDurakModePodkidnoi": "Efterslag",
+  "gamesFinishCurrentFirst": "Afslut dit nuværende spil først",
+  "gamesObservation": "Kigger med",
+  "gamesObservationHint": "Du kan se med til spillet er slut",
+  "gamesVariantClassic": "Klassisk",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 spillere",
+  "gamesVariantMulti4": "4 spillere",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Spillere {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Angriberen lægger kort; forsvareren slår dem (samme farve højere, eller trumf). Trumf slås kun af højere trumf.",
+  "rulesDurakBeat": "Når alle kort er slået, siger angriberen «Slået», og kortene går i bunken. Ellers tager forsvareren alt fra bordet.",
+  "rulesDurakLoser": "Taberen er den, der har kort tilbage til sidst — «narren».",
+  "rulesDurakMode": "Tilstand: {mode}",
+  "rulesDurakOfflineBot": "Spil mod en bot uden indsats eller tid.",
+  "rulesDurakPlayersDeck": "Spillere: {players}. Kortspil: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Regler",
   "gamesRulesTitle": "Spilleregler",
   "gamesCreate": "Opret spil",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Du har fået {amount} mønter",
   "coinsDeductedTitle": "{amount} mønter er trukket",
   "coinsCreditCardTitle": "Du har fået mønter",
-  "coinsClaim": "Hent"
+  "coinsClaim": "Hent",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Tog",
+  "durakRoleBeats": "Slår",
+  "durakRoleThrowIn": "Efterslag",
+  "durakRoleTurn": "Tur",
+  "durakRoleDefends": "Forsvarer",
+  "durakStatusTaking": "Tager",
+  "durakHintDefenderTurn": "Forsvarerens tur",
+  "gameYouEliminated": "Du er ude",
+  "gameYouPlaced": "Du blev nr. {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Spillet er slut",
+  "gameTurnOf": "{name}s tur",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Gruppechat",
+  "lobbyChatNotReady": "Lobbychat er ikke klar endnu",
+  "chatsGroupChat": "Gruppechat",
+  "chatsMembersCount": "Medlemmer: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(dig)",
+  "chatTitleDurak3": "Durak · 3 spillere",
+  "chatTitleDurak4": "Durak · 4 spillere",
+  "rulesTttUltimate": "Ultimate: ni 3×3-minibrætter. Et træk sender modstanderen til det minibræt. Vind med en linje på meta-brættet.",
+  "rulesTttMulti3": "3 spillere: 3×3-bræt, tre spillere (X, O, △). Lav en linje med dine tegn for at vinde.",
+  "rulesTttMulti4": "4 spillere: 4×4-bræt, fire spillere (X, O, △, □). Lav en linje med dine tegn for at vinde."
 }

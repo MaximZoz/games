@@ -91,6 +91,68 @@ class AppLocalizationsNb extends AppLocalizations {
   String get offlinePlayAgain => 'Igjen';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Ta';
+
+  @override
+  String get durakActionAll => 'Alle';
+
+  @override
+  String get durakActionDone => 'Ferdig';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Forsvar';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Forsvar eller overfør';
+
+  @override
+  String get durakHintOpponentDefends => 'Motstanderen forsvarer';
+
+  @override
+  String get durakHintThrowInFirst => 'Legg kort eller «Alle» (max 5 i første slag)';
+
+  @override
+  String get durakHintThrowIn => 'Legg kort eller trykk «Alle»';
+
+  @override
+  String get durakHintOpponentThrows => 'Motstanderen legger på';
+
+  @override
+  String get durakHintTakeFollow => 'Legg på etter ta eller trykk «Ferdig»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Motstanderen kan legge på etter ta';
+
+  @override
+  String get durakHintBito => 'Legg en kort eller si «Bito»';
+
+  @override
+  String get durakHintOpponentBito => 'Motstanderen legger på eller sier «Bito»';
+
+  @override
+  String get durakHintYourAttack => 'Din tur — angrip';
+
+  @override
+  String get durakHintOpponentAttack => 'Motstanderen angriper';
+
+  @override
+  String get durakHintYouLost => 'Du tapte — du er narren';
+
+  @override
+  String get durakHintDrawAllOut => 'Uavgjort — alle er ute';
+
+  @override
+  String get durakHintYouFinished => 'Du er ute — venter på slutten';
+
+  @override
   String get shopPurchaseQueued => 'Kjøp lagret — brukes i online-modus';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Belønninger';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Versjon $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Oppdatering tilgjengelig';
+
+  @override
+  String get appUpdateBody => 'En ny versjon av appen er tilgjengelig. Oppdater for å fortsette.';
+
+  @override
+  String get appUpdateWhatsNew => 'Nyheter';
+
+  @override
+  String get appUpdateOk => 'Oppdater';
+
+  @override
+  String get appUpdateLaterBanner => 'Vi oppdaterer appen etter dette spillet';
 
   @override
   String get loginTitle => 'Logg inn';
@@ -443,7 +525,24 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
   String get gamesInDevelopment => 'Under utvikling';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Spillere: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Hver spiller får 2 hullkort; 5 felleskort legges på bordet.';
+
+  @override
+  String get rulesPokerPlay => 'Innsatsrunder: preflop, flop, turn og river. Fold, call, bet eller raise.';
+
+  @override
+  String get rulesPokerWin => 'Beste femkorts-hånd (hull + felles) vinner, eller siste spiller etter folds.';
 
   @override
   String get gamesRules => 'Regler';
@@ -477,6 +576,77 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Ingen start i midten';
+
+  @override
+  String get gamesObservation => 'Ser med';
+
+  @override
+  String get gamesObservationHint => 'Du kan se til spillet er over';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Fullfør ditt nåværende spill først';
+
+  @override
+  String get gamesVariantClassic => 'Klassisk';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 spillere';
+
+  @override
+  String get gamesVariantMulti4 => '4 spillere';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Pålegg';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Overføring';
+
+  @override
+  String get gamesDurakDeck24 => '24 kort';
+
+  @override
+  String get gamesDurakDeck36 => '36 kort';
+
+  @override
+  String get gamesDurakDeck52 => '52 kort';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Modus: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Spillere: $players. Kortstokk: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Spill mot en bot, uten innsats eller tid.';
+
+  @override
+  String get rulesDurakAttack => 'Angriperen legger kort; forsvareren slår dem (samme farge høyere, eller trumf). Trumf slås bare av høyere trumf.';
+
+  @override
+  String get rulesDurakBeat => 'Når alle kort er slått, sier angriperen «Bito», og kortene går i bunken. Ellers tar forsvareren alt fra bordet.';
+
+  @override
+  String get rulesDurakLoser => 'Taperen er den som har kort igjen til slutt — «narren».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Spillere $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobby $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Lobby';
@@ -1769,4 +1939,81 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Hent';
+
+  @override
+  String get durakActionPass => 'Pass';
+
+  @override
+  String get durakRoleTook => 'Tar';
+
+  @override
+  String get durakRoleBeats => 'Slår';
+
+  @override
+  String get durakRoleThrowIn => 'Pålegg';
+
+  @override
+  String get durakRoleTurn => 'Tur';
+
+  @override
+  String get durakRoleDefends => 'Forsvarer';
+
+  @override
+  String get durakStatusTaking => 'Tar';
+
+  @override
+  String get durakHintDefenderTurn => 'Forsvarerens tur';
+
+  @override
+  String get gameYouEliminated => 'Du er ute';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Du ble nr. $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'Spillet er over';
+
+  @override
+  String gameTurnOf(String name) {
+    return '${name}s tur';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Gruppechat';
+
+  @override
+  String get lobbyChatNotReady => 'Lobbychatten er ikke klar ennå';
+
+  @override
+  String get chatsGroupChat => 'Gruppechat';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Medlemmer: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count pers.';
+  }
+
+  @override
+  String get chatsYouSuffix => '(deg)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 spillere';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 spillere';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: ni 3×3-minibrett. Et trekk sender motstanderen til det minibrettet. Vinn med en linje på metabbrettet.';
+
+  @override
+  String get rulesTttMulti3 => '3 spillere: 3×3-brett, tre spillere (X, O, △). Lag en linje med dine tegn for å vinne.';
+
+  @override
+  String get rulesTttMulti4 => '4 spillere: 4×4-brett, fire spillere (X, O, △, □). Lag en linje med dine tegn for å vinne.';
 }

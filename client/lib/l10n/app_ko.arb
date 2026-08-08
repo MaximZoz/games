@@ -162,8 +162,81 @@
   "gamesWaiting": "대기 중",
   "gamesLobbyTab": "로비",
   "gamesTicTacToe": "틱택토",
-  "gamesDurak": "두락",
+  "appUpdateBody": "앱의 새 버전을 사용할 수 있습니다. 계속하려면 업데이트하세요.",
+  "appUpdateLaterBanner": "이 게임 후 앱을 업데이트합니다",
+  "appUpdateOk": "업데이트",
+  "appUpdateTitle": "업데이트 가능",
+  "appUpdateWhatsNew": "새로운 기능",
+  "durakActionAll": "전체",
+  "durakActionBito": "Beat",
+  "durakActionDone": "완료",
+  "durakActionTake": "가져가기",
+  "durakHintBito": "카드를 내거나 «비토»라고 하세요",
+  "durakHintDefend": "방어하세요",
+  "durakHintDefendOrTransfer": "방어하거나 넘기세요",
+  "durakHintDrawAllOut": "무승부 — 모두 탈락",
+  "durakHintOpponentAttack": "상대가 공격합니다",
+  "durakHintOpponentBito": "상대가 추가하거나 «비토»라고 합니다",
+  "durakHintOpponentDefends": "상대가 방어합니다",
+  "durakHintOpponentTakeFollow": "상대는 가져간 후 추가할 수 있습니다",
+  "durakHintOpponentThrows": "상대가 추가합니다",
+  "durakHintTakeFollow": "가져간 후 추가하거나 «완료»를 누르세요",
+  "durakHintThrowIn": "카드를 추가하거나 «전체»를 누르세요",
+  "durakHintThrowInFirst": "카드를 추가하거나 «전체» (첫 방어에서 최대 5장)",
+  "durakHintYouFinished": "탈락했습니다 — 종료를 기다립니다",
+  "durakHintYouLost": "패배했습니다 — 당신이 바보입니다",
+  "durakHintYourAttack": "당신 차례 — 공격하세요",
+  "gamesDurak": "두라크",
+  "gamesPoker": "포커",
   "gamesInDevelopment": "개발 중",
+  "rulesPokerPlayers": "인원: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "텍사스 홀덤. 각 플레이어는 홀 카드 2장, 테이블에 커뮤니티 카드 5장이 나옵니다.",
+  "rulesPokerPlay": "베팅 라운드: 프리플롭, 플롭, 턴, 리버. 폴드, 콜, 벳, 레이즈를 할 수 있습니다.",
+  "rulesPokerWin": "홀+커뮤니티로 만든 최강 5장 핸드, 또는 폴드 후 남은 한 명이 승리합니다.",
+  "gamesDurakDeck24": "24장",
+  "gamesDurakDeck36": "36장",
+  "gamesDurakDeck52": "52장",
+  "gamesDurakModePerevodnoi": "전달",
+  "gamesDurakModePodkidnoi": "추가",
+  "gamesFinishCurrentFirst": "먼저 현재 게임을 마치세요",
+  "gamesObservation": "관전",
+  "gamesObservationHint": "게임 종료까지 관전할 수 있습니다",
+  "gamesVariantClassic": "클래식",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3인",
+  "gamesVariantMulti4": "4인",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "로비 {name}",
+  "lobbyPlayersCount": "플레이어 {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "공격자가 카드를 내고, 수비자가 막습니다(같은 무늬의 더 높은 카드 또는 트럼프). 트럼프는 더 높은 트럼프로만 막습니다.",
+  "rulesDurakBeat": "모든 카드가 막히면 공격자가 «비토»를 말하고 카드는 버림 더미로 갑니다. 아니면 수비자가 테이블의 카드를 모두 가져갑니다.",
+  "rulesDurakLoser": "마지막에 카드가 남은 사람이 패배 — «바보»입니다.",
+  "rulesDurakMode": "모드: {mode}",
+  "rulesDurakOfflineBot": "봇과 플레이합니다. 판돈과 시간 제한이 없습니다.",
+  "rulesDurakPlayersDeck": "인원: {players}. 덱: {deck}.",
+  "settingsAppVersion": "버전 {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "규칙",
   "gamesRulesTitle": "게임 규칙",
   "gamesCreate": "게임 만들기",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "{amount}코인이 지급되었습니다",
   "coinsDeductedTitle": "{amount}코인이 차감되었습니다",
   "coinsCreditCardTitle": "코인이 지급되었습니다",
-  "coinsClaim": "받기"
+  "coinsClaim": "받기",
+  "durakActionPass": "패스",
+  "durakRoleTook": "가져감",
+  "durakRoleBeats": "막는 중",
+  "durakRoleThrowIn": "추가",
+  "durakRoleTurn": "차례",
+  "durakRoleDefends": "방어 중",
+  "durakStatusTaking": "가져가는 중",
+  "durakHintDefenderTurn": "수비 차례",
+  "gameYouEliminated": "탈락했습니다",
+  "gameYouPlaced": "{place}위를 했습니다",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "게임 종료",
+  "gameTurnOf": "{name} 차례",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "그룹 채팅",
+  "lobbyChatNotReady": "로비 채팅이 아직 없습니다",
+  "chatsGroupChat": "그룹 채팅",
+  "chatsMembersCount": "멤버: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count}명",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(나)",
+  "chatTitleDurak3": "두라크 · 3인",
+  "chatTitleDurak4": "두라크 · 4인",
+  "rulesTttUltimate": "얼티밋: 3×3 미니보드 9개. 수가 상대를 해당 미니보드로 보냅니다. 메타보드에서 줄을 완성하면 승리합니다.",
+  "rulesTttMulti3": "3인: 3×3 보드, 세 명(X, O, △). 자신의 기호로 줄을 완성하면 승리합니다.",
+  "rulesTttMulti4": "4인: 4×4 보드, 네 명(X, O, △, □). 자신의 기호로 줄을 완성하면 승리합니다."
 }

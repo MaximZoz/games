@@ -162,8 +162,81 @@
   "gamesWaiting": "Bekleniyor",
   "gamesLobbyTab": "Lobi",
   "gamesTicTacToe": "XOX",
+  "appUpdateBody": "Uygulamanın yeni bir sürümü mevcut. Devam etmek için güncelleyin.",
+  "appUpdateLaterBanner": "Bu oyundan sonra uygulamayı güncelleyeceğiz",
+  "appUpdateOk": "Güncelle",
+  "appUpdateTitle": "Güncelleme mevcut",
+  "appUpdateWhatsNew": "Yenilikler",
+  "durakActionAll": "Tümü",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Bitti",
+  "durakActionTake": "Al",
+  "durakHintBito": "Kart atın veya «Bito» deyin",
+  "durakHintDefend": "Savun",
+  "durakHintDefendOrTransfer": "Savun veya aktar",
+  "durakHintDrawAllOut": "Berabere — herkes çıktı",
+  "durakHintOpponentAttack": "Rakip saldırıyor",
+  "durakHintOpponentBito": "Rakip atıyor veya «Bito» diyor",
+  "durakHintOpponentDefends": "Rakip savunuyor",
+  "durakHintOpponentTakeFollow": "Rakip aldıktan sonra atabilir",
+  "durakHintOpponentThrows": "Rakip atıyor",
+  "durakHintTakeFollow": "Aldıktan sonra atın veya «Bitti»ye dokunun",
+  "durakHintThrowIn": "Kart atın veya «Tümü»ne dokunun",
+  "durakHintThrowInFirst": "Kart atın veya «Tümü» (ilk savunmada max 5)",
+  "durakHintYouFinished": "Çıktınız — sonu bekleniyor",
+  "durakHintYouLost": "Kaybettiniz — siz duraksınız",
+  "durakHintYourAttack": "Sizin sıra — saldırın",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "Geliştiriliyor",
+  "rulesPokerPlayers": "Oyuncular: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Her oyuncuya 2 kapalı kart verilir; masaya 5 ortak kart gelir.",
+  "rulesPokerPlay": "Bahis turları: preflop, flop, turn ve river. Fold, call, bet veya raise yapabilirsiniz.",
+  "rulesPokerWin": "En iyi beş kartlık el (kapalı + ortak) veya foldlardan sonra kalan son oyuncu kazanır.",
+  "gamesDurakDeck24": "24 kart",
+  "gamesDurakDeck36": "36 kart",
+  "gamesDurakDeck52": "52 kart",
+  "gamesDurakModePerevodnoi": "Aktarmalı",
+  "gamesDurakModePodkidnoi": "Atışlı",
+  "gamesFinishCurrentFirst": "Önce mevcut oyununuzu bitirin",
+  "gamesObservation": "İzleme",
+  "gamesObservationHint": "Oyun bitene kadar izleyebilirsiniz",
+  "gamesVariantClassic": "Klasik",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 oyuncu",
+  "gamesVariantMulti4": "4 oyuncu",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobi {name}",
+  "lobbyPlayersCount": "Oyuncular {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Saldıran kart koyar; savunan onları döver (aynı renk daha yüksek veya koz). Koz yalnızca daha yüksek kozla dövülür.",
+  "rulesDurakBeat": "Tüm kartlar dövülünce saldıran «Bito» der ve kartlar atığa gider. Yoksa savunan masadaki her şeyi alır.",
+  "rulesDurakLoser": "Kaybeden, sonda kartı kalan kişidir — «durak».",
+  "rulesDurakMode": "Mod: {mode}",
+  "rulesDurakOfflineBot": "Bot’a karşı oynayın; bahis ve süre sınırı yok.",
+  "rulesDurakPlayersDeck": "Oyuncular: {players}. Deste: {deck}.",
+  "settingsAppVersion": "Sürüm {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Kurallar",
   "gamesRulesTitle": "Oyun kuralları",
   "gamesCreate": "Oyun oluştur",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Hesabınıza {amount} jeton eklendi",
   "coinsDeductedTitle": "{amount} jeton düşüldü",
   "coinsCreditCardTitle": "Hesabınıza jeton eklendi",
-  "coinsClaim": "Al"
+  "coinsClaim": "Al",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Aldı",
+  "durakRoleBeats": "Vuruyor",
+  "durakRoleThrowIn": "Atış",
+  "durakRoleTurn": "Sıra",
+  "durakRoleDefends": "Savunuyor",
+  "durakStatusTaking": "Alıyor",
+  "durakHintDefenderTurn": "Savunanın sırası",
+  "gameYouEliminated": "Elendiniz",
+  "gameYouPlaced": "{place}. oldunuz",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Oyun bitti",
+  "gameTurnOf": "{name} sırası",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Grup sohbeti",
+  "lobbyChatNotReady": "Lobi sohbeti henüz hazır değil",
+  "chatsGroupChat": "Grup sohbeti",
+  "chatsMembersCount": "Üyeler: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} kişi",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(sen)",
+  "chatTitleDurak3": "Durak · 3 oyuncu",
+  "chatTitleDurak4": "Durak · 4 oyuncu",
+  "rulesTttUltimate": "Ultimate: dokuz 3×3 mini tahta. Hamle rakibi o mini tahtaya gönderir. Meta tahtada çizgi tamamlayan kazanır.",
+  "rulesTttMulti3": "3 oyuncu: 3×3 tahta, üç oyuncu (X, O, △). Kendi işaretlerinizle çizgi tamamlayın.",
+  "rulesTttMulti4": "4 oyuncu: 4×4 tahta, dört oyuncu (X, O, △, □). Kendi işaretlerinizle çizgi tamamlayın."
 }

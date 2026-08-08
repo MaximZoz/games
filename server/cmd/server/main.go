@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,10 +16,12 @@ import (
 
 	"multigames/server/internal/api"
 	"multigames/server/internal/applog"
+	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
 	"multigames/server/internal/translate"
+	"multigames/server/internal/whatsnew"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -31,7 +34,87 @@ import (
 //go:embed web
 var webFS embed.FS
 
+//go:embed whats_new.md
+var whatsNewFile string
+
 const serverMessage = "go start"
+
+// buildID — короткий git sha (или иной id), прошивается при деплое:
+// go build -ldflags="-X main.buildID=abc1234"
+// Либо переменная окружения BUILD_ID перекрывает значение.
+var buildID = "dev"
+
+func effectiveBuildID() string {
+	if v := strings.TrimSpace(os.Getenv("BUILD_ID")); v != "" {
+		return v
+	}
+	if strings.TrimSpace(buildID) == "" {
+		return "dev"
+	}
+	return strings.TrimSpace(buildID)
+}
+
+// whatsNewTranslate — опциональный перевод WHAT_NEW, если нет секции ## lang.
+var whatsNewTranslate *translate.Service
+
+func whatsNewRaw() string {
+	if v := strings.TrimSpace(os.Getenv("WHAT_NEW")); v != "" {
+		return v
+	}
+	return whatsNewFile
+}
+
+// localizedWhatsNew — changelog под Accept-Language (секции ## ru/## en или перевод).
+func localizedWhatsNew(ctx context.Context, lang string) string {
+	raw := whatsNewRaw()
+	lang = strings.ToLower(strings.TrimSpace(lang))
+	if lang == "" {
+		lang = i18n.LangRU
+	}
+	if whatsnew.HasLang(raw, lang) {
+		return whatsnew.Format(raw, lang)
+	}
+	if lang == i18n.LangRU {
+		return whatsnew.SourceRU(raw)
+	}
+	// Явного перевода нет — английская секция как общий fallback.
+	if whatsnew.HasLang(raw, i18n.LangEN) {
+		return whatsnew.Format(raw, i18n.LangEN)
+	}
+	ru := whatsnew.SourceRU(raw)
+	if ru == "" || whatsNewTranslate == nil {
+		return ru
+	}
+	tctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+	tr, err := whatsNewTranslate.Translate(tctx, ru, i18n.LangRU, lang)
+	if err != nil || strings.TrimSpace(tr) == "" {
+		return ru
+	}
+	return strings.TrimSpace(tr)
+}
+
+func handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, i18n.T(i18n.LangFromRequest(r), "Method not allowed"), http.StatusMethodNotAllowed)
+		return
+	}
+	lang := i18n.LangFromRequest(r)
+	id := effectiveBuildID()
+	payload := map[string]string{
+		"build_id":     id,
+		"latest_build": id,
+		"whats_new":    localizedWhatsNew(r.Context(), lang),
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(payload)
+}
 
 func getEnv(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {
@@ -144,8 +227,17 @@ func spaHandler(webRoot fs.FS) http.Handler {
 			contentType = "font/woff2"
 		}
 		w.Header().Set("Content-Type", contentType)
-		// Service worker / bootstrap: без долгого кэша, иначе iOS держит мёртвый SW.
-		if fsPath == "push-sw.js" || fsPath == "flutter_bootstrap.js" || fsPath == "manifest.json" {
+		// Entry / SW: без долгого кэша — иначе вкладка месяцами держит старый main.dart.js
+		// и не видит ни новый UI, ни диалог «есть обновление».
+		switch fsPath {
+		case "index.html",
+			"flutter.js",
+			"flutter_bootstrap.js",
+			"main.dart.js",
+			"flutter_service_worker.js",
+			"push-sw.js",
+			"manifest.json",
+			"version.json":
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 		if fsPath == "push-sw.js" {
@@ -347,6 +439,7 @@ func main() {
 	settingsHandler := &api.SettingsHandler{Pool: pool}
 	languageSettingsHandler := &api.LanguageSettingsHandler{Pool: pool}
 	translateService := translate.NewService()
+	whatsNewTranslate = translateService
 	chatTranslateHandler := &api.ChatTranslateHandler{Pool: pool, Translate: translateService}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Rdb: rdb, Hub: realtimeHub, Push: pushSender}
@@ -357,6 +450,7 @@ func main() {
 		Hub:         realtimeHub,
 		Broadcaster: gamesBroadcaster,
 		Push:        pushSender,
+		Registry:    gameregistry.Default(),
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}
@@ -388,6 +482,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/start", handleStart)
+	mux.HandleFunc("/api/version", handleVersion)
 	mux.HandleFunc("/api/auth/register", authHandler.Register)
 	mux.HandleFunc("/api/auth/login", authHandler.Login)
 	mux.HandleFunc("/api/auth/refresh", authHandler.Refresh)
@@ -497,7 +592,9 @@ func main() {
 		port = ":" + port
 	}
 	log.Printf("MultiGames server listening on http://localhost%s", port)
+	log.Printf("build_id=%s", effectiveBuildID())
 	log.Printf("GET /api/start -> %q", serverMessage)
+	log.Printf("GET /api/version -> build_id")
 	log.Printf("POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/verify-email, POST /api/auth/resend-verification, POST /api/auth/forgot-password, POST /api/auth/reset-password, GET /api/me (Bearer)")
 	log.Printf("OAuth: GET /api/auth/oauth/providers, GET /api/auth/oauth/{google|apple|yandex|vk}/start, /callback")
 	log.Printf("Realtime API: GET /api/ws?access_token=<token> (WebSocket)")
@@ -505,6 +602,20 @@ func main() {
 	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/delivered, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	log.Printf("Presence API: GET /api/presence?user_ids=... (Bearer)")
 	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
+
+	// После деплоя уведомляем онлайн-клиентов (с небольшой задержкой на подъём WS).
+	// whats_new не кладём в broadcast: у каждого своя локаль — клиент тянет /api/version.
+	go func() {
+		time.Sleep(3 * time.Second)
+		id := effectiveBuildID()
+		payload := map[string]any{
+			"type":         "client_update_available",
+			"build_id":     id,
+			"latest_build": id,
+		}
+		gamesBroadcaster.PublishAll(payload)
+	}()
+
 	if err := http.ListenAndServe(port, finalHandler); err != nil {
 		log.Fatal(err)
 	}

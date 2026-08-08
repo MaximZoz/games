@@ -162,8 +162,81 @@
   "gamesWaiting": "Αναμονή",
   "gamesLobbyTab": "Λόμπι",
   "gamesTicTacToe": "Τρίλιζα",
-  "gamesDurak": "Ντούρακ",
+  "appUpdateBody": "Υπάρχει νέα έκδοση της εφαρμογής. Ενημερώστε για να συνεχίσετε.",
+  "appUpdateLaterBanner": "Θα ενημερώσουμε την εφαρμογή μετά από αυτό το παιχνίδι",
+  "appUpdateOk": "Ενημέρωση",
+  "appUpdateTitle": "Διαθέσιμη ενημέρωση",
+  "appUpdateWhatsNew": "Τι νέο υπάρχει",
+  "durakActionAll": "Όλα",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Έτοιμο",
+  "durakActionTake": "Πάρε",
+  "durakHintBito": "Ρίξτε κάρτα ή πείτε «Bito»",
+  "durakHintDefend": "Άμυνα",
+  "durakHintDefendOrTransfer": "Άμυνα ή μεταφορά",
+  "durakHintDrawAllOut": "Ισοπαλία — όλοι έφυγαν",
+  "durakHintOpponentAttack": "Ο αντίπαλος επιτίθεται",
+  "durakHintOpponentBito": "Ο αντίπαλος ρίχνει ή λέει «Bito»",
+  "durakHintOpponentDefends": "Ο αντίπαλος αμύνεται",
+  "durakHintOpponentTakeFollow": "Ο αντίπαλος μπορεί να ρίξει μετά την πάρε",
+  "durakHintOpponentThrows": "Ο αντίπαλος ρίχνει",
+  "durakHintTakeFollow": "Ρίξτε μετά την πάρε ή πατήστε «Έτοιμο»",
+  "durakHintThrowIn": "Ρίξτε κάρτες ή πατήστε «Όλα»",
+  "durakHintThrowInFirst": "Ρίξτε κάρτες ή «Όλα» (μέγ. 5 στην πρώτη άμυνα)",
+  "durakHintYouFinished": "Έφυγες — περιμένουμε το τέλος",
+  "durakHintYouLost": "Έχασες — είσαι ο κάλπης",
+  "durakHintYourAttack": "Η σειρά σου — επιτέθηκε",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Πόκερ",
   "gamesInDevelopment": "Υπό ανάπτυξη",
+  "rulesPokerPlayers": "Παίκτες: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Κάθε παίκτης παίρνει 2 ιδιωτικά φύλλα· στο τραπέζι βγαίνουν 5 κοινά.",
+  "rulesPokerPlay": "Γύροι πονταρίσματος: preflop, flop, turn και river. Fold, call, bet ή raise.",
+  "rulesPokerWin": "Κερδίζει ο καλύτερος συνδυασμός πέντε φύλλων (ιδιωτικά + κοινά) ή ο τελευταίος μετά από folds.",
+  "gamesDurakDeck24": "24 φύλλα",
+  "gamesDurakDeck36": "36 φύλλα",
+  "gamesDurakDeck52": "52 φύλλα",
+  "gamesDurakModePerevodnoi": "Μεταφορά",
+  "gamesDurakModePodkidnoi": "Προσθήκη",
+  "gamesFinishCurrentFirst": "Ολοκληρώστε πρώτα το τρέχον παιχνίδι",
+  "gamesObservation": "Παρακολούθηση",
+  "gamesObservationHint": "Μπορείτε να παρακολουθήσετε μέχρι το τέλος",
+  "gamesVariantClassic": "Κλασικό",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 παίκτες",
+  "gamesVariantMulti4": "4 παίκτες",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Αίθουσα {name}",
+  "lobbyPlayersCount": "Παίκτες {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Ο επιτιθέμενος παίζει φύλλα· ο αμυνόμενος τα καλύπτει (ίδιο χρώμα πιο δυνατό ή ατού). Το ατού καλύπτεται μόνο με πιο δυνατό ατού.",
+  "rulesDurakBeat": "Όταν όλα τα φύλλα καλυφθούν, ο επιτιθέμενος λέει «Bito» και πάνε στην απόρριψη. Αλλιώς ο αμυνόμενος παίρνει όλα από το τραπέζι.",
+  "rulesDurakLoser": "Χάνει όποιος έχει φύλλα στο τέλος — ο «κάλπης».",
+  "rulesDurakMode": "Λειτουργία: {mode}",
+  "rulesDurakOfflineBot": "Παίξτε εναντίον μποτ, χωρίς ποντάρισμα ή όριο χρόνου.",
+  "rulesDurakPlayersDeck": "Παίκτες: {players}. Τράπουλα: {deck}.",
+  "settingsAppVersion": "Έκδοση {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Κανόνες",
   "gamesRulesTitle": "Κανόνες παιχνιδιού",
   "gamesCreate": "Δημιουργία παιχνιδιού",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Σας πιστώθηκαν {amount} νομίσματα",
   "coinsDeductedTitle": "Αφαιρέθηκαν {amount} νομίσματα",
   "coinsCreditCardTitle": "Σας πιστώθηκαν νομίσματα",
-  "coinsClaim": "Παραλαβή"
+  "coinsClaim": "Παραλαβή",
+  "durakActionPass": "Πάσο",
+  "durakRoleTook": "Παίρνει",
+  "durakRoleBeats": "Καλύπτει",
+  "durakRoleThrowIn": "Προσθήκη",
+  "durakRoleTurn": "Σειρά",
+  "durakRoleDefends": "Αμύνεται",
+  "durakStatusTaking": "Παίρνει",
+  "durakHintDefenderTurn": "Σειρά αμυνόμενου",
+  "gameYouEliminated": "Αποκλειστήκατε",
+  "gameYouPlaced": "Τερματίσατε {place}οι",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Το παιχνίδι τελείωσε",
+  "gameTurnOf": "Σειρά του/της {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Ομαδική συνομιλία",
+  "lobbyChatNotReady": "Η συνομιλία του λόμπι δεν είναι έτοιμη ακόμη",
+  "chatsGroupChat": "Ομαδική συνομιλία",
+  "chatsMembersCount": "Μέλη: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} μέλη",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(εσείς)",
+  "chatTitleDurak3": "Durak · 3 παίκτες",
+  "chatTitleDurak4": "Durak · 4 παίκτες",
+  "rulesTttUltimate": "Ultimate: εννέα μίνι-πίνακες 3×3. Μια κίνηση στέλνει τον αντίπαλο σε αυτόν τον πίνακα. Νικάτε με γραμμή στο μετα-πίνακα.",
+  "rulesTttMulti3": "3 παίκτες: πίνακας 3×3, τρεις παίκτες (X, O, △). Κερδίζετε με γραμμή από τα σύμβολά σας.",
+  "rulesTttMulti4": "4 παίκτες: πίνακας 4×4, τέσσερις παίκτες (X, O, △, □). Κερδίζετε με γραμμή από τα σύμβολά σας."
 }

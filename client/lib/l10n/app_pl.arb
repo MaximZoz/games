@@ -162,8 +162,81 @@
   "gamesWaiting": "Oczekiwanie",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Kółko i krzyżyk",
+  "appUpdateBody": "Dostępna jest nowa wersja aplikacji. Zaktualizuj, aby kontynuować.",
+  "appUpdateLaterBanner": "Zaktualizujemy aplikację po tej partii",
+  "appUpdateOk": "Aktualizuj",
+  "appUpdateTitle": "Dostępna aktualizacja",
+  "appUpdateWhatsNew": "Co nowego",
+  "durakActionAll": "Wszystkie",
+  "durakActionBito": "Bito",
+  "durakActionDone": "Gotowe",
+  "durakActionTake": "Weź",
+  "durakHintBito": "Dorzuć kartę lub powiedz «Bito»",
+  "durakHintDefend": "Broń się",
+  "durakHintDefendOrTransfer": "Broń się lub przerzuć",
+  "durakHintDrawAllOut": "Remis — wszyscy wyszli",
+  "durakHintOpponentAttack": "Przeciwnik atakuje",
+  "durakHintOpponentBito": "Przeciwnik dorzuca lub mówi «Bito»",
+  "durakHintOpponentDefends": "Przeciwnik broni się",
+  "durakHintOpponentTakeFollow": "Przeciwnik może dorzucić po wzięciu",
+  "durakHintOpponentThrows": "Przeciwnik dorzuca",
+  "durakHintTakeFollow": "Dorzuć po wzięciu lub dotknij «Gotowe»",
+  "durakHintThrowIn": "Dorzuć karty lub dotknij «Wszystkie»",
+  "durakHintThrowInFirst": "Dorzuć karty lub «Wszystkie» (max 5 w pierwszym odbiciu)",
+  "durakHintYouFinished": "Wyszedłeś — czekamy na koniec",
+  "durakHintYouLost": "Przegrałeś — jesteś durniem",
+  "durakHintYourAttack": "Twoja tura — atakuj",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "W trakcie tworzenia",
+  "rulesPokerPlayers": "Gracze: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Każdy dostaje 2 karty własne; na stół wychodzi 5 kart wspólnych.",
+  "rulesPokerPlay": "Rundy obstawiania: preflop, flop, turn i river. Fold, call, bet lub raise.",
+  "rulesPokerWin": "Wygrywa najlepszy układ z pięciu kart (własne + wspólne) albo ostatni po foldach.",
+  "gamesDurakDeck24": "24 karty",
+  "gamesDurakDeck36": "36 kart",
+  "gamesDurakDeck52": "52 karty",
+  "gamesDurakModePerevodnoi": "Przerzutowy",
+  "gamesDurakModePodkidnoi": "Dokładany",
+  "gamesFinishCurrentFirst": "Najpierw dokończ bieżącą grę",
+  "gamesObservation": "Obserwacja",
+  "gamesObservationHint": "Możesz oglądać do końca partii",
+  "gamesVariantClassic": "Klasyczny",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 graczy",
+  "gamesVariantMulti4": "4 graczy",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Gracze {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Atakujący kładzie karty; obrońca je bije (tym samym kolorem wyższą lub atutem). Atut bije tylko wyższy atut.",
+  "rulesDurakBeat": "Gdy wszystkie karty są bite, atakujący mówi «Bito», a karty idą na stos. W przeciwnym razie obrońca bierze wszystko ze stołu.",
+  "rulesDurakLoser": "Przegrywa ten, kto na końcu ma karty — «dureń».",
+  "rulesDurakMode": "Tryb: {mode}",
+  "rulesDurakOfflineBot": "Gra przeciwko botowi, bez stawek i limitu czasu.",
+  "rulesDurakPlayersDeck": "Gracze: {players}. Talia: {deck}.",
+  "settingsAppVersion": "Wersja {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Zasady",
   "gamesRulesTitle": "Zasady gry",
   "gamesCreate": "Utwórz grę",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Przyznano Ci {amount} monet",
   "coinsDeductedTitle": "Odjęto {amount} monet",
   "coinsCreditCardTitle": "Przyznano Ci monety",
-  "coinsClaim": "Odbierz"
+  "coinsClaim": "Odbierz",
+  "durakActionPass": "Pas",
+  "durakRoleTook": "Bierze",
+  "durakRoleBeats": "Bije",
+  "durakRoleThrowIn": "Dokładka",
+  "durakRoleTurn": "Tura",
+  "durakRoleDefends": "Broni",
+  "durakStatusTaking": "Bierze",
+  "durakHintDefenderTurn": "Tura obrońcy",
+  "gameYouEliminated": "Odpadasz",
+  "gameYouPlaced": "Zająłeś {place}. miejsce",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Gra zakończona",
+  "gameTurnOf": "Tura: {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Czat grupowy",
+  "lobbyChatNotReady": "Czat lobby nie jest jeszcze gotowy",
+  "chatsGroupChat": "Czat grupowy",
+  "chatsMembersCount": "Uczestnicy: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} os.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(ty)",
+  "chatTitleDurak3": "Durak · 3 graczy",
+  "chatTitleDurak4": "Durak · 4 graczy",
+  "rulesTttUltimate": "Ultimate: dziewięć mini-plansz 3×3. Ruch wysyła przeciwnika na daną mini-planszę. Wygrywa linia na meta-planszy.",
+  "rulesTttMulti3": "3 graczy: plansza 3×3, trzej gracze (X, O, △). Ułóż linię ze swoich znaków, aby wygrać.",
+  "rulesTttMulti4": "4 graczy: plansza 4×4, czterej gracze (X, O, △, □). Ułóż linię ze swoich znaków, aby wygrać."
 }
