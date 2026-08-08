@@ -3831,7 +3831,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final groupChatId = (view?.chatId ?? '').trim();
     // После конца партии чат скрываем сразу (сервер тоже удаляет group chat).
     final showGroupChat =
-        isMulti && groupChatId.isNotEmpty && view != null && !view.isOver;
+        isMulti && groupChatId.isNotEmpty && !(view?.isOver ?? true);
     // Мой ход — часики в рамке; ход соперника — рамка на аватаре.
     // Нижняя зона (веер) исключена — свайп по картам не вызывает выход.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
@@ -4383,40 +4383,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     ];
   }
 
-  /// 3–4 игрока: рассадка по часовой для каждого зрителя одинаково.
-  /// Я снизу; ход/отбой на следующего — всегда налево (как часовая стрелка).
+  /// 3–4 игрока: все соперники в одну линию (как втроём).
+  /// Я снизу; слева = следующий по часовой, дальше направо.
   Widget _multiOpponentsArea(DurakGameView view, Size tableSize) {
     final seats = _opponentSeatOrder(view);
     if (seats.isEmpty) return const SizedBox.shrink();
     Widget seat(int idx) => _opponentSeat(view, idx, tableSize);
-    if (seats.length == 2) {
-      // 3 игрока: слева = следующий (my+1), справа = предыдущий (my+2).
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: seat(seats[0])),
-            Expanded(child: seat(seats[1])),
-          ],
-        ),
-      );
-    }
-    // 4 игрока: слева my+1, сверху my+2, справа my+3.
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          seat(seats[1]),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: seat(seats[0])),
-              Expanded(child: seat(seats[2])),
-            ],
-          ),
+          for (final idx in seats) Expanded(child: seat(idx)),
         ],
       ),
     );
