@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: итог победы/ничьей один раз после take или bito
+- CI: передавать BUILD_ID (git sha) в fly deploy
 
 ## en
 - After leaving, invites go to a new lobby only — not the opponent’s old game

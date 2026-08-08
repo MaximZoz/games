@@ -87,12 +87,18 @@ jobs:
             echo "и добавь в Settings → Secrets and variables → Actions"
             exit 1
           fi
+          # Короткий sha коммита → в Flutter (--dart-define) и Go (-ldflags).
+          # Без --build-arg в Dockerfile остаётся default BUILD_ID=dev —
+          # тогда в настройках «Версия dev» и /api/version тоже «dev».
+          BUILD_ID="$(printf '%s' "${GITHUB_SHA}" | cut -c1-7)"
+          echo "BUILD_ID=$BUILD_ID"
           # --depot=false снижает риск deadline_exceeded на тяжёлой Flutter+Go сборке.
           flyctl deploy \
             --config "${{ steps.target.outputs.config }}" \
             --app "${{ steps.target.outputs.app }}" \
             --remote-only \
             --depot=false \
+            --build-arg "BUILD_ID=${BUILD_ID}" \
             --yes
 
       - name: Smoke check /api/start
