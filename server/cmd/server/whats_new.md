@@ -1,8 +1,9 @@
 # Что нового
 # Секции ## ru / ## en — сервер отдаёт по Accept-Language.
-# Автоиз git log (origin/develop..HEAD). ## en можно править руками.
+# Автоиз git log (origin/main..HEAD). ## en можно править руками.
 
 ## ru
+- �- WHAT_NEW: конфликт develop↔main и changelog относительно main
 - трекать client/pubspec.lock для сборки на Fly
 - карточка Дурака «В разработке» на экране игр
 
