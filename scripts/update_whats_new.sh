@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Обновляет WHAT_NEW.md из git-коммитов (для диалога «Обновить приложение»).
+# Пишет секцию ## ru; секцию ## en сохраняет из предыдущего файла (если была).
 # Использование:
 #   ./scripts/update_whats_new.sh              # vs origin/develop
 #   ./scripts/update_whats_new.sh origin/main
@@ -20,6 +21,17 @@ if ! git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
   BASE_REF="HEAD~15"
 fi
 
+# Сохранить прежний ## en (ручной перевод), если есть.
+PREV_EN=""
+if [[ -f "$OUT" ]]; then
+  PREV_EN="$(awk '
+    BEGIN { in_en=0 }
+    /^##[ \t]+en[ \t]*$/ { in_en=1; next }
+    /^##[ \t]+/ { in_en=0 }
+    in_en { print }
+  ' "$OUT" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')"
+fi
+
 # Сообщения коммитов без merge; без технических «Merge:» / chore.
 mapfile -t LINES < <(
   git log --no-merges --pretty=format:'%s' "${BASE_REF}..HEAD" 2>/dev/null \
@@ -30,19 +42,28 @@ mapfile -t LINES < <(
 
 {
   echo "# Что нового"
-  echo "# Автоиз git log (${BASE_REF}..HEAD). Можно править руками перед деплоем."
+  echo "# Секции ## ru / ## en — сервер отдаёт по Accept-Language."
+  echo "# Автоиз git log (${BASE_REF}..HEAD). ## en можно править руками."
   echo ""
+  echo "## ru"
   if [[ ${#LINES[@]} -eq 0 ]]; then
     echo "- Обновление приложения"
   else
     for line in "${LINES[@]}"; do
-      # Убрать префиксы conventional commits для читаемости.
       clean="$(echo "$line" | sed -E 's/^(feat|fix|chore|docs|refactor|test|style|perf)(\([^)]+\))?:[[:space:]]*//I')"
       echo "- $clean"
     done
   fi
   echo ""
+  echo "## en"
+  if [[ -n "$(echo "$PREV_EN" | sed '/^[[:space:]]*$/d')" ]]; then
+    echo "$PREV_EN" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+  else
+    echo "- App update"
+    echo "# Add English bullets here (or rely on server auto-translate fallback)."
+  fi
+  echo ""
 } > "$OUT"
 
 cp "$OUT" "$OUT_SERVER"
-echo "Обновлено: $OUT (${#LINES[@]} пунктов)"
+echo "Обновлено: $OUT (${#LINES[@]} пунктов ru)"

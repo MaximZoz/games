@@ -20,6 +20,7 @@ import (
 	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
 	"multigames/server/internal/translate"
+	"multigames/server/internal/whatsnew"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -52,35 +53,44 @@ func effectiveBuildID() string {
 	return strings.TrimSpace(buildID)
 }
 
-// effectiveWhatsNew — текст для диалога обновления (WHAT_NEW.md / WHAT_NEW env).
-func effectiveWhatsNew() string {
+// whatsNewTranslate — опциональный перевод WHAT_NEW, если нет секции ## lang.
+var whatsNewTranslate *translate.Service
+
+func whatsNewRaw() string {
 	if v := strings.TrimSpace(os.Getenv("WHAT_NEW")); v != "" {
 		return v
 	}
-	return formatWhatsNew(whatsNewFile)
+	return whatsNewFile
 }
 
-func formatWhatsNew(raw string) string {
-	lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
-	out := make([]string, 0, len(lines))
-	for _, line := range lines {
-		trim := strings.TrimSpace(line)
-		// Заголовок файла не показываем в диалоге.
-		if trim == "" || strings.HasPrefix(trim, "#") {
-			continue
-		}
-		out = append(out, strings.TrimRight(line, " \t"))
+// localizedWhatsNew — changelog под Accept-Language (секции ## ru/## en или перевод).
+func localizedWhatsNew(ctx context.Context, lang string) string {
+	raw := whatsNewRaw()
+	lang = strings.ToLower(strings.TrimSpace(lang))
+	if lang == "" {
+		lang = i18n.LangRU
 	}
-	return strings.TrimSpace(strings.Join(out, "\n"))
-}
-
-func versionPayload() map[string]string {
-	id := effectiveBuildID()
-	return map[string]string{
-		"build_id":     id,
-		"latest_build": id,
-		"whats_new":    effectiveWhatsNew(),
+	if whatsnew.HasLang(raw, lang) {
+		return whatsnew.Format(raw, lang)
 	}
+	if lang == i18n.LangRU {
+		return whatsnew.SourceRU(raw)
+	}
+	// Явного перевода нет — английская секция как общий fallback.
+	if whatsnew.HasLang(raw, i18n.LangEN) {
+		return whatsnew.Format(raw, i18n.LangEN)
+	}
+	ru := whatsnew.SourceRU(raw)
+	if ru == "" || whatsNewTranslate == nil {
+		return ru
+	}
+	tctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+	tr, err := whatsNewTranslate.Translate(tctx, ru, i18n.LangRU, lang)
+	if err != nil || strings.TrimSpace(tr) == "" {
+		return ru
+	}
+	return strings.TrimSpace(tr)
 }
 
 func handleVersion(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +103,16 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, i18n.T(i18n.LangFromRequest(r), "Method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
+	lang := i18n.LangFromRequest(r)
+	id := effectiveBuildID()
+	payload := map[string]string{
+		"build_id":     id,
+		"latest_build": id,
+		"whats_new":    localizedWhatsNew(r.Context(), lang),
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
-	_ = json.NewEncoder(w).Encode(versionPayload())
+	_ = json.NewEncoder(w).Encode(payload)
 }
 
 func getEnv(key, defaultVal string) string {
@@ -421,6 +438,7 @@ func main() {
 	settingsHandler := &api.SettingsHandler{Pool: pool}
 	languageSettingsHandler := &api.LanguageSettingsHandler{Pool: pool}
 	translateService := translate.NewService()
+	whatsNewTranslate = translateService
 	chatTranslateHandler := &api.ChatTranslateHandler{Pool: pool, Translate: translateService}
 	friendsHandler := &api.FriendsHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	chatsHandler := &api.ChatsHandler{Pool: pool, Rdb: rdb, Hub: realtimeHub, Push: pushSender}
@@ -584,14 +602,14 @@ func main() {
 	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
 
 	// После деплоя уведомляем онлайн-клиентов (с небольшой задержкой на подъём WS).
+	// whats_new не кладём в broadcast: у каждого своя локаль — клиент тянет /api/version.
 	go func() {
 		time.Sleep(3 * time.Second)
-		v := versionPayload()
+		id := effectiveBuildID()
 		payload := map[string]any{
 			"type":         "client_update_available",
-			"build_id":     v["build_id"],
-			"latest_build": v["latest_build"],
-			"whats_new":    v["whats_new"],
+			"build_id":     id,
+			"latest_build": id,
 		}
 		gamesBroadcaster.PublishAll(payload)
 	}()

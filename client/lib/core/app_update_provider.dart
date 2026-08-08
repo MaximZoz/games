@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/app_reload.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -203,7 +204,14 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
           't': now.millisecondsSinceEpoch.toString(),
         },
       );
-      final res = await http.get(uri).timeout(const Duration(seconds: 6));
+      final res = await http
+          .get(
+            uri,
+            headers: {
+              'Accept-Language': LocaleService.acceptLanguageHeader,
+            },
+          )
+          .timeout(const Duration(seconds: 6));
       if (res.statusCode != 200) return null;
       final body = jsonDecode(res.body);
       if (body is! Map) return null;

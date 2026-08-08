@@ -317,11 +317,11 @@ class AppShell extends ConsumerWidget {
           if (type == 'client_update_available') {
             final latest =
                 (event['latest_build'] ?? event['build_id'])?.toString();
-            final notes = event['whats_new']?.toString();
+            // Текст «Что нового» не берём из WS — он без локали.
+            // Клиент тянет /api/version с Accept-Language.
             unawaited(
               ref.read(appUpdateProvider.notifier).check(
                     latestBuild: latest,
-                    whatsNew: notes,
                   ),
             );
           }
