@@ -3,8 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Убрать автодеплой после каждого коммита
-- Фикс: ставка с серебром, вставка ссылки и инвайт Дурака
+- Дурак: итог победы/ничьей один раз после take или bito
 
 ## en
 - After leaving, invites go to a new lobby only — not the opponent’s old game
