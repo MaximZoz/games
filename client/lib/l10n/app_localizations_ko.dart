@@ -117,10 +117,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get durakHintOpponentDefends => '상대가 방어합니다';
 
   @override
-  String get durakHintThrowInFirst => '카드를 추가하거나 «전체» (첫 방어에서 최대 5장)';
+  String get durakHintThrowInFirst => '카드를 추가하세요 (첫 방어 최대 5장)';
 
   @override
-  String get durakHintThrowIn => '카드를 추가하거나 «전체»를 누르세요';
+  String get durakHintThrowIn => '카드를 추가하거나 방어를 기다리세요';
 
   @override
   String get durakHintOpponentThrows => '상대가 추가합니다';

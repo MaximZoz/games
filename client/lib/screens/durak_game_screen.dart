@@ -207,13 +207,32 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) return;
-      pinBlockingGame(ref, widget.gameId, gameType: 'durak');
-      final prev = ref.read(activeGameProvider).valueOrNull;
-      if (prev?.gameId != widget.gameId) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'game', gameId: widget.gameId),
-            );
+      final known = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+      final gameOver = known != null && known.isOver;
+      final observing =
+          ref.read(observationGameProvider)?.gameId == widget.gameId;
+      final finishedOut = known?.iAmFinished == true;
+      final eliminated = known?.iAmEliminated == true;
+      if (gameOver) {
+        _clearSessionForFinishedGame();
+      } else if (finishedOut || eliminated || observing) {
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        enterGameObservation(ref, widget.gameId, gameType: 'durak');
+      } else {
+        pinBlockingGame(ref, widget.gameId, gameType: 'durak');
+        final prev = ref.read(activeGameProvider).valueOrNull;
+        if (prev?.gameId != widget.gameId) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: widget.gameId,
+                  lobbyId: prev?.lobbyId,
+                  gameType: 'durak',
+                ),
+              );
+        }
       }
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
     if (_isOffline) return;
     _realtimeSubscription = ref.listenManual<AsyncValue<Map<String, dynamic>>>(
@@ -1725,15 +1744,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       view.phase == 'take_follow' &&
       view.table.isNotEmpty;
 
-  /// «Все» — закончить пачку подкида (только если ещё есть что кинуть).
-  bool _canThrowAll(DurakGameView view) =>
-      !view.isOver &&
-      !_busy &&
-      !_cardFlightActive &&
-      _isCurrentThrower(view) &&
-      view.phase == 'throw_in' &&
-      view.legalAttack.isNotEmpty;
-
   /// Пас = то же «Бито»/«Готово» для текущего в очереди (сервер advance).
   bool _canPass(DurakGameView view) => false;
 
@@ -1760,13 +1770,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _confirmTakeDone() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || !_canDone(view)) return;
-    await _sendDone();
-  }
-
-  /// «Все» — отдать стол защитнику после пачки подкида.
-  Future<void> _confirmThrowAll() async {
-    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
-    if (view == null || !_canThrowAll(view)) return;
     await _sendDone();
   }
 
@@ -3459,6 +3462,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (prev?.gameId == widget.gameId) {
       ref.read(activeGameProvider.notifier).clearLocal();
     }
+    ref
+        .read(activeGameProvider.notifier)
+        .clearObservationLocal(ifGameId: widget.gameId);
+  }
+
+  bool _isGameGoneError(Object e) {
+    if (e is GamesException) {
+      if (e.statusCode == 404) return true;
+      final key = e.errorKey.toLowerCase();
+      final msg = e.message.toLowerCase();
+      return key.contains('game not found') ||
+          msg.contains('game not found') ||
+          msg.contains('игра не найдена');
+    }
+    final s = e.toString().toLowerCase();
+    return s.contains('game not found') || s.contains('игра не найдена');
+  }
+
+  void _leaveGoneGame() {
+    if (!mounted) return;
+    _clearSessionForFinishedGame();
+    context.go('/games');
   }
 
   void _navigateToGames({bool keepObservation = false}) {
@@ -3575,8 +3600,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevGameStatus = view.status;
       return;
     }
-    // Mid-game: вышел «в ноль» — сразу observation, монеты, салют (не ждать конца).
-    if (!view.isOver && view.iAmFinished && !view.iAmEliminated) {
+    // Mid-game: вышел «в ноль» — сразу observation/монеты, но только когда
+    // стол уже пуст (иначе подкид ещё бьют → возможна ничья).
+    if (!view.isOver &&
+        view.iAmFinished &&
+        !view.iAmEliminated &&
+        view.table.isEmpty) {
       if (_midFinishedHandled) {
         _prevGameStatus = view.status;
         return;
@@ -3991,6 +4020,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     ),
                     error: (e, _) {
                       _handleAuthError(e);
+                      if (_isGameGoneError(e)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _leaveGoneGame();
+                        });
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentStart,
+                          ),
+                        );
+                      }
                       if (_isSessionExpired(e) || _isTransientLoadError(e)) {
                         if (_isTransientLoadError(e)) {
                           _scheduleTransientRetry();
@@ -4157,7 +4197,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showTake = _canTake(view);
     final showBito = _canBito(view);
     final showDone = _canDone(view);
-    final showThrowAll = _canThrowAll(view);
     final showPass = _canPass(view);
     // Пауза показа стола — та же «кнопка» в фиксированном слоте 52px.
     final showTakeReveal = view.isTakeReveal;
@@ -4165,7 +4204,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final showActionOrReveal = showTake ||
         showBito ||
         showDone ||
-        showThrowAll ||
         showPass ||
         showTakeReveal ||
         showBitoReveal;
@@ -4194,7 +4232,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
               // Пауза «Беру»/«Бито» — в слоте кнопки действия (ниже), не здесь:
               // иначе статус в колонке двигает стол и веер.
-              if (view.isOver || view.iAmFinished) ...[
+              // Mid-finish UI только при пустом столе (не во время отбоя последних карт).
+              if (view.isOver ||
+                  (view.iAmFinished && view.table.isEmpty)) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: GameStatusWithReward(
@@ -4426,11 +4466,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                     ? context.l10n.durakActionTake
                                     : showPass
                                         ? context.l10n.durakActionPass
-                                        : showThrowAll
-                                            ? context.l10n.durakActionAll
-                                            : (showDone
-                                                ? context.l10n.durakActionDone
-                                                : context.l10n.durakActionBito),
+                                        : (showDone
+                                            ? context.l10n.durakActionDone
+                                            : context.l10n.durakActionBito),
                                 icon: showTake
                                     ? Icons.south_rounded
                                     : showPass
@@ -4440,11 +4478,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                     ? _take
                                     : showPass
                                         ? _pass
-                                        : showThrowAll
-                                            ? _confirmThrowAll
-                                            : (showDone
-                                                ? _confirmTakeDone
-                                                : _bito),
+                                        : (showDone
+                                            ? _confirmTakeDone
+                                            : _bito),
                               )
                         : const SizedBox.shrink(),
                   ),
@@ -5476,8 +5512,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (!view.isOver && view.iAmEliminated) {
       return l10n.gameYouEliminated;
     }
-    // Вышел «в ноль», пока остальные ещё играют — сразу победа / место.
-    if (!view.isOver && view.iAmFinished) {
+    // Вышел «в ноль», пока остальные ещё играют — победа/место только
+    // когда стол пуст (не во время чужого отбоя ваших последних карт).
+    if (!view.isOver && view.iAmFinished && view.table.isEmpty) {
       final place = view.myPlace;
       if (place <= 1) return l10n.gameYouWon;
       return l10n.gameYouPlaced(place);

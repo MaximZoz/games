@@ -117,10 +117,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get durakHintOpponentDefends => 'प्रतिद्वंद्वी बचाव कर रहा है';
 
   @override
-  String get durakHintThrowInFirst => 'कार्ड फेंकें या «सभी» (पहली बीट में अधिकतम 5)';
+  String get durakHintThrowInFirst => 'पत्ते फेंकें (पहले बचाव में अधिकतम 5)';
 
   @override
-  String get durakHintThrowIn => 'कार्ड फेंकें या «सभी» दबाएँ';
+  String get durakHintThrowIn => 'पत्ते फेंकें या बचाव की प्रतीक्षा करें';
 
   @override
   String get durakHintOpponentThrows => 'प्रतिद्वंद्वी फेंक रहा है';

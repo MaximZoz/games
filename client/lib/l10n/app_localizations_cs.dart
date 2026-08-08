@@ -117,10 +117,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get durakHintOpponentDefends => 'Soupeř se brání';
 
   @override
-  String get durakHintThrowInFirst => 'Přihoďte karty nebo «Vše» (max. 5 v prvním odhozu)';
+  String get durakHintThrowInFirst => 'Přihazujte karty (max. 5 v prvním odbití)';
 
   @override
-  String get durakHintThrowIn => 'Přihoďte karty nebo klepněte «Vše»';
+  String get durakHintThrowIn => 'Přihazujte karty nebo čekejte na obranu';
 
   @override
   String get durakHintOpponentThrows => 'Soupeř přihazuje';

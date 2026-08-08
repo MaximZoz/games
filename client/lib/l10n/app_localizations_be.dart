@@ -117,10 +117,10 @@ class AppLocalizationsBe extends AppLocalizations {
   String get durakHintOpponentDefends => 'Супернік адбіваецца';
 
   @override
-  String get durakHintThrowInFirst => 'Падкідайце карты або «Усе» (макс. 5 у першым адбоі)';
+  String get durakHintThrowInFirst => 'Падкідайце карты (макс. 5 у першым адбоі)';
 
   @override
-  String get durakHintThrowIn => 'Падкідайце карты або націсніце «Усе»';
+  String get durakHintThrowIn => 'Падкідайце карты або чакайце адбою';
 
   @override
   String get durakHintOpponentThrows => 'Супернік падкідае';

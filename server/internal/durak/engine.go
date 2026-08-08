@@ -30,7 +30,7 @@ type TurnPhase string
 const (
 	PhaseAttack       TurnPhase = "attack"        // атакующий кладёт первую карту
 	PhaseDefend       TurnPhase = "defend"        // защитник бьёт
-	PhaseThrowIn      TurnPhase = "throw_in"      // очередь подкида: кладёт карты, затем «Все»
+	PhaseThrowIn      TurnPhase = "throw_in"      // legacy: сразу finishThrowIn → defend (кнопки «Все» нет)
 	PhaseAttackFollow TurnPhase = "attack_follow" // подкид после полного отбоя или «Бито»
 	PhaseTakeFollow   TurnPhase = "take_follow"   // защитник берёт; атакующий может подкинуть вдогонку
 	PhaseBitoReveal   TurnPhase = "bito_reveal"   // всё отбито, нечего подкинуть — пауза, затем отбой
@@ -598,24 +598,22 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
-	s.markFinishedIfEmpty(playerIdx)
+	// Не markFinishedIfEmpty здесь: карты ещё на столе, защитник может
+	// отбить и тоже выйти «в ноль» → ничья. Выход фиксируем в checkOver
+	// после resolveBito / resolveTake / resolveDefenderEmpty.
 	if s.Phase == PhaseTakeFollow {
 		// Вдогонку: очередь на текущем; если карт больше нет — авто дальше.
 		s.clearPassed()
 		return s.skipThrowersWithoutCards()
 	}
-	// Первая атака / подкид пачкой: ход у атакующего до «Все».
-	// Первый отбой — не больше 5 карт (MaxAttacksThisRound); без карт — сразу defend.
-	s.Phase = PhaseThrowIn
+	// После каждой атаки/подкида сразу ход защитнику — без кнопки «Все».
+	// Доп. подкид возможен в фазе defend (CanThrowIn).
 	s.ThrowerIndex = playerIdx
 	if placedOnEmpty {
 		s.resetThrowerToAttacker()
 		s.ThrowerIndex = playerIdx
 	}
-	if len(s.legalThrowInCards(playerIdx)) == 0 {
-		return s.finishThrowIn()
-	}
-	return nil
+	return s.finishThrowIn()
 }
 
 // finishThrowIn — подкидывающий закончил пачку («Все» или авто) → бьёт защитник.
