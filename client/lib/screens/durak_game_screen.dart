@@ -3994,7 +3994,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     right: 4,
                     top: topPad + 4,
                     child: GameActionsOverlay(
-                      canDraw: !isMulti && view!.playerIds.length == 2,
+                      canDraw: !isMulti && view.playerIds.length == 2,
                       iOfferedDraw: _iOfferedDraw(view),
                       opponentOfferedDraw: _opponentOfferedDraw(view),
                       onSurrender: _confirmSurrender,
