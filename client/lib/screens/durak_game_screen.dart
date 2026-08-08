@@ -3893,7 +3893,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                           children: [
                             Positioned(
                               left: 2,
-                              right: -4,
+                              right: 2,
                               bottom: animLift,
                               child: LayoutBuilder(
                                 builder: (context, c) {
