@@ -54,9 +54,9 @@ void main() {
         stakeBronze: 1,
       );
       expect(text, contains('Ультимейт'));
-      expect(text, contains('Девять малых полей'));
-      expect(text, contains('обязан ходить соперник'));
-      expect(text, contains('три малых поля в ряд'));
+      expect(text, contains('9 мини-полей 3×3'));
+      expect(text, contains('отправляет соперника'));
+      expect(text, contains('мета-поле'));
       expect(text, isNot(contains('на поле 9x9')));
     });
 
