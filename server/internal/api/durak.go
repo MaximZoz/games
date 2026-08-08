@@ -1567,9 +1567,9 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 			return
 		}
 	}
-	// Как multi-крестики: банк stake×N целиком одному победителю
-	// (выбывшие сдачей уже отфильтрованы; при нескольких вышедших — первый).
-	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winners[0]}, false, isBot)
+	// Банк stake×N: при одном победителе — весь банк (как multi-крестики);
+	// при нескольких вышедших — делится. Выбывшие сдачей доли не получают.
+	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, winners, false, isBot)
 }
 
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {

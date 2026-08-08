@@ -222,8 +222,17 @@ class DurakGameView {
 
   bool get iAmEliminated => myIndex >= 0 && isEliminated(myIndex);
 
-  /// Число победителей для банка: как в крестиках — один забирает весь pot.
-  int get stakeWinnerCount => 1;
+  /// Число победителей для банка (не дурак и не выбывшие сдачей).
+  /// Один победитель → весь банк stake×N, как в multi-крестиках.
+  int get stakeWinnerCount {
+    final n = playerIds.length >= 2 ? playerIds.length : 2;
+    var winners = 0;
+    for (var i = 0; i < n; i++) {
+      if (i == loserIndex || isEliminated(i)) continue;
+      winners++;
+    }
+    return winners.clamp(1, n);
+  }
 
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
