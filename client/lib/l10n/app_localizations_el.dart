@@ -96,61 +96,61 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Πάρε';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Όλα';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Έτοιμο';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Άμυνα';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Άμυνα ή μεταφορά';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Ο αντίπαλος αμύνεται';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Ρίξτε κάρτες ή «Όλα» (μέγ. 5 στην πρώτη άμυνα)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Ρίξτε κάρτες ή πατήστε «Όλα»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Ο αντίπαλος ρίχνει';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Ρίξτε μετά την πάρε ή πατήστε «Έτοιμο»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Ο αντίπαλος μπορεί να ρίξει μετά την πάρε';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Ρίξτε κάρτα ή πείτε «Bito»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Ο αντίπαλος ρίχνει ή λέει «Bito»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Η σειρά σου — επιτέθηκε';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Ο αντίπαλος επιτίθεται';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Έχασες — είσαι ο κάλπης';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Ισοπαλία — όλοι έφυγαν';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Έφυγες — περιμένουμε το τέλος';
 
   @override
   String get shopPurchaseQueued => 'Η αγορά αποθηκεύτηκε — θα εφαρμοστεί σε online λειτουργία';
@@ -188,23 +188,23 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Έκδοση $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Διαθέσιμη ενημέρωση';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Υπάρχει νέα έκδοση της εφαρμογής. Ενημερώστε για να συνεχίσετε.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Τι νέο υπάρχει';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Ενημέρωση';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Θα ενημερώσουμε την εφαρμογή μετά από αυτό το παιχνίδι';
 
   @override
   String get loginTitle => 'Σύνδεση';
@@ -525,6 +525,26 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Πόκερ';
+
+  @override
+  String get gamesInDevelopment => 'Υπό ανάπτυξη';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Παίκτες: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Κάθε παίκτης παίρνει 2 ιδιωτικά φύλλα· στο τραπέζι βγαίνουν 5 κοινά.';
+
+  @override
+  String get rulesPokerPlay => 'Γύροι πονταρίσματος: preflop, flop, turn και river. Fold, call, bet ή raise.';
+
+  @override
+  String get rulesPokerWin => 'Κερδίζει ο καλύτερος συνδυασμός πέντε φύλλων (ιδιωτικά + κοινά) ή ο τελευταίος μετά από folds.';
+
+  @override
   String get gamesRules => 'Κανόνες';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesNoCenter => 'Χωρίς εκκίνηση στο κέντρο';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'Παρακολούθηση';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'Μπορείτε να παρακολουθήσετε μέχρι το τέλος';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Ολοκληρώστε πρώτα το τρέχον παιχνίδι';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Κλασικό';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 παίκτες';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 παίκτες';
 
   @override
   String get gamesDurakModePodkidnoi => 'Προσθήκη';
@@ -620,12 +640,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'Παίκτες $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return 'Αίθουσα $name';
   }
 
   @override

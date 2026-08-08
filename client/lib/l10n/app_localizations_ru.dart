@@ -525,6 +525,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesDurak => 'Дурак';
 
   @override
+  String get gamesPoker => 'Покер';
+
+  @override
+  String get gamesInDevelopment => 'В разработке';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Игроки: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Техасский холдем. Каждому раздают 2 карты в руку; на стол выходят 5 общих карт.';
+
+  @override
+  String get rulesPokerPlay => 'Раунды ставок: префлоп, флоп, тёрн и ривер. Можно фолд, колл, бет или рейз.';
+
+  @override
+  String get rulesPokerWin => 'Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.';
+
+  @override
   String get gamesRules => 'Правила';
 
   @override

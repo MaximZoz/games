@@ -108,49 +108,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String get durakActionBito => 'ビト';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => '防御してください';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => '防御するか転送してください';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => '相手が防御中';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'カードを追加するか「すべて」（最初の防御で最大5枚）';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'カードを追加するか「すべて」をタップ';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => '相手が追加中';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => '取った後に追加するか「完了」をタップ';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => '相手は取った後に追加できます';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'カードを出すか「ビト」と言ってください';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => '相手が追加するか「ビト」と言います';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'あなたの番 — 攻撃してください';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => '相手が攻撃中';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => '負けました — あなたが愚か者です';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => '引き分け — 全員脱落';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => '脱落しました — 終了を待っています';
 
   @override
   String get shopPurchaseQueued => '購入を保存しました — オンラインモードで適用されます';
@@ -195,7 +195,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appUpdateTitle => 'アップデートがあります';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'アプリの新しいバージョンがあります。続けるには更新してください。';
 
   @override
   String get appUpdateWhatsNew => '新着情報';
@@ -204,7 +204,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appUpdateOk => '更新';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'この対局の後にアプリを更新します';
 
   @override
   String get loginTitle => 'ログイン';
@@ -525,6 +525,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesDurak => 'ドゥラック';
 
   @override
+  String get gamesPoker => 'ポーカー';
+
+  @override
+  String get gamesInDevelopment => '開発中';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return '人数: $players。';
+  }
+
+  @override
+  String get rulesPokerIntro => 'テキサスホールデム。各プレイヤーにホールカード2枚、場にコミュニティカード5枚。';
+
+  @override
+  String get rulesPokerPlay => 'ベッティングラウンドはプリフロップ・フロップ・ターン・リバー。フォールド、コール、ベット、レイズができます。';
+
+  @override
+  String get rulesPokerWin => 'ホール＋コミュニティから作った最強の5枚、またはフォールド後に残った一人が勝ちです。';
+
+  @override
   String get gamesRules => 'ルール';
 
   @override
@@ -564,16 +584,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesObservationHint => '終了まで観戦できます';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'まず現在の対局を終えてください';
 
   @override
   String get gamesVariantClassic => 'クラシック';
 
   @override
-  String get gamesVariantGomoku => 'Gomoku';
+  String get gamesVariantGomoku => '五目並べ';
 
   @override
-  String get gamesVariantUltimate => 'Ultimate';
+  String get gamesVariantUltimate => 'アルティメット';
 
   @override
   String get gamesVariantMulti3 => '3人';

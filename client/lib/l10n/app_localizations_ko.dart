@@ -96,61 +96,61 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => '가져가기';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => '전체';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => '완료';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => '방어하세요';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => '방어하거나 넘기세요';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => '상대가 방어합니다';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => '카드를 추가하거나 «전체» (첫 방어에서 최대 5장)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => '카드를 추가하거나 «전체»를 누르세요';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => '상대가 추가합니다';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => '가져간 후 추가하거나 «완료»를 누르세요';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => '상대는 가져간 후 추가할 수 있습니다';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => '카드를 내거나 «비토»라고 하세요';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => '상대가 추가하거나 «비토»라고 합니다';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => '당신 차례 — 공격하세요';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => '상대가 공격합니다';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => '패배했습니다 — 당신이 바보입니다';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => '무승부 — 모두 탈락';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => '탈락했습니다 — 종료를 기다립니다';
 
   @override
   String get shopPurchaseQueued => '구매가 저장됨 — 온라인 모드에서 적용됩니다';
@@ -188,23 +188,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return '버전 $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => '업데이트 가능';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => '앱의 새 버전을 사용할 수 있습니다. 계속하려면 업데이트하세요.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => '새로운 기능';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => '업데이트';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => '이 게임 후 앱을 업데이트합니다';
 
   @override
   String get loginTitle => '로그인';
@@ -522,7 +522,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesTicTacToe => '틱택토';
 
   @override
-  String get gamesDurak => 'Durak';
+  String get gamesDurak => '두라크';
+
+  @override
+  String get gamesPoker => '포커';
+
+  @override
+  String get gamesInDevelopment => '개발 중';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return '인원: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => '텍사스 홀덤. 각 플레이어는 홀 카드 2장, 테이블에 커뮤니티 카드 5장이 나옵니다.';
+
+  @override
+  String get rulesPokerPlay => '베팅 라운드: 프리플롭, 플롭, 턴, 리버. 폴드, 콜, 벳, 레이즈를 할 수 있습니다.';
+
+  @override
+  String get rulesPokerWin => '홀+커뮤니티로 만든 최강 5장 핸드, 또는 폴드 후 남은 한 명이 승리합니다.';
 
   @override
   String get gamesRules => '규칙';
@@ -558,16 +578,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesNoCenter => '중앙 시작 금지';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => '관전';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => '게임 종료까지 관전할 수 있습니다';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => '먼저 현재 게임을 마치세요';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => '클래식';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3인';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4인';
 
   @override
   String get gamesDurakModePodkidnoi => '추가';
@@ -620,12 +640,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return '플레이어 $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return '로비 $name';
   }
 
   @override

@@ -96,61 +96,61 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Al';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Tümü';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Bitti';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Savun';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Savun veya aktar';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Rakip savunuyor';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Kart atın veya «Tümü» (ilk savunmada max 5)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Kart atın veya «Tümü»ne dokunun';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Rakip atıyor';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Aldıktan sonra atın veya «Bitti»ye dokunun';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Rakip aldıktan sonra atabilir';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Kart atın veya «Bito» deyin';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Rakip atıyor veya «Bito» diyor';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Sizin sıra — saldırın';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Rakip saldırıyor';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Kaybettiniz — siz duraksınız';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Berabere — herkes çıktı';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Çıktınız — sonu bekleniyor';
 
   @override
   String get shopPurchaseQueued => 'Satın alma kaydedildi — çevrimiçi modda uygulanacak';
@@ -188,23 +188,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Sürüm $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Güncelleme mevcut';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Uygulamanın yeni bir sürümü mevcut. Devam etmek için güncelleyin.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Yenilikler';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Güncelle';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Bu oyundan sonra uygulamayı güncelleyeceğiz';
 
   @override
   String get loginTitle => 'Giriş yap';
@@ -525,6 +525,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Geliştiriliyor';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Oyuncular: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Her oyuncuya 2 kapalı kart verilir; masaya 5 ortak kart gelir.';
+
+  @override
+  String get rulesPokerPlay => 'Bahis turları: preflop, flop, turn ve river. Fold, call, bet veya raise yapabilirsiniz.';
+
+  @override
+  String get rulesPokerWin => 'En iyi beş kartlık el (kapalı + ortak) veya foldlardan sonra kalan son oyuncu kazanır.';
+
+  @override
   String get gamesRules => 'Kurallar';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesNoCenter => 'Merkezden başlama yok';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'İzleme';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'Oyun bitene kadar izleyebilirsiniz';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Önce mevcut oyununuzu bitirin';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Klasik';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 oyuncu';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 oyuncu';
 
   @override
   String get gamesDurakModePodkidnoi => 'Atışlı';
@@ -620,12 +640,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'Oyuncular $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return 'Lobi $name';
   }
 
   @override

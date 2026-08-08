@@ -96,61 +96,61 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Olish';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Hammasi';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Tayyor';
 
   @override
-  String get durakActionBito => 'Beat';
+  String get durakActionBito => 'Bito';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Himoyalaning';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Himoyalaning yoki o‘tkazing';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Raqib himoyalanmoqda';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Kartalar tashlang yoki «Hammasi» (birinchi urinishda max 5)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Kartalar tashlang yoki «Hammasi» bosing';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Raqib tashlamoqda';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Olingandan keyin tashlang yoki «Tayyor» bosing';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Raqib olingandan keyin tashlashi mumkin';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Karta tashlang yoki «Bito» deng';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Raqib tashlaydi yoki «Bito» deydi';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Sizning yurishingiz — hujum qiling';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Raqib hujum qilmoqda';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Yutqazdingiz — siz duraksiz';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Durang — hamma chiqdi';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Siz chiqdingiz — oxirini kutamiz';
 
   @override
   String get shopPurchaseQueued => 'Xarid saqlandi — onlayn rejimda qo‘llanadi';
@@ -188,23 +188,23 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Versiya $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Yangilanish mavjud';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Ilovaning yangi versiyasi mavjud. Davom etish uchun yangilang.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Yangiliklar';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Yangilash';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Bu o‘yindan keyin ilovani yangilaymiz';
 
   @override
   String get loginTitle => 'Kirish';
@@ -525,6 +525,26 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Ishlanmoqda';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'O‘yinchilar: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Har bir o‘yinchiga 2 ta qo‘l kartasi beriladi; stolga 5 ta umumiy karta chiqadi.';
+
+  @override
+  String get rulesPokerPlay => 'Stavka raundlari: preflop, flop, turn va river. Fold, call, bet yoki raise qilish mumkin.';
+
+  @override
+  String get rulesPokerWin => 'G‘olib — beshta kartaning eng yaxshi kombinatsiyasi (qo‘l + umumiy) yoki foldlardan keyin yolg‘iz qolgan o‘yinchi.';
+
+  @override
   String get gamesRules => 'Qoidalar';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesNoCenter => 'Markazdan boshlash yo‘q';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'Kuzatish';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'O‘yin tugaguncha kuzatishingiz mumkin';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Avval joriy o‘yiningizni tugating';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Klassik';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 o‘yinchi';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 o‘yinchi';
 
   @override
   String get gamesDurakModePodkidnoi => 'Tashlama';
@@ -620,12 +640,12 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'O‘yinchilar $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return 'Lobi $name';
   }
 
   @override

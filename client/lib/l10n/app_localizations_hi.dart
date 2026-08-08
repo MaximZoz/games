@@ -96,61 +96,61 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'लो';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'सभी';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'पूर्ण';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'बचाव करें';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'बचाव करें या ट्रांसफर करें';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'प्रतिद्वंद्वी बचाव कर रहा है';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'कार्ड फेंकें या «सभी» (पहली बीट में अधिकतम 5)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'कार्ड फेंकें या «सभी» दबाएँ';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'प्रतिद्वंद्वी फेंक रहा है';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'लेने के बाद फेंकें या «पूर्ण» दबाएँ';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'प्रतिद्वंद्वी लेने के बाद फेंक सकता है';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'कार्ड फेंकें या «बीटो» कहें';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'प्रतिद्वंद्वी फेंकता है या «बीटो» कहता है';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'आपकी बारी — हमला करें';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'प्रतिद्वंद्वी हमला कर रहा है';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'आप हारे — आप मूर्ख हैं';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'ड्रॉ — सभी बाहर';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'आप बाहर — अंत की प्रतीक्षा';
 
   @override
   String get shopPurchaseQueued => 'खरीदारी सहेजी गई — ऑनलाइन मोड में लागू होगी';
@@ -188,23 +188,23 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'संस्करण $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'अपडेट उपलब्ध';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'ऐप का नया संस्करण उपलब्ध है। जारी रखने के लिए अपडेट करें।';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'नया क्या है';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'अपडेट';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'इस गेम के बाद हम ऐप अपडेट करेंगे';
 
   @override
   String get loginTitle => 'साइन इन';
@@ -522,7 +522,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesTicTacToe => 'टिक-टैक-टो';
 
   @override
-  String get gamesDurak => 'Durak';
+  String get gamesDurak => 'दुरक';
+
+  @override
+  String get gamesPoker => 'पोकर';
+
+  @override
+  String get gamesInDevelopment => 'विकास में';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'खिलाड़ी: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'टेक्सास होल्ड’एम। हर खिलाड़ी को 2 होल कार्ड मिलते हैं; टेबल पर 5 कम्युनिटी कार्ड आते हैं।';
+
+  @override
+  String get rulesPokerPlay => 'बेटिंग राउंड: प्रीफ्लॉप, फ्लॉप, टर्न और रिवर। फोल्ड, कॉल, बेट या रेज़ कर सकते हैं।';
+
+  @override
+  String get rulesPokerWin => 'सबसे अच्छा पाँच-पत्तों का हाथ (होल + कम्युनिटी) जीतता है, या फोल्ड के बाद बचा आखिरी खिलाड़ी।';
 
   @override
   String get gamesRules => 'नियम';
@@ -558,16 +578,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesNoCenter => 'केंद्र से शुरुआत नहीं';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'देखना';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'गेम के अंत तक देख सकते हैं';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'पहले अपना वर्तमान गेम पूरा करें';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'क्लासिक';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 खिलाड़ी';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 खिलाड़ी';
 
   @override
   String get gamesDurakModePodkidnoi => 'फेंक वाला';
@@ -620,7 +640,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'खिलाड़ी $count/$maxPlayers';
   }
 
   @override

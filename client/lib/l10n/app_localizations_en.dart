@@ -525,6 +525,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'In development';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Players: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Each player gets 2 hole cards; 5 community cards are dealt to the table.';
+
+  @override
+  String get rulesPokerPlay => 'Betting rounds: preflop, flop, turn and river. You can fold, call, bet or raise.';
+
+  @override
+  String get rulesPokerWin => 'The best five-card hand (hole + community) wins, or the last player left after folds.';
+
+  @override
   String get gamesRules => 'Rules';
 
   @override

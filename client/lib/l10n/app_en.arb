@@ -239,6 +239,19 @@
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Tic-tac-toe",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "In development",
+  "rulesPokerPlayers": "Players: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Each player gets 2 hole cards; 5 community cards are dealt to the table.",
+  "rulesPokerPlay": "Betting rounds: preflop, flop, turn and river. You can fold, call, bet or raise.",
+  "rulesPokerWin": "The best five-card hand (hole + community) wins, or the last player left after folds.",
   "gamesRules": "Rules",
   "gamesRulesTitle": "Game rules",
   "gamesCreate": "Create game",

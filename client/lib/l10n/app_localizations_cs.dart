@@ -96,61 +96,61 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Vzít';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Vše';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Hotovo';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Bránit se';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Bránit se nebo převést';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Soupeř se brání';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Přihoďte karty nebo «Vše» (max. 5 v prvním odhozu)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Přihoďte karty nebo klepněte «Vše»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Soupeř přihazuje';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Přihoďte po vzeti nebo klepněte «Hotovo»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Soupeř může přihodit po vzeti';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Přihoďte kartu nebo řekněte «Bito»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Soupeř přihazuje nebo říká «Bito»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Vaše tah — útočte';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Soupeř útočí';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Prohráli jste — jste hlupák';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Remíza — všichni jsou venku';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Jste venku — čekáme na konec';
 
   @override
   String get shopPurchaseQueued => 'Nákup uložen — uplatní se v online režimu';
@@ -188,23 +188,23 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Verze $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Dostupná aktualizace';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Je k dispozici nová verze aplikace. Aktualizujte pro pokračování.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Co je nového';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Aktualizovat';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Po partii aplikaci aktualizujeme';
 
   @override
   String get loginTitle => 'Přihlášení';
@@ -525,6 +525,26 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Ve vývoji';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Hráči: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Každý dostane 2 soukromé karty; na stůl přijde 5 společných karet.';
+
+  @override
+  String get rulesPokerPlay => 'Sázková kola: preflop, flop, turn a river. Fold, call, bet nebo raise.';
+
+  @override
+  String get rulesPokerWin => 'Vyhrává nejlepší pětikombinace (soukromé + společné), nebo poslední po foldech.';
+
+  @override
   String get gamesRules => 'Pravidla';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesNoCenter => 'Bez startu ve středu';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'Sledování';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'Můžete sledovat až do konce partie';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Nejdříve dokončete aktuální hru';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Klasický';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 hráči';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 hráči';
 
   @override
   String get gamesDurakModePodkidnoi => 'Přihazovaný';
@@ -620,7 +640,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'Hráči $count/$maxPlayers';
   }
 
   @override

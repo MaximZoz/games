@@ -108,49 +108,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get durakActionBito => '打完';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => '防守';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => '防守或转攻';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => '对手正在防守';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => '追加牌或「全部」（首轮防守最多 5 张）';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => '追加牌或点「全部」';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => '对手正在追加';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => '收下后追加或点「完成」';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => '对手收下后可追加';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => '追加一张牌或说「打完」';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => '对手追加或说「打完」';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => '你的回合 — 进攻';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => '对手正在进攻';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => '你输了 — 你是傻瓜';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => '平局 — 所有人都出局';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => '你已出局 — 等待结束';
 
   @override
   String get shopPurchaseQueued => '购买已保存 — 将在在线模式下生效';
@@ -195,7 +195,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appUpdateTitle => '有可用更新';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => '有新版本可用。请更新以继续使用。';
 
   @override
   String get appUpdateWhatsNew => '更新内容';
@@ -204,7 +204,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appUpdateOk => '更新';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => '本局结束后将更新应用';
 
   @override
   String get loginTitle => '登录';
@@ -525,6 +525,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesDurak => '傻瓜牌';
 
   @override
+  String get gamesPoker => '扑克';
+
+  @override
+  String get gamesInDevelopment => '开发中';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return '玩家：$players。';
+  }
+
+  @override
+  String get rulesPokerIntro => '德州扑克。每人两张底牌；桌上发出五张公共牌。';
+
+  @override
+  String get rulesPokerPlay => '下注轮次：翻牌前、翻牌、转牌、河牌。可弃牌、跟注、下注或加注。';
+
+  @override
+  String get rulesPokerWin => '用底牌与公共牌组成的最强五张牌获胜；或其余人弃牌后仅剩者获胜。';
+
+  @override
   String get gamesRules => '规则';
 
   @override
@@ -564,7 +584,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesObservationHint => '可以观战至对局结束';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => '请先完成当前对局';
 
   @override
   String get gamesVariantClassic => '经典';

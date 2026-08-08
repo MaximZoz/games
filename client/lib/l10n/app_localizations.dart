@@ -1145,6 +1145,42 @@ abstract class AppLocalizations {
   /// **'Дурак'**
   String get gamesDurak;
 
+  /// No description provided for @gamesPoker.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покер'**
+  String get gamesPoker;
+
+  /// No description provided for @gamesInDevelopment.
+  ///
+  /// In ru, this message translates to:
+  /// **'В разработке'**
+  String get gamesInDevelopment;
+
+  /// No description provided for @rulesPokerPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: {players}.'**
+  String rulesPokerPlayers(int players);
+
+  /// No description provided for @rulesPokerIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Техасский холдем. Каждому раздают 2 карты в руку; на стол выходят 5 общих карт.'**
+  String get rulesPokerIntro;
+
+  /// No description provided for @rulesPokerPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раунды ставок: префлоп, флоп, тёрн и ривер. Можно фолд, колл, бет или рейз.'**
+  String get rulesPokerPlay;
+
+  /// No description provided for @rulesPokerWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.'**
+  String get rulesPokerWin;
+
   /// No description provided for @gamesRules.
   ///
   /// In ru, this message translates to:

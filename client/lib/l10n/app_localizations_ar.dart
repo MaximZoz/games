@@ -96,61 +96,61 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'خذ';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'الكل';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'تم';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'دافع';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'دافع أو انقل';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'الخصم يدافع';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'ألقِ أوراقًا أو «الكل» (حد أقصى 5 في أول دفاع)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'ألقِ أوراقًا أو اضغط «الكل»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'الخصم يضيف';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'أضف بعد الأخذ أو اضغط «تم»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'قد يضيف الخصم بعد الأخذ';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'ألقِ ورقة أو قل «بيتو»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'الخصم يضيف أو يقول «بيتو»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'دورك — اهاجم';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'الخصم يهاجم';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'لقد خسرت — أنت الأحمق';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'تعادل — خرج الجميع';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'خرجت — في انتظار النهاية';
 
   @override
   String get shopPurchaseQueued => 'تم حفظ الشراء — سيُطبَّق في وضع الاتصال';
@@ -188,23 +188,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'الإصدار $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'يتوفر تحديث';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'يتوفر إصدار جديد من التطبيق. يرجى التحديث للمتابعة.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'ما الجديد';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'تحديث';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'سنحدّث التطبيق بعد هذه اللعبة';
 
   @override
   String get loginTitle => 'تسجيل الدخول';
@@ -522,7 +522,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesTicTacToe => 'إكس-أو';
 
   @override
-  String get gamesDurak => 'Durak';
+  String get gamesDurak => 'دوراك';
+
+  @override
+  String get gamesPoker => 'بوكر';
+
+  @override
+  String get gamesInDevelopment => 'قيد التطوير';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'اللاعبون: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'تكساس هولدم. يحصل كل لاعب على ورقتين خاصتين؛ وتُوضع 5 أوراق مشتركة على الطاولة.';
+
+  @override
+  String get rulesPokerPlay => 'جولات المراهنة: ما قبل الفلوب، الفلوب، الترن والريفر. يمكنك الطي أو المعادلة أو الرهان أو الرفع.';
+
+  @override
+  String get rulesPokerWin => 'يفوز أفضل خمسة أوراق (خاصة + مشتركة) أو آخر لاعب يتبقى بعد الطي.';
 
   @override
   String get gamesRules => 'القواعد';
@@ -558,16 +578,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesNoCenter => 'بدون بداية من الوسط';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'مشاهدة';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'يمكنك المشاهدة حتى نهاية اللعبة';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'أنهِ لعبتك الحالية أولاً';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'كلاسيكي';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 لاعبين';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 لاعبين';
 
   @override
   String get gamesDurakModePodkidnoi => 'إضافة';
@@ -620,7 +640,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'اللاعبون $count/$maxPlayers';
   }
 
   @override

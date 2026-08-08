@@ -239,6 +239,19 @@
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
   "gamesDurak": "Дурак",
+  "gamesPoker": "Покер",
+  "gamesInDevelopment": "В разработке",
+  "rulesPokerPlayers": "Игроки: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Техасский холдем. Каждому раздают 2 карты в руку; на стол выходят 5 общих карт.",
+  "rulesPokerPlay": "Раунды ставок: префлоп, флоп, тёрн и ривер. Можно фолд, колл, бет или рейз.",
+  "rulesPokerWin": "Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",

@@ -108,49 +108,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String get durakActionBito => 'Cubierto';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Defiende';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Defiende o transfiere';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'El rival defiende';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Echa cartas o «Todas» (máx. 5 en el primer cubierto)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Echa cartas o toca «Todas»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'El rival echa';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Echa tras tomar o toca «Listo»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'El rival puede echar tras tomar';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Echa una carta o di «Cubierto»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'El rival echa o dice «Cubierto»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Tu turno — ataca';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'El rival ataca';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Perdiste — eres el tonto';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Empate — todos salieron';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Saliste — esperando el final';
 
   @override
   String get shopPurchaseQueued => 'Compra guardada — se aplicará en modo en línea';
@@ -195,7 +195,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appUpdateTitle => 'Actualización disponible';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Hay una nueva versión de la aplicación. Actualiza para continuar.';
 
   @override
   String get appUpdateWhatsNew => 'Novedades';
@@ -204,7 +204,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appUpdateOk => 'Actualizar';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Actualizaremos la app después de esta partida';
 
   @override
   String get loginTitle => 'Iniciar sesión';
@@ -525,6 +525,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Póker';
+
+  @override
+  String get gamesInDevelopment => 'En desarrollo';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Jugadores: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Cada jugador recibe 2 cartas ocultas; en la mesa salen 5 cartas comunitarias.';
+
+  @override
+  String get rulesPokerPlay => 'Rondas de apuestas: preflop, flop, turn y river. Puedes fold, call, bet o raise.';
+
+  @override
+  String get rulesPokerWin => 'Gana la mejor mano de cinco cartas (ocultas + comunitarias), o el último tras los folds.';
+
+  @override
   String get gamesRules => 'Reglas';
 
   @override
@@ -564,7 +584,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesObservationHint => 'Puedes mirar hasta que termine la partida';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Termina primero tu partida actual';
 
   @override
   String get gamesVariantClassic => 'Clásico';

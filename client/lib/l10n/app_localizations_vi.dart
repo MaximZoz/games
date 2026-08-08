@@ -96,61 +96,61 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Nhận';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Tất cả';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Xong';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Chắn';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Chắn hoặc chuyển';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Đối thủ đang chắn';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Đánh thêm bài hoặc «Tất cả» (tối đa 5 ở lần chắn đầu)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Đánh thêm bài hoặc nhấn «Tất cả»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Đối thủ đang đánh thêm';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Đánh thêm sau khi nhận hoặc nhấn «Xong»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Đối thủ có thể đánh thêm sau khi nhận';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Đánh thêm hoặc nói «Bito»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Đối thủ đánh thêm hoặc nói «Bito»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Lượt của bạn — tấn công';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Đối thủ đang tấn công';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Bạn thua — bạn là kẻ ngốc';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Hòa — mọi người đã ra';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Bạn đã ra — chờ kết thúc';
 
   @override
   String get shopPurchaseQueued => 'Đã lưu giao dịch — sẽ áp dụng ở chế độ trực tuyến';
@@ -188,23 +188,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Phiên bản $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Có bản cập nhật';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Đã có phiên bản mới của ứng dụng. Hãy cập nhật để tiếp tục.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Có gì mới';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Cập nhật';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Chúng tôi sẽ cập nhật ứng dụng sau ván này';
 
   @override
   String get loginTitle => 'Đăng nhập';
@@ -525,6 +525,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Đang phát triển';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Người chơi: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Mỗi người nhận 2 lá bài riêng; bàn có 5 lá bài chung.';
+
+  @override
+  String get rulesPokerPlay => 'Vòng cược: preflop, flop, turn và river. Có thể fold, call, bet hoặc raise.';
+
+  @override
+  String get rulesPokerWin => 'Thắng bằng bộ năm lá mạnh nhất (riêng + chung), hoặc người còn lại sau khi người khác fold.';
+
+  @override
   String get gamesRules => 'Luật';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesNoCenter => 'Không bắt đầu ở giữa';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'Đang xem';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'Bạn có thể xem đến khi ván kết thúc';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Hãy hoàn thành ván hiện tại trước';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Cổ điển';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 người';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 người';
 
   @override
   String get gamesDurakModePodkidnoi => 'Đánh thêm';
@@ -620,12 +640,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'Người chơi $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return 'Phòng chờ $name';
   }
 
   @override

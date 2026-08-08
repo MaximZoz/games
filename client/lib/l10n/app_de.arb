@@ -187,6 +187,19 @@
   "durakHintYouLost": "Du hast verloren — du bist der Narr",
   "durakHintYourAttack": "Dein Zug — angreifen",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "In Entwicklung",
+  "rulesPokerPlayers": "Spieler: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Jeder erhält 2 Handkarten; 5 Gemeinschaftskarten liegen auf dem Tisch.",
+  "rulesPokerPlay": "Wettrunden: Preflop, Flop, Turn und River. Fold, Call, Bet oder Raise.",
+  "rulesPokerWin": "Gewonnen wird mit der besten Fünf-Karten-Hand (Hand + Community) oder wenn alle anderen folden.",
   "gamesDurakDeck24": "24 Karten",
   "gamesDurakDeck36": "36 Karten",
   "gamesDurakDeck52": "52 Karten",

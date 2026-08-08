@@ -96,61 +96,61 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get durakActionTake => 'Take';
+  String get durakActionTake => 'Ota';
 
   @override
-  String get durakActionAll => 'All';
+  String get durakActionAll => 'Kaikki';
 
   @override
-  String get durakActionDone => 'Done';
+  String get durakActionDone => 'Valmis';
 
   @override
   String get durakActionBito => 'Beat';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Puolusta';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Puolusta tai siirrä';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'Vastustaja puolustaa';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Heitä kortteja tai «Kaikki» (max 5 ensimmäisessä lyönnissä)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Heitä kortteja tai paina «Kaikki»';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'Vastustaja heittää';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Heitä oton jälkeen tai paina «Valmis»';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'Vastustaja voit heittää oton jälkeen';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Heitä kortti tai sano «Bito»';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'Vastustaja heittää tai sanoo «Bito»';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Sinun vuoro — hyökkää';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'Vastustaja hyökkää';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Hävisit — olet durak';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Tasapeli — kaikki ulos';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Olet ulos — odotetaan loppua';
 
   @override
   String get shopPurchaseQueued => 'Ostos tallennettu — otetaan käyttöön online-tilassa';
@@ -188,23 +188,23 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String settingsAppVersion(String version) {
-    return 'Version $version';
+    return 'Versio $version';
   }
 
   @override
-  String get appUpdateTitle => 'Update available';
+  String get appUpdateTitle => 'Päivitys saatavilla';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Uusi versio sovelluksesta on saatavilla. Päivitä jatkaaksesi.';
 
   @override
-  String get appUpdateWhatsNew => 'What\'s new';
+  String get appUpdateWhatsNew => 'Uutta';
 
   @override
-  String get appUpdateOk => 'Update';
+  String get appUpdateOk => 'Päivitä';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Päivitämme sovelluksen tämän pelin jälkeen';
 
   @override
   String get loginTitle => 'Kirjaudu sisään';
@@ -525,6 +525,26 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Pokeri';
+
+  @override
+  String get gamesInDevelopment => 'Kehityksessä';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Pelaajat: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Jokainen saa 2 taskukorttia; pöytään jaetaan 5 yhteistä korttia.';
+
+  @override
+  String get rulesPokerPlay => 'Panoskierrokset: preflop, flop, turn ja river. Fold, call, bet tai raise.';
+
+  @override
+  String get rulesPokerWin => 'Paras viiden kortin käsi (tasku + yhteiset) voittaa, tai viimeinen foldien jälkeen.';
+
+  @override
   String get gamesRules => 'Säännöt';
 
   @override
@@ -558,16 +578,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesNoCenter => 'Ei aloitusta keskeltä';
 
   @override
-  String get gamesObservation => 'Spectating';
+  String get gamesObservation => 'Katsele';
 
   @override
-  String get gamesObservationHint => 'You can watch until the game ends';
+  String get gamesObservationHint => 'Voit katsoa pelin loppuun';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Viimeistele ensin nykyinen peli';
 
   @override
-  String get gamesVariantClassic => 'Classic';
+  String get gamesVariantClassic => 'Klassinen';
 
   @override
   String get gamesVariantGomoku => 'Gomoku';
@@ -576,10 +596,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesVariantUltimate => 'Ultimate';
 
   @override
-  String get gamesVariantMulti3 => '3 players';
+  String get gamesVariantMulti3 => '3 pelaajaa';
 
   @override
-  String get gamesVariantMulti4 => '4 players';
+  String get gamesVariantMulti4 => '4 pelaajaa';
 
   @override
   String get gamesDurakModePodkidnoi => 'Lisäys';
@@ -620,12 +640,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String lobbyPlayersCount(int count, int maxPlayers) {
-    return 'Players $count/$maxPlayers';
+    return 'Pelaajat $count/$maxPlayers';
   }
 
   @override
   String lobbyNamed(String name) {
-    return 'Lobby $name';
+    return 'Aula $name';
   }
 
   @override

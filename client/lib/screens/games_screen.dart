@@ -895,6 +895,11 @@ class _GamesPageContent extends ConsumerWidget {
             isOffline: isOffline,
             stakeOptionsList: stakeOptionsList,
           ),
+          const SizedBox(height: 16),
+          _PokerGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
+          ),
         ],
       );
       if (!centerCards) return column;
@@ -1650,6 +1655,165 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 }
 
+/// Карточка «Покер» — превью настроек; игра пока в разработке.
+class _PokerGameCard extends StatefulWidget {
+  const _PokerGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  State<_PokerGameCard> createState() => _PokerGameCardState();
+}
+
+class _PokerGameCardState extends State<_PokerGameCard> {
+  static const _playerOptions = <int>[2, 4, 6, 9];
+
+  int _players = 6;
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+
+  void _cyclePlayers() {
+    final i = _playerOptions.indexOf(_players);
+    setState(() {
+      _players = _playerOptions[(i < 0 ? 0 : i + 1) % _playerOptions.length];
+    });
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      final i = turnTimeOptions.indexOf(_turnTimeSec);
+      _turnTimeSec =
+          turnTimeOptions[(i < 0 ? 0 : i + 1) % turnTimeOptions.length];
+    });
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    setState(() {
+      _stakeBronze = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    });
+  }
+
+  void _showRules(BuildContext context) {
+    final l10n = context.l10n;
+    final lines = <String>[
+      l10n.rulesPokerPlayers(_players),
+      if (!widget.isOffline)
+        _turnTimeSec <= 0
+            ? l10n.rulesNoTimeLimit
+            : l10n.rulesTurnTime(formatTurnTime(_turnTimeSec)),
+      if (!widget.isOffline && _stakeBronze > 0)
+        l10n.rulesStake(formatStakeAmount(_stakeBronze)),
+      l10n.rulesPokerIntro,
+      l10n.rulesPokerPlay,
+      l10n.rulesPokerWin,
+    ];
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines(lines),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+      });
+    }
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: true,
+        icon: Icons.groups_rounded,
+        label: '$_players',
+        onTap: _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesPoker,
+        icon: Icons.casino_rounded,
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: widget.isOffline ? null : _cycleStake,
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.textSecondary.withValues(alpha: 0.22),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+            horizontal: 12,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.construction_rounded,
+                size: 18,
+                color: AppColors.textSecondary.withValues(alpha: 0.9),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.gamesInDevelopment,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TictactoeGameCard extends StatelessWidget {
   const _TictactoeGameCard({
     required this.isCreating,
@@ -2252,9 +2416,7 @@ class _InviteCard extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                inv.gameType == 'durak'
-                                    ? context.l10n.gamesDurak
-                                    : context.l10n.gamesTicTacToe,
+                                _inviteGameTitle(context, inv.gameType),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.textPrimary,
@@ -2403,6 +2565,17 @@ class _InviteCard extends ConsumerWidget {
   }
 }
 
+String _inviteGameTitle(BuildContext context, String gameType) {
+  switch (gameType) {
+    case 'durak':
+      return context.l10n.gamesDurak;
+    case 'poker':
+      return context.l10n.gamesPoker;
+    default:
+      return context.l10n.gamesTicTacToe;
+  }
+}
+
 class _InviteGameIcon extends StatelessWidget {
   const _InviteGameIcon({required this.gameType});
 
@@ -2410,7 +2583,19 @@ class _InviteGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDurak = gameType == 'durak';
+    final IconData? materialIcon;
+    final Widget child;
+    switch (gameType) {
+      case 'durak':
+        materialIcon = null;
+        child = const DurakGameIcon(size: 26, color: Colors.white);
+      case 'poker':
+        materialIcon = Icons.casino_rounded;
+        child = Icon(materialIcon, color: Colors.white, size: 26);
+      default:
+        materialIcon = Icons.grid_3x3_rounded;
+        child = Icon(materialIcon, color: Colors.white, size: 26);
+    }
     return Container(
       width: 44,
       height: 44,
@@ -2423,9 +2608,7 @@ class _InviteGameIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: isDurak
-          ? const DurakGameIcon(size: 26, color: Colors.white)
-          : const Icon(Icons.grid_3x3_rounded, color: Colors.white, size: 26),
+      child: child,
     );
   }
 }

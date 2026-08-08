@@ -187,6 +187,19 @@
   "durakHintYouLost": "Du tabte — du er narren",
   "durakHintYourAttack": "Din tur — angrib",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "Under udvikling",
+  "rulesPokerPlayers": "Spillere: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Hver spiller får 2 hulkort; 5 fælleskort lægges på bordet.",
+  "rulesPokerPlay": "Indsatserunder: preflop, flop, turn og river. Fold, call, bet eller raise.",
+  "rulesPokerWin": "Den bedste femkorts-hånd (hul + fælles) vinder, eller den sidste spiller efter folds.",
   "gamesDurakDeck24": "24 kort",
   "gamesDurakDeck36": "36 kort",
   "gamesDurakDeck52": "52 kort",

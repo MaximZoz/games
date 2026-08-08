@@ -108,49 +108,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get durakActionBito => 'Battu';
 
   @override
-  String get durakHintDefend => 'Defend';
+  String get durakHintDefend => 'Défendez';
 
   @override
-  String get durakHintDefendOrTransfer => 'Defend or transfer';
+  String get durakHintDefendOrTransfer => 'Défendez ou transférez';
 
   @override
-  String get durakHintOpponentDefends => 'Opponent is defending';
+  String get durakHintOpponentDefends => 'L\'adversaire défend';
 
   @override
-  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+  String get durakHintThrowInFirst => 'Ajoutez des cartes ou « Tout » (max 5 au premier battu)';
 
   @override
-  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+  String get durakHintThrowIn => 'Ajoutez des cartes ou touchez « Tout »';
 
   @override
-  String get durakHintOpponentThrows => 'Opponent is throwing in';
+  String get durakHintOpponentThrows => 'L\'adversaire ajoute';
 
   @override
-  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+  String get durakHintTakeFollow => 'Ajoutez après la prise ou touchez « Terminé »';
 
   @override
-  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+  String get durakHintOpponentTakeFollow => 'L\'adversaire peut ajouter après la prise';
 
   @override
-  String get durakHintBito => 'Throw in a card or say “Beat”';
+  String get durakHintBito => 'Ajoutez une carte ou dites « Battu »';
 
   @override
-  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+  String get durakHintOpponentBito => 'L\'adversaire ajoute ou dit « Battu »';
 
   @override
-  String get durakHintYourAttack => 'Your turn — attack';
+  String get durakHintYourAttack => 'Votre tour — attaquez';
 
   @override
-  String get durakHintOpponentAttack => 'Opponent is attacking';
+  String get durakHintOpponentAttack => 'L\'adversaire attaque';
 
   @override
-  String get durakHintYouLost => 'You lost — you’re the fool';
+  String get durakHintYouLost => 'Vous avez perdu — vous êtes le durak';
 
   @override
-  String get durakHintDrawAllOut => 'Draw — everyone went out';
+  String get durakHintDrawAllOut => 'Égalité — tout le monde est sorti';
 
   @override
-  String get durakHintYouFinished => 'You’re out — waiting for the end';
+  String get durakHintYouFinished => 'Vous êtes sorti — en attente de la fin';
 
   @override
   String get shopPurchaseQueued => 'Achat enregistré — sera appliqué en mode en ligne';
@@ -195,7 +195,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appUpdateTitle => 'Mise à jour disponible';
 
   @override
-  String get appUpdateBody => 'A new version of the app is available. Please update to continue.';
+  String get appUpdateBody => 'Une nouvelle version de l\'application est disponible. Mettez à jour pour continuer.';
 
   @override
   String get appUpdateWhatsNew => 'Nouveautés';
@@ -204,7 +204,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appUpdateOk => 'Mettre à jour';
 
   @override
-  String get appUpdateLaterBanner => 'We\'ll update the app after this game';
+  String get appUpdateLaterBanner => 'Nous mettrons l\'application à jour après cette partie';
 
   @override
   String get loginTitle => 'Connexion';
@@ -525,6 +525,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'En développement';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Joueurs : $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Chaque joueur reçoit 2 cartes privées ; 5 cartes communes sont mises sur la table.';
+
+  @override
+  String get rulesPokerPlay => 'Tours de mise : préflop, flop, turn et river. Fold, call, bet ou raise.';
+
+  @override
+  String get rulesPokerWin => 'Gagne la meilleure main de cinq cartes (privées + communes), ou le dernier joueur après les folds.';
+
+  @override
   String get gamesRules => 'Règles';
 
   @override
@@ -561,10 +581,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesObservation => 'Spectateur';
 
   @override
-  String get gamesObservationHint => 'Vous pouvez regarder jusqu’à la fin';
+  String get gamesObservationHint => 'Vous pouvez regarder jusqu\'à la fin de la partie';
 
   @override
-  String get gamesFinishCurrentFirst => 'Finish your current game first';
+  String get gamesFinishCurrentFirst => 'Terminez d\'abord votre partie en cours';
 
   @override
   String get gamesVariantClassic => 'Classique';
@@ -610,10 +630,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesDurakOfflineBot => 'Jouez contre un bot, sans mise ni limite de temps.';
 
   @override
-  String get rulesDurakAttack => 'L’attaquant pose des cartes ; le défenseur les bat (même couleur plus haute, ou un atout). Un atout ne se bat que par un atout plus haut.';
+  String get rulesDurakAttack => 'L\'attaquant pose des cartes ; le défenseur les bat (même couleur plus haute, ou un atout). Un atout ne se bat que par un atout plus haut.';
 
   @override
-  String get rulesDurakBeat => 'Quand toutes les cartes sont battues, l’attaquant dit « Battu » et les cartes vont au discard. Sinon le défenseur prend tout sur la table.';
+  String get rulesDurakBeat => 'Quand toutes les cartes sont battues, l\'attaquant dit « Battu » et les cartes vont au discard. Sinon le défenseur prend tout sur la table.';
 
   @override
   String get rulesDurakLoser => 'Le perdant est celui qui a encore des cartes à la fin — le « durak ».';
