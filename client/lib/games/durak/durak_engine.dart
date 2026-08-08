@@ -1,12 +1,16 @@
 import 'card.dart';
 
+/// Режим игры.
+const durakModePodkidnoi = 'podkidnoi';
+const durakModePerevodnoi = 'perevodnoi';
+
 /// Кто сейчас должен сделать ход.
 enum DurakTurn {
-  attacker, // атакующий кладёт первую карту атаки или подкидывает
-  defender, // защитник бьёт очередную атаку
-  throwIn, // пачка подкида до «Все» (в т.ч. первый отбой ≤5)
-  attackerFollowUp, // атакующий может подкинуть или сказать «Бито»
-  takeFollowUp, // защитник берёт; атакующий может подкинуть вдогонку
+  attacker, // атакующий кладёт первую карту атаки
+  defender, // защитник бьёт (или переводит)
+  throwIn, // пачка подкида до «Все»
+  attackerFollowUp, // очередь подкида после полного отбоя / «Бито»
+  takeFollowUp, // защитник берёт; очередь подкида вдогонку
 }
 
 /// Пара «атака / защита» на столе. [defense] = null — карта ещё не бита.
@@ -21,17 +25,6 @@ class TablePair {
   bool get isBeaten => defense != null;
 }
 
-/// Итог хода (для UI / бота).
-class DurakStep {
-  const DurakStep({required this.type, this.card, this.pair});
-
-  final DurakStepType type;
-  final PlayingCard? card;
-  final TablePair? pair;
-}
-
-enum DurakStepType { attack, defend, take, done, refill, gameOver }
-
 /// Ошибка правил игры (для UI-подсветки/защитного кода).
 class DurakRuleError implements Exception {
   const DurakRuleError(this.message);
@@ -40,10 +33,7 @@ class DurakRuleError implements Exception {
   String toString() => 'DurakRuleError: $message';
 }
 
-/// Состояние партии «Подкидной дурак» на N игроков (N=2 в MVP).
-///
-/// Ход всегда: `attackerIndex` атакует `defenderIndex = (attackerIndex+1) % N`.
-/// Максимум пар на столе = `maxAttacks` (6, ограничено картами в руке защитника).
+/// Состояние партии «Дурак» на 2–4 игроков (подкидной / переводной).
 class DurakGame {
   DurakGame({
     required this.hands,
@@ -51,27 +41,36 @@ class DurakGame {
     required this.trump,
     required this.attackerIndex,
     required this.turn,
+    this.mode = durakModePodkidnoi,
     List<TablePair>? table,
     List<PlayingCard>? bito,
     int? maxAttacks,
+    int? throwerIndex,
+    Set<int>? passed,
+    List<int>? finishedIndices,
     this.loserIndex,
     this.firstRound = false,
   })  : table = table ?? <TablePair>[],
         bito = bito ?? <PlayingCard>[],
-        maxAttacks = maxAttacks ?? 6;
+        maxAttacks = maxAttacks ?? 6,
+        throwerIndex = throwerIndex ?? attackerIndex,
+        passed = passed ?? <int>{},
+        finishedIndices = finishedIndices ?? <int>[];
 
   /// Создать партию: перемешать колоду, раздать по 6, определить козырь
   /// и стартового атакующего (у кого младший козырь).
   factory DurakGame.startNew({
     int playerCount = 2,
     int deckSize = 36,
+    String mode = durakModePodkidnoi,
     int handSize = 6,
     int? seed,
   }) {
     assert(playerCount >= 2 && playerCount <= 4);
+    final normalizedMode =
+        mode == durakModePerevodnoi ? durakModePerevodnoi : durakModePodkidnoi;
     final deck = Deck.standard(deckSize, seed: seed);
     // Козырь — последняя карта в колоде, она же открыта в основании.
-    // Не убираем её: добор идёт с верха (removeAt(0)), последней уйдёт козырь.
     final trump = deck.cards.last.suit;
 
     final hands = List.generate(playerCount, (_) => <PlayingCard>[]);
@@ -81,7 +80,6 @@ class DurakGame {
       }
     }
 
-    // Стартовый ход: у кого младший козырь; если ни у кого — первый.
     var starter = 0;
     var bestValue = 100;
     for (var p = 0; p < playerCount; p++) {
@@ -100,7 +98,9 @@ class DurakGame {
       deck: deck,
       trump: trump,
       attackerIndex: starter,
+      throwerIndex: starter,
       turn: DurakTurn.attacker,
+      mode: normalizedMode,
       firstRound: true,
     );
   }
@@ -119,11 +119,15 @@ class DurakGame {
   final List<List<PlayingCard>> hands;
   final Deck deck;
   final Suit trump;
+  final String mode;
   int attackerIndex;
+  int throwerIndex;
   DurakTurn turn;
   final List<TablePair> table;
   final List<PlayingCard> bito;
   final int maxAttacks;
+  final Set<int> passed;
+  final List<int> finishedIndices;
   int? loserIndex;
 
   /// Первый отбой: не больше 5 карт на столе.
@@ -133,13 +137,47 @@ class DurakGame {
   bool endedInDraw = false;
 
   int get playerCount => hands.length;
-  int get defenderIndex => (attackerIndex + 1) % playerCount;
+  int get defenderIndex => nextAliveAfter(attackerIndex);
 
+  bool get isPerevodnoi => mode == durakModePerevodnoi;
   bool get isOver => loserIndex != null || endedInDraw;
 
   /// Верхняя карта козыря (лежит открытой в основании колоды).
   PlayingCard? get openTrumpCard =>
       deck.isEmpty ? null : deck.cards.last;
+
+  bool isFinished(int idx) => finishedIndices.contains(idx);
+
+  bool isAlive(int idx) {
+    if (idx < 0 || idx >= hands.length) return false;
+    return !isFinished(idx);
+  }
+
+  int aliveCount() {
+    var n = 0;
+    for (var i = 0; i < hands.length; i++) {
+      if (isAlive(i)) n++;
+    }
+    return n;
+  }
+
+  int nextAliveAfter(int idx) {
+    final n = hands.length;
+    for (var i = 1; i <= n; i++) {
+      final j = (idx + i) % n;
+      if (isAlive(j)) return j;
+    }
+    return idx;
+  }
+
+  int prevAliveBefore(int idx) {
+    final n = hands.length;
+    for (var i = 1; i <= n; i++) {
+      final j = (idx - i + n) % n;
+      if (isAlive(j)) return j;
+    }
+    return idx;
+  }
 
   /// Ранги, уже присутствующие на столе (для правил подкидывания).
   Set<int> get tableRanks {
@@ -158,7 +196,6 @@ class DurakGame {
       !isOver && bito.isEmpty && firstRound;
 
   int get maxAttacksThisRound {
-    // Как на сервере: отбитые пары + карты в руке защитника.
     final beaten = table.where((p) => p.isBeaten).length;
     var lim = beaten + hands[defenderIndex].length;
     if (lim < 1) lim = 1;
@@ -167,24 +204,55 @@ class DurakGame {
     return lim;
   }
 
-  bool _canThrowInSeat(int playerIndex) {
-    if (playerIndex < 0 || playerIndex >= hands.length) return false;
+  int get transferAttackCap {
+    var cap = maxAttacks;
+    if (cap <= 0) cap = 6;
+    if (isFirstRoundActive && cap > 5) cap = 5;
+    return cap;
+  }
+
+  bool canThrowInSeat(int playerIndex) {
+    if (!isAlive(playerIndex)) return false;
     if (hands[playerIndex].isEmpty) return false;
     if (playerIndex == defenderIndex) return false;
-    // Живые — у кого ещё есть карты (или колода не пуста и слот в игре).
-    final alive = [
-      for (var i = 0; i < hands.length; i++)
-        if (hands[i].isNotEmpty || deck.isNotEmpty) i,
-    ];
-    if (alive.length >= 4) {
-      // Соседи защитника слева/справа по кругу.
-      final di = alive.indexOf(defenderIndex);
-      if (di < 0) return false;
-      final left = alive[(di - 1 + alive.length) % alive.length];
-      final right = alive[(di + 1) % alive.length];
+    if (aliveCount() >= 4) {
+      final left = prevAliveBefore(defenderIndex);
+      final right = nextAliveAfter(defenderIndex);
       return playerIndex == left || playerIndex == right;
     }
     return true;
+  }
+
+  List<PlayingCard> legalThrowInCards(int idx) {
+    if (table.isEmpty || table.length >= maxAttacksThisRound) {
+      return const [];
+    }
+    final ranks = tableRanks;
+    final room = maxAttacksThisRound - table.length;
+    if (room <= 0) return const [];
+    return hands[idx]
+        .where((c) => ranks.contains(c.rank.value))
+        .toList(growable: false);
+  }
+
+  bool canThrowIn(int idx) {
+    if (isOver) return false;
+    if (table.isEmpty) {
+      return idx == attackerIndex &&
+          (turn == DurakTurn.attacker || turn == DurakTurn.attackerFollowUp);
+    }
+    if (!canThrowInSeat(idx) || passed.contains(idx)) return false;
+    switch (turn) {
+      case DurakTurn.defender:
+        // Пока защитник бьёт — подкид начинает атакующий.
+        return idx == attackerIndex && legalThrowInCards(idx).isNotEmpty;
+      case DurakTurn.throwIn:
+      case DurakTurn.attackerFollowUp:
+      case DurakTurn.takeFollowUp:
+        return idx == throwerIndex && legalThrowInCards(idx).isNotEmpty;
+      case DurakTurn.attacker:
+        return false;
+    }
   }
 
   /// Можно ли [card] использовать как первую атаку (или подкидывание).
@@ -199,14 +267,7 @@ class DurakGame {
       }
       return true;
     }
-    if (!_canThrowInSeat(playerIndex)) return false;
-    if (turn != DurakTurn.attacker &&
-        turn != DurakTurn.attackerFollowUp &&
-        turn != DurakTurn.throwIn &&
-        turn != DurakTurn.defender &&
-        turn != DurakTurn.takeFollowUp) {
-      return false;
-    }
+    if (!canThrowIn(playerIndex)) return false;
     return tableRanks.contains(card.rank.value);
   }
 
@@ -227,20 +288,44 @@ class DurakGame {
     );
   }
 
+  bool canTransferWith(PlayingCard card, int playerIndex) {
+    return legalTransferCards(playerIndex).contains(card);
+  }
+
+  List<PlayingCard> legalTransferCards(int idx) {
+    if (isOver || !isPerevodnoi) return const [];
+    if (turn != DurakTurn.defender || idx != defenderIndex) return const [];
+    if (table.isEmpty) return const [];
+    for (final p in table) {
+      if (p.defense != null) return const [];
+    }
+    if (table.length + 1 > transferAttackCap) return const [];
+    final next = nextAliveAfter(idx);
+    if (!isAlive(next)) return const [];
+    if (hands[next].length < table.length + 1) return const [];
+    final rank = table.first.attack.rank;
+    return hands[idx]
+        .where((c) => c.rank == rank)
+        .toList(growable: false);
+  }
+
   bool get canDefenderTake =>
       turn == DurakTurn.defender &&
       table.isNotEmpty &&
       hands[defenderIndex].isNotEmpty;
 
-  /// Атакующий имеет право сказать «Бито» когда все карты на столе биты.
+  /// Текущий подкидывающий может сказать «Бито» (всё на столе бито).
   bool get canAttackerSayBito =>
       turn == DurakTurn.attackerFollowUp &&
       table.isNotEmpty &&
-      table.every((p) => p.isBeaten);
+      table.every((p) => p.isBeaten) &&
+      isAlive(throwerIndex);
 
-  /// Атакующий подтверждает конец подкида вдогонку.
+  /// Текущий подкидывающий подтверждает конец подкида вдогонку.
   bool get canAttackerConfirmTake =>
-      turn == DurakTurn.takeFollowUp && table.isNotEmpty;
+      turn == DurakTurn.takeFollowUp &&
+      table.isNotEmpty &&
+      isAlive(throwerIndex);
 
   /// Положить атаку/подкидывание [card].
   void attack(PlayingCard card, {int? playerIndex}) {
@@ -248,9 +333,9 @@ class DurakGame {
   }
 
   /// Положить сразу несколько карт атаки/подкида.
-  /// Пустой стол — все одного ранга; иначе каждый ранг уже на столе.
   void attackMany(List<PlayingCard> cards, {int? playerIndex}) {
-    final pIndex = playerIndex ?? attackerIndex;
+    final pIndex = playerIndex ??
+        (table.isEmpty ? attackerIndex : throwerIndex);
     if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
@@ -279,12 +364,14 @@ class DurakGame {
       table.add(TablePair(c));
     }
     if (turn == DurakTurn.takeFollowUp) {
+      throwerIndex = pIndex;
       return;
     }
-    // Пачка подкида: ход остаётся у атакующего до «Все» / лимита (первый отбой ≤5).
+    // Пачка подкида: ход остаётся у текущего до «Все» / лимита.
+    throwerIndex = pIndex;
     turn = DurakTurn.throwIn;
     if (!_canThrowMore(pIndex)) {
-      turn = DurakTurn.defender;
+      _finishThrowIn();
     }
   }
 
@@ -294,23 +381,34 @@ class DurakGame {
     return hands[playerIndex].any((c) => ranks.contains(c.rank.value));
   }
 
-  /// «Все» — закончить пачку подкида, ход защитнику.
-  void confirmThrowAll({int? playerIndex}) {
-    final pIndex = playerIndex ?? attackerIndex;
-    if (turn != DurakTurn.throwIn || pIndex != attackerIndex) {
-      throw const DurakRuleError('нельзя подтвердить подкид');
+  void _finishThrowIn() {
+    passed.clear();
+    if (table.isEmpty) {
+      turn = DurakTurn.attacker;
+      throwerIndex = attackerIndex;
+      return;
     }
     turn = DurakTurn.defender;
+    throwerIndex = attackerIndex;
+  }
+
+  /// «Все» — закончить пачку подкида текущего игрока → защитнику.
+  void confirmThrowAll({int? playerIndex}) {
+    final pIndex = playerIndex ?? throwerIndex;
+    if (turn != DurakTurn.throwIn || pIndex != throwerIndex) {
+      throw const DurakRuleError('нельзя подтвердить подкид');
+    }
+    _finishThrowIn();
   }
 
   /// Кнопка «Все» — только если ещё есть что подкинуть (иначе авто-отбой).
   bool get canConfirmThrowAll =>
       turn == DurakTurn.throwIn &&
       table.isNotEmpty &&
-      _canThrowMore(attackerIndex);
+      isAlive(throwerIndex) &&
+      _canThrowMore(throwerIndex);
 
-  /// Бить пару [pairIndex] картой [card]. Если индекс не задан — первая, которую
-  /// карта реально бьёт.
+  /// Бить пару [pairIndex] картой [card].
   void defend(PlayingCard card, {int? playerIndex, int? pairIndex}) {
     final pIndex = playerIndex ?? defenderIndex;
     if (!canDefendWith(card, pIndex, pairIndex: pairIndex)) {
@@ -325,27 +423,37 @@ class DurakGame {
     }
     hands[pIndex].remove(card);
     table[idx] = table[idx].withDefense(card);
-    // Рука пуста: отбитое — в биту, неотбитое — обратно атакующему.
     if (hands[pIndex].isEmpty) {
       _resolveDefenderEmpty();
       return;
     }
-    // Если все побиты — ждём подкидывания или «бито».
     if (table.every((p) => p.isBeaten)) {
       turn = DurakTurn.attackerFollowUp;
-      // Атакующий без карт — сразу бито.
-      if (hands[attackerIndex].isEmpty) {
-        sayBito();
-      }
+      throwerIndex = attackerIndex;
+      passed.clear();
+      _skipThrowersWithoutCards();
     }
   }
 
-  /// У защитника кончились карты: отбитые пары в отбой, неотбитые атаки —
-  /// атакующему; ход — бывшему защитнику.
+  /// Переводной: защитник кладёт карту того же ранга — атака на следующего.
+  void transfer(PlayingCard card, {int? playerIndex}) {
+    final pIndex = playerIndex ?? defenderIndex;
+    if (!canTransferWith(card, pIndex)) {
+      throw const DurakRuleError('нельзя перевести этой картой');
+    }
+    hands[pIndex].remove(card);
+    table.add(TablePair(card));
+    attackerIndex = pIndex;
+    throwerIndex = pIndex;
+    passed.clear();
+    turn = DurakTurn.defender;
+  }
+
   void _resolveDefenderEmpty() {
     if (isOver || table.isEmpty) return;
     if (hands[defenderIndex].isNotEmpty) return;
     final atk = attackerIndex;
+    final def = defenderIndex;
     for (final p in table) {
       if (p.defense != null) {
         bito.add(p.attack);
@@ -356,71 +464,142 @@ class DurakGame {
     }
     _sortHand(hands[atk], trump);
     table.clear();
+    passed.clear();
     _refillHands();
-    attackerIndex = (atk + 1) % playerCount;
     firstRound = false;
     _checkGameOver();
+    if (isOver) return;
+    attackerIndex = isAlive(def) ? def : nextAliveAfter(def);
+    throwerIndex = attackerIndex;
     turn = DurakTurn.attacker;
   }
 
-  /// Защитник объявляет «Беру» — атакующий может подкинуть вдогонку.
+  /// Защитник объявляет «Беру» — очередь подкида вдогонку.
   void take() {
     if (turn != DurakTurn.defender || table.isEmpty) {
       throw const DurakRuleError('брать сейчас нельзя');
     }
-    // Пустая рука — закрытие раунда, не «взять».
     if (hands[defenderIndex].isEmpty) {
       _resolveDefenderEmpty();
       return;
     }
     turn = DurakTurn.takeFollowUp;
-    // Нечего подкинуть — сразу забираем.
-    if (!_hasThrowIn(attackerIndex)) {
-      confirmTake();
-    }
+    throwerIndex = attackerIndex;
+    passed.clear();
+    _skipThrowersWithoutCards();
   }
 
-  bool _hasThrowIn(int playerIndex) {
-    if (table.isEmpty) return false;
-    if (table.length >= maxAttacksThisRound) return false;
-    final ranks = tableRanks;
-    return hands[playerIndex].any((c) => ranks.contains(c.rank.value));
-  }
-
-  /// Атакующий закончил подкид вдогонку — защитник забирает стол.
-  void confirmTake() {
+  /// Атакующий/подкидывающий закончил подкид вдогонку — пас или забор стола.
+  void confirmTake({int? playerIndex}) {
+    final pIndex = playerIndex ?? throwerIndex;
     if (turn != DurakTurn.takeFollowUp || table.isEmpty) {
       throw const DurakRuleError('подтвердить взятие сейчас нельзя');
     }
+    if (pIndex != throwerIndex) {
+      throw const DurakRuleError('подтвердить взятие сейчас нельзя');
+    }
+    passed.add(pIndex);
+    final next = _nextThrowerAfter(pIndex);
+    if (next < 0) {
+      _resolveTake();
+      return;
+    }
+    throwerIndex = next;
+    _skipThrowersWithoutCards();
+  }
+
+  void _resolveTake() {
     final di = defenderIndex;
     for (final p in table) {
       hands[di].add(p.attack);
       if (p.defense != null) hands[di].add(p.defense!);
     }
     table.clear();
+    passed.clear();
     _sortHand(hands[di], trump);
     _refillHands();
-    attackerIndex = (di + 1) % playerCount;
     firstRound = false;
     _checkGameOver();
+    if (isOver) return;
+    attackerIndex = nextAliveAfter(di);
+    // Как на сервере: ход следующему после защитника.
+    // При take attacker становится next after defender (skipped defender).
+    // Server: AttackerIndex = nextAliveAfter(defender)
+    throwerIndex = attackerIndex;
     turn = DurakTurn.attacker;
   }
 
-  /// Атакующий говорит «Бито».
-  void sayBito() {
-    if (!canAttackerSayBito) {
+  /// Текущий подкидывающий говорит «Бито» (пас очереди).
+  void sayBito({int? playerIndex}) {
+    final pIndex = playerIndex ?? throwerIndex;
+    if (!canAttackerSayBito || pIndex != throwerIndex) {
       throw const DurakRuleError('нельзя сказать «Бито»');
     }
+    passed.add(pIndex);
+    final next = _nextThrowerAfter(pIndex);
+    if (next < 0) {
+      _resolveBito();
+      return;
+    }
+    throwerIndex = next;
+    _skipThrowersWithoutCards();
+  }
+
+  void _resolveBito() {
     for (final p in table) {
       bito.add(p.attack);
       if (p.defense != null) bito.add(p.defense!);
     }
     table.clear();
+    passed.clear();
+    final def = defenderIndex;
     _refillHands();
-    attackerIndex = defenderIndex; // ход переходит к бывшему защитнику
     firstRound = false;
     _checkGameOver();
-    turn = isOver ? DurakTurn.attacker : DurakTurn.attacker;
+    if (isOver) return;
+    attackerIndex = isAlive(def) ? def : nextAliveAfter(def);
+    throwerIndex = attackerIndex;
+    turn = DurakTurn.attacker;
+  }
+
+  int _nextThrowerAfter(int idx) {
+    final n = hands.length;
+    for (var i = 1; i <= n; i++) {
+      final j = (idx + i) % n;
+      if (!canThrowInSeat(j)) continue;
+      if (passed.contains(j)) continue;
+      return j;
+    }
+    return -1;
+  }
+
+  void _skipThrowersWithoutCards() {
+    for (var hops = 0; hops <= hands.length; hops++) {
+      if (turn != DurakTurn.attackerFollowUp &&
+          turn != DurakTurn.takeFollowUp) {
+        return;
+      }
+      final eligible = canThrowInSeat(throwerIndex);
+      final hasCards =
+          eligible && legalThrowInCards(throwerIndex).isNotEmpty;
+      if (hasCards) return;
+      if (eligible) passed.add(throwerIndex);
+      final next = _nextThrowerAfter(throwerIndex);
+      if (next < 0) {
+        if (turn == DurakTurn.takeFollowUp) {
+          _resolveTake();
+        } else {
+          _resolveBito();
+        }
+        return;
+      }
+      throwerIndex = next;
+    }
+    if (turn == DurakTurn.takeFollowUp) {
+      _resolveTake();
+    } else if (turn == DurakTurn.attackerFollowUp) {
+      _resolveBito();
+    }
   }
 
   /// Добор: атакующий → остальные по часовой (кроме защитника) → защитник.
@@ -433,22 +612,39 @@ class DurakGame {
       if (def >= 0 && def < playerCount) def,
     ];
     for (final p in order) {
+      if (!isAlive(p)) continue;
       final need = 6 - hands[p].length;
       if (need <= 0) continue;
-      final drawnAll = deck.length; // включая козырь
+      final drawnAll = deck.length;
       final maxDraw = drawnAll < need ? drawnAll : need;
       for (var i = 0; i < maxDraw; i++) {
-        // Берём с верха, козырь-карта остаётся в конце и уйдёт последней.
         hands[p].add(deck.cards.removeAt(0));
       }
       _sortHand(hands[p], trump);
     }
   }
 
+  void _markFinishedIfEmpty(int idx) {
+    if (idx < 0 || idx >= hands.length) return;
+    if (hands[idx].isNotEmpty) return;
+    if (isFinished(idx)) return;
+    finishedIndices.add(idx);
+  }
+
   void _checkGameOver() {
     if (deck.isNotEmpty) return;
-    final withCards =
-        List.generate(playerCount, (i) => i).where((i) => hands[i].isNotEmpty);
+    for (var i = 0; i < hands.length; i++) {
+      _markFinishedIfEmpty(i);
+    }
+    final withCards = <int>[];
+    for (var i = 0; i < hands.length; i++) {
+      if (isFinished(i)) continue;
+      if (hands[i].isNotEmpty) {
+        withCards.add(i);
+      } else {
+        _markFinishedIfEmpty(i);
+      }
+    }
     if (withCards.length <= 1) {
       if (withCards.isEmpty) {
         endedInDraw = true;

@@ -287,16 +287,52 @@ void main() {
         turn: DurakTurn.attacker,
       );
       game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
+      // Есть что подкинуть → throwIn; «Все» → ход защитнику.
+      expect(game.turn, DurakTurn.throwIn);
+      game.confirmThrowAll(playerIndex: 0);
+      expect(game.turn, DurakTurn.defender);
       game.take();
       expect(game.turn, DurakTurn.takeFollowUp);
       expect(game.canAttackWith(PlayingCard(Rank.nine, Suit.diamonds), 0), isTrue);
       game.attack(PlayingCard(Rank.nine, Suit.diamonds), playerIndex: 0);
       expect(game.table.length, 2);
       expect(game.turn, DurakTurn.takeFollowUp);
-      game.confirmTake();
+      game.confirmTake(playerIndex: 0);
       expect(game.table, isEmpty);
       expect(game.hands[1].length, greaterThanOrEqualTo(4));
       expect(game.turn, DurakTurn.attacker);
+    });
+
+    test('perevodnoi: defender can transfer same rank', () {
+      final game = DurakGame(
+        hands: [
+          [PlayingCard(Rank.six, Suit.hearts)],
+          [
+            PlayingCard(Rank.six, Suit.diamonds),
+            PlayingCard(Rank.nine, Suit.clubs),
+          ],
+          [
+            PlayingCard(Rank.ace, Suit.spades),
+            PlayingCard(Rank.king, Suit.spades),
+          ],
+        ],
+        deck: Deck([
+          for (var i = 0; i < 12; i++)
+            PlayingCard(Rank.ten, Suit.clubs),
+        ]),
+        trump: Suit.clubs,
+        attackerIndex: 0,
+        turn: DurakTurn.attacker,
+        mode: durakModePerevodnoi,
+      );
+      game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
+      expect(game.turn, DurakTurn.defender);
+      expect(game.canTransferWith(PlayingCard(Rank.six, Suit.diamonds), 1), isTrue);
+      game.transfer(PlayingCard(Rank.six, Suit.diamonds), playerIndex: 1);
+      expect(game.attackerIndex, 1);
+      expect(game.defenderIndex, 2);
+      expect(game.table.length, 2);
+      expect(game.turn, DurakTurn.defender);
     });
 
     test('bot defends with minimum higher card of same suit', () {
@@ -331,10 +367,15 @@ void main() {
         turn: DurakTurn.attacker,
       );
       game.attack(PlayingCard(Rank.six, Suit.hearts), playerIndex: 0);
+      if (game.turn == DurakTurn.throwIn) {
+        game.confirmThrowAll(playerIndex: 0);
+      }
       const bot = DurakBot(index: 1);
       bot.step(game);
-      expect(game.table, isNotEmpty);
-      expect(game.table.first.defense, PlayingCard(Rank.seven, Suit.hearts));
+      // Нечего подкинуть → авто-бито (как очередь thrower на сервере).
+      expect(game.table, isEmpty);
+      expect(game.bito, contains(PlayingCard(Rank.seven, Suit.hearts)));
+      expect(game.bito, contains(PlayingCard(Rank.six, Suit.hearts)));
     });
   });
 }

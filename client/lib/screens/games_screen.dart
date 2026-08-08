@@ -93,8 +93,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onPlayersChipTap() {
-    final offline = ref.read(isOfflineProvider);
-    if (offline) return;
     setState(() {
       if (!_playersControlActive) {
         // Переключились с режимов → игроки фиолетовые, режим «Классика» тёмный.
@@ -116,16 +114,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onModeChipTap() {
-    final offline = ref.read(isOfflineProvider);
     setState(() {
-      final cycle = offline
-          ? const [variantClassic, variantGomoku]
-          : _modeCycleVariants;
+      const cycle = _modeCycleVariants;
       if (_playersControlActive ||
           _selectedVariant == variantMulti3 ||
           _selectedVariant == variantMulti4) {
-        // С игроков → 2 участника и сразу следующий режим (не оставлять «Классику»
-        // без смены, если уже были на 2 / classic).
+        // С игроков → 2 участника и сразу следующий режим.
         _playersControlActive = false;
         final base = (_selectedVariant == variantMulti3 ||
                 _selectedVariant == variantMulti4)
@@ -259,14 +253,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
 
     void playOffline() {
-      final offlineVariant = (_selectedVariant == variantClassic ||
-              _selectedVariant == variantGomoku)
-          ? _selectedVariant
-          : variantClassic;
+      final offlineVariant = parseVariant(_selectedVariant);
       final qs = <String, String>{
         'variant': offlineVariant,
         'grid': '${gridSizeForVariant(offlineVariant)}',
-        // В офлайне всегда чередуем, кто начинает.
+        // В офлайне всегда чередуем, кто начинает (для 2 игроков).
         'swap': '1',
       };
       final uri = Uri(
@@ -1543,7 +1534,6 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 
   void _cyclePlayers() {
-    if (widget.isOffline) return; // оффлайн — всегда 1×1 с ботом
     setState(() {
       _players = _players == 4 ? 2 : _players + 1;
       _deckSize = durakClampDeckForPlayers(_players, _deckSize);
@@ -1561,8 +1551,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
 
   void _cycleDeck() {
     setState(() {
-      final players = widget.isOffline ? 2 : _players;
-      final options = durakDeckSizesForPlayers(players);
+      final options = durakDeckSizesForPlayers(_players);
       final i = options.indexOf(_deckSize);
       _deckSize = options[(i < 0 ? 0 : i + 1) % options.length];
     });
@@ -1628,21 +1617,22 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
 
     final chips = <Widget>[
       GameCardChip(
-        selected: !widget.isOffline,
+        selected: true,
         icon: Icons.groups_rounded,
         label: '$_players',
-        onTap: busy || widget.isOffline ? null : _cyclePlayers,
+        onTap: busy ? null : _cyclePlayers,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
-      GameCardChip(
-        selected: !widget.isOffline,
-        icon: Icons.timer_outlined,
-        label: formatTurnTime(_turnTimeSec),
-        onTap: busy ? null : _cycleTurnTime,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: busy ? null : _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
       GameCardChip(
         selected: true,
         icon: Icons.swap_horiz_rounded,
@@ -1688,8 +1678,16 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
-        onOfflinePlay: () =>
-            context.push('/games/durak/offline?deck=$_deckSize'),
+        onOfflinePlay: () {
+          final qs = <String, String>{
+            'deck': '$_deckSize',
+            'players': '$_players',
+            'mode': _gameMode,
+          };
+          context.push(
+            Uri(path: '/games/durak/offline', queryParameters: qs).toString(),
+          );
+        },
         isCreating: _creating,
         isFinding: _finding,
         isDesktop: isDesktop,
@@ -1847,12 +1845,12 @@ class _TictactoeGameCard extends StatelessWidget {
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
     final busy = isCreating || isFinding;
     // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
-    final playersSelected = !isOffline && playersControlActive;
+    final playersSelected = playersControlActive;
     final playersLabel = playersSelected
         ? '${configForVariant(variant).maxPlayers}'
         : '2';
     // Кнопка режима: активна → Классика/Гомоку/Ультимейт; иначе тёмная «Классика».
-    final modeSelected = isOffline || !playersControlActive;
+    final modeSelected = !playersControlActive;
     final modeVariant = modeSelected
         ? parseVariant(variant)
         : variantClassic;
@@ -1862,19 +1860,18 @@ class _TictactoeGameCard extends StatelessWidget {
             ? Icons.dashboard_customize_rounded
             : Icons.close_rounded;
     return [
-      if (!isOffline)
-        _selectableChip(
-          selected: playersSelected,
-          onTap: busy ? null : onPlayersChipTap,
-          icon: Icons.groups_rounded,
-          label: playersLabel,
-          theme: theme,
-          padV: padV,
-          padH: padH,
-          iconSz: iconSz,
-          fontSz: fontSz,
-          compact: compact,
-        ),
+      _selectableChip(
+        selected: playersSelected,
+        onTap: busy ? null : onPlayersChipTap,
+        icon: Icons.groups_rounded,
+        label: playersLabel,
+        theme: theme,
+        padV: padV,
+        padH: padH,
+        iconSz: iconSz,
+        fontSz: fontSz,
+        compact: compact,
+      ),
       if (!isOffline)
         Material(
           color: Colors.transparent,

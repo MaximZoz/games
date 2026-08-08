@@ -462,9 +462,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (_, state) {
                   final q = state.uri.queryParameters;
                   final size = int.tryParse(q['deck'] ?? '') ?? 36;
+                  final players =
+                      (int.tryParse(q['players'] ?? '') ?? 2).clamp(2, 4);
+                  final mode = q['mode'] == 'perevodnoi'
+                      ? 'perevodnoi'
+                      : 'podkidnoi';
                   return _noTransitionPage(
                     state,
-                    DurakOfflineScreen(deckSize: size),
+                    DurakOfflineScreen(
+                      deckSize: size,
+                      playerCount: players,
+                      mode: mode,
+                    ),
                   );
                 },
               ),

@@ -1,13 +1,12 @@
 import 'card.dart';
 import 'durak_engine.dart';
 
-/// Простой бот «средней» силы:
-/// - атакует младшей не-козырной картой (или минимальным козырем, если нет);
-/// - защищается минимально старшей той же масти, козырь — только если нет
-///   альтернатив;
-/// - подкидывает только некозырные ранги, если такие есть на столе;
-/// - «берёт», если не может отбить любую из неотбитых пар;
-/// - «бито» — как только все карты отбиты.
+/// Простой бот «средней» силы для офлайна (2–4 игрока, подкидной/переводной):
+/// - атакует младшей не-козырной картой (или минимальным козырем);
+/// - защищается минимально; в переводном — переводит дешёвой картой, если выгодно;
+/// - подкидывает только некозырные ранги;
+/// - «берёт», если не может отбить;
+/// - «бито»/«готово» — когда нечего подкинуть.
 class DurakBot {
   const DurakBot({required this.index});
 
@@ -15,60 +14,76 @@ class DurakBot {
 
   /// Выполнить один шаг за бота. Возвращает [true], если что-то сделано.
   bool step(DurakGame game) {
-    if (game.isOver) return false;
-    if (index == game.attackerIndex) {
-      return _stepAttacker(game);
-    }
-    if (index == game.defenderIndex && game.turn == DurakTurn.defender) {
+    if (game.isOver || !game.isAlive(index)) return false;
+
+    if (game.turn == DurakTurn.defender && index == game.defenderIndex) {
       return _stepDefender(game);
+    }
+
+    // Подкид / атака / бито / готово — только текущий thrower/attacker.
+    if (game.turn == DurakTurn.attacker && index == game.attackerIndex) {
+      return _stepFirstAttack(game);
+    }
+    if (game.turn == DurakTurn.throwIn && index == game.throwerIndex) {
+      return _stepThrowOrPass(game);
+    }
+    if (game.turn == DurakTurn.attackerFollowUp &&
+        index == game.throwerIndex) {
+      return _stepThrowOrPass(game);
+    }
+    if (game.turn == DurakTurn.takeFollowUp && index == game.throwerIndex) {
+      return _stepThrowOrPass(game);
+    }
+    // Пока защитник бьёт — атакующий может подкинуть.
+    if (game.turn == DurakTurn.defender &&
+        index == game.attackerIndex &&
+        game.canThrowIn(index)) {
+      return _tryThrowOne(game);
     }
     return false;
   }
 
-  bool _stepAttacker(DurakGame game) {
-    if (game.turn == DurakTurn.attacker && game.table.isEmpty) {
-      final card = _pickAttackCard(game.hands[index], game.trump);
-      if (card == null) return false;
-      game.attack(card, playerIndex: index);
+  bool _stepFirstAttack(DurakGame game) {
+    if (game.table.isNotEmpty) return false;
+    final card = _pickAttackCard(game.hands[index], game.trump);
+    if (card == null) return false;
+    game.attack(card, playerIndex: index);
+    return true;
+  }
+
+  bool _stepThrowOrPass(DurakGame game) {
+    if (_tryThrowOne(game)) return true;
+    if (game.canConfirmThrowAll) {
+      game.confirmThrowAll(playerIndex: index);
       return true;
     }
-    if (game.turn == DurakTurn.throwIn ||
-        game.turn == DurakTurn.attackerFollowUp ||
-        game.turn == DurakTurn.takeFollowUp) {
-      // Подкидывать: только если у нас есть некозырь с рангом на столе.
-      final ranks = game.tableRanks;
-      final hand = List<PlayingCard>.from(game.hands[index]);
-      hand.sort((a, b) {
-        final at = a.suit == game.trump ? 1 : 0;
-        final bt = b.suit == game.trump ? 1 : 0;
-        if (at != bt) return at.compareTo(bt);
-        return a.rank.compareTo(b.rank);
-      });
-      final maxToss = game.maxAttacksThisRound - game.table.length;
-      if (maxToss <= 0) {
-        if (game.canConfirmThrowAll) game.confirmThrowAll(playerIndex: index);
-        if (game.canAttackerSayBito) game.sayBito();
-        if (game.canAttackerConfirmTake) game.confirmTake();
-        return true;
-      }
-      for (final c in hand) {
-        if (!ranks.contains(c.rank.value)) continue;
-        if (c.suit == game.trump) continue; // не разбрасываем козыри
-        if (game.canAttackWith(c, index)) {
-          game.attack(c, playerIndex: index);
-          return true;
-        }
-      }
-      if (game.turn == DurakTurn.throwIn) {
-        game.confirmThrowAll(playerIndex: index);
-        return true;
-      }
-      if (game.canAttackerSayBito) {
-        game.sayBito();
-        return true;
-      }
-      if (game.canAttackerConfirmTake) {
-        game.confirmTake();
+    if (game.canAttackerSayBito) {
+      game.sayBito(playerIndex: index);
+      return true;
+    }
+    if (game.canAttackerConfirmTake) {
+      game.confirmTake(playerIndex: index);
+      return true;
+    }
+    return false;
+  }
+
+  bool _tryThrowOne(DurakGame game) {
+    final ranks = game.tableRanks;
+    final hand = List<PlayingCard>.from(game.hands[index]);
+    hand.sort((a, b) {
+      final at = a.suit == game.trump ? 1 : 0;
+      final bt = b.suit == game.trump ? 1 : 0;
+      if (at != bt) return at.compareTo(bt);
+      return a.rank.compareTo(b.rank);
+    });
+    final maxToss = game.maxAttacksThisRound - game.table.length;
+    if (maxToss <= 0) return false;
+    for (final c in hand) {
+      if (!ranks.contains(c.rank.value)) continue;
+      if (c.suit == game.trump) continue; // не разбрасываем козыри
+      if (game.canAttackWith(c, index)) {
+        game.attack(c, playerIndex: index);
         return true;
       }
     }
@@ -76,8 +91,33 @@ class DurakBot {
   }
 
   bool _stepDefender(DurakGame game) {
-    final undefendedIndex =
-        game.table.indexWhere((p) => p.defense == null);
+    // Переводной: дешёвый перевод предпочтительнее слабой защиты козырем.
+    if (game.isPerevodnoi) {
+      final transfers = game.legalTransferCards(index);
+      if (transfers.isNotEmpty) {
+        final cheap = List<PlayingCard>.from(transfers)
+          ..sort((a, b) {
+            final at = a.suit == game.trump ? 1 : 0;
+            final bt = b.suit == game.trump ? 1 : 0;
+            if (at != bt) return at.compareTo(bt);
+            return a.rank.compareTo(b.rank);
+          });
+        final pick = cheap.first;
+        // Переводим, если карта не козырь или бить всё равно только козырем.
+        final needTrumpToBeat = game.table.any((p) {
+          if (p.defense != null) return false;
+          return !game.hands[index].any(
+            (c) => c.suit != game.trump && c.beats(p.attack, game.trump),
+          );
+        });
+        if (pick.suit != game.trump || needTrumpToBeat) {
+          game.transfer(pick, playerIndex: index);
+          return true;
+        }
+      }
+    }
+
+    final undefendedIndex = game.table.indexWhere((p) => p.defense == null);
     if (undefendedIndex < 0) return false;
     final attack = game.table[undefendedIndex].attack;
     final hand = game.hands[index];
@@ -91,7 +131,6 @@ class DurakBot {
       }
       final bestTrump = best.suit == game.trump;
       final cTrump = c.suit == game.trump;
-      // Некозырь всегда лучше козыря (экономим козыри).
       if (bestTrump && !cTrump) {
         best = c;
       } else if (bestTrump == cTrump) {

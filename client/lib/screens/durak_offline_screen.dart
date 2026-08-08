@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
@@ -14,11 +15,18 @@ import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 
-/// Оффлайн-партия «Дурак» против бота. MVP: 2 игрока, 36 карт, подкидной.
+/// Оффлайн-партия «Дурак» против ботов — те же режимы, что в онлайне.
 class DurakOfflineScreen extends ConsumerStatefulWidget {
-  const DurakOfflineScreen({super.key, this.deckSize = 36});
+  const DurakOfflineScreen({
+    super.key,
+    this.deckSize = 36,
+    this.playerCount = 2,
+    this.mode = durakModePodkidnoi,
+  });
 
   final int deckSize;
+  final int playerCount;
+  final String mode;
 
   @override
   ConsumerState<DurakOfflineScreen> createState() => _DurakOfflineScreenState();
@@ -26,16 +34,16 @@ class DurakOfflineScreen extends ConsumerStatefulWidget {
 
 class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   static const int _mePlayer = 0;
-  static const int _botPlayer = 1;
 
   late DurakGame _game;
-  late DurakBot _bot;
+  late List<DurakBot> _bots;
   Timer? _botTimer;
   String? _statusMessage;
   PlayingCard? _activeCard;
   final Set<PlayingCard> _selected = {};
   final GlobalKey _attackSlotKey = GlobalKey();
   final GlobalKey _defendTargetKey = GlobalKey();
+  final GlobalKey _transferSlotKey = GlobalKey();
 
   @override
   void initState() {
@@ -49,44 +57,86 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     super.dispose();
   }
 
+  int get _players => widget.playerCount.clamp(2, 4);
+
   void _newGame() {
     _botTimer?.cancel();
-    _game = DurakGame.startNew(playerCount: 2, deckSize: widget.deckSize);
-    _bot = const DurakBot(index: _botPlayer);
+    final deck = durakClampDeckForPlayers(_players, widget.deckSize);
+    _game = DurakGame.startNew(
+      playerCount: _players,
+      deckSize: deck,
+      mode: widget.mode == durakModePerevodnoi
+          ? durakModePerevodnoi
+          : durakModePodkidnoi,
+    );
+    _bots = [
+      for (var i = 1; i < _players; i++) DurakBot(index: i),
+    ];
     _statusMessage = null;
+    _selected.clear();
     _scheduleBot();
   }
 
   bool get _myTurn {
-    if (_game.isOver) return false;
+    if (_game.isOver || !_game.isAlive(_mePlayer)) return false;
     if (_game.turn == DurakTurn.defender) {
-      // Можно бить или подкидывать, пока защитник бьёт.
       return _game.defenderIndex == _mePlayer ||
-          _game.attackerIndex == _mePlayer;
+          _game.canThrowIn(_mePlayer);
+    }
+    if (_game.turn == DurakTurn.throwIn ||
+        _game.turn == DurakTurn.attackerFollowUp ||
+        _game.turn == DurakTurn.takeFollowUp) {
+      return _game.throwerIndex == _mePlayer;
     }
     return _game.attackerIndex == _mePlayer;
   }
 
-  bool get _botShouldAct {
-    if (_game.isOver) return false;
+  int? get _actingBotIndex {
+    if (_game.isOver) return null;
     if (_game.turn == DurakTurn.defender) {
-      return _game.defenderIndex == _botPlayer;
+      if (_game.defenderIndex != _mePlayer &&
+          _game.isAlive(_game.defenderIndex)) {
+        return _game.defenderIndex;
+      }
+      if (_game.canThrowIn(_game.attackerIndex) &&
+          _game.attackerIndex != _mePlayer) {
+        return _game.attackerIndex;
+      }
+      return null;
     }
-    return _game.attackerIndex == _botPlayer;
+    if (_game.turn == DurakTurn.attacker) {
+      return _game.attackerIndex == _mePlayer ? null : _game.attackerIndex;
+    }
+    if (_game.turn == DurakTurn.throwIn ||
+        _game.turn == DurakTurn.attackerFollowUp ||
+        _game.turn == DurakTurn.takeFollowUp) {
+      return _game.throwerIndex == _mePlayer ? null : _game.throwerIndex;
+    }
+    return null;
   }
 
   void _scheduleBot() {
     _botTimer?.cancel();
-    if (!_botShouldAct) return;
+    final botIdx = _actingBotIndex;
+    if (botIdx == null) return;
     _botTimer = Timer(const Duration(milliseconds: 650), () {
       if (!mounted) return;
-      final acted = _bot.step(_game);
+      DurakBot? bot;
+      for (final b in _bots) {
+        if (b.index == botIdx) {
+          bot = b;
+          break;
+        }
+      }
+      final acted = bot?.step(_game) ?? false;
       if (!acted) {
-        // Например: бот-атакующий не может ничего подкинуть — говорим «бито»/«готово».
-        if (_game.canAttackerSayBito) {
-          _game.sayBito();
-        } else if (_game.canAttackerConfirmTake) {
-          _game.confirmTake();
+        if (_game.canConfirmThrowAll && _game.throwerIndex == botIdx) {
+          _game.confirmThrowAll(playerIndex: botIdx);
+        } else if (_game.canAttackerSayBito && _game.throwerIndex == botIdx) {
+          _game.sayBito(playerIndex: botIdx);
+        } else if (_game.canAttackerConfirmTake &&
+            _game.throwerIndex == botIdx) {
+          _game.confirmTake(playerIndex: botIdx);
         }
       }
       setState(() {});
@@ -99,9 +149,13 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     try {
       if (_game.turn == DurakTurn.defender &&
           _game.defenderIndex == _mePlayer) {
-        _game.defend(card, playerIndex: _mePlayer);
+        if (_game.canTransferWith(card, _mePlayer)) {
+          _game.transfer(card, playerIndex: _mePlayer);
+        } else {
+          _game.defend(card, playerIndex: _mePlayer);
+        }
         _selected.clear();
-      } else if (_game.attackerIndex == _mePlayer) {
+      } else if (_game.canAttackWith(card, _mePlayer)) {
         final batch = _selected.length > 1 && _selected.contains(card)
             ? _selected.toList()
             : [card];
@@ -118,8 +172,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   }
 
   void _toggleSelect(PlayingCard card) {
-    if (_game.isOver || _game.attackerIndex != _mePlayer) return;
-    if (!_game.canAttackWith(card, _mePlayer)) return;
+    if (_game.isOver || !_game.canAttackWith(card, _mePlayer)) return;
     setState(() {
       if (_selected.contains(card)) {
         _selected.remove(card);
@@ -139,18 +192,24 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     final canDefend = _game.turn == DurakTurn.defender &&
         _game.defenderIndex == _mePlayer &&
         _game.canDefendWith(card, _mePlayer);
-    final canAttack = _game.attackerIndex == _mePlayer &&
-        _game.canAttackWith(card, _mePlayer);
-    if (!canDefend && !canAttack) return false;
+    final canTransfer = _game.turn == DurakTurn.defender &&
+        _game.defenderIndex == _mePlayer &&
+        _game.canTransferWith(card, _mePlayer);
+    final canAttack = _game.canAttackWith(card, _mePlayer);
+    if (!canDefend && !canAttack && !canTransfer) return false;
 
     final attackRect = globalRectOf(_attackSlotKey);
     final defendRect = globalRectOf(_defendTargetKey);
+    final transferRect = globalRectOf(_transferSlotKey);
     final over = (canAttack &&
             attackRect != null &&
             attackRect.inflate(28).contains(global)) ||
         (canDefend &&
             defendRect != null &&
             defendRect.inflate(28).contains(global)) ||
+        (canTransfer &&
+            transferRect != null &&
+            transferRect.inflate(28).contains(global)) ||
         from.center.dy < MediaQuery.sizeOf(context).height * 0.55;
     if (!over) return false;
     _onMyCardTap(card);
@@ -167,7 +226,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
 
   void _onBito() {
     try {
-      _game.sayBito();
+      _game.sayBito(playerIndex: _mePlayer);
       setState(() {});
       _scheduleBot();
     } on DurakRuleError catch (_) {}
@@ -175,7 +234,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
 
   void _onConfirmTake() {
     try {
-      _game.confirmTake();
+      _game.confirmTake(playerIndex: _mePlayer);
       setState(() {});
       _scheduleBot();
     } on DurakRuleError catch (_) {}
@@ -183,37 +242,38 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
 
   void _onThrowAll() {
     try {
-      _game.confirmThrowAll();
+      _game.confirmThrowAll(playerIndex: _mePlayer);
       setState(() {});
       _scheduleBot();
     } on DurakRuleError catch (_) {}
   }
 
   Set<PlayingCard> _legalForMe() {
-    if (_game.isOver) return {};
+    if (_game.isOver || !_game.isAlive(_mePlayer)) return {};
+    final out = <PlayingCard>{};
     if (_game.turn == DurakTurn.defender &&
         _game.defenderIndex == _mePlayer) {
-      return _game.hands[_mePlayer]
-          .where((c) => _game.canDefendWith(c, _mePlayer))
-          .toSet();
+      out.addAll(
+        _game.hands[_mePlayer].where((c) => _game.canDefendWith(c, _mePlayer)),
+      );
+      out.addAll(_game.legalTransferCards(_mePlayer));
     }
-    if (_game.attackerIndex == _mePlayer) {
-      return _game.hands[_mePlayer]
-          .where((c) => _game.canAttackWith(c, _mePlayer))
-          .toSet();
-    }
-    return {};
+    out.addAll(
+      _game.hands[_mePlayer].where((c) => _game.canAttackWith(c, _mePlayer)),
+    );
+    return out;
   }
 
   @override
   Widget build(BuildContext context) {
     const cardSize = Size(64, 92);
-    final botHand = _game.hands[_botPlayer];
     final myHand = _game.hands[_mePlayer];
     final legal = _legalForMe();
     final openTrump = _game.openTrumpCard;
-
     final status = _statusOverlay();
+    final opponents = [
+      for (var i = 1; i < _game.playerCount; i++) i,
+    ];
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -223,11 +283,24 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/games'),
         ),
-        title: Text(context.l10n.gamesDurak),
+        title: Column(
+          children: [
+            Text(context.l10n.gamesDurak),
+            Text(
+              '${durakModeLabel(_game.mode, context.l10n)} · '
+              '${durakDeckLabel(widget.deckSize, context.l10n)}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'Новая партия',
+            tooltip: context.l10n.offlinePlayAgain,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () {
               setState(() => _newGame());
@@ -242,20 +315,11 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // Верх: рубашечный веер бота.
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 8),
-                    child: CardFan(
-                      cards: botHand,
-                      cardSize: Size(cardSize.width * 0.85, cardSize.height * 0.85),
-                      faceDown: true,
-                      invertFan: true,
-                      enabled: false,
-                    ),
-                  ),
+                  _opponentsRow(opponents, cardSize),
                   const SizedBox(height: 6),
                   Text(
                     _turnHint(),
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -271,21 +335,32 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                     child: _buildSideAction(),
                   ),
                   const SizedBox(height: 4),
-                  // Мой веер.
-                  CardFan(
-                    cards: myHand,
-                    cardSize: cardSize,
-                    legalCards: legal,
-                    selectedCards: _selected,
-                    enabled: !_game.isOver && _myTurn,
-                    onActiveChanged: (c) {
-                      if (_activeCard == c) return;
-                      setState(() => _activeCard = c);
-                    },
-                    onTap: _onMyCardTap,
-                    onLongPress: _toggleSelect,
-                    onDrop: _onDrop,
-                  ),
+                  if (_game.isAlive(_mePlayer))
+                    CardFan(
+                      cards: myHand,
+                      cardSize: cardSize,
+                      legalCards: legal,
+                      selectedCards: _selected,
+                      enabled: !_game.isOver && _myTurn,
+                      onActiveChanged: (c) {
+                        if (_activeCard == c) return;
+                        setState(() => _activeCard = c);
+                      },
+                      onTap: _onMyCardTap,
+                      onLongPress: _toggleSelect,
+                      onDrop: _onDrop,
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        context.l10n.gameYouWon,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 6),
                   if (status != null)
                     Padding(
@@ -306,13 +381,59 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     );
   }
 
+  Widget _opponentsRow(List<int> opponents, Size cardSize) {
+    if (opponents.isEmpty) return const SizedBox.shrink();
+    final fanSize = Size(cardSize.width * 0.75, cardSize.height * 0.75);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final oi in opponents)
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  'Bot $oi',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _game.throwerIndex == oi ||
+                            _game.attackerIndex == oi ||
+                            _game.defenderIndex == oi
+                        ? AppColors.accentStart
+                        : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (_game.isFinished(oi))
+                  Text(
+                    context.l10n.gameYouWon,
+                    style: const TextStyle(fontSize: 11),
+                  )
+                else
+                  CardFan(
+                    cards: _game.hands[oi],
+                    cardSize: fanSize,
+                    faceDown: true,
+                    invertFan: true,
+                    enabled: false,
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildTable(Size cardSize, PlayingCard? openTrump) {
     final canDefend = _activeCard != null &&
         _game.turn == DurakTurn.defender &&
         _game.defenderIndex == _mePlayer &&
         _game.canDefendWith(_activeCard!, _mePlayer);
+    final canTransfer = _activeCard != null &&
+        _game.turn == DurakTurn.defender &&
+        _game.defenderIndex == _mePlayer &&
+        _game.canTransferWith(_activeCard!, _mePlayer);
     final canAttack = _activeCard != null &&
-        _game.attackerIndex == _mePlayer &&
         _game.canAttackWith(_activeCard!, _mePlayer);
     var defendIdx = -1;
     if (canDefend) {
@@ -372,10 +493,23 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
                           ),
                         ),
                       ),
+                    if (!_game.isOver && canTransfer)
+                      Padding(
+                        key: _transferSlotKey,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: DurakDropSlot(
+                          size: cardSize,
+                          active: true,
+                        ),
+                      ),
                     if (!_game.isOver &&
-                        _game.attackerIndex == _mePlayer &&
+                        _myTurn &&
                         (_game.turn == DurakTurn.attacker ||
-                            _game.turn == DurakTurn.attackerFollowUp))
+                            _game.turn == DurakTurn.attackerFollowUp ||
+                            _game.turn == DurakTurn.throwIn ||
+                            _game.turn == DurakTurn.takeFollowUp ||
+                            (_game.turn == DurakTurn.defender &&
+                                _game.canThrowIn(_mePlayer))))
                       Padding(
                         key: _attackSlotKey,
                         padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -403,13 +537,13 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
         _game.canDefenderTake;
     final canBito = !_game.isOver &&
         _game.turn == DurakTurn.attackerFollowUp &&
-        _game.attackerIndex == _mePlayer &&
+        _game.throwerIndex == _mePlayer &&
         _game.canAttackerSayBito;
     final canDone = !_game.isOver &&
-        _game.attackerIndex == _mePlayer &&
+        _game.throwerIndex == _mePlayer &&
         _game.canAttackerConfirmTake;
     final canThrowAll = !_game.isOver &&
-        _game.attackerIndex == _mePlayer &&
+        _game.throwerIndex == _mePlayer &&
         _game.canConfirmThrowAll;
     if (!canTake && !canBito && !canDone && !canThrowAll) {
       return const SizedBox(height: 40);
@@ -454,30 +588,36 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
 
   String _turnHint() {
     if (_game.isOver) {
-      if (_game.endedInDraw) return 'Ничья — оба вышли';
+      if (_game.endedInDraw) return 'Ничья — все вышли';
       return _game.loserIndex == _mePlayer
           ? 'Вы проиграли — вы дурак'
           : 'Вы выиграли!';
     }
+    if (_game.isFinished(_mePlayer)) {
+      return 'Вы вышли — ждём конца партии';
+    }
     if (_game.turn == DurakTurn.defender) {
-      return _game.defenderIndex == _mePlayer
-          ? 'Отбивайтесь'
-          : 'Соперник отбивается';
+      if (_game.defenderIndex == _mePlayer) {
+        return _game.isPerevodnoi
+            ? 'Отбивайтесь или переведите'
+            : 'Отбивайтесь';
+      }
+      return 'Соперник отбивается';
     }
     if (_game.turn == DurakTurn.throwIn) {
-      return _game.attackerIndex == _mePlayer
+      return _game.throwerIndex == _mePlayer
           ? (_game.firstRound
               ? 'Подкиньте карты или «Все» (макс. 5 в первом отбое)'
               : 'Подкиньте карты или нажмите «Все»')
           : 'Соперник подкидывает';
     }
     if (_game.turn == DurakTurn.takeFollowUp) {
-      return _game.attackerIndex == _mePlayer
+      return _game.throwerIndex == _mePlayer
           ? 'Подкиньте вдогонку или нажмите «Готово»'
           : 'Соперник может подкинуть вдогонку';
     }
     if (_game.turn == DurakTurn.attackerFollowUp) {
-      return _game.attackerIndex == _mePlayer
+      return _game.throwerIndex == _mePlayer
           ? 'Подкиньте карту или скажите «Бито»'
           : 'Соперник подкидывает или говорит «Бито»';
     }
@@ -492,4 +632,3 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     return msg;
   }
 }
-
