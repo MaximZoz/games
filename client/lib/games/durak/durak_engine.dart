@@ -650,6 +650,8 @@ class DurakGame {
 
   void _checkGameOver() {
     if (deck.isNotEmpty) return;
+    // Пока стол не разобран — не «finished» (последние карты ещё могут отбить → ничья).
+    if (table.isNotEmpty) return;
     for (var i = 0; i < hands.length; i++) {
       _markFinishedIfEmpty(i);
     }

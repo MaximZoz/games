@@ -4071,9 +4071,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   ),
                 ),
                 // Призовое место (в т.ч. 2-е после чужого таймаута) — не только «не дурак».
+                // Не конфетти, пока последние карты ещё на столе (возможен отбой → ничья).
                 if (view != null &&
                     (_iWon(view) &&
-                        (view.isOver || view.iAmFinished)))
+                        (view.isOver ||
+                            (view.iAmFinished && view.table.isEmpty))))
                   const Positioned.fill(child: GameConfettiOverlay()),
                 // Групповой чат — отдельно под крестиком.
                 if (showGroupChat && view != null)
@@ -5454,7 +5456,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _showRewardChip(DurakGameView view) {
     if (view.stakeBronze <= 0) return false;
     // Mid-game после выхода «в ноль» или итог партии.
-    if (!view.isOver && !view.iAmFinished) return false;
+    if (!view.isOver && !(view.iAmFinished && view.table.isEmpty)) {
+      return false;
+    }
     return _rewardBronze(view) > 0;
   }
 
