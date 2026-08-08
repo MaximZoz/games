@@ -3,8 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: посадка карты сразу в слот, без прыжка из центра
-- Дурак: плавные анимации без рывков
+- трекать client/pubspec.lock для сборки на Fly
+- карточка Дурака «В разработке» на экране игр
 
 ## en
 - After leaving, invites go to a new lobby only — not the opponent’s old game
