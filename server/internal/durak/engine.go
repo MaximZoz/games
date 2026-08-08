@@ -81,7 +81,8 @@ type State struct {
 	// Помечает: последнее действие — take (для UI и разгона следующих ходов).
 	LastWasTake bool `json:"last_was_take,omitempty"`
 	// Первый отбой партии: на стол не больше 5 карт (включая первую атаку).
-	FirstRound bool `json:"first_round,omitempty"`
+	// Без omitempty — иначе false/отсутствие поля путает клиент и лимит 5.
+	FirstRound bool `json:"first_round"`
 }
 
 // DefenderIndex — следующий защитник по кругу.
@@ -378,6 +379,9 @@ func (s *State) UndefendedIndex() int {
 	return -1
 }
 
+// firstRoundAttackCap — жёсткий потолок атак в первом отбое.
+const firstRoundAttackCap = 5
+
 // MaxAttacksThisRound — сколько всего пар можно положить на стол.
 // Лимит = уже отбитые пары + карты в руке защитника:
 // каждой карте в руке — не больше одной атаки (включая те, что ещё надо отбить).
@@ -385,25 +389,28 @@ func (s *State) UndefendedIndex() int {
 // В первом отбое партии — не больше 5 карт (включая первую атаку).
 func (s *State) MaxAttacksThisRound() int {
 	def := s.DefenderIndex()
-	if def < 0 || def >= len(s.Hands) {
-		return s.MaxAttacks
+	lim := s.MaxAttacks
+	if lim <= 0 {
+		lim = 6
 	}
-	undefended := 0
-	for _, p := range s.Table {
-		if p.Defense == nil {
-			undefended++
+	if def >= 0 && def < len(s.Hands) {
+		undefended := 0
+		for _, p := range s.Table {
+			if p.Defense == nil {
+				undefended++
+			}
+		}
+		beaten := len(s.Table) - undefended
+		byHand := beaten + len(s.Hands[def])
+		if byHand < 1 {
+			byHand = 1
+		}
+		if byHand < lim {
+			lim = byHand
 		}
 	}
-	beaten := len(s.Table) - undefended
-	lim := beaten + len(s.Hands[def])
-	if lim < 1 {
-		lim = 1
-	}
-	if s.MaxAttacks > 0 && s.MaxAttacks < lim {
-		lim = s.MaxAttacks
-	}
-	if s.FirstRound && lim > 5 {
-		lim = 5
+	if s.FirstRound && lim > firstRoundAttackCap {
+		lim = firstRoundAttackCap
 	}
 	return lim
 }
@@ -468,6 +475,10 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		return ErrBadAttack
 	}
 	if len(s.Table)+len(cards) > s.MaxAttacksThisRound() {
+		return ErrBadAttack
+	}
+	// Жёсткий потолок первого отбоя (даже если FirstRound потерялся в расчёте руки).
+	if s.FirstRound && len(s.Table)+len(cards) > firstRoundAttackCap {
 		return ErrBadAttack
 	}
 	// Все карты должны быть в руке (без повторов сверх наличия).
@@ -590,8 +601,8 @@ func (s *State) transferAttackCap() int {
 	if cap <= 0 {
 		cap = 6
 	}
-	if s.FirstRound && cap > 5 {
-		cap = 5
+	if s.FirstRound && cap > firstRoundAttackCap {
+		cap = firstRoundAttackCap
 	}
 	return cap
 }
@@ -878,6 +889,10 @@ func (s *State) Eliminate(playerIdx int) (continues bool) {
 	s.ThrowerIndex = s.AttackerIndex
 	s.Phase = PhaseAttack
 	s.LastWasTake = false
+	// Стол ушёл в отбой / раунд сорван — первый отбой закончен.
+	if len(s.BitoPile) > 0 {
+		s.clearFirstRound()
+	}
 	s.checkOver()
 	return s.Status == StatusActive
 }
@@ -1044,6 +1059,10 @@ func (s *State) legalThrowInCards(idx int) []Card {
 	if len(s.Table) >= s.MaxAttacksThisRound() {
 		return nil
 	}
+	// Жёсткий потолок первого отбоя (UI не предлагает 6-ю).
+	if s.FirstRound && len(s.Table) >= firstRoundAttackCap {
+		return nil
+	}
 	ranks := s.TableRanks()
 	out := []Card{}
 	for _, c := range s.Hands[idx] {
@@ -1143,6 +1162,11 @@ func Decode(raw string) (*State, error) {
 	// Старые сейвы без thrower_index → атакующий.
 	if s.ThrowerIndex < 0 || s.ThrowerIndex >= len(s.PlayerIDs) {
 		s.ThrowerIndex = s.AttackerIndex
+	}
+	// Если ещё не было биты/взятия — это первый отбой (лимит 5), даже когда
+	// в старом JSON поле first_round потерялось (omitempty / false).
+	if s.Status == StatusActive && len(s.BitoPile) == 0 && !s.LastWasTake {
+		s.FirstRound = true
 	}
 	return &s, nil
 }

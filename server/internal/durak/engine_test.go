@@ -286,6 +286,38 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Decode восстанавливает first_round, если биты ещё не было.
+func TestDecodeHealsFirstRound(t *testing.T) {
+	raw := `{"player_ids":["a","b"],` +
+		`"hands":[[{"rank":6,"suit":"c"},{"rank":9,"suit":"c"}],` +
+		`[{"rank":7,"suit":"h"},{"rank":8,"suit":"h"},{"rank":9,"suit":"h"},` +
+		`{"rank":10,"suit":"h"},{"rank":11,"suit":"h"},{"rank":12,"suit":"h"}]],` +
+		`"trump":"h","attacker_index":0,"phase":"defend","hand_size":6,"max_attacks":6,` +
+		`"status":"active","table":[{"attack":{"rank":9,"suit":"h"}}],"bito":[]}`
+	st, err := Decode(raw)
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+	if !st.FirstRound {
+		t.Fatal("want FirstRound=true after Decode heal")
+	}
+	if got := st.MaxAttacksThisRound(); got != 5 {
+		t.Fatalf("MaxAttacksThisRound=%d want 5", got)
+	}
+	// После take-флага — не лечим как первый отбой.
+	raw2 := `{"player_ids":["a","b"],` +
+		`"hands":[[{"rank":6,"suit":"c"}],[{"rank":7,"suit":"h"}]],` +
+		`"trump":"h","attacker_index":0,"phase":"attack","hand_size":6,"max_attacks":6,` +
+		`"status":"active","table":[],"bito":[],"last_was_take":true}`
+	st2, err := Decode(raw2)
+	if err != nil {
+		t.Fatalf("Decode2: %v", err)
+	}
+	if st2.FirstRound {
+		t.Fatal("want FirstRound=false when last_was_take")
+	}
+}
+
 // Первый отбой: пачка до 5 карт (лимит), «Все»/авто — потом отбой.
 func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
 	st := &State{

@@ -3523,26 +3523,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       for (final peerId in _peerIds(view)) {
         ref.read(gameInvitesProvider.notifier).removeByCreatorId(peerId);
       }
-      final iWon = !view.isDraw &&
-          view.loserIndex >= 0 &&
-          view.loserIndex != view.myIndex &&
-          !view.iAmEliminated &&
-          view.myPlace > 0;
       final playersN = view.playerIds.length >= 2 ? view.playerIds.length : 2;
       final placesFilled = view.winnerPlaceOrder.length.clamp(1, playersN);
-      final netProfit = view.isDraw
-          ? 0
-          : (iWon
-              ? durakPlaceNetProfit(
-                  stake: view.stakeBronze,
-                  playerCount: playersN,
-                  place: view.myPlace,
-                  placesFilled: placesFilled,
-                )
-              : 0);
       final credit = view.isDraw
           ? view.stakeBronze
-          : (iWon
+          : (view.myPlace > 0
               ? durakPlaceCredit(
                   stake: view.stakeBronze,
                   playerCount: playersN,
@@ -3550,6 +3535,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   placesFilled: placesFilled,
                 )
               : 0);
+      // Показываем начисление всем, кто получил хоть что-то (кредит > 0).
+      final displayReward = credit > 0 ? credit : 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _clearSessionForFinishedGame();
@@ -3563,7 +3550,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         });
         unawaited(_onGameSettled(
           creditBronze: credit,
-          displayRewardBronze: netProfit,
+          displayRewardBronze: displayReward,
         ));
       });
     } else {
@@ -5202,18 +5189,47 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       !view.iAmEliminated &&
       view.myPlace > 0;
 
-  bool _showRewardChip(DurakGameView view) =>
-      view.isOver && _iWon(view) && view.stakeBronze > 0;
+  bool _showRewardChip(DurakGameView view) {
+    if (!view.isOver || view.stakeBronze <= 0) return false;
+    return _rewardBronze(view) > 0;
+  }
 
   int _rewardBronze(DurakGameView view) {
+    if (view.isDraw) return view.stakeBronze;
+    if (view.myPlace <= 0) return 0;
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
     final placesFilled = view.winnerPlaceOrder.length.clamp(1, n);
-    return durakPlaceNetProfit(
+    // Показываем фактическое начисление (кредит), не только «чистый» плюс.
+    return durakPlaceCredit(
       stake: view.stakeBronze,
       playerCount: n,
       place: view.myPlace,
       placesFilled: placesFilled,
     );
+  }
+
+  /// Имя победителя (1-е место) или соперника в 1×1.
+  String _winnerName(DurakGameView view) {
+    final order = view.winnerPlaceOrder;
+    if (order.isNotEmpty) {
+      return _playerDisplayName(view, order.first);
+    }
+    // fallback 1×1
+    return _opponentName(view);
+  }
+
+  String _playerDisplayName(DurakGameView view, int idx) {
+    if (idx < 0 || idx >= view.playerIds.length) {
+      return context.l10n.gameOpponent;
+    }
+    final id = view.playerIds[idx];
+    if (id.startsWith('bot:')) return context.l10n.gameBot;
+    final meta = view.playerMeta(id);
+    final n = meta?.displayName?.trim() ?? '';
+    if (n.isNotEmpty) return n;
+    // Логин / короткий id, не общее «Соперник».
+    if (id.length >= 8) return id.substring(0, 8);
+    return id.isNotEmpty ? id : context.l10n.gameOpponent;
   }
 
   /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог со сдачей/таймаутом.
@@ -5223,31 +5239,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     if (view.isOver) {
       if (view.isDraw) return context.l10n.gameDraw;
-      final isMulti = view.playerIds.length > 2;
       final iWon = _iWon(view);
-      if (isMulti) {
-        if (iWon) return context.l10n.gameYouWon;
-        final loserId = view.loserIndex >= 0 &&
-                view.loserIndex < view.playerIds.length
-            ? view.playerIds[view.loserIndex]
-            : '';
-        // В дураке «дурак» проиграл — победитель не один; для чужого итога
-        // показываем имя соперника из 1×1-логики / первого не-себя.
-        final winnerName = _opponentName(view);
-        if (loserId.isNotEmpty && view.loserIndex == view.myIndex) {
-          return context.l10n.gameOpponentWon(winnerName);
-        }
-        return context.l10n.gameOpponentWon(winnerName);
-      }
-      final opp = _opponentName(view);
-      if (iWon) {
+      final winnerName = _winnerName(view);
+      if (iWon && view.myPlace == 1) {
         if (view.isForfeit) return context.l10n.gameYouWonOpponentForfeit;
         if (view.isTimeout) return context.l10n.gameYouWonOpponentTimeout;
         return context.l10n.gameYouWon;
       }
-      if (view.isForfeit) return context.l10n.gameYouForfeitOpponentWon(opp);
-      if (view.isTimeout) return context.l10n.gameOpponentWonTimeout(opp);
-      return context.l10n.gameOpponentWon(opp);
+      if (iWon && view.myPlace > 1) {
+        return 'Вы заняли ${view.myPlace}-е место';
+      }
+      // Проигравший / остальные: «Победил {логин}».
+      if (view.isTimeout) {
+        return context.l10n.gameOpponentWonTimeout(winnerName);
+      }
+      return context.l10n.gameOpponentWon(winnerName);
     }
     if (view.phase == 'take_follow') {
       if (view.attackerIndex == view.myIndex ||
@@ -5278,15 +5284,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   String _opponentName(DurakGameView view) {
-    if (view.playerIds.length != 2 || view.myIndex < 0) {
+    if (view.myIndex < 0 || view.playerIds.length < 2) {
       return context.l10n.gameOpponent;
     }
-    final oppIndex = view.myIndex == 0 ? 1 : 0;
-    final oppId = view.playerIds[oppIndex];
-    if (oppId.startsWith('bot:')) return context.l10n.gameBot;
-    final meta = view.playerMeta(oppId);
-    final n = meta?.displayName?.trim() ?? '';
-    return n.isNotEmpty ? n : context.l10n.gameOpponent;
+    // 1×1 — единственный соперник; multi — первый не-я из списка.
+    for (var i = 0; i < view.playerIds.length; i++) {
+      if (i == view.myIndex) continue;
+      return _playerDisplayName(view, i);
+    }
+    return context.l10n.gameOpponent;
   }
 
   List<PlayingCard> _apiCardsToPlaying(List<DurakApiCard> apis) {
