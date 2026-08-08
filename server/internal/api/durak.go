@@ -1522,8 +1522,9 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	h.recordDurakGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
 }
 
-// settleDurakCoins — банк stake×N, как в крестиках (SettleStakePot).
-// Выбывшие сдачей долю не получают; при одном победителе — весь банк ему.
+// settleDurakCoins — банк stake×N по местам выхода:
+// 3 игрока: 1-е 2/3, 2-е 1/3; 4 игрока: 1-е 2/4, 2-е и 3-е по 1/4; дурак — 0.
+// Сдавшиеся долю не получают. 1×1 — весь банк победителю.
 func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int) {
 	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1545,19 +1546,22 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, nil, true, isBot)
 		return
 	}
-	winners := make([]string, 0, len(ids)-1)
-	for i, pid := range ids {
-		if i == state.LoserIndex || state.IsEliminated(i) {
-			continue
-		}
-		winners = append(winners, pid)
+	placeIdx := state.WinnerPlaceOrder()
+	if len(placeIdx) == 0 {
+		return
 	}
-	if len(winners) == 0 {
+	placeIDs := make([]string, 0, len(placeIdx))
+	for _, i := range placeIdx {
+		if i >= 0 && i < len(ids) {
+			placeIDs = append(placeIDs, ids[i])
+		}
+	}
+	if len(placeIDs) == 0 {
 		return
 	}
 	// 1×1 vs бот: человек проиграл — без выплат; победил — банк stake×2.
 	if len(ids) == 2 {
-		winner := winners[0]
+		winner := placeIDs[0]
 		loser := ids[state.LoserIndex]
 		if isBot(winner) {
 			return
@@ -1566,10 +1570,11 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 			_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winner}, false, isBot)
 			return
 		}
+		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winner}, false, isBot)
+		return
 	}
-	// Банк stake×N: при одном победителе — весь банк (как multi-крестики);
-	// при нескольких вышедших — делится. Выбывшие сдачей доли не получают.
-	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, winners, false, isBot)
+	nums := durak.PlaceShareNumerators(len(ids))
+	_ = store.SettleStakePotByShares(ctx, h.Pool, stakeBronze, ids, placeIDs, nums, len(ids), isBot)
 }
 
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {

@@ -210,6 +210,7 @@ class DurakGame {
   /// Можно ли [card] бить неотбитую атаку ([pairIndex] или любую).
   bool canDefendWith(PlayingCard card, int playerIndex, {int? pairIndex}) {
     if (isOver) return false;
+    if (turn != DurakTurn.defender) return false;
     if (playerIndex != defenderIndex) return false;
     if (!hands[playerIndex].contains(card)) return false;
     if (pairIndex != null) {

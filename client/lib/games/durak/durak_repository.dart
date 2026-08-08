@@ -222,16 +222,32 @@ class DurakGameView {
 
   bool get iAmEliminated => myIndex >= 0 && isEliminated(myIndex);
 
-  /// Число победителей для банка (не дурак и не выбывшие сдачей).
-  /// Один победитель → весь банк stake×N, как в multi-крестиках.
-  int get stakeWinnerCount {
-    final n = playerIds.length >= 2 ? playerIds.length : 2;
-    var winners = 0;
-    for (var i = 0; i < n; i++) {
-      if (i == loserIndex || isEliminated(i)) continue;
-      winners++;
+  /// Места победителей по порядку выхода (finished), затем оставшиеся не-дураки.
+  List<int> get winnerPlaceOrder {
+    final n = playerIds.length;
+    final seen = <int>{};
+    final out = <int>[];
+    for (final i in finished) {
+      if (i < 0 || i >= n) continue;
+      if (i == loserIndex || isEliminated(i) || seen.contains(i)) continue;
+      seen.add(i);
+      out.add(i);
     }
-    return winners.clamp(1, n);
+    for (var i = 0; i < n; i++) {
+      if (i == loserIndex || isEliminated(i) || seen.contains(i)) continue;
+      out.add(i);
+      seen.add(i);
+    }
+    return out;
+  }
+
+  /// Место текущего игрока (1-е, 2-е, …) или 0, если дурак/сдался/не в списке.
+  int get myPlace {
+    if (!isOver || isDraw || iAmEliminated) return 0;
+    if (myIndex < 0 || myIndex == loserIndex) return 0;
+    final order = winnerPlaceOrder;
+    final idx = order.indexOf(myIndex);
+    return idx < 0 ? 0 : idx + 1;
   }
 
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).

@@ -3526,26 +3526,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final iWon = !view.isDraw &&
           view.loserIndex >= 0 &&
           view.loserIndex != view.myIndex &&
-          !view.iAmEliminated;
+          !view.iAmEliminated &&
+          view.myPlace > 0;
       final playersN = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-      // Как в крестиках: при одном победителе — весь банк stake×N.
-      final winnersN = view.stakeWinnerCount;
+      final placesFilled = view.winnerPlaceOrder.length.clamp(1, playersN);
       final netProfit = view.isDraw
           ? 0
           : (iWon
-              ? stakeWinnerNetProfit(
+              ? durakPlaceNetProfit(
                   stake: view.stakeBronze,
                   playerCount: playersN,
-                  winnerCount: winnersN,
+                  place: view.myPlace,
+                  placesFilled: placesFilled,
                 )
               : 0);
       final credit = view.isDraw
           ? view.stakeBronze
           : (iWon
-              ? stakeWinnerCredit(
+              ? durakPlaceCredit(
                   stake: view.stakeBronze,
                   playerCount: playersN,
-                  winnerCount: winnersN,
+                  place: view.myPlace,
+                  placesFilled: placesFilled,
                 )
               : 0);
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -5197,17 +5199,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       !view.isDraw &&
       view.loserIndex >= 0 &&
       view.loserIndex != view.myIndex &&
-      !view.iAmEliminated;
+      !view.iAmEliminated &&
+      view.myPlace > 0;
 
   bool _showRewardChip(DurakGameView view) =>
       view.isOver && _iWon(view) && view.stakeBronze > 0;
 
   int _rewardBronze(DurakGameView view) {
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
-    return stakeWinnerNetProfit(
+    final placesFilled = view.winnerPlaceOrder.length.clamp(1, n);
+    return durakPlaceNetProfit(
       stake: view.stakeBronze,
       playerCount: n,
-      winnerCount: view.stakeWinnerCount,
+      place: view.myPlace,
+      placesFilled: placesFilled,
     );
   }
 

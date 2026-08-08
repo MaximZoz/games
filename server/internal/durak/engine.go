@@ -505,6 +505,7 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
+	s.markFinishedIfEmpty(playerIdx)
 	if s.Phase == PhaseTakeFollow {
 		// Вдогонку: очередь на текущем; если карт больше нет — авто дальше.
 		s.clearPassed()
@@ -922,19 +923,50 @@ func (s *State) refill() {
 	}
 }
 
+// markFinishedIfEmpty — зафиксировать выход «в ноль» по порядку (место в банке).
+// Пока в колоде есть карты — добор, выход не считается.
+func (s *State) markFinishedIfEmpty(idx int) {
+	if idx < 0 || idx >= len(s.Hands) || len(s.Deck) > 0 {
+		return
+	}
+	if len(s.Hands[idx]) > 0 || s.IsEliminated(idx) {
+		return
+	}
+	for _, f := range s.FinishedIndices {
+		if f == idx {
+			return
+		}
+	}
+	s.FinishedIndices = append(s.FinishedIndices, idx)
+}
+
 func (s *State) checkOver() {
 	if len(s.Deck) > 0 {
 		return
 	}
+	for i := range s.Hands {
+		s.markFinishedIfEmpty(i)
+	}
 	var withCards []int
 	for i, h := range s.Hands {
-		if !s.isAlive(i) {
+		if s.IsEliminated(i) {
+			continue
+		}
+		// Уже вышедшие «в ноль» — не дурак.
+		finished := false
+		for _, f := range s.FinishedIndices {
+			if f == i {
+				finished = true
+				break
+			}
+		}
+		if finished {
 			continue
 		}
 		if len(h) > 0 {
 			withCards = append(withCards, i)
 		} else {
-			s.FinishedIndices = append(s.FinishedIndices, i)
+			s.markFinishedIfEmpty(i)
 		}
 	}
 	if len(withCards) <= 1 {
@@ -945,6 +977,61 @@ func (s *State) checkOver() {
 			s.LoserIndex = -1
 		}
 	}
+}
+
+// WinnerPlaceOrder — индексы победителей по местам (1-й вышедший, 2-й, …).
+// Дурак и сдавшиеся не входят. Единственный оставшийся после сдач — 1-е место.
+func (s *State) WinnerPlaceOrder() []int {
+	seen := map[int]bool{}
+	out := make([]int, 0, len(s.PlayerIDs))
+	for _, i := range s.FinishedIndices {
+		if i < 0 || i >= len(s.PlayerIDs) {
+			continue
+		}
+		if i == s.LoserIndex || s.IsEliminated(i) || seen[i] {
+			continue
+		}
+		seen[i] = true
+		out = append(out, i)
+	}
+	for i := range s.PlayerIDs {
+		if i == s.LoserIndex || s.IsEliminated(i) || seen[i] {
+			continue
+		}
+		// Единственный выживший (ещё с картами) или вышедший без записи.
+		out = append(out, i)
+		seen[i] = true
+	}
+	return out
+}
+
+// PlaceShareNumerators — доли банка по местам (числители), знаменатель = N игроков.
+// 3: 2/3 + 1/3; 4: 2/4 + 1/4 + 1/4; 2: весь банк победителю.
+func PlaceShareNumerators(playerCount int) []int {
+	switch playerCount {
+	case 3:
+		return []int{2, 1}
+	case 4:
+		return []int{2, 1, 1}
+	default:
+		if playerCount < 2 {
+			return nil
+		}
+		return []int{playerCount}
+	}
+}
+
+// CreditForPlace — начисление с банка за место (0 = первое). Проигравший — не сюда.
+func CreditForPlace(stakeBronze, playerCount, placeIndex0 int) int {
+	if stakeBronze <= 0 || playerCount < 2 || placeIndex0 < 0 {
+		return 0
+	}
+	nums := PlaceShareNumerators(playerCount)
+	if placeIndex0 >= len(nums) {
+		return 0
+	}
+	pot := stakeBronze * playerCount
+	return pot * nums[placeIndex0] / playerCount
 }
 
 // ---- Клиентские подсказки (легальные ходы) ----

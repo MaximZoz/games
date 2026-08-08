@@ -229,6 +229,73 @@ func DeductCoinsMany(ctx context.Context, pool *pgxpool.Pool, userIDs []uuid.UUI
 	return tx.Commit(ctx)
 }
 
+// SettleStakePotByShares — банк stake×N по долям (числители / denom).
+// placeWinnerIDs — в порядке мест (1-й, 2-й, …). Лишние доли (если мест меньше)
+// прибавляются к 1-му месту, чтобы банк не сгорал.
+func SettleStakePotByShares(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	stakeBronze int,
+	playerIDs []string,
+	placeWinnerIDs []string,
+	shareNumerators []int,
+	shareDenom int,
+	isBotFn func(string) bool,
+) error {
+	if stakeBronze <= 0 || pool == nil || len(playerIDs) == 0 || shareDenom <= 0 {
+		return nil
+	}
+	if isBotFn == nil {
+		isBotFn = func(string) bool { return false }
+	}
+	if len(placeWinnerIDs) == 0 || len(shareNumerators) == 0 {
+		return nil
+	}
+	nums := append([]int(nil), shareNumerators...)
+	if len(placeWinnerIDs) < len(nums) {
+		extra := 0
+		for i := len(placeWinnerIDs); i < len(nums); i++ {
+			extra += nums[i]
+		}
+		nums = nums[:len(placeWinnerIDs)]
+		nums[0] += extra
+	}
+	pot := stakeBronze * len(playerIDs)
+	paid := 0
+	for i, pid := range placeWinnerIDs {
+		if i >= len(nums) {
+			break
+		}
+		if isBotFn(pid) {
+			continue
+		}
+		u, err := uuid.Parse(pid)
+		if err != nil {
+			continue
+		}
+		credit := pot * nums[i] / shareDenom
+		paid += credit
+		if credit > 0 {
+			if err := AddCoins(ctx, pool, u, credit); err != nil {
+				return err
+			}
+		}
+	}
+	// Остаток от целочисленного деления — первому месту (человеку).
+	rem := pot - paid
+	if rem > 0 {
+		for _, pid := range placeWinnerIDs {
+			if isBotFn(pid) {
+				continue
+			}
+			if u, err := uuid.Parse(pid); err == nil {
+				return AddCoins(ctx, pool, u, rem)
+			}
+		}
+	}
+	return nil
+}
+
 // SettleStakePot — общий банк stake×N игроков (крестики / дурак multi).
 // Ничья или пустой список победителей при isDraw: возврат stake каждому человеку.
 // Иначе весь банк делится между winnerIDs (1 победитель → stake×N).

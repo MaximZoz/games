@@ -256,6 +256,36 @@ func TestAttackManySameRank(t *testing.T) {
 	}
 }
 
+func TestPlaceShareNumerators(t *testing.T) {
+	if got := PlaceShareNumerators(3); len(got) != 2 || got[0] != 2 || got[1] != 1 {
+		t.Fatalf("3p shares=%v want [2 1]", got)
+	}
+	if got := PlaceShareNumerators(4); len(got) != 3 || got[0] != 2 || got[1] != 1 || got[2] != 1 {
+		t.Fatalf("4p shares=%v want [2 1 1]", got)
+	}
+	if CreditForPlace(10, 3, 0) != 20 || CreditForPlace(10, 3, 1) != 10 {
+		t.Fatalf("3p credits want 20/10, got %d/%d", CreditForPlace(10, 3, 0), CreditForPlace(10, 3, 1))
+	}
+	if CreditForPlace(10, 4, 0) != 20 || CreditForPlace(10, 4, 1) != 10 || CreditForPlace(10, 4, 2) != 10 {
+		t.Fatalf("4p credits want 20/10/10")
+	}
+}
+
+func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
+	st := &State{
+		PlayerIDs:         []string{"a", "b", "c"},
+		Hands:             [][]Card{{}, {}, {{6, Hearts}}},
+		FinishedIndices:   []int{1, 0}, // b вышел первым, a — вторым
+		LoserIndex:        2,
+		Status:            StatusOver,
+		Deck:              nil,
+	}
+	got := st.WinnerPlaceOrder()
+	if len(got) != 2 || got[0] != 1 || got[1] != 0 {
+		t.Fatalf("place order=%v want [1 0]", got)
+	}
+}
+
 // Первый отбой: пачка до 5 карт (лимит), «Все»/авто — потом отбой.
 func TestFirstRoundThrowInBatchMaxFive(t *testing.T) {
 	st := &State{
