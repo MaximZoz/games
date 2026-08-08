@@ -232,7 +232,8 @@ class AppShell extends ConsumerWidget {
       ref.watch(shopCatalogProvider);
       ref.watch(inventoryListProvider);
       ref.watch(inventoryCapabilitiesProvider);
-      ref.watch(userGameSettingsProvider);
+      ref.watch(userGameSettingsProvider('tictactoe'));
+      ref.watch(userGameSettingsProvider('durak'));
       ref.watch(achievementsListProvider);
       ref.watch(collectionIncomeProvider);
       ref.watch(dailyRewardStatusProvider);

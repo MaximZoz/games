@@ -32,18 +32,19 @@ const List<int> gridSizeOptions = [3, 8, 9, 10, 15];
 const List<String> variantOptions = allGameVariants;
 
 String variantLabel(String variant) {
+  final l10n = LocaleService.l10n;
   switch (parseVariant(variant)) {
     case variantGomoku:
-      return 'Гомоку';
+      return l10n.gamesVariantGomoku;
     case variantUltimate:
-      return 'Ультимейт';
+      return l10n.gamesVariantUltimate;
     case variantMulti3:
-      return 'На троих';
+      return l10n.gamesVariantMulti3;
     case variantMulti4:
-      return 'На четверых';
+      return l10n.gamesVariantMulti4;
     case variantClassic:
     default:
-      return 'Классика';
+      return l10n.gamesVariantClassic;
   }
 }
 
@@ -69,6 +70,9 @@ class UserGameSettings {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.stakeBronze = 2,
+    this.deckSize = 36,
+    this.maxPlayers = 2,
+    this.gameMode = 'podkidnoi',
   }) : gridSize = gridSize ??
             (variant == variantGomoku
                 ? 15
@@ -88,7 +92,29 @@ class UserGameSettings {
   final bool firstMoveRestriction;
   final int stakeBronze;
 
+  /// Дурак: размер колоды (24/36/52).
+  final int deckSize;
+
+  /// Дурак: число игроков (2–4).
+  final int maxPlayers;
+
+  /// Дурак: podkidnoi | perevodnoi.
+  final String gameMode;
+
   static const defaults = UserGameSettings();
+
+  static const durakDefaults = UserGameSettings(
+    gameType: 'durak',
+    turnTimeSec: 60,
+    variant: 'podkidnoi',
+    stakeBronze: 2,
+    deckSize: 36,
+    maxPlayers: 2,
+    gameMode: 'podkidnoi',
+  );
+
+  static UserGameSettings defaultsFor(String gameType) =>
+      gameType == 'durak' ? durakDefaults : defaults;
 
   UserGameSettings copyWith({
     String? gameType,
@@ -98,29 +124,58 @@ class UserGameSettings {
     bool? swapRule,
     bool? firstMoveRestriction,
     int? stakeBronze,
+    int? deckSize,
+    int? maxPlayers,
+    String? gameMode,
   }) {
     final nextVariant = variant ?? this.variant;
     return UserGameSettings(
       gameType: gameType ?? this.gameType,
       turnTimeSec: turnTimeSec ?? this.turnTimeSec,
       variant: nextVariant,
-      gridSize: gridSize ?? gridSizeForVariant(nextVariant),
+      gridSize: gridSize ??
+          (gameType == 'durak' || this.gameType == 'durak'
+              ? 3
+              : gridSizeForVariant(nextVariant)),
       swapRule: swapRule ?? this.swapRule,
       firstMoveRestriction: firstMoveRestriction ?? this.firstMoveRestriction,
       stakeBronze: stakeBronze ?? this.stakeBronze,
+      deckSize: deckSize ?? this.deckSize,
+      maxPlayers: maxPlayers ?? this.maxPlayers,
+      gameMode: gameMode ?? this.gameMode,
     );
   }
 
   factory UserGameSettings.fromJson(Map<String, dynamic> json) {
+    final gameType = json['game_type'] as String? ?? 'tictactoe';
     final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
     final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
     final stake = (json['stake_bronze'] as num?)?.toInt() ?? 2;
+    final deck = (json['deck_size'] as num?)?.toInt() ?? 36;
+    final maxP = (json['max_players'] as num?)?.toInt() ?? 2;
+    final modeRaw = json['game_mode']?.toString().trim();
+    final gameMode =
+        (modeRaw == null || modeRaw.isEmpty) ? 'podkidnoi' : modeRaw;
+    if (gameType == 'durak') {
+      return UserGameSettings(
+        gameType: 'durak',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: gameMode,
+        gridSize: 3,
+        swapRule: false,
+        firstMoveRestriction: false,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: const {24, 36, 52}.contains(deck) ? deck : 36,
+        maxPlayers: maxP.clamp(2, 4),
+        gameMode: gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi',
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
         : parseVariant(rawVariant);
     return UserGameSettings(
-      gameType: json['game_type'] as String? ?? 'tictactoe',
+      gameType: gameType,
       turnTimeSec: turnTimeOptions.contains(turn) ? turn : 0,
       variant: variant,
       swapRule: json['swap_rule'] == true,
@@ -129,15 +184,26 @@ class UserGameSettings {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'game_type': gameType,
-        'turn_time_sec': turnTimeSec,
-        'variant': parseVariant(variant),
-        'grid_size': gridSize,
-        'swap_rule': swapRule,
-        'first_move_restriction': firstMoveRestriction,
-        'stake_bronze': stakeBronze,
-      };
+  Map<String, dynamic> toJson() {
+    final out = <String, dynamic>{
+      'game_type': gameType,
+      'turn_time_sec': turnTimeSec,
+      'stake_bronze': stakeBronze,
+      'swap_rule': false,
+      'first_move_restriction': false,
+    };
+    if (gameType == 'durak') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
+      out['deck_size'] = deckSize;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = gameMode;
+    } else {
+      out['variant'] = parseVariant(variant);
+      out['grid_size'] = gridSize;
+    }
+    return out;
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -149,7 +215,10 @@ class UserGameSettings {
           gridSize == other.gridSize &&
           swapRule == other.swapRule &&
           firstMoveRestriction == other.firstMoveRestriction &&
-          stakeBronze == other.stakeBronze;
+          stakeBronze == other.stakeBronze &&
+          deckSize == other.deckSize &&
+          maxPlayers == other.maxPlayers &&
+          gameMode == other.gameMode;
 
   @override
   int get hashCode => Object.hash(
@@ -160,6 +229,9 @@ class UserGameSettings {
         swapRule,
         firstMoveRestriction,
         stakeBronze,
+        deckSize,
+        maxPlayers,
+        gameMode,
       );
 }
 
@@ -222,7 +294,7 @@ String buildTictactoeRulesText({
   final cfg = configForVariant(variant);
   final resolvedGridSize = cfg.gridSize;
   final parts = <String>[
-    'Режим: ${variantLabel(cfg.variant)}',
+    l10n.rulesDurakMode(variantLabel(cfg.variant)),
     ..._variantRulesBody(cfg, l10n, resolvedGridSize),
   ];
   if (includeTurnTime) {

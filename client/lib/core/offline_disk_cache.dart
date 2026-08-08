@@ -24,6 +24,11 @@ class OfflineDiskCache {
 
   static String _k(String userId, String name) => 'offline_cache_${userId}_$name';
 
+  static String _settingsCacheKey(String userId, String gameType) {
+    final gt = gameType.trim().isEmpty ? 'tictactoe' : gameType.trim();
+    return '${userId}__$gt';
+  }
+
   static Future<void> saveShop(String userId, List<ShopItem> items) async {
     // Не затираем хороший кэш пустым ответом API.
     if (items.isEmpty && (_memShop[userId]?.isNotEmpty ?? false)) return;
@@ -127,29 +132,50 @@ class OfflineDiskCache {
 
   static Future<void> saveGameSettings(
     String userId,
-    UserGameSettings settings,
-  ) async {
-    _memGameSettings[userId] = settings;
+    UserGameSettings settings, {
+    String? gameType,
+  }) async {
+    final gt = (gameType ?? settings.gameType).trim().isEmpty
+        ? 'tictactoe'
+        : (gameType ?? settings.gameType).trim();
+    final key = _settingsCacheKey(userId, gt);
+    _memGameSettings[key] = settings;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        _k(userId, 'game_settings'),
+        _k(userId, 'game_settings_$gt'),
         jsonEncode(settings.toJson()),
       );
+      // Legacy-ключ: для tictactoe пишем и старый слот (миграция кэша).
+      if (gt == 'tictactoe') {
+        await prefs.setString(
+          _k(userId, 'game_settings'),
+          jsonEncode(settings.toJson()),
+        );
+      }
     } catch (_) {}
   }
 
-  static Future<UserGameSettings?> loadGameSettings(String userId) async {
-    final mem = _memGameSettings[userId];
+  static Future<UserGameSettings?> loadGameSettings(
+    String userId, {
+    String gameType = 'tictactoe',
+  }) async {
+    final gt = gameType.trim().isEmpty ? 'tictactoe' : gameType.trim();
+    final key = _settingsCacheKey(userId, gt);
+    final mem = _memGameSettings[key];
     if (mem != null) return mem;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_k(userId, 'game_settings'));
+      var raw = prefs.getString(_k(userId, 'game_settings_$gt'));
+      // Fallback на старый единый ключ только для крестиков.
+      if ((raw == null || raw.isEmpty) && gt == 'tictactoe') {
+        raw = prefs.getString(_k(userId, 'game_settings'));
+      }
       if (raw == null || raw.isEmpty) return null;
       final map = jsonDecode(raw);
       if (map is! Map) return null;
       final loaded = UserGameSettings.fromJson(Map<String, dynamic>.from(map));
-      _memGameSettings[userId] = loaded;
+      _memGameSettings[key] = loaded;
       return loaded;
     } catch (_) {
       return null;

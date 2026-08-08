@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 /// Сообщение, когда нельзя войти в другую игру/лобби.
-const finishCurrentGameMessage = 'Сначала завершите текущую игру';
+String get finishCurrentGameMessage =>
+    LocaleService.l10n.gamesFinishCurrentFirst;
 
 /// Канонический ключ ошибки сервера (поле JSON `error`).
 const finishCurrentGameErrorKey = 'finish your current game first';

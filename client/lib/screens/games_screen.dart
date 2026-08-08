@@ -67,7 +67,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   void _hydrateFromSavedSettings() {
     if (_settingsHydrated) return;
-    final saved = ref.read(userGameSettingsProvider).valueOrNull;
+    final saved = ref.read(userGameSettingsProvider('tictactoe')).valueOrNull;
     if (saved == null) return;
     _settingsHydrated = true;
     setState(() {
@@ -80,8 +80,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _persistSettings() {
-    ref.read(userGameSettingsProvider.notifier).updateLocal(
+    ref.read(userGameSettingsProvider('tictactoe').notifier).updateLocal(
           UserGameSettings(
+            gameType: 'tictactoe',
             turnTimeSec: _selectedTurnTimeSec,
             variant: _selectedVariant,
             swapRule: false,
@@ -202,9 +203,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       }
       goToActiveSession(context, active);
     });
-    // Подхватываем конфиг из БД, когда он лениво догрузится.
-    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
-        (prev, next) {
+    // Подхватываем конфиг крестиков из БД, когда он лениво догрузится.
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('tictactoe'), (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
@@ -934,9 +935,7 @@ class _GamesPageContent extends ConsumerWidget {
                                   const SizedBox(height: 16),
                                   _DurakGameCard(
                                     isOffline: isOffline,
-                                    stakeBronze: stakeBronze,
                                     stakeOptionsList: stakeOptionsList,
-                                    onStakeChanged: onStakeChanged,
                                   ),
                                 ],
                               ),
@@ -967,9 +966,7 @@ class _GamesPageContent extends ConsumerWidget {
                           const SizedBox(height: 16),
                           _DurakGameCard(
                             isOffline: isOffline,
-                            stakeBronze: stakeBronze,
                             stakeOptionsList: stakeOptionsList,
-                            onStakeChanged: onStakeChanged,
                           ),
                         ],
                       );
@@ -1020,34 +1017,35 @@ class _GamesPageContent extends ConsumerWidget {
                               );
                             },
                             borderRadius: BorderRadius.circular(16),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.visibility_rounded,
+                                const Icon(Icons.visibility_rounded,
                                     size: 40, color: AppColors.accentStart),
-                                SizedBox(width: 16),
+                                const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Наблюдение',
-                                        style: TextStyle(
+                                        context.l10n.gamesObservation,
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.textPrimary,
                                           fontSize: 16,
                                         ),
                                       ),
                                       Text(
-                                        'Можно смотреть до конца партии',
-                                        style: TextStyle(
+                                        context.l10n.gamesObservationHint,
+                                        style: const TextStyle(
                                             fontSize: 13,
                                             color: AppColors.textSecondary),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                                const Icon(Icons.arrow_forward_ios_rounded,
+                                    size: 16),
                               ],
                             ),
                           ),
@@ -1169,47 +1167,9 @@ class _LobbiesPageContent extends StatelessWidget {
                   _invitesSection(context),
                   lobbiesAsync.when(
                     data: (lobbies) {
-                      if (lobbies.isEmpty && invites.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isDesktop ? 48 : 36,
-                            horizontal: 12,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.group_off_rounded,
-                                size: isDesktop ? 48 : 40,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.7),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                context.l10n.gamesLobbyTab,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isDesktop ? 16 : 15,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton.icon(
-                                onPressed: onRefresh,
-                                icon: const Icon(Icons.refresh_rounded),
-                                label: Text(context.l10n.commonTryRefresh),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
+                      // Пустое лобби — без заглушки («Лобби» / refresh).
                       if (lobbies.isEmpty) {
-                        return TextButton.icon(
-                          onPressed: onRefresh,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: Text(context.l10n.commonTryRefresh),
-                        );
+                        return const SizedBox.shrink();
                       }
                       final lobbyCards = lobbies
                           .map(
@@ -1441,28 +1401,64 @@ class _LobbiesPageContent extends StatelessWidget {
 class _DurakGameCard extends ConsumerStatefulWidget {
   const _DurakGameCard({
     required this.isOffline,
-    required this.stakeBronze,
     required this.stakeOptionsList,
-    required this.onStakeChanged,
   });
 
   final bool isOffline;
-  final int stakeBronze;
   final List<int> stakeOptionsList;
-  final void Function(int) onStakeChanged;
 
   @override
   ConsumerState<_DurakGameCard> createState() => _DurakGameCardState();
 }
 
 class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
-  // Игроки и режим независимы — переключение не сбрасывает другое.
+  // Свои настройки (не общие с крестиками) — hydrate из userGameSettings(durak).
   int _players = 2;
   int _deckSize = 36;
   String _gameMode = 'podkidnoi'; // podkidnoi | perevodnoi
   int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  bool _settingsHydrated = false;
   bool _creating = false;
   bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('durak')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _players = saved.maxPlayers.clamp(2, 4);
+      _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
+      _gameMode =
+          saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('durak').notifier).updateLocal(
+          UserGameSettings(
+            gameType: 'durak',
+            turnTimeSec: _turnTimeSec,
+            variant: _gameMode,
+            stakeBronze: _stakeBronze,
+            deckSize: _deckSize,
+            maxPlayers: _players,
+            gameMode: _gameMode,
+          ),
+        );
+  }
 
   Future<void> _create(String mode) async {
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
@@ -1481,7 +1477,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         deckSize: _deckSize,
         gameMode: _gameMode,
         turnTimeSec: _turnTimeSec,
-        stakeBronze: widget.stakeBronze,
+        stakeBronze: _stakeBronze,
       );
       if (!mounted) return;
       final lobbyId = result.lobbyId;
@@ -1552,6 +1548,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       _players = _players == 4 ? 2 : _players + 1;
       _deckSize = durakClampDeckForPlayers(_players, _deckSize);
     });
+    _persistSettings();
   }
 
   void _cycleGameMode() {
@@ -1559,6 +1556,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
     setState(() {
       _gameMode = _gameMode == 'podkidnoi' ? 'perevodnoi' : 'podkidnoi';
     });
+    _persistSettings();
   }
 
   void _cycleDeck() {
@@ -1568,6 +1566,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       final i = options.indexOf(_deckSize);
       _deckSize = options[(i < 0 ? 0 : i + 1) % options.length];
     });
+    _persistSettings();
   }
 
   void _cycleTurnTime() {
@@ -1575,23 +1574,53 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       const arr = [20, 60, 600, 0];
       _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
     });
+    _persistSettings();
   }
 
   void _cycleStake() {
     final options = widget.stakeOptionsList.isEmpty
         ? freeStakeOptions
         : widget.stakeOptionsList;
-    final idx = options.indexOf(widget.stakeBronze);
+    final idx = options.indexOf(_stakeBronze);
     final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
-    widget.onStakeChanged(next);
+    setState(() => _stakeBronze = next);
+    _persistSettings();
   }
 
-  String _modeLabel(String m) => durakModeLabel(m);
+  String _modeLabel(String m) => durakModeLabel(m, context.l10n);
 
-  String _deckLabel(int n) => durakDeckLabel(n);
+  String _deckLabel(int n) => durakDeckLabel(n, context.l10n);
 
   @override
   Widget build(BuildContext context) {
+    // Поздняя подгрузка настроек с сервера.
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('durak'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _players = saved.maxPlayers.clamp(2, 4);
+        _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
+        _gameMode =
+            saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
@@ -1637,12 +1666,12 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       isDesktop: isDesktop,
       isMedium: isMedium,
       header: GameCardHeader(
-        title: 'Дурак',
+        title: context.l10n.gamesDurak,
         icon: DurakGameIcon.iconData,
         flipIcon: true,
-        stakeBronze: widget.isOffline ? null : widget.stakeBronze,
-        stakeLabel: formatStakeAmount(widget.stakeBronze),
-        stakeCoinType: stakeCoinType(widget.stakeBronze),
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: busy ? null : _cycleStake,
         onInfoTap: busy ? null : () => _showRules(context),
         busy: busy,
@@ -1678,8 +1707,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         players: _players,
         deckSize: _deckSize,
         turnTimeSec: _turnTimeSec,
-        stakeBronze: widget.stakeBronze,
+        stakeBronze: _stakeBronze,
         offlineBot: widget.isOffline,
+        l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,
     );

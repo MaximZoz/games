@@ -379,7 +379,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
       queryParameters: {
         'from': 'games',
         'game': returnPath,
-        'name': 'Лобби ${durakModeLabel(fresh.gameMode)}',
+        'name': context.l10n.lobbyNamed(durakModeLabel(fresh.gameMode, context.l10n)),
       },
     ).toString();
     context.push(route);

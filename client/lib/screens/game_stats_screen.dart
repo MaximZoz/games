@@ -152,7 +152,7 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
     case 'tictactoe':
       return l10n.gamesTicTacToe;
     case 'durak':
-      return 'Дурак';
+      return l10n.gamesDurak;
     default:
       return gameType;
   }

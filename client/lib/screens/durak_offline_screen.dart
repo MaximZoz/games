@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
@@ -222,7 +223,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/games'),
         ),
-        title: const Text('Дурак'),
+        title: Text(context.l10n.gamesDurak),
         centerTitle: true,
         actions: [
           IconButton(

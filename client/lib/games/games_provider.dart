@@ -6,6 +6,7 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -60,7 +61,7 @@ class GameInvite {
   /// Подпись режима для карточки приглашения.
   String get modeLabel {
     if (isDurak) {
-      return durakMode == 'perevodnoi' ? 'Переводной' : 'Подкидной';
+      return durakModeLabel(durakMode);
     }
     return variantLabel(variant);
   }
@@ -457,19 +458,25 @@ final gameInvitesCountProvider = Provider.autoDispose<int>((ref) {
   return ref.watch(gameInvitesProvider).length;
 });
 
-/// Ленивая загрузка конфигурации игр из БД (при старте/входе).
-final userGameSettingsProvider =
-    AsyncNotifierProvider<UserGameSettingsNotifier, UserGameSettings>(
+/// Ленивая загрузка конфигурации игры из БД (на [gameType]).
+final userGameSettingsProvider = AsyncNotifierProvider.family<
+    UserGameSettingsNotifier, UserGameSettings, String>(
   UserGameSettingsNotifier.new,
 );
 
-class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
+class UserGameSettingsNotifier
+    extends FamilyAsyncNotifier<UserGameSettings, String> {
   Timer? _saveTimer;
   UserGameSettings? _pending;
   GamesRepository? _repo;
 
+  String get _gameType {
+    final gt = arg.trim();
+    return gt.isEmpty ? 'tictactoe' : gt;
+  }
+
   @override
-  Future<UserGameSettings> build() async {
+  Future<UserGameSettings> build(String arg) async {
     ref.onDispose(() {
       _saveTimer?.cancel();
       final pending = _pending;
@@ -479,32 +486,45 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
         unawaited(repo.saveGameSettings(pending));
       }
     });
+    final gameType = _gameType;
     final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return UserGameSettings.defaults;
+    if (user == null) return UserGameSettings.defaultsFor(gameType);
     final offline = ref.watch(isOfflineProvider);
     if (offline) {
-      return await OfflineDiskCache.loadGameSettings(user.id) ??
-          UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+          UserGameSettings.defaultsFor(gameType);
     }
     try {
-      final settings =
-          await ref.read(gamesRepositoryProvider).getGameSettings();
-      await OfflineDiskCache.saveGameSettings(user.id, settings);
+      final settings = await ref
+          .read(gamesRepositoryProvider)
+          .getGameSettings(gameType: gameType);
+      await OfflineDiskCache.saveGameSettings(
+        user.id,
+        settings,
+        gameType: gameType,
+      );
       return settings;
     } catch (_) {
-      return await OfflineDiskCache.loadGameSettings(user.id) ??
-          UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+          UserGameSettings.defaultsFor(gameType);
     }
   }
 
   /// Локально применяет настройки и с задержкой пишет в БД.
   void updateLocal(UserGameSettings next) {
-    state = AsyncData(next);
-    _pending = next;
+    final withType = next.gameType == _gameType
+        ? next
+        : next.copyWith(gameType: _gameType);
+    state = AsyncData(withType);
+    _pending = withType;
     _repo = ref.read(gamesRepositoryProvider);
     final user = ref.read(authStateProvider).valueOrNull;
     if (user != null) {
-      unawaited(OfflineDiskCache.saveGameSettings(user.id, next));
+      unawaited(OfflineDiskCache.saveGameSettings(
+        user.id,
+        withType,
+        gameType: _gameType,
+      ));
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 450), () {
@@ -521,7 +541,6 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     if (user == null) return;
     try {
       final saved = await repo.saveGameSettings(settings);
-      // Не затираем более новые локальные правки.
       final current = state.valueOrNull;
       if (current == null || current == settings || current == saved) {
         state = AsyncData(saved);

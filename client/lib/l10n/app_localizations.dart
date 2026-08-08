@@ -1019,6 +1019,12 @@ abstract class AppLocalizations {
   /// **'Крестики-нолики'**
   String get gamesTicTacToe;
 
+  /// No description provided for @gamesDurak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дурак'**
+  String get gamesDurak;
+
   /// No description provided for @gamesRules.
   ///
   /// In ru, this message translates to:
@@ -1084,6 +1090,132 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Запрет центра'**
   String get gamesNoCenter;
+
+  /// No description provided for @gamesObservation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Наблюдение'**
+  String get gamesObservation;
+
+  /// No description provided for @gamesObservationHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно смотреть до конца партии'**
+  String get gamesObservationHint;
+
+  /// No description provided for @gamesFinishCurrentFirst.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сначала завершите текущую игру'**
+  String get gamesFinishCurrentFirst;
+
+  /// No description provided for @gamesVariantClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика'**
+  String get gamesVariantClassic;
+
+  /// No description provided for @gamesVariantGomoku.
+  ///
+  /// In ru, this message translates to:
+  /// **'Гомоку'**
+  String get gamesVariantGomoku;
+
+  /// No description provided for @gamesVariantUltimate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ультимейт'**
+  String get gamesVariantUltimate;
+
+  /// No description provided for @gamesVariantMulti3.
+  ///
+  /// In ru, this message translates to:
+  /// **'На троих'**
+  String get gamesVariantMulti3;
+
+  /// No description provided for @gamesVariantMulti4.
+  ///
+  /// In ru, this message translates to:
+  /// **'На четверых'**
+  String get gamesVariantMulti4;
+
+  /// No description provided for @gamesDurakModePodkidnoi.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкидной'**
+  String get gamesDurakModePodkidnoi;
+
+  /// No description provided for @gamesDurakModePerevodnoi.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переводной'**
+  String get gamesDurakModePerevodnoi;
+
+  /// No description provided for @gamesDurakDeck24.
+  ///
+  /// In ru, this message translates to:
+  /// **'24 карты'**
+  String get gamesDurakDeck24;
+
+  /// No description provided for @gamesDurakDeck36.
+  ///
+  /// In ru, this message translates to:
+  /// **'36 карт'**
+  String get gamesDurakDeck36;
+
+  /// No description provided for @gamesDurakDeck52.
+  ///
+  /// In ru, this message translates to:
+  /// **'52 карты'**
+  String get gamesDurakDeck52;
+
+  /// No description provided for @rulesDurakMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}'**
+  String rulesDurakMode(String mode);
+
+  /// No description provided for @rulesDurakPlayersDeck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: {players}. Колода: {deck}.'**
+  String rulesDurakPlayersDeck(int players, String deck);
+
+  /// No description provided for @rulesDurakOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра против бота, без ставок и лимита времени.'**
+  String get rulesDurakOfflineBot;
+
+  /// No description provided for @rulesDurakAttack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.'**
+  String get rulesDurakAttack;
+
+  /// No description provided for @rulesDurakBeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.'**
+  String get rulesDurakBeat;
+
+  /// No description provided for @rulesDurakLoser.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проигравший — у кого в конце партии остались карты, «дурак».'**
+  String get rulesDurakLoser;
+
+  /// No description provided for @lobbyPlayersCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки {count}/{maxPlayers}'**
+  String lobbyPlayersCount(int count, int maxPlayers);
+
+  /// No description provided for @lobbyNamed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби {name}'**
+  String lobbyNamed(String name);
 
   /// No description provided for @lobbyMatchmake.
   ///

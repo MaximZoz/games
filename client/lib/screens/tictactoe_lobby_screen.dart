@@ -811,7 +811,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       queryParameters: {
         'from': 'games',
         'game': returnPath,
-        'name': 'Лобби ${variantLabel(fresh.variant)}',
+        'name': context.l10n.lobbyNamed(variantLabel(fresh.variant)),
       },
     ).toString();
     context.push(route);

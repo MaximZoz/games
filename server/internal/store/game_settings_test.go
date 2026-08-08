@@ -13,4 +13,8 @@ func TestDefaultUserGameSettings(t *testing.T) {
 	if s.SwapRule || s.FirstMoveRestriction {
 		t.Fatal("bool defaults must be false")
 	}
+	d := DefaultUserGameSettings(GameTypeDurak)
+	if d.GameType != GameTypeDurak || d.TurnTimeSec != 60 || d.DeckSize != 36 || d.GameMode != "podkidnoi" {
+		t.Fatalf("durak defaults: %+v", d)
+	}
 }

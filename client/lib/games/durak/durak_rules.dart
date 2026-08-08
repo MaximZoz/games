@@ -1,19 +1,26 @@
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show formatTurnTime;
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Подпись режима игры «Дурак».
-String durakModeLabel(String mode) =>
-    mode == 'perevodnoi' ? 'Переводной' : 'Подкидной';
+String durakModeLabel(String mode, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  return mode == 'perevodnoi'
+      ? t.gamesDurakModePerevodnoi
+      : t.gamesDurakModePodkidnoi;
+}
 
 /// Подпись размера колоды.
-String durakDeckLabel(int n) {
+String durakDeckLabel(int n, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
   switch (n) {
     case 24:
-      return '24 карты';
+      return t.gamesDurakDeck24;
     case 52:
-      return '52 карты';
+      return t.gamesDurakDeck52;
     default:
-      return '36 карт';
+      return t.gamesDurakDeck36;
   }
 }
 
@@ -37,23 +44,22 @@ List<String> durakRuleLines({
   required int turnTimeSec,
   required int stakeBronze,
   bool offlineBot = false,
+  AppLocalizations? l10n,
 }) {
+  final t = l10n ?? LocaleService.l10n;
   return [
-    'Режим: ${durakModeLabel(mode)}',
-    'Игроки: $players. Колода: ${durakDeckLabel(deckSize)}.',
+    t.rulesDurakMode(durakModeLabel(mode, t)),
+    t.rulesDurakPlayersDeck(players, durakDeckLabel(deckSize, t)),
     if (offlineBot)
-      'Игра против бота, без ставок и лимита времени.'
+      t.rulesDurakOfflineBot
     else ...[
       turnTimeSec == 0
-          ? 'Без ограничения по времени на ход.'
-          : 'Время на ход: ${formatTurnTime(turnTimeSec)}.',
-      if (stakeBronze > 0)
-        'Ставка: $stakeBronze. На столько монет идёт игра.',
+          ? t.rulesNoTimeLimit
+          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
+      if (stakeBronze > 0) t.rulesStake('$stakeBronze'),
     ],
-    'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). '
-        'Козырь бьётся только козырем старше.',
-    'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. '
-        'Иначе защитник берёт всё со стола.',
-    'Проигравший — у кого в конце партии остались карты, «дурак».',
+    t.rulesDurakAttack,
+    t.rulesDurakBeat,
+    t.rulesDurakLoser,
   ];
 }

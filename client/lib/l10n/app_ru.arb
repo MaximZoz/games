@@ -211,6 +211,7 @@
   "gamesWaiting": "Ожидание",
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
+  "gamesDurak": "Дурак",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",
@@ -222,6 +223,61 @@
   "gamesGridSize": "Размер сетки",
   "gamesSwapSides": "Смена сторон",
   "gamesNoCenter": "Запрет центра",
+  "gamesObservation": "Наблюдение",
+  "gamesObservationHint": "Можно смотреть до конца партии",
+  "gamesFinishCurrentFirst": "Сначала завершите текущую игру",
+  "gamesVariantClassic": "Классика",
+  "gamesVariantGomoku": "Гомоку",
+  "gamesVariantUltimate": "Ультимейт",
+  "gamesVariantMulti3": "На троих",
+  "gamesVariantMulti4": "На четверых",
+  "gamesDurakModePodkidnoi": "Подкидной",
+  "gamesDurakModePerevodnoi": "Переводной",
+  "gamesDurakDeck24": "24 карты",
+  "gamesDurakDeck36": "36 карт",
+  "gamesDurakDeck52": "52 карты",
+  "rulesDurakMode": "Режим: {mode}",
+  "@rulesDurakMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesDurakPlayersDeck": "Игроки: {players}. Колода: {deck}.",
+  "@rulesDurakPlayersDeck": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      },
+      "deck": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesDurakOfflineBot": "Игра против бота, без ставок и лимита времени.",
+  "rulesDurakAttack": "Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.",
+  "rulesDurakBeat": "Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.",
+  "rulesDurakLoser": "Проигравший — у кого в конце партии остались карты, «дурак».",
+  "lobbyPlayersCount": "Игроки {count}/{maxPlayers}",
+  "@lobbyPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "maxPlayers": {
+        "type": "int"
+      }
+    }
+  },
+  "lobbyNamed": "Лобби {name}",
+  "@lobbyNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "lobbyMatchmake": "Лобби",
   "lobbyPrivateGame": "Своя игра",
   "lobbySearchingOpponent": "Поиск соперника…",

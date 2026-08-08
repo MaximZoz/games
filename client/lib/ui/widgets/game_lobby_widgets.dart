@@ -249,7 +249,7 @@ class LobbyMultiPlayersCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Игроки $count/$maxPlayers',
+                  context.l10n.lobbyPlayersCount(count, maxPlayers),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,

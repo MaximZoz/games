@@ -3864,7 +3864,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               icon: const Icon(Icons.close_rounded),
               onPressed: _busy ? null : _onClosePressed,
             ),
-            title: const Text('Дурак'),
+            title: Text(context.l10n.gamesDurak),
             actions: view == null
                 ? const []
                 : buildGameAppBarActions(

@@ -460,6 +460,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesTicTacToe => 'Tic-tac-toe';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
   String get gamesRules => 'Rules';
 
   @override
@@ -491,6 +494,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'No center start';
+
+  @override
+  String get gamesObservation => 'Spectating';
+
+  @override
+  String get gamesObservationHint => 'You can watch until the game ends';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Finish your current game first';
+
+  @override
+  String get gamesVariantClassic => 'Classic';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 players';
+
+  @override
+  String get gamesVariantMulti4 => '4 players';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Throw-in';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Transfer';
+
+  @override
+  String get gamesDurakDeck24 => '24 cards';
+
+  @override
+  String get gamesDurakDeck36 => '36 cards';
+
+  @override
+  String get gamesDurakDeck52 => '52 cards';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Mode: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Players: $players. Deck: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Play against a bot, no stakes or turn timer.';
+
+  @override
+  String get rulesDurakAttack => 'The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.';
+
+  @override
+  String get rulesDurakBeat => 'When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.';
+
+  @override
+  String get rulesDurakLoser => 'The loser is the one left with cards at the end — the “fool”.';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Players $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobby $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Lobby';

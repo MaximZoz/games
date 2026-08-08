@@ -460,6 +460,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesTicTacToe => 'إكس-أو';
 
   @override
+  String get gamesDurak => 'Дурак';
+
+  @override
   String get gamesRules => 'القواعد';
 
   @override
@@ -491,6 +494,77 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'بدون بداية من الوسط';
+
+  @override
+  String get gamesObservation => 'Наблюдение';
+
+  @override
+  String get gamesObservationHint => 'Можно смотреть до конца партии';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Сначала завершите текущую игру';
+
+  @override
+  String get gamesVariantClassic => 'Классика';
+
+  @override
+  String get gamesVariantGomoku => 'Гомоку';
+
+  @override
+  String get gamesVariantUltimate => 'Ультимейт';
+
+  @override
+  String get gamesVariantMulti3 => 'На троих';
+
+  @override
+  String get gamesVariantMulti4 => 'На четверых';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Подкидной';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Переводной';
+
+  @override
+  String get gamesDurakDeck24 => '24 карты';
+
+  @override
+  String get gamesDurakDeck36 => '36 карт';
+
+  @override
+  String get gamesDurakDeck52 => '52 карты';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Режим: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Игроки: $players. Колода: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Игра против бота, без ставок и лимита времени.';
+
+  @override
+  String get rulesDurakAttack => 'Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.';
+
+  @override
+  String get rulesDurakBeat => 'Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.';
+
+  @override
+  String get rulesDurakLoser => 'Проигравший — у кого в конце партии остались карты, «дурак».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Игроки $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Лобби $name';
+  }
 
   @override
   String get lobbyMatchmake => 'الردهة';
