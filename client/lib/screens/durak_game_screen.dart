@@ -4030,16 +4030,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     },
                   ),
                 ),
+                // Призовое место (в т.ч. 2-е после чужого таймаута) — не только «не дурак».
                 if (view != null &&
-                    !view.isDraw &&
-                    !view.iAmEliminated &&
-                    ((view.isOver &&
-                            view.loserIndex >= 0 &&
-                            view.loserIndex != view.myIndex &&
-                            view.myPlace > 0) ||
-                        (!view.isOver &&
-                            view.iAmFinished &&
-                            view.myPlace > 0)))
+                    (_iWon(view) &&
+                        (view.isOver || view.iAmFinished)))
                   const Positioned.fill(child: GameConfettiOverlay()),
                 // Групповой чат — отдельно под крестиком.
                 if (showGroupChat && view != null)
@@ -5361,12 +5355,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
+  /// Есть оплачиваемое место (1-е, 2-е, …) — не обязательно «не дурак».
+  /// После чужой сдачи/таймаута дурак среди оставшихся тоже получает место.
   bool _iWon(DurakGameView view) =>
-      !view.isDraw &&
-      view.loserIndex >= 0 &&
-      view.loserIndex != view.myIndex &&
-      !view.iAmEliminated &&
-      view.myPlace > 0;
+      !view.isDraw && !view.iAmEliminated && view.myPlace > 0;
 
   bool _showRewardChip(DurakGameView view) {
     if (view.stakeBronze <= 0) return false;
@@ -5437,19 +5429,28 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     if (view.isOver) {
       if (view.isDraw) return l10n.gameDraw;
-      final iWon = _iWon(view);
+      final place = view.myPlace;
       final winnerName = _winnerName(view);
-      if (iWon && view.myPlace == 1) {
+      // 1-е место — с причиной конца, если соперник сдался/вылетел по времени.
+      if (place == 1) {
         if (view.isForfeit) return l10n.gameYouWonOpponentForfeit;
         if (view.isTimeout) return l10n.gameYouWonOpponentTimeout;
         return l10n.gameYouWon;
       }
-      if (iWon && view.myPlace > 1) {
-        return l10n.gameYouPlaced(view.myPlace);
+      // 2-е и дальше — всегда своё место. Не «Время вышло»: флаг timeout
+      // на партии может быть от другого игрока, выбывшего раньше.
+      if (place > 1) {
+        return l10n.gameYouPlaced(place);
       }
-      // Проигравший / остальные: «Победил {логин}».
-      if (view.isTimeout) {
+      // Нет места: выбыл по времени / сдался / классический дурак.
+      if (view.iAmEliminated && view.isTimeout) {
         return l10n.gameOpponentWonTimeout(winnerName);
+      }
+      if (view.iAmEliminated && view.isForfeit) {
+        return l10n.gameYouForfeitOpponentWon(winnerName);
+      }
+      if (view.iAmEliminated) {
+        return l10n.gameYouEliminated;
       }
       return l10n.gameOpponentWon(winnerName);
     }
