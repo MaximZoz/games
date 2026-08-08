@@ -1116,15 +1116,26 @@ class _LobbiesPageContent extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            lobby.creatorName.trim().isNotEmpty
-                                                ? lobby.creatorName
-                                                : context.l10n.commonPlayer,
+                                            lobby.isDurak
+                                                ? context.l10n.gamesDurak
+                                                : context.l10n.gamesTicTacToe,
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
                                               fontSize: isDesktop ? 16 : 14,
                                             ),
                                           ),
+                                          Text(
+                                            lobby.creatorName.trim().isNotEmpty
+                                                ? lobby.creatorName
+                                                : context.l10n.commonPlayer,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textSecondary,
+                                              fontSize: isDesktop ? 13 : 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
                                           Wrap(
                                             spacing: 12,
                                             runSpacing: 4,
@@ -2236,14 +2247,32 @@ class _InviteCard extends ConsumerWidget {
                         child: InkWell(
                           onTap: () => onShowCreatorInfo(context, inv),
                           borderRadius: BorderRadius.circular(6),
-                          child: Text(
-                            inv.creatorName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                inv.gameType == 'durak'
+                                    ? context.l10n.gamesDurak
+                                    : context.l10n.gamesTicTacToe,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                inv.creatorName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ),
