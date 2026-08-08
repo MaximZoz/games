@@ -2706,12 +2706,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (playerCount <= 0) return const [];
     final atk = attacker.clamp(0, playerCount - 1);
     final def = defender.clamp(0, playerCount - 1);
-    final order = <int>[atk];
-    for (var i = 1; i < playerCount - 1; i++) {
-      order.add((atk + i) % playerCount);
-    }
-    if (def != atk) order.add(def);
-    return order;
+    return [
+      for (var i = 0; i < playerCount; i++)
+        if ((atk + i) % playerCount != def) (atk + i) % playerCount,
+      if (def != atk) def,
+    ];
   }
 
   /// Держать колоду/козырь на экране с числа [before], пока идёт добор.

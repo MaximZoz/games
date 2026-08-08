@@ -423,14 +423,15 @@ class DurakGame {
     turn = isOver ? DurakTurn.attacker : DurakTurn.attacker;
   }
 
-  /// Добор карт по кругу: атакующий, подкидывающие, защитник — по 6.
+  /// Добор: атакующий → остальные по часовой (кроме защитника) → защитник.
   void _refillHands() {
-    final order = <int>[];
-    order.add(attackerIndex);
-    for (var i = 1; i < playerCount - 1; i++) {
-      order.add((attackerIndex + i) % playerCount);
-    }
-    if (defenderIndex != attackerIndex) order.add(defenderIndex);
+    final def = defenderIndex;
+    final order = <int>[
+      for (var i = 0; i < playerCount; i++)
+        if ((attackerIndex + i) % playerCount != def)
+          (attackerIndex + i) % playerCount,
+      if (def >= 0 && def < playerCount) def,
+    ];
     for (final p in order) {
       final need = 6 - hands[p].length;
       if (need <= 0) continue;

@@ -964,18 +964,39 @@ func (s *State) removeFromHand(idx int, c Card) {
 	}
 }
 
-func (s *State) refill() {
+// refillOrder — атакующий, затем остальные по часовой (кроме защитника), защитник последний.
+// Важно при 3 игроках: старый цикл i < n-1 пропускал «среднего» и дублировал защитника.
+func (s *State) refillOrder() []int {
 	n := len(s.PlayerIDs)
-	order := []int{s.AttackerIndex}
-	for i := 1; i < n-1; i++ {
-		order = append(order, (s.AttackerIndex+i)%n)
+	if n == 0 {
+		return nil
+	}
+	atk := s.AttackerIndex
+	if atk < 0 || atk >= n {
+		atk = 0
 	}
 	def := s.DefenderIndex()
-	if def != s.AttackerIndex {
+	order := make([]int, 0, n)
+	for i := 0; i < n; i++ {
+		j := (atk + i) % n
+		if j == def || !s.isAlive(j) {
+			continue
+		}
+		order = append(order, j)
+	}
+	if def >= 0 && def < n && s.isAlive(def) {
 		order = append(order, def)
 	}
-	for _, p := range order {
-		need := s.HandSize - len(s.Hands[p])
+	return order
+}
+
+func (s *State) refill() {
+	handSize := s.HandSize
+	if handSize <= 0 {
+		handSize = 6
+	}
+	for _, p := range s.refillOrder() {
+		need := handSize - len(s.Hands[p])
 		for need > 0 && len(s.Deck) > 0 {
 			s.Hands[p] = append(s.Hands[p], s.Deck[0])
 			s.Deck = s.Deck[1:]
@@ -1206,6 +1227,9 @@ func Decode(raw string) (*State, error) {
 	if s.Passed == nil {
 		s.Passed = map[int]bool{}
 	}
+	if s.HandSize <= 0 {
+		s.HandSize = 6
+	}
 	// Старые сейвы без thrower_index → атакующий.
 	if s.ThrowerIndex < 0 || s.ThrowerIndex >= len(s.PlayerIDs) {
 		s.ThrowerIndex = s.AttackerIndex
@@ -1220,6 +1244,17 @@ func Decode(raw string) (*State, error) {
 		s.FirstRound = s.isFirstRoundActive()
 	}
 	return &s, nil
+}
+
+// RefillIfNeeded — добрать до HandSize при пустом столе (лечит старый баг 3p).
+// true, если хотя бы одна карта ушла из колоды.
+func (s *State) RefillIfNeeded() bool {
+	if s == nil || s.Status != StatusActive || len(s.Table) > 0 || len(s.Deck) == 0 {
+		return false
+	}
+	before := len(s.Deck)
+	s.refill()
+	return len(s.Deck) < before
 }
 
 // UnixNow — стабильный источник времени (для сидов бота на сервере, если нужно).

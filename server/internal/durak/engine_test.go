@@ -286,6 +286,94 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Втроём добор должен дать карты всем, включая «среднего» между атакующим и защитником.
+func TestRefillThreePlayersAllGetCards(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{9, Clubs}, {10, Clubs}, {11, Clubs}, {12, Clubs}}, // atk: 4
+			{{9, Hearts}, {10, Hearts}},                         // def: 2
+			{{9, Spades}, {10, Spades}, {11, Spades}, {12, Spades}}, // mid: 4
+		},
+		Deck: []Card{
+			{6, Clubs}, {7, Clubs}, {8, Clubs}, {6, Hearts}, {7, Hearts}, {8, Hearts},
+			{6, Spades}, {7, Spades}, {8, Spades}, {6, Diamonds}, {7, Diamonds},
+			{8, Diamonds}, {9, Diamonds}, {10, Diamonds}, {11, Diamonds}, {12, Diamonds},
+		},
+		Trump:         Diamonds,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		RoundEnded:    true,
+	}
+	order := st.refillOrder()
+	// atk=0, def=1 → [0, 2, 1]
+	if len(order) != 3 || order[0] != 0 || order[1] != 2 || order[2] != 1 {
+		t.Fatalf("refillOrder=%v want [0 2 1]", order)
+	}
+	st.refill()
+	for i, h := range st.Hands {
+		if len(h) != 6 {
+			t.Fatalf("hand[%d]=%d want 6 (deck left=%d)", i, len(h), len(st.Deck))
+		}
+	}
+	// 4+2+4=10, need 2+4+2=8 from deck → 16-8=8 left
+	if len(st.Deck) != 8 {
+		t.Fatalf("deck=%d want 8", len(st.Deck))
+	}
+}
+
+// После «взял» втроём следующий атакующий тоже добирает до 6.
+func TestRefillAfterTakeThreePlayers(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{{9, Clubs}, {10, Clubs}}, // atk thrown
+			{{11, Hearts}},            // def will take
+			{{9, Spades}, {10, Spades}, {11, Spades}, {12, Spades}}, // 4 — раньше не добирал
+		},
+		Table: []Pair{
+			{Attack: Card{7, Clubs}},
+			{Attack: Card{7, Spades}},
+		},
+		Deck: []Card{
+			{6, Clubs}, {7, Hearts}, {8, Hearts}, {6, Spades}, {7, Diamonds},
+			{8, Diamonds}, {9, Diamonds}, {10, Diamonds}, {11, Diamonds},
+			{12, Diamonds}, {6, Hearts}, {8, Clubs}, {12, Clubs}, {13, Clubs},
+			{14, Clubs}, {6, Diamonds},
+		},
+		Trump:         Diamonds,
+		AttackerIndex: 0,
+		Phase:         PhaseTakeFollow,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+		ThrowerIndex:  0,
+		RoundEnded:    true,
+	}
+	if err := st.Done(0); err != nil {
+		t.Fatalf("Done: %v", err)
+	}
+	// Защитник взял → ход следующему (c=2).
+	if st.AttackerIndex != 2 {
+		t.Fatalf("attacker=%d want 2", st.AttackerIndex)
+	}
+	for i, h := range st.Hands {
+		if i == 1 {
+			// взял 2 со стола + добор
+			if len(h) < 6 {
+				t.Fatalf("defender hand[%d]=%d want >=6", i, len(h))
+			}
+			continue
+		}
+		if len(h) != 6 {
+			t.Fatalf("hand[%d]=%d want 6", i, len(h))
+		}
+	}
+}
+
 // Первый отбой без флага FirstRound (потерянный JSON) — всё равно лимит 5.
 func TestFirstRoundCapWithoutFlag(t *testing.T) {
 	st := &State{

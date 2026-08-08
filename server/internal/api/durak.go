@@ -611,6 +611,15 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
 		return
 	}
+	// Недобор после бага refill при 3 игроках — добрать и сохранить.
+	if h.healDurakShortHands(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
 	// Застрявшее: у защитника 0 карт, стол не пуст — закрыть раунд.
 	if h.healDurakDefenderEmpty(ctx, gameID, m, state) {
 		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
@@ -635,6 +644,27 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 	h.enrichDurakPlayersMeta(ctx, view, state.PlayerIDs)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(view)
+}
+
+// healDurakShortHands — добрать карты, если стол пуст, а у кого-то меньше HandSize
+// (старый баг порядка refill при 3 игроках).
+func (h *GamesHandler) healDurakShortHands(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
+	if state == nil || !state.RefillIfNeeded() {
+		return false
+	}
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return false
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, "state", encoded)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	return true
 }
 
 // healDurakDefenderEmpty — дожимает раунд, если защитник уже без карт, а стол ещё лежит.
@@ -825,6 +855,14 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
 		return
+	}
+	if h.healDurakShortHands(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
 	}
 	idx := state.PlayerIndex(userID.String())
 	if idx < 0 {
