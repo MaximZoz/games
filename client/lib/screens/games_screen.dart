@@ -1405,8 +1405,7 @@ class _DurakGameCard extends ConsumerStatefulWidget {
 }
 
 class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
-  // Активная секция: игроки (2/3/4) или режим (подкидной/переводной).
-  bool _playersActive = false;
+  // Игроки и режим независимы — переключение не сбрасывает другое.
   int _players = 2;
   int _deckSize = 36;
   String _gameMode = 'podkidnoi'; // podkidnoi | perevodnoi
@@ -1498,36 +1497,26 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 
   void _cyclePlayers() {
+    if (widget.isOffline) return; // оффлайн — всегда 1×1 с ботом
     setState(() {
-      if (!_playersActive) {
-        _playersActive = true;
-        _players = 2;
-      } else {
-        _players = _players == 4 ? 2 : _players + 1;
-      }
-      if (_players > 2 && _deckSize == 24) _deckSize = 36;
+      _players = _players == 4 ? 2 : _players + 1;
+      _deckSize = durakClampDeckForPlayers(_players, _deckSize);
     });
   }
 
   void _cycleGameMode() {
+    // Подкидной ↔ переводной всегда доступны, без сброса игроков/колоды.
     setState(() {
-      if (_playersActive) {
-        _playersActive = false;
-        _gameMode = 'podkidnoi';
-      } else {
-        _gameMode = _gameMode == 'podkidnoi' ? 'perevodnoi' : 'podkidnoi';
-      }
+      _gameMode = _gameMode == 'podkidnoi' ? 'perevodnoi' : 'podkidnoi';
     });
   }
 
   void _cycleDeck() {
     setState(() {
-      _deckSize = switch (_deckSize) {
-        24 => 36,
-        36 => 52,
-        _ => 24,
-      };
-      if (_deckSize == 24 && _players > 2) _players = 2;
+      final players = widget.isOffline ? 2 : _players;
+      final options = durakDeckSizesForPlayers(players);
+      final i = options.indexOf(_deckSize);
+      _deckSize = options[(i < 0 ? 0 : i + 1) % options.length];
     });
   }
 
@@ -1558,10 +1547,10 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
 
     final chips = <Widget>[
       GameCardChip(
-        selected: !widget.isOffline && _playersActive,
+        selected: !widget.isOffline,
         icon: Icons.groups_rounded,
-        label: (!widget.isOffline && _playersActive) ? '$_players' : '2',
-        onTap: busy ? null : _cyclePlayers,
+        label: '$_players',
+        onTap: busy || widget.isOffline ? null : _cyclePlayers,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -1574,7 +1563,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         isMedium: isMedium,
       ),
       GameCardChip(
-        selected: widget.isOffline || !_playersActive,
+        selected: true,
         icon: Icons.swap_horiz_rounded,
         label: _modeLabel(_gameMode),
         onTap: busy ? null : _cycleGameMode,
@@ -1582,7 +1571,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         isMedium: isMedium,
       ),
       GameCardChip(
-        selected: !widget.isOffline,
+        selected: true,
         icon: Icons.style_rounded,
         label: _deckLabel(_deckSize),
         onTap: busy ? null : _cycleDeck,

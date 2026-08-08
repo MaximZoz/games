@@ -307,8 +307,12 @@ func New(playerIDs []string, deckSize int, mode Mode, seed int64) (*State, error
 	if deckSize != 24 && deckSize != 36 && deckSize != 52 {
 		return nil, fmt.Errorf("deck size must be 24/36/52, got %d", deckSize)
 	}
+	// Вдвоём — 24/36; втроём и вчетвером — 36/52.
 	if deckSize == 24 && len(playerIDs) > 2 {
 		return nil, fmt.Errorf("deck 24 supports only 2 players")
+	}
+	if deckSize == 52 && len(playerIDs) < 3 {
+		return nil, fmt.Errorf("deck 52 requires 3 or 4 players")
 	}
 	src := rand.New(rand.NewSource(seed))
 	deck := NewDeck(deckSize, src)

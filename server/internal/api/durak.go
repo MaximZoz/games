@@ -127,8 +127,13 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 	if !validDurakDeckSize[deckSize] {
 		deckSize = 36
 	}
+	// Вдвоём — 24/36; втроём и вчетвером — 36/52.
 	if deckSize == 24 && maxPlayers > 2 {
 		WriteErr(w, r, http.StatusBadRequest, "deck 24 supports only 2 players")
+		return
+	}
+	if deckSize == 52 && maxPlayers < 3 {
+		WriteErr(w, r, http.StatusBadRequest, "deck 52 requires 3 or 4 players")
 		return
 	}
 	if !validTurnTimeSec[body.TurnTimeSec] {

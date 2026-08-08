@@ -31,6 +31,9 @@ func TestNewRejectsBadConfigs(t *testing.T) {
 	if _, err := New([]string{"a", "b", "c"}, 24, ModePodkidnoi, 1); err == nil {
 		t.Fatal("deck 24 must reject 3 players")
 	}
+	if _, err := New([]string{"a", "b"}, 52, ModePodkidnoi, 1); err == nil {
+		t.Fatal("deck 52 must reject 2 players")
+	}
 }
 
 func TestNewAcceptsSupportedConfigs(t *testing.T) {
@@ -42,6 +45,8 @@ func TestNewAcceptsSupportedConfigs(t *testing.T) {
 		{2, 24, ModePodkidnoi},
 		{2, 36, ModePerevodnoi},
 		{3, 36, ModePodkidnoi},
+		{3, 52, ModePodkidnoi},
+		{4, 36, ModePerevodnoi},
 		{4, 52, ModePerevodnoi},
 	}
 	for _, c := range configs {

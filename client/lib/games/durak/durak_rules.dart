@@ -17,6 +17,17 @@ String durakDeckLabel(int n) {
   }
 }
 
+/// Допустимые размеры колоды: вдвоём — 24/36, втроём/вчетвером — 36/52.
+List<int> durakDeckSizesForPlayers(int players) =>
+    players <= 2 ? const [24, 36] : const [36, 52];
+
+/// Подогнать колоду под число игроков (если текущая недоступна → 36).
+int durakClampDeckForPlayers(int players, int deckSize) {
+  final allowed = durakDeckSizesForPlayers(players);
+  if (allowed.contains(deckSize)) return deckSize;
+  return 36;
+}
+
 /// Строки правил «Дурака» — единый источник для карточки игры, приглашения
 /// и экрана лобби. [offlineBot] убирает ставку и время на ход.
 List<String> durakRuleLines({
