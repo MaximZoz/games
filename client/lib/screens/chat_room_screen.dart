@@ -16,6 +16,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multigames_client/core/keep_soft_keyboard.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -101,6 +102,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _composerFocusNode = FocusNode();
+  /// Кнопка «Отправить» снаружи поля — зона keep-keyboard на web/iOS.
+  final GlobalKey _sendButtonKey = GlobalKey();
   final Set<String> _messageIDs = <String>{};
 
   bool _loading = true;
@@ -151,6 +154,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
+    installKeepSoftKeyboardGuard();
     unawaited(_restoreAutoTranslatePref());
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
@@ -159,6 +163,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!mounted) return;
       markChatReadInChatsCache(ref, widget.chatID);
       unawaited(_maybeShowPasteSuggestion());
+      _syncKeepSoftKeyboardRects();
     });
   }
 
@@ -261,12 +266,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    if (!_composerFocusNode.hasFocus) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncKeepSoftKeyboardRects();
+      if (_composerFocusNode.hasFocus) _scrollToBottom();
+    });
   }
 
   @override
   void dispose() {
+    clearKeepSoftKeyboardRects();
     final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifier.state = null;
@@ -279,6 +288,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Координаты кнопки «Отправить» для web-guard (preventDefault → нет blur).
+  void _syncKeepSoftKeyboardRects() {
+    final ctx = _sendButtonKey.currentContext;
+    if (ctx == null) {
+      clearKeepSoftKeyboardRects();
+      return;
+    }
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || !box.attached) {
+      clearKeepSoftKeyboardRects();
+      return;
+    }
+    final origin = box.localToGlobal(Offset.zero);
+    // Небольшой запас под палец / hit-slop IconButton.
+    setKeepSoftKeyboardRects([
+      (origin & box.size).inflate(6),
+    ]);
   }
 
   void _onComposerTextChanged() {
@@ -347,9 +375,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerFocusChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncKeepSoftKeyboardRects();
+      if (_composerFocusNode.hasFocus) _scrollToBottom();
+    });
     if (!_composerFocusNode.hasFocus) return;
     unawaited(_loadCapabilities());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   @override
@@ -3239,9 +3271,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ],
                                 ),
                               ),
-                            // «Отправить» внутри поля: тап не уходит с TextField —
-                            // WebKit/iPhone не сворачивает клавиатуру (без
-                            // моргания requestFocus/TextInput.show).
                             TextField(
                               controller: _textController,
                               focusNode: _composerFocusNode,
@@ -3277,65 +3306,92 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   4,
                                   14,
                                 ),
-                                suffixIcon: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      onPressed: _sending
-                                          ? null
-                                          : _openEmojiPicker,
-                                      tooltip: context.l10n.chatEmoji,
-                                      splashRadius: 22,
-                                      icon: const Icon(
-                                        Icons.emoji_emotions_outlined,
-                                        color: _composerIconPurple,
-                                        size: 28,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: (_sending ||
-                                              _pendingImages
-                                                  .any((e) => e.isLoading))
-                                          ? null
-                                          : () =>
-                                              unawaited(_sendMessage()),
-                                      tooltip: _editingMessage != null
-                                          ? context.l10n.commonSave
-                                          : context.l10n.commonSend,
-                                      splashRadius: 22,
-                                      icon: _sending
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: _composerIconPurple,
-                                              ),
-                                            )
-                                          : Icon(
-                                              _editingMessage != null
-                                                  ? Icons.check_rounded
-                                                  : Icons.send_rounded,
-                                              color: _composerIconPurple,
-                                              size: 28,
-                                            ),
-                                    ),
-                                  ],
+                                suffixIcon: IconButton(
+                                  onPressed:
+                                      _sending ? null : _openEmojiPicker,
+                                  tooltip: context.l10n.chatEmoji,
+                                  splashRadius: 22,
+                                  icon: const Icon(
+                                    Icons.emoji_emotions_outlined,
+                                    color: _composerIconPurple,
+                                    size: 28,
+                                  ),
                                 ),
                                 suffixIconConstraints:
                                     const BoxConstraints(
-                                  minWidth: 96,
+                                  minWidth: 48,
                                   minHeight: 48,
                                 ),
                               ),
-                              // newline: клавиша Return не дергает «send» и
-                              // не сворачивает клавиатуру на iOS.
-                              textInputAction: TextInputAction.newline,
+                              textInputAction: TextInputAction.send,
                               onTap: _scrollToBottom,
+                              // Не снимать фокус при тапе по «Отправить»
+                              // (снаружи поля). Иначе Flutter + WebKit
+                              // моргают клавиатурой.
+                              onTapOutside: (event) {
+                                final sendCtx =
+                                    _sendButtonKey.currentContext;
+                                if (sendCtx != null) {
+                                  final box = sendCtx.findRenderObject()
+                                      as RenderBox?;
+                                  if (box != null && box.hasSize) {
+                                    final local =
+                                        box.globalToLocal(event.position);
+                                    if (box.paintBounds
+                                        .inflate(8)
+                                        .contains(local)) {
+                                      return;
+                                    }
+                                  }
+                                }
+                                _composerFocusNode.unfocus();
+                              },
+                              // Перехват send с клавиатуры без unfocus.
+                              onEditingComplete: () {
+                                unawaited(_sendMessage());
+                              },
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                    Focus(
+                      canRequestFocus: false,
+                      skipTraversal: true,
+                      descendantsAreFocusable: false,
+                      child: IconButton(
+                        key: _sendButtonKey,
+                        onPressed: (_sending ||
+                                _pendingImages.any((e) => e.isLoading))
+                            ? null
+                            : () {
+                                _syncKeepSoftKeyboardRects();
+                                unawaited(_sendMessage());
+                              },
+                        tooltip: _editingMessage != null
+                            ? context.l10n.commonSave
+                            : context.l10n.commonSend,
+                        padding: const EdgeInsets.all(10),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: _composerIconPurple,
+                                ),
+                              )
+                            : Icon(
+                                _editingMessage != null
+                                    ? Icons.check_rounded
+                                    : Icons.send_rounded,
+                                color: _composerIconPurple,
+                                size: 28,
+                              ),
                       ),
                     ),
                   ],
