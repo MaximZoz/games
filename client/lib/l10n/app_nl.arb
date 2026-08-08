@@ -162,6 +162,81 @@
   "gamesWaiting": "Wachten",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Boter-kaas-eieren",
+  "appUpdateBody": "Er is een nieuwe versie van de app. Werk bij om door te gaan.",
+  "appUpdateLaterBanner": "We werken de app bij na dit spel",
+  "appUpdateOk": "Bijwerken",
+  "appUpdateTitle": "Update beschikbaar",
+  "appUpdateWhatsNew": "Wat is nieuw",
+  "durakActionAll": "Alle",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Klaar",
+  "durakActionTake": "Neem",
+  "durakHintBito": "Leg een kaart of zeg «Bito»",
+  "durakHintDefend": "Verdedig",
+  "durakHintDefendOrTransfer": "Verdedig of schuif over",
+  "durakHintDrawAllOut": "Gelijkspel — iedereen is uit",
+  "durakHintOpponentAttack": "Tegenstander valt aan",
+  "durakHintOpponentBito": "Tegenstander legt bij of zegt «Bito»",
+  "durakHintOpponentDefends": "Tegenstander verdedigt",
+  "durakHintOpponentTakeFollow": "Tegenstander kan bijleggen na nemen",
+  "durakHintOpponentThrows": "Tegenstander legt bij",
+  "durakHintTakeFollow": "Leg bij na nemen of tik «Klaar»",
+  "durakHintThrowIn": "Leg kaarten bij of tik «Alle»",
+  "durakHintThrowInFirst": "Leg kaarten bij of «Alle» (max 5 bij eerste slag)",
+  "durakHintYouFinished": "Je bent uit — wachten op het einde",
+  "durakHintYouLost": "Je verloor — je bent de dwaas",
+  "durakHintYourAttack": "Jouw beurt — val aan",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "In ontwikkeling",
+  "rulesPokerPlayers": "Spelers: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Iedereen krijgt 2 hole cards; er komen 5 community cards op tafel.",
+  "rulesPokerPlay": "Inzetrondes: preflop, flop, turn en river. Fold, call, bet of raise.",
+  "rulesPokerWin": "De beste vijfkaartshand (hole + community) wint, of de laatste speler na folds.",
+  "gamesDurakDeck24": "24 kaarten",
+  "gamesDurakDeck36": "36 kaarten",
+  "gamesDurakDeck52": "52 kaarten",
+  "gamesDurakModePerevodnoi": "Doorschuiven",
+  "gamesDurakModePodkidnoi": "Bijleggen",
+  "gamesFinishCurrentFirst": "Voltooi eerst je huidige spel",
+  "gamesObservation": "Toeschouwen",
+  "gamesObservationHint": "Je kunt kijken tot het spel eindigt",
+  "gamesVariantClassic": "Klassiek",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 spelers",
+  "gamesVariantMulti4": "4 spelers",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Spelers {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "De aanvaller speelt kaarten; de verdediger slaat ze (zelfde kleur hoger, of een troef). Een troef wordt alleen geslagen door een hogere troef.",
+  "rulesDurakBeat": "Als alle kaarten geslagen zijn, zegt de aanvaller «Bito» en gaan ze naar de aflegstapel. Anders neemt de verdediger alles van tafel.",
+  "rulesDurakLoser": "Verliezer is wie aan het eind nog kaarten heeft — de «dwaas».",
+  "rulesDurakMode": "Modus: {mode}",
+  "rulesDurakOfflineBot": "Speel tegen een bot, zonder inzet of tijdslimiet.",
+  "rulesDurakPlayersDeck": "Spelers: {players}. Deck: {deck}.",
+  "settingsAppVersion": "Versie {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Regels",
   "gamesRulesTitle": "Spelregels",
   "gamesCreate": "Spel maken",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "Je hebt {amount} munten ontvangen",
   "coinsDeductedTitle": "{amount} munten zijn afgetrokken",
   "coinsCreditCardTitle": "Je hebt munten ontvangen",
-  "coinsClaim": "Ophalen"
+  "coinsClaim": "Ophalen",
+  "durakActionPass": "Passen",
+  "durakRoleTook": "Neemt",
+  "durakRoleBeats": "Slaat",
+  "durakRoleThrowIn": "Bijleggen",
+  "durakRoleTurn": "Beurt",
+  "durakRoleDefends": "Verdedigt",
+  "durakStatusTaking": "Neemt",
+  "durakHintDefenderTurn": "Beurt van de verdediger",
+  "gameYouEliminated": "Je bent eruit",
+  "gameYouPlaced": "Je werd {place}e",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Spel afgelopen",
+  "gameTurnOf": "Beurt van {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Groepschat",
+  "lobbyChatNotReady": "Lobbychat is nog niet klaar",
+  "chatsGroupChat": "Groepschat",
+  "chatsMembersCount": "Leden: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(jij)",
+  "chatTitleDurak3": "Durak · 3 spelers",
+  "chatTitleDurak4": "Durak · 4 spelers",
+  "rulesTttUltimate": "Ultimate: negen 3×3-miniborden. Een zet stuurt de tegenstander naar dat minibord. Win met een lijn op het metabord.",
+  "rulesTttMulti3": "3 spelers: 3×3-bord, drie spelers (X, O, △). Maak een lijn met je eigen tekens om te winnen.",
+  "rulesTttMulti4": "4 spelers: 4×4-bord, vier spelers (X, O, △, □). Maak een lijn met je eigen tekens om te winnen."
 }

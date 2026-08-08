@@ -48,12 +48,12 @@ final inventoryCapabilitiesProvider =
     FutureProvider<InventoryCapabilities>((ref) async {
   final user = ref.watch(authStateProvider).valueOrNull;
   if (user == null) {
-    return const InventoryCapabilities(allowedStakeBronze: [1, 10, 50]);
+    return const InventoryCapabilities(allowedStakeBronze: [2, 10, 50]);
   }
   final offline = ref.watch(isOfflineProvider);
   if (offline) {
     return await OfflineDiskCache.loadCapabilities(user.id) ??
-        const InventoryCapabilities(allowedStakeBronze: [1, 10, 50]);
+        const InventoryCapabilities(allowedStakeBronze: [2, 10, 50]);
   }
   try {
     final caps = await ref.watch(shopRepositoryProvider).capabilities();

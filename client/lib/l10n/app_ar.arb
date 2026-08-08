@@ -162,6 +162,81 @@
   "gamesWaiting": "في الانتظار",
   "gamesLobbyTab": "الردهة",
   "gamesTicTacToe": "إكس-أو",
+  "appUpdateBody": "يتوفر إصدار جديد من التطبيق. يرجى التحديث للمتابعة.",
+  "appUpdateLaterBanner": "سنحدّث التطبيق بعد هذه اللعبة",
+  "appUpdateOk": "تحديث",
+  "appUpdateTitle": "يتوفر تحديث",
+  "appUpdateWhatsNew": "ما الجديد",
+  "durakActionAll": "الكل",
+  "durakActionBito": "Beat",
+  "durakActionDone": "تم",
+  "durakActionTake": "خذ",
+  "durakHintBito": "ألقِ ورقة أو قل «بيتو»",
+  "durakHintDefend": "دافع",
+  "durakHintDefendOrTransfer": "دافع أو انقل",
+  "durakHintDrawAllOut": "تعادل — خرج الجميع",
+  "durakHintOpponentAttack": "الخصم يهاجم",
+  "durakHintOpponentBito": "الخصم يضيف أو يقول «بيتو»",
+  "durakHintOpponentDefends": "الخصم يدافع",
+  "durakHintOpponentTakeFollow": "قد يضيف الخصم بعد الأخذ",
+  "durakHintOpponentThrows": "الخصم يضيف",
+  "durakHintTakeFollow": "أضف بعد الأخذ أو اضغط «تم»",
+  "durakHintThrowIn": "ألقِ أوراقًا أو اضغط «الكل»",
+  "durakHintThrowInFirst": "ألقِ أوراقًا أو «الكل» (حد أقصى 5 في أول دفاع)",
+  "durakHintYouFinished": "خرجت — في انتظار النهاية",
+  "durakHintYouLost": "لقد خسرت — أنت الأحمق",
+  "durakHintYourAttack": "دورك — اهاجم",
+  "gamesDurak": "دوراك",
+  "gamesPoker": "بوكر",
+  "gamesInDevelopment": "قيد التطوير",
+  "rulesPokerPlayers": "اللاعبون: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "تكساس هولدم. يحصل كل لاعب على ورقتين خاصتين؛ وتُوضع 5 أوراق مشتركة على الطاولة.",
+  "rulesPokerPlay": "جولات المراهنة: ما قبل الفلوب، الفلوب، الترن والريفر. يمكنك الطي أو المعادلة أو الرهان أو الرفع.",
+  "rulesPokerWin": "يفوز أفضل خمسة أوراق (خاصة + مشتركة) أو آخر لاعب يتبقى بعد الطي.",
+  "gamesDurakDeck24": "24 ورقة",
+  "gamesDurakDeck36": "36 ورقة",
+  "gamesDurakDeck52": "52 ورقة",
+  "gamesDurakModePerevodnoi": "نقل",
+  "gamesDurakModePodkidnoi": "إضافة",
+  "gamesFinishCurrentFirst": "أنهِ لعبتك الحالية أولاً",
+  "gamesObservation": "مشاهدة",
+  "gamesObservationHint": "يمكنك المشاهدة حتى نهاية اللعبة",
+  "gamesVariantClassic": "كلاسيكي",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 لاعبين",
+  "gamesVariantMulti4": "4 لاعبين",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "اللاعبون {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "المهاجم يلعب أوراقًا؛ والمدافع يرد (نفس النوع أعلى، أو ورقة رابحة). الورقة الرابحة تُرد فقط برابحة أعلى.",
+  "rulesDurakBeat": "عندما تُرد كل الأوراق يقول المهاجم «بيتو» وتذهب إلى المهمل. وإلا يأخذ المدافع كل ما على الطاولة.",
+  "rulesDurakLoser": "الخاسر من تبقى معه أوراق في النهاية — «الأحمق».",
+  "rulesDurakMode": "الوضع: {mode}",
+  "rulesDurakOfflineBot": "العب ضد بوت بلا رهانات ولا مهلة زمنية.",
+  "rulesDurakPlayersDeck": "اللاعبون: {players}. المجموعة: {deck}.",
+  "settingsAppVersion": "الإصدار {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "القواعد",
   "gamesRulesTitle": "قواعد اللعبة",
   "gamesCreate": "إنشاء لعبة",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "تم إضافة {amount} عملة إلى رصيدك",
   "coinsDeductedTitle": "تم خصم {amount} عملة",
   "coinsCreditCardTitle": "تم إضافة عملات إلى رصيدك",
-  "coinsClaim": "استلام"
+  "coinsClaim": "استلام",
+  "durakActionPass": "تمرير",
+  "durakRoleTook": "أخذ",
+  "durakRoleBeats": "يرد",
+  "durakRoleThrowIn": "إضافة",
+  "durakRoleTurn": "دور",
+  "durakRoleDefends": "يدافع",
+  "durakStatusTaking": "آخذ",
+  "durakHintDefenderTurn": "دور المدافع",
+  "gameYouEliminated": "تم إقصاؤك",
+  "gameYouPlaced": "حلت في المركز {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "انتهت اللعبة",
+  "gameTurnOf": "دور {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "دردشة المجموعة",
+  "lobbyChatNotReady": "دردشة الردهة غير جاهزة بعد",
+  "chatsGroupChat": "دردشة جماعية",
+  "chatsMembersCount": "الأعضاء: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} أشخاص",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(أنت)",
+  "chatTitleDurak3": "دوراك · 3 لاعبين",
+  "chatTitleDurak4": "دوراك · 4 لاعبين",
+  "rulesTttUltimate": "ألتيميت: تسع لوحات 3×3. النقلة ترسل الخصم إلى تلك اللوحة. الفوز بخط على اللوحة الكبرى.",
+  "rulesTttMulti3": "3 لاعبين: لوحة 3×3 وثلاثة لاعبين (X، O، △). أكمل خطًا برموزك للفوز.",
+  "rulesTttMulti4": "4 لاعبين: لوحة 4×4 وأربعة لاعبين (X، O، △، □). أكمل خطًا برموزك للفوز."
 }

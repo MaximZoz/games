@@ -126,20 +126,20 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : DesktopTileGrid(
-                  itemCount: orderedSets.length,
-                  maxCellWidth: 340,
-                  maxContentWidth: 1080,
-                  itemBuilder: (context, index) =>
-                      _buildCollectionSetTile(context, orderedSets[index], bySet),
-                  mobileBuilder: (context) => ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: orderedSets.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) => _buildCollectionSetTile(
-                      context,
-                      orderedSets[index],
-                      bySet,
+              // Одна колонка сверху вниз, к левому краю (не сетка по центру).
+              : Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: orderedSets.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) => _buildCollectionSetTile(
+                        context,
+                        orderedSets[index],
+                        bySet,
+                      ),
                     ),
                   ),
                 ),

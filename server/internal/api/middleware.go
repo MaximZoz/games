@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -60,7 +61,14 @@ func RequireAuth(secret []byte, pool *pgxpool.Pool, next http.Handler) http.Hand
 				return
 			}
 			ok, existsErr := store.SessionExists(r.Context(), pool, sid)
-			if existsErr != nil || !ok {
+			if existsErr != nil {
+				// Сбой БД ≠ «сессия истекла»: иначе клиент разлогинивает всех
+				// при рестарте/деплое (EOF/timeout → 401 → logout).
+				log.Printf("auth: SessionExists failed: %v", existsErr)
+				WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
+				return
+			}
+			if !ok {
 				WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 				return
 			}

@@ -60,42 +60,52 @@ FRONTEND_URL="${FRONTEND_URL:-$PUBLIC_BASE_URL}"
 
 echo "Используется DEV-приложение Fly: $FLY_APP_NAME"
 echo "Конфиг: fly.dev.toml"
-echo "Обновляю секреты..."
 
-secret_args=(
-  "JWT_SECRET=$JWT_SECRET"
-  "ADMIN_INIT_SECRET=$ADMIN_INIT_SECRET"
-  "PUBLIC_BASE_URL=$PUBLIC_BASE_URL"
-  "FRONTEND_URL=$FRONTEND_URL"
-)
+# Секреты (особенно JWT_SECRET) НЕ трогаем на каждом деплое:
+# fly secrets set перезапускает машины и при смене JWT инвалидирует все сессии.
+# Первый сетап / смена секретов: UPDATE_SECRETS=1 ./launcher/deploy_dev.sh
+if [[ "${UPDATE_SECRETS:-}" == "1" ]]; then
+  echo "UPDATE_SECRETS=1 — обновляю секреты (это разлогинит всех)..."
+  secret_args=(
+    "JWT_SECRET=$JWT_SECRET"
+    "ADMIN_INIT_SECRET=$ADMIN_INIT_SECRET"
+    "PUBLIC_BASE_URL=$PUBLIC_BASE_URL"
+    "FRONTEND_URL=$FRONTEND_URL"
+  )
+  optional_vars=(
+    "REDIS_URL"
+    "RESEND_API_KEY"
+    "MAIL_FROM"
+    "APP_LOG_ENABLED"
+    "APP_LOG_FILE"
+    "APP_LOG_STATE_FILE"
+    "APP_LOG_SYNC_INTERVAL_SECONDS"
+    "APP_LOG_RETENTION_DAYS"
+    "APP_LOG_CLEANUP_INTERVAL_SECONDS"
+  )
+  for var_name in "${optional_vars[@]}"; do
+    value="${!var_name:-}"
+    if [[ -n "$value" ]]; then
+      secret_args+=("$var_name=$value")
+    fi
+  done
+  "$FLY_BIN" secrets set "${secret_args[@]}" --app "$FLY_APP_NAME"
+else
+  echo "Секреты не трогаю (JWT остаётся). Для обновления: UPDATE_SECRETS=1 $0"
+fi
 
-optional_vars=(
-  "REDIS_URL"
-  "RESEND_API_KEY"
-  "MAIL_FROM"
-  "APP_LOG_ENABLED"
-  "APP_LOG_FILE"
-  "APP_LOG_STATE_FILE"
-  "APP_LOG_SYNC_INTERVAL_SECONDS"
-  "APP_LOG_RETENTION_DAYS"
-  "APP_LOG_CLEANUP_INTERVAL_SECONDS"
-)
-for var_name in "${optional_vars[@]}"; do
-  value="${!var_name:-}"
-  if [[ -n "$value" ]]; then
-    secret_args+=("$var_name=$value")
-  fi
-done
-
-"$FLY_BIN" secrets set "${secret_args[@]}" --app "$FLY_APP_NAME"
+BUILD_ID="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
+echo "BUILD_ID=$BUILD_ID"
 
 echo "Запускаю деплой DEV..."
 (
   cd "$ROOT_DIR"
   # --depot=false: обход частых deadline_exceeded у Depot builder на тяжёлой сборке Flutter+Go.
-  if ! "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --depot=false --yes; then
+  if ! "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --depot=false --yes \
+      --build-arg "BUILD_ID=$BUILD_ID"; then
     echo "Повтор деплоя без --depot=false..."
-    "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes
+    "$FLY_BIN" deploy --config "$FLY_CONFIG" --app "$FLY_APP_NAME" --remote-only --yes \
+      --build-arg "BUILD_ID=$BUILD_ID"
   fi
 )
 

@@ -162,6 +162,81 @@
   "gamesWaiting": "กำลังรอ",
   "gamesLobbyTab": "ล็อบบี้",
   "gamesTicTacToe": "โอเอกซ์",
+  "appUpdateBody": "มีเวอร์ชันใหม่ของแอป อัปเดตเพื่อดำเนินการต่อ",
+  "appUpdateLaterBanner": "เราจะอัปเดตแอปหลังเกมนี้",
+  "appUpdateOk": "อัปเดต",
+  "appUpdateTitle": "มีอัปเดต",
+  "appUpdateWhatsNew": "มีอะไรใหม่",
+  "durakActionAll": "ทั้งหมด",
+  "durakActionBito": "Beat",
+  "durakActionDone": "เสร็จ",
+  "durakActionTake": "รับ",
+  "durakHintBito": "ทิ้งการ์ดหรือพูด «บิโต»",
+  "durakHintDefend": "ป้องกัน",
+  "durakHintDefendOrTransfer": "ป้องกันหรือส่งต่อ",
+  "durakHintDrawAllOut": "เสมอ — ทุกคนออก",
+  "durakHintOpponentAttack": "คู่แข่งโจมตี",
+  "durakHintOpponentBito": "คู่แข่งทิ้งเพิ่มหรือพูด «บิโต»",
+  "durakHintOpponentDefends": "คู่แข่งป้องกัน",
+  "durakHintOpponentTakeFollow": "คู่แข่งทิ้งเพิ่มหลังรับได้",
+  "durakHintOpponentThrows": "คู่แข่งทิ้งเพิ่ม",
+  "durakHintTakeFollow": "ทิ้งเพิ่มหลังรับหรือกด «เสร็จ»",
+  "durakHintThrowIn": "ทิ้งการ์ดหรือกด «ทั้งหมด»",
+  "durakHintThrowInFirst": "ทิ้งการ์ดหรือ «ทั้งหมด» (สูงสุด 5 ในการป้องกันครั้งแรก)",
+  "durakHintYouFinished": "คุณออกแล้ว — รอจบเกม",
+  "durakHintYouLost": "คุณแพ้ — คุณคือคนโง่",
+  "durakHintYourAttack": "ตาคุณ — โจมตี",
+  "gamesDurak": "ดูรัก",
+  "gamesPoker": "โป๊กเกอร์",
+  "gamesInDevelopment": "กำลังพัฒนา",
+  "rulesPokerPlayers": "ผู้เล่น: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "เท็กซัสโฮลเด็ม ผู้เล่นได้ไพ่ส่วนตัว 2 ใบ และไพ่กลาง 5 ใบบนโต๊ะ",
+  "rulesPokerPlay": "รอบเดิมพัน: พรีฟล็อป ฟล็อป เทิร์น และริเวอร์ โฟลด คอล เบท หรือเรสได้",
+  "rulesPokerWin": "มือห้าใบที่ดีที่สุด (ส่วนตัว+กลาง) ชนะ หรือผู้ที่เหลือคนเดียวหลังโฟลด",
+  "gamesDurakDeck24": "24 ใบ",
+  "gamesDurakDeck36": "36 ใบ",
+  "gamesDurakDeck52": "52 ใบ",
+  "gamesDurakModePerevodnoi": "ส่งต่อ",
+  "gamesDurakModePodkidnoi": "ทิ้งเพิ่ม",
+  "gamesFinishCurrentFirst": "จบเกมปัจจุบันก่อน",
+  "gamesObservation": "ดูอยู่",
+  "gamesObservationHint": "ดูได้จนจบเกม",
+  "gamesVariantClassic": "คลาสสิก",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 คน",
+  "gamesVariantMulti4": "4 คน",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "ล็อบบี้ {name}",
+  "lobbyPlayersCount": "ผู้เล่น {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "ฝ่ายรุกออกไพ่ ฝ่ายรับต้องทับ (ดอกเดียวกันที่สูงกว่า หรือไพ่ตาย) ไพ่ตายทับได้ด้วยไพ่ตายที่สูงกว่าเท่านั้น",
+  "rulesDurakBeat": "เมื่อทับครบแล้วฝ่ายรุกพูด «บิโต» ไพ่ไปกองทิ้ง ไม่เช่นนั้นฝ่ายรับรับไพ่ทั้งหมดบนโต๊ะ",
+  "rulesDurakLoser": "ผู้แพ้คือคนที่ยังมีไพ่ตอนจบ — «คนโง่»",
+  "rulesDurakMode": "โหมด: {mode}",
+  "rulesDurakOfflineBot": "เล่นกับบอท ไม่มีเดิมพันและไม่จำกัดเวลา",
+  "rulesDurakPlayersDeck": "ผู้เล่น: {players}. สำรับ: {deck}.",
+  "settingsAppVersion": "เวอร์ชัน {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "กติกา",
   "gamesRulesTitle": "กติกาเกม",
   "gamesCreate": "สร้างเกม",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "คุณได้รับ {amount} เหรียญ",
   "coinsDeductedTitle": "หัก {amount} เหรียญแล้ว",
   "coinsCreditCardTitle": "คุณได้รับเหรียญ",
-  "coinsClaim": "รับ"
+  "coinsClaim": "รับ",
+  "durakActionPass": "ผ่าน",
+  "durakRoleTook": "รับไป",
+  "durakRoleBeats": "ป้องกัน",
+  "durakRoleThrowIn": "ทิ้งเพิ่ม",
+  "durakRoleTurn": "ตา",
+  "durakRoleDefends": "กำลังป้องกัน",
+  "durakStatusTaking": "กำลังรับ",
+  "durakHintDefenderTurn": "ตาของผู้ป้องกัน",
+  "gameYouEliminated": "คุณตกรอบแล้ว",
+  "gameYouPlaced": "คุณได้อันดับ {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "จบเกมแล้ว",
+  "gameTurnOf": "ตาของ {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "แชทกลุ่ม",
+  "lobbyChatNotReady": "แชทล็อบบี้ยังไม่พร้อม",
+  "chatsGroupChat": "แชทกลุ่ม",
+  "chatsMembersCount": "สมาชิก: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} คน",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(คุณ)",
+  "chatTitleDurak3": "ดูรัก · 3 คน",
+  "chatTitleDurak4": "ดูรัก · 4 คน",
+  "rulesTttUltimate": "อัลติเมต: มินิบอร์ด 3×3 จำนวนเก้าบอร์ด ตาเดินส่งคู่แข่งไปบอร์ดนั้น ชนะด้วยเส้นบนเมตาบอร์ด",
+  "rulesTttMulti3": "3 คน: กระดาน 3×3 ผู้เล่นสามคน (X, O, △) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ",
+  "rulesTttMulti4": "4 คน: กระดาน 4×4 ผู้เล่นสี่คน (X, O, △, □) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ"
 }

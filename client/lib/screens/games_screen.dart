@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/durak/durak_provider.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/framework/game_session_api.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -13,6 +16,8 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -45,7 +50,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   String _selectedVariant = variantClassic;
   /// true — активна кнопка игроков (2/3/4); false — кнопка режима.
   bool _playersControlActive = false;
-  int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
+  int _selectedStakeBronze = 2; // free: 2, 10, 50; + bought silver/gold
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
 
@@ -63,7 +68,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   void _hydrateFromSavedSettings() {
     if (_settingsHydrated) return;
-    final saved = ref.read(userGameSettingsProvider).valueOrNull;
+    final saved = ref.read(userGameSettingsProvider('tictactoe')).valueOrNull;
     if (saved == null) return;
     _settingsHydrated = true;
     setState(() {
@@ -76,8 +81,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _persistSettings() {
-    ref.read(userGameSettingsProvider.notifier).updateLocal(
+    ref.read(userGameSettingsProvider('tictactoe').notifier).updateLocal(
           UserGameSettings(
+            gameType: 'tictactoe',
             turnTimeSec: _selectedTurnTimeSec,
             variant: _selectedVariant,
             swapRule: false,
@@ -88,8 +94,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onPlayersChipTap() {
-    final offline = ref.read(isOfflineProvider);
-    if (offline) return;
     setState(() {
       if (!_playersControlActive) {
         // Переключились с режимов → игроки фиолетовые, режим «Классика» тёмный.
@@ -111,18 +115,20 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onModeChipTap() {
-    final offline = ref.read(isOfflineProvider);
     setState(() {
+      const cycle = _modeCycleVariants;
       if (_playersControlActive ||
           _selectedVariant == variantMulti3 ||
           _selectedVariant == variantMulti4) {
-        // С игроков → режимы: 2 тёмные, Классика фиолетовая.
+        // С игроков → 2 участника и сразу следующий режим.
         _playersControlActive = false;
-        _selectedVariant = variantClassic;
+        final base = (_selectedVariant == variantMulti3 ||
+                _selectedVariant == variantMulti4)
+            ? variantClassic
+            : parseVariant(_selectedVariant);
+        final idx = cycle.indexOf(base);
+        _selectedVariant = cycle[(idx < 0 ? 0 : idx + 1) % cycle.length];
       } else {
-        final cycle = offline
-            ? const [variantClassic, variantGomoku]
-            : _modeCycleVariants;
         final current = parseVariant(_selectedVariant);
         final idx = cycle.indexOf(current);
         final next = (idx < 0 ? 0 : idx + 1) % cycle.length;
@@ -140,8 +146,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   void _startLobbyPoll() {
     _lobbyRefreshTimer?.cancel();
+    // Чаще: отмена/старт должны быстро убирать карточку, даже без WS.
     _lobbyRefreshTimer = Timer.periodic(
-      const Duration(seconds: 10),
+      const Duration(seconds: 3),
       (_) => ref.invalidate(openLobbiesProvider),
     );
   }
@@ -170,33 +177,30 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final activeAsync = ref.watch(activeGameProvider);
     final observation = ref.watch(observationGameProvider);
     final caps = ref.watch(inventoryCapabilitiesProvider).valueOrNull;
-    // После «Присоединиться» не оставляем список с карточкой лобби —
-    // сразу экран «Войти в игру».
+    // После GetActive / join — сразу в активную партию или «Войти в игру».
     ref.listen<AsyncValue<ActiveGameItem?>>(activeGameProvider, (prev, next) {
       final active = next.valueOrNull;
-      if (active == null ||
-          active.type != 'lobby' ||
-          active.lobbyId == null ||
-          active.lobbyId!.isEmpty) {
+      if (active == null) return;
+      final path =
+          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+      if (path != '/games') return;
+      if (hasBlockingActiveMatch(active)) {
+        goToActiveSession(context, active);
         return;
       }
+      if (!hasActiveLobby(active)) return;
       // Живая партия (пин) важнее автоухода в лобби-инвайт.
-      if (ref.read(blockingGamePinProvider)?.trim().isNotEmpty ?? false) {
+      if (ref.read(blockingGamePinProvider)?.gameId.isNotEmpty ?? false) {
         return;
       }
       if (hasBlockingActiveMatch(prev?.valueOrNull)) {
         return;
       }
-      final path =
-          GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-      if (path != '/games') return;
-      context.go(
-        '/games/tictactoe/lobby/${active.lobbyId}?mode=invite',
-      );
+      goToActiveSession(context, active);
     });
-    // Подхватываем конфиг из БД, когда он лениво догрузится.
-    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider,
-        (prev, next) {
+    // Подхватываем конфиг крестиков из БД, когда он лениво догрузится.
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('tictactoe'), (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
@@ -231,13 +235,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         if (mounted) setState(() => _selectedTab = _GamesTab.games);
       });
     }
-    // Уже есть активное лобби при открытии списка — уйти в «Войти в игру».
-    final activeLobby = activeAsync.valueOrNull;
+    // Уже есть активная партия/лобби при открытии списка — сразу туда.
+    final activeSession = activeAsync.valueOrNull;
     if (!isOffline &&
-        activeLobby != null &&
-        activeLobby.type == 'lobby' &&
-        activeLobby.lobbyId != null &&
-        activeLobby.lobbyId!.isNotEmpty) {
+        activeSession != null &&
+        (hasBlockingActiveMatch(activeSession) ||
+            hasActiveLobby(activeSession))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final path = GoRouter.of(context)
@@ -246,21 +249,16 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             .uri
             .path;
         if (path != '/games') return;
-        context.go(
-          '/games/tictactoe/lobby/${activeLobby.lobbyId}?mode=invite',
-        );
+        goToActiveSession(context, activeSession);
       });
     }
 
     void playOffline() {
-      final offlineVariant = (_selectedVariant == variantClassic ||
-              _selectedVariant == variantGomoku)
-          ? _selectedVariant
-          : variantClassic;
+      final offlineVariant = parseVariant(_selectedVariant);
       final qs = <String, String>{
         'variant': offlineVariant,
         'grid': '${gridSizeForVariant(offlineVariant)}',
-        // В офлайне всегда чередуем, кто начинает.
+        // В офлайне всегда чередуем, кто начинает (для 2 игроков).
         'swap': '1',
       };
       final uri = Uri(
@@ -285,11 +283,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     child: _GamesTabSwitcher(
                       selectedTab: _selectedTab,
                       onTabChanged: _onTabChanged,
+                      lobbyBadgeCount: invites.length,
                     ),
                   ),
                 ),
               ),
-            SizedBox(height: isDesktop ? 8 : 20),
             Expanded(
               // IndexedStack вместо PageView: ветка /games в StatefulShell
               // indexedStack остаётся живой при /login|/register (PWA),
@@ -298,6 +296,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 index:
                     isOffline ? 0 : (_selectedTab == _GamesTab.games ? 0 : 1),
                 sizing: StackFit.expand,
+                clipBehavior: Clip.hardEdge,
                 children: [
                   _GamesPageContent(
                     isDesktop: isDesktop,
@@ -323,21 +322,21 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     // Всегда matchmake: multi схлопывается на сервере в одно лобби.
                     onFindGame: () => _createGame(context, 'matchmake'),
                     onPlayOffline: playOffline,
-                    invites: isOffline ? const [] : invites,
                     activeAsync: activeAsync,
                     observation: observation,
-                    onAcceptInvite: _acceptInvite,
-                    onDeclineInvite: _declineInvite,
-                    onShowCreatorInfo: _showCreatorInfo,
-                    onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
                   ),
                   _LobbiesPageContent(
                     lobbiesAsync: lobbiesAsync,
+                    invites: isOffline ? const [] : invites,
                     isDesktop: isDesktop,
                     onJoinLobby: _joinLobby,
                     onShowLobbyRules: _showLobbyRulesInfo,
                     onRefresh: () => ref.invalidate(openLobbiesProvider),
+                    onAcceptInvite: _acceptInvite,
+                    onDeclineInvite: _declineInvite,
+                    onShowCreatorInfo: _showCreatorInfo,
+                    onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
                   ),
                 ],
@@ -351,7 +350,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   Future<void> _createGame(BuildContext context, String mode) async {
     // Async: после конца партии пин/кэш могли ещё держать старый gameId.
-    if (await blockJoinIfBusyAsync(context, ref)) return;
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
     if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
@@ -403,6 +404,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
               : formatUserError(e),
           kind: AppSnackKind.error,
         );
+        if (isFinishCurrentGameError(e)) {
+          try {
+            final active =
+                await ref.read(activeGameProvider.notifier).refresh();
+            if (context.mounted && active != null) {
+              goToActiveSession(context, active);
+            }
+          } catch (_) {}
+        }
       }
     } finally {
       if (mounted) {
@@ -414,13 +424,53 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
-  Future<void> _acceptInvite(BuildContext context, String lobbyId) async {
+  Future<void> _acceptInvite(BuildContext context, GameInvite inv) async {
+    final lobbyId = inv.lobbyId;
     if (await blockJoinIfBusyAsync(
       context,
       ref,
       targetLobbyId: lobbyId,
       redirectToActive: true,
     )) {
+      return;
+    }
+    // Ветвление по game_type: используем правильный repository + роут.
+      if (inv.gameType == 'durak') {
+      try {
+        final res = await ref
+            .read(durakRepositoryProvider)
+            .joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'durak',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'durak');
+          if (context.mounted) {
+            context.go('/games/durak/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'durak',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
       return;
     }
     try {
@@ -447,7 +497,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (!context.mounted) return;
       if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
         _showInviteError(e);
-        final active = resolveActiveForGuard(ref, context);
+        // Только серверная active-сессия — не URL старой партии.
+        final active = ref.read(activeGameProvider).valueOrNull;
         if (active != null &&
             (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
           goToActiveSession(context, active);
@@ -495,7 +546,17 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
   }
 
+  /// Правила приглашения по game_type: инжектируем нужный набор.
   Widget _inviteRulesWidget(GameInvite inv) {
+    if (inv.isDurak) {
+      return rulesTextLines(durakRuleLines(
+        mode: inv.durakMode,
+        players: inv.maxPlayers,
+        deckSize: inv.deckSize,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -579,16 +640,24 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
-  Future<void> _declineInvite(String lobbyId) async {
+  Future<void> _declineInvite(String lobbyId, {String gameType = 'tictactoe'}) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
-      await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
+      if (gameType == 'durak') {
+        await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
+      } else {
+        await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
+      }
     } catch (_) {
       // Карточка уже скрыта локально; сервер мог уже закрыть лобби.
     }
   }
 
-  Future<void> _joinLobby(BuildContext context, String lobbyId) async {
+  Future<void> _joinLobby(
+    BuildContext context,
+    String lobbyId, {
+    String gameType = 'tictactoe',
+  }) async {
     if (await blockJoinIfBusyAsync(
       context,
       ref,
@@ -597,7 +666,55 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     )) {
       return;
     }
+    // Durak — свой стек API и роутов.
+    if (gameType == 'durak') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res =
+            await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'durak',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'durak');
+          context.go('/games/durak/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'durak',
+                ),
+              );
+          context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (e) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (context.mounted) {
+          showAppSnackBar(context,
+              message: formatUserError(e), kind: AppSnackKind.error);
+        }
+      }
+      return;
+    }
     try {
+      ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
       if (!context.mounted) return;
@@ -697,7 +814,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 }
 
-class _GamesPageContent extends StatelessWidget {
+class _GamesPageContent extends ConsumerWidget {
   const _GamesPageContent({
     required this.isDesktop,
     required this.isCreating,
@@ -715,13 +832,8 @@ class _GamesPageContent extends StatelessWidget {
     required this.onCreateGame,
     required this.onFindGame,
     required this.onPlayOffline,
-    required this.invites,
     required this.activeAsync,
     required this.observation,
-    required this.onAcceptInvite,
-    required this.onDeclineInvite,
-    required this.onShowCreatorInfo,
-    required this.onShowInviteRules,
     required this.contentPadding,
   });
 
@@ -741,231 +853,144 @@ class _GamesPageContent extends StatelessWidget {
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final VoidCallback onPlayOffline;
-  final List<GameInvite> invites;
   final AsyncValue<ActiveGameItem?> activeAsync;
   final ObservationItem? observation;
-  final void Function(BuildContext, String) onAcceptInvite;
-  final void Function(String) onDeclineInvite;
-  final void Function(BuildContext, GameInvite) onShowCreatorInfo;
-  final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          primary: false,
-          physics: (isDesktop || isPhoneLandscape(context) || isTablet(context))
-              ? const ClampingScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            contentPadding,
-            0,
-            contentPadding,
-            isDesktop ? 24 : 48,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phoneLandscape = isPhoneLandscape(context);
+    final tablet = isTablet(context);
+    final centerCards = isDesktop || phoneLandscape;
+    final minCardWidth = phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
+    final maxCardWidth = phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
+
+    Widget gameCards(double maxWidth) {
+      final cardWidth = centerCards
+          ? maxWidth.clamp(minCardWidth, maxCardWidth).toDouble()
+          : maxWidth;
+      final column = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TictactoeGameCard(
+            isCreating: isCreating,
+            isFinding: isFinding,
+            isOffline: isOffline,
+            turnTimeSec: turnTimeSec,
+            onTurnTimeChanged: onTurnTimeChanged,
+            variant: variant,
+            playersControlActive: playersControlActive,
+            onPlayersChipTap: onPlayersChipTap,
+            onModeChipTap: onModeChipTap,
+            stakeBronze: stakeBronze,
+            stakeOptionsList: stakeOptionsList,
+            onStakeChanged: onStakeChanged,
+            onCreateGame: onCreateGame,
+            onFindGame: onFindGame,
+            onPlayOffline: onPlayOffline,
           ),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight.isFinite &&
-                        constraints.maxHeight > 100
-                    ? constraints.maxHeight
-                    : 400,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final phoneLandscape = isPhoneLandscape(context);
-                      final tablet = isTablet(context);
-                      if (isDesktop || phoneLandscape) {
-                        // Одна карточка игры — по центру, достаточно широкая,
-                        // чтобы «Крестики-нолики» не обрезалось на планшете.
-                        final minCardWidth =
-                            phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
-                        final maxCardWidth =
-                            phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
-                        final availableWidth = constraints.maxWidth;
-                        final cardWidth = availableWidth
-                            .clamp(minCardWidth, maxCardWidth)
-                            .toDouble();
-                        return SizedBox(
-                          width: availableWidth,
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: SizedBox(
-                              width: cardWidth,
-                              child: _TictactoeGameCard(
-                                isCreating: isCreating,
-                                isFinding: isFinding,
-                                isOffline: isOffline,
-                                turnTimeSec: turnTimeSec,
-                                onTurnTimeChanged: onTurnTimeChanged,
-                                variant: variant,
-                                playersControlActive: playersControlActive,
-                                onPlayersChipTap: onPlayersChipTap,
-                                onModeChipTap: onModeChipTap,
-                                stakeBronze: stakeBronze,
-                                stakeOptionsList: stakeOptionsList,
-                                onStakeChanged: onStakeChanged,
-                                onCreateGame: onCreateGame,
-                                onFindGame: onFindGame,
-                                onPlayOffline: onPlayOffline,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return _TictactoeGameCard(
-                        isCreating: isCreating,
-                        isFinding: isFinding,
-                        isOffline: isOffline,
-                        turnTimeSec: turnTimeSec,
-                        onTurnTimeChanged: onTurnTimeChanged,
-                        variant: variant,
-                        playersControlActive: playersControlActive,
-                        onPlayersChipTap: onPlayersChipTap,
-                        onModeChipTap: onModeChipTap,
-                        stakeBronze: stakeBronze,
-                        stakeOptionsList: stakeOptionsList,
-                        onStakeChanged: onStakeChanged,
-                        onCreateGame: onCreateGame,
-                        onFindGame: onFindGame,
-                        onPlayOffline: onPlayOffline,
-                      );
-                    },
+          const SizedBox(height: 16),
+          _DurakGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
+          ),
+          const SizedBox(height: 16),
+          _PokerGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
+          ),
+        ],
+      );
+      if (!centerCards) return column;
+      return Align(
+        alignment: Alignment.topCenter,
+        child: SizedBox(width: cardWidth, child: column),
+      );
+    }
+
+    Widget? observationCard() {
+      final active = activeAsync.valueOrNull;
+      final obs = observation;
+      if (obs == null || obs.gameId.trim().isEmpty) return null;
+      if (active?.type == 'game' && active?.gameId == obs.gameId) {
+        return null;
+      }
+      return GradientCard(
+        animate: false,
+        padding: const EdgeInsets.all(16),
+        child: InkWell(
+          onTap: () async {
+            // Тип партии через реестр + фасад (не хардкод durak/ttt).
+            var gt = normalizeGameType(obs.gameType);
+            final resolved =
+                await ref.read(gameSessionApiProvider).resolveGameType(obs.gameId);
+            if (resolved == null) return;
+            gt = resolved;
+            ref.read(activeGameProvider.notifier).setObservationLocal(
+                  ObservationItem(
+                    gameId: obs.gameId,
+                    lobbyId: obs.lobbyId,
+                    gameType: gt,
                   ),
-                  if (invites.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(
-                        context.l10n.gamesInvitedYou,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
+                );
+            if (!context.mounted) return;
+            context.push(gamePathFor(obs.gameId, gameType: gt));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              const Icon(Icons.visibility_rounded,
+                  size: 40, color: AppColors.accentStart),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.gamesObservation,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final inviteContent = invites.map(
-                          (inv) => _InviteCard(
-                            inv: inv,
-                            onShowCreatorInfo: onShowCreatorInfo,
-                            onShowInviteRules: onShowInviteRules,
-                            onDeclineInvite: onDeclineInvite,
-                            onAcceptInvite: onAcceptInvite,
-                          ),
-                        );
-                        if (isDesktop) {
-                          final width = constraints.maxWidth;
-                          const minCardWidth = 360.0;
-                          const gap = 16.0;
-                          final crossAxisCount = (width / (minCardWidth + gap))
-                              .floor()
-                              .clamp(1, 4);
-                          final itemWidth =
-                              (width - gap * (crossAxisCount - 1)) /
-                                  crossAxisCount;
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: width),
-                              child: Wrap(
-                                spacing: gap,
-                                runSpacing: gap,
-                                alignment: WrapAlignment.center,
-                                children: inviteContent
-                                    .map((w) => SizedBox(
-                                          width: itemWidth,
-                                          child: w,
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          );
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: inviteContent
-                              .map((w) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: w,
-                                  ))
-                              .toList(),
-                        );
-                      },
+                    Text(
+                      context.l10n.gamesObservationHint,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
-                  Builder(
-                    builder: (context) {
-                      final active = activeAsync.valueOrNull;
-                      final obs = observation;
-                      // Active game на списке не показываем — таб уводит в неё.
-                      // Observation — карточка, пока партия не закроется.
-                      if (obs == null || obs.gameId.trim().isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      // Если эта же партия уже active (ещё играю) — карточка не нужна.
-                      if (active?.type == 'game' &&
-                          active?.gameId == obs.gameId) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: GradientCard(
-                          padding: const EdgeInsets.all(16),
-                          child: InkWell(
-                            onTap: () => context.push(
-                                '/games/tictactoe/game/${obs.gameId}'),
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.visibility_rounded,
-                                    size: 40, color: AppColors.accentStart),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Наблюдение',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Вы выбыли — можно смотреть',
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.textSecondary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            ],
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    final obs = observationCard();
+    // ListView без minHeight на весь экран: иначе при скролле карточки
+    // «уезжают» в пустоту и визуально пропадают.
+    return ListView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        contentPadding,
+        isOffline ? 12 : 8,
+        contentPadding,
+        isDesktop ? 24 : 48,
+      ),
+      children: [
+        gameCards(MediaQuery.sizeOf(context).width - contentPadding * 2),
+        if (obs != null) ...[
+          const SizedBox(height: 20),
+          obs,
+        ],
+      ],
     );
   }
 }
@@ -973,73 +998,99 @@ class _GamesPageContent extends StatelessWidget {
 class _LobbiesPageContent extends StatelessWidget {
   const _LobbiesPageContent({
     required this.lobbiesAsync,
+    required this.invites,
     required this.isDesktop,
     required this.onJoinLobby,
     required this.onShowLobbyRules,
     required this.onRefresh,
+    required this.onAcceptInvite,
+    required this.onDeclineInvite,
+    required this.onShowCreatorInfo,
+    required this.onShowInviteRules,
     required this.contentPadding,
   });
 
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
+  final List<GameInvite> invites;
   final bool isDesktop;
-  final void Function(BuildContext, String) onJoinLobby;
+  final void Function(BuildContext, String, {String gameType}) onJoinLobby;
   final void Function(BuildContext, LobbyItem) onShowLobbyRules;
   final VoidCallback onRefresh;
+  final void Function(BuildContext, GameInvite) onAcceptInvite;
+  final void Function(String, {String gameType}) onDeclineInvite;
+  final void Function(BuildContext, GameInvite) onShowCreatorInfo;
+  final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
+
+  Widget _invitesSection(BuildContext context) {
+    if (invites.isEmpty) return const SizedBox.shrink();
+    final inviteContent = invites.map(
+      (inv) => _InviteCard(
+        inv: inv,
+        onShowCreatorInfo: onShowCreatorInfo,
+        onShowInviteRules: onShowInviteRules,
+        onDeclineInvite: onDeclineInvite,
+        onAcceptInvite: onAcceptInvite,
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: Text(
+            context.l10n.gamesInvitedYou,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (isDesktop)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              const minCardWidth = 360.0;
+              const gap = 16.0;
+              final crossAxisCount =
+                  (width / (minCardWidth + gap)).floor().clamp(1, 4);
+              final itemWidth =
+                  (width - gap * (crossAxisCount - 1)) / crossAxisCount;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                alignment: WrapAlignment.center,
+                children: inviteContent
+                    .map((w) => SizedBox(width: itemWidth, child: w))
+                    .toList(),
+              );
+            },
+          )
+        else
+          ...inviteContent.map(
+            (w) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: w,
+            ),
+          ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final minH =
-            constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minH),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  lobbiesAsync.when(
+    return ListView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
+      children: [
+        _invitesSection(context),
+        lobbiesAsync.when(
                     data: (lobbies) {
+                      // Пустое лобби — без заглушки («Лобби» / refresh).
                       if (lobbies.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isDesktop ? 48 : 36,
-                            horizontal: 12,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.group_off_rounded,
-                                size: isDesktop ? 48 : 40,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.7),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                context.l10n.gamesLobbyTab,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isDesktop ? 16 : 15,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton.icon(
-                                onPressed: onRefresh,
-                                icon: const Icon(Icons.refresh_rounded),
-                                label: Text(context.l10n.commonTryRefresh),
-                              ),
-                            ],
-                          ),
-                        );
+                        return const SizedBox.shrink();
                       }
                       final lobbyCards = lobbies
                           .map(
@@ -1047,16 +1098,22 @@ class _LobbiesPageContent extends StatelessWidget {
                               padding: EdgeInsets.symmetric(
                                   vertical: isDesktop ? 8 : 6),
                               child: GradientCard(
+                                animate: false,
                                 padding: EdgeInsets.all(isDesktop ? 20 : 16),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.grid_3x3_rounded,
-                                      size: isDesktop ? 36 : 32,
-                                      color: AppColors.accentStart,
-                                    ),
+                                    lobby.isDurak
+                                        ? DurakGameIcon(
+                                            size: isDesktop ? 36 : 32,
+                                            color: AppColors.accentStart,
+                                          )
+                                        : Icon(
+                                            Icons.grid_3x3_rounded,
+                                            size: isDesktop ? 36 : 32,
+                                            color: AppColors.accentStart,
+                                          ),
                                     SizedBox(width: isDesktop ? 16 : 12),
                                     Expanded(
                                       child: Column(
@@ -1064,15 +1121,26 @@ class _LobbiesPageContent extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            lobby.creatorName.trim().isNotEmpty
-                                                ? lobby.creatorName
-                                                : context.l10n.commonPlayer,
+                                            lobby.isDurak
+                                                ? context.l10n.gamesDurak
+                                                : context.l10n.gamesTicTacToe,
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
                                               fontSize: isDesktop ? 16 : 14,
                                             ),
                                           ),
+                                          Text(
+                                            lobby.creatorName.trim().isNotEmpty
+                                                ? lobby.creatorName
+                                                : context.l10n.commonPlayer,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textSecondary,
+                                              fontSize: isDesktop ? 13 : 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
                                           Wrap(
                                             spacing: 12,
                                             runSpacing: 4,
@@ -1127,15 +1195,21 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    Icons.extension_rounded,
+                                                    lobby.isDurak
+                                                        ? Icons
+                                                            .swap_horiz_rounded
+                                                        : Icons
+                                                            .extension_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    variantShortLabel(
-                                                        lobby.variant),
+                                                    lobby.isDurak
+                                                        ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                        : variantShortLabel(
+                                                            lobby.variant),
                                                     style: TextStyle(
                                                       fontSize:
                                                           isDesktop ? 14 : 13,
@@ -1181,7 +1255,8 @@ class _LobbiesPageContent extends StatelessWidget {
                                     ),
                                     IconButton.filled(
                                       onPressed: () =>
-                                          onJoinLobby(context, lobby.id),
+                                          onJoinLobby(context, lobby.id,
+                                              gameType: lobby.gameType),
                                       icon: const Icon(Icons.login_rounded),
                                       tooltip: context.l10n.gamesJoin,
                                       style: IconButton.styleFrom(
@@ -1196,6 +1271,8 @@ class _LobbiesPageContent extends StatelessWidget {
                           )
                           .toList();
                       if (isDesktop) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
                         final width = constraints.maxWidth;
                         const minCardWidth = 360.0;
                         const gap = 16.0;
@@ -1221,6 +1298,8 @@ class _LobbiesPageContent extends StatelessWidget {
                             ),
                           ),
                         );
+                          },
+                        );
                       }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1243,13 +1322,494 @@ class _LobbiesPageContent extends StatelessWidget {
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Карточка «Дурак» — визуально идентична `_TictactoeGameCard`, использует
+/// общие виджеты `GameCard*` из `ui/widgets/game_card_widgets.dart`.
+class _DurakGameCard extends ConsumerStatefulWidget {
+  const _DurakGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_DurakGameCard> createState() => _DurakGameCardState();
+}
+
+class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
+  // Свои настройки (не общие с крестиками) — hydrate из userGameSettings(durak).
+  int _players = 2;
+  int _deckSize = 36;
+  String _gameMode = 'podkidnoi'; // podkidnoi | perevodnoi
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('durak')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _players = saved.maxPlayers.clamp(2, 4);
+      _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
+      _gameMode =
+          saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('durak').notifier).updateLocal(
+          UserGameSettings(
+            gameType: 'durak',
+            turnTimeSec: _turnTimeSec,
+            variant: _gameMode,
+            stakeBronze: _stakeBronze,
+            deckSize: _deckSize,
+            maxPlayers: _players,
+            gameMode: _gameMode,
           ),
         );
-      },
+  }
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
+    if (!context.mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final repo = ref.read(durakRepositoryProvider);
+      final result = await repo.createLobby(
+        mode: mode,
+        maxPlayers: _players,
+        deckSize: _deckSize,
+        gameMode: _gameMode,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+      );
+      if (!mounted) return;
+      final lobbyId = result.lobbyId;
+      final gameId = result.gameId;
+      if (gameId != null && gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'durak',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'durak');
+        context.push('/games/durak/game/$gameId');
+      } else if (lobbyId.isEmpty) {
+        // Сервер не вернул ни лобби, ни партию — не строим битый роут.
+        showAppSnackBar(
+          context,
+          message: context.l10n.commonTryLater,
+          kind: AppSnackKind.error,
+        );
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'durak',
+              ),
+            );
+        context.push('/games/durak/lobby/$lobbyId?mode=$mode');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(e)
+            ? finishCurrentGameMessage
+            : formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+      // Сервер видит активную партию, а кэш мог отстать — увести в неё.
+      if (isFinishCurrentGameError(e)) {
+        try {
+          final active =
+              await ref.read(activeGameProvider.notifier).refresh();
+          if (!mounted) return;
+          if (active != null) goToActiveSession(context, active);
+        } catch (_) {}
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context,
+          message: formatUserError(e), kind: AppSnackKind.error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _cyclePlayers() {
+    setState(() {
+      _players = _players == 4 ? 2 : _players + 1;
+      _deckSize = durakClampDeckForPlayers(_players, _deckSize);
+    });
+    _persistSettings();
+  }
+
+  void _cycleGameMode() {
+    // Подкидной ↔ переводной всегда доступны, без сброса игроков/колоды.
+    setState(() {
+      _gameMode = _gameMode == 'podkidnoi' ? 'perevodnoi' : 'podkidnoi';
+    });
+    _persistSettings();
+  }
+
+  void _cycleDeck() {
+    setState(() {
+      final options = durakDeckSizesForPlayers(_players);
+      final i = options.indexOf(_deckSize);
+      _deckSize = options[(i < 0 ? 0 : i + 1) % options.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    setState(() => _stakeBronze = next);
+    _persistSettings();
+  }
+
+  String _modeLabel(String m) => durakModeLabel(m, context.l10n);
+
+  String _deckLabel(int n) => durakDeckLabel(n, context.l10n);
+
+  @override
+  Widget build(BuildContext context) {
+    // Поздняя подгрузка настроек с сервера.
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('durak'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _players = saved.maxPlayers.clamp(2, 4);
+        _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
+        _gameMode =
+            saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final busy = _creating || _finding;
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: true,
+        icon: Icons.groups_rounded,
+        label: '$_players',
+        onTap: busy ? null : _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: busy ? null : _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.swap_horiz_rounded,
+        label: _modeLabel(_gameMode),
+        onTap: busy ? null : _cycleGameMode,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: DurakGameIcon.iconData,
+        flipIcon: true,
+        label: _deckLabel(_deckSize),
+        onTap: busy ? null : _cycleDeck,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesDurak,
+        icon: DurakGameIcon.iconData,
+        flipIcon: true,
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: busy ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () {
+          final qs = <String, String>{
+            'deck': '$_deckSize',
+            'players': '$_players',
+            'mode': _gameMode,
+          };
+          context.push(
+            Uri(path: '/games/durak/offline', queryParameters: qs).toString(),
+          );
+        },
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    );
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines(durakRuleLines(
+        mode: _gameMode,
+        players: _players,
+        deckSize: _deckSize,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+        offlineBot: widget.isOffline,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+}
+
+/// Карточка «Покер» — превью настроек; игра пока в разработке.
+class _PokerGameCard extends StatefulWidget {
+  const _PokerGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  State<_PokerGameCard> createState() => _PokerGameCardState();
+}
+
+class _PokerGameCardState extends State<_PokerGameCard> {
+  static const _playerOptions = <int>[2, 4, 6, 9];
+
+  int _players = 6;
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+
+  void _cyclePlayers() {
+    final i = _playerOptions.indexOf(_players);
+    setState(() {
+      _players = _playerOptions[(i < 0 ? 0 : i + 1) % _playerOptions.length];
+    });
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      final i = turnTimeOptions.indexOf(_turnTimeSec);
+      _turnTimeSec =
+          turnTimeOptions[(i < 0 ? 0 : i + 1) % turnTimeOptions.length];
+    });
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    setState(() {
+      _stakeBronze = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    });
+  }
+
+  void _showRules(BuildContext context) {
+    final l10n = context.l10n;
+    final lines = <String>[
+      l10n.rulesPokerPlayers(_players),
+      if (!widget.isOffline)
+        _turnTimeSec <= 0
+            ? l10n.rulesNoTimeLimit
+            : l10n.rulesTurnTime(formatTurnTime(_turnTimeSec)),
+      if (!widget.isOffline && _stakeBronze > 0)
+        l10n.rulesStake(formatStakeAmount(_stakeBronze)),
+      l10n.rulesPokerIntro,
+      l10n.rulesPokerPlay,
+      l10n.rulesPokerWin,
+    ];
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines(lines),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+      });
+    }
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: true,
+        icon: Icons.groups_rounded,
+        label: '$_players',
+        onTap: _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesPoker,
+        icon: Icons.casino_rounded,
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: widget.isOffline ? null : _cycleStake,
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.textSecondary.withValues(alpha: 0.22),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+            horizontal: 12,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.construction_rounded,
+                size: 18,
+                color: AppColors.textSecondary.withValues(alpha: 0.9),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.gamesInDevelopment,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1385,12 +1945,12 @@ class _TictactoeGameCard extends StatelessWidget {
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
     final busy = isCreating || isFinding;
     // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
-    final playersSelected = !isOffline && playersControlActive;
+    final playersSelected = playersControlActive;
     final playersLabel = playersSelected
         ? '${configForVariant(variant).maxPlayers}'
         : '2';
     // Кнопка режима: активна → Классика/Гомоку/Ультимейт; иначе тёмная «Классика».
-    final modeSelected = isOffline || !playersControlActive;
+    final modeSelected = !playersControlActive;
     final modeVariant = modeSelected
         ? parseVariant(variant)
         : variantClassic;
@@ -1400,19 +1960,18 @@ class _TictactoeGameCard extends StatelessWidget {
             ? Icons.dashboard_customize_rounded
             : Icons.close_rounded;
     return [
-      if (!isOffline)
-        _selectableChip(
-          selected: playersSelected,
-          onTap: busy ? null : onPlayersChipTap,
-          icon: Icons.groups_rounded,
-          label: playersLabel,
-          theme: theme,
-          padV: padV,
-          padH: padH,
-          iconSz: iconSz,
-          fontSz: fontSz,
-          compact: compact,
-        ),
+      _selectableChip(
+        selected: playersSelected,
+        onTap: busy ? null : onPlayersChipTap,
+        icon: Icons.groups_rounded,
+        label: playersLabel,
+        theme: theme,
+        padV: padV,
+        padH: padH,
+        iconSz: iconSz,
+        fontSz: fontSz,
+        compact: compact,
+      ),
       if (!isOffline)
         Material(
           color: Colors.transparent,
@@ -1473,20 +2032,11 @@ class _TictactoeGameCard extends StatelessWidget {
   }
 
   void _showRulesInfo(BuildContext context) {
-    showDialog(
+    showGameRulesDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gamesRulesTitle),
-        content: SingleChildScrollView(
-          child: _buildRulesWidget(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.l10n.commonClose),
-          ),
-        ],
-      ),
+      title: context.l10n.gamesRulesTitle,
+      content: _buildRulesWidget(),
+      closeLabel: context.l10n.commonClose,
     );
   }
 
@@ -1624,90 +2174,22 @@ class _TictactoeGameCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
-          if (isOffline)
-            FilledButton.icon(
-              onPressed: onPlayOffline,
-              icon: const Icon(Icons.play_arrow_rounded, size: 22),
-              label: Text(context.l10n.gamesPlay),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentStart,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                ),
-              ),
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: isCreating || isFinding ? null : onCreateGame,
-                    icon: isCreating
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.add_rounded, size: 20),
-                    label: Text(isCreating
-                        ? context.l10n.commonCreating
-                        : context.l10n.gamesCreate),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: isMedium ? 10 : 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: isCreating || isFinding ? null : onFindGame,
-                    icon: isFinding
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.accentStart,
-                            ),
-                          )
-                        : const Icon(Icons.search_rounded, size: 20),
-                    label: Text(isFinding
-                        ? context.l10n.commonSearching
-                        : context.l10n.gamesFindMatch),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentStart,
-                      side: BorderSide(
-                        color: AppColors.accentStart.withValues(alpha: 0.6),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          // Общий виджет — тот же, что у карточки Дурака.
+          GameCardActionsRow(
+            createLabel: context.l10n.gamesCreate,
+            creatingLabel: context.l10n.commonCreating,
+            onCreate: onCreateGame,
+            findLabel: context.l10n.gamesFindMatch,
+            findingLabel: context.l10n.commonSearching,
+            onFind: onFindGame,
+            offline: isOffline,
+            offlinePlayLabel: context.l10n.gamesPlay,
+            onOfflinePlay: onPlayOffline,
+            isCreating: isCreating,
+            isFinding: isFinding,
+            isDesktop: isDesktop,
+            isMedium: isMedium,
+          ),
         ],
       ),
     );
@@ -1718,10 +2200,12 @@ class _GamesTabSwitcher extends StatelessWidget {
   const _GamesTabSwitcher({
     required this.selectedTab,
     required this.onTabChanged,
+    this.lobbyBadgeCount = 0,
   });
 
   final _GamesTab selectedTab;
   final void Function(_GamesTab) onTabChanged;
+  final int lobbyBadgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1753,6 +2237,7 @@ class _GamesTabSwitcher extends StatelessWidget {
               isSelected: selectedTab == _GamesTab.lobbies,
               onTap: () => onTabChanged(_GamesTab.lobbies),
               isDesktop: isDesktop,
+              badgeCount: lobbyBadgeCount,
             ),
           ],
         ),
@@ -1768,6 +2253,7 @@ class _TabSegment extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.isDesktop,
+    this.badgeCount = 0,
   });
 
   final String label;
@@ -1775,6 +2261,7 @@ class _TabSegment extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final bool isDesktop;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1790,7 +2277,7 @@ class _TabSegment extends StatelessWidget {
           child: Semantics(
             button: true,
             selected: isSelected,
-            label: label,
+            label: badgeCount > 0 ? '$label, $badgeCount' : label,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
               child: Padding(
@@ -1810,17 +2297,63 @@ class _TabSegment extends StatelessWidget {
                     ),
                     SizedBox(width: isDesktop ? 10 : 8),
                     Flexible(
-                      child: Text(
-                        label,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
-                          fontSize: isDesktop ? 15 : 14,
-                          color: isSelected
-                              ? AppColors.accentStart
-                              : AppColors.textSecondary,
-                        ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            // Место под бейдж справа сверху от текста.
+                            padding: EdgeInsets.only(
+                              right: badgeCount > 0 ? 14 : 0,
+                              top: badgeCount > 0 ? 2 : 0,
+                            ),
+                            child: Text(
+                              label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                fontSize: isDesktop ? 15 : 14,
+                                color: isSelected
+                                    ? AppColors.accentStart
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (badgeCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -8,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade600,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  badgeCount > 99 ? '99+' : '$badgeCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -1843,16 +2376,19 @@ class _InviteCard extends ConsumerWidget {
     required this.onAcceptInvite,
   });
 
+
+
   final GameInvite inv;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
-  final void Function(String) onDeclineInvite;
-  final void Function(BuildContext, String) onAcceptInvite;
+  final void Function(String, {String gameType}) onDeclineInvite;
+  final void Function(BuildContext, GameInvite) onAcceptInvite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const iconSz = 16.0;
     return GradientCard(
+      animate: false,
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
       child: IntrinsicHeight(
@@ -1875,14 +2411,30 @@ class _InviteCard extends ConsumerWidget {
                         child: InkWell(
                           onTap: () => onShowCreatorInfo(context, inv),
                           borderRadius: BorderRadius.circular(6),
-                          child: Text(
-                            inv.creatorName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _inviteGameTitle(context, inv.gameType),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                inv.creatorName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -1944,14 +2496,31 @@ class _InviteCard extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Tooltip(
                               message: context.l10n.gamesRulesTitle,
-                              child: Icon(Icons.extension_rounded,
-                                  size: iconSz, color: AppColors.textSecondary),
+                              child: Icon(
+                                inv.isDurak
+                                    ? Icons.swap_horiz_rounded
+                                    : Icons.extension_rounded,
+                                size: iconSz,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             Text(
-                              variantShortLabel(inv.variant),
+                              inv.modeLabel,
                               style: const TextStyle(
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
+                            if (inv.isDurak) ...[
+                              DurakGameIcon(
+                                size: iconSz,
+                                color: AppColors.textSecondary,
+                              ),
+                              Text(
+                                durakDeckLabel(inv.deckSize, context.l10n),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
                             Icon(Icons.person_outline_rounded,
                                 size: iconSz, color: AppColors.textSecondary),
                             Text(
@@ -1972,13 +2541,14 @@ class _InviteCard extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () => onDeclineInvite(inv.lobbyId),
+                  onPressed: () =>
+                      onDeclineInvite(inv.lobbyId, gameType: inv.gameType),
                   icon: const Icon(Icons.close_rounded),
                   tooltip: context.l10n.commonDecline,
                   style: IconButton.styleFrom(foregroundColor: Colors.red),
                 ),
                 IconButton.filled(
-                  onPressed: () => onAcceptInvite(context, inv.lobbyId),
+                  onPressed: () => onAcceptInvite(context, inv),
                   icon: const Icon(Icons.check_rounded),
                   tooltip: context.l10n.commonAccept,
                   style: IconButton.styleFrom(
@@ -1995,6 +2565,17 @@ class _InviteCard extends ConsumerWidget {
   }
 }
 
+String _inviteGameTitle(BuildContext context, String gameType) {
+  switch (gameType) {
+    case 'durak':
+      return context.l10n.gamesDurak;
+    case 'poker':
+      return context.l10n.gamesPoker;
+    default:
+      return context.l10n.gamesTicTacToe;
+  }
+}
+
 class _InviteGameIcon extends StatelessWidget {
   const _InviteGameIcon({required this.gameType});
 
@@ -2002,10 +2583,19 @@ class _InviteGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = switch (gameType) {
-      'tictactoe' => Icons.grid_3x3_rounded,
-      _ => Icons.grid_3x3_rounded,
-    };
+    final IconData? materialIcon;
+    final Widget child;
+    switch (gameType) {
+      case 'durak':
+        materialIcon = null;
+        child = const DurakGameIcon(size: 26, color: Colors.white);
+      case 'poker':
+        materialIcon = Icons.casino_rounded;
+        child = Icon(materialIcon, color: Colors.white, size: 26);
+      default:
+        materialIcon = Icons.grid_3x3_rounded;
+        child = Icon(materialIcon, color: Colors.white, size: 26);
+    }
     return Container(
       width: 44,
       height: 44,
@@ -2018,7 +2608,7 @@ class _InviteGameIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: Colors.white, size: 26),
+      child: child,
     );
   }
 }

@@ -1,53 +1,48 @@
 ---
-description: После каждого git push рабочей ветки — деплой этой ветки на Fly
+description: После push — деплой только на Fly DEV (multigameszozu-dev)
 alwaysApply: true
 ---
 
-# Автодеплой рабочей ветки после push
+# Деплой только на дев-среду
 
-После **каждого** `git push` текущей рабочей ветки — деплоить именно эту
-ветку (как есть, без мержа в develop/main) на Fly.io.
+После **каждого коммита и `git push`** рабочей ветки сразу деплоим
+**только DEV** (`multigameszozu-dev` через `fly.dev.toml` /
+`./launcher/deploy_dev.sh`). Не откладывать деплой на конец сессии —
+push → deploy в том же ходе.
 
-## Условие запуска
-
-Правило срабатывает, когда в ходе ответа **был выполнен `git push`** рабочей
-ветки (не считая случаев, когда пользователь явно попросил **не** деплоить).
+Прод (`multigameszozu` / `fly.toml`) этим правилом **не** трогаем.
 
 ## Шаги
 
-1. Проверить наличие `deploy.cursor.env` в корне проекта. Если файла нет —
-   чётко сообщить: «нет `deploy.cursor.env` с `FLY_API_TOKEN`/`FLY_APP_NAME`,
-   деплой невозможен» — и **не** пытаться деплоить.
+1. Проверить `deploy.dev.env` в корне (шаблон: `deploy.dev.env.example`).
+   Если файла нет — сообщить и не деплоить.
 
-2. Запустить деплой текущей ветки (контекст сборки — корень репозитория,
-   тот же `Dockerfile`, что в `fly.toml`):
+2. В `deploy.dev.env` обязательно:
+   - `FLY_APP_NAME=multigameszozu-dev` (скрипт откажет при `multigameszozu`)
+   - `FLY_API_TOKEN`, `JWT_SECRET`, `ADMIN_INIT_SECRET`
+   - `PUBLIC_BASE_URL=https://multigameszozu-dev.fly.dev`
+
+3. Задеплоить текущую рабочую ветку на DEV **без** перезаписи секретов
+   (иначе `JWT_SECRET` сбрасывает все сессии):
 
    ```bash
-   set -a
-   source deploy.cursor.env
-   set +a
-   fly deploy --app "$FLY_APP_NAME" --remote-only --yes
+   ./launcher/deploy_dev.sh
    ```
 
-   Не добавлять `--depot` — флаг устаревший; `--remote-only` уже настроен
-   в `launcher/deploy_*.sh` и `fly.toml`.
+   Windows: `.\launcher\deploy_dev.ps1`
 
-3. Это долгая операция (сборка Flutter Web + Go): запускать с большим
-   таймаутом (≥ 10 минут) и не прерывать раньше времени.
+   `UPDATE_SECRETS=1` — только при первом сетапе / явной смене секретов.
 
-4. По итогу показать кратко:
-   - **успех** — версия/URL приложения (`https://multigameszozu.fly.dev`);
-   - **ошибка** — 1–2 конкретных шага для исправления (например, «токен
-     истёк, пересоздай `fly tokens create deploy -a multigameszozu -x 24h`»).
+4. Долгая операция (Flutter Web + Go): таймаут ≥ 10 минут.
+
+5. По итогу кратко:
+   - **успех** — `https://multigameszozu-dev.fly.dev`;
+   - **ошибка** — 1–2 шага (токен, секреты; приложение:
+     `./launcher/setup_fly_dev.sh`).
 
 ## Важно
 
-- Деплоится **текущая рабочая ветка** (код может быть не слит в develop) —
-  это сознательное решение владельца. Перед деплоем не мержить и не
-  переключать ветки.
-- `deploy.cursor.env` в `.gitignore` — никогда не коммитить и не выводить
-  его содержимое (токен) в ответ.
-- Флаг `--depot=false` не используется (устарел).
-- Если `fly` не авторизован и `deploy.cursor.env` отсутствует/токен
-  невалиден — сообщить об этом и **остановиться**, не пытаться `fly auth
-  login` (это интерактивно).
+- Только DEV. Не вызывать `deploy_develop.sh` / `deploy_cursor.sh` и не
+  деплоить в `multigameszozu` по этому правилу.
+- `deploy.dev.env` в `.gitignore` — не коммитить и не печатать токен.
+- Если нет `fly` / `deploy.dev.env` — сообщить и остановиться.

@@ -28,6 +28,33 @@
   "offlineBotWon": "Бот победил",
   "offlineBotThinking": "Ход бота…",
   "offlinePlayAgain": "Ещё раз",
+  "offlineBotName": "Бот {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "durakActionTake": "Взять",
+  "durakActionAll": "Все",
+  "durakActionDone": "Готово",
+  "durakActionBito": "Бито",
+  "durakHintDefend": "Отбивайтесь",
+  "durakHintDefendOrTransfer": "Отбивайтесь или переведите",
+  "durakHintOpponentDefends": "Соперник отбивается",
+  "durakHintThrowInFirst": "Подкиньте карты или «Все» (макс. 5 в первом отбое)",
+  "durakHintThrowIn": "Подкиньте карты или нажмите «Все»",
+  "durakHintOpponentThrows": "Соперник подкидывает",
+  "durakHintTakeFollow": "Подкиньте вдогонку или нажмите «Готово»",
+  "durakHintOpponentTakeFollow": "Соперник может подкинуть вдогонку",
+  "durakHintBito": "Подкиньте карту или скажите «Бито»",
+  "durakHintOpponentBito": "Соперник подкидывает или говорит «Бито»",
+  "durakHintYourAttack": "Ваш ход — атакуйте",
+  "durakHintOpponentAttack": "Атакует соперник",
+  "durakHintYouLost": "Вы проиграли — вы дурак",
+  "durakHintDrawAllOut": "Ничья — все вышли",
+  "durakHintYouFinished": "Вы вышли — ждём конца партии",
   "shopPurchaseQueued": "Покупка сохранена — применится в режиме онлайн",
   "shopPurchaseApplied": "{title} — покупка применена",
   "@shopPurchaseApplied": {
@@ -55,6 +82,19 @@
   "settingsPushFriends": "Друзья",
   "settingsPushGames": "Игры",
   "settingsPushRewards": "Награды",
+  "settingsAppVersion": "Версия {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateTitle": "Доступно обновление",
+  "appUpdateBody": "Вышла новая версия приложения. Обновитесь, чтобы продолжить.",
+  "appUpdateWhatsNew": "Что нового",
+  "appUpdateOk": "Обновить",
+  "appUpdateLaterBanner": "После партии обновим приложение",
   "loginTitle": "Вход",
   "loginSubtitle": "Введите email или логин и пароль",
   "loginEmailLabel": "Email или логин",
@@ -198,6 +238,20 @@
   "gamesWaiting": "Ожидание",
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
+  "gamesDurak": "Дурак",
+  "gamesPoker": "Покер",
+  "gamesInDevelopment": "В разработке",
+  "rulesPokerPlayers": "Игроки: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Техасский холдем. Каждому раздают 2 карты в руку; на стол выходят 5 общих карт.",
+  "rulesPokerPlay": "Раунды ставок: префлоп, флоп, тёрн и ривер. Можно фолд, колл, бет или рейз.",
+  "rulesPokerWin": "Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",
@@ -209,6 +263,61 @@
   "gamesGridSize": "Размер сетки",
   "gamesSwapSides": "Смена сторон",
   "gamesNoCenter": "Запрет центра",
+  "gamesObservation": "Наблюдение",
+  "gamesObservationHint": "Можно смотреть до конца партии",
+  "gamesFinishCurrentFirst": "Сначала завершите текущую игру",
+  "gamesVariantClassic": "Классика",
+  "gamesVariantGomoku": "Гомоку",
+  "gamesVariantUltimate": "Ультимейт",
+  "gamesVariantMulti3": "На троих",
+  "gamesVariantMulti4": "На четверых",
+  "gamesDurakModePodkidnoi": "Подкидной",
+  "gamesDurakModePerevodnoi": "Переводной",
+  "gamesDurakDeck24": "24 карты",
+  "gamesDurakDeck36": "36 карт",
+  "gamesDurakDeck52": "52 карты",
+  "rulesDurakMode": "Режим: {mode}",
+  "@rulesDurakMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesDurakPlayersDeck": "Игроки: {players}. Колода: {deck}.",
+  "@rulesDurakPlayersDeck": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      },
+      "deck": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesDurakOfflineBot": "Игра против бота, без ставок и лимита времени.",
+  "rulesDurakAttack": "Атакующий кладёт карты, защитник бьёт (той же масти старше или козырем). Козырь бьётся только козырем старше.",
+  "rulesDurakBeat": "Когда все карты биты — атакующий говорит «Бито», карты уходят в отбой. Иначе защитник берёт всё со стола.",
+  "rulesDurakLoser": "Проигравший — у кого в конце партии остались карты, «дурак».",
+  "lobbyPlayersCount": "Игроки {count}/{maxPlayers}",
+  "@lobbyPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "maxPlayers": {
+        "type": "int"
+      }
+    }
+  },
+  "lobbyNamed": "Лобби {name}",
+  "@lobbyNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "lobbyMatchmake": "Лобби",
   "lobbyPrivateGame": "Своя игра",
   "lobbySearchingOpponent": "Поиск соперника…",
@@ -1090,5 +1199,56 @@
     }
   },
   "coinsCreditCardTitle": "Вам начислены монеты",
-  "coinsClaim": "Забрать"
+  "coinsClaim": "Забрать",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Забрал",
+  "durakRoleBeats": "Бьёт",
+  "durakRoleThrowIn": "Подкид",
+  "durakRoleTurn": "Ход",
+  "durakRoleDefends": "Отбивается",
+  "durakStatusTaking": "Беру",
+  "durakHintDefenderTurn": "Ход защитника",
+  "gameYouEliminated": "Вы выбыли",
+  "gameYouPlaced": "Вы заняли {place}-е место",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Партия окончена",
+  "gameTurnOf": "Ход {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Чат группы",
+  "lobbyChatNotReady": "Чат лобби ещё не создан",
+  "chatsGroupChat": "Групповой чат",
+  "chatsMembersCount": "Участники: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} уч.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(вы)",
+  "chatTitleDurak3": "Дурак на троих",
+  "chatTitleDurak4": "Дурак на четверых",
+  "rulesTttUltimate": "Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.",
+  "rulesTttMulti3": "На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.",
+  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает."
 }

@@ -162,6 +162,81 @@
   "gamesWaiting": "Esperando",
   "gamesLobbyTab": "Sala",
   "gamesTicTacToe": "Tres en raya",
+  "appUpdateBody": "Hay una nueva versión de la aplicación. Actualiza para continuar.",
+  "appUpdateLaterBanner": "Actualizaremos la app después de esta partida",
+  "appUpdateOk": "Actualizar",
+  "appUpdateTitle": "Actualización disponible",
+  "appUpdateWhatsNew": "Novedades",
+  "durakActionAll": "Todas",
+  "durakActionBito": "Cubierto",
+  "durakActionDone": "Listo",
+  "durakActionTake": "Tomar",
+  "durakHintBito": "Echa una carta o di «Cubierto»",
+  "durakHintDefend": "Defiende",
+  "durakHintDefendOrTransfer": "Defiende o transfiere",
+  "durakHintDrawAllOut": "Empate — todos salieron",
+  "durakHintOpponentAttack": "El rival ataca",
+  "durakHintOpponentBito": "El rival echa o dice «Cubierto»",
+  "durakHintOpponentDefends": "El rival defiende",
+  "durakHintOpponentTakeFollow": "El rival puede echar tras tomar",
+  "durakHintOpponentThrows": "El rival echa",
+  "durakHintTakeFollow": "Echa tras tomar o toca «Listo»",
+  "durakHintThrowIn": "Echa cartas o toca «Todas»",
+  "durakHintThrowInFirst": "Echa cartas o «Todas» (máx. 5 en el primer cubierto)",
+  "durakHintYouFinished": "Saliste — esperando el final",
+  "durakHintYouLost": "Perdiste — eres el tonto",
+  "durakHintYourAttack": "Tu turno — ataca",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Póker",
+  "gamesInDevelopment": "En desarrollo",
+  "rulesPokerPlayers": "Jugadores: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Cada jugador recibe 2 cartas ocultas; en la mesa salen 5 cartas comunitarias.",
+  "rulesPokerPlay": "Rondas de apuestas: preflop, flop, turn y river. Puedes fold, call, bet o raise.",
+  "rulesPokerWin": "Gana la mejor mano de cinco cartas (ocultas + comunitarias), o el último tras los folds.",
+  "gamesDurakDeck24": "24 cartas",
+  "gamesDurakDeck36": "36 cartas",
+  "gamesDurakDeck52": "52 cartas",
+  "gamesDurakModePerevodnoi": "Traspaso",
+  "gamesDurakModePodkidnoi": "Apoyo",
+  "gamesFinishCurrentFirst": "Termina primero tu partida actual",
+  "gamesObservation": "Espectador",
+  "gamesObservationHint": "Puedes mirar hasta que termine la partida",
+  "gamesVariantClassic": "Clásico",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 jugadores",
+  "gamesVariantMulti4": "4 jugadores",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Sala {name}",
+  "lobbyPlayersCount": "Jugadores {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "El atacante juega cartas; el defensor las cubre (mismo palo más alto, o un triunfo). Un triunfo solo se cubre con un triunfo mayor.",
+  "rulesDurakBeat": "Cuando todas las cartas están cubiertas, el atacante dice «Bito» y van al descarte. Si no, el defensor se lleva todo de la mesa.",
+  "rulesDurakLoser": "Pierde quien se queda con cartas al final: el «tonto».",
+  "rulesDurakMode": "Modo: {mode}",
+  "rulesDurakOfflineBot": "Juega contra un bot, sin apuestas ni límite de tiempo.",
+  "rulesDurakPlayersDeck": "Jugadores: {players}. Baraja: {deck}.",
+  "settingsAppVersion": "Versión {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Reglas",
   "gamesRulesTitle": "Reglas del juego",
   "gamesCreate": "Crear partida",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "Se te han acreditado {amount} monedas",
   "coinsDeductedTitle": "Se dedujeron {amount} monedas",
   "coinsCreditCardTitle": "Se te han acreditado monedas",
-  "coinsClaim": "Reclamar"
+  "coinsClaim": "Reclamar",
+  "durakActionPass": "Pasar",
+  "durakRoleTook": "Toma",
+  "durakRoleBeats": "Cubre",
+  "durakRoleThrowIn": "Apoyo",
+  "durakRoleTurn": "Turno",
+  "durakRoleDefends": "Defiende",
+  "durakStatusTaking": "Toma",
+  "durakHintDefenderTurn": "Turno del defensor",
+  "gameYouEliminated": "Has sido eliminado",
+  "gameYouPlaced": "Quedaste {place}º",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Partida terminada",
+  "gameTurnOf": "Turno de {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Chat de grupo",
+  "lobbyChatNotReady": "El chat del lobby aún no está listo",
+  "chatsGroupChat": "Chat de grupo",
+  "chatsMembersCount": "Miembros: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(tú)",
+  "chatTitleDurak3": "Durak · 3 jugadores",
+  "chatTitleDurak4": "Durak · 4 jugadores",
+  "rulesTttUltimate": "Ultimate: nueve minitableros 3×3. Una jugada envía al rival a ese minitablero. Gana quien complete una línea en el metatablero.",
+  "rulesTttMulti3": "3 jugadores: tablero 3×3, tres jugadores (X, O, △). Completa una línea con tus marcas para ganar.",
+  "rulesTttMulti4": "4 jugadores: tablero 4×4, cuatro jugadores (X, O, △, □). Completa una línea con tus marcas para ganar."
 }

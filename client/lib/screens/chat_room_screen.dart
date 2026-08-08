@@ -16,6 +16,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multigames_client/core/keep_soft_keyboard.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -43,6 +44,7 @@ import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -100,6 +102,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _composerFocusNode = FocusNode();
+  /// Кнопка «Отправить» снаружи поля — зона keep-keyboard на web/iOS.
+  final GlobalKey _sendButtonKey = GlobalKey();
   final Set<String> _messageIDs = <String>{};
 
   bool _loading = true;
@@ -150,6 +154,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _composerFocusNode.addListener(_onComposerFocusChanged);
     _textController.addListener(_onComposerTextChanged);
     _scrollController.addListener(_onMessagesScroll);
+    installKeepSoftKeyboardGuard();
     unawaited(_restoreAutoTranslatePref());
     _loadMessages(initial: true);
     unawaited(_loadCapabilities());
@@ -158,6 +163,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       if (!mounted) return;
       markChatReadInChatsCache(ref, widget.chatID);
       unawaited(_maybeShowPasteSuggestion());
+      _syncKeepSoftKeyboardRects();
     });
   }
 
@@ -260,12 +266,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    if (!_composerFocusNode.hasFocus) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncKeepSoftKeyboardRects();
+      if (_composerFocusNode.hasFocus) _scrollToBottom();
+    });
   }
 
   @override
   void dispose() {
+    clearKeepSoftKeyboardRects();
     final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifier.state = null;
@@ -278,6 +288,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Координаты кнопки «Отправить» для web-guard (preventDefault → нет blur).
+  void _syncKeepSoftKeyboardRects() {
+    final ctx = _sendButtonKey.currentContext;
+    if (ctx == null) {
+      clearKeepSoftKeyboardRects();
+      return;
+    }
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || !box.attached) {
+      clearKeepSoftKeyboardRects();
+      return;
+    }
+    final origin = box.localToGlobal(Offset.zero);
+    // Небольшой запас под палец / hit-slop IconButton.
+    setKeepSoftKeyboardRects([
+      (origin & box.size).inflate(6),
+    ]);
   }
 
   void _onComposerTextChanged() {
@@ -346,9 +375,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerFocusChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncKeepSoftKeyboardRects();
+      if (_composerFocusNode.hasFocus) _scrollToBottom();
+    });
     if (!_composerFocusNode.hasFocus) return;
     unawaited(_loadCapabilities());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   @override
@@ -1700,8 +1733,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String _chatTitle(ChatPreviewItem? item, String fallback) {
     if (item?.isGroup == true) {
       final title = item?.title?.trim();
-      if (title != null && title.isNotEmpty) return title;
-      return 'Групповой чат';
+      if (title != null && title.isNotEmpty) {
+        return localizeChatTitle(title, context.l10n);
+      }
+      return context.l10n.chatsGroupChat;
     }
     final user = item?.user;
     return user == null ? fallback : _peerTitle(user);
@@ -2106,7 +2141,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 ),
                           ),
                           Text(
-                            '${chat?.members.length ?? 0} уч.',
+                            context.l10n.chatsMembersShort(
+                              chat?.members.length ?? 0,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -2295,7 +2332,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 children: [
                   Text(
                     (chat.title ?? '').trim().isNotEmpty
-                        ? chat.title!.trim()
+                        ? localizeChatTitle(chat.title, context.l10n)
                         : context.l10n.navChats,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppColors.textPrimary,
@@ -2304,7 +2341,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Участники: ${members.length}',
+                    context.l10n.chatsMembersCount(members.length),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -2332,7 +2369,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               radius: 20,
                             ),
                             title: Text(
-                              isMe ? '$title (вы)' : title,
+                              isMe
+                                  ? '$title ${context.l10n.chatsYouSuffix}'
+                                  : title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -3136,7 +3175,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -3148,10 +3187,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           ? null
                           : _pickPhoto,
                       tooltip: context.l10n.photo,
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                       icon: Icon(
                         Icons.image_outlined,
@@ -3161,14 +3200,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 _pendingImages.length >= _maxPendingImages)
                             ? _composerIconPurple.withValues(alpha: 0.35)
                             : _composerIconPurple,
-                        size: 24,
+                        size: 28,
                       ),
                     ),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(22),
+                          borderRadius: BorderRadius.circular(26),
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Column(
@@ -3237,12 +3276,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               focusNode: _composerFocusNode,
                               minLines: 1,
                               maxLines: 4,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 1.3,
+                                color: AppColors.textPrimary,
+                              ),
                               textCapitalization:
                                   TextCapitalization.sentences,
                               // Тема приложения рисует OutlineInputBorder —
                               // явно гасим все границы и заливку.
                               decoration: InputDecoration(
                                 hintText: context.l10n.chatMessageHint,
+                                hintStyle: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.textSecondary
+                                      .withValues(alpha: 0.85),
+                                ),
                                 filled: false,
                                 isDense: true,
                                 border: InputBorder.none,
@@ -3252,59 +3301,98 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 errorBorder: InputBorder.none,
                                 focusedErrorBorder: InputBorder.none,
                                 contentPadding: const EdgeInsets.fromLTRB(
+                                  16,
                                   14,
-                                  12,
                                   4,
-                                  12,
+                                  14,
                                 ),
                                 suffixIcon: IconButton(
                                   onPressed:
                                       _sending ? null : _openEmojiPicker,
                                   tooltip: context.l10n.chatEmoji,
-                                  splashRadius: 20,
+                                  splashRadius: 22,
                                   icon: const Icon(
                                     Icons.emoji_emotions_outlined,
                                     color: _composerIconPurple,
-                                    size: 24,
+                                    size: 28,
                                   ),
                                 ),
                                 suffixIconConstraints:
                                     const BoxConstraints(
-                                  minWidth: 40,
-                                  minHeight: 40,
+                                  minWidth: 48,
+                                  minHeight: 48,
                                 ),
                               ),
                               textInputAction: TextInputAction.send,
                               onTap: _scrollToBottom,
-                              onSubmitted: (_) => _sendMessage(),
+                              // Не снимать фокус при тапе по «Отправить»
+                              // (снаружи поля). Иначе Flutter + WebKit
+                              // моргают клавиатурой.
+                              onTapOutside: (event) {
+                                final sendCtx =
+                                    _sendButtonKey.currentContext;
+                                if (sendCtx != null) {
+                                  final box = sendCtx.findRenderObject()
+                                      as RenderBox?;
+                                  if (box != null && box.hasSize) {
+                                    final local =
+                                        box.globalToLocal(event.position);
+                                    if (box.paintBounds
+                                        .inflate(8)
+                                        .contains(local)) {
+                                      return;
+                                    }
+                                  }
+                                }
+                                _composerFocusNode.unfocus();
+                              },
+                              // Перехват send с клавиатуры без unfocus.
+                              onEditingComplete: () {
+                                unawaited(_sendMessage());
+                              },
                             ),
                           ],
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: (_sending ||
-                              _pendingImages.any((e) => e.isLoading))
-                          ? null
-                          : _sendMessage,
-                      tooltip: _editingMessage != null
-                          ? context.l10n.commonSave
-                          : context.l10n.commonSend,
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                    Focus(
+                      canRequestFocus: false,
+                      skipTraversal: true,
+                      descendantsAreFocusable: false,
+                      child: IconButton(
+                        key: _sendButtonKey,
+                        onPressed: (_sending ||
+                                _pendingImages.any((e) => e.isLoading))
+                            ? null
+                            : () {
+                                _syncKeepSoftKeyboardRects();
+                                unawaited(_sendMessage());
+                              },
+                        tooltip: _editingMessage != null
+                            ? context.l10n.commonSave
+                            : context.l10n.commonSend,
+                        padding: const EdgeInsets.all(10),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: _composerIconPurple,
+                                ),
+                              )
+                            : Icon(
+                                _editingMessage != null
+                                    ? Icons.check_rounded
+                                    : Icons.send_rounded,
                                 color: _composerIconPurple,
+                                size: 28,
                               ),
-                            )
-                          : Icon(
-                              _editingMessage != null
-                                  ? Icons.check_rounded
-                                  : Icons.send_rounded,
-                              color: _composerIconPurple,
-                            ),
+                      ),
                     ),
                   ],
                 ),
@@ -3666,9 +3754,9 @@ class _ChatInviteCard extends ConsumerWidget {
       context.go(link.appPathFromMessage(messageId));
     } on GamesException catch (e) {
       if (!context.mounted) return;
-      // 409 при активной партии — только всплывашка, без ухода в чужое лобби.
+      // 409 при активной партии — только всплывашка; не уводить в старую по URL.
       if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
-        final active = resolveActiveForGuard(ref, context);
+        final active = ref.read(activeGameProvider).valueOrNull;
         showAppSnackBar(
           context,
           message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
@@ -3693,7 +3781,7 @@ class _ChatInviteCard extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      final active = resolveActiveForGuard(ref, context);
+      final active = ref.read(activeGameProvider).valueOrNull;
       if (hasBlockingActiveMatch(active)) {
         showAppSnackBar(
           context,

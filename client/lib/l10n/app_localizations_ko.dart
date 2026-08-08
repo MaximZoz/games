@@ -91,6 +91,68 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlinePlayAgain => '다시';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => '가져가기';
+
+  @override
+  String get durakActionAll => '전체';
+
+  @override
+  String get durakActionDone => '완료';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => '방어하세요';
+
+  @override
+  String get durakHintDefendOrTransfer => '방어하거나 넘기세요';
+
+  @override
+  String get durakHintOpponentDefends => '상대가 방어합니다';
+
+  @override
+  String get durakHintThrowInFirst => '카드를 추가하거나 «전체» (첫 방어에서 최대 5장)';
+
+  @override
+  String get durakHintThrowIn => '카드를 추가하거나 «전체»를 누르세요';
+
+  @override
+  String get durakHintOpponentThrows => '상대가 추가합니다';
+
+  @override
+  String get durakHintTakeFollow => '가져간 후 추가하거나 «완료»를 누르세요';
+
+  @override
+  String get durakHintOpponentTakeFollow => '상대는 가져간 후 추가할 수 있습니다';
+
+  @override
+  String get durakHintBito => '카드를 내거나 «비토»라고 하세요';
+
+  @override
+  String get durakHintOpponentBito => '상대가 추가하거나 «비토»라고 합니다';
+
+  @override
+  String get durakHintYourAttack => '당신 차례 — 공격하세요';
+
+  @override
+  String get durakHintOpponentAttack => '상대가 공격합니다';
+
+  @override
+  String get durakHintYouLost => '패배했습니다 — 당신이 바보입니다';
+
+  @override
+  String get durakHintDrawAllOut => '무승부 — 모두 탈락';
+
+  @override
+  String get durakHintYouFinished => '탈락했습니다 — 종료를 기다립니다';
+
+  @override
   String get shopPurchaseQueued => '구매가 저장됨 — 온라인 모드에서 적용됩니다';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsPushRewards => '보상';
+
+  @override
+  String settingsAppVersion(String version) {
+    return '버전 $version';
+  }
+
+  @override
+  String get appUpdateTitle => '업데이트 가능';
+
+  @override
+  String get appUpdateBody => '앱의 새 버전을 사용할 수 있습니다. 계속하려면 업데이트하세요.';
+
+  @override
+  String get appUpdateWhatsNew => '새로운 기능';
+
+  @override
+  String get appUpdateOk => '업데이트';
+
+  @override
+  String get appUpdateLaterBanner => '이 게임 후 앱을 업데이트합니다';
 
   @override
   String get loginTitle => '로그인';
@@ -440,6 +522,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesTicTacToe => '틱택토';
 
   @override
+  String get gamesDurak => '두라크';
+
+  @override
+  String get gamesPoker => '포커';
+
+  @override
+  String get gamesInDevelopment => '개발 중';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return '인원: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => '텍사스 홀덤. 각 플레이어는 홀 카드 2장, 테이블에 커뮤니티 카드 5장이 나옵니다.';
+
+  @override
+  String get rulesPokerPlay => '베팅 라운드: 프리플롭, 플롭, 턴, 리버. 폴드, 콜, 벳, 레이즈를 할 수 있습니다.';
+
+  @override
+  String get rulesPokerWin => '홀+커뮤니티로 만든 최강 5장 핸드, 또는 폴드 후 남은 한 명이 승리합니다.';
+
+  @override
   String get gamesRules => '규칙';
 
   @override
@@ -471,6 +576,77 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gamesNoCenter => '중앙 시작 금지';
+
+  @override
+  String get gamesObservation => '관전';
+
+  @override
+  String get gamesObservationHint => '게임 종료까지 관전할 수 있습니다';
+
+  @override
+  String get gamesFinishCurrentFirst => '먼저 현재 게임을 마치세요';
+
+  @override
+  String get gamesVariantClassic => '클래식';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3인';
+
+  @override
+  String get gamesVariantMulti4 => '4인';
+
+  @override
+  String get gamesDurakModePodkidnoi => '추가';
+
+  @override
+  String get gamesDurakModePerevodnoi => '전달';
+
+  @override
+  String get gamesDurakDeck24 => '24장';
+
+  @override
+  String get gamesDurakDeck36 => '36장';
+
+  @override
+  String get gamesDurakDeck52 => '52장';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return '모드: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return '인원: $players. 덱: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => '봇과 플레이합니다. 판돈과 시간 제한이 없습니다.';
+
+  @override
+  String get rulesDurakAttack => '공격자가 카드를 내고, 수비자가 막습니다(같은 무늬의 더 높은 카드 또는 트럼프). 트럼프는 더 높은 트럼프로만 막습니다.';
+
+  @override
+  String get rulesDurakBeat => '모든 카드가 막히면 공격자가 «비토»를 말하고 카드는 버림 더미로 갑니다. 아니면 수비자가 테이블의 카드를 모두 가져갑니다.';
+
+  @override
+  String get rulesDurakLoser => '마지막에 카드가 남은 사람이 패배 — «바보»입니다.';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return '플레이어 $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return '로비 $name';
+  }
 
   @override
   String get lobbyMatchmake => '로비';
@@ -1763,4 +1939,81 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coinsClaim => '받기';
+
+  @override
+  String get durakActionPass => '패스';
+
+  @override
+  String get durakRoleTook => '가져감';
+
+  @override
+  String get durakRoleBeats => '막는 중';
+
+  @override
+  String get durakRoleThrowIn => '추가';
+
+  @override
+  String get durakRoleTurn => '차례';
+
+  @override
+  String get durakRoleDefends => '방어 중';
+
+  @override
+  String get durakStatusTaking => '가져가는 중';
+
+  @override
+  String get durakHintDefenderTurn => '수비 차례';
+
+  @override
+  String get gameYouEliminated => '탈락했습니다';
+
+  @override
+  String gameYouPlaced(int place) {
+    return '$place위를 했습니다';
+  }
+
+  @override
+  String get gameOverNeutral => '게임 종료';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name 차례';
+  }
+
+  @override
+  String get chatGroupTooltip => '그룹 채팅';
+
+  @override
+  String get lobbyChatNotReady => '로비 채팅이 아직 없습니다';
+
+  @override
+  String get chatsGroupChat => '그룹 채팅';
+
+  @override
+  String chatsMembersCount(int count) {
+    return '멤버: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count명';
+  }
+
+  @override
+  String get chatsYouSuffix => '(나)';
+
+  @override
+  String get chatTitleDurak3 => '두라크 · 3인';
+
+  @override
+  String get chatTitleDurak4 => '두라크 · 4인';
+
+  @override
+  String get rulesTttUltimate => '얼티밋: 3×3 미니보드 9개. 수가 상대를 해당 미니보드로 보냅니다. 메타보드에서 줄을 완성하면 승리합니다.';
+
+  @override
+  String get rulesTttMulti3 => '3인: 3×3 보드, 세 명(X, O, △). 자신의 기호로 줄을 완성하면 승리합니다.';
+
+  @override
+  String get rulesTttMulti4 => '4인: 4×4 보드, 네 명(X, O, △, □). 자신의 기호로 줄을 완성하면 승리합니다.';
 }

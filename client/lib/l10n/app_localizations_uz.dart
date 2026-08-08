@@ -91,6 +91,68 @@ class AppLocalizationsUz extends AppLocalizations {
   String get offlinePlayAgain => 'Yana';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Olish';
+
+  @override
+  String get durakActionAll => 'Hammasi';
+
+  @override
+  String get durakActionDone => 'Tayyor';
+
+  @override
+  String get durakActionBito => 'Bito';
+
+  @override
+  String get durakHintDefend => 'Himoyalaning';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Himoyalaning yoki o‘tkazing';
+
+  @override
+  String get durakHintOpponentDefends => 'Raqib himoyalanmoqda';
+
+  @override
+  String get durakHintThrowInFirst => 'Kartalar tashlang yoki «Hammasi» (birinchi urinishda max 5)';
+
+  @override
+  String get durakHintThrowIn => 'Kartalar tashlang yoki «Hammasi» bosing';
+
+  @override
+  String get durakHintOpponentThrows => 'Raqib tashlamoqda';
+
+  @override
+  String get durakHintTakeFollow => 'Olingandan keyin tashlang yoki «Tayyor» bosing';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Raqib olingandan keyin tashlashi mumkin';
+
+  @override
+  String get durakHintBito => 'Karta tashlang yoki «Bito» deng';
+
+  @override
+  String get durakHintOpponentBito => 'Raqib tashlaydi yoki «Bito» deydi';
+
+  @override
+  String get durakHintYourAttack => 'Sizning yurishingiz — hujum qiling';
+
+  @override
+  String get durakHintOpponentAttack => 'Raqib hujum qilmoqda';
+
+  @override
+  String get durakHintYouLost => 'Yutqazdingiz — siz duraksiz';
+
+  @override
+  String get durakHintDrawAllOut => 'Durang — hamma chiqdi';
+
+  @override
+  String get durakHintYouFinished => 'Siz chiqdingiz — oxirini kutamiz';
+
+  @override
   String get shopPurchaseQueued => 'Xarid saqlandi — onlayn rejimda qo‘llanadi';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Mukofotlar';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Versiya $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Yangilanish mavjud';
+
+  @override
+  String get appUpdateBody => 'Ilovaning yangi versiyasi mavjud. Davom etish uchun yangilang.';
+
+  @override
+  String get appUpdateWhatsNew => 'Yangiliklar';
+
+  @override
+  String get appUpdateOk => 'Yangilash';
+
+  @override
+  String get appUpdateLaterBanner => 'Bu o‘yindan keyin ilovani yangilaymiz';
 
   @override
   String get loginTitle => 'Kirish';
@@ -440,6 +522,29 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesTicTacToe => 'X-O';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Ishlanmoqda';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'O‘yinchilar: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Har bir o‘yinchiga 2 ta qo‘l kartasi beriladi; stolga 5 ta umumiy karta chiqadi.';
+
+  @override
+  String get rulesPokerPlay => 'Stavka raundlari: preflop, flop, turn va river. Fold, call, bet yoki raise qilish mumkin.';
+
+  @override
+  String get rulesPokerWin => 'G‘olib — beshta kartaning eng yaxshi kombinatsiyasi (qo‘l + umumiy) yoki foldlardan keyin yolg‘iz qolgan o‘yinchi.';
+
+  @override
   String get gamesRules => 'Qoidalar';
 
   @override
@@ -471,6 +576,77 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Markazdan boshlash yo‘q';
+
+  @override
+  String get gamesObservation => 'Kuzatish';
+
+  @override
+  String get gamesObservationHint => 'O‘yin tugaguncha kuzatishingiz mumkin';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Avval joriy o‘yiningizni tugating';
+
+  @override
+  String get gamesVariantClassic => 'Klassik';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 o‘yinchi';
+
+  @override
+  String get gamesVariantMulti4 => '4 o‘yinchi';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Tashlama';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'O‘tkazmali';
+
+  @override
+  String get gamesDurakDeck24 => '24 karta';
+
+  @override
+  String get gamesDurakDeck36 => '36 karta';
+
+  @override
+  String get gamesDurakDeck52 => '52 karta';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Rejim: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'O‘yinchilar: $players. Koloda: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Botga qarshi o‘yin, stavka va vaqt cheklovisiz.';
+
+  @override
+  String get rulesDurakAttack => 'Hujumchi kartalar qo‘yadi, himoyachi uradi (shu mast yuqoriroq yoki kozir). Kozir faqat yuqoriroq kozir bilan uriladi.';
+
+  @override
+  String get rulesDurakBeat => 'Barcha kartalar urilganda hujumchi «Bito» deydi, kartalar otboyga ketadi. Aks holda himoyachi stoldagi hammasini oladi.';
+
+  @override
+  String get rulesDurakLoser => 'Yutqazgan — partiya oxirida kartalari qolgan o‘yinchi, «durak».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'O‘yinchilar $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobi $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Lobi';
@@ -1763,4 +1939,81 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Olish';
+
+  @override
+  String get durakActionPass => 'Pas';
+
+  @override
+  String get durakRoleTook => 'Oldi';
+
+  @override
+  String get durakRoleBeats => 'Uradi';
+
+  @override
+  String get durakRoleThrowIn => 'Tashlash';
+
+  @override
+  String get durakRoleTurn => 'Yurish';
+
+  @override
+  String get durakRoleDefends => 'Himoyalanadi';
+
+  @override
+  String get durakStatusTaking => 'Olaman';
+
+  @override
+  String get durakHintDefenderTurn => 'Himoyachining yurishi';
+
+  @override
+  String get gameYouEliminated => 'Siz chiqdingiz';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Siz $place-o‘rinni egalladingiz';
+  }
+
+  @override
+  String get gameOverNeutral => 'O‘yin tugadi';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name yurishi';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Guruh chati';
+
+  @override
+  String get lobbyChatNotReady => 'Lobi chati hali yaratilmagan';
+
+  @override
+  String get chatsGroupChat => 'Guruh chati';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Ishtirokchilar: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count kishi';
+  }
+
+  @override
+  String get chatsYouSuffix => '(siz)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 o‘yinchi';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 o‘yinchi';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: to‘qqizta 3×3 mini-doska. Yurish raqibni shu mini-doskaga yuboradi. Meta-doskada chiziq yig‘gan g‘olib.';
+
+  @override
+  String get rulesTttMulti3 => '3 o‘yinchi: 3×3 doska, uch o‘yinchi (X, O, △). O‘z belgilaringiz bilan chiziq yig‘ing.';
+
+  @override
+  String get rulesTttMulti4 => '4 o‘yinchi: 4×4 doska, to‘rt o‘yinchi (X, O, △, □). O‘z belgilaringiz bilan chiziq yig‘ing.';
 }

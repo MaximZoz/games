@@ -162,6 +162,81 @@
   "gamesWaiting": "Đang chờ",
   "gamesLobbyTab": "Sảnh",
   "gamesTicTacToe": "Cờ caro",
+  "appUpdateBody": "Đã có phiên bản mới của ứng dụng. Hãy cập nhật để tiếp tục.",
+  "appUpdateLaterBanner": "Chúng tôi sẽ cập nhật ứng dụng sau ván này",
+  "appUpdateOk": "Cập nhật",
+  "appUpdateTitle": "Có bản cập nhật",
+  "appUpdateWhatsNew": "Có gì mới",
+  "durakActionAll": "Tất cả",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Xong",
+  "durakActionTake": "Nhận",
+  "durakHintBito": "Đánh thêm hoặc nói «Bito»",
+  "durakHintDefend": "Chắn",
+  "durakHintDefendOrTransfer": "Chắn hoặc chuyển",
+  "durakHintDrawAllOut": "Hòa — mọi người đã ra",
+  "durakHintOpponentAttack": "Đối thủ đang tấn công",
+  "durakHintOpponentBito": "Đối thủ đánh thêm hoặc nói «Bito»",
+  "durakHintOpponentDefends": "Đối thủ đang chắn",
+  "durakHintOpponentTakeFollow": "Đối thủ có thể đánh thêm sau khi nhận",
+  "durakHintOpponentThrows": "Đối thủ đang đánh thêm",
+  "durakHintTakeFollow": "Đánh thêm sau khi nhận hoặc nhấn «Xong»",
+  "durakHintThrowIn": "Đánh thêm bài hoặc nhấn «Tất cả»",
+  "durakHintThrowInFirst": "Đánh thêm bài hoặc «Tất cả» (tối đa 5 ở lần chắn đầu)",
+  "durakHintYouFinished": "Bạn đã ra — chờ kết thúc",
+  "durakHintYouLost": "Bạn thua — bạn là kẻ ngốc",
+  "durakHintYourAttack": "Lượt của bạn — tấn công",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "Đang phát triển",
+  "rulesPokerPlayers": "Người chơi: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Mỗi người nhận 2 lá bài riêng; bàn có 5 lá bài chung.",
+  "rulesPokerPlay": "Vòng cược: preflop, flop, turn và river. Có thể fold, call, bet hoặc raise.",
+  "rulesPokerWin": "Thắng bằng bộ năm lá mạnh nhất (riêng + chung), hoặc người còn lại sau khi người khác fold.",
+  "gamesDurakDeck24": "24 lá",
+  "gamesDurakDeck36": "36 lá",
+  "gamesDurakDeck52": "52 lá",
+  "gamesDurakModePerevodnoi": "Chuyển",
+  "gamesDurakModePodkidnoi": "Đánh thêm",
+  "gamesFinishCurrentFirst": "Hãy hoàn thành ván hiện tại trước",
+  "gamesObservation": "Đang xem",
+  "gamesObservationHint": "Bạn có thể xem đến khi ván kết thúc",
+  "gamesVariantClassic": "Cổ điển",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 người",
+  "gamesVariantMulti4": "4 người",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Phòng chờ {name}",
+  "lobbyPlayersCount": "Người chơi {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Người tấn đánh bài; người thủ chắn (cùng chất cao hơn, hoặc át). Át chỉ bị chắn bởi át cao hơn.",
+  "rulesDurakBeat": "Khi tất cả bài đã bị chắn, người tấn nói «Bito» và bài vào chồng bỏ. Nếu không, người thủ lấy hết bài trên bàn.",
+  "rulesDurakLoser": "Người thua là người còn bài lúc kết thúc — «kẻ ngốc».",
+  "rulesDurakMode": "Chế độ: {mode}",
+  "rulesDurakOfflineBot": "Chơi với bot, không cược và không giới hạn thời gian.",
+  "rulesDurakPlayersDeck": "Người chơi: {players}. Bộ bài: {deck}.",
+  "settingsAppVersion": "Phiên bản {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Luật",
   "gamesRulesTitle": "Luật chơi",
   "gamesCreate": "Tạo trận",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "Bạn đã được cộng {amount} xu",
   "coinsDeductedTitle": "Đã trừ {amount} xu",
   "coinsCreditCardTitle": "Bạn đã được cộng xu",
-  "coinsClaim": "Nhận"
+  "coinsClaim": "Nhận",
+  "durakActionPass": "Bỏ",
+  "durakRoleTook": "Nhận",
+  "durakRoleBeats": "Chắn",
+  "durakRoleThrowIn": "Đánh thêm",
+  "durakRoleTurn": "Lượt",
+  "durakRoleDefends": "Đang chắn",
+  "durakStatusTaking": "Đang nhận",
+  "durakHintDefenderTurn": "Lượt người chắn",
+  "gameYouEliminated": "Bạn đã bị loại",
+  "gameYouPlaced": "Bạn xếp hạng {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Ván đã kết thúc",
+  "gameTurnOf": "Lượt của {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Chat nhóm",
+  "lobbyChatNotReady": "Chat sảnh chưa sẵn sàng",
+  "chatsGroupChat": "Chat nhóm",
+  "chatsMembersCount": "Thành viên: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} ng.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(bạn)",
+  "chatTitleDurak3": "Durak · 3 người",
+  "chatTitleDurak4": "Durak · 4 người",
+  "rulesTttUltimate": "Ultimate: chín bàn 3×3. Một nước đưa đối thủ sang bàn đó. Thắng khi hoàn thành một hàng trên bàn meta.",
+  "rulesTttMulti3": "3 người: bàn 3×3, ba người (X, O, △). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.",
+  "rulesTttMulti4": "4 người: bàn 4×4, bốn người (X, O, △, □). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn."
 }

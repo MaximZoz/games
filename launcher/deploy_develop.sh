@@ -78,10 +78,11 @@ done
 
 "$FLY_BIN" secrets set "${secret_args[@]}" --app "$FLY_APP_NAME"
 
-echo "Запускаю деплой..."
+echo "Запускаю деплой (BUILD_ID=$DEPLOY_SHA)..."
 (
   cd "$TEMP_WORKTREE"
-  "$FLY_BIN" deploy --app "$FLY_APP_NAME" --remote-only --yes
+  "$FLY_BIN" deploy --app "$FLY_APP_NAME" --remote-only --yes \
+    --build-arg "BUILD_ID=$DEPLOY_SHA"
 )
 
 echo "Деплой develop завершен: https://$FLY_APP_NAME.fly.dev"

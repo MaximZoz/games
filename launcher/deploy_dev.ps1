@@ -51,43 +51,50 @@ if ([string]::IsNullOrWhiteSpace($env:FRONTEND_URL)) {
 
 Write-Host "Используется DEV-приложение Fly: $($env:FLY_APP_NAME)"
 Write-Host "Конфиг: fly.dev.toml"
-Write-Host "Обновляю секреты..."
 
-$secretArgs = @(
-    "JWT_SECRET=$($env:JWT_SECRET)",
-    "ADMIN_INIT_SECRET=$($env:ADMIN_INIT_SECRET)",
-    "PUBLIC_BASE_URL=$($env:PUBLIC_BASE_URL)",
-    "FRONTEND_URL=$($env:FRONTEND_URL)"
-)
-
-$optionalVars = @(
-    "REDIS_URL",
-    "RESEND_API_KEY",
-    "MAIL_FROM",
-    "APP_LOG_ENABLED",
-    "APP_LOG_FILE",
-    "APP_LOG_STATE_FILE",
-    "APP_LOG_SYNC_INTERVAL_SECONDS",
-    "APP_LOG_RETENTION_DAYS",
-    "APP_LOG_CLEANUP_INTERVAL_SECONDS"
-)
-foreach ($varName in $optionalVars) {
-    $value = [Environment]::GetEnvironmentVariable($varName)
-    if (-not [string]::IsNullOrWhiteSpace($value)) {
-        $secretArgs += "$varName=$value"
+# Секреты не трогаем на каждом деплое (JWT иначе сбрасывает сессии).
+# Первый сетап / смена: $env:UPDATE_SECRETS='1'; .\launcher\deploy_dev.ps1
+if ($env:UPDATE_SECRETS -eq "1") {
+    Write-Host "UPDATE_SECRETS=1 — обновляю секреты (это разлогинит всех)..."
+    $secretArgs = @(
+        "JWT_SECRET=$($env:JWT_SECRET)",
+        "ADMIN_INIT_SECRET=$($env:ADMIN_INIT_SECRET)",
+        "PUBLIC_BASE_URL=$($env:PUBLIC_BASE_URL)",
+        "FRONTEND_URL=$($env:FRONTEND_URL)"
+    )
+    $optionalVars = @(
+        "REDIS_URL",
+        "RESEND_API_KEY",
+        "MAIL_FROM",
+        "APP_LOG_ENABLED",
+        "APP_LOG_FILE",
+        "APP_LOG_STATE_FILE",
+        "APP_LOG_SYNC_INTERVAL_SECONDS",
+        "APP_LOG_RETENTION_DAYS",
+        "APP_LOG_CLEANUP_INTERVAL_SECONDS"
+    )
+    foreach ($varName in $optionalVars) {
+        $value = [Environment]::GetEnvironmentVariable($varName)
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $secretArgs += "$varName=$value"
+        }
     }
+    & $flyBin secrets set @secretArgs --app $env:FLY_APP_NAME
+} else {
+    Write-Host "Секреты не трогаю (JWT остаётся). Для обновления: `$env:UPDATE_SECRETS='1'; $PSCommandPath"
 }
 
-& $flyBin secrets set @secretArgs --app $env:FLY_APP_NAME
+$buildId = (git -C $RootDir rev-parse --short HEAD).Trim()
+Write-Host "BUILD_ID=$buildId"
 
 Write-Host "Запускаю деплой DEV..."
 Push-Location $RootDir
 try {
     # --depot=false: обход частых deadline_exceeded у Depot builder.
-    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --depot=false --yes
+    & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --depot=false --yes --build-arg "BUILD_ID=$buildId"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Повтор деплоя без --depot=false..."
-        & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes
+        & $flyBin deploy --config $FlyConfig --app $env:FLY_APP_NAME --remote-only --yes --build-arg "BUILD_ID=$buildId"
     }
 } finally {
     Pop-Location

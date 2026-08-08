@@ -10,7 +10,7 @@ class ProfileExtra {
     this.about,
     this.avatarKind = AvatarKind.letter,
     this.avatarValue,
-    this.showStatsToOthers = false,
+    this.showStatsToOthers = true,
   });
 
   final int? age;
@@ -58,7 +58,7 @@ class ProfileExtra {
           orElse: () => AvatarKind.letter,
         ),
         avatarValue: map['avatar_value'] as String?,
-        showStatsToOthers: map['show_stats_to_others'] as bool? ?? false,
+        showStatsToOthers: map['show_stats_to_others'] as bool? ?? true,
       );
     } catch (_) {
       return null;

@@ -162,6 +162,81 @@
   "gamesWaiting": "En attente",
   "gamesLobbyTab": "Salon",
   "gamesTicTacToe": "Morpion",
+  "appUpdateBody": "Une nouvelle version de l'application est disponible. Mettez à jour pour continuer.",
+  "appUpdateLaterBanner": "Nous mettrons l'application à jour après cette partie",
+  "appUpdateOk": "Mettre à jour",
+  "appUpdateTitle": "Mise à jour disponible",
+  "appUpdateWhatsNew": "Nouveautés",
+  "durakActionAll": "Tout",
+  "durakActionBito": "Battu",
+  "durakActionDone": "Terminé",
+  "durakActionTake": "Prendre",
+  "durakHintBito": "Ajoutez une carte ou dites « Battu »",
+  "durakHintDefend": "Défendez",
+  "durakHintDefendOrTransfer": "Défendez ou transférez",
+  "durakHintDrawAllOut": "Égalité — tout le monde est sorti",
+  "durakHintOpponentAttack": "L'adversaire attaque",
+  "durakHintOpponentBito": "L'adversaire ajoute ou dit « Battu »",
+  "durakHintOpponentDefends": "L'adversaire défend",
+  "durakHintOpponentTakeFollow": "L'adversaire peut ajouter après la prise",
+  "durakHintOpponentThrows": "L'adversaire ajoute",
+  "durakHintTakeFollow": "Ajoutez après la prise ou touchez « Terminé »",
+  "durakHintThrowIn": "Ajoutez des cartes ou touchez « Tout »",
+  "durakHintThrowInFirst": "Ajoutez des cartes ou « Tout » (max 5 au premier battu)",
+  "durakHintYouFinished": "Vous êtes sorti — en attente de la fin",
+  "durakHintYouLost": "Vous avez perdu — vous êtes le durak",
+  "durakHintYourAttack": "Votre tour — attaquez",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "En développement",
+  "rulesPokerPlayers": "Joueurs : {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Chaque joueur reçoit 2 cartes privées ; 5 cartes communes sont mises sur la table.",
+  "rulesPokerPlay": "Tours de mise : préflop, flop, turn et river. Fold, call, bet ou raise.",
+  "rulesPokerWin": "Gagne la meilleure main de cinq cartes (privées + communes), ou le dernier joueur après les folds.",
+  "gamesDurakDeck24": "24 cartes",
+  "gamesDurakDeck36": "36 cartes",
+  "gamesDurakDeck52": "52 cartes",
+  "gamesDurakModePerevodnoi": "Transfert",
+  "gamesDurakModePodkidnoi": "Relance",
+  "gamesFinishCurrentFirst": "Terminez d'abord votre partie en cours",
+  "gamesObservation": "Spectateur",
+  "gamesObservationHint": "Vous pouvez regarder jusqu'à la fin de la partie",
+  "gamesVariantClassic": "Classique",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 joueurs",
+  "gamesVariantMulti4": "4 joueurs",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Salon {name}",
+  "lobbyPlayersCount": "Joueurs {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "L'attaquant pose des cartes ; le défenseur les bat (même couleur plus haute, ou un atout). Un atout ne se bat que par un atout plus haut.",
+  "rulesDurakBeat": "Quand toutes les cartes sont battues, l'attaquant dit « Battu » et les cartes vont au discard. Sinon le défenseur prend tout sur la table.",
+  "rulesDurakLoser": "Le perdant est celui qui a encore des cartes à la fin — le « durak ».",
+  "rulesDurakMode": "Mode : {mode}",
+  "rulesDurakOfflineBot": "Jouez contre un bot, sans mise ni limite de temps.",
+  "rulesDurakPlayersDeck": "Joueurs : {players}. Jeu : {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Règles",
   "gamesRulesTitle": "Règles du jeu",
   "gamesCreate": "Créer une partie",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "Vous avez reçu {amount} pièces",
   "coinsDeductedTitle": "{amount} pièces ont été déduites",
   "coinsCreditCardTitle": "Des pièces vous ont été créditées",
-  "coinsClaim": "Récupérer"
+  "coinsClaim": "Récupérer",
+  "durakActionPass": "Passer",
+  "durakRoleTook": "Prend",
+  "durakRoleBeats": "Bat",
+  "durakRoleThrowIn": "Renfort",
+  "durakRoleTurn": "Tour",
+  "durakRoleDefends": "Défend",
+  "durakStatusTaking": "Prend",
+  "durakHintDefenderTurn": "Tour du défenseur",
+  "gameYouEliminated": "Vous êtes éliminé",
+  "gameYouPlaced": "Vous êtes {place}e",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Partie terminée",
+  "gameTurnOf": "Tour de {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Chat de groupe",
+  "lobbyChatNotReady": "Le chat du lobby n’est pas encore prêt",
+  "chatsGroupChat": "Chat de groupe",
+  "chatsMembersCount": "Membres : {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(vous)",
+  "chatTitleDurak3": "Durak · 3 joueurs",
+  "chatTitleDurak4": "Durak · 4 joueurs",
+  "rulesTttUltimate": "Ultimate : neuf mini-grilles 3×3. Un coup envoie l’adversaire sur cette mini-grille. Gagnez en alignant sur la méta-grille.",
+  "rulesTttMulti3": "3 joueurs : grille 3×3, trois joueurs (X, O, △). Alignez vos symboles pour gagner.",
+  "rulesTttMulti4": "4 joueurs : grille 4×4, quatre joueurs (X, O, △, □). Alignez vos symboles pour gagner."
 }

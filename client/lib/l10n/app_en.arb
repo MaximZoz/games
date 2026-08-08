@@ -28,6 +28,33 @@
   "offlineBotWon": "Bot won",
   "offlineBotThinking": "Bot is thinking…",
   "offlinePlayAgain": "Play again",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "durakActionTake": "Take",
+  "durakActionAll": "All",
+  "durakActionDone": "Done",
+  "durakActionBito": "Beat",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintYourAttack": "Your turn — attack",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintYouFinished": "You’re out — waiting for the end",
   "shopPurchaseQueued": "Purchase saved — will apply in online mode",
   "shopPurchaseApplied": "{title} — purchase applied",
   "@shopPurchaseApplied": {
@@ -55,6 +82,19 @@
   "settingsPushFriends": "Friends",
   "settingsPushGames": "Games",
   "settingsPushRewards": "Rewards",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateTitle": "Update available",
+  "appUpdateBody": "A new version of the app is available. Please update to continue.",
+  "appUpdateWhatsNew": "What's new",
+  "appUpdateOk": "Update",
+  "appUpdateLaterBanner": "We'll update the app after this game",
   "loginTitle": "Sign in",
   "loginSubtitle": "Enter email or username and password",
   "loginEmailLabel": "Email or username",
@@ -198,6 +238,20 @@
   "gamesWaiting": "Waiting",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Tic-tac-toe",
+  "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
+  "gamesInDevelopment": "In development",
+  "rulesPokerPlayers": "Players: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Each player gets 2 hole cards; 5 community cards are dealt to the table.",
+  "rulesPokerPlay": "Betting rounds: preflop, flop, turn and river. You can fold, call, bet or raise.",
+  "rulesPokerWin": "The best five-card hand (hole + community) wins, or the last player left after folds.",
   "gamesRules": "Rules",
   "gamesRulesTitle": "Game rules",
   "gamesCreate": "Create game",
@@ -209,6 +263,27 @@
   "gamesGridSize": "Grid size",
   "gamesSwapSides": "Side swap",
   "gamesNoCenter": "No center start",
+  "gamesObservation": "Spectating",
+  "gamesObservationHint": "You can watch until the game ends",
+  "gamesFinishCurrentFirst": "Finish your current game first",
+  "gamesVariantClassic": "Classic",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantUltimate": "Ultimate",
+  "gamesVariantMulti3": "3 players",
+  "gamesVariantMulti4": "4 players",
+  "gamesDurakModePodkidnoi": "Throw-in",
+  "gamesDurakModePerevodnoi": "Transfer",
+  "gamesDurakDeck24": "24 cards",
+  "gamesDurakDeck36": "36 cards",
+  "gamesDurakDeck52": "52 cards",
+  "rulesDurakMode": "Mode: {mode}",
+  "rulesDurakPlayersDeck": "Players: {players}. Deck: {deck}.",
+  "rulesDurakOfflineBot": "Play against a bot, no stakes or turn timer.",
+  "rulesDurakAttack": "The attacker plays cards; the defender beats them (same suit higher, or a trump). A trump is beaten only by a higher trump.",
+  "rulesDurakBeat": "When all cards are beaten, the attacker says “Beat” and cards go to the discard. Otherwise the defender takes everything from the table.",
+  "rulesDurakLoser": "The loser is the one left with cards at the end — the “fool”.",
+  "lobbyPlayersCount": "Players {count}/{maxPlayers}",
+  "lobbyNamed": "Lobby {name}",
   "lobbyMatchmake": "Lobby",
   "lobbyPrivateGame": "Private game",
   "lobbySearchingOpponent": "Looking for an opponent…",
@@ -1038,5 +1113,56 @@
   "coinsGrantedTitle": "You've been credited {amount} coins",
   "coinsDeductedTitle": "{amount} coins were deducted",
   "coinsCreditCardTitle": "You've been credited coins",
-  "coinsClaim": "Claim"
+  "coinsClaim": "Claim",
+  "durakActionPass": "Pass",
+  "durakRoleTook": "Took",
+  "durakRoleBeats": "Beats",
+  "durakRoleThrowIn": "Throw-in",
+  "durakRoleTurn": "Turn",
+  "durakRoleDefends": "Defending",
+  "durakStatusTaking": "Taking",
+  "durakHintDefenderTurn": "Defender’s turn",
+  "gameYouEliminated": "You’re out",
+  "gameYouPlaced": "You finished {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Game over",
+  "gameTurnOf": "{name}’s turn",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Group chat",
+  "lobbyChatNotReady": "Lobby chat is not ready yet",
+  "chatsGroupChat": "Group chat",
+  "chatsMembersCount": "Members: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} ppl",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(you)",
+  "chatTitleDurak3": "Durak · 3 players",
+  "chatTitleDurak4": "Durak · 4 players",
+  "rulesTttUltimate": "Ultimate: nine 3×3 mini-boards. A move sends the opponent to that mini-board. Win by completing a line on the meta-board.",
+  "rulesTttMulti3": "3 players: 3×3 board, three players (X, O, △). Complete a line of your marks to win.",
+  "rulesTttMulti4": "4 players: 4×4 board, four players (X, O, △, □). Complete a line of your marks to win."
 }

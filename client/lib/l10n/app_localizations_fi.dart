@@ -91,6 +91,68 @@ class AppLocalizationsFi extends AppLocalizations {
   String get offlinePlayAgain => 'Uudelleen';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Ota';
+
+  @override
+  String get durakActionAll => 'Kaikki';
+
+  @override
+  String get durakActionDone => 'Valmis';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Puolusta';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Puolusta tai siirrä';
+
+  @override
+  String get durakHintOpponentDefends => 'Vastustaja puolustaa';
+
+  @override
+  String get durakHintThrowInFirst => 'Heitä kortteja tai «Kaikki» (max 5 ensimmäisessä lyönnissä)';
+
+  @override
+  String get durakHintThrowIn => 'Heitä kortteja tai paina «Kaikki»';
+
+  @override
+  String get durakHintOpponentThrows => 'Vastustaja heittää';
+
+  @override
+  String get durakHintTakeFollow => 'Heitä oton jälkeen tai paina «Valmis»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Vastustaja voit heittää oton jälkeen';
+
+  @override
+  String get durakHintBito => 'Heitä kortti tai sano «Bito»';
+
+  @override
+  String get durakHintOpponentBito => 'Vastustaja heittää tai sanoo «Bito»';
+
+  @override
+  String get durakHintYourAttack => 'Sinun vuoro — hyökkää';
+
+  @override
+  String get durakHintOpponentAttack => 'Vastustaja hyökkää';
+
+  @override
+  String get durakHintYouLost => 'Hävisit — olet durak';
+
+  @override
+  String get durakHintDrawAllOut => 'Tasapeli — kaikki ulos';
+
+  @override
+  String get durakHintYouFinished => 'Olet ulos — odotetaan loppua';
+
+  @override
   String get shopPurchaseQueued => 'Ostos tallennettu — otetaan käyttöön online-tilassa';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Palkinnot';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Versio $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Päivitys saatavilla';
+
+  @override
+  String get appUpdateBody => 'Uusi versio sovelluksesta on saatavilla. Päivitä jatkaaksesi.';
+
+  @override
+  String get appUpdateWhatsNew => 'Uutta';
+
+  @override
+  String get appUpdateOk => 'Päivitä';
+
+  @override
+  String get appUpdateLaterBanner => 'Päivitämme sovelluksen tämän pelin jälkeen';
 
   @override
   String get loginTitle => 'Kirjaudu sisään';
@@ -440,6 +522,29 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesTicTacToe => 'Ristinolla';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesPoker => 'Pokeri';
+
+  @override
+  String get gamesInDevelopment => 'Kehityksessä';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Pelaajat: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Jokainen saa 2 taskukorttia; pöytään jaetaan 5 yhteistä korttia.';
+
+  @override
+  String get rulesPokerPlay => 'Panoskierrokset: preflop, flop, turn ja river. Fold, call, bet tai raise.';
+
+  @override
+  String get rulesPokerWin => 'Paras viiden kortin käsi (tasku + yhteiset) voittaa, tai viimeinen foldien jälkeen.';
+
+  @override
   String get gamesRules => 'Säännöt';
 
   @override
@@ -471,6 +576,77 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Ei aloitusta keskeltä';
+
+  @override
+  String get gamesObservation => 'Katsele';
+
+  @override
+  String get gamesObservationHint => 'Voit katsoa pelin loppuun';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Viimeistele ensin nykyinen peli';
+
+  @override
+  String get gamesVariantClassic => 'Klassinen';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 pelaajaa';
+
+  @override
+  String get gamesVariantMulti4 => '4 pelaajaa';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Lisäys';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Siirto';
+
+  @override
+  String get gamesDurakDeck24 => '24 korttia';
+
+  @override
+  String get gamesDurakDeck36 => '36 korttia';
+
+  @override
+  String get gamesDurakDeck52 => '52 korttia';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Tila: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Pelaajat: $players. Pakka: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Pelaa bottia vastaan ilman panoksia ja aikarajaa.';
+
+  @override
+  String get rulesDurakAttack => 'Hyökkääjä laittaa kortteja; puolustaja lyö ne (samaa maata korkeammalla tai valttilla). Valtti lyödään vain korkeammalla valttilla.';
+
+  @override
+  String get rulesDurakBeat => 'Kun kaikki kortit on lyöty, hyökkääjä sanoo «Bito» ja kortit menevät poistopakkaan. Muuten puolustaja ottaa kaiken pöydästä.';
+
+  @override
+  String get rulesDurakLoser => 'Häviäjä on se, jolla on kortteja lopussa — «durak».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Pelaajat $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Aula $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Aula';
@@ -1763,4 +1939,81 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Nouda';
+
+  @override
+  String get durakActionPass => 'Passaa';
+
+  @override
+  String get durakRoleTook => 'Ottaa';
+
+  @override
+  String get durakRoleBeats => 'Lyö';
+
+  @override
+  String get durakRoleThrowIn => 'Lisäys';
+
+  @override
+  String get durakRoleTurn => 'Vuoro';
+
+  @override
+  String get durakRoleDefends => 'Puolustaa';
+
+  @override
+  String get durakStatusTaking => 'Ottaa';
+
+  @override
+  String get durakHintDefenderTurn => 'Puolustajan vuoro';
+
+  @override
+  String get gameYouEliminated => 'Pudotit';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Sijoituksesi: $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'Peli päättyi';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Vuoro: $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Ryhmächat';
+
+  @override
+  String get lobbyChatNotReady => 'Aulan chat ei ole vielä valmis';
+
+  @override
+  String get chatsGroupChat => 'Ryhmächat';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Jäsenet: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count hlö';
+  }
+
+  @override
+  String get chatsYouSuffix => '(sinä)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 pelaajaa';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 pelaajaa';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: yhdeksän 3×3-minilautaa. Siirto lähettää vastustajan kyseiselle minilaudalle. Voita meta-laudan viivalla.';
+
+  @override
+  String get rulesTttMulti3 => '3 pelaajaa: 3×3-lauta, kolme pelaajaa (X, O, △). Voita omien merkkien rivillä.';
+
+  @override
+  String get rulesTttMulti4 => '4 pelaajaa: 4×4-lauta, neljä pelaajaa (X, O, △, □). Voita omien merkkien rivillä.';
 }

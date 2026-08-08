@@ -91,6 +91,68 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlinePlayAgain => 'Chơi lại';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Nhận';
+
+  @override
+  String get durakActionAll => 'Tất cả';
+
+  @override
+  String get durakActionDone => 'Xong';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Chắn';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Chắn hoặc chuyển';
+
+  @override
+  String get durakHintOpponentDefends => 'Đối thủ đang chắn';
+
+  @override
+  String get durakHintThrowInFirst => 'Đánh thêm bài hoặc «Tất cả» (tối đa 5 ở lần chắn đầu)';
+
+  @override
+  String get durakHintThrowIn => 'Đánh thêm bài hoặc nhấn «Tất cả»';
+
+  @override
+  String get durakHintOpponentThrows => 'Đối thủ đang đánh thêm';
+
+  @override
+  String get durakHintTakeFollow => 'Đánh thêm sau khi nhận hoặc nhấn «Xong»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Đối thủ có thể đánh thêm sau khi nhận';
+
+  @override
+  String get durakHintBito => 'Đánh thêm hoặc nói «Bito»';
+
+  @override
+  String get durakHintOpponentBito => 'Đối thủ đánh thêm hoặc nói «Bito»';
+
+  @override
+  String get durakHintYourAttack => 'Lượt của bạn — tấn công';
+
+  @override
+  String get durakHintOpponentAttack => 'Đối thủ đang tấn công';
+
+  @override
+  String get durakHintYouLost => 'Bạn thua — bạn là kẻ ngốc';
+
+  @override
+  String get durakHintDrawAllOut => 'Hòa — mọi người đã ra';
+
+  @override
+  String get durakHintYouFinished => 'Bạn đã ra — chờ kết thúc';
+
+  @override
   String get shopPurchaseQueued => 'Đã lưu giao dịch — sẽ áp dụng ở chế độ trực tuyến';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Phần thưởng';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Phiên bản $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Có bản cập nhật';
+
+  @override
+  String get appUpdateBody => 'Đã có phiên bản mới của ứng dụng. Hãy cập nhật để tiếp tục.';
+
+  @override
+  String get appUpdateWhatsNew => 'Có gì mới';
+
+  @override
+  String get appUpdateOk => 'Cập nhật';
+
+  @override
+  String get appUpdateLaterBanner => 'Chúng tôi sẽ cập nhật ứng dụng sau ván này';
 
   @override
   String get loginTitle => 'Đăng nhập';
@@ -440,6 +522,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesTicTacToe => 'Cờ caro';
 
   @override
+  String get gamesDurak => 'Durak';
+
+  @override
+  String get gamesPoker => 'Poker';
+
+  @override
+  String get gamesInDevelopment => 'Đang phát triển';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Người chơi: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Mỗi người nhận 2 lá bài riêng; bàn có 5 lá bài chung.';
+
+  @override
+  String get rulesPokerPlay => 'Vòng cược: preflop, flop, turn và river. Có thể fold, call, bet hoặc raise.';
+
+  @override
+  String get rulesPokerWin => 'Thắng bằng bộ năm lá mạnh nhất (riêng + chung), hoặc người còn lại sau khi người khác fold.';
+
+  @override
   String get gamesRules => 'Luật';
 
   @override
@@ -471,6 +576,77 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Không bắt đầu ở giữa';
+
+  @override
+  String get gamesObservation => 'Đang xem';
+
+  @override
+  String get gamesObservationHint => 'Bạn có thể xem đến khi ván kết thúc';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Hãy hoàn thành ván hiện tại trước';
+
+  @override
+  String get gamesVariantClassic => 'Cổ điển';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 người';
+
+  @override
+  String get gamesVariantMulti4 => '4 người';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Đánh thêm';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Chuyển';
+
+  @override
+  String get gamesDurakDeck24 => '24 lá';
+
+  @override
+  String get gamesDurakDeck36 => '36 lá';
+
+  @override
+  String get gamesDurakDeck52 => '52 lá';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Chế độ: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Người chơi: $players. Bộ bài: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Chơi với bot, không cược và không giới hạn thời gian.';
+
+  @override
+  String get rulesDurakAttack => 'Người tấn đánh bài; người thủ chắn (cùng chất cao hơn, hoặc át). Át chỉ bị chắn bởi át cao hơn.';
+
+  @override
+  String get rulesDurakBeat => 'Khi tất cả bài đã bị chắn, người tấn nói «Bito» và bài vào chồng bỏ. Nếu không, người thủ lấy hết bài trên bàn.';
+
+  @override
+  String get rulesDurakLoser => 'Người thua là người còn bài lúc kết thúc — «kẻ ngốc».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Người chơi $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Phòng chờ $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Sảnh';
@@ -1763,4 +1939,81 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Nhận';
+
+  @override
+  String get durakActionPass => 'Bỏ';
+
+  @override
+  String get durakRoleTook => 'Nhận';
+
+  @override
+  String get durakRoleBeats => 'Chắn';
+
+  @override
+  String get durakRoleThrowIn => 'Đánh thêm';
+
+  @override
+  String get durakRoleTurn => 'Lượt';
+
+  @override
+  String get durakRoleDefends => 'Đang chắn';
+
+  @override
+  String get durakStatusTaking => 'Đang nhận';
+
+  @override
+  String get durakHintDefenderTurn => 'Lượt người chắn';
+
+  @override
+  String get gameYouEliminated => 'Bạn đã bị loại';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Bạn xếp hạng $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'Ván đã kết thúc';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Lượt của $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Chat nhóm';
+
+  @override
+  String get lobbyChatNotReady => 'Chat sảnh chưa sẵn sàng';
+
+  @override
+  String get chatsGroupChat => 'Chat nhóm';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Thành viên: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count ng.';
+  }
+
+  @override
+  String get chatsYouSuffix => '(bạn)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 người';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 người';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: chín bàn 3×3. Một nước đưa đối thủ sang bàn đó. Thắng khi hoàn thành một hàng trên bàn meta.';
+
+  @override
+  String get rulesTttMulti3 => '3 người: bàn 3×3, ba người (X, O, △). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.';
+
+  @override
+  String get rulesTttMulti4 => '4 người: bàn 4×4, bốn người (X, O, △, □). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.';
 }

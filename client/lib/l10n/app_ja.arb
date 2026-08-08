@@ -162,6 +162,81 @@
   "gamesWaiting": "待機中",
   "gamesLobbyTab": "ロビー",
   "gamesTicTacToe": "三目並べ",
+  "appUpdateBody": "アプリの新しいバージョンがあります。続けるには更新してください。",
+  "appUpdateLaterBanner": "この対局の後にアプリを更新します",
+  "appUpdateOk": "更新",
+  "appUpdateTitle": "アップデートがあります",
+  "appUpdateWhatsNew": "新着情報",
+  "durakActionAll": "すべて",
+  "durakActionBito": "ビト",
+  "durakActionDone": "完了",
+  "durakActionTake": "取る",
+  "durakHintBito": "カードを出すか「ビト」と言ってください",
+  "durakHintDefend": "防御してください",
+  "durakHintDefendOrTransfer": "防御するか転送してください",
+  "durakHintDrawAllOut": "引き分け — 全員脱落",
+  "durakHintOpponentAttack": "相手が攻撃中",
+  "durakHintOpponentBito": "相手が追加するか「ビト」と言います",
+  "durakHintOpponentDefends": "相手が防御中",
+  "durakHintOpponentTakeFollow": "相手は取った後に追加できます",
+  "durakHintOpponentThrows": "相手が追加中",
+  "durakHintTakeFollow": "取った後に追加するか「完了」をタップ",
+  "durakHintThrowIn": "カードを追加するか「すべて」をタップ",
+  "durakHintThrowInFirst": "カードを追加するか「すべて」（最初の防御で最大5枚）",
+  "durakHintYouFinished": "脱落しました — 終了を待っています",
+  "durakHintYouLost": "負けました — あなたが愚か者です",
+  "durakHintYourAttack": "あなたの番 — 攻撃してください",
+  "gamesDurak": "ドゥラック",
+  "gamesPoker": "ポーカー",
+  "gamesInDevelopment": "開発中",
+  "rulesPokerPlayers": "人数: {players}。",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "テキサスホールデム。各プレイヤーにホールカード2枚、場にコミュニティカード5枚。",
+  "rulesPokerPlay": "ベッティングラウンドはプリフロップ・フロップ・ターン・リバー。フォールド、コール、ベット、レイズができます。",
+  "rulesPokerWin": "ホール＋コミュニティから作った最強の5枚、またはフォールド後に残った一人が勝ちです。",
+  "gamesDurakDeck24": "24枚",
+  "gamesDurakDeck36": "36枚",
+  "gamesDurakDeck52": "52枚",
+  "gamesDurakModePerevodnoi": "転送",
+  "gamesDurakModePodkidnoi": "追加出し",
+  "gamesFinishCurrentFirst": "まず現在の対局を終えてください",
+  "gamesObservation": "観戦",
+  "gamesObservationHint": "終了まで観戦できます",
+  "gamesVariantClassic": "クラシック",
+  "gamesVariantGomoku": "五目並べ",
+  "gamesVariantMulti3": "3人",
+  "gamesVariantMulti4": "4人",
+  "gamesVariantUltimate": "アルティメット",
+  "lobbyNamed": "ロビー {name}",
+  "lobbyPlayersCount": "プレイヤー {count}/{maxPlayers}",
+  "offlineBotName": "ボット {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "攻撃側がカードを出し、守備側が打ちます（同スートのより強い札、または切り札）。切り札はより強い切り札でのみ打てます。",
+  "rulesDurakBeat": "すべて打てたら攻撃側が「ビト」と言い、カードは捨て札へ。できなければ守備側が場の札をすべて取ります。",
+  "rulesDurakLoser": "最後に手札が残った人が負け — 「愚か者」です。",
+  "rulesDurakMode": "モード: {mode}",
+  "rulesDurakOfflineBot": "ボット対戦。賭け金も制限時間もありません。",
+  "rulesDurakPlayersDeck": "人数: {players}。デッキ: {deck}。",
+  "settingsAppVersion": "バージョン {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "ルール",
   "gamesRulesTitle": "ゲームルール",
   "gamesCreate": "ゲームを作成",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "{amount} コインが付与されました",
   "coinsDeductedTitle": "{amount} コインが差し引かれました",
   "coinsCreditCardTitle": "コインが付与されました",
-  "coinsClaim": "受け取る"
+  "coinsClaim": "受け取る",
+  "durakActionPass": "パス",
+  "durakRoleTook": "取り",
+  "durakRoleBeats": "防御中",
+  "durakRoleThrowIn": "追加",
+  "durakRoleTurn": "手番",
+  "durakRoleDefends": "防御中",
+  "durakStatusTaking": "取る",
+  "durakHintDefenderTurn": "守り手の番",
+  "gameYouEliminated": "脱落しました",
+  "gameYouPlaced": "{place}位でした",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "対局終了",
+  "gameTurnOf": "{name}の番",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "グループチャット",
+  "lobbyChatNotReady": "ロビーチャットはまだありません",
+  "chatsGroupChat": "グループチャット",
+  "chatsMembersCount": "メンバー: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count}人",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(あなた)",
+  "chatTitleDurak3": "ドゥラック・3人",
+  "chatTitleDurak4": "ドゥラック・4人",
+  "rulesTttUltimate": "アルティメット：3×3のミニ盤が9つ。手番で相手をそのミニ盤へ送ります。メタ盤で揃えた方が勝ちです。",
+  "rulesTttMulti3": "3人用：3×3盤で3人（X・O・△）。自分の記号で揃えると勝ちです。",
+  "rulesTttMulti4": "4人用：4×4盤で4人（X・O・△・□）。自分の記号で揃えると勝ちです。"
 }

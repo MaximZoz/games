@@ -127,7 +127,8 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
           ),
         ),
         body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: isWide(context) ? 720 : 480,
@@ -213,13 +214,13 @@ class _LoginRewardsBody extends StatelessWidget {
           children: [
             Expanded(
               child: Align(
-                alignment:
-                    alignTop ? Alignment.topCenter : Alignment.center,
+                alignment: Alignment.topCenter,
                 child: SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 680),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         GridView.count(
                           shrinkWrap: true,

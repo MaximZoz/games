@@ -269,7 +269,12 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	tokenHash := refreshTokenHash(req.RefreshToken)
 	session, err := store.GetSessionByRefreshTokenHash(r.Context(), h.Pool, tokenHash)
 	if err != nil {
-		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+		if err == pgx.ErrNoRows {
+			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+			return
+		}
+		// Сбой БД — не разлогинивать клиента.
+		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
 		return
 	}
 	if session.UserID != userID || time.Now().After(session.ExpiresAt) {
@@ -278,7 +283,11 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := store.GetUserByID(r.Context(), h.Pool, userID)
-	if err != nil || u == nil {
+	if err != nil {
+		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
+		return
+	}
+	if u == nil {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 		return
 	}

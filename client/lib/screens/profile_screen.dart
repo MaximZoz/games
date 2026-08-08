@@ -14,8 +14,6 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
-import 'package:multigames_client/games/head_to_head_section.dart';
-import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -773,12 +771,9 @@ class _ProfileView extends ConsumerWidget {
         ) !=
         null;
 
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
             if (hasFrame)
               FramedAvatar(
                 size: 80,
@@ -930,16 +925,6 @@ class _ProfileView extends ConsumerWidget {
                 ),
               ),
             ),
-          ],
-        ),
-        // Иконка статистики — правый верхний угол карточки.
-        Positioned(
-          top: 0,
-          right: 0,
-          child: StatsIconButton(
-            onTap: () => showGameStatsDialog(context),
-          ),
-        ),
       ],
     );
   }

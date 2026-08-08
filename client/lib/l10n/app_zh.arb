@@ -162,6 +162,81 @@
   "gamesWaiting": "等待中",
   "gamesLobbyTab": "大厅",
   "gamesTicTacToe": "井字棋",
+  "appUpdateBody": "有新版本可用。请更新以继续使用。",
+  "appUpdateLaterBanner": "本局结束后将更新应用",
+  "appUpdateOk": "更新",
+  "appUpdateTitle": "有可用更新",
+  "appUpdateWhatsNew": "更新内容",
+  "durakActionAll": "全部",
+  "durakActionBito": "打完",
+  "durakActionDone": "完成",
+  "durakActionTake": "拿牌",
+  "durakHintBito": "追加一张牌或说「打完」",
+  "durakHintDefend": "防守",
+  "durakHintDefendOrTransfer": "防守或转攻",
+  "durakHintDrawAllOut": "平局 — 所有人都出局",
+  "durakHintOpponentAttack": "对手正在进攻",
+  "durakHintOpponentBito": "对手追加或说「打完」",
+  "durakHintOpponentDefends": "对手正在防守",
+  "durakHintOpponentTakeFollow": "对手收下后可追加",
+  "durakHintOpponentThrows": "对手正在追加",
+  "durakHintTakeFollow": "收下后追加或点「完成」",
+  "durakHintThrowIn": "追加牌或点「全部」",
+  "durakHintThrowInFirst": "追加牌或「全部」（首轮防守最多 5 张）",
+  "durakHintYouFinished": "你已出局 — 等待结束",
+  "durakHintYouLost": "你输了 — 你是傻瓜",
+  "durakHintYourAttack": "你的回合 — 进攻",
+  "gamesDurak": "傻瓜牌",
+  "gamesPoker": "扑克",
+  "gamesInDevelopment": "开发中",
+  "rulesPokerPlayers": "玩家：{players}。",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "德州扑克。每人两张底牌；桌上发出五张公共牌。",
+  "rulesPokerPlay": "下注轮次：翻牌前、翻牌、转牌、河牌。可弃牌、跟注、下注或加注。",
+  "rulesPokerWin": "用底牌与公共牌组成的最强五张牌获胜；或其余人弃牌后仅剩者获胜。",
+  "gamesDurakDeck24": "24 张",
+  "gamesDurakDeck36": "36 张",
+  "gamesDurakDeck52": "52 张",
+  "gamesDurakModePerevodnoi": "转攻",
+  "gamesDurakModePodkidnoi": "加牌",
+  "gamesFinishCurrentFirst": "请先完成当前对局",
+  "gamesObservation": "观战",
+  "gamesObservationHint": "可以观战至对局结束",
+  "gamesVariantClassic": "经典",
+  "gamesVariantGomoku": "五子棋",
+  "gamesVariantMulti3": "三人",
+  "gamesVariantMulti4": "四人",
+  "gamesVariantUltimate": "终极",
+  "lobbyNamed": "大厅 {name}",
+  "lobbyPlayersCount": "玩家 {count}/{maxPlayers}",
+  "offlineBotName": "机器人 {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "进攻方出牌；防守方用同花色更大的牌或王牌盖住。王牌只能被更大的王牌盖住。",
+  "rulesDurakBeat": "全部盖住后，进攻方说「打完」，牌进入弃牌堆；否则防守方收走桌上所有牌。",
+  "rulesDurakLoser": "终局仍有手牌的人落败——「傻瓜」。",
+  "rulesDurakMode": "模式：{mode}",
+  "rulesDurakOfflineBot": "与机器人对战，无赌注、无回合时限。",
+  "rulesDurakPlayersDeck": "玩家：{players}。牌组：{deck}。",
+  "settingsAppVersion": "版本 {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "规则",
   "gamesRulesTitle": "游戏规则",
   "gamesCreate": "创建对局",
@@ -1021,5 +1096,56 @@
   "coinsGrantedTitle": "已为您发放 {amount} 枚金币",
   "coinsDeductedTitle": "已扣除 {amount} 枚金币",
   "coinsCreditCardTitle": "已为您发放金币",
-  "coinsClaim": "领取"
+  "coinsClaim": "领取",
+  "durakActionPass": "过牌",
+  "durakRoleTook": "收下",
+  "durakRoleBeats": "防守",
+  "durakRoleThrowIn": "追加",
+  "durakRoleTurn": "回合",
+  "durakRoleDefends": "防守中",
+  "durakStatusTaking": "收下中",
+  "durakHintDefenderTurn": "防守方回合",
+  "gameYouEliminated": "你已出局",
+  "gameYouPlaced": "你获得第 {place} 名",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "对局结束",
+  "gameTurnOf": "{name} 的回合",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "群聊",
+  "lobbyChatNotReady": "大厅聊天尚未创建",
+  "chatsGroupChat": "群聊",
+  "chatsMembersCount": "成员：{count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count}人",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(你)",
+  "chatTitleDurak3": "傻瓜牌 · 3人",
+  "chatTitleDurak4": "傻瓜牌 · 4人",
+  "rulesTttUltimate": "终极井字棋：九个 3×3 小棋盘。落子会把对手送到对应小盘。在元棋盘连成一线即胜。",
+  "rulesTttMulti3": "三人局：3×3 棋盘，三位玩家（X、O、△）。用自己的符号连成一线即胜。",
+  "rulesTttMulti4": "四人局：4×4 棋盘，四位玩家（X、O、△、□）。用自己的符号连成一线即胜。"
 }
