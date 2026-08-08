@@ -1522,8 +1522,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return true;
 
-    // Финальная точка: ключ pending (всегда смонтирован) или геометрия ряда.
+    // Финальная точка: pending-пара → слот при подъёме → оценка ряда.
+    // Нельзя брать «центр стола» — потом карта выровняется и будет рывок.
     final to = globalRectOf(_pendingAttackLandKey) ??
+        globalRectOf(_attackSlotKey) ??
         _estimateAttackLandRect(view, screen);
 
     final landSize = Size(_tableCardSize.width, _tableCardSize.height);
@@ -5260,25 +5262,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     : null,
               ),
             ),
-        // Слот атаки/перевода — ячейка сетки; topLeft как у атаки в _AnimatedTablePair
-        // (не Center — иначе слот ниже карты на ~10px из‑за запаса высоты +20).
-        // Резервируем ячейку заранее на своём ходе атаки — иначе подъём
-        // карты сдвигает уже лежащие пары.
-        if (hold == null && (canShowAttackSlot || showTableDropSlot))
-          Opacity(
-            opacity: showTableDropSlot ? 1 : 0,
-            child: KeyedSubtree(
-              key: _attackSlotKey,
-              child: SizedBox(
-                width: cardSize.width + 18,
-                height: cardSize.height + 20,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: IgnorePointer(
-                    child: DurakDropSlot(
-                      size: cardSize,
-                      active: showTableDropSlot,
-                    ),
+        // Слот атаки/перевода — только при подъёме карты (как раньше):
+        // иначе карта летит в «зарезервированный» центр/слот, а после
+        // посадки сетка перестраивается и карта «прыгает» на место.
+        // topLeft как у атаки в _AnimatedTablePair (не Center).
+        if (hold == null && showTableDropSlot)
+          KeyedSubtree(
+            key: _attackSlotKey,
+            child: SizedBox(
+              width: cardSize.width + 18,
+              height: cardSize.height + 20,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: IgnorePointer(
+                  child: DurakDropSlot(
+                    size: cardSize,
+                    active: true,
                   ),
                 ),
               ),
