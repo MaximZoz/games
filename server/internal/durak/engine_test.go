@@ -61,12 +61,21 @@ func TestAttackDefendBito(t *testing.T) {
 	if err := st.Defend(1, Card{7, Hearts}, -1); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
-	// Атакующему нечего подкинуть (8♠ ≠ ранги стола) — авто-бито.
+	// Атакующему нечего подкинуть — пауза показа стола, затем отбой.
+	if st.Phase != PhaseBitoReveal {
+		t.Fatalf("phase after defend = %v, want bito_reveal", st.Phase)
+	}
+	if len(st.Table) != 1 || st.Table[0].Defense == nil {
+		t.Fatalf("table should stay visible during reveal: %v", st.Table)
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if len(st.Table) != 0 || len(st.BitoPile) != 2 {
 		t.Fatalf("bito state: table=%v bito=%v", st.Table, st.BitoPile)
 	}
 	if st.Phase != PhaseAttack {
-		t.Fatalf("phase after auto-bito = %v, want attack", st.Phase)
+		t.Fatalf("phase after reveal = %v, want attack", st.Phase)
 	}
 	if st.AttackerIndex != 1 {
 		t.Fatalf("next attacker = %d, want 1", st.AttackerIndex)
@@ -1331,15 +1340,21 @@ func TestPassAllResolvesBito(t *testing.T) {
 	if err := st.SayBito(2); err != nil {
 		t.Fatalf("bito third: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal {
+		t.Fatalf("phase=%s want bito_reveal after all pass", st.Phase)
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if len(st.Table) != 0 {
-		t.Fatalf("table should be cleared after bito, got %d", len(st.Table))
+		t.Fatalf("table should be cleared after reveal, got %d", len(st.Table))
 	}
 	if st.Phase != PhaseAttack {
 		t.Fatalf("phase=%s want attack", st.Phase)
 	}
 }
 
-// После отбоя, если никому нечего подкинуть — сразу бито без фазы «Подкид».
+// После отбоя, если никому нечего подкинуть — пауза показа стола, потом отбой.
 func TestAutoBitoWhenNobodyCanThrow(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
@@ -1361,8 +1376,17 @@ func TestAutoBitoWhenNobodyCanThrow(t *testing.T) {
 	if err := st.Defend(1, Card{7, Clubs}, 0); err != nil {
 		t.Fatalf("defend: %v", err)
 	}
+	if st.Phase != PhaseBitoReveal {
+		t.Fatalf("phase=%s want bito_reveal", st.Phase)
+	}
+	if len(st.Table) != 1 || st.Table[0].Defense == nil {
+		t.Fatalf("table should stay for reveal, got %v", st.Table)
+	}
+	if err := st.FinishBitoReveal(); err != nil {
+		t.Fatalf("FinishBitoReveal: %v", err)
+	}
 	if len(st.Table) != 0 {
-		t.Fatalf("table should be cleared by auto-bito, got %d", len(st.Table))
+		t.Fatalf("table should be cleared after reveal, got %d", len(st.Table))
 	}
 	if st.Phase != PhaseAttack {
 		t.Fatalf("phase=%s want attack", st.Phase)

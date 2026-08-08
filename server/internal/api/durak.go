@@ -620,6 +620,15 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 			return
 		}
 	}
+	// Пауза «все отбили» истекла — увести стол в отбой.
+	if h.healDurakBitoReveal(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
 	// Застрявшее: у защитника 0 карт, стол не пуст — закрыть раунд.
 	if h.healDurakDefenderEmpty(ctx, gameID, m, state) {
 		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
@@ -644,6 +653,72 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 	h.enrichDurakPlayersMeta(ctx, view, state.PlayerIDs)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(view)
+}
+
+// healDurakBitoReveal — если фаза bito_reveal и время паузы вышло → отбой.
+func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
+	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseBitoReveal {
+		return false
+	}
+	revealAt, err := strconv.ParseInt(m["bito_reveal_at"], 10, 64)
+	if err != nil || revealAt <= 0 {
+		// Нет метки — дожимаем сразу (старый сейв / сбой).
+		revealAt = 0
+	}
+	if time.Now().UTC().Unix() < revealAt {
+		return false
+	}
+	if err := state.FinishBitoReveal(); err != nil {
+		return false
+	}
+	encoded, err := durak.Encode(state)
+	if err != nil {
+		return false
+	}
+	fields := []any{"state", encoded, "bito_reveal_at", "0"}
+	if state.Status == durak.StatusOver {
+		fields = append(fields, durakOverRedisFields(state)...)
+	} else if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
+		fields = append(fields,
+			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+		)
+	}
+	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	if state.Status == durak.StatusOver {
+		if state.LoserIndex < 0 {
+			m["draw"] = "1"
+		}
+		h.onDurakGameFinished(ctx, gameID, m, state)
+	}
+	return true
+}
+
+// scheduleDurakBitoReveal — после хода: через 2с дожать отбой и разослать state.
+func (h *GamesHandler) scheduleDurakBitoReveal(gameID string) {
+	delay := durak.BitoRevealDelay
+	go func() {
+		timer := time.NewTimer(delay + 50*time.Millisecond)
+		defer timer.Stop()
+		<-timer.C
+		ctx := context.Background()
+		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+			return
+		}
+		state, err := durak.Decode(m["state"])
+		if err != nil || state.Phase != durak.PhaseBitoReveal {
+			return
+		}
+		_ = h.healDurakBitoReveal(ctx, gameID, m, state)
+	}()
 }
 
 // healDurakShortHands — добрать карты, если стол пуст, а у кого-то меньше HandSize
@@ -864,6 +939,14 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			return
 		}
 	}
+	if h.healDurakBitoReveal(ctx, gameID, m, state) {
+		m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		state, err = durak.Decode(m["state"])
+		if err != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "bad state")
+			return
+		}
+	}
 	idx := state.PlayerIndex(userID.String())
 	if idx < 0 {
 		WriteErr(w, r, http.StatusForbidden, "not a player")
@@ -963,11 +1046,22 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	encoded, _ := durak.Encode(state)
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
 	fields := []any{"state", encoded}
-	if turnT > 0 && state.Status == durak.StatusActive {
+	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
+		// Пауза показа стола: без таймера хода / forfeit, через 2с — отбой.
+		revealAt := time.Now().UTC().Unix() + int64(durak.BitoRevealDelay/time.Second)
+		fields = append(fields,
+			"bito_reveal_at", strconv.FormatInt(revealAt, 10),
+			"turn_deadline", "0",
+			"turn_actor_idx", "-1",
+		)
+	} else if turnT > 0 && state.Status == durak.StatusActive {
 		fields = append(fields,
 			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
 			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+			"bito_reveal_at", "0",
 		)
+	} else {
+		fields = append(fields, "bito_reveal_at", "0")
 	}
 	if state.Status == durak.StatusOver {
 		fields = append(fields, durakOverRedisFields(state)...)
@@ -978,10 +1072,13 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	// Broadcast.
 	humans := durakHumans(m)
 	h.broadcast(humans, map[string]any{
-		"type":     "game_state",
-		"game_id":  gameID,
+		"type":      "game_state",
+		"game_id":   gameID,
 		"game_type": durakGameType,
 	})
+	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
+		h.scheduleDurakBitoReveal(gameID)
+	}
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
 			m["draw"] = "1"
@@ -1380,6 +1477,9 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 // durakTurnActorIdx — чей таймер хода (защитник / атакующий / текущий подкидывающий).
 // Вышедших «в ноль» и сдавшихся пропускаем — иначе таймер залипает на победителе.
 func durakTurnActorIdx(state *durak.State) int {
+	if state.Phase == durak.PhaseBitoReveal {
+		return -1 // пауза показа стола — ничей таймер
+	}
 	pick := func(idx int) int {
 		if idx >= 0 && idx < len(state.PlayerIDs) && state.IsAlive(idx) {
 			return idx
@@ -1405,6 +1505,11 @@ func durakTurnActorIdx(state *durak.State) int {
 // applyDurakTurnTimeout — если истёк ход, проигрывает владелец deadline (не «текущая» фаза после гонки с ходом).
 func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string, m map[string]string) {
 	if m["status"] != gameStatusActive {
+		return
+	}
+	// Пауза показа отбоя — не сдача, а дожать стол в биту по таймеру reveal.
+	if st, err := durak.Decode(m["state"]); err == nil && st.Phase == durak.PhaseBitoReveal {
+		_ = h.healDurakBitoReveal(ctx, gameID, m, st)
 		return
 	}
 	turnDeadline, err := strconv.ParseInt(m["turn_deadline"], 10, 64)

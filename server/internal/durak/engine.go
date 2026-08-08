@@ -33,7 +33,11 @@ const (
 	PhaseThrowIn      TurnPhase = "throw_in"      // очередь подкида: кладёт карты, затем «Все»
 	PhaseAttackFollow TurnPhase = "attack_follow" // подкид после полного отбоя или «Бито»
 	PhaseTakeFollow   TurnPhase = "take_follow"   // защитник берёт; атакующий может подкинуть вдогонку
+	PhaseBitoReveal   TurnPhase = "bito_reveal"   // всё отбито, нечего подкинуть — пауза, затем отбой
 )
+
+// BitoRevealDelay — сколько держим стол на экране перед авто-отбоем.
+const BitoRevealDelay = 2 * time.Second
 
 // Status — статус партии.
 type Status string
@@ -241,12 +245,42 @@ func (s *State) skipThrowersWithoutCards() error {
 			if s.Phase == PhaseTakeFollow {
 				return s.resolveTake()
 			}
-			return s.resolveBito()
+			return s.beginBitoReveal()
 		}
 		s.ThrowerIndex = next
 	}
 	if s.Phase == PhaseTakeFollow {
 		return s.resolveTake()
+	}
+	return s.beginBitoReveal()
+}
+
+// beginBitoReveal — всё отбито и подкидывать нечего: стол остаётся на паузу,
+// затем FinishBitoReveal уводит карты в отбой (чтобы все увидели, чем побили).
+func (s *State) beginBitoReveal() error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if len(s.Table) == 0 {
+		return ErrCannotBito
+	}
+	for _, p := range s.Table {
+		if p.Defense == nil {
+			return ErrCannotBito
+		}
+	}
+	s.Phase = PhaseBitoReveal
+	s.ThrowerIndex = s.AttackerIndex
+	return nil
+}
+
+// FinishBitoReveal — конец паузы показа стола → отбой.
+func (s *State) FinishBitoReveal() error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if s.Phase != PhaseBitoReveal {
+		return ErrCannotBito
 	}
 	return s.resolveBito()
 }
@@ -301,7 +335,7 @@ func (s *State) advanceThrowerOrFinish() error {
 		if s.Phase == PhaseTakeFollow {
 			return s.resolveTake()
 		}
-		return s.resolveBito()
+		return s.beginBitoReveal()
 	}
 	s.ThrowerIndex = next
 	return s.skipThrowersWithoutCards()

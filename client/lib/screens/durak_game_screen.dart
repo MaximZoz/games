@@ -5293,6 +5293,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
       return context.l10n.gameOpponentWon(winnerName);
     }
+    if (view.isBitoReveal) {
+      return 'Бито';
+    }
     if (view.phase == 'take_follow') {
       if (view.attackerIndex == view.myIndex ||
           view.throwerIndex == view.myIndex) {
