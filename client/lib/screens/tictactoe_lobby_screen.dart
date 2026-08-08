@@ -965,6 +965,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     final url = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
       baseUri: Uri.base,
+      gameType: 'tictactoe',
     );
     await Clipboard.setData(ClipboardData(text: url));
     // Чтобы в чате сразу показать «Вставить» без чтения буфера (Safari).
