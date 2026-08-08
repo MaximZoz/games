@@ -881,15 +881,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (view.mode != 'perevodnoi') return {};
     if (!_isDefendPhase(view)) return {};
     if (!_canTransferToNext(view)) return {};
+    final rank = view.table.first.attack.toPlayingCard().rank;
+    final byRank = {for (final c in hand) if (c.rank == rank) c};
+    // Сервер — уточнение; при рассинхроне оставляем локальный ранг.
     final server = _apiCardsToPlaying(view.legalTransfer).toSet();
     if (server.isNotEmpty) {
-      return {for (final c in hand) if (server.contains(c)) c};
+      final hit = byRank.intersection(server);
+      if (hit.isNotEmpty) return hit;
     }
-    final rank = view.table.first.attack.toPlayingCard().rank;
-    return {
-      for (final c in hand)
-        if (c.rank == rank) c,
-    };
+    return byRank;
   }
 
   /// Выбор отбоя vs перевода: ближе к цели отбоя — бьём, к слоту — переводим.
@@ -905,9 +905,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final atkKey = _tableAttackKeys[defendIdx];
     final defendCenter = (atkKey != null ? globalRectOf(atkKey)?.center : null) ??
         _estimatePairCenter(defendIdx, view.table.length);
+    // Слот перевода — следующая ячейка сетки (table.length при total+1).
     final slotCenter = globalRectOf(_attackSlotKey)?.center ??
-        _estimateAttackLandRect(view, MediaQuery.sizeOf(context)).center;
+        _estimatePairCenter(view.table.length, view.table.length + 1);
     if (defendCenter == null) return true;
+    if (slotCenter == null) return false;
     return (slotCenter - p).distanceSquared <
         (defendCenter - p).distanceSquared;
   }
@@ -4483,7 +4485,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
-    // Подсказки при подъёме: одна цель — ближайшая к пальцу (лево/центр/право).
+    // Подсказки при подъёме: все бьющиеся атаки + слот перевода в сетке.
     final lifting =
         _flightLockTable || (!_busy && _activeCard != null);
     final highlightAttack = lifting && _highlightAttackSlot(view);
@@ -4499,10 +4501,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } else {
       defendPairIndex = -1;
     }
-    final defendTargets =
-        defendPairIndex >= 0 ? {defendPairIndex} : const <int>{};
+    // При подъёме светим все цели, которые карта бьёт (не только ближайшую).
+    final Set<int> defendTargets;
+    if (_flightLockTable && _flightDefendIdx != null) {
+      defendTargets = {_flightDefendIdx!};
+    } else if (lifting && focus != null) {
+      defendTargets = _defendTargetIndexes(view, focus);
+    } else {
+      defendTargets = const <int>{};
+    }
     final pendingAttacks = _pendingAttackPlaceholders(view);
-    // Слот-подсказка только при подъёме; посадка идёт в плейсхолдер стола.
+    // Слот-подсказка только при подъёме; в сетке стола — следующая ячейка.
     final canShowAttackSlot = !view.isOver &&
         view.attackerIndex == view.myIndex &&
         (view.phase == 'attack' ||
@@ -4512,13 +4521,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !_busy &&
         !_flightLockTable &&
         pendingAttacks.isEmpty;
-    // Перевод: слот рядом со столом, даже если карта ещё и бьёт атаку.
+    // Перевод: слот в следующей ячейке (1→ряд1/место2, 2→ряд2/место1, 3→ряд2/место2).
     final showTransferSlot = lifting &&
         !_busy &&
         !_flightLockTable &&
         pendingAttacks.isEmpty &&
         _highlightTransferSlot(view);
-    final showAttackSlot =
+    final showTableDropSlot =
         (canShowAttackSlot && highlightAttack) || showTransferSlot;
 
     // Колода слева — чуть в кадре, не под боковой панелью.
@@ -4589,6 +4598,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     : null,
               ),
             ),
+        // Слот атаки/перевода — ячейка сетки (2 в ряд), не отдельный overlay.
+        if (hold == null && showTableDropSlot)
+          KeyedSubtree(
+            key: _attackSlotKey,
+            child: SizedBox(
+              width: cardSize.width + 18,
+              height: cardSize.height + 20,
+              child: Center(
+                child: IgnorePointer(
+                  child: DurakDropSlot(
+                    size: cardSize,
+                    active: true,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     ];
 
@@ -4671,30 +4697,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 ),
               ),
             ),
-            if (showAttackSlot)
-              Positioned(
-                left: leftReserve,
-                right: rightReserve,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: Transform.translate(
-                    offset: Offset(
-                      view.table.length * cardSize.width * 0.22,
-                      8,
-                    ),
-                    child: KeyedSubtree(
-                      key: _attackSlotKey,
-                      child: IgnorePointer(
-                        child: DurakDropSlot(
-                          size: cardSize,
-                          active: true,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             // Колода слева; таймер своего хода — над колодой с козырем.
             // Слот таймера всегда зарезервирован — колода не прыгает при смене хода.
             Positioned(
