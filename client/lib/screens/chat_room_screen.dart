@@ -281,6 +281,33 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     super.dispose();
   }
 
+  /// iPhone/WebKit снимает фокус при тапе по кнопке «Отправить» вне TextField.
+  /// Возвращаем фокус и явно показываем soft-keyboard несколькими кадрами.
+  void _keepComposerKeyboardOpen() {
+    void show() {
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(_composerFocusNode);
+      // ignore: discarded_futures — платформенный канал, ошибки не критичны
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    }
+
+    show();
+    WidgetsBinding.instance.addPostFrameCallback((_) => show());
+    Future<void>.delayed(const Duration(milliseconds: 50), show);
+    Future<void>.delayed(const Duration(milliseconds: 160), show);
+    Future<void>.delayed(const Duration(milliseconds: 320), show);
+  }
+
+  Future<void> _sendAndKeepKeyboard() async {
+    // Сразу удерживаем фокус — до await, пока WebKit ещё не «съел» клавиатуру.
+    _keepComposerKeyboardOpen();
+    try {
+      await _sendMessage();
+    } finally {
+      _keepComposerKeyboardOpen();
+    }
+  }
+
   void _onComposerTextChanged() {
     if (_applyingPaste) return;
     if (!_pasteSuggestionVisible && _composerAlert == null) return;
@@ -676,7 +703,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           _editingMessage = null;
           _composerAlert = null;
         });
-        _composerFocusNode.requestFocus();
+        _keepComposerKeyboardOpen();
       } on ChatException catch (e) {
         if (e.statusCode == 401) {
           await ref.read(authStateProvider.notifier).logout();
@@ -741,8 +768,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _replyTo = null;
         _pendingImages.clear();
       });
-      // Клавиатуру не прячем — сразу возвращаем фокус в поле.
-      _composerFocusNode.requestFocus();
+      _keepComposerKeyboardOpen();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -3296,47 +3322,52 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               ),
                               textInputAction: TextInputAction.send,
                               onTap: _scrollToBottom,
-                              onSubmitted: (_) {
-                                unawaited(_sendMessage().whenComplete(() {
-                                  if (mounted) {
-                                    _composerFocusNode.requestFocus();
-                                  }
-                                }));
+                              // onEditingComplete вместо onSubmitted: на iOS
+                              // дефолт onSubmitted снимает фокус с поля.
+                              onEditingComplete: () {
+                                unawaited(_sendAndKeepKeyboard());
                               },
                             ),
                           ],
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: (_sending ||
-                              _pendingImages.any((e) => e.isLoading))
-                          ? null
-                          : () => unawaited(_sendMessage()),
-                      tooltip: _editingMessage != null
-                          ? context.l10n.commonSave
-                          : context.l10n.commonSend,
-                      padding: const EdgeInsets.all(10),
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                    // canRequestFocus: false — кнопка не перехватывает фокус у поля
+                    // (иначе WebKit на iPhone сворачивает клавиатуру).
+                    Focus(
+                      canRequestFocus: false,
+                      skipTraversal: true,
+                      descendantsAreFocusable: false,
+                      child: IconButton(
+                        onPressed: (_sending ||
+                                _pendingImages.any((e) => e.isLoading))
+                            ? null
+                            : () => unawaited(_sendAndKeepKeyboard()),
+                        tooltip: _editingMessage != null
+                            ? context.l10n.commonSave
+                            : context.l10n.commonSend,
+                        padding: const EdgeInsets.all(10),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: _composerIconPurple,
+                                ),
+                              )
+                            : Icon(
+                                _editingMessage != null
+                                    ? Icons.check_rounded
+                                    : Icons.send_rounded,
                                 color: _composerIconPurple,
+                                size: 28,
                               ),
-                            )
-                          : Icon(
-                              _editingMessage != null
-                                  ? Icons.check_rounded
-                                  : Icons.send_rounded,
-                              color: _composerIconPurple,
-                              size: 28,
-                            ),
+                      ),
                     ),
                   ],
                 ),

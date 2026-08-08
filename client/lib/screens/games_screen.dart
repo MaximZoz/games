@@ -8,6 +8,7 @@ import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/framework/game_session_api.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -915,29 +916,12 @@ class _GamesPageContent extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: InkWell(
           onTap: () async {
-            // Сначала Дурак: дефолт observation — tictactoe, а GetGame
-            // крестиков для durak-id раньше «успешно» открывал чужой экран.
+            // Тип партии через реестр + фасад (не хардкод durak/ttt).
             var gt = normalizeGameType(obs.gameType);
-            if (gt != 'durak') {
-              try {
-                await ref.read(durakRepositoryProvider).getGame(obs.gameId);
-                gt = 'durak';
-              } catch (_) {
-                try {
-                  await ref.read(gamesRepositoryProvider).getGame(obs.gameId);
-                  gt = 'tictactoe';
-                } catch (_) {
-                  return;
-                }
-              }
-            } else {
-              // Подтверждаем, что партия Дурака ещё доступна.
-              try {
-                await ref.read(durakRepositoryProvider).getGame(obs.gameId);
-              } catch (_) {
-                return;
-              }
-            }
+            final resolved =
+                await ref.read(gameSessionApiProvider).resolveGameType(obs.gameId);
+            if (resolved == null) return;
+            gt = resolved;
             ref.read(activeGameProvider.notifier).setObservationLocal(
                   ObservationItem(
                     gameId: obs.gameId,

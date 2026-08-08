@@ -1424,7 +1424,12 @@ func (h *GamesHandler) DurakOfferDraw(w http.ResponseWriter, r *http.Request, ga
 		return
 	}
 	players := parsePlayerIDsCSV(m["player_ids"])
-	if len(players) != 2 {
+	mod, _ := h.games().Get(durakGameType)
+	if mod != nil && !mod.SupportsDrawOffer(len(players)) {
+		WriteErr(w, r, http.StatusBadRequest, "draw only in 1v1")
+		return
+	}
+	if mod == nil && len(players) != 2 {
 		WriteErr(w, r, http.StatusBadRequest, "draw only in 1v1")
 		return
 	}

@@ -1,65 +1,42 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-/// Префиксы пути партии по типу игры.
-const _gamePathPrefixes = <String, String>{
-  'tictactoe': '/games/tictactoe/game/',
-  'durak': '/games/durak/game/',
-};
-const _lobbyPathPrefixes = <String, String>{
-  'tictactoe': '/games/tictactoe/lobby/',
-  'durak': '/games/durak/lobby/',
-};
+import 'package:multigames_client/games/framework/game_registry.dart';
 
 /// Возвращает префикс пути партии для game_type ('/games/<gt>/game/').
 String gamePathPrefixFor(String gameType) {
-  return _gamePathPrefixes[gameType] ?? _gamePathPrefixes['tictactoe']!;
+  final id = gameRegistry.normalizeId(gameType);
+  return '/games/$id/game/';
 }
 
 /// Префикс лобби для game_type.
 String lobbyPathPrefixFor(String gameType) {
-  return _lobbyPathPrefixes[gameType] ?? _lobbyPathPrefixes['tictactoe']!;
+  final id = gameRegistry.normalizeId(gameType);
+  return '/games/$id/lobby/';
 }
 
-/// Нормализованный game_type ('tictactoe' | 'durak').
-String normalizeGameType(String? gameType) {
-  final gt = gameType?.trim() ?? '';
-  if (gt.isEmpty) return 'tictactoe';
-  return _gamePathPrefixes.containsKey(gt) ? gt : 'tictactoe';
-}
+/// Нормализованный game_type через реестр игр.
+String normalizeGameType(String? gameType) =>
+    gameRegistry.normalizeId(gameType);
 
 /// Путь к партии: `/games/<type>/game/<id>`.
 String gamePathFor(String gameId, {String gameType = 'tictactoe'}) {
-  return '${gamePathPrefixFor(normalizeGameType(gameType))}${gameId.trim()}';
+  return gameRegistry.gamePath(gameId, gameType: gameType);
 }
 
 /// Путь к лобби: `/games/<type>/lobby/<id>`.
 String lobbyPathFor(String lobbyId, {String gameType = 'tictactoe'}) {
-  return '${lobbyPathPrefixFor(normalizeGameType(gameType))}${lobbyId.trim()}';
+  return gameRegistry.lobbyPath(lobbyId, gameType: gameType);
 }
 
-/// gameId из `/games/<type>/game/:id` (tictactoe / durak).
-String? gameIdFromGamePath(String? location) {
-  final path = (location ?? '').split('?').first.trim();
-  for (final prefix in _gamePathPrefixes.values) {
-    if (!path.startsWith(prefix)) continue;
-    final id = path.substring(prefix.length).split('/').first.trim();
-    if (id.isNotEmpty) return id;
-  }
-  return null;
-}
+/// gameId из `/games/<type>/game/:id`.
+String? gameIdFromGamePath(String? location) =>
+    gameRegistry.gameIdFromPath(location);
 
-/// game_type из пути партии, иначе null.
-String? gameTypeFromGamePath(String? location) {
-  final path = (location ?? '').split('?').first.trim();
-  for (final entry in _gamePathPrefixes.entries) {
-    if (path.startsWith(entry.value)) return entry.key;
-  }
-  return null;
-}
+/// game_type из пути партии/лобби/оффлайна, иначе null.
+String? gameTypeFromGamePath(String? location) =>
+    gameRegistry.gameTypeFromPath(location);
 
-/// Совместимая константа для legacy-кода. Новый код — используйте
-/// [gamePathPrefixFor].
+/// Совместимая константа для legacy-кода. Новый код — [gamePathPrefixFor].
 const tictactoeGamePathPrefix = '/games/tictactoe/game/';
 
 final gameNavigationCoordinatorProvider =
@@ -83,7 +60,7 @@ class GameNavigationCoordinator {
       return null;
     }
 
-    final target = '${gamePathPrefixFor(gameType)}$normalizedId';
+    final target = gamePathFor(normalizedId, gameType: gameType);
     return currentPath == target ? null : target;
   }
 }
@@ -110,7 +87,10 @@ bool navigateToGame(
 /// Разрешение realtime-события в переход на партию: возвращает пару
 /// (gameId, gameType) либо null.
 class RealtimeGameNavTarget {
-  const RealtimeGameNavTarget({required this.gameId, this.gameType = 'tictactoe'});
+  const RealtimeGameNavTarget({
+    required this.gameId,
+    this.gameType = 'tictactoe',
+  });
   final String gameId;
   final String gameType;
 }
@@ -150,7 +130,7 @@ RealtimeGameNavTarget? realtimeGameNavForEvent(
   final gt = event['game_type']?.toString().trim();
   return RealtimeGameNavTarget(
     gameId: gameId,
-    gameType: (gt == null || gt.isEmpty) ? 'tictactoe' : gt,
+    gameType: normalizeGameType(gt),
   );
 }
 
@@ -188,7 +168,8 @@ bool _isAuthOrPublicPath(String path) {
 }
 
 String? _lobbyIdFromPath(String currentPath) {
-  for (final prefix in _lobbyPathPrefixes.values) {
+  for (final g in gameRegistry.all) {
+    final prefix = '/games/${g.id}/lobby/';
     if (currentPath.startsWith(prefix)) {
       final id = currentPath.substring(prefix.length).trim();
       if (id.isEmpty || id.contains('/')) return null;

@@ -16,6 +16,7 @@ import (
 
 	"multigames/server/internal/api"
 	"multigames/server/internal/applog"
+	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/mailer"
 	"multigames/server/internal/store"
@@ -449,6 +450,7 @@ func main() {
 		Hub:         realtimeHub,
 		Broadcaster: gamesBroadcaster,
 		Push:        pushSender,
+		Registry:    gameregistry.Default(),
 	}
 	presenceHandler := &api.PresenceHandler{Pool: pool, Hub: realtimeHub}
 	coinsHandler := &api.CoinsHandler{Pool: pool, Hub: realtimeHub}

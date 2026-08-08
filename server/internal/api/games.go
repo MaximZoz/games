@@ -12,6 +12,7 @@ import (
 
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
+	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/store"
 
@@ -54,6 +55,15 @@ type GamesHandler struct {
 	Hub         *RealtimeHub
 	Broadcaster *GamesBroadcaster
 	Push        *WebPushSender
+	// Registry — каталог игр (метаданные/политики). Lifecycle пока в этом handler.
+	Registry *gameregistry.Registry
+}
+
+func (h *GamesHandler) games() *gameregistry.Registry {
+	if h.Registry != nil {
+		return h.Registry
+	}
+	return gameregistry.Default()
 }
 
 type CreateLobbyBody struct {
@@ -3578,7 +3588,12 @@ func (h *GamesHandler) OfferDraw(w http.ResponseWriter, r *http.Request, gameID 
 		gs, _ := strconv.Atoi(m["grid_size"])
 		return gs
 	}())
-	if cfg.MaxPlayers > 2 {
+	mod, _ := h.games().Get(h.games().Normalize(m["game_type"]))
+	if mod != nil && !mod.SupportsDrawOffer(cfg.MaxPlayers) {
+		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
+		return
+	}
+	if mod == nil && cfg.MaxPlayers > 2 {
 		WriteErr(w, r, http.StatusBadRequest, "draw not available in multiplayer")
 		return
 	}
