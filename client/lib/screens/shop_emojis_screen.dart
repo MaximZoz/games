@@ -168,7 +168,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                     )
                   // Одна колонка сверху вниз, к левому краю (не сетка по центру).
                   : Align(
-                      alignment: Alignment.topLeft,
+                      alignment: Alignment.topCenter,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 520),
                         child: ListView.separated(
