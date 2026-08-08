@@ -6,10 +6,16 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Последний успешно отправленный язык — не спамить PUT из rebuild/listen.
+String? _lastSyncedPreferredLanguage;
 
 /// Синхронизирует язык интерфейса на сервер (нужно для автоперевода в чате).
 Future<void> syncPreferredLanguageToServer(WidgetRef ref) async {
+  // Офлайн: язык уже в SharedPreferences, на сервер — после выхода в онлайн.
+  if (ref.read(isOfflineProvider)) return;
   await syncPreferredLanguageWith(
     ref.read(authRepositoryProvider),
     user: ref.read(authStateProvider).valueOrNull,
@@ -25,6 +31,7 @@ Future<void> syncPreferredLanguageWith(
   if (user == null) return;
   final lang = languageCode.trim();
   if (lang.isEmpty) return;
+  if (_lastSyncedPreferredLanguage == lang) return;
   try {
     await auth.sendAuthorized(
       (token) => ApiClient.put(
@@ -37,6 +44,7 @@ Future<void> syncPreferredLanguageWith(
         operation: 'syncPreferredLanguageToServer',
       ),
     );
+    _lastSyncedPreferredLanguage = lang;
   } catch (_) {
     // не блокируем UI
   }

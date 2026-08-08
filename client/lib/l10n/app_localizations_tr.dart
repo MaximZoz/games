@@ -91,6 +91,68 @@ class AppLocalizationsTr extends AppLocalizations {
   String get offlinePlayAgain => 'Tekrar';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Al';
+
+  @override
+  String get durakActionAll => 'Tümü';
+
+  @override
+  String get durakActionDone => 'Bitti';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Savun';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Savun veya aktar';
+
+  @override
+  String get durakHintOpponentDefends => 'Rakip savunuyor';
+
+  @override
+  String get durakHintThrowInFirst => 'Kart atın veya «Tümü» (ilk savunmada max 5)';
+
+  @override
+  String get durakHintThrowIn => 'Kart atın veya «Tümü»ne dokunun';
+
+  @override
+  String get durakHintOpponentThrows => 'Rakip atıyor';
+
+  @override
+  String get durakHintTakeFollow => 'Aldıktan sonra atın veya «Bitti»ye dokunun';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Rakip aldıktan sonra atabilir';
+
+  @override
+  String get durakHintBito => 'Kart atın veya «Bito» deyin';
+
+  @override
+  String get durakHintOpponentBito => 'Rakip atıyor veya «Bito» diyor';
+
+  @override
+  String get durakHintYourAttack => 'Sizin sıra — saldırın';
+
+  @override
+  String get durakHintOpponentAttack => 'Rakip saldırıyor';
+
+  @override
+  String get durakHintYouLost => 'Kaybettiniz — siz duraksınız';
+
+  @override
+  String get durakHintDrawAllOut => 'Berabere — herkes çıktı';
+
+  @override
+  String get durakHintYouFinished => 'Çıktınız — sonu bekleniyor';
+
+  @override
   String get shopPurchaseQueued => 'Satın alma kaydedildi — çevrimiçi modda uygulanacak';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Ödüller';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Sürüm $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Güncelleme mevcut';
+
+  @override
+  String get appUpdateBody => 'Uygulamanın yeni bir sürümü mevcut. Devam etmek için güncelleyin.';
+
+  @override
+  String get appUpdateWhatsNew => 'Yenilikler';
+
+  @override
+  String get appUpdateOk => 'Güncelle';
+
+  @override
+  String get appUpdateLaterBanner => 'Bu oyundan sonra uygulamayı güncelleyeceğiz';
 
   @override
   String get loginTitle => 'Giriş yap';
@@ -443,7 +525,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
   String get gamesInDevelopment => 'Geliştiriliyor';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Oyuncular: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Her oyuncuya 2 kapalı kart verilir; masaya 5 ortak kart gelir.';
+
+  @override
+  String get rulesPokerPlay => 'Bahis turları: preflop, flop, turn ve river. Fold, call, bet veya raise yapabilirsiniz.';
+
+  @override
+  String get rulesPokerWin => 'En iyi beş kartlık el (kapalı + ortak) veya foldlardan sonra kalan son oyuncu kazanır.';
 
   @override
   String get gamesRules => 'Kurallar';
@@ -477,6 +576,77 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Merkezden başlama yok';
+
+  @override
+  String get gamesObservation => 'İzleme';
+
+  @override
+  String get gamesObservationHint => 'Oyun bitene kadar izleyebilirsiniz';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Önce mevcut oyununuzu bitirin';
+
+  @override
+  String get gamesVariantClassic => 'Klasik';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 oyuncu';
+
+  @override
+  String get gamesVariantMulti4 => '4 oyuncu';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Atışlı';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Aktarmalı';
+
+  @override
+  String get gamesDurakDeck24 => '24 kart';
+
+  @override
+  String get gamesDurakDeck36 => '36 kart';
+
+  @override
+  String get gamesDurakDeck52 => '52 kart';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Mod: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Oyuncular: $players. Deste: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Bot’a karşı oynayın; bahis ve süre sınırı yok.';
+
+  @override
+  String get rulesDurakAttack => 'Saldıran kart koyar; savunan onları döver (aynı renk daha yüksek veya koz). Koz yalnızca daha yüksek kozla dövülür.';
+
+  @override
+  String get rulesDurakBeat => 'Tüm kartlar dövülünce saldıran «Bito» der ve kartlar atığa gider. Yoksa savunan masadaki her şeyi alır.';
+
+  @override
+  String get rulesDurakLoser => 'Kaybeden, sonda kartı kalan kişidir — «durak».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Oyuncular $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobi $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Lobi';
@@ -1769,4 +1939,81 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Al';
+
+  @override
+  String get durakActionPass => 'Pas';
+
+  @override
+  String get durakRoleTook => 'Aldı';
+
+  @override
+  String get durakRoleBeats => 'Vuruyor';
+
+  @override
+  String get durakRoleThrowIn => 'Atış';
+
+  @override
+  String get durakRoleTurn => 'Sıra';
+
+  @override
+  String get durakRoleDefends => 'Savunuyor';
+
+  @override
+  String get durakStatusTaking => 'Alıyor';
+
+  @override
+  String get durakHintDefenderTurn => 'Savunanın sırası';
+
+  @override
+  String get gameYouEliminated => 'Elendiniz';
+
+  @override
+  String gameYouPlaced(int place) {
+    return '$place. oldunuz';
+  }
+
+  @override
+  String get gameOverNeutral => 'Oyun bitti';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name sırası';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Grup sohbeti';
+
+  @override
+  String get lobbyChatNotReady => 'Lobi sohbeti henüz hazır değil';
+
+  @override
+  String get chatsGroupChat => 'Grup sohbeti';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Üyeler: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count kişi';
+  }
+
+  @override
+  String get chatsYouSuffix => '(sen)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 oyuncu';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 oyuncu';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: dokuz 3×3 mini tahta. Hamle rakibi o mini tahtaya gönderir. Meta tahtada çizgi tamamlayan kazanır.';
+
+  @override
+  String get rulesTttMulti3 => '3 oyuncu: 3×3 tahta, üç oyuncu (X, O, △). Kendi işaretlerinizle çizgi tamamlayın.';
+
+  @override
+  String get rulesTttMulti4 => '4 oyuncu: 4×4 tahta, dört oyuncu (X, O, △, □). Kendi işaretlerinizle çizgi tamamlayın.';
 }

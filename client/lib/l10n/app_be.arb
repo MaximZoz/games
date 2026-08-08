@@ -162,8 +162,81 @@
   "gamesWaiting": "Чаканне",
   "gamesLobbyTab": "Лобі",
   "gamesTicTacToe": "Крыжыкі-нулікі",
+  "appUpdateBody": "Выйшла новая версія праграмы. Абнавіцеся, каб працягваць.",
+  "appUpdateLaterBanner": "Пасля партыі абнавіма праграму",
+  "appUpdateOk": "Абнавіць",
+  "appUpdateTitle": "Даступна абнаўленне",
+  "appUpdateWhatsNew": "Што новага",
+  "durakActionAll": "Усе",
+  "durakActionBito": "Біта",
+  "durakActionDone": "Гатова",
+  "durakActionTake": "Узяць",
+  "durakHintBito": "Падкідайце карту або скажыце «Біта»",
+  "durakHintDefend": "Адбівайцеся",
+  "durakHintDefendOrTransfer": "Адбівайцеся або перавядзіце",
+  "durakHintDrawAllOut": "Нічыя — усе выйшлі",
+  "durakHintOpponentAttack": "Атакуе супернік",
+  "durakHintOpponentBito": "Супернік падкідае або кажа «Біта»",
+  "durakHintOpponentDefends": "Супернік адбіваецца",
+  "durakHintOpponentTakeFollow": "Супернік можа падкінуць удогонку",
+  "durakHintOpponentThrows": "Супернік падкідае",
+  "durakHintTakeFollow": "Падкідайце ўдогонку або націсніце «Гатова»",
+  "durakHintThrowIn": "Падкідайце карты або націсніце «Усе»",
+  "durakHintThrowInFirst": "Падкідайце карты або «Усе» (макс. 5 у першым адбоі)",
+  "durakHintYouFinished": "Вы выйшлі — чакаем канца партыі",
+  "durakHintYouLost": "Вы прайгралі — вы дурак",
+  "durakHintYourAttack": "Ваш ход — атакуйце",
   "gamesDurak": "Дурак",
+  "gamesPoker": "Покер",
   "gamesInDevelopment": "У распрацоўцы",
+  "rulesPokerPlayers": "Гульцы: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Тэхаскі холдэм. Кожнаму раздаюць 2 карты ў руку; на стол выходзяць 5 агульных карт.",
+  "rulesPokerPlay": "Раўнды ставак: прэфлоп, флоп, тэрн і рывер. Можна фолд, колл, бет ці рэйз.",
+  "rulesPokerWin": "Перамагае найлепшая камбінацыя з пяці карт (свае + агульныя) або той, хто застаўся адзін пасля фолдаў.",
+  "gamesDurakDeck24": "24 карты",
+  "gamesDurakDeck36": "36 карт",
+  "gamesDurakDeck52": "52 карты",
+  "gamesDurakModePerevodnoi": "Пераводны",
+  "gamesDurakModePodkidnoi": "Падкідны",
+  "gamesFinishCurrentFirst": "Спачатку завяршыце бягучую гульню",
+  "gamesObservation": "Назіранне",
+  "gamesObservationHint": "Можна глядзець да канца партыі",
+  "gamesVariantClassic": "Класіка",
+  "gamesVariantGomoku": "Гомоку",
+  "gamesVariantMulti3": "На траіх",
+  "gamesVariantMulti4": "На чацвярых",
+  "gamesVariantUltimate": "Ультымейт",
+  "lobbyNamed": "Лобі {name}",
+  "lobbyPlayersCount": "Гульцы {count}/{maxPlayers}",
+  "offlineBotName": "Бот {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Атакуючы кладзе карты, абаронца б’е (той жа масці старэйшай або казырам). Казыр б’ецца толькі старэйшым казырам.",
+  "rulesDurakBeat": "Калі ўсе карты біты — атакуючы кажа «Біта», карты ідуць у адбой. Інакш абаронца бярэ ўсё са стала.",
+  "rulesDurakLoser": "Прайграўшы — у каго ў канцы партыі засталіся карты, «дурак».",
+  "rulesDurakMode": "Рэжым: {mode}",
+  "rulesDurakOfflineBot": "Гульня супраць бота, без ставак і ліміту часу.",
+  "rulesDurakPlayersDeck": "Гульцы: {players}. Калода: {deck}.",
+  "settingsAppVersion": "Версія {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Правілы",
   "gamesRulesTitle": "Правілы гульні",
   "gamesCreate": "Стварыць гульню",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Вам налічана {amount} манет",
   "coinsDeductedTitle": "Спісана {amount} манет",
   "coinsCreditCardTitle": "Вам налічаны манеты",
-  "coinsClaim": "Забраць"
+  "coinsClaim": "Забраць",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Забраў",
+  "durakRoleBeats": "Б'е",
+  "durakRoleThrowIn": "Падкід",
+  "durakRoleTurn": "Ход",
+  "durakRoleDefends": "Адбіваецца",
+  "durakStatusTaking": "Бяру",
+  "durakHintDefenderTurn": "Ход абаронцы",
+  "gameYouEliminated": "Вы выбылі",
+  "gameYouPlaced": "Вы занялі {place}-е месца",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Партыя завершана",
+  "gameTurnOf": "Ход {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Чат групы",
+  "lobbyChatNotReady": "Чат лобі яшчэ не створаны",
+  "chatsGroupChat": "Групавы чат",
+  "chatsMembersCount": "Удзельнікі: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} уч.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(вы)",
+  "chatTitleDurak3": "Дурак на траіх",
+  "chatTitleDurak4": "Дурак на чацвярых",
+  "rulesTttUltimate": "Ультымейт: 9 міні-палёў 3×3. Ход у клетку адпраўляе суперніка на адпаведнае міні-поле. Перамагае той, хто сабраў лінію на мета-полі.",
+  "rulesTttMulti3": "На траіх: поле 3×3, трое гульцоў (X, O, △). Хто сабраў лінію са сваіх знакаў — перамагае.",
+  "rulesTttMulti4": "На чацвярых: поле 4×4, чацвёра гульцоў (X, O, △, □). Хто сабраў лінію са сваіх знакаў — перамагае."
 }

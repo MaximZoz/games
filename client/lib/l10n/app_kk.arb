@@ -162,8 +162,81 @@
   "gamesWaiting": "Күту",
   "gamesLobbyTab": "Лобби",
   "gamesTicTacToe": "Крестики-нолики",
+  "appUpdateBody": "Қолданбаның жаңа нұсқасы қолжетімді. Жалғастыру үшін жаңартыңыз.",
+  "appUpdateLaterBanner": "Осы ойыннан кейін қолданбаны жаңартамыз",
+  "appUpdateOk": "Жаңарту",
+  "appUpdateTitle": "Жаңарту қолжетімді",
+  "appUpdateWhatsNew": "Жаңалықтар",
+  "durakActionAll": "Барлығы",
+  "durakActionBito": "Бита",
+  "durakActionDone": "Дайын",
+  "durakActionTake": "Алу",
+  "durakHintBito": "Карта тастаңыз немесе «Бита» деңіз",
+  "durakHintDefend": "Қорғаныңыз",
+  "durakHintDefendOrTransfer": "Қорғаныңыз немесе ауыстырыңыз",
+  "durakHintDrawAllOut": "Тең ойын — барлығы шықты",
+  "durakHintOpponentAttack": "Қарсылас шабуылдауда",
+  "durakHintOpponentBito": "Қарсылас тастайды немесе «Бита» дейді",
+  "durakHintOpponentDefends": "Қарсылас қорғануда",
+  "durakHintOpponentTakeFollow": "Қарсылас алғаннан кейін тастай алады",
+  "durakHintOpponentThrows": "Қарсылас тастайды",
+  "durakHintTakeFollow": "Алғаннан кейін тастаңыз немесе «Дайын» басыңыз",
+  "durakHintThrowIn": "Карталар тастаңыз немесе «Барлығы» басыңыз",
+  "durakHintThrowInFirst": "Карталар тастаңыз немесе «Барлығы» (бірінші ұрыста макс. 5)",
+  "durakHintYouFinished": "Сіз шықтыңыз — соңын күтеміз",
+  "durakHintYouLost": "Жеңілдіңіз — сіз дурак",
+  "durakHintYourAttack": "Сіздің жүріс — шабуылдаңыз",
   "gamesDurak": "Дурак",
+  "gamesPoker": "Покер",
   "gamesInDevelopment": "Әзірленуде",
+  "rulesPokerPlayers": "Ойыншылар: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Әр ойыншыға 2 қол картасы беріледі; үстелге 5 ортақ карта шығады.",
+  "rulesPokerPlay": "Ставка раундтары: префлоп, флоп, терн және ривер. Фолд, колл, бет немесе рейз жасауға болады.",
+  "rulesPokerWin": "Жеңімпаз — бес картаның ең жақсы комбинациясы (қол + ортақ) немесе фолдтан кейін жалғыз қалған ойыншы.",
+  "gamesDurakDeck24": "24 карта",
+  "gamesDurakDeck36": "36 карта",
+  "gamesDurakDeck52": "52 карта",
+  "gamesDurakModePerevodnoi": "Аударылмалы",
+  "gamesDurakModePodkidnoi": "Тастамалы",
+  "gamesFinishCurrentFirst": "Алдымен ағымдағы ойынды аяқтаңыз",
+  "gamesObservation": "Бақылау",
+  "gamesObservationHint": "Ойын соңына дейін бақылауға болады",
+  "gamesVariantClassic": "Классикалық",
+  "gamesVariantGomoku": "Гомоку",
+  "gamesVariantMulti3": "3 ойыншы",
+  "gamesVariantMulti4": "4 ойыншы",
+  "gamesVariantUltimate": "Ультимейт",
+  "lobbyNamed": "Лобби {name}",
+  "lobbyPlayersCount": "Ойыншылар {count}/{maxPlayers}",
+  "offlineBotName": "Бот {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Шабуылшы карта салады, қорғаушы ұрады (сол масть жоғарырақ немесе козырь). Козырь тек жоғарырақ козырьмен ұрылады.",
+  "rulesDurakBeat": "Барлық карта ұрылғанда шабуылшы «Бита» дейді, карталар отбойға кетеді. Әйтпесе қорғаушы үстелдегінің бәрін алады.",
+  "rulesDurakLoser": "Жеңілген — партия соңында карталары қалған ойыншы, «дурак».",
+  "rulesDurakMode": "Режим: {mode}",
+  "rulesDurakOfflineBot": "Ботқа қарсы ойын, ставка мен уақыт шектеуінсіз.",
+  "rulesDurakPlayersDeck": "Ойыншылар: {players}. Колода: {deck}.",
+  "settingsAppVersion": "Нұсқа {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Ережелер",
   "gamesRulesTitle": "Ойын ережелері",
   "gamesCreate": "Ойын жасау",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Сізге {amount} тиын есептелді",
   "coinsDeductedTitle": "{amount} тиын шегерілді",
   "coinsCreditCardTitle": "Сізге тиындар есептелді",
-  "coinsClaim": "Алу"
+  "coinsClaim": "Алу",
+  "durakActionPass": "Пас",
+  "durakRoleTook": "Алды",
+  "durakRoleBeats": "Ұрады",
+  "durakRoleThrowIn": "Тастау",
+  "durakRoleTurn": "Жүріс",
+  "durakRoleDefends": "Қорғанады",
+  "durakStatusTaking": "Аламын",
+  "durakHintDefenderTurn": "Қорғаушының жүрісі",
+  "gameYouEliminated": "Сіз шықтыңыз",
+  "gameYouPlaced": "Сіз {place}-орын алдыңыз",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Ойын аяқталды",
+  "gameTurnOf": "{name} жүрісі",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Топ чаты",
+  "lobbyChatNotReady": "Лобби чаты әлі жасалмаған",
+  "chatsGroupChat": "Топтық чат",
+  "chatsMembersCount": "Қатысушылар: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} қат.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(сіз)",
+  "chatTitleDurak3": "Дурак · 3 ойыншы",
+  "chatTitleDurak4": "Дурак · 4 ойыншы",
+  "rulesTttUltimate": "Ultimate: тоғыз 3×3 мини-тақта. Жүріс қарсыласты сол мини-тақтаға жібереді. Мета-тақтадағы сызық жеңеді.",
+  "rulesTttMulti3": "3 ойыншы: 3×3 тақта, үш ойыншы (X, O, △). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз.",
+  "rulesTttMulti4": "4 ойыншы: 4×4 тақта, төрт ойыншы (X, O, △, □). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз."
 }

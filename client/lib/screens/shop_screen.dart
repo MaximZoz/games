@@ -38,7 +38,8 @@ class ShopScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               physics: const AlwaysScrollableScrollPhysics(

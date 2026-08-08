@@ -6,7 +6,10 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
 final gamesRepositoryProvider = Provider<GamesRepository>((ref) {
@@ -30,7 +33,9 @@ class GameInvite {
     this.firstMoveRestriction = false,
     this.creatorAvatarKind = 'letter',
     this.creatorAvatarValue,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
+    this.deckSize = 36,
+    this.durakMode = 'podkidnoi',
   });
   final String lobbyId;
   final String creatorId;
@@ -45,11 +50,35 @@ class GameInvite {
   final String creatorAvatarKind;
   final String? creatorAvatarValue;
   final int stakeBronze;
+
+  /// Durak: размер колоды (24/36/52).
+  final int deckSize;
+
+  /// Durak: 'podkidnoi' | 'perevodnoi'.
+  final String durakMode;
+
+  bool get isDurak => gameType == 'durak';
+
+  /// Подпись режима для карточки приглашения.
+  String get modeLabel {
+    if (isDurak) {
+      return durakModeLabel(durakMode);
+    }
+    return variantLabel(variant);
+  }
 }
 
 final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
+
+  // После логина / rebuild — восстановить карточки приглашений с сервера.
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user != null) {
+    unawaited(
+      notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
+    );
+  }
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
@@ -76,7 +105,7 @@ final gameInvitesProvider =
         final creatorAvatarKind =
             data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
-        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
+        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 2;
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
@@ -93,8 +122,25 @@ final gameInvitesProvider =
             creatorAvatarKind: creatorAvatarKind,
             creatorAvatarValue: creatorAvatarValue,
             stakeBronze: stakeBronze,
+            deckSize: (data['deck_size'] as num?)?.toInt() ?? 36,
+            durakMode: data['game_mode']?.toString() ?? 'podkidnoi',
           ));
         }
+        return;
+      }
+      // Создатель отозвал приглашение — карточка должна исчезнуть.
+      if (type == 'invite_cancelled') {
+        final lobbyId = data['lobby_id']?.toString();
+        if (lobbyId != null && lobbyId.isNotEmpty) {
+          notifier.remove(lobbyId);
+        }
+        return;
+      }
+      // После reconnect — восстановить карточки, которые пришли, пока были offline.
+      if (type == 'realtime_connected') {
+        unawaited(
+          notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
+        );
         return;
       }
       // Приглашение больше не актуально: лобби закрыто, игра началась, или
@@ -123,6 +169,56 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   void add(GameInvite invite) {
     if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
     state = [...state, invite];
+  }
+
+  /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
+  /// Сервер — источник истины для уже известных карточек; WS-инвайты,
+  /// пришедшие во время запроса, сохраняем.
+  Future<void> hydrateFromServer(GamesRepository repo) async {
+    try {
+      final snapshot = List<GameInvite>.of(state);
+      final raw = await repo.listPendingInvites();
+      final next = <GameInvite>[];
+      for (final m in raw) {
+        final lobbyId = m['lobby_id']?.toString() ?? '';
+        if (lobbyId.isEmpty || next.any((i) => i.lobbyId == lobbyId)) {
+          continue;
+        }
+        final gameType = m['game_type']?.toString() ?? 'tictactoe';
+        final rawVariant = m['variant']?.toString();
+        final legacyGrid = (m['grid_size'] as num?)?.toInt() ?? 3;
+        final variant = rawVariant == null || rawVariant.isEmpty
+            ? variantFromLegacyGrid(legacyGrid)
+            : parseVariant(rawVariant);
+        final cfg = configForVariant(variant);
+        next.add(GameInvite(
+          lobbyId: lobbyId,
+          creatorId: m['creator_id']?.toString() ?? '',
+          creatorName: localizeDisplayName(m['creator_name']?.toString()),
+          gameType: gameType,
+          turnTimeSec: (m['turn_time_sec'] as num?)?.toInt() ?? 0,
+          variant: variant,
+          gridSize: cfg.gridSize,
+          maxPlayers: (m['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
+          swapRule: m['swap_rule'] == true,
+          firstMoveRestriction: m['first_move_restriction'] == true,
+          creatorAvatarKind: m['creator_avatar_kind']?.toString() ?? 'letter',
+          creatorAvatarValue: m['creator_avatar_value']?.toString(),
+          stakeBronze: (m['stake_bronze'] as num?)?.toInt() ?? 2,
+          deckSize: (m['deck_size'] as num?)?.toInt() ?? 36,
+          durakMode: m['game_mode']?.toString() ?? 'podkidnoi',
+        ));
+      }
+      final serverIds = next.map((i) => i.lobbyId).toSet();
+      // Инвайты, пришедшие по WS пока шёл GET — не затирать.
+      for (final inv in state) {
+        final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
+        if (!wasKnown && !serverIds.contains(inv.lobbyId)) {
+          next.add(inv);
+        }
+      }
+      state = next;
+    } catch (_) {}
   }
 
   void remove(String lobbyId) {
@@ -169,13 +265,26 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
       realtimeEventsProvider,
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
-        if (type == 'lobby_updated' || type == 'game_started') {
+        // lobbies_changed — всем онлайн: отмена/старт публичного лобби.
+        if (type == 'lobby_updated' ||
+            type == 'game_started' ||
+            type == 'lobbies_changed') {
           ref.invalidate(openLobbiesProvider);
         }
       },
     );
 
     return lobbies;
+  }
+
+  /// Сразу убрать карточку (вход / отмена / старт), не дожидаясь refetch.
+  void removeLocal(String lobbyId) {
+    final cur = state.valueOrNull;
+    if (cur == null || cur.isEmpty) return;
+    final next = cur.where((l) => l.id != lobbyId).toList(growable: false);
+    if (next.length != cur.length) {
+      state = AsyncData(next);
+    }
   }
 }
 
@@ -190,6 +299,24 @@ final lobbyDetailProvider =
 final gameStateProvider =
     FutureProvider.autoDispose.family<GameStateItem, String>(
   (ref, gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      var alive = true;
+      void onChanged() {
+        Future.microtask(() {
+          if (alive) ref.invalidateSelf();
+        });
+      }
+      session.addListener(onChanged);
+      ref.onDispose(() {
+        alive = false;
+        session.removeListener(onChanged);
+      });
+      return session.view;
+    }
     final repo = ref.read(gamesRepositoryProvider);
     return repo.getGame(gameId);
   },
@@ -219,6 +346,27 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int get epoch => _epoch;
 
   void _applyObservation(ObservationItem? obs) {
+    // Не затирать/не дефолтить durak→tictactoe.
+    if (obs != null) {
+      final prev = ref.read(observationGameProvider);
+      final incoming = normalizeGameType(obs.gameType);
+      if (prev != null &&
+          prev.gameId == obs.gameId &&
+          normalizeGameType(prev.gameType) == 'durak' &&
+          incoming != 'durak') {
+        obs = ObservationItem(
+          gameId: obs.gameId,
+          lobbyId: obs.lobbyId ?? prev.lobbyId,
+          gameType: 'durak',
+        );
+      } else if (incoming != obs.gameType) {
+        obs = ObservationItem(
+          gameId: obs.gameId,
+          lobbyId: obs.lobbyId,
+          gameType: incoming,
+        );
+      }
+    }
     ref.read(observationGameProvider.notifier).state = obs;
   }
 
@@ -329,19 +477,25 @@ final gameInvitesCountProvider = Provider.autoDispose<int>((ref) {
   return ref.watch(gameInvitesProvider).length;
 });
 
-/// Ленивая загрузка конфигурации игр из БД (при старте/входе).
-final userGameSettingsProvider =
-    AsyncNotifierProvider<UserGameSettingsNotifier, UserGameSettings>(
+/// Ленивая загрузка конфигурации игры из БД (на [gameType]).
+final userGameSettingsProvider = AsyncNotifierProvider.family<
+    UserGameSettingsNotifier, UserGameSettings, String>(
   UserGameSettingsNotifier.new,
 );
 
-class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
+class UserGameSettingsNotifier
+    extends FamilyAsyncNotifier<UserGameSettings, String> {
   Timer? _saveTimer;
   UserGameSettings? _pending;
   GamesRepository? _repo;
 
+  String get _gameType {
+    final gt = arg.trim();
+    return gt.isEmpty ? 'tictactoe' : gt;
+  }
+
   @override
-  Future<UserGameSettings> build() async {
+  Future<UserGameSettings> build(String arg) async {
     ref.onDispose(() {
       _saveTimer?.cancel();
       final pending = _pending;
@@ -351,32 +505,45 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
         unawaited(repo.saveGameSettings(pending));
       }
     });
+    final gameType = _gameType;
     final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return UserGameSettings.defaults;
+    if (user == null) return UserGameSettings.defaultsFor(gameType);
     final offline = ref.watch(isOfflineProvider);
     if (offline) {
-      return await OfflineDiskCache.loadGameSettings(user.id) ??
-          UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+          UserGameSettings.defaultsFor(gameType);
     }
     try {
-      final settings =
-          await ref.read(gamesRepositoryProvider).getGameSettings();
-      await OfflineDiskCache.saveGameSettings(user.id, settings);
+      final settings = await ref
+          .read(gamesRepositoryProvider)
+          .getGameSettings(gameType: gameType);
+      await OfflineDiskCache.saveGameSettings(
+        user.id,
+        settings,
+        gameType: gameType,
+      );
       return settings;
     } catch (_) {
-      return await OfflineDiskCache.loadGameSettings(user.id) ??
-          UserGameSettings.defaults;
+      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+          UserGameSettings.defaultsFor(gameType);
     }
   }
 
   /// Локально применяет настройки и с задержкой пишет в БД.
   void updateLocal(UserGameSettings next) {
-    state = AsyncData(next);
-    _pending = next;
+    final withType = next.gameType == _gameType
+        ? next
+        : next.copyWith(gameType: _gameType);
+    state = AsyncData(withType);
+    _pending = withType;
     _repo = ref.read(gamesRepositoryProvider);
     final user = ref.read(authStateProvider).valueOrNull;
     if (user != null) {
-      unawaited(OfflineDiskCache.saveGameSettings(user.id, next));
+      unawaited(OfflineDiskCache.saveGameSettings(
+        user.id,
+        withType,
+        gameType: _gameType,
+      ));
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 450), () {
@@ -393,7 +560,6 @@ class UserGameSettingsNotifier extends AsyncNotifier<UserGameSettings> {
     if (user == null) return;
     try {
       final saved = await repo.saveGameSettings(settings);
-      // Не затираем более новые локальные правки.
       final current = state.valueOrNull;
       if (current == null || current == settings || current == saved) {
         state = AsyncData(saved);

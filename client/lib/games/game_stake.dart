@@ -1,0 +1,83 @@
+// Общий расчёт банка ставки (крестики-нолики / дурак / будущие игры).
+// Банк = stake × playerCount. Ничья — возврат ставки.
+// Победа в крестиках: банк делится между winnerCount победителями
+// (1 победитель → stake×N).
+// Дурак multi: доли по местам выхода (см. durakPlaceCredit).
+
+/// Выплата одному победителю из банка (кредит на баланс).
+int stakeWinnerCredit({
+  required int stake,
+  required int playerCount,
+  required int winnerCount,
+}) {
+  if (stake <= 0 || playerCount < 2 || winnerCount < 1) return 0;
+  final pot = stake * playerCount;
+  return pot ~/ winnerCount;
+}
+
+/// Чистый плюс к доматчевому балансу (без возврата своей ставки).
+int stakeWinnerNetProfit({
+  required int stake,
+  required int playerCount,
+  required int winnerCount,
+}) {
+  final credit = stakeWinnerCredit(
+    stake: stake,
+    playerCount: playerCount,
+    winnerCount: winnerCount,
+  );
+  return (credit - stake).clamp(0, credit);
+}
+
+/// Числители долей банка дурака по местам (знаменатель = playerCount).
+/// 3: 2/3 + 1/3; 4: 2/4 + 1/4 + 1/4; 2: весь банк.
+List<int> durakPlaceShareNumerators(int playerCount) {
+  switch (playerCount) {
+    case 3:
+      return const [2, 1];
+    case 4:
+      return const [2, 1, 1];
+    default:
+      if (playerCount < 2) return const [];
+      return [playerCount];
+  }
+}
+
+/// Кредит с банка за место (place — 1-е, 2-е, …). Проигравший — 0.
+/// Если реальных мест меньше долей — остаток уходит 1-му месту.
+int durakPlaceCredit({
+  required int stake,
+  required int playerCount,
+  required int place,
+  required int placesFilled,
+}) {
+  if (stake <= 0 || playerCount < 2 || place < 1) return 0;
+  final nums = List<int>.from(durakPlaceShareNumerators(playerCount));
+  if (nums.isEmpty || place > placesFilled) return 0;
+  if (placesFilled < nums.length) {
+    var extra = 0;
+    for (var i = placesFilled; i < nums.length; i++) {
+      extra += nums[i];
+    }
+    nums.removeRange(placesFilled, nums.length);
+    nums[0] += extra;
+  }
+  if (place > nums.length) return 0;
+  final pot = stake * playerCount;
+  return pot * nums[place - 1] ~/ playerCount;
+}
+
+int durakPlaceNetProfit({
+  required int stake,
+  required int playerCount,
+  required int place,
+  required int placesFilled,
+}) {
+  final credit = durakPlaceCredit(
+    stake: stake,
+    playerCount: playerCount,
+    place: place,
+    placesFilled: placesFilled,
+  );
+  return (credit - stake).clamp(0, credit);
+}

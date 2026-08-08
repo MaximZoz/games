@@ -91,6 +91,68 @@ class AppLocalizationsId extends AppLocalizations {
   String get offlinePlayAgain => 'Main lagi';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Ambil';
+
+  @override
+  String get durakActionAll => 'Semua';
+
+  @override
+  String get durakActionDone => 'Selesai';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Bertahan';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Bertahan atau alihkan';
+
+  @override
+  String get durakHintOpponentDefends => 'Lawan bertahan';
+
+  @override
+  String get durakHintThrowInFirst => 'Buang kartu atau «Semua» (max 5 di beat pertama)';
+
+  @override
+  String get durakHintThrowIn => 'Buang kartu atau ketuk «Semua»';
+
+  @override
+  String get durakHintOpponentThrows => 'Lawan membuang';
+
+  @override
+  String get durakHintTakeFollow => 'Buang setelah ambil atau ketuk «Selesai»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Lawan bisa membuang setelah ambil';
+
+  @override
+  String get durakHintBito => 'Buang kartu atau katakan «Bito»';
+
+  @override
+  String get durakHintOpponentBito => 'Lawan membuang atau bilang «Bito»';
+
+  @override
+  String get durakHintYourAttack => 'Giliran Anda — serang';
+
+  @override
+  String get durakHintOpponentAttack => 'Lawan menyerang';
+
+  @override
+  String get durakHintYouLost => 'Anda kalah — Anda durak';
+
+  @override
+  String get durakHintDrawAllOut => 'Seri — semua keluar';
+
+  @override
+  String get durakHintYouFinished => 'Anda keluar — menunggu akhir';
+
+  @override
   String get shopPurchaseQueued => 'Pembelian disimpan — akan diterapkan di mode online';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Hadiah';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Versi $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Pembaruan tersedia';
+
+  @override
+  String get appUpdateBody => 'Versi baru aplikasi tersedia. Perbarui untuk melanjutkan.';
+
+  @override
+  String get appUpdateWhatsNew => 'Yang baru';
+
+  @override
+  String get appUpdateOk => 'Perbarui';
+
+  @override
+  String get appUpdateLaterBanner => 'Kami akan memperbarui aplikasi setelah game ini';
 
   @override
   String get loginTitle => 'Masuk';
@@ -443,7 +525,24 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
   String get gamesInDevelopment => 'Dalam pengembangan';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Pemain: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Setiap pemain mendapat 2 hole card; 5 community card di meja.';
+
+  @override
+  String get rulesPokerPlay => 'Ronde taruhan: preflop, flop, turn, dan river. Bisa fold, call, bet, atau raise.';
+
+  @override
+  String get rulesPokerWin => 'Menang dengan kombinasi lima kartu terbaik (hole + community), atau pemain terakhir setelah fold.';
 
   @override
   String get gamesRules => 'Aturan';
@@ -477,6 +576,77 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Tanpa mulai di tengah';
+
+  @override
+  String get gamesObservation => 'Menonton';
+
+  @override
+  String get gamesObservationHint => 'Anda bisa menonton hingga game berakhir';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Selesaikan game Anda terlebih dahulu';
+
+  @override
+  String get gamesVariantClassic => 'Klasik';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 pemain';
+
+  @override
+  String get gamesVariantMulti4 => '4 pemain';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Tambah';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Alih';
+
+  @override
+  String get gamesDurakDeck24 => '24 kartu';
+
+  @override
+  String get gamesDurakDeck36 => '36 kartu';
+
+  @override
+  String get gamesDurakDeck52 => '52 kartu';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Mode permainan: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Pemain: $players. Dek: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Main lawan bot, tanpa taruhan dan batas waktu.';
+
+  @override
+  String get rulesDurakAttack => 'Penyerang mengeluarkan kartu; bertahan mengalahkannya (warna sama lebih tinggi, atau truf). Truf hanya dikalahkan truf yang lebih tinggi.';
+
+  @override
+  String get rulesDurakBeat => 'Jika semua kartu dikalahkan, penyerang bilang «Bito» dan kartu ke buangan. Jika tidak, bertahan mengambil semua dari meja.';
+
+  @override
+  String get rulesDurakLoser => 'Yang kalah adalah yang masih punya kartu di akhir — «durak».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Pemain $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobby $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Lobi';
@@ -1769,4 +1939,81 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Ambil';
+
+  @override
+  String get durakActionPass => 'Pass';
+
+  @override
+  String get durakRoleTook => 'Ambil';
+
+  @override
+  String get durakRoleBeats => 'Mengalahkan';
+
+  @override
+  String get durakRoleThrowIn => 'Tambah';
+
+  @override
+  String get durakRoleTurn => 'Giliran';
+
+  @override
+  String get durakRoleDefends => 'Bertahan';
+
+  @override
+  String get durakStatusTaking => 'Mengambil';
+
+  @override
+  String get durakHintDefenderTurn => 'Giliran bertahan';
+
+  @override
+  String get gameYouEliminated => 'Anda tersingkir';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Anda finis ke-$place';
+  }
+
+  @override
+  String get gameOverNeutral => 'Permainan selesai';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Giliran $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Obrolan grup';
+
+  @override
+  String get lobbyChatNotReady => 'Obrolan lobi belum siap';
+
+  @override
+  String get chatsGroupChat => 'Obrolan grup';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Anggota: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count org';
+  }
+
+  @override
+  String get chatsYouSuffix => '(Anda)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 pemain';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 pemain';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: sembilan papan mini 3×3. Langkah mengirim lawan ke papan itu. Menang dengan garis di meta-papan.';
+
+  @override
+  String get rulesTttMulti3 => '3 pemain: papan 3×3, tiga pemain (X, O, △). Menang dengan menyelesaikan garis dari tanda Anda.';
+
+  @override
+  String get rulesTttMulti4 => '4 pemain: papan 4×4, empat pemain (X, O, △, □). Menang dengan menyelesaikan garis dari tanda Anda.';
 }

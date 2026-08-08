@@ -91,6 +91,68 @@ class AppLocalizationsHi extends AppLocalizations {
   String get offlinePlayAgain => 'फिर से';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'लो';
+
+  @override
+  String get durakActionAll => 'सभी';
+
+  @override
+  String get durakActionDone => 'पूर्ण';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'बचाव करें';
+
+  @override
+  String get durakHintDefendOrTransfer => 'बचाव करें या ट्रांसफर करें';
+
+  @override
+  String get durakHintOpponentDefends => 'प्रतिद्वंद्वी बचाव कर रहा है';
+
+  @override
+  String get durakHintThrowInFirst => 'कार्ड फेंकें या «सभी» (पहली बीट में अधिकतम 5)';
+
+  @override
+  String get durakHintThrowIn => 'कार्ड फेंकें या «सभी» दबाएँ';
+
+  @override
+  String get durakHintOpponentThrows => 'प्रतिद्वंद्वी फेंक रहा है';
+
+  @override
+  String get durakHintTakeFollow => 'लेने के बाद फेंकें या «पूर्ण» दबाएँ';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'प्रतिद्वंद्वी लेने के बाद फेंक सकता है';
+
+  @override
+  String get durakHintBito => 'कार्ड फेंकें या «बीटो» कहें';
+
+  @override
+  String get durakHintOpponentBito => 'प्रतिद्वंद्वी फेंकता है या «बीटो» कहता है';
+
+  @override
+  String get durakHintYourAttack => 'आपकी बारी — हमला करें';
+
+  @override
+  String get durakHintOpponentAttack => 'प्रतिद्वंद्वी हमला कर रहा है';
+
+  @override
+  String get durakHintYouLost => 'आप हारे — आप मूर्ख हैं';
+
+  @override
+  String get durakHintDrawAllOut => 'ड्रॉ — सभी बाहर';
+
+  @override
+  String get durakHintYouFinished => 'आप बाहर — अंत की प्रतीक्षा';
+
+  @override
   String get shopPurchaseQueued => 'खरीदारी सहेजी गई — ऑनलाइन मोड में लागू होगी';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'इनाम';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'संस्करण $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'अपडेट उपलब्ध';
+
+  @override
+  String get appUpdateBody => 'ऐप का नया संस्करण उपलब्ध है। जारी रखने के लिए अपडेट करें।';
+
+  @override
+  String get appUpdateWhatsNew => 'नया क्या है';
+
+  @override
+  String get appUpdateOk => 'अपडेट';
+
+  @override
+  String get appUpdateLaterBanner => 'इस गेम के बाद हम ऐप अपडेट करेंगे';
 
   @override
   String get loginTitle => 'साइन इन';
@@ -440,10 +522,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesTicTacToe => 'टिक-टैक-टो';
 
   @override
-  String get gamesDurak => 'डुरक';
+  String get gamesDurak => 'दुरक';
+
+  @override
+  String get gamesPoker => 'पोकर';
 
   @override
   String get gamesInDevelopment => 'विकास में';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'खिलाड़ी: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'टेक्सास होल्ड’एम। हर खिलाड़ी को 2 होल कार्ड मिलते हैं; टेबल पर 5 कम्युनिटी कार्ड आते हैं।';
+
+  @override
+  String get rulesPokerPlay => 'बेटिंग राउंड: प्रीफ्लॉप, फ्लॉप, टर्न और रिवर। फोल्ड, कॉल, बेट या रेज़ कर सकते हैं।';
+
+  @override
+  String get rulesPokerWin => 'सबसे अच्छा पाँच-पत्तों का हाथ (होल + कम्युनिटी) जीतता है, या फोल्ड के बाद बचा आखिरी खिलाड़ी।';
 
   @override
   String get gamesRules => 'नियम';
@@ -477,6 +576,77 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'केंद्र से शुरुआत नहीं';
+
+  @override
+  String get gamesObservation => 'देखना';
+
+  @override
+  String get gamesObservationHint => 'गेम के अंत तक देख सकते हैं';
+
+  @override
+  String get gamesFinishCurrentFirst => 'पहले अपना वर्तमान गेम पूरा करें';
+
+  @override
+  String get gamesVariantClassic => 'क्लासिक';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 खिलाड़ी';
+
+  @override
+  String get gamesVariantMulti4 => '4 खिलाड़ी';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'फेंक वाला';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'ट्रांसफर';
+
+  @override
+  String get gamesDurakDeck24 => '24 पत्ते';
+
+  @override
+  String get gamesDurakDeck36 => '36 पत्ते';
+
+  @override
+  String get gamesDurakDeck52 => '52 पत्ते';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'मोड: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'खिलाड़ी: $players. डेक: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'बॉट के खिलाफ खेलें, बिना दांव और समय सीमा के।';
+
+  @override
+  String get rulesDurakAttack => 'आक्रमणकारी पत्ते खेलता है; रक्षक उन्हें काटता है (उसी सूट का ऊँचा, या ट्रंप)। ट्रंप केवल ऊँचे ट्रंप से कटता है।';
+
+  @override
+  String get rulesDurakBeat => 'जब सभी पत्ते कट जाएँ, आक्रमणकारी «बीटो» कहता है और पत्ते डिसकार्ड में जाते हैं। वरना रक्षक मेज़ से सब ले लेता है।';
+
+  @override
+  String get rulesDurakLoser => 'हारने वाला वही है जिसके पास अंत में पत्ते रह जाएँ — «मूर्ख».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'खिलाड़ी $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobby $name';
+  }
 
   @override
   String get lobbyMatchmake => 'लॉबी';
@@ -1769,4 +1939,81 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get coinsClaim => 'प्राप्त करें';
+
+  @override
+  String get durakActionPass => 'पास';
+
+  @override
+  String get durakRoleTook => 'ले लिया';
+
+  @override
+  String get durakRoleBeats => 'काटता है';
+
+  @override
+  String get durakRoleThrowIn => 'फेंकना';
+
+  @override
+  String get durakRoleTurn => 'चाल';
+
+  @override
+  String get durakRoleDefends => 'बचाव';
+
+  @override
+  String get durakStatusTaking => 'ले रहा हूँ';
+
+  @override
+  String get durakHintDefenderTurn => 'रक्षक की बारी';
+
+  @override
+  String get gameYouEliminated => 'आप बाहर हो गए';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'आपका स्थान $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'खेल समाप्त';
+
+  @override
+  String gameTurnOf(String name) {
+    return '$name की बारी';
+  }
+
+  @override
+  String get chatGroupTooltip => 'समूह चैट';
+
+  @override
+  String get lobbyChatNotReady => 'लॉबी चैट अभी तैयार नहीं';
+
+  @override
+  String get chatsGroupChat => 'समूह चैट';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'सदस्य: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count लोग';
+  }
+
+  @override
+  String get chatsYouSuffix => '(आप)';
+
+  @override
+  String get chatTitleDurak3 => 'दुरक · 3 खिलाड़ी';
+
+  @override
+  String get chatTitleDurak4 => 'दुरक · 4 खिलाड़ी';
+
+  @override
+  String get rulesTttUltimate => 'अल्टीमेट: नौ 3×3 मिनी-बोर्ड। चाल विरोधी को उस मिनी-बोर्ड पर भेजती है। मेटा-बोर्ड पर रेखा पूरी करें।';
+
+  @override
+  String get rulesTttMulti3 => '3 खिलाड़ी: 3×3 बोर्ड, तीन खिलाड़ी (X, O, △)। अपनी चिह्नों की रेखा पूरी करें।';
+
+  @override
+  String get rulesTttMulti4 => '4 खिलाड़ी: 4×4 बोर्ड, चार खिलाड़ी (X, O, △, □)। अपनी चिह्नों की रेखा पूरी करें।';
 }

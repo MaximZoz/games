@@ -51,12 +51,16 @@ class LobbyGameNavigationWatcher extends ConsumerStatefulWidget {
     required this.child,
     this.pollInterval = lobbyGameRecoveryPollInterval,
     this.onRealtimeEvent,
+    this.gameType = 'tictactoe',
   });
 
   final String lobbyId;
   final Widget child;
   final Duration pollInterval;
   final ValueChanged<Map<String, dynamic>>? onRealtimeEvent;
+
+  /// Тип игры лобби. Используется для роутинга: `/games/<gameType>/game/...`.
+  final String gameType;
 
   @override
   ConsumerState<LobbyGameNavigationWatcher> createState() =>
@@ -77,12 +81,12 @@ class _LobbyGameNavigationWatcherState
       realtimeEventsProvider,
       (_, next) => next.whenData(_handleRealtimeEvent),
     );
-    _lobbySubscription = ref.listenManual(
+      _lobbySubscription = ref.listenManual(
       lobbyDetailProvider(widget.lobbyId),
       (_, next) {
         final lobby = next.valueOrNull;
         if (lobby?.id == widget.lobbyId) {
-          _navigate(lobby?.gameId);
+          _navigate(lobby?.gameId, gameType: widget.gameType);
         }
       },
       fireImmediately: true,
@@ -105,13 +109,13 @@ class _LobbyGameNavigationWatcherState
     }
     final router = GoRouter.of(context);
     final currentPath = router.routerDelegate.currentConfiguration.uri.path;
-    final gameId = realtimeGameIdForNavigation(
+    final nav = realtimeGameNavForEvent(
       event,
       currentPath: currentPath,
       expectedLobbyId: widget.lobbyId,
     );
-    if (gameId != null && gameId.isNotEmpty) {
-      _navigate(gameId);
+    if (nav != null && nav.gameId.isNotEmpty) {
+      _navigate(nav.gameId, gameType: nav.gameType);
       return;
     }
     // Если lobby_id в событии другой, но у нас уже есть active game — уйти сразу.
@@ -130,7 +134,7 @@ class _LobbyGameNavigationWatcherState
       ref.invalidate(lobbyGameRecoveryProvider(widget.lobbyId));
       final gameId =
           await ref.read(lobbyGameRecoveryProvider(widget.lobbyId).future);
-      if (mounted) _navigate(gameId);
+      if (mounted) _navigate(gameId, gameType: widget.gameType);
     } catch (_) {
       // A later poll retries transient lobby/active-game failures.
     } finally {
@@ -138,7 +142,7 @@ class _LobbyGameNavigationWatcherState
     }
   }
 
-  void _navigate(String? gameId) {
+  void _navigate(String? gameId, {String gameType = 'tictactoe'}) {
     if (!mounted || gameId == null || gameId.trim().isEmpty) return;
     final router = GoRouter.of(context);
     navigateToGame(
@@ -146,6 +150,7 @@ class _LobbyGameNavigationWatcherState
       ref.read(gameNavigationCoordinatorProvider),
       gameId,
       expectedLobbyId: widget.lobbyId,
+      gameType: gameType,
     );
   }
 

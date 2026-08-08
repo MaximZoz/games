@@ -162,8 +162,81 @@
   "gamesWaiting": "Menunggu",
   "gamesLobbyTab": "Lobi",
   "gamesTicTacToe": "XOX",
+  "appUpdateBody": "Versi baru aplikasi tersedia. Perbarui untuk melanjutkan.",
+  "appUpdateLaterBanner": "Kami akan memperbarui aplikasi setelah game ini",
+  "appUpdateOk": "Perbarui",
+  "appUpdateTitle": "Pembaruan tersedia",
+  "appUpdateWhatsNew": "Yang baru",
+  "durakActionAll": "Semua",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Selesai",
+  "durakActionTake": "Ambil",
+  "durakHintBito": "Buang kartu atau katakan «Bito»",
+  "durakHintDefend": "Bertahan",
+  "durakHintDefendOrTransfer": "Bertahan atau alihkan",
+  "durakHintDrawAllOut": "Seri — semua keluar",
+  "durakHintOpponentAttack": "Lawan menyerang",
+  "durakHintOpponentBito": "Lawan membuang atau bilang «Bito»",
+  "durakHintOpponentDefends": "Lawan bertahan",
+  "durakHintOpponentTakeFollow": "Lawan bisa membuang setelah ambil",
+  "durakHintOpponentThrows": "Lawan membuang",
+  "durakHintTakeFollow": "Buang setelah ambil atau ketuk «Selesai»",
+  "durakHintThrowIn": "Buang kartu atau ketuk «Semua»",
+  "durakHintThrowInFirst": "Buang kartu atau «Semua» (max 5 di beat pertama)",
+  "durakHintYouFinished": "Anda keluar — menunggu akhir",
+  "durakHintYouLost": "Anda kalah — Anda durak",
+  "durakHintYourAttack": "Giliran Anda — serang",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "Dalam pengembangan",
+  "rulesPokerPlayers": "Pemain: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Setiap pemain mendapat 2 hole card; 5 community card di meja.",
+  "rulesPokerPlay": "Ronde taruhan: preflop, flop, turn, dan river. Bisa fold, call, bet, atau raise.",
+  "rulesPokerWin": "Menang dengan kombinasi lima kartu terbaik (hole + community), atau pemain terakhir setelah fold.",
+  "gamesDurakDeck24": "24 kartu",
+  "gamesDurakDeck36": "36 kartu",
+  "gamesDurakDeck52": "52 kartu",
+  "gamesDurakModePerevodnoi": "Alih",
+  "gamesDurakModePodkidnoi": "Tambah",
+  "gamesFinishCurrentFirst": "Selesaikan game Anda terlebih dahulu",
+  "gamesObservation": "Menonton",
+  "gamesObservationHint": "Anda bisa menonton hingga game berakhir",
+  "gamesVariantClassic": "Klasik",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 pemain",
+  "gamesVariantMulti4": "4 pemain",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Pemain {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Penyerang mengeluarkan kartu; bertahan mengalahkannya (warna sama lebih tinggi, atau truf). Truf hanya dikalahkan truf yang lebih tinggi.",
+  "rulesDurakBeat": "Jika semua kartu dikalahkan, penyerang bilang «Bito» dan kartu ke buangan. Jika tidak, bertahan mengambil semua dari meja.",
+  "rulesDurakLoser": "Yang kalah adalah yang masih punya kartu di akhir — «durak».",
+  "rulesDurakMode": "Mode permainan: {mode}",
+  "rulesDurakOfflineBot": "Main lawan bot, tanpa taruhan dan batas waktu.",
+  "rulesDurakPlayersDeck": "Pemain: {players}. Dek: {deck}.",
+  "settingsAppVersion": "Versi {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Aturan",
   "gamesRulesTitle": "Aturan game",
   "gamesCreate": "Buat game",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Anda menerima {amount} koin",
   "coinsDeductedTitle": "{amount} koin dipotong",
   "coinsCreditCardTitle": "Anda menerima koin",
-  "coinsClaim": "Ambil"
+  "coinsClaim": "Ambil",
+  "durakActionPass": "Pass",
+  "durakRoleTook": "Ambil",
+  "durakRoleBeats": "Mengalahkan",
+  "durakRoleThrowIn": "Tambah",
+  "durakRoleTurn": "Giliran",
+  "durakRoleDefends": "Bertahan",
+  "durakStatusTaking": "Mengambil",
+  "durakHintDefenderTurn": "Giliran bertahan",
+  "gameYouEliminated": "Anda tersingkir",
+  "gameYouPlaced": "Anda finis ke-{place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Permainan selesai",
+  "gameTurnOf": "Giliran {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Obrolan grup",
+  "lobbyChatNotReady": "Obrolan lobi belum siap",
+  "chatsGroupChat": "Obrolan grup",
+  "chatsMembersCount": "Anggota: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} org",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(Anda)",
+  "chatTitleDurak3": "Durak · 3 pemain",
+  "chatTitleDurak4": "Durak · 4 pemain",
+  "rulesTttUltimate": "Ultimate: sembilan papan mini 3×3. Langkah mengirim lawan ke papan itu. Menang dengan garis di meta-papan.",
+  "rulesTttMulti3": "3 pemain: papan 3×3, tiga pemain (X, O, △). Menang dengan menyelesaikan garis dari tanda Anda.",
+  "rulesTttMulti4": "4 pemain: papan 4×4, empat pemain (X, O, △, □). Menang dengan menyelesaikan garis dari tanda Anda."
 }

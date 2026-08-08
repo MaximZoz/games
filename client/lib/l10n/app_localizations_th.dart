@@ -91,6 +91,68 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlinePlayAgain => 'อีกครั้ง';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'รับ';
+
+  @override
+  String get durakActionAll => 'ทั้งหมด';
+
+  @override
+  String get durakActionDone => 'เสร็จ';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'ป้องกัน';
+
+  @override
+  String get durakHintDefendOrTransfer => 'ป้องกันหรือส่งต่อ';
+
+  @override
+  String get durakHintOpponentDefends => 'คู่แข่งป้องกัน';
+
+  @override
+  String get durakHintThrowInFirst => 'ทิ้งการ์ดหรือ «ทั้งหมด» (สูงสุด 5 ในการป้องกันครั้งแรก)';
+
+  @override
+  String get durakHintThrowIn => 'ทิ้งการ์ดหรือกด «ทั้งหมด»';
+
+  @override
+  String get durakHintOpponentThrows => 'คู่แข่งทิ้งเพิ่ม';
+
+  @override
+  String get durakHintTakeFollow => 'ทิ้งเพิ่มหลังรับหรือกด «เสร็จ»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'คู่แข่งทิ้งเพิ่มหลังรับได้';
+
+  @override
+  String get durakHintBito => 'ทิ้งการ์ดหรือพูด «บิโต»';
+
+  @override
+  String get durakHintOpponentBito => 'คู่แข่งทิ้งเพิ่มหรือพูด «บิโต»';
+
+  @override
+  String get durakHintYourAttack => 'ตาคุณ — โจมตี';
+
+  @override
+  String get durakHintOpponentAttack => 'คู่แข่งโจมตี';
+
+  @override
+  String get durakHintYouLost => 'คุณแพ้ — คุณคือคนโง่';
+
+  @override
+  String get durakHintDrawAllOut => 'เสมอ — ทุกคนออก';
+
+  @override
+  String get durakHintYouFinished => 'คุณออกแล้ว — รอจบเกม';
+
+  @override
   String get shopPurchaseQueued => 'บันทึกการซื้อแล้ว — จะใช้ในโหมดออนไลน์';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'รางวัล';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'เวอร์ชัน $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'มีอัปเดต';
+
+  @override
+  String get appUpdateBody => 'มีเวอร์ชันใหม่ของแอป อัปเดตเพื่อดำเนินการต่อ';
+
+  @override
+  String get appUpdateWhatsNew => 'มีอะไรใหม่';
+
+  @override
+  String get appUpdateOk => 'อัปเดต';
+
+  @override
+  String get appUpdateLaterBanner => 'เราจะอัปเดตแอปหลังเกมนี้';
 
   @override
   String get loginTitle => 'เข้าสู่ระบบ';
@@ -443,7 +525,24 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesDurak => 'ดูรัก';
 
   @override
+  String get gamesPoker => 'โป๊กเกอร์';
+
+  @override
   String get gamesInDevelopment => 'กำลังพัฒนา';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'ผู้เล่น: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'เท็กซัสโฮลเด็ม ผู้เล่นได้ไพ่ส่วนตัว 2 ใบ และไพ่กลาง 5 ใบบนโต๊ะ';
+
+  @override
+  String get rulesPokerPlay => 'รอบเดิมพัน: พรีฟล็อป ฟล็อป เทิร์น และริเวอร์ โฟลด คอล เบท หรือเรสได้';
+
+  @override
+  String get rulesPokerWin => 'มือห้าใบที่ดีที่สุด (ส่วนตัว+กลาง) ชนะ หรือผู้ที่เหลือคนเดียวหลังโฟลด';
 
   @override
   String get gamesRules => 'กติกา';
@@ -477,6 +576,77 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'ห้ามเริ่มกลางกระดาน';
+
+  @override
+  String get gamesObservation => 'ดูอยู่';
+
+  @override
+  String get gamesObservationHint => 'ดูได้จนจบเกม';
+
+  @override
+  String get gamesFinishCurrentFirst => 'จบเกมปัจจุบันก่อน';
+
+  @override
+  String get gamesVariantClassic => 'คลาสสิก';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 คน';
+
+  @override
+  String get gamesVariantMulti4 => '4 คน';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'ทิ้งเพิ่ม';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'ส่งต่อ';
+
+  @override
+  String get gamesDurakDeck24 => '24 ใบ';
+
+  @override
+  String get gamesDurakDeck36 => '36 ใบ';
+
+  @override
+  String get gamesDurakDeck52 => '52 ใบ';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'ผู้เล่น: $players. สำรับ: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'เล่นกับบอท ไม่มีเดิมพันและไม่จำกัดเวลา';
+
+  @override
+  String get rulesDurakAttack => 'ฝ่ายรุกออกไพ่ ฝ่ายรับต้องทับ (ดอกเดียวกันที่สูงกว่า หรือไพ่ตาย) ไพ่ตายทับได้ด้วยไพ่ตายที่สูงกว่าเท่านั้น';
+
+  @override
+  String get rulesDurakBeat => 'เมื่อทับครบแล้วฝ่ายรุกพูด «บิโต» ไพ่ไปกองทิ้ง ไม่เช่นนั้นฝ่ายรับรับไพ่ทั้งหมดบนโต๊ะ';
+
+  @override
+  String get rulesDurakLoser => 'ผู้แพ้คือคนที่ยังมีไพ่ตอนจบ — «คนโง่»';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'ผู้เล่น $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'ล็อบบี้ $name';
+  }
 
   @override
   String get lobbyMatchmake => 'ล็อบบี้';
@@ -1769,4 +1939,81 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get coinsClaim => 'รับ';
+
+  @override
+  String get durakActionPass => 'ผ่าน';
+
+  @override
+  String get durakRoleTook => 'รับไป';
+
+  @override
+  String get durakRoleBeats => 'ป้องกัน';
+
+  @override
+  String get durakRoleThrowIn => 'ทิ้งเพิ่ม';
+
+  @override
+  String get durakRoleTurn => 'ตา';
+
+  @override
+  String get durakRoleDefends => 'กำลังป้องกัน';
+
+  @override
+  String get durakStatusTaking => 'กำลังรับ';
+
+  @override
+  String get durakHintDefenderTurn => 'ตาของผู้ป้องกัน';
+
+  @override
+  String get gameYouEliminated => 'คุณตกรอบแล้ว';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'คุณได้อันดับ $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'จบเกมแล้ว';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'ตาของ $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'แชทกลุ่ม';
+
+  @override
+  String get lobbyChatNotReady => 'แชทล็อบบี้ยังไม่พร้อม';
+
+  @override
+  String get chatsGroupChat => 'แชทกลุ่ม';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'สมาชิก: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count คน';
+  }
+
+  @override
+  String get chatsYouSuffix => '(คุณ)';
+
+  @override
+  String get chatTitleDurak3 => 'ดูรัก · 3 คน';
+
+  @override
+  String get chatTitleDurak4 => 'ดูรัก · 4 คน';
+
+  @override
+  String get rulesTttUltimate => 'อัลติเมต: มินิบอร์ด 3×3 จำนวนเก้าบอร์ด ตาเดินส่งคู่แข่งไปบอร์ดนั้น ชนะด้วยเส้นบนเมตาบอร์ด';
+
+  @override
+  String get rulesTttMulti3 => '3 คน: กระดาน 3×3 ผู้เล่นสามคน (X, O, △) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ';
+
+  @override
+  String get rulesTttMulti4 => '4 คน: กระดาน 4×4 ผู้เล่นสี่คน (X, O, △, □) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ';
 }

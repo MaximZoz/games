@@ -562,7 +562,7 @@ String balancePerDaySuffix([AppLocalizations? l10n]) {
   const marker = '\u0001';
   final sample = t.balancePerDay(marker);
   final i = sample.indexOf(marker);
-  if (i < 0) return '/день';
+  if (i < 0) return '/day';
   return sample.substring(i + marker.length);
 }
 

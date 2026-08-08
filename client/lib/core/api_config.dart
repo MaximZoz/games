@@ -2,6 +2,10 @@
 const String _apiBaseUrlRaw =
     String.fromEnvironment('API_BASE', defaultValue: 'http://localhost:8080');
 
+/// Короткий git sha / BUILD_ID, прошитый при сборке (`--dart-define=BUILD_ID=...`).
+const String appBuildId =
+    String.fromEnvironment('BUILD_ID', defaultValue: 'dev');
+
 /// Отправка клиентских логов на /api/logs/frontend (для отладки).
 /// По умолчанию отключено.
 const bool frontendApiLogsEnabled =

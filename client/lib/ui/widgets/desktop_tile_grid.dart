@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/responsive.dart';
 
-/// Центрированная сетка плиток для десктопа/планшета.
+/// Сетка плиток для десктопа/планшета — сверху, колонка/сетка по центру.
 ///
 /// На узких экранах ([isNarrow]) возвращает [mobileBuilder] без изменений.
 class DesktopTileGrid extends StatelessWidget {
@@ -55,6 +55,7 @@ class DesktopTileGrid extends StatelessWidget {
               child: Wrap(
                 spacing: gap,
                 runSpacing: gap,
+                // Полные ряды на всю ширину; неполный последний ряд — к центру.
                 alignment: WrapAlignment.center,
                 children: [
                   for (var i = 0; i < itemCount; i++)
@@ -72,7 +73,7 @@ class DesktopTileGrid extends StatelessWidget {
   }
 }
 
-/// Ограничивает ширину контента и центрирует его на широких экранах.
+/// Ограничивает ширину контента и держит его сверху по центру на широких экранах.
 class DesktopContentFrame extends StatelessWidget {
   const DesktopContentFrame({
     super.key,

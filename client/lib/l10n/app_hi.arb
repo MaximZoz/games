@@ -162,8 +162,81 @@
   "gamesWaiting": "प्रतीक्षा",
   "gamesLobbyTab": "लॉबी",
   "gamesTicTacToe": "टिक-टैक-टो",
-  "gamesDurak": "डुरक",
+  "appUpdateBody": "ऐप का नया संस्करण उपलब्ध है। जारी रखने के लिए अपडेट करें।",
+  "appUpdateLaterBanner": "इस गेम के बाद हम ऐप अपडेट करेंगे",
+  "appUpdateOk": "अपडेट",
+  "appUpdateTitle": "अपडेट उपलब्ध",
+  "appUpdateWhatsNew": "नया क्या है",
+  "durakActionAll": "सभी",
+  "durakActionBito": "Beat",
+  "durakActionDone": "पूर्ण",
+  "durakActionTake": "लो",
+  "durakHintBito": "कार्ड फेंकें या «बीटो» कहें",
+  "durakHintDefend": "बचाव करें",
+  "durakHintDefendOrTransfer": "बचाव करें या ट्रांसफर करें",
+  "durakHintDrawAllOut": "ड्रॉ — सभी बाहर",
+  "durakHintOpponentAttack": "प्रतिद्वंद्वी हमला कर रहा है",
+  "durakHintOpponentBito": "प्रतिद्वंद्वी फेंकता है या «बीटो» कहता है",
+  "durakHintOpponentDefends": "प्रतिद्वंद्वी बचाव कर रहा है",
+  "durakHintOpponentTakeFollow": "प्रतिद्वंद्वी लेने के बाद फेंक सकता है",
+  "durakHintOpponentThrows": "प्रतिद्वंद्वी फेंक रहा है",
+  "durakHintTakeFollow": "लेने के बाद फेंकें या «पूर्ण» दबाएँ",
+  "durakHintThrowIn": "कार्ड फेंकें या «सभी» दबाएँ",
+  "durakHintThrowInFirst": "कार्ड फेंकें या «सभी» (पहली बीट में अधिकतम 5)",
+  "durakHintYouFinished": "आप बाहर — अंत की प्रतीक्षा",
+  "durakHintYouLost": "आप हारे — आप मूर्ख हैं",
+  "durakHintYourAttack": "आपकी बारी — हमला करें",
+  "gamesDurak": "दुरक",
+  "gamesPoker": "पोकर",
   "gamesInDevelopment": "विकास में",
+  "rulesPokerPlayers": "खिलाड़ी: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "टेक्सास होल्ड’एम। हर खिलाड़ी को 2 होल कार्ड मिलते हैं; टेबल पर 5 कम्युनिटी कार्ड आते हैं।",
+  "rulesPokerPlay": "बेटिंग राउंड: प्रीफ्लॉप, फ्लॉप, टर्न और रिवर। फोल्ड, कॉल, बेट या रेज़ कर सकते हैं।",
+  "rulesPokerWin": "सबसे अच्छा पाँच-पत्तों का हाथ (होल + कम्युनिटी) जीतता है, या फोल्ड के बाद बचा आखिरी खिलाड़ी।",
+  "gamesDurakDeck24": "24 पत्ते",
+  "gamesDurakDeck36": "36 पत्ते",
+  "gamesDurakDeck52": "52 पत्ते",
+  "gamesDurakModePerevodnoi": "ट्रांसफर",
+  "gamesDurakModePodkidnoi": "फेंक वाला",
+  "gamesFinishCurrentFirst": "पहले अपना वर्तमान गेम पूरा करें",
+  "gamesObservation": "देखना",
+  "gamesObservationHint": "गेम के अंत तक देख सकते हैं",
+  "gamesVariantClassic": "क्लासिक",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 खिलाड़ी",
+  "gamesVariantMulti4": "4 खिलाड़ी",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "खिलाड़ी {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "आक्रमणकारी पत्ते खेलता है; रक्षक उन्हें काटता है (उसी सूट का ऊँचा, या ट्रंप)। ट्रंप केवल ऊँचे ट्रंप से कटता है।",
+  "rulesDurakBeat": "जब सभी पत्ते कट जाएँ, आक्रमणकारी «बीटो» कहता है और पत्ते डिसकार्ड में जाते हैं। वरना रक्षक मेज़ से सब ले लेता है।",
+  "rulesDurakLoser": "हारने वाला वही है जिसके पास अंत में पत्ते रह जाएँ — «मूर्ख».",
+  "rulesDurakMode": "मोड: {mode}",
+  "rulesDurakOfflineBot": "बॉट के खिलाफ खेलें, बिना दांव और समय सीमा के।",
+  "rulesDurakPlayersDeck": "खिलाड़ी: {players}. डेक: {deck}.",
+  "settingsAppVersion": "संस्करण {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "नियम",
   "gamesRulesTitle": "गेम के नियम",
   "gamesCreate": "गेम बनाएँ",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "आपको {amount} सिक्के जमा किए गए",
   "coinsDeductedTitle": "{amount} सिक्के काटे गए",
   "coinsCreditCardTitle": "आपको सिक्के जमा किए गए",
-  "coinsClaim": "प्राप्त करें"
+  "coinsClaim": "प्राप्त करें",
+  "durakActionPass": "पास",
+  "durakRoleTook": "ले लिया",
+  "durakRoleBeats": "काटता है",
+  "durakRoleThrowIn": "फेंकना",
+  "durakRoleTurn": "चाल",
+  "durakRoleDefends": "बचाव",
+  "durakStatusTaking": "ले रहा हूँ",
+  "durakHintDefenderTurn": "रक्षक की बारी",
+  "gameYouEliminated": "आप बाहर हो गए",
+  "gameYouPlaced": "आपका स्थान {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "खेल समाप्त",
+  "gameTurnOf": "{name} की बारी",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "समूह चैट",
+  "lobbyChatNotReady": "लॉबी चैट अभी तैयार नहीं",
+  "chatsGroupChat": "समूह चैट",
+  "chatsMembersCount": "सदस्य: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} लोग",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(आप)",
+  "chatTitleDurak3": "दुरक · 3 खिलाड़ी",
+  "chatTitleDurak4": "दुरक · 4 खिलाड़ी",
+  "rulesTttUltimate": "अल्टीमेट: नौ 3×3 मिनी-बोर्ड। चाल विरोधी को उस मिनी-बोर्ड पर भेजती है। मेटा-बोर्ड पर रेखा पूरी करें।",
+  "rulesTttMulti3": "3 खिलाड़ी: 3×3 बोर्ड, तीन खिलाड़ी (X, O, △)। अपनी चिह्नों की रेखा पूरी करें।",
+  "rulesTttMulti4": "4 खिलाड़ी: 4×4 बोर्ड, चार खिलाड़ी (X, O, △, □)। अपनी चिह्नों की रेखा पूरी करें।"
 }

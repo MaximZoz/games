@@ -91,6 +91,68 @@ class AppLocalizationsHe extends AppLocalizations {
   String get offlinePlayAgain => 'שוב';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'קח';
+
+  @override
+  String get durakActionAll => 'הכל';
+
+  @override
+  String get durakActionDone => 'סיום';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'הגן';
+
+  @override
+  String get durakHintDefendOrTransfer => 'הגן או העבר';
+
+  @override
+  String get durakHintOpponentDefends => 'היריב מתגונן';
+
+  @override
+  String get durakHintThrowInFirst => 'זרוק קלפים או «הכל» (עד 5 בביט הראשון)';
+
+  @override
+  String get durakHintThrowIn => 'זרוק קלפים או לחץ «הכל»';
+
+  @override
+  String get durakHintOpponentThrows => 'היריב זורק';
+
+  @override
+  String get durakHintTakeFollow => 'זרוק אחרי לקיחה או לחץ «סיום»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'היריב יכול לזרוק אחרי לקיחה';
+
+  @override
+  String get durakHintBito => 'זרוק קלף או אמור «ביטו»';
+
+  @override
+  String get durakHintOpponentBito => 'היריב זורק או אומר «ביטו»';
+
+  @override
+  String get durakHintYourAttack => 'תורך — תקוף';
+
+  @override
+  String get durakHintOpponentAttack => 'היריב תוקף';
+
+  @override
+  String get durakHintYouLost => 'הפסדת — אתה הטיפש';
+
+  @override
+  String get durakHintDrawAllOut => 'שוויון — כולם יצאו';
+
+  @override
+  String get durakHintYouFinished => 'יצאת — מחכים לסוף';
+
+  @override
   String get shopPurchaseQueued => 'הרכישה נשמרה — תוחל במצב אונליין';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'פרסים';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'גרסה $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'עדכון זמין';
+
+  @override
+  String get appUpdateBody => 'גרסה חדשה של האפליקציה זמינה. עדכן כדי להמשיך.';
+
+  @override
+  String get appUpdateWhatsNew => 'מה חדש';
+
+  @override
+  String get appUpdateOk => 'עדכן';
+
+  @override
+  String get appUpdateLaterBanner => 'נעדכן האפליקציה אחרי המשחק הזה';
 
   @override
   String get loginTitle => 'התחברות';
@@ -443,7 +525,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesDurak => 'דוראק';
 
   @override
+  String get gamesPoker => 'פוקר';
+
+  @override
   String get gamesInDevelopment => 'בפיתוח';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'שחקנים: $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'טקסס הולדם. לכל שחקן 2 קלפים פרטיים; על השולחן יוצאים 5 קלפים קהילתיים.';
+
+  @override
+  String get rulesPokerPlay => 'סבבי הימורים: פרה-פלופ, פלופ, טרן וריבר. אפשר לקפל, להשוות, להמר או להעלות.';
+
+  @override
+  String get rulesPokerWin => 'מנצחת היד הטובה ביותר מחמישה קלפים (פרטיים + קהילתיים), או השחקן האחרון אחרי קיפולים.';
 
   @override
   String get gamesRules => 'חוקים';
@@ -477,6 +576,77 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'ללא פתיחה במרכז';
+
+  @override
+  String get gamesObservation => 'צפייה';
+
+  @override
+  String get gamesObservationHint => 'אפשר לצפות עד סוף המשחק';
+
+  @override
+  String get gamesFinishCurrentFirst => 'סיים קודם המשחק הנוכחי';
+
+  @override
+  String get gamesVariantClassic => 'קלאסי';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 שחקנים';
+
+  @override
+  String get gamesVariantMulti4 => '4 שחקנים';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'הוספה';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'העברה';
+
+  @override
+  String get gamesDurakDeck24 => '24 קלפים';
+
+  @override
+  String get gamesDurakDeck36 => '36 קלפים';
+
+  @override
+  String get gamesDurakDeck52 => '52 קלפים';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'מצב: $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'שחקנים: $players. חפיסה: $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'שחקו נגד בוט, בלי הימורים ובלי מגבלת זמן.';
+
+  @override
+  String get rulesDurakAttack => 'התוקף מניח קלפים; המגן מכסה אותם (אותה סדרה גבוהה יותר, או קלף שליט). שליט מכוסה רק בשליט גבוה יותר.';
+
+  @override
+  String get rulesDurakBeat => 'כשכל הקלפים מכוסים, התוקף אומר «ביטו» והקלפים הולכים לערימת הפסילה. אחרת המגן לוקח הכול מהשולחן.';
+
+  @override
+  String get rulesDurakLoser => 'המפסיד הוא מי שנשאר עם קלפים בסוף — ה«טיפש».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'שחקנים $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Lobby $name';
+  }
 
   @override
   String get lobbyMatchmake => 'לובי';
@@ -1769,4 +1939,81 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get coinsClaim => 'לקבל';
+
+  @override
+  String get durakActionPass => 'פס';
+
+  @override
+  String get durakRoleTook => 'לוקח';
+
+  @override
+  String get durakRoleBeats => 'מכסה';
+
+  @override
+  String get durakRoleThrowIn => 'תוספת';
+
+  @override
+  String get durakRoleTurn => 'תור';
+
+  @override
+  String get durakRoleDefends => 'מתגונן';
+
+  @override
+  String get durakStatusTaking => 'לוקח';
+
+  @override
+  String get durakHintDefenderTurn => 'תור המגן';
+
+  @override
+  String get gameYouEliminated => 'הודחת';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'סיימת במקום $place';
+  }
+
+  @override
+  String get gameOverNeutral => 'המשחק נגמר';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'תור של $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'צ\'אט קבוצתי';
+
+  @override
+  String get lobbyChatNotReady => 'צ\'אט הלובי עדיין לא מוכן';
+
+  @override
+  String get chatsGroupChat => 'צ\'אט קבוצתי';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'משתתפים: $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count משת\'';
+  }
+
+  @override
+  String get chatsYouSuffix => '(את/ה)';
+
+  @override
+  String get chatTitleDurak3 => 'דוראק · 3 שחקנים';
+
+  @override
+  String get chatTitleDurak4 => 'דוראק · 4 שחקנים';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate: תשעה לוחות 3×3. מהלך שולח את היריב ללוח הזה. מנצחים עם שורה בלוח העל.';
+
+  @override
+  String get rulesTttMulti3 => '3 שחקנים: לוח 3×3, שלושה שחקנים (X, O, △). השלימו שורה בסימנים שלכם כדי לנצח.';
+
+  @override
+  String get rulesTttMulti4 => '4 שחקנים: לוח 4×4, ארבעה שחקנים (X, O, △, □). השלימו שורה בסימנים שלכם כדי לנצח.';
 }

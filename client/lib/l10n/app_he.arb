@@ -162,8 +162,81 @@
   "gamesWaiting": "ממתין",
   "gamesLobbyTab": "לובי",
   "gamesTicTacToe": "איקס־עיגול",
+  "appUpdateBody": "גרסה חדשה של האפליקציה זמינה. עדכן כדי להמשיך.",
+  "appUpdateLaterBanner": "נעדכן האפליקציה אחרי המשחק הזה",
+  "appUpdateOk": "עדכן",
+  "appUpdateTitle": "עדכון זמין",
+  "appUpdateWhatsNew": "מה חדש",
+  "durakActionAll": "הכל",
+  "durakActionBito": "Beat",
+  "durakActionDone": "סיום",
+  "durakActionTake": "קח",
+  "durakHintBito": "זרוק קלף או אמור «ביטו»",
+  "durakHintDefend": "הגן",
+  "durakHintDefendOrTransfer": "הגן או העבר",
+  "durakHintDrawAllOut": "שוויון — כולם יצאו",
+  "durakHintOpponentAttack": "היריב תוקף",
+  "durakHintOpponentBito": "היריב זורק או אומר «ביטו»",
+  "durakHintOpponentDefends": "היריב מתגונן",
+  "durakHintOpponentTakeFollow": "היריב יכול לזרוק אחרי לקיחה",
+  "durakHintOpponentThrows": "היריב זורק",
+  "durakHintTakeFollow": "זרוק אחרי לקיחה או לחץ «סיום»",
+  "durakHintThrowIn": "זרוק קלפים או לחץ «הכל»",
+  "durakHintThrowInFirst": "זרוק קלפים או «הכל» (עד 5 בביט הראשון)",
+  "durakHintYouFinished": "יצאת — מחכים לסוף",
+  "durakHintYouLost": "הפסדת — אתה הטיפש",
+  "durakHintYourAttack": "תורך — תקוף",
   "gamesDurak": "דוראק",
+  "gamesPoker": "פוקר",
   "gamesInDevelopment": "בפיתוח",
+  "rulesPokerPlayers": "שחקנים: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "טקסס הולדם. לכל שחקן 2 קלפים פרטיים; על השולחן יוצאים 5 קלפים קהילתיים.",
+  "rulesPokerPlay": "סבבי הימורים: פרה-פלופ, פלופ, טרן וריבר. אפשר לקפל, להשוות, להמר או להעלות.",
+  "rulesPokerWin": "מנצחת היד הטובה ביותר מחמישה קלפים (פרטיים + קהילתיים), או השחקן האחרון אחרי קיפולים.",
+  "gamesDurakDeck24": "24 קלפים",
+  "gamesDurakDeck36": "36 קלפים",
+  "gamesDurakDeck52": "52 קלפים",
+  "gamesDurakModePerevodnoi": "העברה",
+  "gamesDurakModePodkidnoi": "הוספה",
+  "gamesFinishCurrentFirst": "סיים קודם המשחק הנוכחי",
+  "gamesObservation": "צפייה",
+  "gamesObservationHint": "אפשר לצפות עד סוף המשחק",
+  "gamesVariantClassic": "קלאסי",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 שחקנים",
+  "gamesVariantMulti4": "4 שחקנים",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "שחקנים {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "התוקף מניח קלפים; המגן מכסה אותם (אותה סדרה גבוהה יותר, או קלף שליט). שליט מכוסה רק בשליט גבוה יותר.",
+  "rulesDurakBeat": "כשכל הקלפים מכוסים, התוקף אומר «ביטו» והקלפים הולכים לערימת הפסילה. אחרת המגן לוקח הכול מהשולחן.",
+  "rulesDurakLoser": "המפסיד הוא מי שנשאר עם קלפים בסוף — ה«טיפש».",
+  "rulesDurakMode": "מצב: {mode}",
+  "rulesDurakOfflineBot": "שחקו נגד בוט, בלי הימורים ובלי מגבלת זמן.",
+  "rulesDurakPlayersDeck": "שחקנים: {players}. חפיסה: {deck}.",
+  "settingsAppVersion": "גרסה {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "חוקים",
   "gamesRulesTitle": "חוקי המשחק",
   "gamesCreate": "יצירת משחק",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "זוכו לכם {amount} מטבעות",
   "coinsDeductedTitle": "נוכו {amount} מטבעות",
   "coinsCreditCardTitle": "זוכו לכם מטבעות",
-  "coinsClaim": "לקבל"
+  "coinsClaim": "לקבל",
+  "durakActionPass": "פס",
+  "durakRoleTook": "לוקח",
+  "durakRoleBeats": "מכסה",
+  "durakRoleThrowIn": "תוספת",
+  "durakRoleTurn": "תור",
+  "durakRoleDefends": "מתגונן",
+  "durakStatusTaking": "לוקח",
+  "durakHintDefenderTurn": "תור המגן",
+  "gameYouEliminated": "הודחת",
+  "gameYouPlaced": "סיימת במקום {place}",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "המשחק נגמר",
+  "gameTurnOf": "תור של {name}",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "צ'אט קבוצתי",
+  "lobbyChatNotReady": "צ'אט הלובי עדיין לא מוכן",
+  "chatsGroupChat": "צ'אט קבוצתי",
+  "chatsMembersCount": "משתתפים: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} משת'",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(את/ה)",
+  "chatTitleDurak3": "דוראק · 3 שחקנים",
+  "chatTitleDurak4": "דוראק · 4 שחקנים",
+  "rulesTttUltimate": "Ultimate: תשעה לוחות 3×3. מהלך שולח את היריב ללוח הזה. מנצחים עם שורה בלוח העל.",
+  "rulesTttMulti3": "3 שחקנים: לוח 3×3, שלושה שחקנים (X, O, △). השלימו שורה בסימנים שלכם כדי לנצח.",
+  "rulesTttMulti4": "4 שחקנים: לוח 4×4, ארבעה שחקנים (X, O, △, □). השלימו שורה בסימנים שלכם כדי לנצח."
 }

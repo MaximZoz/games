@@ -91,6 +91,68 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offlinePlayAgain => 'Encore';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Prendre';
+
+  @override
+  String get durakActionAll => 'Tout';
+
+  @override
+  String get durakActionDone => 'Terminé';
+
+  @override
+  String get durakActionBito => 'Battu';
+
+  @override
+  String get durakHintDefend => 'Défendez';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Défendez ou transférez';
+
+  @override
+  String get durakHintOpponentDefends => 'L\'adversaire défend';
+
+  @override
+  String get durakHintThrowInFirst => 'Ajoutez des cartes ou « Tout » (max 5 au premier battu)';
+
+  @override
+  String get durakHintThrowIn => 'Ajoutez des cartes ou touchez « Tout »';
+
+  @override
+  String get durakHintOpponentThrows => 'L\'adversaire ajoute';
+
+  @override
+  String get durakHintTakeFollow => 'Ajoutez après la prise ou touchez « Terminé »';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'L\'adversaire peut ajouter après la prise';
+
+  @override
+  String get durakHintBito => 'Ajoutez une carte ou dites « Battu »';
+
+  @override
+  String get durakHintOpponentBito => 'L\'adversaire ajoute ou dit « Battu »';
+
+  @override
+  String get durakHintYourAttack => 'Votre tour — attaquez';
+
+  @override
+  String get durakHintOpponentAttack => 'L\'adversaire attaque';
+
+  @override
+  String get durakHintYouLost => 'Vous avez perdu — vous êtes le durak';
+
+  @override
+  String get durakHintDrawAllOut => 'Égalité — tout le monde est sorti';
+
+  @override
+  String get durakHintYouFinished => 'Vous êtes sorti — en attente de la fin';
+
+  @override
   String get shopPurchaseQueued => 'Achat enregistré — sera appliqué en mode en ligne';
 
   @override
@@ -123,6 +185,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsPushRewards => 'Récompenses';
+
+  @override
+  String settingsAppVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get appUpdateTitle => 'Mise à jour disponible';
+
+  @override
+  String get appUpdateBody => 'Une nouvelle version de l\'application est disponible. Mettez à jour pour continuer.';
+
+  @override
+  String get appUpdateWhatsNew => 'Nouveautés';
+
+  @override
+  String get appUpdateOk => 'Mettre à jour';
+
+  @override
+  String get appUpdateLaterBanner => 'Nous mettrons l\'application à jour après cette partie';
 
   @override
   String get loginTitle => 'Connexion';
@@ -443,7 +525,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesPoker => 'Poker';
+
+  @override
   String get gamesInDevelopment => 'En développement';
+
+  @override
+  String rulesPokerPlayers(int players) {
+    return 'Joueurs : $players.';
+  }
+
+  @override
+  String get rulesPokerIntro => 'Texas Hold’em. Chaque joueur reçoit 2 cartes privées ; 5 cartes communes sont mises sur la table.';
+
+  @override
+  String get rulesPokerPlay => 'Tours de mise : préflop, flop, turn et river. Fold, call, bet ou raise.';
+
+  @override
+  String get rulesPokerWin => 'Gagne la meilleure main de cinq cartes (privées + communes), ou le dernier joueur après les folds.';
 
   @override
   String get gamesRules => 'Règles';
@@ -477,6 +576,77 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gamesNoCenter => 'Pas de départ au centre';
+
+  @override
+  String get gamesObservation => 'Spectateur';
+
+  @override
+  String get gamesObservationHint => 'Vous pouvez regarder jusqu\'à la fin de la partie';
+
+  @override
+  String get gamesFinishCurrentFirst => 'Terminez d\'abord votre partie en cours';
+
+  @override
+  String get gamesVariantClassic => 'Classique';
+
+  @override
+  String get gamesVariantGomoku => 'Gomoku';
+
+  @override
+  String get gamesVariantUltimate => 'Ultimate';
+
+  @override
+  String get gamesVariantMulti3 => '3 joueurs';
+
+  @override
+  String get gamesVariantMulti4 => '4 joueurs';
+
+  @override
+  String get gamesDurakModePodkidnoi => 'Relance';
+
+  @override
+  String get gamesDurakModePerevodnoi => 'Transfert';
+
+  @override
+  String get gamesDurakDeck24 => '24 cartes';
+
+  @override
+  String get gamesDurakDeck36 => '36 cartes';
+
+  @override
+  String get gamesDurakDeck52 => '52 cartes';
+
+  @override
+  String rulesDurakMode(String mode) {
+    return 'Mode : $mode';
+  }
+
+  @override
+  String rulesDurakPlayersDeck(int players, String deck) {
+    return 'Joueurs : $players. Jeu : $deck.';
+  }
+
+  @override
+  String get rulesDurakOfflineBot => 'Jouez contre un bot, sans mise ni limite de temps.';
+
+  @override
+  String get rulesDurakAttack => 'L\'attaquant pose des cartes ; le défenseur les bat (même couleur plus haute, ou un atout). Un atout ne se bat que par un atout plus haut.';
+
+  @override
+  String get rulesDurakBeat => 'Quand toutes les cartes sont battues, l\'attaquant dit « Battu » et les cartes vont au discard. Sinon le défenseur prend tout sur la table.';
+
+  @override
+  String get rulesDurakLoser => 'Le perdant est celui qui a encore des cartes à la fin — le « durak ».';
+
+  @override
+  String lobbyPlayersCount(int count, int maxPlayers) {
+    return 'Joueurs $count/$maxPlayers';
+  }
+
+  @override
+  String lobbyNamed(String name) {
+    return 'Salon $name';
+  }
 
   @override
   String get lobbyMatchmake => 'Salon';
@@ -1769,4 +1939,81 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get coinsClaim => 'Récupérer';
+
+  @override
+  String get durakActionPass => 'Passer';
+
+  @override
+  String get durakRoleTook => 'Prend';
+
+  @override
+  String get durakRoleBeats => 'Bat';
+
+  @override
+  String get durakRoleThrowIn => 'Renfort';
+
+  @override
+  String get durakRoleTurn => 'Tour';
+
+  @override
+  String get durakRoleDefends => 'Défend';
+
+  @override
+  String get durakStatusTaking => 'Prend';
+
+  @override
+  String get durakHintDefenderTurn => 'Tour du défenseur';
+
+  @override
+  String get gameYouEliminated => 'Vous êtes éliminé';
+
+  @override
+  String gameYouPlaced(int place) {
+    return 'Vous êtes ${place}e';
+  }
+
+  @override
+  String get gameOverNeutral => 'Partie terminée';
+
+  @override
+  String gameTurnOf(String name) {
+    return 'Tour de $name';
+  }
+
+  @override
+  String get chatGroupTooltip => 'Chat de groupe';
+
+  @override
+  String get lobbyChatNotReady => 'Le chat du lobby n’est pas encore prêt';
+
+  @override
+  String get chatsGroupChat => 'Chat de groupe';
+
+  @override
+  String chatsMembersCount(int count) {
+    return 'Membres : $count';
+  }
+
+  @override
+  String chatsMembersShort(int count) {
+    return '$count pers.';
+  }
+
+  @override
+  String get chatsYouSuffix => '(vous)';
+
+  @override
+  String get chatTitleDurak3 => 'Durak · 3 joueurs';
+
+  @override
+  String get chatTitleDurak4 => 'Durak · 4 joueurs';
+
+  @override
+  String get rulesTttUltimate => 'Ultimate : neuf mini-grilles 3×3. Un coup envoie l’adversaire sur cette mini-grille. Gagnez en alignant sur la méta-grille.';
+
+  @override
+  String get rulesTttMulti3 => '3 joueurs : grille 3×3, trois joueurs (X, O, △). Alignez vos symboles pour gagner.';
+
+  @override
+  String get rulesTttMulti4 => '4 joueurs : grille 4×4, quatre joueurs (X, O, △, □). Alignez vos symboles pour gagner.';
 }

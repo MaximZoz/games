@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -32,18 +33,19 @@ const List<int> gridSizeOptions = [3, 8, 9, 10, 15];
 const List<String> variantOptions = allGameVariants;
 
 String variantLabel(String variant) {
+  final l10n = LocaleService.l10n;
   switch (parseVariant(variant)) {
     case variantGomoku:
-      return 'Гомоку';
+      return l10n.gamesVariantGomoku;
     case variantUltimate:
-      return 'Ультимейт';
+      return l10n.gamesVariantUltimate;
     case variantMulti3:
-      return 'На троих';
+      return l10n.gamesVariantMulti3;
     case variantMulti4:
-      return 'На четверых';
+      return l10n.gamesVariantMulti4;
     case variantClassic:
     default:
-      return 'Классика';
+      return l10n.gamesVariantClassic;
   }
 }
 
@@ -54,7 +56,7 @@ int gridSizeForVariant(String variant) => configForVariant(variant).gridSize;
 int winLengthForVariant(String variant) => configForVariant(variant).winLength;
 
 /// Базовые ставки в бронзе (без покупки в магазине).
-const List<int> freeStakeOptions = [1, 10, 50];
+const List<int> freeStakeOptions = [2, 10, 50];
 
 /// Fallback, если capabilities ещё не загружены.
 const List<int> stakeOptions = freeStakeOptions;
@@ -68,7 +70,10 @@ class UserGameSettings {
     int? gridSize,
     this.swapRule = false,
     this.firstMoveRestriction = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
+    this.deckSize = 36,
+    this.maxPlayers = 2,
+    this.gameMode = 'podkidnoi',
   }) : gridSize = gridSize ??
             (variant == variantGomoku
                 ? 15
@@ -88,7 +93,29 @@ class UserGameSettings {
   final bool firstMoveRestriction;
   final int stakeBronze;
 
+  /// Дурак: размер колоды (24/36/52).
+  final int deckSize;
+
+  /// Дурак: число игроков (2–4).
+  final int maxPlayers;
+
+  /// Дурак: podkidnoi | perevodnoi.
+  final String gameMode;
+
   static const defaults = UserGameSettings();
+
+  static const durakDefaults = UserGameSettings(
+    gameType: 'durak',
+    turnTimeSec: 60,
+    variant: 'podkidnoi',
+    stakeBronze: 2,
+    deckSize: 36,
+    maxPlayers: 2,
+    gameMode: 'podkidnoi',
+  );
+
+  static UserGameSettings defaultsFor(String gameType) =>
+      gameType == 'durak' ? durakDefaults : defaults;
 
   UserGameSettings copyWith({
     String? gameType,
@@ -98,46 +125,86 @@ class UserGameSettings {
     bool? swapRule,
     bool? firstMoveRestriction,
     int? stakeBronze,
+    int? deckSize,
+    int? maxPlayers,
+    String? gameMode,
   }) {
     final nextVariant = variant ?? this.variant;
     return UserGameSettings(
       gameType: gameType ?? this.gameType,
       turnTimeSec: turnTimeSec ?? this.turnTimeSec,
       variant: nextVariant,
-      gridSize: gridSize ?? gridSizeForVariant(nextVariant),
+      gridSize: gridSize ??
+          (gameType == 'durak' || this.gameType == 'durak'
+              ? 3
+              : gridSizeForVariant(nextVariant)),
       swapRule: swapRule ?? this.swapRule,
       firstMoveRestriction: firstMoveRestriction ?? this.firstMoveRestriction,
       stakeBronze: stakeBronze ?? this.stakeBronze,
+      deckSize: deckSize ?? this.deckSize,
+      maxPlayers: maxPlayers ?? this.maxPlayers,
+      gameMode: gameMode ?? this.gameMode,
     );
   }
 
   factory UserGameSettings.fromJson(Map<String, dynamic> json) {
+    final gameType = json['game_type'] as String? ?? 'tictactoe';
     final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
     final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
-    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 1;
+    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 2;
+    final deck = (json['deck_size'] as num?)?.toInt() ?? 36;
+    final maxP = (json['max_players'] as num?)?.toInt() ?? 2;
+    final modeRaw = json['game_mode']?.toString().trim();
+    final gameMode =
+        (modeRaw == null || modeRaw.isEmpty) ? 'podkidnoi' : modeRaw;
+    if (gameType == 'durak') {
+      return UserGameSettings(
+        gameType: 'durak',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: gameMode,
+        gridSize: 3,
+        swapRule: false,
+        firstMoveRestriction: false,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: const {24, 36, 52}.contains(deck) ? deck : 36,
+        maxPlayers: maxP.clamp(2, 4),
+        gameMode: gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi',
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
         : parseVariant(rawVariant);
     return UserGameSettings(
-      gameType: json['game_type'] as String? ?? 'tictactoe',
+      gameType: gameType,
       turnTimeSec: turnTimeOptions.contains(turn) ? turn : 0,
       variant: variant,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
-      stakeBronze: stake < 1 ? 1 : stake,
+      stakeBronze: stake < 2 ? 2 : stake,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'game_type': gameType,
-        'turn_time_sec': turnTimeSec,
-        'variant': parseVariant(variant),
-        'grid_size': gridSize,
-        'swap_rule': swapRule,
-        'first_move_restriction': firstMoveRestriction,
-        'stake_bronze': stakeBronze,
-      };
+  Map<String, dynamic> toJson() {
+    final out = <String, dynamic>{
+      'game_type': gameType,
+      'turn_time_sec': turnTimeSec,
+      'stake_bronze': stakeBronze,
+      'swap_rule': false,
+      'first_move_restriction': false,
+    };
+    if (gameType == 'durak') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
+      out['deck_size'] = deckSize;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = gameMode;
+    } else {
+      out['variant'] = parseVariant(variant);
+      out['grid_size'] = gridSize;
+    }
+    return out;
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -149,7 +216,10 @@ class UserGameSettings {
           gridSize == other.gridSize &&
           swapRule == other.swapRule &&
           firstMoveRestriction == other.firstMoveRestriction &&
-          stakeBronze == other.stakeBronze;
+          stakeBronze == other.stakeBronze &&
+          deckSize == other.deckSize &&
+          maxPlayers == other.maxPlayers &&
+          gameMode == other.gameMode;
 
   @override
   int get hashCode => Object.hash(
@@ -160,6 +230,9 @@ class UserGameSettings {
         swapRule,
         firstMoveRestriction,
         stakeBronze,
+        deckSize,
+        maxPlayers,
+        gameMode,
       );
 }
 
@@ -214,7 +287,7 @@ String buildTictactoeRulesText({
   required int turnTimeSec,
   required bool swapRule,
   required bool firstMoveRestriction,
-  int stakeBronze = 1,
+  int stakeBronze = 2,
   bool includeTurnTime = true,
   bool offlineBot = false,
 }) {
@@ -222,7 +295,7 @@ String buildTictactoeRulesText({
   final cfg = configForVariant(variant);
   final resolvedGridSize = cfg.gridSize;
   final parts = <String>[
-    'Режим: ${variantLabel(cfg.variant)}',
+    l10n.rulesDurakMode(variantLabel(cfg.variant)),
     ..._variantRulesBody(cfg, l10n, resolvedGridSize),
   ];
   if (includeTurnTime) {
@@ -258,15 +331,7 @@ List<String> _variantRulesBody(
 ) {
   switch (cfg.variant) {
     case variantUltimate:
-      return const [
-        'Девять малых полей 3×3 объединены в одно большое. Ходят по очереди, X начинает.',
-        'Ход в клетку малого поля указывает, в какое малое поле обязан ходить соперник '
-            '(по той же позиции клетки: центр → центр, угол → угол и т.д.). '
-            'Если это поле уже выиграно или заполнено — соперник может выбрать любое открытое.',
-        'Малое поле выигрывает тот, кто собрал в нём 3 в ряд; при заполнении без победителя поле закрывается ничьей.',
-        'Победа в партии: выиграть три малых поля в ряд на большом поле '
-            '(горизонталь, вертикаль или диагональ).',
-      ];
+      return [l10n.rulesTttUltimate];
     case variantGomoku:
       return [
         l10n.rulesIntro(formatGridSize(resolvedGridSize)),
@@ -274,14 +339,12 @@ List<String> _variantRulesBody(
       ];
     case variantMulti3:
       return [
-        'Трое игроков на поле ${formatGridSize(resolvedGridSize)}. '
-            'Знаки: крестик (X), нолик (O) и треугольник. Ходят по кругу, X начинает.',
+        l10n.rulesTttMulti3,
         l10n.rulesWin(cfg.winLength),
       ];
     case variantMulti4:
       return [
-        'Четверо игроков на поле ${formatGridSize(resolvedGridSize)}. '
-            'Знаки: крестик (X), нолик (O), треугольник и квадрат. Ходят по кругу, X начинает.',
+        l10n.rulesTttMulti4,
         l10n.rulesWin(cfg.winLength),
       ];
     case variantClassic:
@@ -300,7 +363,7 @@ Widget buildTictactoeRulesTextWidget({
   required int turnTimeSec,
   required bool swapRule,
   required bool firstMoveRestriction,
-  int stakeBronze = 1,
+  int stakeBronze = 2,
   bool includeTurnTime = true,
   bool offlineBot = false,
   TextStyle? style,
@@ -421,6 +484,15 @@ class LobbyItem {
   final bool firstMoveRestriction;
   final int stakeBronze;
 
+  /// Тип игры лобби: 'tictactoe' | 'durak'.
+  final String gameType;
+
+  /// Durak: размер колоды и режим (подкидной/переводной).
+  final int deckSize;
+  final String gameMode;
+
+  bool get isDurak => gameType == 'durak';
+
   LobbyItem({
     required this.id,
     required this.creatorId,
@@ -440,7 +512,10 @@ class LobbyItem {
     this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
+    this.gameType = 'tictactoe',
+    this.deckSize = 36,
+    this.gameMode = 'podkidnoi',
   })  : gridSize = gridSize ?? gridSizeForVariant(variant),
         maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
         players = players ?? const [],
@@ -478,7 +553,14 @@ class LobbyItem {
       chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
+      deckSize: (json['deck_size'] as num?)?.toInt() ?? 36,
+      gameMode: (json['game_mode'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_mode'] as String).trim()
+          : 'podkidnoi',
     );
   }
 
@@ -590,7 +672,7 @@ class GameStateItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.canSwap = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
     this.xDisplayName,
     this.oDisplayName,
     this.xAvatarKind = 'letter',
@@ -747,7 +829,7 @@ class GameStateItem {
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       xDisplayName: () {
         final raw = json['x_display_name'] as String?;
         if (raw == null || raw.trim().isEmpty) return null;
@@ -928,11 +1010,16 @@ class ActiveGameItem {
   final String? lobbyId;
   final bool isMyTurn;
 
+  /// Тип игры: 'tictactoe' | 'durak'. От него зависит роутинг обратно
+  /// в лобби/партию. Default 'tictactoe' сохраняет обратную совместимость.
+  final String gameType;
+
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
+    this.gameType = 'tictactoe',
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -941,6 +1028,9 @@ class ActiveGameItem {
       gameId: json['game_id'] as String?,
       lobbyId: json['lobby_id'] as String?,
       isMyTurn: json['is_my_turn'] as bool? ?? false,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
     );
   }
 }
@@ -950,12 +1040,22 @@ class ObservationItem {
   final String gameId;
   final String? lobbyId;
 
-  const ObservationItem({required this.gameId, this.lobbyId});
+  /// Тип игры для роутинга карточки «Наблюдение».
+  final String gameType;
+
+  const ObservationItem({
+    required this.gameId,
+    this.lobbyId,
+    this.gameType = 'tictactoe',
+  });
 
   factory ObservationItem.fromJson(Map<String, dynamic> json) {
     return ObservationItem(
       gameId: json['game_id'] as String? ?? '',
       lobbyId: json['lobby_id'] as String?,
+      gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['game_type'] as String).trim()
+          : 'tictactoe',
     );
   }
 }
@@ -970,8 +1070,10 @@ class ActiveSessionResult {
   factory ActiveSessionResult.fromJson(Map<String, dynamic> json) {
     ObservationItem? obs;
     final rawObs = json['observation'];
-    if (rawObs is Map<String, dynamic>) {
-      final item = ObservationItem.fromJson(rawObs);
+    if (rawObs is Map) {
+      final item = ObservationItem.fromJson(
+        Map<String, dynamic>.from(rawObs),
+      );
       if (item.gameId.trim().isNotEmpty) obs = item;
     }
     final type = json['type']?.toString();
@@ -1316,6 +1418,16 @@ class GamesRepository {
     if (response.statusCode == 404 && message.trim().isEmpty) {
       throw GamesException(404, l10n.commonNotFound, errorKey: errorKey);
     }
+    final keyLower = errorKey.toLowerCase();
+    final msgLower = message.toLowerCase();
+    if (keyLower.contains('temporarily unavailable') ||
+        msgLower.contains('temporarily unavailable')) {
+      throw GamesException(
+        response.statusCode == 0 ? 503 : response.statusCode,
+        l10n.commonTryLater,
+        errorKey: errorKey.isEmpty ? 'temporarily unavailable' : errorKey,
+      );
+    }
     if (response.statusCode == 503 && message.trim().isEmpty) {
       throw GamesException(503, l10n.errGamesUnavailable, errorKey: errorKey);
     }
@@ -1352,13 +1464,13 @@ class GamesRepository {
     int gridSize = 3,
     bool swapRule = false,
     bool firstMoveRestriction = false,
-    int stakeBronze = 1,
+    int stakeBronze = 2,
     bool addBotsAfter30s = false,
   }) async {
     final parsedVariant = parseVariant(variant);
     final body = <String, dynamic>{
       'mode': mode,
-      'stake_bronze': stakeBronze.clamp(1, 999999),
+      'stake_bronze': stakeBronze.clamp(2, 999999),
       'turn_time_sec': turnTimeSec,
       'variant': parsedVariant,
       'grid_size': gridSizeForVariant(parsedVariant),
@@ -1436,6 +1548,24 @@ class GamesRepository {
     }
   }
 
+  Future<void> cancelLobbyInvite(String lobbyId, String friendUserId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse(
+            '$apiBaseUrl/api/games/tictactoe/lobby/$lobbyId/cancel-invite'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'friend_user_id': friendUserId}),
+        operation: 'GamesRepository.cancelLobbyInvite',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
   Future<JoinLobbyResult> joinLobby(String lobbyId) async {
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
@@ -1486,6 +1616,13 @@ class GamesRepository {
   }
 
   Future<GameStateItem> getGame(String gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.view;
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId'),
@@ -1525,6 +1662,14 @@ class GamesRepository {
   }
 
   Future<void> forfeitGame(String gameId) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      await session.forfeit();
+      return;
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/forfeit'),
@@ -1595,6 +1740,13 @@ class GamesRepository {
   }
 
   Future<GameStateItem> makeMove(String gameId, int cell) async {
+    if (OfflineTttRegistry.instance.isOffline(gameId)) {
+      final session = OfflineTttRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.makeMove(cell);
+    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/game/$gameId/move'),
@@ -1650,6 +1802,30 @@ class GamesRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return UserGameSettings.fromJson(body);
+  }
+
+  /// GET /api/games/invites — активные приглашения (после reconnect).
+  Future<List<Map<String, dynamic>>> listPendingInvites() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/games/invites'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.listPendingInvites',
+      ),
+    );
+    if (response.statusCode == 204 || response.statusCode == 404) {
+      return const [];
+    }
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['invites'] as List<dynamic>? ?? [];
+    return list
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .where((m) => (m['lobby_id']?.toString() ?? '').isNotEmpty)
+        .toList();
   }
 
   /// GET /api/games/stats — статистика (W/D/L, win-rate, время, топ соперников).

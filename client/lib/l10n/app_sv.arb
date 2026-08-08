@@ -162,8 +162,81 @@
   "gamesWaiting": "Väntar",
   "gamesLobbyTab": "Lobby",
   "gamesTicTacToe": "Luffarschack",
+  "appUpdateBody": "En ny version av appen finns. Uppdatera för att fortsätta.",
+  "appUpdateLaterBanner": "Vi uppdaterar appen efter detta spel",
+  "appUpdateOk": "Uppdatera",
+  "appUpdateTitle": "Uppdatering tillgänglig",
+  "appUpdateWhatsNew": "Nyheter",
+  "durakActionAll": "Alla",
+  "durakActionBito": "Beat",
+  "durakActionDone": "Klart",
+  "durakActionTake": "Ta",
+  "durakHintBito": "Lägg ett kort eller säg «Bito»",
+  "durakHintDefend": "Försvara",
+  "durakHintDefendOrTransfer": "Försvara eller överför",
+  "durakHintDrawAllOut": "Oavgjort — alla är ute",
+  "durakHintOpponentAttack": "Motståndaren attackerar",
+  "durakHintOpponentBito": "Motståndaren lägger på eller säger «Bito»",
+  "durakHintOpponentDefends": "Motståndaren försvarar",
+  "durakHintOpponentTakeFollow": "Motståndaren kan lägga på efter ta",
+  "durakHintOpponentThrows": "Motståndaren lägger på",
+  "durakHintTakeFollow": "Lägg på efter ta eller tryck «Klart»",
+  "durakHintThrowIn": "Lägg kort eller tryck «Alla»",
+  "durakHintThrowInFirst": "Lägg kort eller «Alla» (max 5 i första slaget)",
+  "durakHintYouFinished": "Du är ute — väntar på slutet",
+  "durakHintYouLost": "Du förlorade — du är dåren",
+  "durakHintYourAttack": "Din tur — attackera",
   "gamesDurak": "Durak",
+  "gamesPoker": "Poker",
   "gamesInDevelopment": "Under utveckling",
+  "rulesPokerPlayers": "Spelare: {players}.",
+  "@rulesPokerPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesPokerIntro": "Texas Hold’em. Varje spelare får 2 hålkort; 5 gemensamma kort läggs på bordet.",
+  "rulesPokerPlay": "Insatserundor: preflop, flop, turn och river. Fold, call, bet eller raise.",
+  "rulesPokerWin": "Bästa femkorts-handen (hål + gemensamma) vinner, eller den siste efter folds.",
+  "gamesDurakDeck24": "24 kort",
+  "gamesDurakDeck36": "36 kort",
+  "gamesDurakDeck52": "52 kort",
+  "gamesDurakModePerevodnoi": "Överföring",
+  "gamesDurakModePodkidnoi": "Pålägg",
+  "gamesFinishCurrentFirst": "Slutför ditt nuvarande spel först",
+  "gamesObservation": "Tittar",
+  "gamesObservationHint": "Du kan titta tills spelet slutar",
+  "gamesVariantClassic": "Klassisk",
+  "gamesVariantGomoku": "Gomoku",
+  "gamesVariantMulti3": "3 spelare",
+  "gamesVariantMulti4": "4 spelare",
+  "gamesVariantUltimate": "Ultimate",
+  "lobbyNamed": "Lobby {name}",
+  "lobbyPlayersCount": "Spelare {count}/{maxPlayers}",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesDurakAttack": "Anfallaren lägger kort; försvararen slår dem (samma färg högre, eller trumf). Trumf slås bara av högre trumf.",
+  "rulesDurakBeat": "När alla kort är slagna säger anfallaren «Bito» och korten går till högen. Annars tar försvararen allt från bordet.",
+  "rulesDurakLoser": "Förloraren är den som har kort kvar i slutet — «dåren».",
+  "rulesDurakMode": "Läge: {mode}",
+  "rulesDurakOfflineBot": "Spela mot en bot, utan insatser eller tid.",
+  "rulesDurakPlayersDeck": "Spelare: {players}. Kortlek: {deck}.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "gamesRules": "Regler",
   "gamesRulesTitle": "Spelregler",
   "gamesCreate": "Skapa spel",
@@ -1023,5 +1096,56 @@
   "coinsGrantedTitle": "Du har fått {amount} mynt",
   "coinsDeductedTitle": "{amount} mynt drogs av",
   "coinsCreditCardTitle": "Du har fått mynt",
-  "coinsClaim": "Hämta"
+  "coinsClaim": "Hämta",
+  "durakActionPass": "Passa",
+  "durakRoleTook": "Tar",
+  "durakRoleBeats": "Slår",
+  "durakRoleThrowIn": "Pålägg",
+  "durakRoleTurn": "Tur",
+  "durakRoleDefends": "Försvarar",
+  "durakStatusTaking": "Tar",
+  "durakHintDefenderTurn": "Försvararens tur",
+  "gameYouEliminated": "Du är ute",
+  "gameYouPlaced": "Du kom {place}:a",
+  "@gameYouPlaced": {
+    "placeholders": {
+      "place": {
+        "type": "int"
+      }
+    }
+  },
+  "gameOverNeutral": "Matchen är slut",
+  "gameTurnOf": "{name}s tur",
+  "@gameTurnOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGroupTooltip": "Gruppchatt",
+  "lobbyChatNotReady": "Lobbychatten är inte redo än",
+  "chatsGroupChat": "Gruppchatt",
+  "chatsMembersCount": "Medlemmar: {count}",
+  "@chatsMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMembersShort": "{count} pers.",
+  "@chatsMembersShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsYouSuffix": "(du)",
+  "chatTitleDurak3": "Durak · 3 spelare",
+  "chatTitleDurak4": "Durak · 4 spelare",
+  "rulesTttUltimate": "Ultimate: nio 3×3-minibräden. Ett drag skickar motståndaren till det minibrädet. Vinn med en linje på metabrädet.",
+  "rulesTttMulti3": "3 spelare: 3×3-bräde, tre spelare (X, O, △). Gör en linje med dina tecken för att vinna.",
+  "rulesTttMulti4": "4 spelare: 4×4-bräde, fyra spelare (X, O, △, □). Gör en linje med dina tecken för att vinna."
 }

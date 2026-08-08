@@ -1,30 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 /// Сообщение, когда нельзя войти в другую игру/лобби.
-const finishCurrentGameMessage = 'Сначала завершите текущую игру';
+String get finishCurrentGameMessage =>
+    LocaleService.l10n.gamesFinishCurrentFirst;
 
 /// Канонический ключ ошибки сервера (поле JSON `error`).
 const finishCurrentGameErrorKey = 'finish your current game first';
 
 /// Локальный пин живой партии: не сбрасывается при invalidate activeGameProvider.
 /// Нужен, когда из чата жмут инвайт, а GetActive ещё/уже пуст.
-final blockingGamePinProvider = StateProvider<String?>((ref) => null);
+class BlockingGamePin {
+  const BlockingGamePin({
+    required this.gameId,
+    this.gameType = 'tictactoe',
+  });
 
-void pinBlockingGame(WidgetRef ref, String? gameId) {
+  final String gameId;
+  final String gameType;
+}
+
+final blockingGamePinProvider = StateProvider<BlockingGamePin?>((ref) => null);
+
+void pinBlockingGame(
+  WidgetRef ref,
+  String? gameId, {
+  String gameType = 'tictactoe',
+}) {
   final id = gameId?.trim() ?? '';
-  ref.read(blockingGamePinProvider.notifier).state = id.isEmpty ? null : id;
+  ref.read(blockingGamePinProvider.notifier).state = id.isEmpty
+      ? null
+      : BlockingGamePin(
+          gameId: id,
+          gameType: normalizeGameType(gameType),
+        );
 }
 
 void clearBlockingGamePin(WidgetRef ref, {String? ifGameId}) {
-  final cur = ref.read(blockingGamePinProvider)?.trim() ?? '';
-  if (cur.isEmpty) return;
+  final cur = ref.read(blockingGamePinProvider);
+  if (cur == null) return;
   final only = ifGameId?.trim() ?? '';
-  if (only.isNotEmpty && cur != only) return;
+  if (only.isNotEmpty && cur.gameId != only) return;
   ref.read(blockingGamePinProvider.notifier).state = null;
 }
 
@@ -66,23 +88,18 @@ bool isBusyWithOtherSession(
 
 void goToActiveSession(BuildContext context, ActiveGameItem active) {
   if (!context.mounted) return;
+  final gt = normalizeGameType(active.gameType);
   if (hasActiveMatch(active)) {
-    context.go('/games/tictactoe/game/${active.gameId!.trim()}');
+    context.go(gamePathFor(active.gameId!.trim(), gameType: gt));
     return;
   }
   if (hasActiveLobby(active)) {
-    context.go('/games/tictactoe/lobby/${active.lobbyId!.trim()}?mode=invite');
+    context.go('${lobbyPathFor(active.lobbyId!.trim(), gameType: gt)}?mode=invite');
   }
 }
 
-/// gameId из пути `/games/tictactoe/game/:id`.
-String? gameIdFromLocation(String? location) {
-  final path = (location ?? '').split('?').first.trim();
-  const prefix = '/games/tictactoe/game/';
-  if (!path.startsWith(prefix)) return null;
-  final id = path.substring(prefix.length).split('/').first.trim();
-  return id.isEmpty ? null : id;
-}
+/// gameId из пути `/games/<type>/game/:id` (tictactoe / durak).
+String? gameIdFromLocation(String? location) => gameIdFromGamePath(location);
 
 /// Активная сессия для гарда: пин + кэш + путь партии + `?game=` из чата.
 /// Observation не считается блокирующей.
@@ -92,9 +109,13 @@ ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   if (hasBlockingActiveMatch(fromProvider) || hasActiveLobby(fromProvider)) {
     return fromProvider;
   }
-  final pinned = ref.read(blockingGamePinProvider)?.trim() ?? '';
-  if (pinned.isNotEmpty) {
-    return ActiveGameItem(type: 'game', gameId: pinned);
+  final pinned = ref.read(blockingGamePinProvider);
+  if (pinned != null && pinned.gameId.isNotEmpty) {
+    return ActiveGameItem(
+      type: 'game',
+      gameId: pinned.gameId,
+      gameType: normalizeGameType(pinned.gameType),
+    );
   }
   Uri uri;
   try {
@@ -102,7 +123,7 @@ ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
   } catch (_) {
     return fromProvider;
   }
-  // Экран партии ИЛИ чат, открытый из партии (`?game=/games/tictactoe/game/...`).
+  // Экран партии ИЛИ чат, открытый из партии (`?game=/games/.../game/...`).
   final pathGameId = gameIdFromLocation(uri.toString()) ??
       gameIdFromLocation(uri.queryParameters['game']);
   if (pathGameId != null) {
@@ -113,11 +134,15 @@ ActiveGameItem? resolveActiveForGuard(WidgetRef ref, BuildContext context) {
     }
     final same =
         fromProvider?.type == 'game' && fromProvider?.gameId == pathGameId;
+    final pathType = gameTypeFromGamePath(uri.toString()) ??
+        gameTypeFromGamePath(uri.queryParameters['game']) ??
+        (same ? fromProvider!.gameType : 'tictactoe');
     return ActiveGameItem(
       type: 'game',
       gameId: pathGameId,
       lobbyId: fromProvider?.lobbyId,
       isMyTurn: same ? (fromProvider?.isMyTurn ?? false) : false,
+      gameType: normalizeGameType(pathType),
     );
   }
   return fromProvider;
@@ -164,6 +189,10 @@ bool blockJoinIfBusy(
 }
 
 /// Асинхронный вариант: сверить с GetActive (протухший пин после конца партии).
+///
+/// После refresh источник истины — сервер. Нельзя блокировать/редиректить
+/// по URL экрана оконченной партии (`/game/:oldId` или `?game=`): иначе
+/// accept инвайта в новое лобби уводит обратно в старую игру.
 Future<bool> blockJoinIfBusyAsync(
   BuildContext context,
   WidgetRef ref, {
@@ -179,8 +208,12 @@ Future<bool> blockJoinIfBusyAsync(
   final fresh = ref.read(activeGameProvider).valueOrNull;
   if (!hasBlockingActiveMatch(fresh) && !hasActiveLobby(fresh)) {
     clearBlockingGamePin(ref);
+    return false;
   }
-  final active = resolveActiveForGuard(ref, context);
+  // Только серверная сессия (и пин, если сервер ещё держит active).
+  final active = hasBlockingActiveMatch(fresh) || hasActiveLobby(fresh)
+      ? fresh
+      : resolveActiveForGuard(ref, context);
   if (!isBusyWithOtherSession(
     active,
     targetLobbyId: targetLobbyId,

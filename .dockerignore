@@ -8,6 +8,7 @@
 .idea
 *.md
 !README.md
+!WHAT_NEW.md
 
 # =========================
 # Local env

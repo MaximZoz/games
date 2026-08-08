@@ -60,11 +60,14 @@ void main() {
       '/games/tictactoe/game/game-1',
     );
 
-    final eventGameId = realtimeGameIdForNavigation(
+    final eventNav = realtimeGameNavForEvent(
       const {'type': 'game_started', 'game_id': 'game-1'},
       currentPath: '/games',
     );
-    expect(navigateToGame(router, coordinator, eventGameId), isFalse);
+    expect(
+      navigateToGame(router, coordinator, eventNav?.gameId),
+      isFalse,
+    );
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
       '/games/tictactoe/game/game-1',
@@ -90,12 +93,12 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
-    final gameId = realtimeGameIdForNavigation(
+    final nav = realtimeGameNavForEvent(
       const {'type': 'lobby_updated', 'game_id': 'game-2'},
       currentPath: router.routerDelegate.currentConfiguration.uri.path,
     );
     expect(
-      navigateToGame(router, GameNavigationCoordinator(), gameId),
+      navigateToGame(router, GameNavigationCoordinator(), nav?.gameId),
       isTrue,
     );
     await tester.pumpAndSettle();
@@ -106,42 +109,42 @@ void main() {
     );
   });
 
-  group('realtimeGameIdForNavigation', () {
+  group('realtimeGameNavForEvent', () {
     test('accepts game_started and lobby_updated with a game id', () {
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {'type': 'game_started', 'game_id': 'game-1'},
           currentPath: '/games',
-        ),
+        )?.gameId,
         'game-1',
       );
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {
             'type': 'lobby_updated',
             'lobby_id': 'lobby-1',
             'game_id': 'game-2',
           },
           currentPath: '/games/tictactoe/lobby/lobby-1',
-        ),
+        )?.gameId,
         'game-2',
       );
     });
 
     test('navigates from chats/friends when a game starts', () {
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {
             'type': 'game_started',
             'lobby_id': 'lobby-1',
             'game_id': 'game-1',
           },
           currentPath: '/chats',
-        ),
+        )?.gameId,
         'game-1',
       );
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {
             'type': 'lobby_updated',
             'lobby_id': 'lobby-1',
@@ -149,21 +152,21 @@ void main() {
           },
           currentPath: '/friends',
           expectedLobbyId: 'lobby-1',
-        ),
+        )?.gameId,
         'game-2',
       );
     });
 
     test('ignores auth routes and lobby updates without a game', () {
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {'type': 'game_started', 'game_id': 'game-1'},
           currentPath: '/login',
         ),
         isNull,
       );
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {'type': 'lobby_updated', 'left': true},
           currentPath: '/games',
         ),
@@ -173,7 +176,7 @@ void main() {
 
     test('ignores an event for a different lobby', () {
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {
             'type': 'game_started',
             'lobby_id': 'lobby-2',
@@ -185,7 +188,7 @@ void main() {
         isNull,
       );
       expect(
-        realtimeGameIdForNavigation(
+        realtimeGameNavForEvent(
           const {
             'type': 'game_started',
             'lobby_id': 'lobby-2',
@@ -195,6 +198,20 @@ void main() {
           expectedLobbyId: 'lobby-1',
         ),
         isNull,
+      );
+    });
+
+    test('keeps game_type from event when present', () {
+      expect(
+        realtimeGameNavForEvent(
+          const {
+            'type': 'game_started',
+            'game_id': 'game-1',
+            'game_type': 'durak',
+          },
+          currentPath: '/games',
+        )?.gameType,
+        'durak',
       );
     });
   });

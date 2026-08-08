@@ -13,7 +13,6 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
-import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -189,30 +188,24 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : DesktopTileGrid(
-                  itemCount: section.length,
-                  maxCellWidth: 340,
-                  maxContentWidth: 1080,
-                  itemBuilder: (context, index) {
-                    final item = section[index];
-                    return _ShopItemCard(
-                      item: item,
-                      busy: _buyInFlight.contains(item.code),
-                      onBuy: () => _buy(item),
-                    );
-                  },
-                  mobileBuilder: (context) => ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: section.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final item = section[index];
-                      return _ShopItemCard(
-                        item: item,
-                        busy: _buyInFlight.contains(item.code),
-                        onBuy: () => _buy(item),
-                      );
-                    },
+              // Одна колонка сверху вниз, к левому краю (не сетка по центру).
+              : Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: section.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final item = section[index];
+                        return _ShopItemCard(
+                          item: item,
+                          busy: _buyInFlight.contains(item.code),
+                          onBuy: () => _buy(item),
+                        );
+                      },
+                    ),
                   ),
                 ),
         ),
