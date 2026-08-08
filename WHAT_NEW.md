@@ -3,8 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: не считать победу, пока карты на столе
-- Дурак: нет «Игра не найдена», без ранней победы и без кнопки «Все»
+- Фикс: ставка с серебром, вставка ссылки и инвайт Дурака
 
 ## en
 - After leaving, invites go to a new lobby only — not the opponent’s old game
