@@ -3666,9 +3666,9 @@ class _ChatInviteCard extends ConsumerWidget {
       context.go(link.appPathFromMessage(messageId));
     } on GamesException catch (e) {
       if (!context.mounted) return;
-      // 409 при активной партии — только всплывашка, без ухода в чужое лобби.
+      // 409 при активной партии — только всплывашка; не уводить в старую по URL.
       if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
-        final active = resolveActiveForGuard(ref, context);
+        final active = ref.read(activeGameProvider).valueOrNull;
         showAppSnackBar(
           context,
           message: isFinishCurrentGameError(e) || hasBlockingActiveMatch(active)
@@ -3693,7 +3693,7 @@ class _ChatInviteCard extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      final active = resolveActiveForGuard(ref, context);
+      final active = ref.read(activeGameProvider).valueOrNull;
       if (hasBlockingActiveMatch(active)) {
         showAppSnackBar(
           context,

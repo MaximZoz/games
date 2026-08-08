@@ -3681,43 +3681,89 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
-      final result =
-          await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
-      if (!mounted) return;
-      if (result.joined && result.waitingMore) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
-            );
-        context.go('/games/durak/lobby/$lobbyId?mode=invite');
-        return;
-      }
-      if (result.joined && result.gameId != null) {
-        final gameId = result.gameId!;
-        ref.invalidate(durakGameProvider(gameId));
-        context.go('/games/durak/game/$gameId');
-      }
-    } on GamesException catch (e) {
-      if (!mounted) return;
-      if (e.statusCode == 409) {
-        ref.invalidate(activeGameProvider);
-        final active = await ref.read(activeGameProvider.future);
-        if (!mounted) return;
-        if (active != null &&
-            active.type == 'game' &&
-            active.gameId != null &&
-            active.gameId!.isNotEmpty) {
-          context.go('/games/durak/game/${active.gameId}');
-        } else {
-          context.go('/games');
-        }
-      } else {
-        context.go('/games');
-      }
+      await _joinInviteLobby(lobbyId, leaveCurrentIfBusy: true);
     } catch (_) {
       if (mounted) context.go('/games');
     } finally {
       if (mounted) setState(() => _isAcceptingRematch = false);
     }
+  }
+
+  /// Принять инвайт/реванш в лобби — не возвращаться в [widget.gameId].
+  Future<void> _joinInviteLobby(
+    String lobbyId, {
+    bool leaveCurrentIfBusy = false,
+  }) async {
+    final repo = ref.read(durakRepositoryProvider);
+    try {
+      final result = await repo.joinLobby(lobbyId);
+      if (!mounted) return;
+      _navigateJoinedDurakLobby(lobbyId, result);
+      return;
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      if (leaveCurrentIfBusy && isFinishCurrentGameError(e)) {
+        try {
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
+          await repo.forfeit(widget.gameId);
+        } catch (_) {}
+        if (!mounted) return;
+        ref.read(activeGameProvider.notifier).clearLocal();
+        final retry = await repo.joinLobby(lobbyId);
+        if (!mounted) return;
+        _navigateJoinedDurakLobby(lobbyId, retry);
+        return;
+      }
+      if (e.statusCode == 409) {
+        try {
+          await ref.read(activeGameProvider.notifier).refresh();
+        } catch (_) {}
+        if (!mounted) return;
+        final active = ref.read(activeGameProvider).valueOrNull;
+        final gid = active?.gameId?.trim() ?? '';
+        if (active?.type == 'game' &&
+            gid.isNotEmpty &&
+            gid != widget.gameId) {
+          context.go('/games/durak/game/$gid');
+          return;
+        }
+        context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  void _navigateJoinedDurakLobby(String lobbyId, DurakJoinResult result) {
+    if (!result.joined) {
+      context.go('/games/durak/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    if (result.waitingMore ||
+        result.gameId == null ||
+        result.gameId!.trim().isEmpty) {
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'lobby',
+              lobbyId: lobbyId,
+              gameType: 'durak',
+            ),
+          );
+      context.go('/games/durak/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    final gameId = result.gameId!.trim();
+    if (gameId == widget.gameId) {
+      context.go('/games/durak/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    pinBlockingGame(ref, gameId, gameType: 'durak');
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(type: 'game', gameId: gameId, gameType: 'durak'),
+        );
+    ref.invalidate(durakGameProvider(gameId));
+    context.go('/games/durak/game/$gameId');
   }
 
   Future<void> _declineRematch(String lobbyId) async {

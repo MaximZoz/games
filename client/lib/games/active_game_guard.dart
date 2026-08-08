@@ -189,6 +189,10 @@ bool blockJoinIfBusy(
 }
 
 /// Асинхронный вариант: сверить с GetActive (протухший пин после конца партии).
+///
+/// После refresh источник истины — сервер. Нельзя блокировать/редиректить
+/// по URL экрана оконченной партии (`/game/:oldId` или `?game=`): иначе
+/// accept инвайта в новое лобби уводит обратно в старую игру.
 Future<bool> blockJoinIfBusyAsync(
   BuildContext context,
   WidgetRef ref, {
@@ -204,8 +208,12 @@ Future<bool> blockJoinIfBusyAsync(
   final fresh = ref.read(activeGameProvider).valueOrNull;
   if (!hasBlockingActiveMatch(fresh) && !hasActiveLobby(fresh)) {
     clearBlockingGamePin(ref);
+    return false;
   }
-  final active = resolveActiveForGuard(ref, context);
+  // Только серверная сессия (и пин, если сервер ещё держит active).
+  final active = hasBlockingActiveMatch(fresh) || hasActiveLobby(fresh)
+      ? fresh
+      : resolveActiveForGuard(ref, context);
   if (!isBusyWithOtherSession(
     active,
     targetLobbyId: targetLobbyId,

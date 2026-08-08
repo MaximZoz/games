@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Инвайт после выхода: только новое лобби, не старая партия
 - Тест правил: дефолтная ставка 2, не 1
 - Фикс analyze: лишний ! у view в DurakGameScreen
 - Офлайн: тот же UI и анимации, что в онлайне, с ботами
@@ -27,9 +28,9 @@
 - Дурак: первый отбой — пачка до 5 карт, потом «Все»
 - Дурак: банк всем победителям, не только первому
 - Дурак: банк победителю, сдача→наблюдатель, подкид «Все»
-- Дурак: «Забрал» после беру и авто-бито без подкида
 
 ## en
+- After leaving, invites go to a new lobby only — not the opponent’s old game
 - Offline: same UI/animations as online — Durak and tic-tac-toe, all modes
 - Localized “What’s new” in the update dialog
 - Per-game settings and stakes; translations; empty lobby

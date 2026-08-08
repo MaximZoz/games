@@ -496,7 +496,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       if (!context.mounted) return;
       if (e.statusCode == 409 || isFinishCurrentGameError(e)) {
         _showInviteError(e);
-        final active = resolveActiveForGuard(ref, context);
+        // Только серверная active-сессия — не URL старой партии.
+        final active = ref.read(activeGameProvider).valueOrNull;
         if (active != null &&
             (hasBlockingActiveMatch(active) || hasActiveLobby(active))) {
           goToActiveSession(context, active);

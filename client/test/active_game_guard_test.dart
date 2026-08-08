@@ -48,6 +48,14 @@ void main() {
         isTrue,
       );
     });
+
+    test('target lobby same as active lobby is allowed', () {
+      final active = ActiveGameItem(type: 'lobby', lobbyId: 'invite-1');
+      expect(
+        isBusyWithOtherSession(active, targetLobbyId: 'invite-1'),
+        isFalse,
+      );
+    });
   });
 
   group('gameIdFromLocation', () {

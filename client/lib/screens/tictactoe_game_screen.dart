@@ -1186,50 +1186,97 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
-      final result = await ref.read(gamesRepositoryProvider).joinLobby(lobbyId);
-      if (!context.mounted) return;
-      if (result.joined && result.waitingMore) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
-            );
-        ref.invalidate(lobbyDetailProvider(lobbyId));
-        unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        if (!context.mounted) return;
-        // ignore: use_build_context_synchronously
-        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
-        return;
-      }
-      if (result.joined && result.gameId != null) {
-        final gameId = result.gameId!;
-        ref.invalidate(gameStateProvider(gameId));
-        if (!context.mounted) return;
-        // ignore: use_build_context_synchronously
-        context.go('/games/tictactoe/game/$gameId');
-      }
-    } on GamesException catch (e) {
-      if (!context.mounted) return;
-      // 409 = одновременный реванш: соперник уже принял наше приглашение, игра создана
-      if (e.statusCode == 409) {
-        ref.invalidate(activeGameProvider);
-        final active = await ref.read(activeGameProvider.future);
-        if (!context.mounted) return;
-        if (active != null &&
-            active.type == 'game' &&
-            active.gameId != null &&
-            active.gameId!.isNotEmpty) {
-          // ignore: use_build_context_synchronously
-          context.go('/games/tictactoe/game/${active.gameId}');
-        } else {
-          _redirectToGamesOnError();
-        }
-      } else {
-        _redirectToGamesOnError();
-      }
+      await _joinInviteLobby(lobbyId, leaveCurrentIfBusy: true);
     } catch (_) {
       if (context.mounted) _redirectToGamesOnError();
     } finally {
       if (mounted) setState(() => _isAcceptingRematch = false);
     }
+  }
+
+  /// Принять инвайт/реванш: всегда целевое лобби (или новая партия),
+  /// никогда не оставаться / не уходить в [widget.gameId].
+  Future<void> _joinInviteLobby(
+    String lobbyId, {
+    bool leaveCurrentIfBusy = false,
+  }) async {
+    final repo = ref.read(gamesRepositoryProvider);
+    try {
+      final result = await repo.joinLobby(lobbyId);
+      if (!mounted) return;
+      await _navigateJoinedTttLobby(lobbyId, result);
+      return;
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      if (leaveCurrentIfBusy && isFinishCurrentGameError(e)) {
+        // Ещё в этой (старой) партии — выходим и входим в лобби инвайта.
+        try {
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
+          await repo.forfeitGame(widget.gameId);
+        } catch (_) {}
+        if (!mounted) return;
+        ref.read(activeGameProvider.notifier).clearLocal();
+        final retry = await repo.joinLobby(lobbyId);
+        if (!mounted) return;
+        await _navigateJoinedTttLobby(lobbyId, retry);
+        return;
+      }
+      if (e.statusCode == 409) {
+        try {
+          await ref.read(activeGameProvider.notifier).refresh();
+        } catch (_) {}
+        if (!mounted) return;
+        final active = ref.read(activeGameProvider).valueOrNull;
+        final gid = active?.gameId?.trim() ?? '';
+        // Только НОВАЯ партия — не редирект в экран, с которого принимали.
+        if (active?.type == 'game' &&
+            gid.isNotEmpty &&
+            gid != widget.gameId) {
+          context.go('/games/tictactoe/game/$gid');
+          return;
+        }
+        // Инвайт всегда в лобби.
+        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _navigateJoinedTttLobby(
+    String lobbyId,
+    JoinLobbyResult result,
+  ) async {
+    if (!result.joined) {
+      context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    if (result.waitingMore ||
+        result.gameId == null ||
+        result.gameId!.trim().isEmpty) {
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
+          );
+      ref.invalidate(lobbyDetailProvider(lobbyId));
+      unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+      if (!mounted) return;
+      context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    final gameId = result.gameId!.trim();
+    // Защита: сервер не должен вернуть id текущей доски, но не остаёмся на ней.
+    if (gameId == widget.gameId) {
+      context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
+      return;
+    }
+    pinBlockingGame(ref, gameId);
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(type: 'game', gameId: gameId),
+        );
+    ref.invalidate(gameStateProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/tictactoe/game/$gameId');
   }
 
   Future<void> _declineRematch(String lobbyId) async {
