@@ -4598,14 +4598,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     : null,
               ),
             ),
-        // Слот атаки/перевода — ячейка сетки (2 в ряд), не отдельный overlay.
+        // Слот атаки/перевода — ячейка сетки; topLeft как у атаки в _AnimatedTablePair
+        // (не Center — иначе слот ниже карты на ~10px из‑за запаса высоты +20).
         if (hold == null && showTableDropSlot)
           KeyedSubtree(
             key: _attackSlotKey,
             child: SizedBox(
               width: cardSize.width + 18,
               height: cardSize.height + 20,
-              child: Center(
+              child: Align(
+                alignment: Alignment.topLeft,
                 child: IgnorePointer(
                   child: DurakDropSlot(
                     size: cardSize,
