@@ -12,6 +12,22 @@ void main() {
     );
   });
 
+  test('buildInviteLobbyShareUrl durak path', () {
+    expect(
+      buildInviteLobbyShareUrl(
+        lobbyId: 'lob-d',
+        baseUri: Uri.parse('https://multigames.example/'),
+        gameType: 'durak',
+      ),
+      'https://multigames.example/games/durak/lobby/lob-d?mode=invite',
+    );
+    final parsed = parseInviteLobbyShareUrl(
+      'https://multigames.example/games/durak/lobby/lob-d?mode=invite',
+    );
+    expect(parsed?.gameType, 'durak');
+    expect(parsed?.lobbyId, 'lob-d');
+  });
+
   test('parseInviteLobbyShareUrl absolute with mode=invite', () {
     final link = parseInviteLobbyShareUrl(
       'https://multigameszozu.fly.dev/games/tictactoe/lobby/f84e367b-674a-4290-900c-a5133fa23204?mode=invite',

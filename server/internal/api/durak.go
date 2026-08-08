@@ -145,9 +145,22 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 	if stakeBronze < 2 {
 		stakeBronze = 2
 	}
-	// Достаточность баланса.
+	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	if !mayStake {
+		WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
+		return
+	}
+	// Достаточность баланса (весь balance_bronze: серебро/золото тоже считаются).
 	if err := h.checkStakeAffordable(ctx, userID, stakeBronze); err != nil {
-		WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
+		if err == store.ErrInsufficientFunds {
+			WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
+			return
+		}
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 
@@ -314,9 +327,19 @@ func durakGroupChatTitle(n int) string {
 	}
 }
 
-// checkStakeAffordable — сколько бронзы у пользователя (используем существующую логику,
-// если она есть; здесь — упрощённо, никак не проверяем).
+// checkStakeAffordable — хватает ли единого баланса (бронза+серебро+…) на ставку.
+// 1 серебро = 100 бронзы в balance_bronze; отдельного кошелька серебра нет.
 func (h *GamesHandler) checkStakeAffordable(ctx context.Context, userID uuid.UUID, stakeBronze int) error {
+	if stakeBronze <= 0 || h.Pool == nil {
+		return nil
+	}
+	bal, err := store.GetBalance(ctx, h.Pool, userID)
+	if err != nil {
+		return err
+	}
+	if bal < stakeBronze {
+		return store.ErrInsufficientFunds
+	}
 	return nil
 }
 
@@ -338,6 +361,7 @@ func (h *GamesHandler) ListDurakLobbies(w http.ResponseWriter, r *http.Request) 
 		LobbyID     string `json:"lobby_id"`
 		CreatorID   string `json:"creator_id"`
 		Status      string `json:"status"`
+		GameType    string `json:"game_type"`
 		MaxPlayers  int    `json:"max_players"`
 		DeckSize    int    `json:"deck_size"`
 		GameMode    string `json:"game_mode"`
@@ -367,10 +391,14 @@ func (h *GamesHandler) ListDurakLobbies(w http.ResponseWriter, r *http.Request) 
 		stake, _ := strconv.Atoi(m["stake_bronze"])
 		turnT, _ := strconv.Atoi(m["turn_time_sec"])
 		playerIDs := parsePlayerIDsCSV(m["player_ids"])
+		if stake < 2 {
+			stake = 2
+		}
 		items = append(items, lobbyOut{
 			LobbyID:     strings.TrimPrefix(key, "lobby:"),
 			CreatorID:   m["creator_id"],
 			Status:      st,
+			GameType:    durakGameType,
 			MaxPlayers:  maxPlayers,
 			DeckSize:    deckSize,
 			GameMode:    m["game_mode"],
@@ -454,6 +482,27 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 	}
 	creatorUUID, _ := uuid.Parse(m["creator_id"])
 
+	// Ставка и баланс — до записи в лобби (иначе «присоединился», а игра не стартовала).
+	if !already && stake > 0 {
+		mayStake, e := store.UserMayStake(ctx, h.Pool, userID, stake)
+		if e != nil {
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+		if !mayStake {
+			WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
+			return
+		}
+		if err := h.checkStakeAffordable(ctx, userID, stake); err != nil {
+			if err == store.ErrInsufficientFunds {
+				WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
+				return
+			}
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+			return
+		}
+	}
+
 	// Обновить состав лобби.
 	h.Rdb.HSet(ctx, key, "player_ids", strings.Join(players, ","))
 	h.Rdb.Expire(ctx, key, lobbyTTL)
@@ -516,6 +565,7 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		return
 	}
 	// Списываем ставку у людей — как в крестиках-ноликах.
+	// Баланс один (balance_bronze): 1 серебро = 100 бронзы.
 	if stakeBronze > 0 {
 		humans := make([]uuid.UUID, 0, len(players))
 		for _, u := range players {
@@ -525,7 +575,22 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 				return
 			}
 			if !ok {
-				WriteErr(w, r, http.StatusBadRequest, "stake not allowed")
+				WriteErr(w, r, http.StatusForbidden, "stake not unlocked")
+				return
+			}
+			bal, be := store.GetBalance(ctx, h.Pool, u)
+			if be != nil {
+				WriteErr(w, r, http.StatusInternalServerError, "server error")
+				return
+			}
+			if bal < stakeBronze {
+				// Весь balance_bronze (серебро/золото входят); не только «остаток бронзы».
+				reqUID, _ := currentUserIDFromGames(r)
+				if u == reqUID {
+					WriteErr(w, r, http.StatusPaymentRequired, "insufficient balance")
+				} else {
+					WriteErr(w, r, http.StatusConflict, "a player has insufficient balance")
+				}
 				return
 			}
 			humans = append(humans, u)

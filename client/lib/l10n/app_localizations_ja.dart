@@ -117,10 +117,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get durakHintOpponentDefends => '相手が防御中';
 
   @override
-  String get durakHintThrowInFirst => 'カードを追加するか「すべて」（最初の防御で最大5枚）';
+  String get durakHintThrowInFirst => 'カードを追加（最初の回りは最大5枚）';
 
   @override
-  String get durakHintThrowIn => 'カードを追加するか「すべて」をタップ';
+  String get durakHintThrowIn => 'カードを追加するか防御を待つ';
 
   @override
   String get durakHintOpponentThrows => '相手が追加中';

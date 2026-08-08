@@ -2036,6 +2036,11 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
+	// Дурак и др. — только через свой join endpoint (иначе ставка/старт ломаются).
+	if gt := strings.TrimSpace(m["game_type"]); gt != "" && gt != "tictactoe" {
+		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
+		return
+	}
 
 	creatorID := m["creator_id"]
 	status := m["status"]

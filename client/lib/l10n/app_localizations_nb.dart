@@ -117,10 +117,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get durakHintOpponentDefends => 'Motstanderen forsvarer';
 
   @override
-  String get durakHintThrowInFirst => 'Legg kort eller «Alle» (max 5 i første slag)';
+  String get durakHintThrowInFirst => 'Legg kort (max 5 i første slag)';
 
   @override
-  String get durakHintThrowIn => 'Legg kort eller trykk «Alle»';
+  String get durakHintThrowIn => 'Legg kort eller vent på forsvaret';
 
   @override
   String get durakHintOpponentThrows => 'Motstanderen legger på';

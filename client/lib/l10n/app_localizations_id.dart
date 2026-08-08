@@ -117,10 +117,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get durakHintOpponentDefends => 'Lawan bertahan';
 
   @override
-  String get durakHintThrowInFirst => 'Buang kartu atau «Semua» (max 5 di beat pertama)';
+  String get durakHintThrowInFirst => 'Tambah kartu (maks. 5 di pukulan pertama)';
 
   @override
-  String get durakHintThrowIn => 'Buang kartu atau ketuk «Semua»';
+  String get durakHintThrowIn => 'Tambah kartu atau tunggu pertahanan';
 
   @override
   String get durakHintOpponentThrows => 'Lawan membuang';

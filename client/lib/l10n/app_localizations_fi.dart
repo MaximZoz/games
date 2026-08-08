@@ -117,10 +117,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get durakHintOpponentDefends => 'Vastustaja puolustaa';
 
   @override
-  String get durakHintThrowInFirst => 'Heitä kortteja tai «Kaikki» (max 5 ensimmäisessä lyönnissä)';
+  String get durakHintThrowInFirst => 'Lisää kortteja (max 5 ensimmäisessä kierroksessa)';
 
   @override
-  String get durakHintThrowIn => 'Heitä kortteja tai paina «Kaikki»';
+  String get durakHintThrowIn => 'Lisää kortteja tai odota puolustusta';
 
   @override
   String get durakHintOpponentThrows => 'Vastustaja heittää';

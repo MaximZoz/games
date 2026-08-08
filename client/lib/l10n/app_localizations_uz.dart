@@ -117,10 +117,10 @@ class AppLocalizationsUz extends AppLocalizations {
   String get durakHintOpponentDefends => 'Raqib himoyalanmoqda';
 
   @override
-  String get durakHintThrowInFirst => 'Kartalar tashlang yoki «Hammasi» (birinchi urinishda max 5)';
+  String get durakHintThrowInFirst => 'Karta tashlang (birinchi zarba: maks. 5)';
 
   @override
-  String get durakHintThrowIn => 'Kartalar tashlang yoki «Hammasi» bosing';
+  String get durakHintThrowIn => 'Karta tashlang yoki himoyani kuting';
 
   @override
   String get durakHintOpponentThrows => 'Raqib tashlamoqda';

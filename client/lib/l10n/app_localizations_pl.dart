@@ -117,10 +117,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get durakHintOpponentDefends => 'Przeciwnik broni się';
 
   @override
-  String get durakHintThrowInFirst => 'Dorzuć karty lub «Wszystkie» (max 5 w pierwszym odbiciu)';
+  String get durakHintThrowInFirst => 'Dokładaj karty (maks. 5 w pierwszym zbiciu)';
 
   @override
-  String get durakHintThrowIn => 'Dorzuć karty lub dotknij «Wszystkie»';
+  String get durakHintThrowIn => 'Dokładaj karty lub czekaj na obronę';
 
   @override
   String get durakHintOpponentThrows => 'Przeciwnik dorzuca';

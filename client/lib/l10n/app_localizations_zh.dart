@@ -117,10 +117,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get durakHintOpponentDefends => '对手正在防守';
 
   @override
-  String get durakHintThrowInFirst => '追加牌或「全部」（首轮防守最多 5 张）';
+  String get durakHintThrowInFirst => '加牌（首轮最多 5 张）';
 
   @override
-  String get durakHintThrowIn => '追加牌或点「全部」';
+  String get durakHintThrowIn => '加牌或等待防守';
 
   @override
   String get durakHintOpponentThrows => '对手正在追加';

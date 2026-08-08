@@ -117,10 +117,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get durakHintOpponentDefends => 'Gegner verteidigt';
 
   @override
-  String get durakHintThrowInFirst => 'Karten nachlegen oder „Alle“ (max. 5 im ersten Schlag)';
+  String get durakHintThrowInFirst => 'Karten nachlegen (max. 5 im ersten Schlag)';
 
   @override
-  String get durakHintThrowIn => 'Karten nachlegen oder „Alle“ tippen';
+  String get durakHintThrowIn => 'Karten nachlegen oder auf die Abwehr warten';
 
   @override
   String get durakHintOpponentThrows => 'Gegner legt nach';

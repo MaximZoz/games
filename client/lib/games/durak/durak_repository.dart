@@ -554,6 +554,13 @@ class DurakRepository {
     final l10n = LocaleService.l10n;
     final keyLower = key.toLowerCase();
     final msgLower = msg.toLowerCase();
+    if (r.statusCode == 402) {
+      throw GamesException(
+        402,
+        msg.trim().isEmpty ? l10n.commonInsufficientCoins : msg.trim(),
+        errorKey: key,
+      );
+    }
     if (r.statusCode == 502 ||
         r.statusCode == 503 ||
         keyLower.contains('temporarily unavailable') ||
