@@ -317,6 +317,126 @@ abstract class AppLocalizations {
   /// **'Ещё раз'**
   String get offlinePlayAgain;
 
+  /// No description provided for @offlineBotName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бот {n}'**
+  String offlineBotName(int n);
+
+  /// No description provided for @durakActionTake.
+  ///
+  /// In ru, this message translates to:
+  /// **'Взять'**
+  String get durakActionTake;
+
+  /// No description provided for @durakActionAll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все'**
+  String get durakActionAll;
+
+  /// No description provided for @durakActionDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get durakActionDone;
+
+  /// No description provided for @durakActionBito.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бито'**
+  String get durakActionBito;
+
+  /// No description provided for @durakHintDefend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отбивайтесь'**
+  String get durakHintDefend;
+
+  /// No description provided for @durakHintDefendOrTransfer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отбивайтесь или переведите'**
+  String get durakHintDefendOrTransfer;
+
+  /// No description provided for @durakHintOpponentDefends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник отбивается'**
+  String get durakHintOpponentDefends;
+
+  /// No description provided for @durakHintThrowInFirst.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкиньте карты или «Все» (макс. 5 в первом отбое)'**
+  String get durakHintThrowInFirst;
+
+  /// No description provided for @durakHintThrowIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкиньте карты или нажмите «Все»'**
+  String get durakHintThrowIn;
+
+  /// No description provided for @durakHintOpponentThrows.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник подкидывает'**
+  String get durakHintOpponentThrows;
+
+  /// No description provided for @durakHintTakeFollow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкиньте вдогонку или нажмите «Готово»'**
+  String get durakHintTakeFollow;
+
+  /// No description provided for @durakHintOpponentTakeFollow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник может подкинуть вдогонку'**
+  String get durakHintOpponentTakeFollow;
+
+  /// No description provided for @durakHintBito.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подкиньте карту или скажите «Бито»'**
+  String get durakHintBito;
+
+  /// No description provided for @durakHintOpponentBito.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник подкидывает или говорит «Бито»'**
+  String get durakHintOpponentBito;
+
+  /// No description provided for @durakHintYourAttack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш ход — атакуйте'**
+  String get durakHintYourAttack;
+
+  /// No description provided for @durakHintOpponentAttack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Атакует соперник'**
+  String get durakHintOpponentAttack;
+
+  /// No description provided for @durakHintYouLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли — вы дурак'**
+  String get durakHintYouLost;
+
+  /// No description provided for @durakHintDrawAllOut.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — все вышли'**
+  String get durakHintDrawAllOut;
+
+  /// No description provided for @durakHintYouFinished.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы вышли — ждём конца партии'**
+  String get durakHintYouFinished;
+
   /// No description provided for @shopPurchaseQueued.
   ///
   /// In ru, this message translates to:

@@ -91,6 +91,68 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlinePlayAgain => 'De novo';
 
   @override
+  String offlineBotName(int n) {
+    return 'Бот $n';
+  }
+
+  @override
+  String get durakActionTake => 'Взять';
+
+  @override
+  String get durakActionAll => 'Все';
+
+  @override
+  String get durakActionDone => 'Готово';
+
+  @override
+  String get durakActionBito => 'Бито';
+
+  @override
+  String get durakHintDefend => 'Отбивайтесь';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Отбивайтесь или переведите';
+
+  @override
+  String get durakHintOpponentDefends => 'Соперник отбивается';
+
+  @override
+  String get durakHintThrowInFirst => 'Подкиньте карты или «Все» (макс. 5 в первом отбое)';
+
+  @override
+  String get durakHintThrowIn => 'Подкиньте карты или нажмите «Все»';
+
+  @override
+  String get durakHintOpponentThrows => 'Соперник подкидывает';
+
+  @override
+  String get durakHintTakeFollow => 'Подкиньте вдогонку или нажмите «Готово»';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Соперник может подкинуть вдогонку';
+
+  @override
+  String get durakHintBito => 'Подкиньте карту или скажите «Бито»';
+
+  @override
+  String get durakHintOpponentBito => 'Соперник подкидывает или говорит «Бито»';
+
+  @override
+  String get durakHintYourAttack => 'Ваш ход — атакуйте';
+
+  @override
+  String get durakHintOpponentAttack => 'Атакует соперник';
+
+  @override
+  String get durakHintYouLost => 'Вы проиграли — вы дурак';
+
+  @override
+  String get durakHintDrawAllOut => 'Ничья — все вышли';
+
+  @override
+  String get durakHintYouFinished => 'Вы вышли — ждём конца партии';
+
+  @override
   String get shopPurchaseQueued => 'Compra salva — será aplicada no modo online';
 
   @override

@@ -392,7 +392,7 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
             child: Column(
               children: [
                 Text(
-                  'Bot $oi',
+                  context.l10n.offlineBotName(oi),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -548,11 +548,12 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
     if (!canTake && !canBito && !canDone && !canThrowAll) {
       return const SizedBox(height: 40);
     }
+    final l10n = context.l10n;
     final label = canTake
-        ? 'Взять'
+        ? l10n.durakActionTake
         : canThrowAll
-            ? 'Все'
-            : (canDone ? 'Готово' : 'Бито');
+            ? l10n.durakActionAll
+            : (canDone ? l10n.durakActionDone : l10n.durakActionBito);
     final onPressed = canTake
         ? _onTake
         : canThrowAll
@@ -587,43 +588,44 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   }
 
   String _turnHint() {
+    final l10n = context.l10n;
     if (_game.isOver) {
-      if (_game.endedInDraw) return 'Ничья — все вышли';
+      if (_game.endedInDraw) return l10n.durakHintDrawAllOut;
       return _game.loserIndex == _mePlayer
-          ? 'Вы проиграли — вы дурак'
-          : 'Вы выиграли!';
+          ? l10n.durakHintYouLost
+          : l10n.gameYouWon;
     }
     if (_game.isFinished(_mePlayer)) {
-      return 'Вы вышли — ждём конца партии';
+      return l10n.durakHintYouFinished;
     }
     if (_game.turn == DurakTurn.defender) {
       if (_game.defenderIndex == _mePlayer) {
         return _game.isPerevodnoi
-            ? 'Отбивайтесь или переведите'
-            : 'Отбивайтесь';
+            ? l10n.durakHintDefendOrTransfer
+            : l10n.durakHintDefend;
       }
-      return 'Соперник отбивается';
+      return l10n.durakHintOpponentDefends;
     }
     if (_game.turn == DurakTurn.throwIn) {
       return _game.throwerIndex == _mePlayer
           ? (_game.firstRound
-              ? 'Подкиньте карты или «Все» (макс. 5 в первом отбое)'
-              : 'Подкиньте карты или нажмите «Все»')
-          : 'Соперник подкидывает';
+              ? l10n.durakHintThrowInFirst
+              : l10n.durakHintThrowIn)
+          : l10n.durakHintOpponentThrows;
     }
     if (_game.turn == DurakTurn.takeFollowUp) {
       return _game.throwerIndex == _mePlayer
-          ? 'Подкиньте вдогонку или нажмите «Готово»'
-          : 'Соперник может подкинуть вдогонку';
+          ? l10n.durakHintTakeFollow
+          : l10n.durakHintOpponentTakeFollow;
     }
     if (_game.turn == DurakTurn.attackerFollowUp) {
       return _game.throwerIndex == _mePlayer
-          ? 'Подкиньте карту или скажите «Бито»'
-          : 'Соперник подкидывает или говорит «Бито»';
+          ? l10n.durakHintBito
+          : l10n.durakHintOpponentBito;
     }
     return _game.attackerIndex == _mePlayer
-        ? 'Ваш ход — атакуйте'
-        : 'Атакует соперник';
+        ? l10n.durakHintYourAttack
+        : l10n.durakHintOpponentAttack;
   }
 
   String? _statusOverlay() {

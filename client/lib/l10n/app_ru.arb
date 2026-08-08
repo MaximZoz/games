@@ -28,6 +28,33 @@
   "offlineBotWon": "Бот победил",
   "offlineBotThinking": "Ход бота…",
   "offlinePlayAgain": "Ещё раз",
+  "offlineBotName": "Бот {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "durakActionTake": "Взять",
+  "durakActionAll": "Все",
+  "durakActionDone": "Готово",
+  "durakActionBito": "Бито",
+  "durakHintDefend": "Отбивайтесь",
+  "durakHintDefendOrTransfer": "Отбивайтесь или переведите",
+  "durakHintOpponentDefends": "Соперник отбивается",
+  "durakHintThrowInFirst": "Подкиньте карты или «Все» (макс. 5 в первом отбое)",
+  "durakHintThrowIn": "Подкиньте карты или нажмите «Все»",
+  "durakHintOpponentThrows": "Соперник подкидывает",
+  "durakHintTakeFollow": "Подкиньте вдогонку или нажмите «Готово»",
+  "durakHintOpponentTakeFollow": "Соперник может подкинуть вдогонку",
+  "durakHintBito": "Подкиньте карту или скажите «Бито»",
+  "durakHintOpponentBito": "Соперник подкидывает или говорит «Бито»",
+  "durakHintYourAttack": "Ваш ход — атакуйте",
+  "durakHintOpponentAttack": "Атакует соперник",
+  "durakHintYouLost": "Вы проиграли — вы дурак",
+  "durakHintDrawAllOut": "Ничья — все вышли",
+  "durakHintYouFinished": "Вы вышли — ждём конца партии",
   "shopPurchaseQueued": "Покупка сохранена — применится в режиме онлайн",
   "shopPurchaseApplied": "{title} — покупка применена",
   "@shopPurchaseApplied": {

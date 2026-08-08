@@ -28,6 +28,33 @@
   "offlineBotWon": "Bot won",
   "offlineBotThinking": "Bot is thinking…",
   "offlinePlayAgain": "Play again",
+  "offlineBotName": "Bot {n}",
+  "@offlineBotName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "durakActionTake": "Take",
+  "durakActionAll": "All",
+  "durakActionDone": "Done",
+  "durakActionBito": "Beat",
+  "durakHintDefend": "Defend",
+  "durakHintDefendOrTransfer": "Defend or transfer",
+  "durakHintOpponentDefends": "Opponent is defending",
+  "durakHintThrowInFirst": "Throw in cards or tap “All” (max 5 on the first beat)",
+  "durakHintThrowIn": "Throw in cards or tap “All”",
+  "durakHintOpponentThrows": "Opponent is throwing in",
+  "durakHintTakeFollow": "Throw in after take or tap “Done”",
+  "durakHintOpponentTakeFollow": "Opponent may throw in after take",
+  "durakHintBito": "Throw in a card or say “Beat”",
+  "durakHintOpponentBito": "Opponent throws in or says “Beat”",
+  "durakHintYourAttack": "Your turn — attack",
+  "durakHintOpponentAttack": "Opponent is attacking",
+  "durakHintYouLost": "You lost — you’re the fool",
+  "durakHintDrawAllOut": "Draw — everyone went out",
+  "durakHintYouFinished": "You’re out — waiting for the end",
   "shopPurchaseQueued": "Purchase saved — will apply in online mode",
   "shopPurchaseApplied": "{title} — purchase applied",
   "@shopPurchaseApplied": {

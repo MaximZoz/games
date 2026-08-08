@@ -8,6 +8,9 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/flag_asset_cache.dart';
+import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -147,6 +150,7 @@ class SettingsScreen extends ConsumerWidget {
                         await ref
                             .read(pendingPurchasesProvider.notifier)
                             .flush();
+                        await syncPreferredLanguageToServer(ref);
                       },
                     ),
                   ),
@@ -297,6 +301,11 @@ class SettingsScreen extends ConsumerWidget {
     required Locale? selected,
   }) async {
     final l10n = context.l10n;
+    // Прогрев флагов языков в memory-кэш — нужно для офлайна на Web.
+    await Future.wait(
+      appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso)),
+    );
+    if (!context.mounted) return;
     final chosen = await showModalBottomSheet<Object>(
       context: context,
       isScrollControlled: true,
@@ -378,7 +387,9 @@ class SettingsScreen extends ConsumerWidget {
     } else if (chosen is String) {
       await ref.read(appLocaleProvider.notifier).setLocale(Locale(chosen));
     }
-    await syncPreferredLanguageToServer(ref);
+    if (!ref.read(isOfflineProvider)) {
+      await syncPreferredLanguageToServer(ref);
+    }
   }
 }
 
@@ -389,17 +400,27 @@ class _FlagThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? unicode;
+    for (final info in countryFlagsByName.values) {
+      if (info.iso.toLowerCase() == iso.toLowerCase()) {
+        unicode = info.unicode;
+        break;
+      }
+    }
+    // Memory-кэш FlagAssetCache — на Flutter Web в офлайне Image.asset
+    // снова ходит в сеть за /assets/flags/*.png.
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Image.asset(
-        'assets/flags/$iso.png',
+      child: SizedBox(
         width: 28,
         height: 20,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const SizedBox(
-          width: 28,
-          height: 20,
-          child: Icon(Icons.flag_outlined, size: 18),
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: CountryFlagImage(
+            iso: iso,
+            size: 28,
+            fallbackUnicode: unicode,
+          ),
         ),
       ),
     );

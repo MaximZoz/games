@@ -287,7 +287,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                   ),
                 ),
               ),
-            SizedBox(height: isDesktop ? 8 : 20),
             Expanded(
               // IndexedStack вместо PageView: ветка /games в StatefulShell
               // indexedStack остаётся живой при /login|/register (PWA),
@@ -296,6 +295,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 index:
                     isOffline ? 0 : (_selectedTab == _GamesTab.games ? 0 : 1),
                 sizing: StackFit.expand,
+                clipBehavior: Clip.hardEdge,
                 children: [
                   _GamesPageContent(
                     isDesktop: isDesktop,
@@ -857,199 +857,134 @@ class _GamesPageContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          primary: false,
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            contentPadding,
-            0,
-            contentPadding,
-            isDesktop ? 24 : 48,
+    final phoneLandscape = isPhoneLandscape(context);
+    final tablet = isTablet(context);
+    final centerCards = isDesktop || phoneLandscape;
+    final minCardWidth = phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
+    final maxCardWidth = phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
+
+    Widget gameCards(double maxWidth) {
+      final cardWidth = centerCards
+          ? maxWidth.clamp(minCardWidth, maxCardWidth).toDouble()
+          : maxWidth;
+      final column = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TictactoeGameCard(
+            isCreating: isCreating,
+            isFinding: isFinding,
+            isOffline: isOffline,
+            turnTimeSec: turnTimeSec,
+            onTurnTimeChanged: onTurnTimeChanged,
+            variant: variant,
+            playersControlActive: playersControlActive,
+            onPlayersChipTap: onPlayersChipTap,
+            onModeChipTap: onModeChipTap,
+            stakeBronze: stakeBronze,
+            stakeOptionsList: stakeOptionsList,
+            onStakeChanged: onStakeChanged,
+            onCreateGame: onCreateGame,
+            onFindGame: onFindGame,
+            onPlayOffline: onPlayOffline,
           ),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight.isFinite &&
-                        constraints.maxHeight > 100
-                    ? constraints.maxHeight
-                    : 400,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final phoneLandscape = isPhoneLandscape(context);
-                      final tablet = isTablet(context);
-                      if (isDesktop || phoneLandscape) {
-                        // Одна карточка игры — по центру, достаточно широкая,
-                        // чтобы «Крестики-нолики» не обрезалось на планшете.
-                        final minCardWidth =
-                            phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
-                        final maxCardWidth =
-                            phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
-                        final availableWidth = constraints.maxWidth;
-                        final cardWidth = availableWidth
-                            .clamp(minCardWidth, maxCardWidth)
-                            .toDouble();
-                        return SizedBox(
-                          width: availableWidth,
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: SizedBox(
-                              width: cardWidth,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _TictactoeGameCard(
-                                    isCreating: isCreating,
-                                    isFinding: isFinding,
-                                    isOffline: isOffline,
-                                    turnTimeSec: turnTimeSec,
-                                    onTurnTimeChanged: onTurnTimeChanged,
-                                    variant: variant,
-                                    playersControlActive: playersControlActive,
-                                    onPlayersChipTap: onPlayersChipTap,
-                                    onModeChipTap: onModeChipTap,
-                                    stakeBronze: stakeBronze,
-                                    stakeOptionsList: stakeOptionsList,
-                                    onStakeChanged: onStakeChanged,
-                                    onCreateGame: onCreateGame,
-                                    onFindGame: onFindGame,
-                                    onPlayOffline: onPlayOffline,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _DurakGameCard(
-                                    isOffline: isOffline,
-                                    stakeOptionsList: stakeOptionsList,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _TictactoeGameCard(
-                            isCreating: isCreating,
-                            isFinding: isFinding,
-                            isOffline: isOffline,
-                            turnTimeSec: turnTimeSec,
-                            onTurnTimeChanged: onTurnTimeChanged,
-                            variant: variant,
-                            playersControlActive: playersControlActive,
-                            onPlayersChipTap: onPlayersChipTap,
-                            onModeChipTap: onModeChipTap,
-                            stakeBronze: stakeBronze,
-                            stakeOptionsList: stakeOptionsList,
-                            onStakeChanged: onStakeChanged,
-                            onCreateGame: onCreateGame,
-                            onFindGame: onFindGame,
-                            onPlayOffline: onPlayOffline,
-                          ),
-                          const SizedBox(height: 16),
-                          _DurakGameCard(
-                            isOffline: isOffline,
-                            stakeOptionsList: stakeOptionsList,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  Builder(
-                    builder: (context) {
-                      final active = activeAsync.valueOrNull;
-                      final obs = observation;
-                      // Active game на списке не показываем — таб уводит в неё.
-                      // Observation — карточка, пока партия не закроется.
-                      if (obs == null || obs.gameId.trim().isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      // Если эта же партия уже active (ещё играю) — карточка не нужна.
-                      if (active?.type == 'game' &&
-                          active?.gameId == obs.gameId) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: GradientCard(
-                          padding: const EdgeInsets.all(16),
-                          child: InkWell(
-                            onTap: () async {
-                              var gt = normalizeGameType(obs.gameType);
-                              // Если тип неизвестен/дефолт — пробуем Дурак по game_id.
-                              if (gt != 'durak') {
-                                try {
-                                  await ref
-                                      .read(durakRepositoryProvider)
-                                      .getGame(obs.gameId);
-                                  gt = 'durak';
-                                  ref
-                                      .read(activeGameProvider.notifier)
-                                      .setObservationLocal(
-                                        ObservationItem(
-                                          gameId: obs.gameId,
-                                          lobbyId: obs.lobbyId,
-                                          gameType: 'durak',
-                                        ),
-                                      );
-                                } catch (_) {}
-                              }
-                              if (!context.mounted) return;
-                              context.push(
-                                gamePathFor(obs.gameId, gameType: gt),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.visibility_rounded,
-                                    size: 40, color: AppColors.accentStart),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        context.l10n.gamesObservation,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        context.l10n.gamesObservationHint,
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.textSecondary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.arrow_forward_ios_rounded,
-                                    size: 16),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+          const SizedBox(height: 16),
+          _DurakGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
           ),
-        );
-      },
+        ],
+      );
+      if (!centerCards) return column;
+      return Align(
+        alignment: Alignment.topCenter,
+        child: SizedBox(width: cardWidth, child: column),
+      );
+    }
+
+    Widget? observationCard() {
+      final active = activeAsync.valueOrNull;
+      final obs = observation;
+      if (obs == null || obs.gameId.trim().isEmpty) return null;
+      if (active?.type == 'game' && active?.gameId == obs.gameId) {
+        return null;
+      }
+      return GradientCard(
+        animate: false,
+        padding: const EdgeInsets.all(16),
+        child: InkWell(
+          onTap: () async {
+            var gt = normalizeGameType(obs.gameType);
+            if (gt != 'durak') {
+              try {
+                await ref.read(durakRepositoryProvider).getGame(obs.gameId);
+                gt = 'durak';
+                ref.read(activeGameProvider.notifier).setObservationLocal(
+                      ObservationItem(
+                        gameId: obs.gameId,
+                        lobbyId: obs.lobbyId,
+                        gameType: 'durak',
+                      ),
+                    );
+              } catch (_) {}
+            }
+            if (!context.mounted) return;
+            context.push(gamePathFor(obs.gameId, gameType: gt));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              const Icon(Icons.visibility_rounded,
+                  size: 40, color: AppColors.accentStart),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.gamesObservation,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.gamesObservationHint,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final obs = observationCard();
+    // ListView без minHeight на весь экран: иначе при скролле карточки
+    // «уезжают» в пустоту и визуально пропадают.
+    return ListView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        contentPadding,
+        isOffline ? 12 : 8,
+        contentPadding,
+        isDesktop ? 24 : 48,
+      ),
+      children: [
+        gameCards(MediaQuery.sizeOf(context).width - contentPadding * 2),
+        if (obs != null) ...[
+          const SizedBox(height: 20),
+          obs,
+        ],
+      ],
     );
   }
 }
@@ -1139,24 +1074,13 @@ class _LobbiesPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final minH =
-            constraints.maxHeight.isFinite ? constraints.maxHeight : 400.0;
-        return SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(contentPadding, 0, contentPadding, 48),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minH),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _invitesSection(context),
-                  lobbiesAsync.when(
+    return ListView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
+      children: [
+        _invitesSection(context),
+        lobbiesAsync.when(
                     data: (lobbies) {
                       // Пустое лобби — без заглушки («Лобби» / refresh).
                       if (lobbies.isEmpty) {
@@ -1168,6 +1092,7 @@ class _LobbiesPageContent extends StatelessWidget {
                               padding: EdgeInsets.symmetric(
                                   vertical: isDesktop ? 8 : 6),
                               child: GradientCard(
+                                animate: false,
                                 padding: EdgeInsets.all(isDesktop ? 20 : 16),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1329,6 +1254,8 @@ class _LobbiesPageContent extends StatelessWidget {
                           )
                           .toList();
                       if (isDesktop) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
                         final width = constraints.maxWidth;
                         const minCardWidth = 360.0;
                         const gap = 16.0;
@@ -1354,6 +1281,8 @@ class _LobbiesPageContent extends StatelessWidget {
                             ),
                           ),
                         );
+                          },
+                        );
                       }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1376,13 +1305,8 @@ class _LobbiesPageContent extends StatelessWidget {
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

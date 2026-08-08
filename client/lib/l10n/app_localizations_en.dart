@@ -91,6 +91,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlinePlayAgain => 'Play again';
 
   @override
+  String offlineBotName(int n) {
+    return 'Bot $n';
+  }
+
+  @override
+  String get durakActionTake => 'Take';
+
+  @override
+  String get durakActionAll => 'All';
+
+  @override
+  String get durakActionDone => 'Done';
+
+  @override
+  String get durakActionBito => 'Beat';
+
+  @override
+  String get durakHintDefend => 'Defend';
+
+  @override
+  String get durakHintDefendOrTransfer => 'Defend or transfer';
+
+  @override
+  String get durakHintOpponentDefends => 'Opponent is defending';
+
+  @override
+  String get durakHintThrowInFirst => 'Throw in cards or tap “All” (max 5 on the first beat)';
+
+  @override
+  String get durakHintThrowIn => 'Throw in cards or tap “All”';
+
+  @override
+  String get durakHintOpponentThrows => 'Opponent is throwing in';
+
+  @override
+  String get durakHintTakeFollow => 'Throw in after take or tap “Done”';
+
+  @override
+  String get durakHintOpponentTakeFollow => 'Opponent may throw in after take';
+
+  @override
+  String get durakHintBito => 'Throw in a card or say “Beat”';
+
+  @override
+  String get durakHintOpponentBito => 'Opponent throws in or says “Beat”';
+
+  @override
+  String get durakHintYourAttack => 'Your turn — attack';
+
+  @override
+  String get durakHintOpponentAttack => 'Opponent is attacking';
+
+  @override
+  String get durakHintYouLost => 'You lost — you’re the fool';
+
+  @override
+  String get durakHintDrawAllOut => 'Draw — everyone went out';
+
+  @override
+  String get durakHintYouFinished => 'You’re out — waiting for the end';
+
+  @override
   String get shopPurchaseQueued => 'Purchase saved — will apply in online mode';
 
   @override
