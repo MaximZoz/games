@@ -357,6 +357,39 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	return nil
 }
 
+// transferAttackCap — жёсткий потолок пар после перевода (MaxAttacks / первый отбой).
+func (s *State) transferAttackCap() int {
+	cap := s.MaxAttacks
+	if cap <= 0 {
+		cap = 6
+	}
+	if s.FirstRound && cap > 5 {
+		cap = 5
+	}
+	return cap
+}
+
+// canTransferToNext — у следующего защитника хватает карт отбить весь стол после перевода.
+func (s *State) canTransferToNext(defIdx int) bool {
+	if len(s.Table) == 0 {
+		return false
+	}
+	for _, p := range s.Table {
+		if p.Defense != nil {
+			return false
+		}
+	}
+	if len(s.Table)+1 > s.transferAttackCap() {
+		return false
+	}
+	next := s.nextAliveAfter(defIdx)
+	if next < 0 || next >= len(s.Hands) {
+		return false
+	}
+	// После перевода на столе будет len(Table)+1 атак — у next не меньше карт.
+	return len(s.Hands[next]) >= len(s.Table)+1
+}
+
 // Transfer — «переводной»: защитник кладёт свою карту того же ранга, что и
 // последняя неотбитая атака, — атака переводится на следующего.
 func (s *State) Transfer(playerIdx int, card Card) error {
@@ -373,22 +406,13 @@ func (s *State) Transfer(playerIdx int, card Card) error {
 	if !s.handContains(playerIdx, card) {
 		return ErrCardNotInHand
 	}
-	// Только если ни одна пара ещё не бита.
-	for _, p := range s.Table {
-		if p.Defense != nil {
-			return ErrCannotTransfer
-		}
-	}
 	if len(s.Table) == 0 {
 		return ErrCannotTransfer
 	}
 	if card.Rank != s.Table[0].Attack.Rank {
 		return ErrCannotTransfer
 	}
-	// Следующий защитник — тот, кто идёт после текущего.
-	next := s.nextAliveAfter(def)
-	// Проверяем что у next в руке хватает под возросший стол.
-	if len(s.Hands[next]) < len(s.Table)+1 {
+	if !s.canTransferToNext(def) {
 		return ErrCannotTransfer
 	}
 	s.removeFromHand(playerIdx, card)
@@ -678,6 +702,31 @@ func (s *State) LegalDefendCards(idx int) []Card {
 				out = append(out, c)
 				break
 			}
+		}
+	}
+	return out
+}
+
+// LegalTransferCards — карты, которыми можно перевести (переводной режим).
+// Пусто, если у следующего защитника не хватит карт отбить весь стол.
+func (s *State) LegalTransferCards(idx int) []Card {
+	if s.Status != StatusActive || s.Mode != ModePerevodnoi {
+		return nil
+	}
+	if s.Phase == PhaseTakeFollow {
+		return nil
+	}
+	if idx != s.DefenderIndex() {
+		return nil
+	}
+	if !s.canTransferToNext(idx) {
+		return nil
+	}
+	rank := s.Table[0].Attack.Rank
+	out := []Card{}
+	for _, c := range s.Hands[idx] {
+		if c.Rank == rank {
+			out = append(out, c)
 		}
 	}
 	return out

@@ -514,6 +514,38 @@ func TestTransferInPerevodnoi(t *testing.T) {
 	}
 }
 
+// Нельзя перевести, если у следующего защитника карт меньше, чем будет атак на столе.
+func TestTransferBlockedWhenNextHasTooFewCards(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b"},
+		Hands: [][]Card{
+			{{7, Hearts}},                            // следующий защитник после перевода — 1 карта
+			{{6, Diamonds}, {6, Spades}, {9, Clubs}}, // защитник
+		},
+		Table: []Pair{
+			{Attack: Card{6, Clubs}},
+			{Attack: Card{6, Hearts}}, // на столе уже 2; перевод → 3, у next только 1
+		},
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseDefend,
+		Mode:          ModePerevodnoi,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	if got := st.LegalTransferCards(1); len(got) != 0 {
+		t.Fatalf("LegalTransferCards=%v, want empty (next has 1 < 3)", got)
+	}
+	if err := st.Transfer(1, Card{6, Diamonds}); err == nil {
+		t.Fatalf("expected ErrCannotTransfer when next hand too small")
+	}
+	// Отбить козырем всё ещё можно.
+	if err := st.Defend(1, Card{6, Spades}, 0); err != nil {
+		t.Fatalf("defend trump: %v", err)
+	}
+}
+
 // Можно бить любую неотбитую атаку (не только первую), в т.ч. некозырем.
 func TestDefendAnyUndefendedPair(t *testing.T) {
 	st := &State{

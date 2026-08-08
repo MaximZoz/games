@@ -1240,6 +1240,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 	}
 	legalAttack := s.LegalAttackCards(myIdx)
 	legalDefend := s.LegalDefendCards(myIdx)
+	legalTransfer := s.LegalTransferCards(myIdx)
 	turnDeadline := int64(0)
 	if v, err := strconv.ParseInt(m["turn_deadline"], 10, 64); err == nil {
 		turnDeadline = v
@@ -1281,6 +1282,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"my_index":       myIdx,
 		"legal_attack":   legalAttack,
 		"legal_defend":   legalDefend,
+		"legal_transfer": legalTransfer,
 		"loser_index":    s.LoserIndex,
 		"finished":       s.FinishedIndices,
 		"turn_time_sec":  turnT,

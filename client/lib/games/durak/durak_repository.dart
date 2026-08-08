@@ -144,6 +144,7 @@ class DurakGameView {
     required this.turnTimeSec,
     required this.turnDeadline,
     required this.stakeBronze,
+    this.legalTransfer = const [],
     this.isDraw = false,
     this.isForfeit = false,
     this.isTimeout = false,
@@ -172,6 +173,9 @@ class DurakGameView {
   final int myIndex;
   final List<DurakApiCard> legalAttack;
   final List<DurakApiCard> legalDefend;
+
+  /// Карты для перевода (переводной); пусто, если у следующего мало карт.
+  final List<DurakApiCard> legalTransfer;
   final int loserIndex;
   final List<int> finished;
   final int turnTimeSec;
@@ -274,6 +278,11 @@ class DurakGameView {
               .toList() ??
           const [],
       legalDefend: (json['legal_defend'] as List?)
+              ?.whereType<Map>()
+              .map((e) => DurakApiCard.fromJson(e.cast<String, dynamic>()))
+              .toList() ??
+          const [],
+      legalTransfer: (json['legal_transfer'] as List?)
               ?.whereType<Map>()
               .map((e) => DurakApiCard.fromJson(e.cast<String, dynamic>()))
               .toList() ??

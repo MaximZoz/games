@@ -734,6 +734,44 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return _legalAttackNow(view).contains(focus);
   }
 
+  /// Подсветка слота перевода при подъёме карты того же ранга.
+  bool _highlightTransferSlot(DurakGameView view) {
+    final focus = _activeCard ??
+        (_selected.isNotEmpty ? _selected.first : null);
+    if (focus == null || _busy || view.isOver) return false;
+    if (!_isDefendPhase(view)) return false;
+    final hand = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+    return _transferLegalFanCards(view, hand).contains(focus);
+  }
+
+  int _nextAliveAfter(DurakGameView view, int idx) {
+    final n = view.hands.length;
+    if (n <= 0) return idx;
+    final finished = view.finished.toSet();
+    for (var i = 1; i <= n; i++) {
+      final j = (idx + i) % n;
+      if (!finished.contains(j)) return j;
+    }
+    return idx;
+  }
+
+  /// Как на сервере: у следующего защитника хватает карт на весь стол после перевода.
+  bool _canTransferToNext(DurakGameView view) {
+    if (view.table.isEmpty) return false;
+    if (view.table.any((p) => p.defense != null)) return false;
+    if (_optimisticDefends.isNotEmpty) return false;
+    var cap = 6;
+    if (view.firstRound && cap > 5) cap = 5;
+    if (view.table.length + 1 > cap) return false;
+    final next = _nextAliveAfter(view, view.defenderIndex);
+    if (next < 0 || next >= view.hands.length) return false;
+    return view.hands[next].count >= view.table.length + 1;
+  }
+
   /// Неотбитые атаки на столе (индексы).
   List<int> _undefendedIndexes(DurakGameView view) {
     final out = <int>[];
@@ -835,21 +873,43 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   /// Карты, которыми можно перевести (переводной режим).
+  /// Пусто, если у следующего защитника не хватит карт отбить весь стол.
   Set<PlayingCard> _transferLegalFanCards(
     DurakGameView view,
     List<PlayingCard> hand,
   ) {
     if (view.mode != 'perevodnoi') return {};
     if (!_isDefendPhase(view)) return {};
-    if (view.table.isEmpty) return {};
-    if (view.table.any((p) => p.defense != null)) return {};
-    if (_optimisticDefends.isNotEmpty) return {};
+    if (!_canTransferToNext(view)) return {};
+    final server = _apiCardsToPlaying(view.legalTransfer).toSet();
+    if (server.isNotEmpty) {
+      return {for (final c in hand) if (server.contains(c)) c};
+    }
     final rank = view.table.first.attack.toPlayingCard().rank;
-    if (view.table.length + 1 > 6) return {};
     return {
       for (final c in hand)
         if (c.rank == rank) c,
     };
+  }
+
+  /// Выбор отбоя vs перевода: ближе к цели отбоя — бьём, к слоту — переводим.
+  bool _preferTransferOverDefend(
+    DurakGameView view,
+    PlayingCard card, {
+    Offset? pointer,
+  }) {
+    final p = pointer ?? _dragGlobal;
+    if (p == null) return false;
+    final defendIdx = _defendTargetIndex(view, card, pointer: p);
+    if (defendIdx < 0) return true;
+    final atkKey = _tableAttackKeys[defendIdx];
+    final defendCenter = (atkKey != null ? globalRectOf(atkKey)?.center : null) ??
+        _estimatePairCenter(defendIdx, view.table.length);
+    final slotCenter = globalRectOf(_attackSlotKey)?.center ??
+        _estimateAttackLandRect(view, MediaQuery.sizeOf(context)).center;
+    if (defendCenter == null) return true;
+    return (slotCenter - p).distanceSquared <
+        (defendCenter - p).distanceSquared;
   }
 
   bool _isAttackPhase(DurakGameView view) =>
@@ -986,7 +1046,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (!isDefend && !isAttack) return false;
 
     final defendTargets = _defendTargetIndexes(view, cards.first);
-    final doDefend = isDefend && defendTargets.isNotEmpty;
+    final canDefend = isDefend && defendTargets.isNotEmpty;
     final transferLegal = isDefend
         ? _transferLegalFanCards(
             view,
@@ -997,9 +1057,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             ),
           )
         : const <PlayingCard>{};
-    final doTransfer = isDefend &&
-        !doDefend &&
-        transferLegal.contains(cards.first);
+    final canTransfer =
+        isDefend && transferLegal.contains(cards.first);
+    // Козырная девятка на девятку: и отбить, и перевести — выбор по близости.
+    var doDefend = false;
+    var doTransfer = false;
+    if (canDefend && canTransfer) {
+      if (_preferTransferOverDefend(
+        view,
+        cards.first,
+        pointer: pointer,
+      )) {
+        doTransfer = true;
+      } else {
+        doDefend = true;
+      }
+    } else if (canDefend) {
+      doDefend = true;
+    } else if (canTransfer) {
+      doTransfer = true;
+    }
     final doAttack = !doDefend &&
         !doTransfer &&
         isAttack &&
@@ -4435,7 +4512,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !_busy &&
         !_flightLockTable &&
         pendingAttacks.isEmpty;
-    final showAttackSlot = canShowAttackSlot && highlightAttack;
+    // Перевод: слот рядом со столом, даже если карта ещё и бьёт атаку.
+    final showTransferSlot = lifting &&
+        !_busy &&
+        !_flightLockTable &&
+        pendingAttacks.isEmpty &&
+        _highlightTransferSlot(view);
+    final showAttackSlot =
+        (canShowAttackSlot && highlightAttack) || showTransferSlot;
 
     // Колода слева — чуть в кадре, не под боковой панелью.
     // Freeze: козырь не исчезает, пока доборные карты не улетели.
