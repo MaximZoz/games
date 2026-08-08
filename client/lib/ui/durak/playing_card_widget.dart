@@ -311,10 +311,13 @@ class CardBackWidget extends StatelessWidget {
         child: ClipRRect(
           borderRadius: radius,
           child: Center(
-            child: Icon(
-              Icons.style_rounded,
-              color: Colors.white.withValues(alpha: 0.55),
-              size: iconSize,
+            child: Transform.flip(
+              flipX: true,
+              child: Icon(
+                Icons.style_rounded,
+                color: Colors.white.withValues(alpha: 0.55),
+                size: iconSize,
+              ),
             ),
           ),
         ),

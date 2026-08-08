@@ -473,6 +473,10 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 		"players_count": len(players),
 		"max_players":   maxPlayers,
 	})
+	// Открытый поиск: обновить вкладку «Лобби» (состав / убрать при заполнении).
+	if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+		h.notifyPublicLobbiesChanged()
+	}
 
 	// Групповой чат для 3-4.
 	if maxPlayers > 2 {
@@ -569,6 +573,9 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 	pipe.HSet(ctx, "lobby:"+lobbyID, "status", lobbyStatusInGame, "game_id", gameID)
 	pipe.Expire(ctx, "lobby:"+lobbyID, 24*time.Hour)
 	_, _ = pipe.Exec(ctx)
+
+	// Приглашённые, кто ещё не вошёл — убрать карточку; лобби уходит из списка.
+	h.notifyAndClearLobbyInvites(ctx, lobbyID)
 
 	for _, u := range players {
 		clearUserActiveLobby(ctx, h.Rdb, u)

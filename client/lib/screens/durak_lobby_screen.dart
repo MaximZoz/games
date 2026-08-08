@@ -21,6 +21,7 @@ import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -214,8 +215,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.style_rounded,
-                  size: 22, color: AppColors.accentStart),
+              const DurakGameIcon(size: 22, color: AppColors.accentStart),
               const SizedBox(width: 8),
               Text(isMatchmake
                   ? context.l10n.gamesLobbyTab

@@ -298,6 +298,11 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !h.requireRedis(w, r) {
 		return
 	}
+	// Активные приглашения текущего пользователя (после reconnect).
+	if r.URL.Path == "/api/games/invites" && r.Method == http.MethodGet {
+		h.ListPendingInvites(w, r)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/durak/") {
 		h.serveDurak(w, r)
 		return
@@ -2331,7 +2336,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 				})
 			}
 		}
-		h.Rdb.Del(ctx, key+":invited")
+		// Приглашённые (кто не успел войти) — снять карточку.
+		h.notifyAndClearLobbyInvites(ctx, lobbyID)
 	}
 
 	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
@@ -2491,10 +2497,10 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	}
 
 	if dissolve {
-		// Сначала собираем аудиторию (включая :invited), потом удаляем ключи.
+		// Сначала аудитория (включая :invited), потом invite_cancelled + Del.
 		notifyIDs := h.lobbyAudienceUUIDs(ctx, key, m, players)
+		h.notifyAndClearLobbyInvites(ctx, lobbyID)
 		h.Rdb.Del(ctx, key)
-		h.Rdb.Del(ctx, key+":invited")
 		if status == lobbyStatusWaitingMatchmake {
 			turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 			stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
@@ -2630,6 +2636,143 @@ func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lob
 		"declined": true,
 		"closed":   false,
 	})
+}
+
+// notifyAndClearLobbyInvites — убрать приглашения: WS invite_cancelled + Del :invited.
+// Вызывать при старте партии / роспуске, чтобы карточка не зависала у приглашённых.
+func (h *GamesHandler) notifyAndClearLobbyInvites(ctx context.Context, lobbyID string) {
+	if h.Rdb == nil || lobbyID == "" {
+		return
+	}
+	key := "lobby:" + lobbyID
+	invitedKey := key + ":invited"
+	members, _ := h.Rdb.SMembers(ctx, invitedKey).Result()
+	m, _ := h.Rdb.HGetAll(ctx, key).Result()
+	seen := map[string]struct{}{}
+	for _, mid := range members {
+		if mid = strings.TrimSpace(mid); mid != "" {
+			seen[mid] = struct{}{}
+		}
+	}
+	if t := strings.TrimSpace(m["invite_target_id"]); t != "" {
+		seen[t] = struct{}{}
+	}
+	uuids := make([]uuid.UUID, 0, len(seen))
+	for id := range seen {
+		u, err := uuid.Parse(id)
+		if err != nil {
+			continue
+		}
+		uuids = append(uuids, u)
+		clearUserActiveLobbyIfMatch(ctx, h.Rdb, u, lobbyID)
+	}
+	if len(uuids) > 0 {
+		h.broadcast(uuids, map[string]any{
+			"type":     "invite_cancelled",
+			"lobby_id": lobbyID,
+			"reason":   "lobby_closed",
+		})
+	}
+	h.Rdb.Del(ctx, invitedKey)
+}
+
+// ListPendingInvites — GET /api/games/invites — лобби, куда меня пригласили и ещё ждут.
+func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*:invited")
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	out := make([]map[string]any, 0)
+	uid := userID.String()
+	for _, invitedKey := range keys {
+		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
+		if !okMem {
+			continue
+		}
+		lobbyID := strings.TrimSuffix(strings.TrimPrefix(invitedKey, "lobby:"), ":invited")
+		if lobbyID == "" || lobbyID == invitedKey {
+			continue
+		}
+		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+		if len(m) == 0 {
+			continue
+		}
+		st := m["status"]
+		if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
+			continue
+		}
+		creatorID := strings.TrimSpace(m["creator_id"])
+		if creatorID == "" || creatorID == uid {
+			continue
+		}
+		creatorUUID, err := uuid.Parse(creatorID)
+		if err != nil {
+			continue
+		}
+		creator, _ := store.GetUserByID(ctx, h.Pool, creatorUUID)
+		creatorName := "Игрок"
+		creatorAvatarKind := "letter"
+		creatorAvatarValue := ""
+		if creator != nil {
+			if creator.DisplayName != nil && *creator.DisplayName != "" {
+				creatorName = *creator.DisplayName
+			}
+			if creator.AvatarKind != "" {
+				creatorAvatarKind = creator.AvatarKind
+			}
+			if creator.AvatarValue != nil {
+				creatorAvatarValue = *creator.AvatarValue
+			}
+		}
+		gt := strings.TrimSpace(m["game_type"])
+		if gt == "" {
+			gt = "tictactoe"
+		}
+		turnT, _ := strconv.Atoi(m["turn_time_sec"])
+		stake, _ := strconv.Atoi(m["stake_bronze"])
+		maxP, _ := strconv.Atoi(m["max_players"])
+		item := map[string]any{
+			"lobby_id":            lobbyID,
+			"creator_id":          creatorID,
+			"creator_name":        creatorName,
+			"creator_avatar_kind": creatorAvatarKind,
+			"game_type":           gt,
+			"turn_time_sec":       turnT,
+			"stake_bronze":        stake,
+			"max_players":         maxP,
+		}
+		if creatorAvatarValue != "" {
+			item["creator_avatar_value"] = creatorAvatarValue
+		}
+		if gt == durakGameType {
+			deck, _ := strconv.Atoi(m["deck_size"])
+			if deck <= 0 {
+				deck = 36
+			}
+			item["deck_size"] = deck
+			mode := strings.TrimSpace(m["game_mode"])
+			if mode == "" {
+				mode = "podkidnoi"
+			}
+			item["game_mode"] = mode
+		} else {
+			item["variant"] = m["variant"]
+			gs, _ := strconv.Atoi(m["grid_size"])
+			item["grid_size"] = gs
+			item["swap_rule"] = m["swap_rule"] == "1" || m["swap_rule"] == "true"
+			item["first_move_restriction"] = m["first_move_restriction"] == "1" || m["first_move_restriction"] == "true"
+		}
+		out = append(out, item)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"invites": out})
 }
 
 // CancelInvite — создатель/участник отзывает своё приглашение другу.
@@ -3676,7 +3819,7 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	// Выбывший не должен оставаться в active_game — переносим в observation.
 	if parseEliminatedMarks(gm["eliminated_marks"])[mark] {
 		clearUserActiveGame(ctx, h.Rdb, userID)
-		setUserObservingGame(ctx, h.Rdb, userID, gid)
+		setUserObservingGame(ctx, h.Rdb, userID, gid, gm["game_type"])
 		return ""
 	}
 	return gid
@@ -3986,11 +4129,24 @@ func clearUserActiveLobbyIfMatch(ctx context.Context, rdb *redis.Client, userID 
 	rdb.Del(ctx, userActiveLobbyKey(userID))
 }
 
-func setUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
+func userObservingGameTypeKey(userID uuid.UUID) string {
+	return "user:" + userID.String() + ":observing_game_type"
+}
+
+func setUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string, gameType string) {
 	if rdb == nil || gameID == "" {
 		return
 	}
 	rdb.Set(ctx, userObservingGameKey(userID), gameID, 24*time.Hour)
+	gt := strings.TrimSpace(gameType)
+	if gt == "" {
+		if v, err := rdb.HGet(ctx, "game:"+gameID, "game_type").Result(); err == nil {
+			gt = strings.TrimSpace(v)
+		}
+	}
+	if gt != "" {
+		rdb.Set(ctx, userObservingGameTypeKey(userID), gt, 24*time.Hour)
+	}
 }
 
 func clearUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.UUID) {
@@ -3998,6 +4154,7 @@ func clearUserObservingGame(ctx context.Context, rdb *redis.Client, userID uuid.
 		return
 	}
 	rdb.Del(ctx, userObservingGameKey(userID))
+	rdb.Del(ctx, userObservingGameTypeKey(userID))
 }
 
 func clearUserObservingGameIfMatch(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
@@ -4009,6 +4166,7 @@ func clearUserObservingGameIfMatch(ctx context.Context, rdb *redis.Client, userI
 		return
 	}
 	rdb.Del(ctx, userObservingGameKey(userID))
+	rdb.Del(ctx, userObservingGameTypeKey(userID))
 }
 
 // observationPayload — карточка «Наблюдение», пока партия ещё идёт.
@@ -4025,7 +4183,13 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
 	}
-	gt := strings.TrimSpace(m["game_type"])
+	gt := ""
+	if stored, err := h.Rdb.Get(ctx, userObservingGameTypeKey(userID)).Result(); err == nil {
+		gt = strings.TrimSpace(stored)
+	}
+	if gt == "" {
+		gt = strings.TrimSpace(m["game_type"])
+	}
 	if gt == "" {
 		gt = "tictactoe"
 	}
@@ -4043,6 +4207,10 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 	if !inGame {
 		clearUserObservingGame(ctx, h.Rdb, userID)
 		return nil
+	}
+	// Подтянуть тип в Redis, если ещё не записан.
+	if stored, _ := h.Rdb.Get(ctx, userObservingGameTypeKey(userID)).Result(); strings.TrimSpace(stored) == "" {
+		h.Rdb.Set(ctx, userObservingGameTypeKey(userID), gt, 24*time.Hour)
 	}
 	return map[string]any{
 		"game_id":   gameID,

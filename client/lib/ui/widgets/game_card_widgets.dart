@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 /// Верхний блок карточки игры: иконка + заголовок + ставка (кликабельная) +
@@ -10,6 +11,7 @@ class GameCardHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.flipIcon = false,
     this.stakeBronze,
     this.stakeLabel,
     this.stakeCoinType = CoinType.bronze,
@@ -22,6 +24,9 @@ class GameCardHeader extends StatelessWidget {
 
   final String title;
   final IconData icon;
+
+  /// Зеркалить иконку по X (Дурак — веер карт).
+  final bool flipIcon;
 
   /// Отображаемая ставка (например, `1`, `10`). null → блок ставки скрыт.
   final int? stakeBronze;
@@ -53,7 +58,9 @@ class GameCardHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           alignment: Alignment.center,
-          child: Icon(icon, color: Colors.white, size: 26),
+          child: flipIcon
+              ? DurakGameIcon(size: 26, color: Colors.white)
+              : Icon(icon, color: Colors.white, size: 26),
         ),
         SizedBox(width: isDesktop ? 20 : 12),
         Expanded(
@@ -135,6 +142,7 @@ class GameCardChip extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.flipIcon = false,
     this.selected = true,
     this.compact = false,
     this.isDesktop = false,
@@ -143,6 +151,9 @@ class GameCardChip extends StatelessWidget {
 
   final String label;
   final IconData icon;
+
+  /// Зеркалить иконку по X (иконка Дурака / колоды).
+  final bool flipIcon;
   final VoidCallback? onTap;
   final bool selected;
   final bool compact;
@@ -182,7 +193,9 @@ class GameCardChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: iconSz, color: color),
+              flipIcon
+                  ? DurakGameIcon(size: iconSz, color: color)
+                  : Icon(icon, size: iconSz, color: color),
               SizedBox(width: compact ? 4 : 6),
               Text(
                 label,

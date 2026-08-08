@@ -15,6 +15,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -819,7 +820,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 }
 
-class _GamesPageContent extends StatelessWidget {
+class _GamesPageContent extends ConsumerWidget {
   const _GamesPageContent({
     required this.isDesktop,
     required this.isCreating,
@@ -863,7 +864,7 @@ class _GamesPageContent extends StatelessWidget {
   final double contentPadding;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -993,11 +994,30 @@ class _GamesPageContent extends StatelessWidget {
                         child: GradientCard(
                           padding: const EdgeInsets.all(16),
                           child: InkWell(
-                            onTap: () {
-                              context.push(gamePathFor(
-                                obs.gameId,
-                                gameType: obs.gameType,
-                              ));
+                            onTap: () async {
+                              var gt = normalizeGameType(obs.gameType);
+                              // Если тип неизвестен/дефолт — пробуем Дурак по game_id.
+                              if (gt != 'durak') {
+                                try {
+                                  await ref
+                                      .read(durakRepositoryProvider)
+                                      .getGame(obs.gameId);
+                                  gt = 'durak';
+                                  ref
+                                      .read(activeGameProvider.notifier)
+                                      .setObservationLocal(
+                                        ObservationItem(
+                                          gameId: obs.gameId,
+                                          lobbyId: obs.lobbyId,
+                                          gameType: 'durak',
+                                        ),
+                                      );
+                                } catch (_) {}
+                              }
+                              if (!context.mounted) return;
+                              context.push(
+                                gamePathFor(obs.gameId, gameType: gt),
+                              );
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: const Row(
@@ -1202,13 +1222,16 @@ class _LobbiesPageContent extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      lobby.isDurak
-                                          ? Icons.style_rounded
-                                          : Icons.grid_3x3_rounded,
-                                      size: isDesktop ? 36 : 32,
-                                      color: AppColors.accentStart,
-                                    ),
+                                    lobby.isDurak
+                                        ? DurakGameIcon(
+                                            size: isDesktop ? 36 : 32,
+                                            color: AppColors.accentStart,
+                                          )
+                                        : Icon(
+                                            Icons.grid_3x3_rounded,
+                                            size: isDesktop ? 36 : 32,
+                                            color: AppColors.accentStart,
+                                          ),
                                     SizedBox(width: isDesktop ? 16 : 12),
                                     Expanded(
                                       child: Column(
@@ -1601,7 +1624,8 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       ),
       GameCardChip(
         selected: true,
-        icon: Icons.style_rounded,
+        icon: DurakGameIcon.iconData,
+        flipIcon: true,
         label: _deckLabel(_deckSize),
         onTap: busy ? null : _cycleDeck,
         isDesktop: isDesktop,
@@ -1614,7 +1638,8 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       isMedium: isMedium,
       header: GameCardHeader(
         title: 'Дурак',
-        icon: Icons.style_rounded,
+        icon: DurakGameIcon.iconData,
+        flipIcon: true,
         stakeBronze: widget.isOffline ? null : widget.stakeBronze,
         stakeLabel: formatStakeAmount(widget.stakeBronze),
         stakeCoinType: stakeCoinType(widget.stakeBronze),
@@ -2341,9 +2366,10 @@ class _InviteCard extends ConsumerWidget {
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
                             if (inv.isDurak) ...[
-                              Icon(Icons.style_rounded,
-                                  size: iconSz,
-                                  color: AppColors.textSecondary),
+                              DurakGameIcon(
+                                size: iconSz,
+                                color: AppColors.textSecondary,
+                              ),
                               Text(
                                 '${inv.deckSize}',
                                 style: const TextStyle(
@@ -2402,11 +2428,7 @@ class _InviteGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = switch (gameType) {
-      'durak' => Icons.style_rounded,
-      'tictactoe' => Icons.grid_3x3_rounded,
-      _ => Icons.grid_3x3_rounded,
-    };
+    final isDurak = gameType == 'durak';
     return Container(
       width: 44,
       height: 44,
@@ -2419,7 +2441,9 @@ class _InviteGameIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: Colors.white, size: 26),
+      child: isDurak
+          ? const DurakGameIcon(size: 26, color: Colors.white)
+          : const Icon(Icons.grid_3x3_rounded, color: Colors.white, size: 26),
     );
   }
 }

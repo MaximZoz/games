@@ -12,7 +12,13 @@ import (
 // Общая логика для крестиков, дурака и будущих игр.
 func moveActiveToObserving(ctx context.Context, rdb *redis.Client, userID uuid.UUID, gameID string) {
 	clearUserActiveGame(ctx, rdb, userID)
-	setUserObservingGame(ctx, rdb, userID, gameID)
+	gt := ""
+	if rdb != nil && gameID != "" {
+		if v, err := rdb.HGet(ctx, "game:"+gameID, "game_type").Result(); err == nil {
+			gt = v
+		}
+	}
+	setUserObservingGame(ctx, rdb, userID, gameID, gt)
 }
 
 // clearUsersFinishedGame — снять active/observation/lobby по оконченной партии.

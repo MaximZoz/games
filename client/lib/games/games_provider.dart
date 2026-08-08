@@ -6,6 +6,7 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -69,6 +70,14 @@ final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
 
+  // После логина / rebuild — восстановить карточки приглашений с сервера.
+  final user = ref.watch(authStateProvider).valueOrNull;
+  if (user != null) {
+    unawaited(
+      notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
+    );
+  }
+
   ref.listen<AsyncValue<Map<String, dynamic>>>(
     realtimeEventsProvider,
     (_, next) {
@@ -125,6 +134,13 @@ final gameInvitesProvider =
         }
         return;
       }
+      // После reconnect — восстановить карточки, которые пришли, пока были offline.
+      if (type == 'realtime_connected') {
+        unawaited(
+          notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
+        );
+        return;
+      }
       // Приглашение больше не актуально: лобби закрыто, игра началась, или
       // создатель/соперник ушёл.
       if (type == 'lobby_updated' || type == 'game_started') {
@@ -151,6 +167,56 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   void add(GameInvite invite) {
     if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
     state = [...state, invite];
+  }
+
+  /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
+  /// Сервер — источник истины для уже известных карточек; WS-инвайты,
+  /// пришедшие во время запроса, сохраняем.
+  Future<void> hydrateFromServer(GamesRepository repo) async {
+    try {
+      final snapshot = List<GameInvite>.of(state);
+      final raw = await repo.listPendingInvites();
+      final next = <GameInvite>[];
+      for (final m in raw) {
+        final lobbyId = m['lobby_id']?.toString() ?? '';
+        if (lobbyId.isEmpty || next.any((i) => i.lobbyId == lobbyId)) {
+          continue;
+        }
+        final gameType = m['game_type']?.toString() ?? 'tictactoe';
+        final rawVariant = m['variant']?.toString();
+        final legacyGrid = (m['grid_size'] as num?)?.toInt() ?? 3;
+        final variant = rawVariant == null || rawVariant.isEmpty
+            ? variantFromLegacyGrid(legacyGrid)
+            : parseVariant(rawVariant);
+        final cfg = configForVariant(variant);
+        next.add(GameInvite(
+          lobbyId: lobbyId,
+          creatorId: m['creator_id']?.toString() ?? '',
+          creatorName: localizeDisplayName(m['creator_name']?.toString()),
+          gameType: gameType,
+          turnTimeSec: (m['turn_time_sec'] as num?)?.toInt() ?? 0,
+          variant: variant,
+          gridSize: cfg.gridSize,
+          maxPlayers: (m['max_players'] as num?)?.toInt() ?? cfg.maxPlayers,
+          swapRule: m['swap_rule'] == true,
+          firstMoveRestriction: m['first_move_restriction'] == true,
+          creatorAvatarKind: m['creator_avatar_kind']?.toString() ?? 'letter',
+          creatorAvatarValue: m['creator_avatar_value']?.toString(),
+          stakeBronze: (m['stake_bronze'] as num?)?.toInt() ?? 2,
+          deckSize: (m['deck_size'] as num?)?.toInt() ?? 36,
+          durakMode: m['game_mode']?.toString() ?? 'podkidnoi',
+        ));
+      }
+      final serverIds = next.map((i) => i.lobbyId).toSet();
+      // Инвайты, пришедшие по WS пока шёл GET — не затирать.
+      for (final inv in state) {
+        final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
+        if (!wasKnown && !serverIds.contains(inv.lobbyId)) {
+          next.add(inv);
+        }
+      }
+      state = next;
+    } catch (_) {}
   }
 
   void remove(String lobbyId) {
@@ -260,17 +326,24 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int get epoch => _epoch;
 
   void _applyObservation(ObservationItem? obs) {
-    // Не затирать durak→tictactoe, если сервер ещё без game_type.
+    // Не затирать/не дефолтить durak→tictactoe.
     if (obs != null) {
       final prev = ref.read(observationGameProvider);
+      final incoming = normalizeGameType(obs.gameType);
       if (prev != null &&
           prev.gameId == obs.gameId &&
-          prev.gameType == 'durak' &&
-          (obs.gameType.isEmpty || obs.gameType == 'tictactoe')) {
+          normalizeGameType(prev.gameType) == 'durak' &&
+          incoming != 'durak') {
         obs = ObservationItem(
           gameId: obs.gameId,
           lobbyId: obs.lobbyId ?? prev.lobbyId,
           gameType: 'durak',
+        );
+      } else if (incoming != obs.gameType) {
+        obs = ObservationItem(
+          gameId: obs.gameId,
+          lobbyId: obs.lobbyId,
+          gameType: incoming,
         );
       }
     }

@@ -1007,8 +1007,10 @@ class ActiveSessionResult {
   factory ActiveSessionResult.fromJson(Map<String, dynamic> json) {
     ObservationItem? obs;
     final rawObs = json['observation'];
-    if (rawObs is Map<String, dynamic>) {
-      final item = ObservationItem.fromJson(rawObs);
+    if (rawObs is Map) {
+      final item = ObservationItem.fromJson(
+        Map<String, dynamic>.from(rawObs),
+      );
       if (item.gameId.trim().isNotEmpty) obs = item;
     }
     final type = json['type']?.toString();
@@ -1715,6 +1717,30 @@ class GamesRepository {
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return UserGameSettings.fromJson(body);
+  }
+
+  /// GET /api/games/invites — активные приглашения (после reconnect).
+  Future<List<Map<String, dynamic>>> listPendingInvites() async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/games/invites'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.listPendingInvites',
+      ),
+    );
+    if (response.statusCode == 204 || response.statusCode == 404) {
+      return const [];
+    }
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['invites'] as List<dynamic>? ?? [];
+    return list
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .where((m) => (m['lobby_id']?.toString() ?? '').isNotEmpty)
+        .toList();
   }
 
   /// GET /api/games/stats — статистика (W/D/L, win-rate, время, топ соперников).

@@ -5,6 +5,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
@@ -128,7 +129,7 @@ class GameStatsBody extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _GameStatsBlock(
                     title: _gameTypeTitle(l10n, g.gameType),
-                    icon: _gameTypeIcon(g.gameType),
+                    icon: _gameTypeIconWidget(g.gameType, size: 20),
                     wins: g.won,
                     draws: g.drawn,
                     losses: g.lost,
@@ -150,17 +151,21 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
   switch (gameType) {
     case 'tictactoe':
       return l10n.gamesTicTacToe;
+    case 'durak':
+      return 'Дурак';
     default:
       return gameType;
   }
 }
 
-IconData _gameTypeIcon(String gameType) {
+Widget _gameTypeIconWidget(String gameType, {double size = 22}) {
   switch (gameType) {
     case 'tictactoe':
-      return Icons.grid_3x3_rounded;
+      return Icon(Icons.grid_3x3_rounded, color: Colors.white, size: size);
+    case 'durak':
+      return DurakGameIcon(size: size, color: Colors.white);
     default:
-      return Icons.sports_esports_rounded;
+      return Icon(Icons.sports_esports_rounded, color: Colors.white, size: size);
   }
 }
 
@@ -234,7 +239,7 @@ class _GameStatsBlock extends StatelessWidget {
   });
 
   final String title;
-  final IconData icon;
+  final Object icon; // IconData («все игры») или Widget (Дурак и т.п.)
   final int wins;
   final int draws;
   final int losses;
@@ -267,7 +272,14 @@ class _GameStatsBlock extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                alignment: Alignment.center,
+                child: icon is Widget
+                    ? icon as Widget
+                    : Icon(
+                        icon as IconData,
+                        color: Colors.white,
+                        size: 20,
+                      ),
               ),
               const SizedBox(width: 10),
               Expanded(

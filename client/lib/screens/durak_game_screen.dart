@@ -3557,9 +3557,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         clearBlockingGamePin(ref, ifGameId: widget.gameId);
-        final alreadyObs =
-            ref.read(observationGameProvider)?.gameId == widget.gameId;
-        if (!alreadyObs) {
+        final curObs = ref.read(observationGameProvider);
+        if (curObs?.gameId != widget.gameId || curObs?.gameType != 'durak') {
           enterGameObservation(ref, widget.gameId, gameType: 'durak');
         }
         unawaited(ref.read(activeGameProvider.notifier).refresh());
