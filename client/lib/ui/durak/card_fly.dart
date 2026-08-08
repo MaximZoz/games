@@ -31,7 +31,8 @@ class CardFlyTicket {
 }
 
 /// Плавный полёт карты из [from] в [to] поверх всего UI.
-/// Позиция/масштаб/поворот — только через [Transform] (без layout каждый кадр).
+/// Координаты — [Positioned] в fullscreen [Stack] (как globalRectOf);
+/// поворот/масштаб — [Transform] на самой карте.
 Future<CardFlyTicket> playCardFlyAnimation({
   required BuildContext context,
   required PlayingCard card,
@@ -76,12 +77,15 @@ Future<CardFlyTicket> playCardFlyAnimation({
                 arcLift == 0 ? 0.0 : -arcLift * math.sin(math.pi * t);
             final left = cx - cardSize.width / 2;
             final top = cy - cardSize.height / 2 + midLift;
-            // Transform-only: не трогаем Positioned/layout на каждом тике.
-            return Transform.translate(
-              offset: Offset(left, top),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
+            // Positioned в expand-Stack: те же global-координаты, что у
+            // globalRectOf / слота посадки. Transform.translate+Align давал
+            // посадку «в центр», потом snap на место.
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned(
+                  left: left,
+                  top: top,
                   width: cardSize.width,
                   height: cardSize.height,
                   child: RepaintBoundary(
@@ -95,7 +99,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
                     ),
                   ),
                 ),
-              ),
+              ],
             );
           },
           child: _FlyFace(
