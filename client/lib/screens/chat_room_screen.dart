@@ -676,6 +676,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           _editingMessage = null;
           _composerAlert = null;
         });
+        _composerFocusNode.requestFocus();
       } on ChatException catch (e) {
         if (e.statusCode == 401) {
           await ref.read(authStateProvider.notifier).logout();
@@ -740,6 +741,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _replyTo = null;
         _pendingImages.clear();
       });
+      // Клавиатуру не прячем — сразу возвращаем фокус в поле.
+      _composerFocusNode.requestFocus();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -3143,7 +3146,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -3155,10 +3158,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                           ? null
                           : _pickPhoto,
                       tooltip: context.l10n.photo,
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                       icon: Icon(
                         Icons.image_outlined,
@@ -3168,14 +3171,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 _pendingImages.length >= _maxPendingImages)
                             ? _composerIconPurple.withValues(alpha: 0.35)
                             : _composerIconPurple,
-                        size: 24,
+                        size: 28,
                       ),
                     ),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(22),
+                          borderRadius: BorderRadius.circular(26),
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Column(
@@ -3244,12 +3247,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                               focusNode: _composerFocusNode,
                               minLines: 1,
                               maxLines: 4,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 1.3,
+                                color: AppColors.textPrimary,
+                              ),
                               textCapitalization:
                                   TextCapitalization.sentences,
                               // Тема приложения рисует OutlineInputBorder —
                               // явно гасим все границы и заливку.
                               decoration: InputDecoration(
                                 hintText: context.l10n.chatMessageHint,
+                                hintStyle: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.textSecondary
+                                      .withValues(alpha: 0.85),
+                                ),
                                 filled: false,
                                 isDense: true,
                                 border: InputBorder.none,
@@ -3259,31 +3272,37 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 errorBorder: InputBorder.none,
                                 focusedErrorBorder: InputBorder.none,
                                 contentPadding: const EdgeInsets.fromLTRB(
+                                  16,
                                   14,
-                                  12,
                                   4,
-                                  12,
+                                  14,
                                 ),
                                 suffixIcon: IconButton(
                                   onPressed:
                                       _sending ? null : _openEmojiPicker,
                                   tooltip: context.l10n.chatEmoji,
-                                  splashRadius: 20,
+                                  splashRadius: 22,
                                   icon: const Icon(
                                     Icons.emoji_emotions_outlined,
                                     color: _composerIconPurple,
-                                    size: 24,
+                                    size: 28,
                                   ),
                                 ),
                                 suffixIconConstraints:
                                     const BoxConstraints(
-                                  minWidth: 40,
-                                  minHeight: 40,
+                                  minWidth: 48,
+                                  minHeight: 48,
                                 ),
                               ),
                               textInputAction: TextInputAction.send,
                               onTap: _scrollToBottom,
-                              onSubmitted: (_) => _sendMessage(),
+                              onSubmitted: (_) {
+                                unawaited(_sendMessage().whenComplete(() {
+                                  if (mounted) {
+                                    _composerFocusNode.requestFocus();
+                                  }
+                                }));
+                              },
                             ),
                           ],
                         ),
@@ -3293,14 +3312,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       onPressed: (_sending ||
                               _pendingImages.any((e) => e.isLoading))
                           ? null
-                          : _sendMessage,
+                          : () => unawaited(_sendMessage()),
                       tooltip: _editingMessage != null
                           ? context.l10n.commonSave
                           : context.l10n.commonSend,
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
                       icon: _sending
                           ? const SizedBox(
-                              width: 18,
-                              height: 18,
+                              width: 22,
+                              height: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: _composerIconPurple,
@@ -3311,6 +3335,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ? Icons.check_rounded
                                   : Icons.send_rounded,
                               color: _composerIconPurple,
+                              size: 28,
                             ),
                     ),
                   ],
