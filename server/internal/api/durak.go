@@ -1364,8 +1364,9 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 	encoded, _ := durak.Encode(state)
 	humans := durakHumans(m)
 	if continues {
-		// Как в крестиках multi: партия идёт, сдавшийся → observation.
-		fields := []any{"state", encoded, "forfeit", "1"}
+		// Партия идёт: не ставим forfeit на игру — иначе в конце у
+		// оставшихся будет «Соперник сдался», хотя сдался третий раньше.
+		fields := []any{"state", encoded}
 		if turnT, e := strconv.Atoi(m["turn_time_sec"]); e == nil && turnT > 0 {
 			fields = append(fields,
 				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
@@ -1373,13 +1374,15 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 			)
 		}
 		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+		// Сбрасываем «липкий» forfeit от прошлой сдачи (если был).
+		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit")
 		moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 		h.broadcast(humans, map[string]any{
-			"type":      "game_state",
-			"game_id":   gameID,
-			"game_type": durakGameType,
-			"forfeit":   true,
-			"eliminated": true,
+			"type":         "game_state",
+			"game_id":      gameID,
+			"game_type":    durakGameType,
+			"forfeit":      true,
+			"eliminated":   true,
 			"left_user_id": userID.String(),
 		})
 		w.Header().Set("Content-Type", "application/json")
@@ -1883,7 +1886,9 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	}
 	humans := durakHumans(fresh)
 	if continues {
-		fields := []any{"state", encoded, "timeout", "1"}
+		// Как с forfeit: mid-game вылет по времени не помечает всю партию
+		// timeout — иначе победителю в конце покажут «время соперника вышло».
+		fields := []any{"state", encoded}
 		if turnT, e := strconv.Atoi(fresh["turn_time_sec"]); e == nil && turnT > 0 {
 			fields = append(fields,
 				"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
@@ -1891,6 +1896,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 			)
 		}
 		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+		h.Rdb.HDel(ctx, "game:"+gameID, "timeout")
 		h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
 		if timedOutIdx >= 0 && timedOutIdx < len(state.PlayerIDs) {
 			if u, err := uuid.Parse(state.PlayerIDs[timedOutIdx]); err == nil && !isBot(state.PlayerIDs[timedOutIdx]) {

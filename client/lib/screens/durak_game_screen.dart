@@ -5365,6 +5365,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _iWon(DurakGameView view) =>
       !view.isDraw && !view.iAmEliminated && view.myPlace > 0;
 
+  /// Победа из‑за сдачи/таймаута соперника — только в 1×1.
+  ///
+  /// Втроём/вчетвером флаг forfeit/timeout мог остаться от раннего выбывшего;
+  /// «Соперник сдался» показываем, если игра изначально 1×1 либо конец —
+  /// сдача/таймаут последнего соперника (он же loser и в eliminated).
+  bool _isDecisiveOpponentExitWin(DurakGameView view) {
+    if (view.myPlace != 1 || view.isDraw) return false;
+    if (!view.isForfeit && !view.isTimeout) return false;
+    if (view.playerIds.length <= 2) return true;
+    final loser = view.loserIndex;
+    return loser >= 0 && view.isEliminated(loser);
+  }
+
   bool _showRewardChip(DurakGameView view) {
     if (view.stakeBronze <= 0) return false;
     // Mid-game после выхода «в ноль» или итог партии.
@@ -5436,10 +5449,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (view.isDraw) return l10n.gameDraw;
       final place = view.myPlace;
       final winnerName = _winnerName(view);
-      // 1-е место — с причиной конца, если соперник сдался/вылетел по времени.
+      // 1-е место: «соперник сдался/время» только в реальном 1×1
+      // (изначально двое или сдался/вылетел последний соперник).
       if (place == 1) {
-        if (view.isForfeit) return l10n.gameYouWonOpponentForfeit;
-        if (view.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        if (_isDecisiveOpponentExitWin(view)) {
+          if (view.isForfeit) return l10n.gameYouWonOpponentForfeit;
+          if (view.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        }
         return l10n.gameYouWon;
       }
       // 2-е и дальше — всегда своё место. Не «Время вышло»: флаг timeout
