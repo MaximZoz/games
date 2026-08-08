@@ -145,6 +145,8 @@ class DurakGameView {
     required this.turnDeadline,
     required this.stakeBronze,
     this.legalTransfer = const [],
+    this.canThrowIn = false,
+    this.turnActorIdx = -1,
     this.isDraw = false,
     this.isForfeit = false,
     this.isTimeout = false,
@@ -176,6 +178,12 @@ class DurakGameView {
 
   /// Карты для перевода (переводной); пусто, если у следующего мало карт.
   final List<DurakApiCard> legalTransfer;
+
+  /// Можно подкинуть сейчас (3–4 игрока; при 4 — только соседи защитника).
+  final bool canThrowIn;
+
+  /// Чей таймер хода (рамка на аватаре).
+  final int turnActorIdx;
   final int loserIndex;
   final List<int> finished;
   final int turnTimeSec;
@@ -205,18 +213,20 @@ class DurakGameView {
   /// Чей сейчас «ход по таймеру» (защитник бьёт / атакующий кладёт / вдогонку).
   bool get isMyTurn {
     if (isOver) return false;
+    if (turnActorIdx >= 0) return turnActorIdx == myIndex;
     if (phase == 'defend') return defenderIndex == myIndex;
-    // take_follow / attack / attack_follow — атакующий.
     return attackerIndex == myIndex;
   }
 
-  /// Можно ли трогать веер: свой ход или подкид, пока защитник бьёт.
+  /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
     if (isOver) return false;
+    if (defenderIndex == myIndex && phase == 'defend') return true;
+    if (canThrowIn || legalAttack.isNotEmpty) return true;
     if (phase == 'defend') {
       return defenderIndex == myIndex || attackerIndex == myIndex;
     }
-    if (phase == 'take_follow') return attackerIndex == myIndex;
+    if (phase == 'take_follow') return attackerIndex == myIndex || canThrowIn;
     return attackerIndex == myIndex;
   }
 
@@ -287,6 +297,8 @@ class DurakGameView {
               .map((e) => DurakApiCard.fromJson(e.cast<String, dynamic>()))
               .toList() ??
           const [],
+      canThrowIn: json['can_throw_in'] == true,
+      turnActorIdx: (json['turn_actor_idx'] as num?)?.toInt() ?? -1,
       loserIndex: loserIdx,
       finished: (json['finished'] as List?)
               ?.map((e) => (e as num).toInt())

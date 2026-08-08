@@ -906,6 +906,12 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			WriteErr(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+	case "pass":
+		// Отказ подкидывать (3–4 игрока); когда все пасанули — бито/взятие.
+		if err := state.Pass(idx); err != nil {
+			WriteErr(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
 	default:
 		WriteErr(w, r, http.StatusBadRequest, "unknown move type")
 		return
@@ -1280,14 +1286,16 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"last_was_take":  s.LastWasTake,
 		"first_round":    s.FirstRound,
 		"my_index":       myIdx,
-		"legal_attack":   legalAttack,
-		"legal_defend":   legalDefend,
-		"legal_transfer": legalTransfer,
-		"loser_index":    s.LoserIndex,
-		"finished":       s.FinishedIndices,
-		"turn_time_sec":  turnT,
-		"turn_deadline":  turnDeadline,
-		"stake_bronze":   func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
+		"legal_attack":    legalAttack,
+		"legal_defend":    legalDefend,
+		"legal_transfer":  legalTransfer,
+		"can_throw_in":    s.CanThrowIn(myIdx),
+		"turn_actor_idx":  durakTurnActorIdx(s),
+		"loser_index":     s.LoserIndex,
+		"finished":        s.FinishedIndices,
+		"turn_time_sec":   turnT,
+		"turn_deadline":   turnDeadline,
+		"stake_bronze":    func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
 	}
 }
 
@@ -1448,8 +1456,7 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	h.recordDurakGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
 }
 
-// settleDurakCoins — банк как в крестиках: 1×1 победитель получает 2*stake,
-// ничья — возврат; multi — ставка дурака делится между остальными (+возврат своей).
+// settleDurakCoins — тот же банк, что в крестиках (SettleStakePot): stake×N победителям.
 func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int) {
 	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1466,77 +1473,31 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 	if len(ids) < 2 {
 		return
 	}
-	if m["draw"] == "1" {
-		for _, pid := range ids {
-			if isBot(pid) {
-				continue
-			}
-			if u, e := uuid.Parse(pid); e == nil {
-				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
-			}
-		}
+	isDraw := m["draw"] == "1" || state.LoserIndex < 0 || state.LoserIndex >= len(ids)
+	if isDraw {
+		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, nil, true, isBot)
 		return
 	}
-	if state.LoserIndex < 0 || state.LoserIndex >= len(ids) {
-		// Нет дурака — возвращаем ставки.
-		for _, pid := range ids {
-			if isBot(pid) {
-				continue
-			}
-			if u, e := uuid.Parse(pid); e == nil {
-				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
-			}
+	winners := make([]string, 0, len(ids)-1)
+	for i, pid := range ids {
+		if i == state.LoserIndex {
+			continue
 		}
-		return
+		winners = append(winners, pid)
 	}
+	// 1×1 vs бот: человек проиграл — без выплат; победил — банк stake×2.
 	if len(ids) == 2 {
-		winner := ids[0]
-		if state.LoserIndex == 0 {
-			winner = ids[1]
-		}
+		winner := winners[0]
 		loser := ids[state.LoserIndex]
 		if isBot(winner) {
-			// Человек проиграл боту — ничего не возвращаем.
 			return
 		}
 		if isBot(loser) {
-			// Победа над ботом: возврат + выигрыш = 2*stake.
-			if u, e := uuid.Parse(winner); e == nil {
-				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze*2)
-			}
+			_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, []string{winner}, false, isBot)
 			return
 		}
-		wUUID, we := uuid.Parse(winner)
-		lUUID, le := uuid.Parse(loser)
-		if we != nil || le != nil {
-			return
-		}
-		// SettleGameCoins ждёт метку x/o — победитель как "x".
-		_ = store.SettleGameCoins(ctx, h.Pool, wUUID, lUUID, stakeBronze, "x")
-		return
 	}
-	// Multi: каждому не-дураку — своя ставка обратно + доля ставки дурака.
-	winners := make([]uuid.UUID, 0, len(ids)-1)
-	for i, pid := range ids {
-		if i == state.LoserIndex || isBot(pid) {
-			continue
-		}
-		if u, e := uuid.Parse(pid); e == nil {
-			winners = append(winners, u)
-		}
-	}
-	if len(winners) == 0 {
-		return
-	}
-	share := stakeBronze / len(winners)
-	rem := stakeBronze % len(winners)
-	for i, u := range winners {
-		extra := share
-		if i < rem {
-			extra++
-		}
-		_ = store.AddCoins(ctx, h.Pool, u, stakeBronze+extra)
-	}
+	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, ids, winners, false, isBot)
 }
 
 func (h *GamesHandler) recordDurakGameResult(ctx context.Context, gameID string, m map[string]string, state *durak.State, stakeBronze int, finishReason string) {

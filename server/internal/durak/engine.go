@@ -95,11 +95,96 @@ func (s *State) nextAliveAfter(idx int) int {
 	return idx
 }
 
+func (s *State) prevAliveBefore(idx int) int {
+	n := len(s.Hands)
+	for i := 1; i <= n; i++ {
+		j := (idx - i + n) % n
+		if s.isAlive(j) {
+			return j
+		}
+	}
+	return idx
+}
+
 func (s *State) isAlive(idx int) bool {
 	for _, f := range s.FinishedIndices {
 		if f == idx {
 			return false
 		}
+	}
+	return true
+}
+
+func (s *State) aliveCount() int {
+	n := 0
+	for i := range s.Hands {
+		if s.isAlive(i) {
+			n++
+		}
+	}
+	return n
+}
+
+func (s *State) clearPassed() {
+	s.Passed = nil
+}
+
+// canThrowInSeat — место имеет право подкидывать (не защитник; при 4 живых — только соседи защитника).
+func (s *State) canThrowInSeat(idx int) bool {
+	if idx < 0 || idx >= len(s.Hands) || !s.isAlive(idx) {
+		return false
+	}
+	if len(s.Hands[idx]) == 0 {
+		return false
+	}
+	def := s.DefenderIndex()
+	if idx == def {
+		return false
+	}
+	// 4+ живых: подкид только слева и справа от защитника.
+	if s.aliveCount() >= 4 {
+		left := s.prevAliveBefore(def)
+		right := s.nextAliveAfter(def)
+		return idx == left || idx == right
+	}
+	// 2–3 игрока: все, кроме защитника.
+	return true
+}
+
+// CanThrowIn — можно ли сейчас класть атаку/подкид (с учётом фазы и «пас»).
+func (s *State) CanThrowIn(idx int) bool {
+	if s.Status != StatusActive {
+		return false
+	}
+	if len(s.Table) == 0 {
+		return idx == s.AttackerIndex &&
+			(s.Phase == PhaseAttack || s.Phase == PhaseAttackFollow)
+	}
+	if !s.canThrowInSeat(idx) {
+		return false
+	}
+	if s.Phase != PhaseDefend && s.Phase != PhaseAttackFollow && s.Phase != PhaseTakeFollow {
+		return false
+	}
+	if s.Passed != nil && s.Passed[idx] {
+		return false
+	}
+	return true
+}
+
+func (s *State) allEligibleThrowersPassed() bool {
+	for i := range s.Hands {
+		if !s.canThrowInSeat(i) {
+			continue
+		}
+		if s.Passed != nil && s.Passed[i] {
+			continue
+		}
+		// Нет легальных карт — считаем «пасом».
+		if len(s.legalThrowInCards(i)) == 0 {
+			continue
+		}
+		return false
 	}
 	return true
 }
@@ -229,6 +314,7 @@ var (
 	ErrCannotBito     = errors.New("cannot bito")
 	ErrCannotTransfer = errors.New("cannot transfer")
 	ErrCannotDone     = errors.New("cannot confirm take")
+	ErrCannotPass     = errors.New("cannot pass")
 )
 
 // PlayerIndex — индекс игрока по userID.
@@ -249,7 +335,8 @@ func (s *State) Attack(playerIdx int, card Card) error {
 }
 
 // AttackMany — положить сразу несколько карт атаки/подкидывания.
-// Пустой стол: все карты одного ранга. Иначе каждая — ранг со стола.
+// Пустой стол: только атакующий, все карты одного ранга.
+// Непустой: подкид от CanThrowIn (при 4 игроках — соседи защитника).
 func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -257,7 +344,7 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 	if len(cards) == 0 {
 		return ErrBadAttack
 	}
-	if playerIdx != s.AttackerIndex {
+	if !s.CanThrowIn(playerIdx) {
 		return ErrNotYourTurn
 	}
 	// Подкид: во время защиты, после отбоя, или вдогонку после «Беру».
@@ -305,6 +392,7 @@ func (s *State) AttackMany(playerIdx int, cards []Card) error {
 		s.removeFromHand(playerIdx, c)
 		s.Table = append(s.Table, Pair{Attack: c})
 	}
+	s.clearPassed()
 	// Вдогонку после «Беру» — фаза не меняется; иначе снова ждём отбой.
 	if s.Phase != PhaseTakeFollow {
 		s.Phase = PhaseDefend
@@ -349,8 +437,9 @@ func (s *State) Defend(playerIdx int, card Card, pairIndex int) error {
 	}
 	if s.UndefendedIndex() < 0 {
 		s.Phase = PhaseAttackFollow
-		// Атакующий без карт — подкинуть нечего, сразу бито.
-		if len(s.Hands[s.AttackerIndex]) == 0 {
+		s.clearPassed()
+		// Никто не может подкинуть — сразу бито.
+		if s.allEligibleThrowersPassed() {
 			return s.resolveBito()
 		}
 	}
@@ -418,9 +507,35 @@ func (s *State) Transfer(playerIdx int, card Card) error {
 	s.removeFromHand(playerIdx, card)
 	s.Table = append(s.Table, Pair{Attack: card})
 	s.AttackerIndex = def
+	s.clearPassed()
 	// defender стал = next, phase = defend
 	s.Phase = PhaseDefend
 	return nil
+}
+
+// Pass — отказ подкидывать в этой фазе (attack_follow / take_follow).
+// Когда все имеющие право пасанули — бито или взятие.
+func (s *State) Pass(playerIdx int) error {
+	if s.Status != StatusActive {
+		return ErrGameOver
+	}
+	if s.Phase != PhaseAttackFollow && s.Phase != PhaseTakeFollow {
+		return ErrCannotPass
+	}
+	if !s.canThrowInSeat(playerIdx) {
+		return ErrNotYourTurn
+	}
+	if s.Passed == nil {
+		s.Passed = map[int]bool{}
+	}
+	s.Passed[playerIdx] = true
+	if !s.allEligibleThrowersPassed() {
+		return nil
+	}
+	if s.Phase == PhaseTakeFollow {
+		return s.resolveTake()
+	}
+	return s.resolveBito()
 }
 
 // Take — защитник объявляет «Беру»: атакующий может подкинуть вдогонку,
@@ -445,14 +560,15 @@ func (s *State) Take(playerIdx int) error {
 	}
 	// В подкидном разрешаем «взять» на любой фазе защиты/атаки, пока стол не пуст.
 	s.Phase = PhaseTakeFollow
+	s.clearPassed()
 	// Нечего подкинуть — сразу забираем.
-	if len(s.LegalAttackCards(s.AttackerIndex)) == 0 {
+	if s.allEligibleThrowersPassed() {
 		return s.resolveTake()
 	}
 	return nil
 }
 
-// Done — атакующий закончил подкид вдогонку; защитник забирает стол.
+// Done — закончил подкид вдогонку (атакующий или пас всех); защитник забирает стол.
 func (s *State) Done(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -460,10 +576,11 @@ func (s *State) Done(playerIdx int) error {
 	if s.Phase != PhaseTakeFollow {
 		return ErrCannotDone
 	}
-	if playerIdx != s.AttackerIndex {
-		return ErrNotYourTurn
+	if playerIdx == s.AttackerIndex {
+		return s.resolveTake()
 	}
-	return s.resolveTake()
+	// Остальные подкидывающие — через Pass.
+	return s.Pass(playerIdx)
 }
 
 // resolveTake — стол в руку защитнику, добор, ход следующему после защитника.
@@ -480,6 +597,7 @@ func (s *State) resolveTake() error {
 	}
 	SortHand(s.Hands[di], s.Trump)
 	s.Table = nil
+	s.clearPassed()
 	s.refill()
 	skipped := di
 	s.AttackerIndex = s.nextAliveAfter(skipped)
@@ -490,7 +608,7 @@ func (s *State) resolveTake() error {
 	return nil
 }
 
-// SayBito — атакующий говорит «Бито».
+// SayBito — атакующий говорит «Бито» (или пас всех подкидывающих).
 func (s *State) SayBito(playerIdx int) error {
 	if s.Status != StatusActive {
 		return ErrGameOver
@@ -498,10 +616,10 @@ func (s *State) SayBito(playerIdx int) error {
 	if s.Phase != PhaseAttackFollow {
 		return ErrCannotBito
 	}
-	if playerIdx != s.AttackerIndex {
-		return ErrNotYourTurn
+	if playerIdx == s.AttackerIndex {
+		return s.resolveBito()
 	}
-	return s.resolveBito()
+	return s.Pass(playerIdx)
 }
 
 // resolveDefenderEmpty — у защитника кончились карты: отбитые пары в отбой,
@@ -528,6 +646,7 @@ func (s *State) resolveDefenderEmpty() {
 	}
 	SortHand(s.Hands[atk], s.Trump)
 	s.Table = nil
+	s.clearPassed()
 	s.refill()
 	s.AttackerIndex = s.nextAliveAfter(atk)
 	s.LastWasTake = false
@@ -566,6 +685,7 @@ func (s *State) resolveBito() error {
 		}
 	}
 	s.Table = nil
+	s.clearPassed()
 	s.refill()
 	// Ход переходит к бывшему защитнику.
 	s.AttackerIndex = s.nextAliveAfter(s.AttackerIndex)
@@ -655,33 +775,40 @@ func (s *State) checkOver() {
 
 // ---- Клиентские подсказки (легальные ходы) ----
 
-// LegalAttackCards — какие карты игрока [idx] можно положить атакой/подкидыванием.
-func (s *State) LegalAttackCards(idx int) []Card {
-	if s.Status != StatusActive || idx != s.AttackerIndex {
-		return nil
-	}
-	if s.Phase != PhaseAttack && s.Phase != PhaseAttackFollow &&
-		s.Phase != PhaseDefend && s.Phase != PhaseTakeFollow {
+// legalThrowInCards — карты для подкида по рангам стола (без проверки CanThrowIn).
+func (s *State) legalThrowInCards(idx int) []Card {
+	if idx < 0 || idx >= len(s.Hands) || len(s.Table) == 0 {
 		return nil
 	}
 	if len(s.Table) >= s.MaxAttacksThisRound() {
 		return nil
 	}
-	out := []Card{}
-	if len(s.Table) == 0 {
-		if s.Phase == PhaseDefend || s.Phase == PhaseTakeFollow {
-			return nil
-		}
-		out = append(out, s.Hands[idx]...)
-		return out
-	}
 	ranks := s.TableRanks()
+	out := []Card{}
 	for _, c := range s.Hands[idx] {
 		if ranks[c.Rank] {
 			out = append(out, c)
 		}
 	}
 	return out
+}
+
+// LegalAttackCards — какие карты игрока [idx] можно положить атакой/подкидыванием.
+func (s *State) LegalAttackCards(idx int) []Card {
+	if s.Status != StatusActive || !s.CanThrowIn(idx) {
+		return nil
+	}
+	if len(s.Table) >= s.MaxAttacksThisRound() {
+		return nil
+	}
+	if len(s.Table) == 0 {
+		if s.Phase == PhaseDefend || s.Phase == PhaseTakeFollow {
+			return nil
+		}
+		out := append([]Card(nil), s.Hands[idx]...)
+		return out
+	}
+	return s.legalThrowInCards(idx)
 }
 
 // LegalDefendCards — карты, которыми можно отбить хотя бы одну неотбитую атаку.

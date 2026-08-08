@@ -163,21 +163,45 @@ class DurakGame {
     return lim;
   }
 
+  bool _canThrowInSeat(int playerIndex) {
+    if (playerIndex < 0 || playerIndex >= hands.length) return false;
+    if (hands[playerIndex].isEmpty) return false;
+    if (playerIndex == defenderIndex) return false;
+    // Живые — у кого ещё есть карты (или колода не пуста и слот в игре).
+    final alive = [
+      for (var i = 0; i < hands.length; i++)
+        if (hands[i].isNotEmpty || deck.isNotEmpty) i,
+    ];
+    if (alive.length >= 4) {
+      // Соседи защитника слева/справа по кругу.
+      final di = alive.indexOf(defenderIndex);
+      if (di < 0) return false;
+      final left = alive[(di - 1 + alive.length) % alive.length];
+      final right = alive[(di + 1) % alive.length];
+      return playerIndex == left || playerIndex == right;
+    }
+    return true;
+  }
+
   /// Можно ли [card] использовать как первую атаку (или подкидывание).
   bool canAttackWith(PlayingCard card, int playerIndex) {
     if (isOver) return false;
-    if (playerIndex != attackerIndex) return false;
     if (!hands[playerIndex].contains(card)) return false;
     if (table.length >= maxAttacksThisRound) return false;
-    // Пока защитник бьёт или берёт — только подкид рангов со стола.
-    if (turn == DurakTurn.defender || turn == DurakTurn.takeFollowUp) {
-      if (table.isEmpty) return false;
-      return tableRanks.contains(card.rank.value);
+    if (table.isEmpty) {
+      if (playerIndex != attackerIndex) return false;
+      if (turn != DurakTurn.attacker && turn != DurakTurn.attackerFollowUp) {
+        return false;
+      }
+      return true;
     }
-    if (turn != DurakTurn.attacker && turn != DurakTurn.attackerFollowUp) {
+    if (!_canThrowInSeat(playerIndex)) return false;
+    if (turn != DurakTurn.attacker &&
+        turn != DurakTurn.attackerFollowUp &&
+        turn != DurakTurn.defender &&
+        turn != DurakTurn.takeFollowUp) {
       return false;
     }
-    if (table.isEmpty) return true;
     return tableRanks.contains(card.rank.value);
   }
 
@@ -224,24 +248,13 @@ class DurakGame {
     if (cards.isEmpty) {
       throw const DurakRuleError('нельзя атаковать этой картой');
     }
-    // Подкид: во время защиты, после отбоя или вдогонку после «Беру».
-    if (turn != DurakTurn.attacker &&
-        turn != DurakTurn.attackerFollowUp &&
-        turn != DurakTurn.defender &&
-        turn != DurakTurn.takeFollowUp) {
-      throw const DurakRuleError('нельзя атаковать этой картой');
-    }
-    if ((turn == DurakTurn.defender || turn == DurakTurn.takeFollowUp) &&
-        table.isEmpty) {
-      throw const DurakRuleError('нельзя атаковать этой картой');
+    for (final c in cards) {
+      if (!canAttackWith(c, pIndex)) {
+        throw const DurakRuleError('нельзя атаковать этой картой');
+      }
     }
     if (table.length + cards.length > maxAttacksThisRound) {
       throw const DurakRuleError('нельзя атаковать этой картой');
-    }
-    for (final c in cards) {
-      if (!hands[pIndex].contains(c)) {
-        throw const DurakRuleError('нельзя атаковать этой картой');
-      }
     }
     if (table.isEmpty) {
       final rank = cards.first.rank;

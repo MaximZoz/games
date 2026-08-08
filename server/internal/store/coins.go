@@ -229,6 +229,64 @@ func DeductCoinsMany(ctx context.Context, pool *pgxpool.Pool, userIDs []uuid.UUI
 	return tx.Commit(ctx)
 }
 
+// SettleStakePot — общий банк stake×N игроков (крестики / дурак multi).
+// Ничья или пустой список победителей при isDraw: возврат stake каждому человеку.
+// Иначе весь банк делится между winnerIDs (1 победитель → stake×N).
+func SettleStakePot(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	stakeBronze int,
+	playerIDs []string,
+	winnerIDs []string,
+	isDraw bool,
+	isBotFn func(string) bool,
+) error {
+	if stakeBronze <= 0 || pool == nil || len(playerIDs) == 0 {
+		return nil
+	}
+	if isBotFn == nil {
+		isBotFn = func(string) bool { return false }
+	}
+	if isDraw || len(winnerIDs) == 0 {
+		for _, pid := range playerIDs {
+			if isBotFn(pid) {
+				continue
+			}
+			if u, e := uuid.Parse(pid); e == nil {
+				if err := AddCoins(ctx, pool, u, stakeBronze); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	humans := make([]uuid.UUID, 0, len(winnerIDs))
+	for _, pid := range winnerIDs {
+		if isBotFn(pid) {
+			continue
+		}
+		if u, e := uuid.Parse(pid); e == nil {
+			humans = append(humans, u)
+		}
+	}
+	if len(humans) == 0 {
+		return nil
+	}
+	pot := stakeBronze * len(playerIDs)
+	share := pot / len(humans)
+	rem := pot % len(humans)
+	for i, u := range humans {
+		extra := share
+		if i < rem {
+			extra++
+		}
+		if err := AddCoins(ctx, pool, u, extra); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SettleGameCoins: winner gets 2*stake, loser gets 0. On draw both get stake back.
 func SettleGameCoins(ctx context.Context, pool *pgxpool.Pool, xUserID, oUserID uuid.UUID, stakeBronze int, winner string) error {
 	if stakeBronze <= 0 {

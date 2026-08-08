@@ -3806,23 +3806,14 @@ func (h *GamesHandler) settleGameCoinsMulti(ctx context.Context, m map[string]st
 	}
 	// N игроков: банк stake*N победителю; при ничьей — возврат ставки каждому.
 	if winnerMark == "" {
-		for _, p := range players {
-			if isBot(p) {
-				continue
-			}
-			if u, e := uuid.Parse(p); e == nil {
-				_ = store.AddCoins(ctx, h.Pool, u, stakeBronze)
-			}
-		}
+		_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, players, nil, true, isBot)
 		return
 	}
 	winnerID := markOwnerUserID(m, winnerMark)
 	if winnerID == "" || isBot(winnerID) {
 		return
 	}
-	if u, e := uuid.Parse(winnerID); e == nil {
-		_ = store.AddCoins(ctx, h.Pool, u, stakeBronze*len(players))
-	}
+	_ = store.SettleStakePot(ctx, h.Pool, stakeBronze, players, []string{winnerID}, false, isBot)
 }
 
 // recordGameResult сохраняет результат партии в game_results (для статистики).

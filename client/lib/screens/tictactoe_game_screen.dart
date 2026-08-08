@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -517,12 +518,20 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 }
               }
               // Не трогаем провайдеры баланса из build — только после кадра.
-              // Сервер: банк stake*N победителю; чистый плюс к доматчевому = stake*(N-1).
+              // Сервер: банк stake*N победителю (общий SettleStakePot / game_stake).
               final playersN = game.playerUserIds.length >= 2
                   ? game.playerUserIds.length
                   : (game.maxPlayers > 2 ? game.maxPlayers : 2);
-              final pot = game.stakeBronze * playersN;
-              final netProfit = game.stakeBronze * (playersN - 1);
+              final pot = stakeWinnerCredit(
+                stake: game.stakeBronze,
+                playerCount: playersN,
+                winnerCount: 1,
+              );
+              final netProfit = stakeWinnerNetProfit(
+                stake: game.stakeBronze,
+                playerCount: playersN,
+                winnerCount: 1,
+              );
               final settledCredit = iWonEarly
                   ? pot
                   : isDraw
@@ -673,7 +682,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 : (game.maxPlayers > 2 ? game.maxPlayers : 2);
             final showRewardChip = isOver && iWon && game.stakeBronze > 0;
             // Чистый выигрыш (как меняется баланс относительно до матча).
-            final rewardBronze = game.stakeBronze * (playersNForReward - 1);
+            final rewardBronze = stakeWinnerNetProfit(
+              stake: game.stakeBronze,
+              playerCount: playersNForReward,
+              winnerCount: 1,
+            );
             final isDesktop = isWide(context);
             final narrow = isNarrow(context);
             final phoneLandscape = isPhoneLandscape(context);
