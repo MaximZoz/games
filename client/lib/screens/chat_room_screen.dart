@@ -281,33 +281,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     super.dispose();
   }
 
-  /// iPhone/WebKit снимает фокус при тапе по кнопке «Отправить» вне TextField.
-  /// Возвращаем фокус и явно показываем soft-keyboard несколькими кадрами.
-  void _keepComposerKeyboardOpen() {
-    void show() {
-      if (!mounted) return;
-      FocusScope.of(context).requestFocus(_composerFocusNode);
-      // ignore: discarded_futures — платформенный канал, ошибки не критичны
-      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-    }
-
-    show();
-    WidgetsBinding.instance.addPostFrameCallback((_) => show());
-    Future<void>.delayed(const Duration(milliseconds: 50), show);
-    Future<void>.delayed(const Duration(milliseconds: 160), show);
-    Future<void>.delayed(const Duration(milliseconds: 320), show);
-  }
-
-  Future<void> _sendAndKeepKeyboard() async {
-    // Сразу удерживаем фокус — до await, пока WebKit ещё не «съел» клавиатуру.
-    _keepComposerKeyboardOpen();
-    try {
-      await _sendMessage();
-    } finally {
-      _keepComposerKeyboardOpen();
-    }
-  }
-
   void _onComposerTextChanged() {
     if (_applyingPaste) return;
     if (!_pasteSuggestionVisible && _composerAlert == null) return;
@@ -703,7 +676,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           _editingMessage = null;
           _composerAlert = null;
         });
-        _keepComposerKeyboardOpen();
       } on ChatException catch (e) {
         if (e.statusCode == 401) {
           await ref.read(authStateProvider.notifier).logout();
@@ -768,7 +740,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         _replyTo = null;
         _pendingImages.clear();
       });
-      _keepComposerKeyboardOpen();
     } on ChatException catch (e) {
       if (e.statusCode == 401) {
         await ref.read(authStateProvider.notifier).logout();
@@ -3268,6 +3239,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   ],
                                 ),
                               ),
+                            // «Отправить» внутри поля: тап не уходит с TextField —
+                            // WebKit/iPhone не сворачивает клавиатуру (без
+                            // моргания requestFocus/TextInput.show).
                             TextField(
                               controller: _textController,
                               focusNode: _composerFocusNode,
@@ -3303,70 +3277,65 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                   4,
                                   14,
                                 ),
-                                suffixIcon: IconButton(
-                                  onPressed:
-                                      _sending ? null : _openEmojiPicker,
-                                  tooltip: context.l10n.chatEmoji,
-                                  splashRadius: 22,
-                                  icon: const Icon(
-                                    Icons.emoji_emotions_outlined,
-                                    color: _composerIconPurple,
-                                    size: 28,
-                                  ),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: _sending
+                                          ? null
+                                          : _openEmojiPicker,
+                                      tooltip: context.l10n.chatEmoji,
+                                      splashRadius: 22,
+                                      icon: const Icon(
+                                        Icons.emoji_emotions_outlined,
+                                        color: _composerIconPurple,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: (_sending ||
+                                              _pendingImages
+                                                  .any((e) => e.isLoading))
+                                          ? null
+                                          : () =>
+                                              unawaited(_sendMessage()),
+                                      tooltip: _editingMessage != null
+                                          ? context.l10n.commonSave
+                                          : context.l10n.commonSend,
+                                      splashRadius: 22,
+                                      icon: _sending
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child:
+                                                  CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: _composerIconPurple,
+                                              ),
+                                            )
+                                          : Icon(
+                                              _editingMessage != null
+                                                  ? Icons.check_rounded
+                                                  : Icons.send_rounded,
+                                              color: _composerIconPurple,
+                                              size: 28,
+                                            ),
+                                    ),
+                                  ],
                                 ),
                                 suffixIconConstraints:
                                     const BoxConstraints(
-                                  minWidth: 48,
+                                  minWidth: 96,
                                   minHeight: 48,
                                 ),
                               ),
-                              textInputAction: TextInputAction.send,
+                              // newline: клавиша Return не дергает «send» и
+                              // не сворачивает клавиатуру на iOS.
+                              textInputAction: TextInputAction.newline,
                               onTap: _scrollToBottom,
-                              // onEditingComplete вместо onSubmitted: на iOS
-                              // дефолт onSubmitted снимает фокус с поля.
-                              onEditingComplete: () {
-                                unawaited(_sendAndKeepKeyboard());
-                              },
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    // canRequestFocus: false — кнопка не перехватывает фокус у поля
-                    // (иначе WebKit на iPhone сворачивает клавиатуру).
-                    Focus(
-                      canRequestFocus: false,
-                      skipTraversal: true,
-                      descendantsAreFocusable: false,
-                      child: IconButton(
-                        onPressed: (_sending ||
-                                _pendingImages.any((e) => e.isLoading))
-                            ? null
-                            : () => unawaited(_sendAndKeepKeyboard()),
-                        tooltip: _editingMessage != null
-                            ? context.l10n.commonSave
-                            : context.l10n.commonSend,
-                        padding: const EdgeInsets.all(10),
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: _composerIconPurple,
-                                ),
-                              )
-                            : Icon(
-                                _editingMessage != null
-                                    ? Icons.check_rounded
-                                    : Icons.send_rounded,
-                                color: _composerIconPurple,
-                                size: 28,
-                              ),
                       ),
                     ),
                   ],
