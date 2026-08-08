@@ -63,7 +63,7 @@ type CreateLobbyBody struct {
 	GridSize             int    `json:"grid_size"`              // legacy; перекрывается variant
 	SwapRule             bool   `json:"swap_rule"`              // deprecated, игнорируется
 	FirstMoveRestriction bool   `json:"first_move_restriction"` // deprecated, игнорируется
-	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 1)
+	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 2)
 	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`     // в matchmake: через 30 с добавить бота
 }
 
@@ -391,8 +391,8 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	stakeBronze := body.StakeBronze
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	ctx := r.Context()
 	mayStake, err := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
@@ -607,8 +607,8 @@ func (h *GamesHandler) findOpenMultiLobbyID(
 			continue
 		}
 		stakes, _ := strconv.Atoi(m["stake_bronze"])
-		if stakes < 1 {
-			stakes = 1
+		if stakes < 2 {
+			stakes = 2
 		}
 		if stakes != stakeBronze {
 			continue
@@ -923,8 +923,8 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	// Для совместимости DeclineInvite/старых клиентов: первый invitee в invite_target_id.
 	pipe := h.Rdb.Pipeline()
@@ -1953,8 +1953,8 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	firstMoveRestriction := m["first_move_restriction"] == "true"
 
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	cfg, variant := resolveVariantConfig(m["variant"], gridSize)
 	maxPlayers, _ := strconv.Atoi(m["max_players"])
@@ -2069,8 +2069,8 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}())
 	gridSize := cfg.GridSize
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 
 	players := parsePlayerIDsCSV(m["player_ids"])
@@ -2874,8 +2874,8 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 	gridSize := cfg.GridSize
 	board := parseBoard(m["board"], gridSize)
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	maxPlayers, _ := strconv.Atoi(m["max_players"])
 	if maxPlayers < 1 {
@@ -4085,6 +4085,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 			// Протухший ход применяем и здесь — иначе «Игры» показывает
 			// чужой/старый ход, пока кто-то не откроет GetGame.
 			if m["game_type"] == durakGameType {
+				h.armDurakTurnAfterDeal(ctx, gameID, m)
+				m, _ = h.Rdb.HGetAll(ctx, key).Result()
 				h.applyDurakTurnTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied

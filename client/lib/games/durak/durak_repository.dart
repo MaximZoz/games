@@ -155,6 +155,7 @@ class DurakGameView {
     this.drawOfferBy = '',
     this.lastWasTake = false,
     this.firstRound = false,
+    this.tiedLeaders = 0,
   });
 
   final String id;
@@ -203,6 +204,9 @@ class DurakGameView {
 
   /// Первый отбой партии — лимит 5 карт на столе.
   final bool firstRound;
+
+  /// Ничья лидеров: банк 1/2/3 мест делится поровну между ними.
+  final int tiedLeaders;
 
   /// Партия завершена соглашением на ничью.
   final bool isDraw;
@@ -368,9 +372,10 @@ class DurakGameView {
               ?.map((e) => (e as num).toInt())
               .toList() ??
           const [],
+      tiedLeaders: (json['tied_leaders'] as num?)?.toInt() ?? 0,
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       isDraw: isDraw,
       isForfeit: isForfeit,
       isTimeout: isTimeout,
@@ -440,7 +445,7 @@ class DurakLobbyView {
       deckSize: (json['deck_size'] as num?)?.toInt() ?? 36,
       gameMode: (json['game_mode'] ?? 'podkidnoi').toString(),
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       playerIds: ids,
       players: players,
       chatId: (json['chat_id']?.toString().trim().isEmpty ?? true)

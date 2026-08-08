@@ -11,7 +11,7 @@ void main() {
       expect(s.gridSize, 3);
       expect(s.swapRule, isFalse);
       expect(s.firstMoveRestriction, isFalse);
-      expect(s.stakeBronze, 1);
+      expect(s.stakeBronze, 2);
     });
 
     test('fromJson clamps invalid turn/variant/stake', () {
@@ -27,7 +27,7 @@ void main() {
       expect(s.turnTimeSec, 0);
       expect(s.variant, 'classic');
       expect(s.gridSize, 3);
-      expect(s.stakeBronze, 1);
+      expect(s.stakeBronze, 2);
       expect(s.swapRule, isTrue);
       expect(s.firstMoveRestriction, isTrue);
     });

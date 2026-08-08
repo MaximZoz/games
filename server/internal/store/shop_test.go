@@ -5,10 +5,16 @@ import (
 )
 
 func TestFreeStakeBronze(t *testing.T) {
+	if MinStakeBronze != 2 {
+		t.Fatalf("MinStakeBronze=%d want 2", MinStakeBronze)
+	}
 	if len(FreeStakeBronze) != 3 {
 		t.Fatalf("want 3 free stakes, got %d", len(FreeStakeBronze))
 	}
-	want := []int{1, 10, 50}
+	if FreeStakeBronze[0] != 2 {
+		t.Fatalf("FreeStakeBronze[0]=%d want 2", FreeStakeBronze[0])
+	}
+	want := []int{2, 10, 50}
 	for i, v := range want {
 		if FreeStakeBronze[i] != v {
 			t.Fatalf("FreeStakeBronze[%d]=%d want %d", i, FreeStakeBronze[i], v)

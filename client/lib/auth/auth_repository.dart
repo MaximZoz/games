@@ -38,7 +38,7 @@ class AuthUser {
     this.avatarKind = 'letter',
     this.avatarValue,
     this.balanceBronze = 0,
-    this.showStatsToOthers = false,
+    this.showStatsToOthers = true,
     this.emailVerified = true,
   });
 
@@ -54,7 +54,7 @@ class AuthUser {
       avatarKind: json['avatar_kind'] as String? ?? 'letter',
       avatarValue: json['avatar_value'] as String?,
       balanceBronze: (json['balance_bronze'] as num?)?.toInt() ?? 0,
-      showStatsToOthers: json['show_stats_to_others'] as bool? ?? false,
+      showStatsToOthers: json['show_stats_to_others'] as bool? ?? true,
       emailVerified: json['email_verified'] as bool? ?? true,
     );
   }

@@ -718,7 +718,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       : _rematchRespondedIds,
                   chatsList: chats ?? const [],
                   groupUnread: groupUnread,
-                  showGroupChat: chatId.isNotEmpty,
+                  showGroupChat: chatId.isNotEmpty && !isOver,
                   onGroupChatTap:
                       canOpenChat ? () => _openGroupChat(context, game) : null,
                   onPlayerTap: (player, login) {

@@ -3829,7 +3829,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final isMulti = (view?.playerIds.length ?? 0) > 2;
     final topPad = MediaQuery.paddingOf(context).top;
     final groupChatId = (view?.chatId ?? '').trim();
-    final showGroupChat = isMulti && groupChatId.isNotEmpty;
+    // После конца партии чат скрываем сразу (сервер тоже удаляет group chat).
+    final showGroupChat =
+        isMulti && groupChatId.isNotEmpty && view != null && !view.isOver;
     // Мой ход — часики в рамке; ход соперника — рамка на аватаре.
     // Нижняя зона (веер) исключена — свайп по картам не вызывает выход.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
@@ -4053,7 +4055,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // Кнопка чуть выше видимых карт веера.
     final actionBtnBottom = -seatLift + fanCardH + 10;
 
+    // Таймер — только после раздачи (_busy) и когда сервер выставил deadline.
     final showTimer = !view.isOver &&
+        !_busy &&
         view.isMyTurn &&
         view.turnTimeSec > 0 &&
         view.turnDeadline > 0;
@@ -5263,6 +5267,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (view.isDraw) return view.stakeBronze;
     if (view.myPlace <= 0) return 0;
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
+    final pot = view.stakeBronze * n;
+    // Ничья лидеров: весь банк мест делится поровну.
+    if (view.tiedLeaders >= 2 && view.myPlace <= view.tiedLeaders) {
+      return pot ~/ view.tiedLeaders +
+          (view.myPlace == 1 ? pot % view.tiedLeaders : 0);
+    }
     // Mid-game: фиксированная доля места (без roll-up) — как CreditForPlace на сервере.
     // В конце партии — с roll-up по реально занятым местам.
     final placesFilled = (!view.isOver && view.iAmFinished)

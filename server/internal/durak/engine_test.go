@@ -298,6 +298,35 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	}
 }
 
+// Два выхода «в ноль» одной волной → TiedLeaders=2 (ничья 1–2).
+func TestTiedLeadersOnSimultaneousFinish(t *testing.T) {
+	st := &State{
+		PlayerIDs: []string{"a", "b", "c"},
+		Hands: [][]Card{
+			{},
+			{},
+			{{6, Hearts}, {7, Hearts}},
+		},
+		Deck:          nil,
+		Trump:         Spades,
+		AttackerIndex: 0,
+		Phase:         PhaseAttack,
+		HandSize:      6,
+		MaxAttacks:    6,
+		Status:        StatusActive,
+	}
+	st.checkOver()
+	if st.TiedLeaders != 2 {
+		t.Fatalf("TiedLeaders=%d want 2", st.TiedLeaders)
+	}
+	if st.Status != StatusOver || st.LoserIndex != 2 {
+		t.Fatalf("status=%s loser=%d want over/2", st.Status, st.LoserIndex)
+	}
+	if len(st.FinishedIndices) != 2 {
+		t.Fatalf("finished=%v want 2", st.FinishedIndices)
+	}
+}
+
 // Пока партия active — loser_index = -1 (0 не должен считаться «дураком»).
 func TestNewLoserIndexUnset(t *testing.T) {
 	st, err := New([]string{"a", "b", "c"}, 36, ModePodkidnoi, 1)

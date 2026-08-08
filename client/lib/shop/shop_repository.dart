@@ -232,7 +232,7 @@ class InventoryCapabilities {
       }
     }
     if (stakes.isEmpty) {
-      stakes.addAll(const [1, 10, 50]);
+      stakes.addAll(const [2, 10, 50]);
     }
     return InventoryCapabilities(
       allowedStakeBronze: stakes,

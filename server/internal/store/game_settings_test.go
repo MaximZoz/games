@@ -7,7 +7,7 @@ func TestDefaultUserGameSettings(t *testing.T) {
 	if s.GameType != GameTypeTicTacToe {
 		t.Fatalf("game_type=%q", s.GameType)
 	}
-	if s.TurnTimeSec != 0 || s.GridSize != 3 || s.StakeBronze != 1 {
+	if s.TurnTimeSec != 0 || s.GridSize != 3 || s.StakeBronze != 2 {
 		t.Fatalf("unexpected defaults: %+v", s)
 	}
 	if s.SwapRule || s.FirstMoveRestriction {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Секция счёта head-to-head в попапе профиля при клике на игрока.
@@ -41,12 +41,69 @@ class HeadToHeadSection extends ConsumerWidget {
             showStats: showStats,
             onTapStats: () {
               final name = (opponentName ?? h2h.displayName).trim();
-              final q = <String, String>{
-                'user_id': opponentId,
-                if (name.isNotEmpty) 'name': name,
-              };
-              context.push(
-                Uri(path: '/stats', queryParameters: q).toString(),
+              // Из попапа профиля — статистика тоже во всплывашке.
+              // С главной (/stats) остаётся полноэкранный виджет.
+              showDialog<void>(
+                context: context,
+                builder: (ctx) {
+                  final title = name.isNotEmpty
+                      ? name
+                      : context.l10n.statsTitle;
+                  return Dialog(
+                    backgroundColor: AppColors.surfaceUnified,
+                    insetPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 24,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 520,
+                        maxHeight: 640,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Text(
+                                      title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: context.l10n.commonClose,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Flexible(
+                            child: GameStatsBody(
+                              userId: opponentId,
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

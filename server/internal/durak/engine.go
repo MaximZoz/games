@@ -43,6 +43,20 @@ const BitoRevealDelay = 2 * time.Second
 // TakeRevealDelay — пауза перед взятием, чтобы все увидели подкинутые карты.
 const TakeRevealDelay = 2 * time.Second
 
+// OpeningDealGrace — сколько ждать стартовую раздачу на клиенте, прежде чем
+// запускать таймер хода (6 карт × игроки × ~280мс + козырь + запас).
+func OpeningDealGrace(players int) time.Duration {
+	if players < 2 {
+		players = 2
+	}
+	if players > 4 {
+		players = 4
+	}
+	return 1500*time.Millisecond +
+		time.Duration(6*players)*280*time.Millisecond +
+		800*time.Millisecond
+}
+
 // Status — статус партии.
 type Status string
 
@@ -80,6 +94,9 @@ type State struct {
 	LoserIndex int `json:"loser_index"`
 	// Кто уже вышел успешно (рука пуста, колода пуста) — претендует на банк.
 	FinishedIndices []int `json:"finished_indices,omitempty"`
+	// TiedLeaders — сколько лидеров делят банк поровну (2 = ничья 1–2 места).
+	// Ставится, если ≥2 игрока вышли «в ноль» одной волной checkOver.
+	TiedLeaders int `json:"tied_leaders,omitempty"`
 	// Кто сдался / выбыл — наблюдатель, долю банка не получает.
 	EliminatedIndices []int `json:"eliminated_indices,omitempty"`
 
@@ -1092,6 +1109,7 @@ func (s *State) checkOver() {
 	if len(s.Deck) > 0 {
 		return
 	}
+	before := len(s.FinishedIndices)
 	for i := range s.Hands {
 		s.markFinishedIfEmpty(i)
 	}
@@ -1116,6 +1134,10 @@ func (s *State) checkOver() {
 		} else {
 			s.markFinishedIfEmpty(i)
 		}
+	}
+	// Несколько выходов одной волной → ничья мест: банк мест делится поровну.
+	if newly := len(s.FinishedIndices) - before; newly >= 2 && s.TiedLeaders == 0 {
+		s.TiedLeaders = newly
 	}
 	if len(withCards) <= 1 {
 		s.Status = StatusOver

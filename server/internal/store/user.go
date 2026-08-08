@@ -34,7 +34,7 @@ type User struct {
 const selectUserCols = `id, email, COALESCE(password_hash, ''), display_name, is_admin,
 	age, gender, about, avatar_kind, avatar_value,
 	balance_bronze,
-	COALESCE(show_stats_to_others, false),
+	COALESCE(show_stats_to_others, true),
 	email_verified_at,
 	frozen_at,
 	COALESCE(is_support, false),
@@ -257,8 +257,8 @@ func CreateUser(
 	// CreateUser вызывается только после подтверждения email (или admin init) —
 	// сразу помечаем email_verified_at.
 	row := tx.QueryRow(ctx,
-		`INSERT INTO users (email, password_hash, display_name, balance_bronze, referred_by, email_verified_at)
-		 VALUES ($1, $2, $3, $4, $5, now())
+		`INSERT INTO users (email, password_hash, display_name, balance_bronze, referred_by, email_verified_at, show_stats_to_others)
+		 VALUES ($1, $2, $3, $4, $5, now(), true)
 		 RETURNING `+selectUserCols,
 		email, passwordHash, displayNamePtr, RegistrationBonusBronze, referrerID,
 	)

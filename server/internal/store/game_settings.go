@@ -34,7 +34,7 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		Variant:              "classic",
 		SwapRule:             false,
 		FirstMoveRestriction: false,
-		StakeBronze:          1,
+		StakeBronze:          2,
 	}
 }
 

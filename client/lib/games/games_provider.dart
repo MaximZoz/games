@@ -30,7 +30,7 @@ class GameInvite {
     this.firstMoveRestriction = false,
     this.creatorAvatarKind = 'letter',
     this.creatorAvatarValue,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
     this.deckSize = 36,
     this.durakMode = 'podkidnoi',
   });
@@ -94,7 +94,7 @@ final gameInvitesProvider =
         final creatorAvatarKind =
             data['creator_avatar_kind']?.toString() ?? 'letter';
         final creatorAvatarValue = data['creator_avatar_value']?.toString();
-        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 1;
+        final stakeBronze = (data['stake_bronze'] as num?)?.toInt() ?? 2;
         if (lobbyId != null && creatorId != null) {
           notifier.add(GameInvite(
             lobbyId: lobbyId,
@@ -260,6 +260,20 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int get epoch => _epoch;
 
   void _applyObservation(ObservationItem? obs) {
+    // Не затирать durak→tictactoe, если сервер ещё без game_type.
+    if (obs != null) {
+      final prev = ref.read(observationGameProvider);
+      if (prev != null &&
+          prev.gameId == obs.gameId &&
+          prev.gameType == 'durak' &&
+          (obs.gameType.isEmpty || obs.gameType == 'tictactoe')) {
+        obs = ObservationItem(
+          gameId: obs.gameId,
+          lobbyId: obs.lobbyId ?? prev.lobbyId,
+          gameType: 'durak',
+        );
+      }
+    }
     ref.read(observationGameProvider.notifier).state = obs;
   }
 

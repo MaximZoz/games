@@ -48,7 +48,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   String _selectedVariant = variantClassic;
   /// true — активна кнопка игроков (2/3/4); false — кнопка режима.
   bool _playersControlActive = false;
-  int _selectedStakeBronze = 1; // free: 1, 10, 50; + bought silver
+  int _selectedStakeBronze = 2; // free: 2, 10, 50; + bought silver/gold
   bool _settingsHydrated = false;
   Timer? _lobbyRefreshTimer;
 
@@ -116,16 +116,22 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   void _onModeChipTap() {
     final offline = ref.read(isOfflineProvider);
     setState(() {
+      final cycle = offline
+          ? const [variantClassic, variantGomoku]
+          : _modeCycleVariants;
       if (_playersControlActive ||
           _selectedVariant == variantMulti3 ||
           _selectedVariant == variantMulti4) {
-        // С игроков → режимы: 2 тёмные, Классика фиолетовая.
+        // С игроков → 2 участника и сразу следующий режим (не оставлять «Классику»
+        // без смены, если уже были на 2 / classic).
         _playersControlActive = false;
-        _selectedVariant = variantClassic;
+        final base = (_selectedVariant == variantMulti3 ||
+                _selectedVariant == variantMulti4)
+            ? variantClassic
+            : parseVariant(_selectedVariant);
+        final idx = cycle.indexOf(base);
+        _selectedVariant = cycle[(idx < 0 ? 0 : idx + 1) % cycle.length];
       } else {
-        final cycle = offline
-            ? const [variantClassic, variantGomoku]
-            : _modeCycleVariants;
         final current = parseVariant(_selectedVariant);
         final idx = cycle.indexOf(current);
         final next = (idx < 0 ? 0 : idx + 1) % cycle.length;
@@ -925,7 +931,12 @@ class _GamesPageContent extends StatelessWidget {
                                     onPlayOffline: onPlayOffline,
                                   ),
                                   const SizedBox(height: 16),
-                                  _DurakGameCard(isOffline: isOffline),
+                                  _DurakGameCard(
+                                    isOffline: isOffline,
+                                    stakeBronze: stakeBronze,
+                                    stakeOptionsList: stakeOptionsList,
+                                    onStakeChanged: onStakeChanged,
+                                  ),
                                 ],
                               ),
                             ),
@@ -953,7 +964,12 @@ class _GamesPageContent extends StatelessWidget {
                             onPlayOffline: onPlayOffline,
                           ),
                           const SizedBox(height: 16),
-                          _DurakGameCard(isOffline: isOffline),
+                          _DurakGameCard(
+                            isOffline: isOffline,
+                            stakeBronze: stakeBronze,
+                            stakeOptionsList: stakeOptionsList,
+                            onStakeChanged: onStakeChanged,
+                          ),
                         ],
                       );
                     },
@@ -978,10 +994,10 @@ class _GamesPageContent extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: InkWell(
                             onTap: () {
-                              final path = obs.gameType == 'durak'
-                                  ? '/games/durak/game/${obs.gameId}'
-                                  : '/games/tictactoe/game/${obs.gameId}';
-                              context.push(path);
+                              context.push(gamePathFor(
+                                obs.gameId,
+                                gameType: obs.gameType,
+                              ));
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: const Row(
@@ -1400,9 +1416,17 @@ class _LobbiesPageContent extends StatelessWidget {
 /// Карточка «Дурак» — визуально идентична `_TictactoeGameCard`, использует
 /// общие виджеты `GameCard*` из `ui/widgets/game_card_widgets.dart`.
 class _DurakGameCard extends ConsumerStatefulWidget {
-  const _DurakGameCard({required this.isOffline});
+  const _DurakGameCard({
+    required this.isOffline,
+    required this.stakeBronze,
+    required this.stakeOptionsList,
+    required this.onStakeChanged,
+  });
 
   final bool isOffline;
+  final int stakeBronze;
+  final List<int> stakeOptionsList;
+  final void Function(int) onStakeChanged;
 
   @override
   ConsumerState<_DurakGameCard> createState() => _DurakGameCardState();
@@ -1414,7 +1438,6 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   int _deckSize = 36;
   String _gameMode = 'podkidnoi'; // podkidnoi | perevodnoi
   int _turnTimeSec = 60;
-  int _stake = 1;
   bool _creating = false;
   bool _finding = false;
 
@@ -1435,7 +1458,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         deckSize: _deckSize,
         gameMode: _gameMode,
         turnTimeSec: _turnTimeSec,
-        stakeBronze: _stake,
+        stakeBronze: widget.stakeBronze,
       );
       if (!mounted) return;
       final lobbyId = result.lobbyId;
@@ -1532,10 +1555,12 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 
   void _cycleStake() {
-    setState(() {
-      const arr = [1, 10, 50];
-      _stake = arr[(arr.indexOf(_stake) + 1) % arr.length];
-    });
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(widget.stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    widget.onStakeChanged(next);
   }
 
   String _modeLabel(String m) => durakModeLabel(m);
@@ -1590,9 +1615,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       header: GameCardHeader(
         title: 'Дурак',
         icon: Icons.style_rounded,
-        stakeBronze: widget.isOffline ? null : _stake,
-        stakeLabel: formatStakeAmount(_stake),
-        stakeCoinType: stakeCoinType(_stake),
+        stakeBronze: widget.isOffline ? null : widget.stakeBronze,
+        stakeLabel: formatStakeAmount(widget.stakeBronze),
+        stakeCoinType: stakeCoinType(widget.stakeBronze),
         onStakeTap: busy ? null : _cycleStake,
         onInfoTap: busy ? null : () => _showRules(context),
         busy: busy,
@@ -1628,7 +1653,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         players: _players,
         deckSize: _deckSize,
         turnTimeSec: _turnTimeSec,
-        stakeBronze: _stake,
+        stakeBronze: widget.stakeBronze,
         offlineBot: widget.isOffline,
       )),
       closeLabel: context.l10n.commonClose,

@@ -54,7 +54,7 @@ int gridSizeForVariant(String variant) => configForVariant(variant).gridSize;
 int winLengthForVariant(String variant) => configForVariant(variant).winLength;
 
 /// Базовые ставки в бронзе (без покупки в магазине).
-const List<int> freeStakeOptions = [1, 10, 50];
+const List<int> freeStakeOptions = [2, 10, 50];
 
 /// Fallback, если capabilities ещё не загружены.
 const List<int> stakeOptions = freeStakeOptions;
@@ -68,7 +68,7 @@ class UserGameSettings {
     int? gridSize,
     this.swapRule = false,
     this.firstMoveRestriction = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
   }) : gridSize = gridSize ??
             (variant == variantGomoku
                 ? 15
@@ -114,7 +114,7 @@ class UserGameSettings {
   factory UserGameSettings.fromJson(Map<String, dynamic> json) {
     final turn = (json['turn_time_sec'] as num?)?.toInt() ?? 0;
     final grid = (json['grid_size'] as num?)?.toInt() ?? 3;
-    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 1;
+    final stake = (json['stake_bronze'] as num?)?.toInt() ?? 2;
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -125,7 +125,7 @@ class UserGameSettings {
       variant: variant,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
-      stakeBronze: stake < 1 ? 1 : stake,
+      stakeBronze: stake < 2 ? 2 : stake,
     );
   }
 
@@ -214,7 +214,7 @@ String buildTictactoeRulesText({
   required int turnTimeSec,
   required bool swapRule,
   required bool firstMoveRestriction,
-  int stakeBronze = 1,
+  int stakeBronze = 2,
   bool includeTurnTime = true,
   bool offlineBot = false,
 }) {
@@ -300,7 +300,7 @@ Widget buildTictactoeRulesTextWidget({
   required int turnTimeSec,
   required bool swapRule,
   required bool firstMoveRestriction,
-  int stakeBronze = 1,
+  int stakeBronze = 2,
   bool includeTurnTime = true,
   bool offlineBot = false,
   TextStyle? style,
@@ -449,7 +449,7 @@ class LobbyItem {
     this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
     this.gameType = 'tictactoe',
     this.deckSize = 36,
     this.gameMode = 'podkidnoi',
@@ -490,7 +490,7 @@ class LobbyItem {
       chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
           ? (json['game_type'] as String).trim()
           : 'tictactoe',
@@ -609,7 +609,7 @@ class GameStateItem {
     this.swapRule = false,
     this.firstMoveRestriction = false,
     this.canSwap = false,
-    this.stakeBronze = 1,
+    this.stakeBronze = 2,
     this.xDisplayName,
     this.oDisplayName,
     this.xAvatarKind = 'letter',
@@ -766,7 +766,7 @@ class GameStateItem {
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
       canSwap: json['can_swap'] == true,
-      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 1,
+      stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       xDisplayName: () {
         final raw = json['x_display_name'] as String?;
         if (raw == null || raw.trim().isEmpty) return null;
@@ -1399,13 +1399,13 @@ class GamesRepository {
     int gridSize = 3,
     bool swapRule = false,
     bool firstMoveRestriction = false,
-    int stakeBronze = 1,
+    int stakeBronze = 2,
     bool addBotsAfter30s = false,
   }) async {
     final parsedVariant = parseVariant(variant);
     final body = <String, dynamic>{
       'mode': mode,
-      'stake_bronze': stakeBronze.clamp(1, 999999),
+      'stake_bronze': stakeBronze.clamp(2, 999999),
       'turn_time_sec': turnTimeSec,
       'variant': parsedVariant,
       'grid_size': gridSizeForVariant(parsedVariant),

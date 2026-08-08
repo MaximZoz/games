@@ -142,8 +142,8 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 	}
 	gameMode := string(durak.ParseMode(body.GameMode))
 	stakeBronze := body.StakeBronze
-	if stakeBronze < 1 {
-		stakeBronze = 1
+	if stakeBronze < 2 {
+		stakeBronze = 2
 	}
 	// Достаточность баланса.
 	if err := h.checkStakeAffordable(ctx, userID, stakeBronze); err != nil {
@@ -267,8 +267,8 @@ func (h *GamesHandler) findOpenDurakLobbyID(
 			continue
 		}
 		stakes, _ := strconv.Atoi(m["stake_bronze"])
-		if stakes < 1 {
-			stakes = 1
+		if stakes < 2 {
+			stakes = 2
 		}
 		if stakes != stakeBronze {
 			continue
@@ -449,8 +449,8 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 	gameMode := m["game_mode"]
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
 	stake, _ := strconv.Atoi(m["stake_bronze"])
-	if stake < 1 {
-		stake = 1
+	if stake < 2 {
+		stake = 2
 	}
 	creatorUUID, _ := uuid.Parse(m["creator_id"])
 
@@ -556,12 +556,13 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 	if lm, _ := h.Rdb.HGet(ctx, "lobby:"+lobbyID, "chat_id").Result(); lm != "" {
 		fields = append(fields, "chat_id", lm)
 	}
-	if turnTimeSec > 0 {
-		fields = append(fields,
-			"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnTimeSec), 10),
-			"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
-		)
-	}
+	// Таймер хода — только после стартовой раздачи на клиенте.
+	graceUntil := time.Now().UTC().Unix() + int64(durak.OpeningDealGrace(len(ids))/time.Second)
+	fields = append(fields,
+		"deal_grace_until", strconv.FormatInt(graceUntil, 10),
+		"turn_deadline", "0",
+		"turn_actor_idx", strconv.Itoa(durakTurnActorIdx(state)),
+	)
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, gkey, fields...)
 	pipe.Expire(ctx, gkey, 24*time.Hour)
@@ -574,6 +575,9 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		setUserActiveGame(ctx, h.Rdb, u, gameID)
 	}
 	h.publishGameStartedTyped(players, gameID, lobbyID, durakGameType)
+	if turnTimeSec > 0 {
+		h.scheduleDurakDealGrace(gameID)
+	}
 
 	// В ответ — game_id и lobby_id: клиент роутит по ним без догадок.
 	w.Header().Set("Content-Type", "application/json")
@@ -602,7 +606,9 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
 		return
 	}
-	// Применить таймаут хода: если время вышло — форфейт для чьего хода.
+	// После раздачи — включить таймер; затем проверить таймаут хода.
+	h.armDurakTurnAfterDeal(ctx, gameID, m)
+	m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
 	h.applyDurakTurnTimeout(ctx, gameID, m)
 	m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
 
@@ -799,6 +805,61 @@ func (h *GamesHandler) scheduleDurakTakeReveal(gameID string) {
 	}()
 }
 
+// armDurakTurnAfterDeal — после паузы стартовой раздачи выставить turn_deadline.
+func (h *GamesHandler) armDurakTurnAfterDeal(ctx context.Context, gameID string, m map[string]string) bool {
+	if h.Rdb == nil || m == nil || m["status"] != gameStatusActive {
+		return false
+	}
+	turnT, _ := strconv.Atoi(m["turn_time_sec"])
+	if turnT <= 0 {
+		return false
+	}
+	deadline, _ := strconv.ParseInt(m["turn_deadline"], 10, 64)
+	if deadline > 0 {
+		return false
+	}
+	graceUntil, _ := strconv.ParseInt(m["deal_grace_until"], 10, 64)
+	if graceUntil > 0 && time.Now().UTC().Unix() < graceUntil {
+		return false
+	}
+	state, err := durak.Decode(m["state"])
+	if err != nil || state == nil || state.Status != durak.StatusActive {
+		return false
+	}
+	actor := durakTurnActorIdx(state)
+	h.Rdb.HSet(ctx, "game:"+gameID,
+		"turn_deadline", strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10),
+		"turn_actor_idx", strconv.Itoa(actor),
+		"deal_grace_until", "0",
+	)
+	m["turn_deadline"] = strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10)
+	m["turn_actor_idx"] = strconv.Itoa(actor)
+	m["deal_grace_until"] = "0"
+	humans := durakHumans(m)
+	h.broadcast(humans, map[string]any{
+		"type":      "game_state",
+		"game_id":   gameID,
+		"game_type": durakGameType,
+	})
+	return true
+}
+
+// scheduleDurakDealGrace — через OpeningDealGrace включить таймер хода.
+func (h *GamesHandler) scheduleDurakDealGrace(gameID string) {
+	go func() {
+		// Верхняя оценка раздачи; точный arm — по deal_grace_until.
+		timer := time.NewTimer(durak.OpeningDealGrace(4) + 200*time.Millisecond)
+		defer timer.Stop()
+		<-timer.C
+		ctx := context.Background()
+		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+			return
+		}
+		_ = h.armDurakTurnAfterDeal(ctx, gameID, m)
+	}()
+}
+
 // promoteDurakFinishedPlayers — вышедший «в ноль» → observation; ранняя выплата доли места.
 func (h *GamesHandler) promoteDurakFinishedPlayers(ctx context.Context, gameID string, m map[string]string, state *durak.State) {
 	if state == nil || h.Rdb == nil || len(state.FinishedIndices) == 0 {
@@ -806,6 +867,20 @@ func (h *GamesHandler) promoteDurakFinishedPlayers(ctx context.Context, gameID s
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	n := len(state.PlayerIDs)
+	// Ничья лидеров: банк мест (1+2+3…) делится поровну между TiedLeaders.
+	tiedCredits := map[int]int{}
+	if state.TiedLeaders >= 2 && stakeBronze > 0 {
+		pot := stakeBronze * n
+		each := pot / state.TiedLeaders
+		rem := pot % state.TiedLeaders
+		for i := 0; i < state.TiedLeaders && i < len(state.FinishedIndices); i++ {
+			c := each
+			if i == 0 {
+				c += rem
+			}
+			tiedCredits[state.FinishedIndices[i]] = c
+		}
+	}
 	for placeIdx, idx := range state.FinishedIndices {
 		if idx < 0 || idx >= n {
 			continue
@@ -826,7 +901,17 @@ func (h *GamesHandler) promoteDurakFinishedPlayers(ctx context.Context, gameID s
 		if state.Status != durak.StatusActive || stakeBronze <= 0 || h.Pool == nil {
 			continue
 		}
-		credit := durak.CreditForPlace(stakeBronze, n, placeIdx)
+		credit := 0
+		if c, ok := tiedCredits[idx]; ok {
+			credit = c
+		} else if state.TiedLeaders >= 2 && placeIdx < state.TiedLeaders {
+			continue
+		} else if state.TiedLeaders >= 2 {
+			// Места после ничьей лидеров уже «съедены» общим банком.
+			continue
+		} else {
+			credit = durak.CreditForPlace(stakeBronze, n, placeIdx)
+		}
 		if credit <= 0 {
 			continue
 		}
@@ -1194,6 +1279,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			"bito_reveal_at", "0",
 			"take_reveal_at", "0",
 			"throw_reveal_at", "0",
+			"deal_grace_until", "0",
 		)
 	} else {
 		fields = append(fields, "bito_reveal_at", "0", "take_reveal_at", "0", "throw_reveal_at", "0")
@@ -1447,8 +1533,8 @@ func (h *GamesHandler) DurakRematch(w http.ResponseWriter, r *http.Request) {
 	deckSize, _ := strconv.Atoi(m["deck_size"])
 	maxPlayers, _ := strconv.Atoi(m["max_players"])
 	stake, _ := strconv.Atoi(m["stake_bronze"])
-	if stake < 1 {
-		stake = 1
+	if stake < 2 {
+		stake = 2
 	}
 	gameMode := m["mode"]
 	pipe := h.Rdb.Pipeline()
@@ -1613,6 +1699,7 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 			return s.LoserIndex
 		}(),
 		"finished":        s.FinishedIndices,
+		"tied_leaders":    s.TiedLeaders,
 		"eliminated":      s.EliminatedIndices,
 		"turn_time_sec":   turnT,
 		"turn_deadline":   turnDeadline,
@@ -1664,8 +1751,17 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 			return
 		}
 	}
+	// Стартовая раздача ещё идёт — таймер не тикает.
+	if graceUntil, gerr := strconv.ParseInt(m["deal_grace_until"], 10, 64); gerr == nil && graceUntil > 0 {
+		if time.Now().UTC().Unix() < graceUntil {
+			return
+		}
+		if h.armDurakTurnAfterDeal(ctx, gameID, m) {
+			m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		}
+	}
 	turnDeadline, err := strconv.ParseInt(m["turn_deadline"], 10, 64)
-	// 0 = нет лимита / пауза reveal — не считаем просрочкой.
+	// 0 = нет лимита / пауза reveal / до раздачи — не считаем просрочкой.
 	if err != nil || turnDeadline <= 0 {
 		return
 	}
@@ -1953,6 +2049,24 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 		h.durakPayCreditDelta(ctx, gameID, winner, stakeBronze*2)
 		return
 	}
+	pot := stakeBronze * len(ids)
+	// Ничья 1–2 (и т.п.): банк за 1/2/3 места делится поровну между лидерами.
+	if state.TiedLeaders >= 2 {
+		nTied := state.TiedLeaders
+		if nTied > len(placeIDs) {
+			nTied = len(placeIDs)
+		}
+		each := pot / nTied
+		rem := pot % nTied
+		for i := 0; i < nTied; i++ {
+			credit := each
+			if i == 0 {
+				credit += rem
+			}
+			h.durakPayCreditDelta(ctx, gameID, placeIDs[i], credit)
+		}
+		return
+	}
 	nums := durak.PlaceShareNumerators(len(ids))
 	if len(nums) == 0 {
 		return
@@ -1967,7 +2081,6 @@ func (h *GamesHandler) settleDurakCoins(ctx context.Context, gameID string, m ma
 		shareNums = shareNums[:len(placeIDs)]
 		shareNums[0] += extra
 	}
-	pot := stakeBronze * len(ids)
 	denom := len(ids)
 	credits := make([]int, len(placeIDs))
 	paidTotal := 0
