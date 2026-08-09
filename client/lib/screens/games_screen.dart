@@ -11,6 +11,7 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/framework/game_session_api.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -213,13 +214,27 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         _selectedStakeBronze = saved.stakeBronze;
       });
     });
-    final availableStakes =
+    // Разблокированные ставки; для выбора — только те, что можно оплатить
+    // всем balance_bronze (1 серебро = 100 бронзы). Иначе «2» с серебряной
+    // монетой (=200) при балансе 1с+1бр даёт «Недостаточно монет».
+    final unlockedStakes =
         caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
+    final balanceBronze =
+        ref.watch(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final affordable =
+        affordableStakeOptions(balanceBronze, unlockedStakes);
+    final availableStakes =
+        affordable.isNotEmpty ? affordable : unlockedStakes;
     if (!availableStakes.contains(_selectedStakeBronze) &&
         availableStakes.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        setState(() => _selectedStakeBronze = availableStakes.first);
+        final next = clampStakeToAffordable(
+          _selectedStakeBronze,
+          balanceBronze,
+          availableStakes,
+        );
+        setState(() => _selectedStakeBronze = next);
         if (_settingsHydrated) _persistSettings();
       });
     }
@@ -349,11 +364,40 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
+  /// Обновить баланс и убедиться, что ставка по карману (весь кошелёк).
+  Future<bool> _ensureStakeAffordable(int stakeBronze) async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final caps = ref.read(inventoryCapabilitiesProvider).valueOrNull;
+    final unlocked =
+        caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
+    final next = clampStakeToAffordable(stakeBronze, balance, unlocked);
+    if (next != stakeBronze) {
+      setState(() => _selectedStakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _createGame(BuildContext context, String mode) async {
     // Async: после конца партии пин/кэш могли ещё держать старый gameId.
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable(_selectedStakeBronze)) return;
     if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
@@ -1513,10 +1557,38 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         );
   }
 
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final next = clampStakeToAffordable(_stakeBronze, balance, options);
+    if (next != _stakeBronze) {
+      setState(() => _stakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _create(String mode) async {
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable()) return;
     if (!context.mounted) return;
     setState(() {
       _creating = mode == 'invite';
@@ -1828,10 +1900,38 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         );
   }
 
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final next = clampStakeToAffordable(_stakeBronze, balance, options);
+    if (next != _stakeBronze) {
+      setState(() => _stakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _create(String mode) async {
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable()) return;
     if (!context.mounted) return;
     setState(() {
       _creating = mode == 'invite';
