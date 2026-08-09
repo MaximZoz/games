@@ -3086,75 +3086,76 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
   }
 
-  /// Рубашки по одной: колода → веер одного соперника ([_oppDealPending] уже учтён).
+  /// Рубашки по одной: колода → веер соперника ([_oppDealPending] уже учтён).
+  /// При n>1 — строго последовательно, как свой добор: каждая карта видна отдельно.
   Future<void> _animateDealToOpponent(
     int idx,
     int n, {
-    Duration flyDuration = const Duration(milliseconds: 320),
-    Duration stagger = const Duration(milliseconds: 26),
+    Duration flyDuration = const Duration(milliseconds: 300),
+    Duration gap = const Duration(milliseconds: 48),
   }) async {
     if (n <= 0 || !mounted || !_gameUiActive) return;
     const dummy = PlayingCard(Rank.six, Suit.spades);
-    final screen = MediaQuery.sizeOf(context);
     final toKey = _oppFanKeys.putIfAbsent(idx, GlobalKey.new);
-    final to = globalRectOf(toKey) ??
-        Rect.fromCenter(
-          center: Offset(screen.width / 2, screen.height * 0.16),
-          width: _tableCardSize.width * 0.44,
-          height: _tableCardSize.height * 0.44,
-        );
-    final endSize = Size(
-      (to.width).clamp(30.0, _tableCardSize.width * 0.55),
-      (to.height).clamp(44.0, _tableCardSize.height * 0.55),
-    );
-    final endScale = endSize.width / _tableCardSize.width;
-    final froms = <Rect>[
-      for (var i = 0; i < n; i++) _deckDealFromRect(jitter: i * 1.2),
-    ];
-    final tos = <Rect>[
-      for (var i = 0; i < n; i++)
-        Rect.fromCenter(
-          center: to.center.translate(i * 2.0, i * 1.5),
-          width: endSize.width,
-          height: endSize.height,
-        ),
-    ];
-    final cards = List<PlayingCard>.filled(n, dummy);
-    List<CardFlyTicket> tickets = const [];
-    await playCardsFlyAnimation(
-      context: context,
-      cards: cards,
-      cardSize: _tableCardSize,
-      froms: froms,
-      tos: tos,
-      duration: flyDuration,
-      stagger: stagger,
-      curve: kDurakFlyCurve,
-      faceDown: true,
-      flipToFace: false,
-      beginScale: 1,
-      endScale: endScale,
-      beginAngles: List<double>.filled(n, 0.12),
-      endAngles: List<double>.filled(n, 0.08),
-      arcLift: 18,
-      keepAtEnd: true,
-      onCardLaunch: (_, __) {
-        _consumeDeckFreezeSlot();
-      },
-      onTickets: (t) => tickets = t,
-    );
-    for (final t in tickets) {
-      t.dismiss();
-    }
-    if (!mounted) return;
-    setState(() {
-      final left = (_oppDealPending[idx] ?? n) - n;
-      if (left <= 0) {
-        _oppDealPending.remove(idx);
-      } else {
-        _oppDealPending[idx] = left;
+
+    for (var i = 0; i < n; i++) {
+      if (!mounted || !_gameUiActive) return;
+      final screen = MediaQuery.sizeOf(context);
+      final to = globalRectOf(toKey) ??
+          Rect.fromCenter(
+            center: Offset(screen.width / 2, screen.height * 0.16),
+            width: _tableCardSize.width * 0.44,
+            height: _tableCardSize.height * 0.44,
+          );
+      final endSize = Size(
+        (to.width).clamp(30.0, _tableCardSize.width * 0.55),
+        (to.height).clamp(44.0, _tableCardSize.height * 0.55),
+      );
+      final endScale = endSize.width / _tableCardSize.width;
+      final from = _deckDealFromRect(jitter: i * 1.8);
+      final land = Rect.fromCenter(
+        center: to.center.translate(i * 2.4, i * 1.6),
+        width: endSize.width,
+        height: endSize.height,
+      );
+      _consumeDeckFreezeSlot();
+      final ticket = await playCardFlyAnimation(
+        context: context,
+        card: dummy,
+        cardSize: _tableCardSize,
+        from: from,
+        to: land,
+        duration: flyDuration,
+        curve: kDurakFlyCurve,
+        faceDown: true,
+        flipToFace: false,
+        beginScale: 1,
+        endScale: endScale,
+        beginAngle: 0.12,
+        endAngle: 0.08,
+        arcLift: 18,
+        keepAtEnd: true,
+      );
+      if (!mounted) {
+        ticket.dismiss();
+        return;
       }
-    });
+      // Карта села — сразу в веер, следующая летит отдельно.
+      setState(() {
+        final left = (_oppDealPending[idx] ?? 1) - 1;
+        if (left <= 0) {
+          _oppDealPending.remove(idx);
+        } else {
+          _oppDealPending[idx] = left;
+        }
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      ticket.dismiss();
+      if (!mounted || !_gameUiActive) return;
+      if (i + 1 < n) {
+        await Future<void>.delayed(gap);
+      }
+    }
   }
 
   /// Синхронизировать prev после своего хода. Если раунд закрылся (бита/взятие) —
