@@ -744,17 +744,32 @@ func (h *GamesHandler) GetDurakGame(w http.ResponseWriter, r *http.Request, game
 	_ = json.NewEncoder(w).Encode(view)
 }
 
+// durakRevealDeadlineMs — дедлайн паузы в unix-ms; старые сейвы хранили секунды.
+func durakRevealDeadlineMs(raw string, delay time.Duration) (deadlineMs int64, missing bool) {
+	v, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || v <= 0 {
+		return time.Now().UTC().Add(delay).UnixMilli(), true
+	}
+	// Секунды (~1e9…1e10) → миллисекунды.
+	if v < 1_000_000_000_000 {
+		v *= 1000
+	}
+	return v, false
+}
+
 // healDurakBitoReveal — если фаза bito_reveal и время паузы вышло → отбой.
 func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m map[string]string, state *durak.State) bool {
 	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseBitoReveal {
 		return false
 	}
-	revealAt, err := strconv.ParseInt(m["bito_reveal_at"], 10, 64)
-	if err != nil || revealAt <= 0 {
-		// Нет метки — дожимаем сразу (старый сейв / сбой).
-		revealAt = 0
+	revealAt, missing := durakRevealDeadlineMs(m["bito_reveal_at"], durak.BitoRevealDelay)
+	if missing {
+		// Нет метки — взвести паузу заново, не закрывать стол мгновенно.
+		h.Rdb.HSet(ctx, "game:"+gameID, "bito_reveal_at", strconv.FormatInt(revealAt, 10))
+		h.scheduleDurakBitoReveal(gameID)
+		return false
 	}
-	if time.Now().UTC().Unix() < revealAt {
+	if time.Now().UTC().UnixMilli() < revealAt {
 		return false
 	}
 	if err := state.FinishBitoReveal(); err != nil {
@@ -816,11 +831,13 @@ func (h *GamesHandler) healDurakTakeReveal(ctx context.Context, gameID string, m
 	if state == nil || state.Status != durak.StatusActive || state.Phase != durak.PhaseTakeReveal {
 		return false
 	}
-	revealAt, err := strconv.ParseInt(m["take_reveal_at"], 10, 64)
-	if err != nil || revealAt <= 0 {
-		revealAt = 0
+	revealAt, missing := durakRevealDeadlineMs(m["take_reveal_at"], durak.TakeRevealDelay)
+	if missing {
+		h.Rdb.HSet(ctx, "game:"+gameID, "take_reveal_at", strconv.FormatInt(revealAt, 10))
+		h.scheduleDurakTakeReveal(gameID)
+		return false
 	}
-	if time.Now().UTC().Unix() < revealAt {
+	if time.Now().UTC().UnixMilli() < revealAt {
 		return false
 	}
 	if err := state.FinishTakeReveal(); err != nil {
@@ -1326,7 +1343,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	fields := []any{"state", encoded}
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
 		// Пауза показа стола: без таймера хода / forfeit, через 2с — отбой.
-		revealAt := time.Now().UTC().Unix() + int64(durak.BitoRevealDelay/time.Second)
+		revealAt := time.Now().UTC().Add(durak.BitoRevealDelay).UnixMilli()
 		fields = append(fields,
 			"bito_reveal_at", strconv.FormatInt(revealAt, 10),
 			"take_reveal_at", "0",
@@ -1336,7 +1353,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 		)
 	} else if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
 		// Пауза перед взятием: все видят подкид, через 2с — карты защитнику.
-		revealAt := time.Now().UTC().Unix() + int64(durak.TakeRevealDelay/time.Second)
+		revealAt := time.Now().UTC().Add(durak.TakeRevealDelay).UnixMilli()
 		fields = append(fields,
 			"take_reveal_at", strconv.FormatInt(revealAt, 10),
 			"bito_reveal_at", "0",
