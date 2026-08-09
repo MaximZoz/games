@@ -1886,6 +1886,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         if (dealt.isNotEmpty) {
           _pendingDealCards.addAll(dealt);
         }
+        // Сразу скрыть добор соперников — иначе кадр с картами «из ниоткуда».
+        _armOppDealPending(oppDeals);
         if (dealt.isNotEmpty || oppDeals.isNotEmpty) {
           _armDeckFreeze(deckBefore);
         }
@@ -2434,7 +2436,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       // Hold синхронно — этот же build ещё рисует стол.
       _takeTableHold = tableSnapshot;
       _leftTableCards.clear();
+      // Стол + добор из колоды: оба скрыты, пока не долетят.
       _oppDealPending[taker] = (_oppDealPending[taker] ?? 0) + takenN;
+      _armOppDealPending(oppDealsDeck);
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2477,6 +2481,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           if (!takenSet.contains(c)) c,
       ];
       if (dealtOnly.isNotEmpty) _pendingDealCards.addAll(dealtOnly);
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       // Hold + порядок веера синхронно — без кадра пустого стола.
       _takeTableHold = tableSnapshot;
@@ -2549,6 +2554,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // дельта руки проглотит анимацию стола в отбой.
     if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      // Скрыть добор соперников на время биты — не мелькать до колоды.
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       // Держим снимок стола в ЭТОМ кадре — иначе пустой стол до post-frame
       // и полёт стартует из «центра экрана».
@@ -2609,6 +2616,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _suppressNextDealFx = false;
         // Свой добор уже/будет в take — только соперники, в порядке атаки.
         if (oppDeals.isNotEmpty) {
+          _armOppDealPending(oppDeals);
           _fxScheduled = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) {
@@ -2629,6 +2637,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       } else {
         if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+        _armOppDealPending(oppDeals);
         _fxScheduled = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
@@ -2673,6 +2682,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         (incoming.isNotEmpty || oppDeals.isNotEmpty)) {
       // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2728,6 +2738,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (d > 0) deltas[e.key] = d;
     }
     return deltas;
+  }
+
+  /// Скрыть добор в веере соперника до полёта из колоды (тот же build, до paint).
+  void _armOppDealPending(Map<int, int> deals) {
+    for (final e in deals.entries) {
+      if (e.value <= 0) continue;
+      _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
+    }
+  }
+
+  /// Подстраховка: pending не меньше ожидаемого добора (без двойного сложения).
+  void _ensureOppDealPending(Map<int, int> deals) {
+    for (final e in deals.entries) {
+      if (e.value <= 0) continue;
+      final cur = _oppDealPending[e.key] ?? 0;
+      if (cur < e.value) {
+        _oppDealPending[e.key] = e.value;
+      }
+    }
   }
 
   /// Порядок добора как на сервере: атакующий → остальные по кругу → защитник.
@@ -2968,13 +2997,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return;
     }
 
-    // Пока рубашки летят — в веере соперника их ещё нет (как у меня pending).
+    // Pending соперников выставляется вызывающим в том же build (до paint),
+    // иначе кадр: карты появились → исчезли → летят из колоды.
+    _ensureOppDealPending(oppDeals);
     setState(() {
       if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
-      for (final e in oppDeals.entries) {
-        if (e.value <= 0) continue;
-        _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
-      }
       if (deckCountBefore != null) {
         _armDeckFreeze(deckCountBefore);
       }

@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: добор соперника — по одной карте, не пачкой
+- Дурак: не мелькать карты в веере соперника до добора
 
 ## en
 - Durak: cards land in the slot immediately, no snap from center
