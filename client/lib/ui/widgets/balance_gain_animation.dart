@@ -210,7 +210,7 @@ Future<void> playBalanceGain({
         );
       }
       if (!context.mounted) return;
-      await _countUp(controller: controller, from: from, to: to);
+      await _countBalance(controller: controller, from: from, to: to);
     } finally {
       // Снимаем лок — тулбар показывает актуальный auth-баланс.
       controller.end();
@@ -218,7 +218,78 @@ Future<void> playBalanceGain({
   });
 }
 
-Future<void> _countUp({
+/// Анимация списания: полёт монеты из тулбара в чип «−N» + счётчик вниз.
+///
+/// Ставка уже списана на старте партии — [toBronze] = актуальный баланс,
+/// [fromBronze] = to + lost (визуально «снимаем» ставку в конце).
+Future<void> playBalanceLoss({
+  required WidgetRef ref,
+  required BuildContext context,
+  required int fromBronze,
+  required int toBronze,
+  int? lostBronze,
+  GlobalKey? targetKey,
+  Rect? targetRect,
+}) {
+  final controller = ref.read(balanceGainProvider.notifier);
+  return controller.enqueue(() async {
+    final user = ref.read(authStateProvider).valueOrNull;
+    if (user == null) return;
+
+    final from = fromBronze;
+    final to = toBronze;
+    if (to >= from) {
+      controller.end();
+      return;
+    }
+
+    final delta = (lostBronze ?? (from - to)).abs();
+    if (delta <= 0) {
+      controller.end();
+      return;
+    }
+    final flyType = rewardCoinType(delta);
+    final forceShow = {
+      ...emergingDenominations(to, from),
+      if (denominationOf(flyType, to) == BigInt.zero) flyType,
+    };
+
+    controller.begin(fromBronze: from, forceShow: forceShow);
+
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!context.mounted) return;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      if (!context.mounted) return;
+
+      final coinKeys = ref.read(toolbarCoinKeysProvider);
+      var startRect = globalRectOfKey(coinKeys[flyType]);
+      if (startRect == null) {
+        for (final type in CoinType.values) {
+          startRect = globalRectOfKey(coinKeys[type]);
+          if (startRect != null) break;
+        }
+      }
+
+      final endRect = targetRect ?? globalRectOfKey(targetKey);
+      if (startRect != null && endRect != null && context.mounted) {
+        await _flyCoin(
+          context: context,
+          from: _centerOf(startRect),
+          to: _centerOf(endRect),
+          coinType: flyType,
+          size: math.max(18, endRect.shortestSide.clamp(16, 28)),
+        );
+      }
+      if (!context.mounted) return;
+      await _countBalance(controller: controller, from: from, to: to);
+    } finally {
+      controller.end();
+    }
+  });
+}
+
+Future<void> _countBalance({
   required BalanceGainController controller,
   required int from,
   required int to,

@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Motståndare",
   "gameYouWon": "Du vann!",
+  "gameYouLost": "Du förlorade",
   "gameYouWonOpponentLeft": "Du vann — motståndaren lämnade",
   "gameYouWonOpponentTimeout": "Du vann — motståndarens tid tog slut",
   "gameDraw": "Oavgjort",

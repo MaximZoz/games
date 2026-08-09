@@ -732,6 +732,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gameYouWon => 'لقد فزت!';
 
   @override
+  String get gameYouLost => 'لقد خسرت';
+
+  @override
   String get gameYouWonOpponentLeft => 'لقد فزت — غادر المنافس';
 
   @override

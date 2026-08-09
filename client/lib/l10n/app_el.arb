@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Αντίπαλος",
   "gameYouWon": "Κερδίσατε!",
+  "gameYouLost": "Χάσατε",
   "gameYouWonOpponentLeft": "Κερδίσατε — ο αντίπαλος αποχώρησε",
   "gameYouWonOpponentTimeout": "Κερδίσατε — έληξε ο χρόνος του αντιπάλου",
   "gameDraw": "Ισοπαλία",

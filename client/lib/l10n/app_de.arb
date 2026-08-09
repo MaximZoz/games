@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Gegner",
   "gameYouWon": "Du hast gewonnen!",
+  "gameYouLost": "Du hast verloren",
   "gameYouWonOpponentLeft": "Du hast gewonnen — Gegner hat verlassen",
   "gameYouWonOpponentTimeout": "Du hast gewonnen — Zeit des Gegners ist abgelaufen",
   "gameDraw": "Unentschieden",

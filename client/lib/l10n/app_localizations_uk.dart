@@ -732,6 +732,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gameYouWon => 'Ви перемогли!';
 
   @override
+  String get gameYouLost => 'Ви програли';
+
+  @override
   String get gameYouWonOpponentLeft => 'Ви перемогли — суперник вийшов';
 
   @override

@@ -732,6 +732,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameYouWon => '이겼습니다!';
 
   @override
+  String get gameYouLost => '패배했습니다';
+
+  @override
   String get gameYouWonOpponentLeft => '이겼습니다 — 상대가 나갔습니다';
 
   @override

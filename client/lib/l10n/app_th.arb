@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "คู่แข่ง",
   "gameYouWon": "คุณชนะ!",
+  "gameYouLost": "คุณแพ้",
   "gameYouWonOpponentLeft": "คุณชนะ — คู่แข่งออกไปแล้ว",
   "gameYouWonOpponentTimeout": "คุณชนะ — คู่แข่งหมดเวลา",
   "gameDraw": "เสมอ",

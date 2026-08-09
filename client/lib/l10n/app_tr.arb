@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Rakip",
   "gameYouWon": "Kazandınız!",
+  "gameYouLost": "Kaybettiniz",
   "gameYouWonOpponentLeft": "Kazandınız — rakip ayrıldı",
   "gameYouWonOpponentTimeout": "Kazandınız — rakibin süresi doldu",
   "gameDraw": "Berabere",

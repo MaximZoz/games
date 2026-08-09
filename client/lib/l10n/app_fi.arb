@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Vastustaja",
   "gameYouWon": "Voitit!",
+  "gameYouLost": "Hävisit",
   "gameYouWonOpponentLeft": "Voitit — vastustaja lähti",
   "gameYouWonOpponentTimeout": "Voitit — vastustajan aika loppui",
   "gameDraw": "Tasapeli",

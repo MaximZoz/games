@@ -732,6 +732,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gameYouWon => 'आप जीत गए!';
 
   @override
+  String get gameYouLost => 'आप हारे';
+
+  @override
   String get gameYouWonOpponentLeft => 'आप जीत गए — प्रतिद्वंद्वी चला गया';
 
   @override

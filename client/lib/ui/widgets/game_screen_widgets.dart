@@ -1461,7 +1461,58 @@ Future<bool> playGameSettledReward({
   }
 }
 
-/// Статус партии и чип награды «+N» в одной строке (крестики / дурак).
+/// Проигрыш ставки: чип «−N» и анимация списания в тулбаре.
+///
+/// Ставка уже удержана на старте — после refresh баланс не должен упасть ещё раз;
+/// показываем from = to + lost → to.
+Future<bool> playGameSettledLoss({
+  required WidgetRef ref,
+  required BuildContext context,
+  required int lostBronze,
+  GlobalKey? targetKey,
+}) async {
+  if (lostBronze <= 0) {
+    unawaited(ref.read(authStateProvider.notifier).refresh());
+    return false;
+  }
+  final before =
+      ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+  try {
+    await ref.read(authStateProvider.notifier).refresh();
+    if (!context.mounted) return false;
+    final toBalance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? before;
+    // Если refresh ещё списал ставку — крутим реальный дроп; иначе визуальный.
+    final fromBalance =
+        toBalance < before ? before : toBalance + lostBronze;
+    if (fromBalance <= toBalance) return false;
+    lockBalanceDisplay(
+      ref: ref,
+      fromBronze: fromBalance,
+      toBronze: toBalance,
+      rewardBronze: lostBronze,
+    );
+    await WidgetsBinding.instance.endOfFrame;
+    if (!context.mounted) return false;
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (!context.mounted) return false;
+    await playBalanceLoss(
+      ref: ref,
+      context: context,
+      fromBronze: fromBalance,
+      toBronze: toBalance,
+      lostBronze: lostBronze,
+      targetKey: targetKey,
+    );
+    return true;
+  } finally {
+    if (ref.read(balanceGainProvider).active) {
+      ref.read(balanceGainProvider.notifier).end();
+    }
+  }
+}
+
+/// Статус партии и чип «+N» / «−N» в одной строке (крестики / дурак / морской бой).
 class GameStatusWithReward extends StatelessWidget {
   const GameStatusWithReward({
     super.key,
@@ -1474,6 +1525,7 @@ class GameStatusWithReward extends StatelessWidget {
 
   final String statusText;
   final bool showReward;
+  /// Положительный = выигрыш, отрицательный = проигрыш ставки.
   final int rewardBronze;
   final GlobalKey rewardKey;
   final double? fontSize;
@@ -1513,17 +1565,22 @@ class GameStatusWithReward extends StatelessWidget {
   }
 }
 
-/// Чип чистого выигрыша — источник полёта монеты в баланс.
+/// Чип дельты монет — источник/цель полёта монеты в баланс.
 class GameRewardChip extends StatelessWidget {
   const GameRewardChip({
     super.key,
     required this.rewardBronze,
   });
 
+  /// Положительный = «+N», отрицательный = «−N».
   final int rewardBronze;
 
   @override
   Widget build(BuildContext context) {
+    final abs = rewardBronze.abs();
+    final label = rewardBronze >= 0
+        ? '+${formatStakeAmount(abs)}'
+        : '−${formatStakeAmount(abs)}';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -1537,7 +1594,7 @@ class GameRewardChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '+${formatStakeAmount(rewardBronze)}',
+            label,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -1546,7 +1603,7 @@ class GameRewardChip extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           CoinIcon(
-            coinType: stakeCoinType(rewardBronze),
+            coinType: stakeCoinType(abs),
             size: 20,
             showBorder: true,
           ),

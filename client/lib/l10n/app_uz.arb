@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Raqib",
   "gameYouWon": "Siz yutdingiz!",
+  "gameYouLost": "Yutqazdingiz",
   "gameYouWonOpponentLeft": "Siz yutdingiz — raqib chiqib ketdi",
   "gameYouWonOpponentTimeout": "Siz yutdingiz — raqib vaqti tugadi",
   "gameDraw": "Durrang",

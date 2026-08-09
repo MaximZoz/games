@@ -1535,6 +1535,12 @@ abstract class AppLocalizations {
   /// **'Вы победили!'**
   String get gameYouWon;
 
+  /// No description provided for @gameYouLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли'**
+  String get gameYouLost;
+
   /// No description provided for @gameYouWonOpponentLeft.
   ///
   /// In ru, this message translates to:

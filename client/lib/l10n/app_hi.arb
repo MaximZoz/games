@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "प्रतिद्वंद्वी",
   "gameYouWon": "आप जीत गए!",
+  "gameYouLost": "आप हारे",
   "gameYouWonOpponentLeft": "आप जीत गए — प्रतिद्वंद्वी चला गया",
   "gameYouWonOpponentTimeout": "आप जीत गए — प्रतिद्वंद्वी का समय समाप्त",
   "gameDraw": "ड्रॉ",

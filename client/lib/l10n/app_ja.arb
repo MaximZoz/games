@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "相手",
   "gameYouWon": "勝ちました！",
+  "gameYouLost": "負けました",
   "gameYouWonOpponentLeft": "勝ちました — 相手が退出しました",
   "gameYouWonOpponentTimeout": "勝ちました — 相手が時間切れです",
   "gameDraw": "引き分け",

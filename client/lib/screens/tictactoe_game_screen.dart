@@ -563,6 +563,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ? game.stakeBronze
                       : 0;
               final settledReward = iWonEarly ? netProfit : 0;
+              final settledLost = (!iWonEarly &&
+                      !isDraw &&
+                      game.stakeBronze > 0)
+                  ? game.stakeBronze
+                  : 0;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
                 // Партия окончена — снять active/observation/пин, иначе
@@ -579,6 +584,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 unawaited(_onGameSettled(
                   creditBronze: settledCredit,
                   displayRewardBronze: settledReward,
+                  lostBronze: settledLost,
                 ));
               });
             } else {
@@ -649,7 +655,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       opponentName;
                   statusText = iWon
                       ? context.l10n.gameYouWon
-                      : context.l10n.gameOpponentWon(winnerName);
+                      : game.stakeBronze > 0
+                          ? context.l10n.gameYouLost
+                          : context.l10n.gameOpponentWon(winnerName);
                 } else {
                   statusText = iWon
                       ? (game.forfeit
@@ -661,7 +669,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           ? context.l10n.gameYouForfeitOpponentWon(opponentName)
                           : game.timeout
                               ? context.l10n.gameOpponentWonTimeout(opponentName)
-                              : context.l10n.gameOpponentWon(opponentName));
+                              : game.stakeBronze > 0
+                                  ? context.l10n.gameYouLost
+                                  : context.l10n.gameOpponentWon(opponentName));
                 }
               } else if (game.status == 'draw') {
                 // В multi значка/режима ничьей нет — нейтральный итог.
@@ -698,13 +708,19 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             final playersNForReward = game.playerUserIds.length >= 2
                 ? game.playerUserIds.length
                 : (game.maxPlayers > 2 ? game.maxPlayers : 2);
-            final showRewardChip = isOver && iWon && game.stakeBronze > 0;
-            // Чистый выигрыш (как меняется баланс относительно до матча).
-            final rewardBronze = stakeWinnerNetProfit(
-              stake: game.stakeBronze,
-              playerCount: playersNForReward,
-              winnerCount: 1,
-            );
+            final iLost = isOver && !iWon && !isDraw && game.stakeBronze > 0;
+            final showRewardChip =
+                isOver && game.stakeBronze > 0 && (iWon || iLost);
+            // Чистый выигрыш / проигрыш ставки (как меняется баланс до матча).
+            final rewardBronze = iWon
+                ? stakeWinnerNetProfit(
+                    stake: game.stakeBronze,
+                    playerCount: playersNForReward,
+                    winnerCount: 1,
+                  )
+                : iLost
+                    ? -game.stakeBronze
+                    : 0;
             final isDesktop = isWide(context);
             final narrow = isNarrow(context);
             final phoneLandscape = isPhoneLandscape(context);
@@ -992,8 +1008,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   Future<void> _onGameSettled({
     required int creditBronze,
     required int displayRewardBronze,
+    int lostBronze = 0,
   }) async {
-    if (_balanceGainPlayed || creditBronze <= 0) {
+    if (_balanceGainPlayed) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    if (lostBronze > 0 && creditBronze <= 0) {
+      _balanceGainPlayed = true;
+      await playGameSettledLoss(
+        ref: ref,
+        context: context,
+        lostBronze: lostBronze,
+        targetKey: _winRewardKey,
+      );
+      return;
+    }
+    if (creditBronze <= 0) {
       unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
@@ -3002,7 +3033,7 @@ class _StatusWithReward extends StatelessWidget {
   }
 }
 
-/// Чип чистого выигрыша (= stake*(N-1)) — источник полёта монеты в баланс.
+/// Чип «+N» / «−N» — источник/цель полёта монеты в баланс.
 class _GameRewardChip extends StatelessWidget {
   const _GameRewardChip({
     super.key,
@@ -3013,6 +3044,10 @@ class _GameRewardChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final abs = rewardBronze.abs();
+    final label = rewardBronze >= 0
+        ? '+${formatStakeAmount(abs)}'
+        : '−${formatStakeAmount(abs)}';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -3026,7 +3061,7 @@ class _GameRewardChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '+${formatStakeAmount(rewardBronze)}',
+            label,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -3035,7 +3070,7 @@ class _GameRewardChip extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           CoinIcon(
-            coinType: stakeCoinType(rewardBronze),
+            coinType: stakeCoinType(abs),
             size: 20,
             showBorder: true,
           ),
