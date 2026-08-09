@@ -139,7 +139,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Сколько карт ещё летит сопернику — скрыты в веере до посадки.
   final Map<int, int> _oppDealPending = {};
   List<DurakTablePairApi> _prevTable = const [];
+  /// Последний непустой стол (в т.ч. пока `_busy`/`_fxScheduled`) — для авто-биты.
+  List<DurakTablePairApi> _lastNonEmptyTable = const [];
   bool _fxScheduled = false;
+  /// Пока шёл FX/busy пришёл новый state — переиграть FX после освобождения.
+  bool _fxNeedsReplay = false;
   Offset _tablePanAccum = Offset.zero;
 
   /// Локальный порядок карт в веере (после ручной сортировки).
@@ -185,6 +189,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevBitoCount = -1;
       _prevHandLen = -1;
       _prevTable = const [];
+      _lastNonEmptyTable = const [];
       _prevAttackerIndex = -1;
       _prevDefenderIndex = -1;
       _prevOppHandCounts.clear();
@@ -194,6 +199,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _trumpFaceVisible = true;
       _deckCountFreeze = null;
       _fxScheduled = false;
+      _fxNeedsReplay = false;
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
@@ -412,7 +418,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (!mounted) return;
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        _requestFxReplay();
+      }
     }
   }
 
@@ -1383,6 +1392,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _suppressFanLayoutAnim = false;
         });
         _releaseFanLayoutSnap();
+        _requestFxReplay();
       } on GamesException catch (e) {
         if (!mounted) return;
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
@@ -1403,6 +1413,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _suppressFanLayoutAnim = false;
         });
         _releaseFanLayoutSnap();
+        _requestFxReplay();
       }
     }());
 
@@ -2314,8 +2325,43 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return tickets;
   }
 
+  void _requestFxReplay() {
+    if (!_fxNeedsReplay || !mounted) return;
+    if (_fxScheduled || _busy) return;
+    _fxNeedsReplay = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _fxScheduled || _busy) return;
+      final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+      if (v != null) _maybeRunTableFx(v);
+    });
+  }
+
+  void _markFxDone() {
+    _fxScheduled = false;
+    _requestFxReplay();
+  }
+
+  /// Снимок стола для ухода в биту: предпочитаем вариант с защитами.
+  List<DurakTablePairApi> _tableForBitoHold(List<DurakTablePairApi> snapshot) {
+    final last = _lastNonEmptyTable;
+    if (last.isEmpty) return snapshot;
+    if (snapshot.isEmpty) return List.of(last);
+    final snapDef = snapshot.where((p) => p.defense != null).length;
+    final lastDef = last.where((p) => p.defense != null).length;
+    if (lastDef > snapDef) return List.of(last);
+    if (last.length > snapshot.length) return List.of(last);
+    return snapshot;
+  }
+
   void _maybeRunTableFx(DurakGameView view) {
-    if (_fxScheduled) return;
+    if (view.table.isNotEmpty) {
+      _lastNonEmptyTable = List.of(view.table);
+    }
+    // Не глотать отбой/биту во время своего полёта — запомним стол и переиграем.
+    if (_fxScheduled || _busy) {
+      _fxNeedsReplay = true;
+      return;
+    }
     if (!_gameUiActive) {
       // Вне экрана игры — только синхронизируем базу, без overlay-анимаций.
       final handLen = view.hands.length > view.myIndex && view.myIndex >= 0
@@ -2343,9 +2389,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           ? (view.hands[view.myIndex].cards ?? const [])
           : const [],
     );
-
-    // Пока свой ход с FX — не трогаем prev (иначе проглотим авто-бито/добор).
-    if (_busy) return;
 
     // Первый кадр: стартовая раздача или просто запомнить базу.
     if (_prevDeckCount < 0) {
@@ -2381,8 +2424,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final deckDropped = _prevDeckCount - deck;
     final prevBito = _prevBitoCount;
     final prevDeck = _prevDeckCount;
-    final bitoGrew = bito > prevBito && _prevTable.isNotEmpty;
-    final tableSnapshot = List<DurakTablePairApi>.of(_prevTable);
+    final bitoGrew = bito > prevBito &&
+        (_prevTable.isNotEmpty || _lastNonEmptyTable.isNotEmpty);
+    final tableSnapshot =
+        _tableForBitoHold(List<DurakTablePairApi>.of(_prevTable));
     final oppDeals = _opponentDealDeltas(view);
     // Добор на сервере идёт со СТАРЫМ атакующим (до смены хода после биты).
     final refillAttacker =
@@ -2442,12 +2487,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
-          _fxScheduled = false;
+          _markFxDone();
           return;
         }
         await _animateTableToOpponentFan(tableSnapshot, taker);
         if (!mounted) {
-          _fxScheduled = false;
+          _markFxDone();
           return;
         }
         setState(() {
@@ -2466,7 +2511,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         } else {
           _clearDeckCountFreeze();
         }
-        if (mounted) _fxScheduled = false;
+        if (mounted) _markFxDone();
       });
       return;
     }
@@ -2502,7 +2547,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
-          _fxScheduled = false;
+          _markFxDone();
           return;
         }
         // froms после кадра с hold — ключи ещё на месте.
@@ -2519,7 +2564,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           );
         }
         if (!mounted) {
-          _fxScheduled = false;
+          _markFxDone();
           return;
         }
         setState(() {
@@ -2544,7 +2589,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
         if (mounted) {
           _suppressNextDealFx = false;
-          _fxScheduled = false;
+          _markFxDone();
         }
       });
       return;
@@ -2566,7 +2611,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _pendingDealCards.clear();
           _takeTableHold = null;
           _bitoCountFreeze = null;
-          _fxScheduled = false;
+          _markFxDone();
+          return;
+        }
+        // Дождаться посадки отбоя и коротко показать стол перед уходом в биту.
+        while (_remoteFlyingCardIds.isNotEmpty && mounted) {
+          await Future<void>.delayed(const Duration(milliseconds: 40));
+        }
+        if (!mounted) {
+          _markFxDone();
+          return;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 480));
+        if (!mounted) {
+          _markFxDone();
           return;
         }
         // Ключи ещё живы благодаря hold — снимаем точные from.
@@ -2608,7 +2666,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             _sortHandInFan(hand, trump, animate: false);
           }
           _pendingDealCards.clear();
-          _fxScheduled = false;
+          _markFxDone();
+        } else {
+          _markFxDone();
         }
       });
     } else if (dealt > 0 && deckDropped > 0) {
@@ -2620,7 +2680,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _fxScheduled = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) {
-              _fxScheduled = false;
+              _markFxDone();
               return;
             }
             await _animateRefillDeals(
@@ -2632,7 +2692,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               skipMyDeal: true,
               deckCountBefore: prevDeck,
             );
-            if (mounted) _fxScheduled = false;
+            if (mounted) _markFxDone();
           });
         }
       } else {
@@ -2642,7 +2702,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
             _pendingDealCards.clear();
-            _fxScheduled = false;
+            _markFxDone();
             return;
           }
           await _animateRefillDeals(
@@ -2662,7 +2722,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 !ordered.toSet().containsAll(hand)) {
               _sortHandInFan(hand, trump, animate: false);
             }
-            _fxScheduled = false;
+            _markFxDone();
           }
         });
       }
@@ -2687,7 +2747,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
           _pendingDealCards.clear();
-          _fxScheduled = false;
+          _markFxDone();
           return;
         }
         await _animateRefillDeals(
@@ -2700,7 +2760,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         );
         if (mounted) {
           _pendingDealCards.clear();
-          _fxScheduled = false;
+          _markFxDone();
         }
       });
     } else if (!_hidingTable && !_fxScheduled) {
@@ -2869,7 +2929,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
-        _fxScheduled = false;
+        _markFxDone();
         return;
       }
       try {
@@ -2889,7 +2949,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             }
           });
         }
-        _fxScheduled = false;
+        _markFxDone();
       }
     });
   }
@@ -3305,15 +3365,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (wasUndefended &&
           _optimisticDefends[i] != defense &&
           !_remoteFlyingCardIds.contains(id)) {
-        // Старая пара без защиты или совсем новая с защитой (редко).
-        if (old != null && old.defense == null) {
-          flights.add(_RemoteTableFlight(
-            card: defense,
-            pairIndex: i,
-            isDefense: true,
-            fromPlayer: view.defenderIndex,
-          ));
-        }
+        // old==null: атака+отбой в одном апдейте (пропустили кадр) — всё равно летим.
+        flights.add(_RemoteTableFlight(
+          card: defense,
+          pairIndex: i,
+          isDefense: true,
+          fromPlayer: view.defenderIndex,
+        ));
       }
     }
 
@@ -3333,14 +3391,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         for (final f in flights) {
           _remoteFlyingCardIds.remove(_cardId(f.card));
         }
-        _fxScheduled = false;
+        _markFxDone();
         return;
       }
       for (final f in flights) {
         await _animateRemoteCardFlight(f, view);
         if (!mounted) break;
       }
-      if (mounted) _fxScheduled = false;
+      _markFxDone();
     });
   }
 
@@ -3768,7 +3826,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _prevOppHandCounts.clear();
           _handOrder = null;
           _trumpFaceVisible = true;
-          _fxScheduled = false;
+          _markFxDone();
           _prevGameStatus = null;
           _balanceGainPlayed = false;
           _midFinishedHandled = false;
