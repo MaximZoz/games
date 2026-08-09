@@ -313,6 +313,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.ListPendingInvites(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/battleship/") {
+		h.serveBattleship(w, r)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/durak/") {
 		h.serveDurak(w, r)
 		return
@@ -1821,6 +1825,11 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		item.Variant = ""
 		item.GridSize = 0
 	}
+	if gameType == battleshipGameType {
+		item.Variant = ""
+		item.GridSize = 10
+		item.FirstMoveRestriction = m["first_move_restriction"] == "true"
+	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
 	}
@@ -2002,6 +2011,8 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		}
 		inviteData["deck_size"] = deckSize
 		inviteData["game_mode"] = gm
+	} else if gameType == battleshipGameType {
+		inviteData["first_move_restriction"] = firstMoveRestriction
 	} else {
 		inviteData["variant"] = string(variant)
 		inviteData["grid_size"] = cfg.GridSize
@@ -2519,11 +2530,15 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		if status == lobbyStatusWaitingMatchmake {
 			turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
 			stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-			_, variant := resolveVariantConfig(m["variant"], func() int {
-				gs, _ := strconv.Atoi(m["grid_size"])
-				return gs
-			}())
-			h.Rdb.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, creatorID+":"+lobbyID)
+			if m["game_type"] == battleshipGameType {
+				h.Rdb.LRem(ctx, battleshipMatchmakeKey(turnTimeSec, stakeBronze), 0, creatorID+":"+lobbyID)
+			} else {
+				_, variant := resolveVariantConfig(m["variant"], func() int {
+					gs, _ := strconv.Atoi(m["grid_size"])
+					return gs
+				}())
+				h.Rdb.LRem(ctx, matchmakeKeyVariant(turnTimeSec, variant, stakeBronze), 0, creatorID+":"+lobbyID)
+			}
 		}
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
@@ -2868,12 +2883,12 @@ func (h *GamesHandler) CancelInvite(w http.ResponseWriter, r *http.Request, lobb
 }
 
 // applyGameTimeout checks if turn_deadline passed; if so, current turn player loses (timeout). Returns true if applied.
-// Только крестики-нолики — дурак ходит через applyDurakTurnTimeout.
+// Только крестики-нолики — дурак/морской бой ходят через свои apply*Timeout.
 func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[string]string) bool {
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType {
+	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3837,6 +3852,13 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
+	if gm["game_type"] == battleshipGameType {
+		if battleshipSide(gm, userID.String()) == "" {
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+		return gid
+	}
 	mark := markForUserID(gm, userID.String())
 	if mark == "" {
 		clearUserActiveGame(ctx, h.Rdb, userID)
@@ -4227,6 +4249,8 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 				break
 			}
 		}
+	} else if gt == battleshipGameType {
+		inGame = battleshipSide(m, userID.String()) != ""
 	} else {
 		inGame = markForUserID(m, userID.String()) != ""
 	}
@@ -4282,6 +4306,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.armDurakTurnAfterDeal(ctx, gameID, m)
 				m, _ = h.Rdb.HGetAll(ctx, key).Result()
 				h.applyDurakTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == battleshipGameType {
+				h.applyBattleshipTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4320,6 +4346,19 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": durakGameType,
+					}
+				}
+			} else if m["game_type"] == battleshipGameType {
+				side := battleshipSide(m, userID.String())
+				if side == "" {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else {
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"is_my_turn": m["turn"] == userID.String(),
+						"game_type":  battleshipGameType,
 					}
 				}
 			} else {

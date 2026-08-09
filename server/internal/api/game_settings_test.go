@@ -72,6 +72,21 @@ func TestNormalizeGameSettingsVariants(t *testing.T) {
 	}
 }
 
+func TestNormalizeBattleshipGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:             store.GameTypeBattleship,
+		TurnTimeSec:          20,
+		StakeBronze:          10,
+		FirstMoveRestriction: true,
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeBattleship || s.GridSize != 10 || !s.FirstMoveRestriction || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+}
+
 func TestNormalizeDurakGameSettings(t *testing.T) {
 	s, errMsg := normalizeGameSettings(gameSettingsBody{
 		GameType:    store.GameTypeDurak,

@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	GameTypeTicTacToe = "tictactoe"
-	GameTypeDurak     = "durak"
+	GameTypeTicTacToe  = "tictactoe"
+	GameTypeDurak      = "durak"
+	GameTypeBattleship = "battleship"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -50,6 +51,12 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.TurnTimeSec = 60
 		s.Variant = "podkidnoi"
 		s.GameMode = "podkidnoi"
+	}
+	if gameType == GameTypeBattleship {
+		s.TurnTimeSec = 60
+		s.GridSize = 10
+		s.Variant = "classic"
+		s.FirstMoveRestriction = false
 	}
 	return s
 }

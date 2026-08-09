@@ -484,7 +484,7 @@ class LobbyItem {
   final bool firstMoveRestriction;
   final int stakeBronze;
 
-  /// Тип игры лобби: 'tictactoe' | 'durak'.
+  /// Тип игры лобби: 'tictactoe' | 'durak' | 'battleship'.
   final String gameType;
 
   /// Durak: размер колоды и режим (подкидной/переводной).
@@ -492,6 +492,8 @@ class LobbyItem {
   final String gameMode;
 
   bool get isDurak => gameType == 'durak';
+
+  bool get isBattleship => gameType == 'battleship';
 
   LobbyItem({
     required this.id,

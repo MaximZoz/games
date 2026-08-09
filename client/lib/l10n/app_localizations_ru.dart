@@ -525,6 +525,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesDurak => 'Дурак';
 
   @override
+  String get gamesBattleship => 'Морской бой';
+
+  @override
+  String get gamesBattleshipRandomPlace => 'Расставить случайно';
+
+  @override
+  String get gamesBattleshipConfirmPlace => 'Готово';
+
+  @override
+  String get gamesBattleshipSetupPhase => 'Расстановка';
+
+  @override
+  String get gamesBattleshipBattlePhase => 'Бой';
+
+  @override
+  String get gamesBattleshipWaitingOpponentSetup => 'Ожидание соперника…';
+
+  @override
+  String get gamesBattleshipYouWon => 'Вы победили!';
+
+  @override
+  String get gamesBattleshipYouLost => 'Вы проиграли';
+
+  @override
+  String get rulesBattleshipTitle => 'Морской бой — правила';
+
+  @override
+  String get rulesBattleshipBody => 'Расставьте корабли на поле 10×10, затем стреляйте по клеткам соперника. Побеждает тот, кто первым потопит весь флот противника.';
+
+  @override
   String get gamesPoker => 'Покер';
 
   @override
