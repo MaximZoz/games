@@ -1886,6 +1886,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         if (dealt.isNotEmpty) {
           _pendingDealCards.addAll(dealt);
         }
+        // Сразу скрыть добор соперников — иначе кадр с картами «из ниоткуда».
+        _armOppDealPending(oppDeals);
         if (dealt.isNotEmpty || oppDeals.isNotEmpty) {
           _armDeckFreeze(deckBefore);
         }
@@ -2434,7 +2436,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       // Hold синхронно — этот же build ещё рисует стол.
       _takeTableHold = tableSnapshot;
       _leftTableCards.clear();
+      // Стол + добор из колоды: оба скрыты, пока не долетят.
       _oppDealPending[taker] = (_oppDealPending[taker] ?? 0) + takenN;
+      _armOppDealPending(oppDealsDeck);
       _armDeckFreeze(prevDeck);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2477,6 +2481,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           if (!takenSet.contains(c)) c,
       ];
       if (dealtOnly.isNotEmpty) _pendingDealCards.addAll(dealtOnly);
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       // Hold + порядок веера синхронно — без кадра пустого стола.
       _takeTableHold = tableSnapshot;
@@ -2549,6 +2554,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // дельта руки проглотит анимацию стола в отбой.
     if (bitoGrew && !_hidingTable && !_suppressRemoteBitoFx) {
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      // Скрыть добор соперников на время биты — не мелькать до колоды.
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       // Держим снимок стола в ЭТОМ кадре — иначе пустой стол до post-frame
       // и полёт стартует из «центра экрана».
@@ -2609,6 +2616,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _suppressNextDealFx = false;
         // Свой добор уже/будет в take — только соперники, в порядке атаки.
         if (oppDeals.isNotEmpty) {
+          _armOppDealPending(oppDeals);
           _fxScheduled = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) {
@@ -2629,6 +2637,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         }
       } else {
         if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+        _armOppDealPending(oppDeals);
         _fxScheduled = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
@@ -2673,6 +2682,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         (incoming.isNotEmpty || oppDeals.isNotEmpty)) {
       // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
+      _armOppDealPending(oppDeals);
       _fxScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
@@ -2728,6 +2738,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (d > 0) deltas[e.key] = d;
     }
     return deltas;
+  }
+
+  /// Скрыть добор в веере соперника до полёта из колоды (тот же build, до paint).
+  void _armOppDealPending(Map<int, int> deals) {
+    for (final e in deals.entries) {
+      if (e.value <= 0) continue;
+      _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
+    }
+  }
+
+  /// Подстраховка: pending не меньше ожидаемого добора (без двойного сложения).
+  void _ensureOppDealPending(Map<int, int> deals) {
+    for (final e in deals.entries) {
+      if (e.value <= 0) continue;
+      final cur = _oppDealPending[e.key] ?? 0;
+      if (cur < e.value) {
+        _oppDealPending[e.key] = e.value;
+      }
+    }
   }
 
   /// Порядок добора как на сервере: атакующий → остальные по кругу → защитник.
@@ -2952,7 +2981,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     ticket.dismiss();
   }
 
-  /// Добор: анимируем только свои карты с колоды (чужие руки не показываем).
+  /// Добор после биты/взятия: колода → мой веер и веера соперников (рубашки).
   Future<void> _animateRefillDeals({
     required DurakGameView view,
     required List<PlayingCard> myIncoming,
@@ -2968,6 +2997,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return;
     }
 
+    // Pending соперников выставляется вызывающим в том же build (до paint),
+    // иначе кадр: карты появились → исчезли → летят из колоды.
+    _ensureOppDealPending(oppDeals);
     setState(() {
       if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
       if (deckCountBefore != null) {
@@ -2975,41 +3007,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
     });
 
-    // Чужие слоты колоды снимаем без полёта (в порядке добора сервера).
     final order = _refillDealOrder(
       attacker: refillAttacker,
       defender: refillDefender,
       playerCount: view.hands.length,
     );
-    var beforeMe = 0;
-    var afterMe = 0;
-    var seenMe = false;
+    var dealtMine = false;
     for (final idx in order) {
+      if (!mounted || !_gameUiActive) return;
       if (idx == view.myIndex) {
-        seenMe = true;
+        if (dealtMine || myCards.isEmpty) continue;
+        dealtMine = true;
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted || !_gameUiActive) return;
+        await _animateDealCardsToFan(myCards);
         continue;
       }
       final n = oppDeals[idx] ?? 0;
       if (n <= 0) continue;
-      if (!seenMe) {
-        beforeMe += n;
-      } else {
-        afterMe += n;
-      }
+      await _animateDealToOpponent(idx, n);
     }
-    for (var i = 0; i < beforeMe; i++) {
-      _consumeDeckFreezeSlot();
-    }
-
-    if (myCards.isNotEmpty) {
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted || !_gameUiActive) return;
+    // Если меня не было в order (защита edge-case) — добор себе в конце.
+    if (!dealtMine && myCards.isNotEmpty && mounted && _gameUiActive) {
       await _animateDealCardsToFan(myCards);
-    }
-    for (var i = 0; i < afterMe; i++) {
-      _consumeDeckFreezeSlot();
     }
     if (mounted) {
       _pendingDealCards.removeAll(myCards);
@@ -3093,75 +3113,76 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
   }
 
-  /// Рубашки по одной: колода → веер одного соперника ([_oppDealPending] уже учтён).
+  /// Рубашки по одной: колода → веер соперника ([_oppDealPending] уже учтён).
+  /// При n>1 — строго последовательно, как свой добор: каждая карта видна отдельно.
   Future<void> _animateDealToOpponent(
     int idx,
     int n, {
-    Duration flyDuration = const Duration(milliseconds: 320),
-    Duration stagger = const Duration(milliseconds: 26),
+    Duration flyDuration = const Duration(milliseconds: 300),
+    Duration gap = const Duration(milliseconds: 48),
   }) async {
     if (n <= 0 || !mounted || !_gameUiActive) return;
     const dummy = PlayingCard(Rank.six, Suit.spades);
-    final screen = MediaQuery.sizeOf(context);
     final toKey = _oppFanKeys.putIfAbsent(idx, GlobalKey.new);
-    final to = globalRectOf(toKey) ??
-        Rect.fromCenter(
-          center: Offset(screen.width / 2, screen.height * 0.16),
-          width: _tableCardSize.width * 0.44,
-          height: _tableCardSize.height * 0.44,
-        );
-    final endSize = Size(
-      (to.width).clamp(30.0, _tableCardSize.width * 0.55),
-      (to.height).clamp(44.0, _tableCardSize.height * 0.55),
-    );
-    final endScale = endSize.width / _tableCardSize.width;
-    final froms = <Rect>[
-      for (var i = 0; i < n; i++) _deckDealFromRect(jitter: i * 1.2),
-    ];
-    final tos = <Rect>[
-      for (var i = 0; i < n; i++)
-        Rect.fromCenter(
-          center: to.center.translate(i * 2.0, i * 1.5),
-          width: endSize.width,
-          height: endSize.height,
-        ),
-    ];
-    final cards = List<PlayingCard>.filled(n, dummy);
-    List<CardFlyTicket> tickets = const [];
-    await playCardsFlyAnimation(
-      context: context,
-      cards: cards,
-      cardSize: _tableCardSize,
-      froms: froms,
-      tos: tos,
-      duration: flyDuration,
-      stagger: stagger,
-      curve: kDurakFlyCurve,
-      faceDown: true,
-      flipToFace: false,
-      beginScale: 1,
-      endScale: endScale,
-      beginAngles: List<double>.filled(n, 0.12),
-      endAngles: List<double>.filled(n, 0.08),
-      arcLift: 18,
-      keepAtEnd: true,
-      onCardLaunch: (_, __) {
-        _consumeDeckFreezeSlot();
-      },
-      onTickets: (t) => tickets = t,
-    );
-    for (final t in tickets) {
-      t.dismiss();
-    }
-    if (!mounted) return;
-    setState(() {
-      final left = (_oppDealPending[idx] ?? n) - n;
-      if (left <= 0) {
-        _oppDealPending.remove(idx);
-      } else {
-        _oppDealPending[idx] = left;
+
+    for (var i = 0; i < n; i++) {
+      if (!mounted || !_gameUiActive) return;
+      final screen = MediaQuery.sizeOf(context);
+      final to = globalRectOf(toKey) ??
+          Rect.fromCenter(
+            center: Offset(screen.width / 2, screen.height * 0.16),
+            width: _tableCardSize.width * 0.44,
+            height: _tableCardSize.height * 0.44,
+          );
+      final endSize = Size(
+        (to.width).clamp(30.0, _tableCardSize.width * 0.55),
+        (to.height).clamp(44.0, _tableCardSize.height * 0.55),
+      );
+      final endScale = endSize.width / _tableCardSize.width;
+      final from = _deckDealFromRect(jitter: i * 1.8);
+      final land = Rect.fromCenter(
+        center: to.center.translate(i * 2.4, i * 1.6),
+        width: endSize.width,
+        height: endSize.height,
+      );
+      _consumeDeckFreezeSlot();
+      final ticket = await playCardFlyAnimation(
+        context: context,
+        card: dummy,
+        cardSize: _tableCardSize,
+        from: from,
+        to: land,
+        duration: flyDuration,
+        curve: kDurakFlyCurve,
+        faceDown: true,
+        flipToFace: false,
+        beginScale: 1,
+        endScale: endScale,
+        beginAngle: 0.12,
+        endAngle: 0.08,
+        arcLift: 18,
+        keepAtEnd: true,
+      );
+      if (!mounted) {
+        ticket.dismiss();
+        return;
       }
-    });
+      // Карта села — сразу в веер, следующая летит отдельно.
+      setState(() {
+        final left = (_oppDealPending[idx] ?? 1) - 1;
+        if (left <= 0) {
+          _oppDealPending.remove(idx);
+        } else {
+          _oppDealPending[idx] = left;
+        }
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      ticket.dismiss();
+      if (!mounted || !_gameUiActive) return;
+      if (i + 1 < n) {
+        await Future<void>.delayed(gap);
+      }
+    }
   }
 
   /// Синхронизировать prev после своего хода. Если раунд закрылся (бита/взятие) —

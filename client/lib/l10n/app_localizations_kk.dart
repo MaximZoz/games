@@ -525,6 +525,36 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesDurak => 'Дурак';
 
   @override
+  String get gamesBattleship => 'Теңіз шайқасы';
+
+  @override
+  String get gamesBattleshipRandomPlace => 'Кездейсоқ орналастыру';
+
+  @override
+  String get gamesBattleshipConfirmPlace => 'Дайын';
+
+  @override
+  String get gamesBattleshipSetupPhase => 'Орналастыру';
+
+  @override
+  String get gamesBattleshipBattlePhase => 'Шайқас';
+
+  @override
+  String get gamesBattleshipWaitingOpponentSetup => 'Қарсыласты күту…';
+
+  @override
+  String get gamesBattleshipYouWon => 'Сіз жеңдіңіз!';
+
+  @override
+  String get gamesBattleshipYouLost => 'Сіз жеңілдіңіз';
+
+  @override
+  String get rulesBattleshipTitle => 'Теңіз шайқасы — ережелер';
+
+  @override
+  String get rulesBattleshipBody => 'Кемелерді 10×10 өріске орналастырыңыз, содан кейін қарсыластың ұяшықтарына атыңыз. Жеңу үшін қарсы флотты толығымен батырыңыз.';
+
+  @override
   String get gamesPoker => 'Покер';
 
   @override

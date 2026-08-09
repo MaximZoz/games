@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/games/battleship/battleship_provider.dart';
+import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
@@ -16,12 +18,17 @@ class GameSessionApi {
 
   GamesRepository get _ttt => _ref.read(gamesRepositoryProvider);
   DurakRepository get _durak => _ref.read(durakRepositoryProvider);
+  BattleshipRepository get _battleship =>
+      _ref.read(battleshipRepositoryProvider);
 
   Future<void> leaveLobby(String lobbyId, {required String gameType}) async {
     final gt = gameRegistry.normalizeId(gameType);
-    // LeaveLobby на сервере общий для всех game_type.
     if (gt == 'durak') {
       await _durak.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'battleship') {
+      await _battleship.leaveLobby(lobbyId);
       return;
     }
     await _ttt.leaveLobby(lobbyId);
@@ -35,6 +42,10 @@ class GameSessionApi {
       await _durak.forfeit(gameId);
       return;
     }
+    if (gt == 'battleship') {
+      await _battleship.forfeit(gameId);
+      return;
+    }
     await _ttt.forfeitGame(gameId);
   }
 
@@ -42,6 +53,10 @@ class GameSessionApi {
     final gt = gameRegistry.normalizeId(gameType);
     if (gt == 'durak') {
       await _durak.offerDraw(gameId);
+      return;
+    }
+    if (gt == 'battleship') {
+      // Морской бой не поддерживает ничью.
       return;
     }
     await _ttt.offerDraw(gameId);
@@ -53,11 +68,18 @@ class GameSessionApi {
       await _durak.acceptDraw(gameId);
       return;
     }
+    if (gt == 'battleship') {
+      return;
+    }
     await _ttt.acceptDraw(gameId);
   }
 
   /// Проверка, что партия существует и какого она типа (для observation).
   Future<String?> resolveGameType(String gameId) async {
+    try {
+      await _battleship.getGame(gameId);
+      return 'battleship';
+    } catch (_) {}
     try {
       await _durak.getGame(gameId);
       return 'durak';

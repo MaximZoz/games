@@ -1,3 +1,5 @@
+import 'package:multigames_client/games/framework/game_registry.dart';
+
 /// Публичная ссылка на invite-лобби «Своя игра».
 String buildInviteLobbyShareUrl({
   required String lobbyId,
@@ -6,13 +8,15 @@ String buildInviteLobbyShareUrl({
 }) {
   final id = lobbyId.trim();
   final origin = baseUri.origin;
-  return '$origin/games/$gameType/lobby/$id?mode=invite';
+  final gt = gameRegistry.normalizeId(gameType);
+  return '$origin/games/$gt/lobby/$id?mode=invite';
 }
 
 /// Сокращённая форма (без baseUri) — использует относительный путь.
 String buildInviteLink(String lobbyId, {String gameType = 'tictactoe'}) {
   final id = lobbyId.trim();
-  return '/games/$gameType/lobby/$id?mode=invite';
+  final gt = gameRegistry.normalizeId(gameType);
+  return '/games/$gt/lobby/$id?mode=invite';
 }
 
 /// Распарсенная ссылка-приглашение в лобби.
@@ -39,6 +43,9 @@ class InviteLobbyLink {
 }
 
 /// Если [raw] — целиком ссылка на invite-лобби (абсолютная или относительная).
+///
+/// Тип игры принимается из [GameRegistry] — новые игры подхватываются
+/// после регистрации дескриптора, без правки whitelist здесь.
 InviteLobbyLink? parseInviteLobbyShareUrl(String raw) {
   final t = raw.trim();
   if (t.isEmpty) return null;
@@ -56,8 +63,8 @@ InviteLobbyLink? parseInviteLobbyShareUrl(String raw) {
   final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
   if (segments.length < 4) return null;
   if (segments[0] != 'games' || segments[2] != 'lobby') return null;
-  final gt = segments[1];
-  if (gt != 'tictactoe' && gt != 'durak') return null;
+  final gt = segments[1].trim();
+  if (!gameRegistry.contains(gt)) return null;
   final id = segments[3].trim();
   if (id.isEmpty) return null;
   if (id.contains('/') || id.contains(' ')) return null;

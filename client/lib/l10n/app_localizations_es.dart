@@ -525,6 +525,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesDurak => 'Durak';
 
   @override
+  String get gamesBattleship => 'Battleship';
+
+  @override
+  String get gamesBattleshipRandomPlace => 'Place randomly';
+
+  @override
+  String get gamesBattleshipConfirmPlace => 'Ready';
+
+  @override
+  String get gamesBattleshipSetupPhase => 'Setup';
+
+  @override
+  String get gamesBattleshipBattlePhase => 'Battle';
+
+  @override
+  String get gamesBattleshipWaitingOpponentSetup => 'Waiting for opponent…';
+
+  @override
+  String get gamesBattleshipYouWon => 'You won!';
+
+  @override
+  String get gamesBattleshipYouLost => 'You lost';
+
+  @override
+  String get rulesBattleshipTitle => 'Battleship — rules';
+
+  @override
+  String get rulesBattleshipBody => 'Place your ships on a 10×10 grid, then fire at the opponent’s cells. Sink the entire enemy fleet to win.';
+
+  @override
   String get gamesPoker => 'Póker';
 
   @override

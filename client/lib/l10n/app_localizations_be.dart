@@ -525,6 +525,36 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesDurak => 'Дурак';
 
   @override
+  String get gamesBattleship => 'Марскі бой';
+
+  @override
+  String get gamesBattleshipRandomPlace => 'Расставіць выпадкова';
+
+  @override
+  String get gamesBattleshipConfirmPlace => 'Гатова';
+
+  @override
+  String get gamesBattleshipSetupPhase => 'Расстаноўка';
+
+  @override
+  String get gamesBattleshipBattlePhase => 'Бой';
+
+  @override
+  String get gamesBattleshipWaitingOpponentSetup => 'Чаканне суперніка…';
+
+  @override
+  String get gamesBattleshipYouWon => 'Вы перамаглі!';
+
+  @override
+  String get gamesBattleshipYouLost => 'Вы прайгралі';
+
+  @override
+  String get rulesBattleshipTitle => 'Марскі бой — правілы';
+
+  @override
+  String get rulesBattleshipBody => 'Расстаўце караблі на полі 10×10, затым страляйце па клетках суперніка. Перамагае той, хто першым патопіць увесь флот праціўніка.';
+
+  @override
   String get gamesPoker => 'Покер';
 
   @override

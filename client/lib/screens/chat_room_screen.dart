@@ -24,9 +24,11 @@ import 'package:multigames_client/utils/relative_time.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
@@ -3735,8 +3737,10 @@ class _ChatInviteCard extends ConsumerWidget {
     )) {
       return;
     }
-    final gameType =
-        link.gameType == 'durak' ? 'durak' : 'tictactoe';
+    // Тип из реестра (новые игры — после регистрации дескриптора).
+    final gameType = gameRegistry.contains(link.gameType)
+        ? link.gameType
+        : gameRegistry.normalizeId(link.gameType);
     try {
       if (gameType == 'durak') {
         final result =
@@ -3767,6 +3771,40 @@ class _ChatInviteCard extends ConsumerWidget {
               );
           unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
           context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          return;
+        }
+        context.go(link.appPathFromMessage(messageId));
+        return;
+      }
+      if (gameType == 'battleship') {
+        final result =
+            await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (result.joined &&
+            result.gameId != null &&
+            result.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: result.gameId,
+                  gameType: 'battleship',
+                ),
+              );
+          pinBlockingGame(ref, result.gameId!, gameType: 'battleship');
+          context.go('/games/battleship/game/${result.gameId}');
+          return;
+        }
+        if (result.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'battleship',
+                ),
+              );
+          unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
+          context.go('/games/battleship/lobby/$lobbyId?mode=invite');
           return;
         }
         context.go(link.appPathFromMessage(messageId));
@@ -3892,8 +3930,10 @@ class _ChatInviteCard extends ConsumerWidget {
                               size: 26,
                               color: Colors.white,
                             )
-                          : const Icon(
-                              Icons.grid_3x3_rounded,
+                          : Icon(
+                              link.gameType == 'battleship'
+                                  ? Icons.directions_boat_filled_rounded
+                                  : Icons.grid_3x3_rounded,
                               color: Colors.white,
                               size: 26,
                             ),
@@ -3916,7 +3956,9 @@ class _ChatInviteCard extends ConsumerWidget {
                           Text(
                             link.gameType == 'durak'
                                 ? l10n.gamesDurak
-                                : l10n.gamesTicTacToe,
+                                : link.gameType == 'battleship'
+                                    ? l10n.gamesBattleship
+                                    : l10n.gamesTicTacToe,
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 13,

@@ -1145,6 +1145,66 @@ abstract class AppLocalizations {
   /// **'Дурак'**
   String get gamesDurak;
 
+  /// No description provided for @gamesBattleship.
+  ///
+  /// In ru, this message translates to:
+  /// **'Морской бой'**
+  String get gamesBattleship;
+
+  /// No description provided for @gamesBattleshipRandomPlace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расставить случайно'**
+  String get gamesBattleshipRandomPlace;
+
+  /// No description provided for @gamesBattleshipConfirmPlace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get gamesBattleshipConfirmPlace;
+
+  /// No description provided for @gamesBattleshipSetupPhase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расстановка'**
+  String get gamesBattleshipSetupPhase;
+
+  /// No description provided for @gamesBattleshipBattlePhase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бой'**
+  String get gamesBattleshipBattlePhase;
+
+  /// No description provided for @gamesBattleshipWaitingOpponentSetup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание соперника…'**
+  String get gamesBattleshipWaitingOpponentSetup;
+
+  /// No description provided for @gamesBattleshipYouWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы победили!'**
+  String get gamesBattleshipYouWon;
+
+  /// No description provided for @gamesBattleshipYouLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли'**
+  String get gamesBattleshipYouLost;
+
+  /// No description provided for @rulesBattleshipTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Морской бой — правила'**
+  String get rulesBattleshipTitle;
+
+  /// No description provided for @rulesBattleshipBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расставьте корабли на поле 10×10, затем стреляйте по клеткам соперника. Побеждает тот, кто первым потопит весь флот противника.'**
+  String get rulesBattleshipBody;
+
   /// No description provided for @gamesPoker.
   ///
   /// In ru, this message translates to:

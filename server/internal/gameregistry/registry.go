@@ -81,10 +81,11 @@ func (r *Registry) Normalize(id string) string {
 	return store.GameTypeTicTacToe
 }
 
-// Default — реестр с крестиками и Дураком.
+// Default — реестр с крестиками, Дураком и Морским боем.
 func Default() *Registry {
 	r := New()
 	r.Register(NewTicTacToe())
 	r.Register(NewDurak())
+	r.Register(NewBattleship())
 	return r
 }

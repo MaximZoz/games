@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/games/framework/battleship_game.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
 import 'package:multigames_client/games/framework/durak_game.dart';
 import 'package:multigames_client/games/framework/tictactoe_game.dart';
@@ -30,7 +31,11 @@ class GameRegistry {
     return _byId[key];
   }
 
-  bool contains(String? id) => find(id) != null;
+  /// Есть ли игра с таким id (без fallback на tictactoe).
+  bool contains(String? id) {
+    final v = (id ?? '').trim();
+    return v.isNotEmpty && _byId.containsKey(v);
+  }
 
   /// Нормализация `game_type`: неизвестное → первая зарегистрированная (ttt).
   String normalizeId(String? raw) {
@@ -79,6 +84,7 @@ class GameRegistry {
 List<GameDescriptor> _builtinGames() => [
       TicTacToeGame(),
       DurakGame(),
+      BattleshipGame(),
     ];
 
 /// Глобальный реестр (без зависимостей Riverpod — удобно в навигации).

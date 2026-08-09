@@ -28,6 +28,22 @@ void main() {
     expect(parsed?.lobbyId, 'lob-d');
   });
 
+  test('buildInviteLobbyShareUrl battleship path', () {
+    expect(
+      buildInviteLobbyShareUrl(
+        lobbyId: 'lob-b',
+        baseUri: Uri.parse('https://multigames.example/'),
+        gameType: 'battleship',
+      ),
+      'https://multigames.example/games/battleship/lobby/lob-b?mode=invite',
+    );
+    final parsed = parseInviteLobbyShareUrl(
+      'https://multigames.example/games/battleship/lobby/lob-b?mode=invite',
+    );
+    expect(parsed?.gameType, 'battleship');
+    expect(parsed?.lobbyId, 'lob-b');
+  });
+
   test('parseInviteLobbyShareUrl absolute with mode=invite', () {
     final link = parseInviteLobbyShareUrl(
       'https://multigameszozu.fly.dev/games/tictactoe/lobby/f84e367b-674a-4290-900c-a5133fa23204?mode=invite',
@@ -59,6 +75,13 @@ void main() {
     expect(parseInviteLobbyShareUrl('привет'), isNull);
     expect(parseInviteLobbyShareUrl('https://example.com/other'), isNull);
     expect(isInviteLobbyMessage('я тоже'), isFalse);
+  });
+
+  test('parseInviteLobbyShareUrl rejects unregistered game type', () {
+    expect(
+      parseInviteLobbyShareUrl('/games/chess/lobby/abc-123?mode=invite'),
+      isNull,
+    );
   });
 
   test('appPathFromMessage appends from_message query', () {
