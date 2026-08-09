@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: не зацикливать анимацию взятия соперником
+- Дурак: пауза «Беру» / take_reveal — 1 секунда
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible
