@@ -38,7 +38,7 @@ const (
 )
 
 // BitoRevealDelay — сколько держим стол на экране перед авто-отбоем.
-const BitoRevealDelay = 2 * time.Second
+const BitoRevealDelay = 1 * time.Second
 
 // TakeRevealDelay — пауза перед взятием, чтобы все увидели подкинутые карты.
 const TakeRevealDelay = 2 * time.Second
