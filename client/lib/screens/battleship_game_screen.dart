@@ -71,6 +71,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
       _shipsSyncedFromServer = false;
       _localShips = const [];
       _selectedShipIndex = null;
+      _balanceGainPlayed = false;
+      _prevGameStatus = null;
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
