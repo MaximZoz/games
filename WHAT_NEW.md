@@ -1,9 +1,12 @@
 # Что нового
 # Секции ## ru / ## en — сервер отдаёт по Accept-Language.
-# Автоиз git log (origin/develop..HEAD). ## en можно править руками.
+# Автоиз git log (origin/main..HEAD). ## en можно править руками.
 
 ## ru
-- WHAT_NEW: восстановить UTF-8 в changelog на main
+- Восстановить Морской бой: сервер и Flutter-клиент
+- Дурак: не мелькать карты в веере соперника до добора
+- Дурак: добор соперника — по одной карте, не пачкой
+- Инвайт-ссылки из реестра + добор соперника из колоды
 
 ## en
 - Battleship: restore server and Flutter client
@@ -14,4 +17,3 @@
 - Durak: smoother animations without jank
 - CI: pass BUILD_ID (git sha) to Fly deploy
 - Durak: win/draw outcome once after take or beat
-
