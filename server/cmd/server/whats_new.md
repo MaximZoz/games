@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Инвайт-ссылки из реестра + добор соперника из колоды
+- Дурак: добор соперника — по одной карте, не пачкой
 
 ## en
 - Durak: cards land in the slot immediately, no snap from center
