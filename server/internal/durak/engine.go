@@ -41,7 +41,7 @@ const (
 const BitoRevealDelay = 1 * time.Second
 
 // TakeRevealDelay — пауза перед взятием, чтобы все увидели подкинутые карты.
-const TakeRevealDelay = 2 * time.Second
+const TakeRevealDelay = 1 * time.Second
 
 // OpeningDealGrace — сколько ждать стартовую раздачу на клиенте, прежде чем
 // запускать таймер хода (6 карт × игроки × ~280мс + козырь + запас).

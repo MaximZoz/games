@@ -28,7 +28,7 @@ class OfflineDurakSession extends ChangeNotifier {
   static const int me = 0;
   static const Duration botDelay = Duration(milliseconds: 650);
   static const Duration bitoRevealDelay = Duration(milliseconds: 1000);
-  static const Duration takeRevealDelay = Duration(milliseconds: 2000);
+  static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
   late DurakGame _game;
   late List<DurakBot> _bots;
