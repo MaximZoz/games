@@ -732,6 +732,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameYouWon => 'Voitit!';
 
   @override
+  String get gameYouLost => 'Hävisit';
+
+  @override
   String get gameYouWonOpponentLeft => 'Voitit — vastustaja lähti';
 
   @override

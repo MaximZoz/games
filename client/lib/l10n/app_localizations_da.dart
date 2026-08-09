@@ -732,6 +732,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gameYouWon => 'Du vandt!';
 
   @override
+  String get gameYouLost => 'Du tabte';
+
+  @override
   String get gameYouWonOpponentLeft => 'Du vandt — modstanderen forlod';
 
   @override

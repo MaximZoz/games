@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Tegenstander",
   "gameYouWon": "Je hebt gewonnen!",
+  "gameYouLost": "Je hebt verloren",
   "gameYouWonOpponentLeft": "Je hebt gewonnen — tegenstander is weggegaan",
   "gameYouWonOpponentTimeout": "Je hebt gewonnen — tijd van tegenstander is op",
   "gameDraw": "Gelijkspel",

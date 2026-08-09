@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Lawan",
   "gameYouWon": "Anda menang!",
+  "gameYouLost": "Anda kalah",
   "gameYouWonOpponentLeft": "Anda menang — lawan keluar",
   "gameYouWonOpponentTimeout": "Anda menang — lawan kehabisan waktu",
   "gameDraw": "Seri",

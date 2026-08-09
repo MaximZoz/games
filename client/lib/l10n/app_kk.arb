@@ -274,6 +274,7 @@
   "gameBot": "Бот",
   "gameOpponent": "Қарсылас",
   "gameYouWon": "Сіз жеңдіңіз!",
+  "gameYouLost": "Сіз жеңілдіңіз",
   "gameYouWonOpponentLeft": "Сіз жеңдіңіз — қарсылас шығып кетті",
   "gameYouWonOpponentTimeout": "Сіз жеңдіңіз — қарсыластың уақыты бітті",
   "gameDraw": "Тең ойын",

@@ -8,6 +8,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -47,6 +48,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   bool _isFindingGame = false;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
+  final GlobalKey _winRewardKey = GlobalKey();
+  bool _balanceGainPlayed = false;
+  String? _prevGameStatus;
 
   /// Локальная расстановка на фазе setup.
   List<List<int>> _localShips = const [];
@@ -67,6 +71,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
       _shipsSyncedFromServer = false;
       _localShips = const [];
       _selectedShipIndex = null;
+      _balanceGainPlayed = false;
+      _prevGameStatus = null;
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
@@ -136,7 +142,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     if (game.isOver) {
       return _isWinner(game, me)
           ? l10n.gamesBattleshipYouWon
-          : l10n.gamesBattleshipYouLost;
+          : l10n.gameYouLost;
     }
     if (game.isSetup) {
       if (_iAmReady(game, me)) {
@@ -146,6 +152,78 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     }
     if (game.isMyTurn) return l10n.gamesMyTurn;
     return l10n.gamesOpponentTurn;
+  }
+
+  int _rewardChipBronze(BattleshipGameView game, String? me) {
+    if (game.stakeBronze <= 0 || !game.isOver) return 0;
+    if (_isWinner(game, me)) {
+      return stakeWinnerNetProfit(
+        stake: game.stakeBronze,
+        playerCount: 2,
+        winnerCount: 1,
+      );
+    }
+    return -game.stakeBronze;
+  }
+
+  Future<void> _onGameSettled({
+    required int creditBronze,
+    required int displayRewardBronze,
+    int lostBronze = 0,
+  }) async {
+    if (_balanceGainPlayed) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    _balanceGainPlayed = true;
+    if (lostBronze > 0 && creditBronze <= 0) {
+      await playGameSettledLoss(
+        ref: ref,
+        context: context,
+        lostBronze: lostBronze,
+        targetKey: _winRewardKey,
+      );
+      return;
+    }
+    await playGameSettledReward(
+      ref: ref,
+      context: context,
+      creditBronze: creditBronze,
+      displayRewardBronze: displayRewardBronze,
+      sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
+    );
+  }
+
+  void _maybeSettleGame(BattleshipGameView game, String? me) {
+    if (!game.isOver) {
+      _prevGameStatus = game.status;
+      return;
+    }
+    if (_prevGameStatus == 'over') return;
+    _prevGameStatus = 'over';
+    final iWon = _isWinner(game, me);
+    final pot = stakeWinnerCredit(
+      stake: game.stakeBronze,
+      playerCount: 2,
+      winnerCount: 1,
+    );
+    final net = stakeWinnerNetProfit(
+      stake: game.stakeBronze,
+      playerCount: 2,
+      winnerCount: 1,
+    );
+    final credit = iWon ? pot : 0;
+    final display = iWon ? net : 0;
+    final lost = (!iWon && game.stakeBronze > 0) ? game.stakeBronze : 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _clearSessionForFinishedGame();
+      unawaited(_onGameSettled(
+        creditBronze: credit,
+        displayRewardBronze: display,
+        lostBronze: lost,
+      ));
+    });
   }
 
   void _syncLocalShips(BattleshipGameView game) {
@@ -487,6 +565,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                   data: (game) {
                     final isOver = game.isOver;
                     final showSurrender = !isOver;
+                    _maybeSettleGame(game, me);
+                    final chip = _rewardChipBronze(game, me);
+                    final status = _statusText(game, me);
                     return Column(
                       children: [
                         Padding(
@@ -510,18 +591,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                              if (_statusText(game, me).isNotEmpty)
-                                Text(
-                                  _statusText(game, me),
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: narrow ? 15 : null,
-                                      ),
+                              if (status.isNotEmpty)
+                                GameStatusWithReward(
+                                  statusText: status,
+                                  showReward: chip != 0,
+                                  rewardBronze: chip,
+                                  rewardKey: _winRewardKey,
+                                  fontSize: narrow ? 15 : null,
                                 ),
                             ],
                           ),

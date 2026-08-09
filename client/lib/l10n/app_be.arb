@@ -274,6 +274,7 @@
   "gameBot": "Бот",
   "gameOpponent": "Супернік",
   "gameYouWon": "Вы перамаглі!",
+  "gameYouLost": "Вы прайгралі",
   "gameYouWonOpponentLeft": "Вы перамаглі — супернік выйшаў",
   "gameYouWonOpponentTimeout": "Вы перамаглі — у суперніка скончыўся час",
   "gameDraw": "Нічыя",

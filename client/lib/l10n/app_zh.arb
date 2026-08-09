@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "对手",
   "gameYouWon": "你赢了！",
+  "gameYouLost": "你输了",
   "gameYouWonOpponentLeft": "你赢了 — 对手已离开",
   "gameYouWonOpponentTimeout": "你赢了 — 对手超时",
   "gameDraw": "平局",

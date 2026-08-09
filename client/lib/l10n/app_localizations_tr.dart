@@ -732,6 +732,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gameYouWon => 'Kazandınız!';
 
   @override
+  String get gameYouLost => 'Kaybettiniz';
+
+  @override
   String get gameYouWonOpponentLeft => 'Kazandınız — rakip ayrıldı';
 
   @override

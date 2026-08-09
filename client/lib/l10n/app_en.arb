@@ -311,6 +311,7 @@
   "gameBot": "Bot",
   "gameOpponent": "Opponent",
   "gameYouWon": "You won!",
+  "gameYouLost": "You lost",
   "gameYouWonOpponentLeft": "You won — opponent left",
   "gameYouWonOpponentTimeout": "You won — opponent ran out of time",
   "gameDraw": "Draw",

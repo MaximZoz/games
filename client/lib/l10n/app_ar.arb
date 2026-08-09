@@ -274,6 +274,7 @@
   "gameBot": "Bot",
   "gameOpponent": "المنافس",
   "gameYouWon": "لقد فزت!",
+  "gameYouLost": "لقد خسرت",
   "gameYouWonOpponentLeft": "لقد فزت — غادر المنافس",
   "gameYouWonOpponentTimeout": "لقد فزت — انتهى وقت المنافس",
   "gameDraw": "تعادل",

@@ -732,6 +732,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gameYouWon => 'Vyhráli jste!';
 
   @override
+  String get gameYouLost => 'Prohráli jste';
+
+  @override
   String get gameYouWonOpponentLeft => 'Vyhráli jste — soupeř odešel';
 
   @override
