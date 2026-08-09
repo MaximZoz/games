@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/framework/game_session_api.dart';
@@ -435,7 +436,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       return;
     }
     // Ветвление по game_type: используем правильный repository + роут.
-      if (inv.gameType == 'durak') {
+    if (inv.gameType == 'durak') {
       try {
         final res = await ref
             .read(durakRepositoryProvider)
@@ -465,6 +466,44 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
               );
           if (context.mounted) {
             context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
+    if (inv.gameType == 'battleship') {
+      try {
+        final res = await ref
+            .read(battleshipRepositoryProvider)
+            .joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'battleship',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'battleship');
+          if (context.mounted) {
+            context.go('/games/battleship/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'battleship',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/battleship/lobby/$lobbyId?mode=invite');
           }
         }
       } catch (e) {
@@ -557,6 +596,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         stakeBronze: inv.stakeBronze,
       ));
     }
+    if (inv.isBattleship) {
+      return Text(context.l10n.rulesBattleshipBody);
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -645,6 +687,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     try {
       if (gameType == 'durak') {
         await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'battleship') {
+        await ref.read(battleshipRepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -695,6 +739,52 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 ),
               );
           context.go('/games/durak/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (e) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (context.mounted) {
+          showAppSnackBar(context,
+              message: formatUserError(e), kind: AppSnackKind.error);
+        }
+      }
+      return;
+    }
+    if (gameType == 'battleship') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res =
+            await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'battleship',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'battleship');
+          context.go('/games/battleship/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'battleship',
+                ),
+              );
+          context.go('/games/battleship/lobby/$lobbyId?mode=invite');
         }
       } on GamesException catch (e) {
         if (!context.mounted) return;
@@ -782,6 +872,27 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       context: context,
       builder: (ctx) {
         final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
+        final Widget body;
+        if (lobby.isBattleship) {
+          body = Text(context.l10n.rulesBattleshipBody);
+        } else if (lobby.isDurak) {
+          body = rulesTextLines(durakRuleLines(
+            mode: lobby.gameMode,
+            players: lobby.maxPlayers,
+            deckSize: lobby.deckSize,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+          ));
+        } else {
+          body = buildTictactoeRulesTextWidget(
+            variant: lobby.variant,
+            gridSize: lobby.gridSize,
+            turnTimeSec: lobby.turnTimeSec,
+            swapRule: lobby.swapRule,
+            firstMoveRestriction: lobby.firstMoveRestriction,
+            stakeBronze: lobby.stakeBronze,
+          );
+        }
         return AlertDialog(
           insetPadding: EdgeInsets.symmetric(
             horizontal: isDesktop ? 80 : 24,
@@ -791,16 +902,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           content: ConstrainedBox(
             constraints:
                 BoxConstraints(maxWidth: isDesktop ? 400 : double.infinity),
-            child: SingleChildScrollView(
-              child: buildTictactoeRulesTextWidget(
-                variant: lobby.variant,
-                gridSize: lobby.gridSize,
-                turnTimeSec: lobby.turnTimeSec,
-                swapRule: lobby.swapRule,
-                firstMoveRestriction: lobby.firstMoveRestriction,
-                stakeBronze: lobby.stakeBronze,
-              ),
-            ),
+            child: SingleChildScrollView(child: body),
           ),
           actions: [
             TextButton(
@@ -892,6 +994,11 @@ class _GamesPageContent extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _DurakGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
+          ),
+          const SizedBox(height: 16),
+          _BattleshipGameCard(
             isOffline: isOffline,
             stakeOptionsList: stakeOptionsList,
           ),
@@ -1104,16 +1211,23 @@ class _LobbiesPageContent extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    lobby.isDurak
-                                        ? DurakGameIcon(
+                                    lobby.isBattleship
+                                        ? Icon(
+                                            Icons
+                                                .directions_boat_filled_rounded,
                                             size: isDesktop ? 36 : 32,
                                             color: AppColors.accentStart,
                                           )
-                                        : Icon(
-                                            Icons.grid_3x3_rounded,
-                                            size: isDesktop ? 36 : 32,
-                                            color: AppColors.accentStart,
-                                          ),
+                                        : lobby.isDurak
+                                            ? DurakGameIcon(
+                                                size: isDesktop ? 36 : 32,
+                                                color: AppColors.accentStart,
+                                              )
+                                            : Icon(
+                                                Icons.grid_3x3_rounded,
+                                                size: isDesktop ? 36 : 32,
+                                                color: AppColors.accentStart,
+                                              ),
                                     SizedBox(width: isDesktop ? 16 : 12),
                                     Expanded(
                                       child: Column(
@@ -1121,9 +1235,12 @@ class _LobbiesPageContent extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            lobby.isDurak
-                                                ? context.l10n.gamesDurak
-                                                : context.l10n.gamesTicTacToe,
+                                            lobby.isBattleship
+                                                ? context.l10n.gamesBattleship
+                                                : lobby.isDurak
+                                                    ? context.l10n.gamesDurak
+                                                    : context
+                                                        .l10n.gamesTicTacToe,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
@@ -1195,21 +1312,25 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    lobby.isDurak
-                                                        ? Icons
-                                                            .swap_horiz_rounded
-                                                        : Icons
-                                                            .extension_rounded,
+                                                    lobby.isBattleship
+                                                        ? Icons.grid_on_rounded
+                                                        : lobby.isDurak
+                                                            ? Icons
+                                                                .swap_horiz_rounded
+                                                            : Icons
+                                                                .extension_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    lobby.isDurak
-                                                        ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                        : variantShortLabel(
-                                                            lobby.variant),
+                                                    lobby.isBattleship
+                                                        ? '10×10'
+                                                        : lobby.isDurak
+                                                            ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                            : variantShortLabel(
+                                                                lobby.variant),
                                                     style: TextStyle(
                                                       fontSize:
                                                           isDesktop ? 14 : 13,
@@ -1650,6 +1771,282 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         offlineBot: widget.isOffline,
         l10n: context.l10n,
       )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+}
+
+/// Карточка «Морской бой» — ставка и время хода; offline не поддерживается.
+class _BattleshipGameCard extends ConsumerStatefulWidget {
+  const _BattleshipGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_BattleshipGameCard> createState() =>
+      _BattleshipGameCardState();
+}
+
+class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('battleship')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('battleship').notifier).updateLocal(
+          UserGameSettings(
+            gameType: 'battleship',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+          ),
+        );
+  }
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
+    if (!context.mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final repo = ref.read(battleshipRepositoryProvider);
+      final result = await repo.createLobby(
+        mode: mode,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+      );
+      if (!mounted) return;
+      final lobbyId = result.lobbyId;
+      final gameId = result.gameId;
+      if (gameId != null && gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'battleship',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'battleship');
+        context.push('/games/battleship/game/$gameId');
+      } else if (lobbyId.isEmpty) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.commonTryLater,
+          kind: AppSnackKind.error,
+        );
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'battleship',
+              ),
+            );
+        context.push('/games/battleship/lobby/$lobbyId?mode=$mode');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(e)
+            ? finishCurrentGameMessage
+            : formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+      if (isFinishCurrentGameError(e)) {
+        try {
+          final active =
+              await ref.read(activeGameProvider.notifier).refresh();
+          if (!mounted) return;
+          if (active != null) goToActiveSession(context, active);
+        } catch (_) {}
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context,
+          message: formatUserError(e), kind: AppSnackKind.error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    setState(() => _stakeBronze = next);
+    _persistSettings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('battleship'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final busy = _creating || _finding;
+
+    final chips = <Widget>[
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: busy ? null : _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.grid_on_rounded,
+        label: '10×10',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesBattleship,
+        icon: Icons.directions_boat_filled_rounded,
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: widget.isOffline
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.textSecondary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.textSecondary.withValues(alpha: 0.22),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+                  horizontal: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.wifi_off_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary.withValues(alpha: 0.9),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        context.l10n.gamesInDevelopment,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : GameCardActionsRow(
+              createLabel: context.l10n.gamesCreate,
+              creatingLabel: context.l10n.commonCreating,
+              onCreate: () => _create('invite'),
+              findLabel: context.l10n.gamesFindMatch,
+              findingLabel: context.l10n.commonSearching,
+              onFind: () => _create('matchmake'),
+              isCreating: _creating,
+              isFinding: _finding,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
+    );
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.rulesBattleshipTitle,
+      content: Text(context.l10n.rulesBattleshipBody),
       closeLabel: context.l10n.commonClose,
     );
   }
@@ -2497,9 +2894,11 @@ class _InviteCard extends ConsumerWidget {
                             Tooltip(
                               message: context.l10n.gamesRulesTitle,
                               child: Icon(
-                                inv.isDurak
-                                    ? Icons.swap_horiz_rounded
-                                    : Icons.extension_rounded,
+                                inv.isBattleship
+                                    ? Icons.grid_on_rounded
+                                    : inv.isDurak
+                                        ? Icons.swap_horiz_rounded
+                                        : Icons.extension_rounded,
                                 size: iconSz,
                                 color: AppColors.textSecondary,
                               ),
@@ -2569,6 +2968,8 @@ String _inviteGameTitle(BuildContext context, String gameType) {
   switch (gameType) {
     case 'durak':
       return context.l10n.gamesDurak;
+    case 'battleship':
+      return context.l10n.gamesBattleship;
     case 'poker':
       return context.l10n.gamesPoker;
     default:
@@ -2589,6 +2990,9 @@ class _InviteGameIcon extends StatelessWidget {
       case 'durak':
         materialIcon = null;
         child = const DurakGameIcon(size: 26, color: Colors.white);
+      case 'battleship':
+        materialIcon = Icons.directions_boat_filled_rounded;
+        child = Icon(materialIcon, color: Colors.white, size: 26);
       case 'poker':
         materialIcon = Icons.casino_rounded;
         child = Icon(materialIcon, color: Colors.white, size: 26);

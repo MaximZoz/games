@@ -59,10 +59,15 @@ class GameInvite {
 
   bool get isDurak => gameType == 'durak';
 
+  bool get isBattleship => gameType == 'battleship';
+
   /// Подпись режима для карточки приглашения.
   String get modeLabel {
     if (isDurak) {
       return durakModeLabel(durakMode);
+    }
+    if (isBattleship) {
+      return '10×10';
     }
     return variantLabel(variant);
   }

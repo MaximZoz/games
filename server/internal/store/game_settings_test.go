@@ -17,4 +17,8 @@ func TestDefaultUserGameSettings(t *testing.T) {
 	if d.GameType != GameTypeDurak || d.TurnTimeSec != 60 || d.DeckSize != 36 || d.GameMode != "podkidnoi" {
 		t.Fatalf("durak defaults: %+v", d)
 	}
+	b := DefaultUserGameSettings(GameTypeBattleship)
+	if b.GameType != GameTypeBattleship || b.TurnTimeSec != 60 || b.GridSize != 10 {
+		t.Fatalf("battleship defaults: %+v", b)
+	}
 }
