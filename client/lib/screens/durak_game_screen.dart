@@ -2952,7 +2952,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     ticket.dismiss();
   }
 
-  /// Добор: анимируем только свои карты с колоды (чужие руки не показываем).
+  /// Добор после биты/взятия: колода → мой веер и веера соперников (рубашки).
   Future<void> _animateRefillDeals({
     required DurakGameView view,
     required List<PlayingCard> myIncoming,
@@ -2968,48 +2968,41 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return;
     }
 
+    // Пока рубашки летят — в веере соперника их ещё нет (как у меня pending).
     setState(() {
       if (myCards.isNotEmpty) _pendingDealCards.addAll(myCards);
+      for (final e in oppDeals.entries) {
+        if (e.value <= 0) continue;
+        _oppDealPending[e.key] = (_oppDealPending[e.key] ?? 0) + e.value;
+      }
       if (deckCountBefore != null) {
         _armDeckFreeze(deckCountBefore);
       }
     });
 
-    // Чужие слоты колоды снимаем без полёта (в порядке добора сервера).
     final order = _refillDealOrder(
       attacker: refillAttacker,
       defender: refillDefender,
       playerCount: view.hands.length,
     );
-    var beforeMe = 0;
-    var afterMe = 0;
-    var seenMe = false;
+    var dealtMine = false;
     for (final idx in order) {
+      if (!mounted || !_gameUiActive) return;
       if (idx == view.myIndex) {
-        seenMe = true;
+        if (dealtMine || myCards.isEmpty) continue;
+        dealtMine = true;
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted || !_gameUiActive) return;
+        await _animateDealCardsToFan(myCards);
         continue;
       }
       final n = oppDeals[idx] ?? 0;
       if (n <= 0) continue;
-      if (!seenMe) {
-        beforeMe += n;
-      } else {
-        afterMe += n;
-      }
+      await _animateDealToOpponent(idx, n);
     }
-    for (var i = 0; i < beforeMe; i++) {
-      _consumeDeckFreezeSlot();
-    }
-
-    if (myCards.isNotEmpty) {
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted || !_gameUiActive) return;
+    // Если меня не было в order (защита edge-case) — добор себе в конце.
+    if (!dealtMine && myCards.isNotEmpty && mounted && _gameUiActive) {
       await _animateDealCardsToFan(myCards);
-    }
-    for (var i = 0; i < afterMe; i++) {
-      _consumeDeckFreezeSlot();
     }
     if (mounted) {
       _pendingDealCards.removeAll(myCards);

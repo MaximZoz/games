@@ -6,6 +6,8 @@ void main() {
   test('registry contains tictactoe and durak', () {
     expect(gameRegistry.contains('tictactoe'), isTrue);
     expect(gameRegistry.contains('durak'), isTrue);
+    expect(gameRegistry.contains('chess'), isFalse);
+    expect(gameRegistry.contains(null), isFalse);
     expect(gameRegistry.all.map((g) => g.id).toList(),
         containsAll(['tictactoe', 'durak']));
   });

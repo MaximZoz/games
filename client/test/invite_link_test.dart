@@ -61,6 +61,13 @@ void main() {
     expect(isInviteLobbyMessage('я тоже'), isFalse);
   });
 
+  test('parseInviteLobbyShareUrl rejects unregistered game type', () {
+    expect(
+      parseInviteLobbyShareUrl('/games/chess/lobby/abc-123?mode=invite'),
+      isNull,
+    );
+  });
+
   test('appPathFromMessage appends from_message query', () {
     final link = parseInviteLobbyShareUrl(
       '/games/tictactoe/lobby/abc-123?mode=invite',
