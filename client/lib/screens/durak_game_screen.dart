@@ -2424,10 +2424,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final deckDropped = _prevDeckCount - deck;
     final prevBito = _prevBitoCount;
     final prevDeck = _prevDeckCount;
+    final prevTableSnapshot = List<DurakTablePairApi>.of(_prevTable);
     final bitoGrew = bito > prevBito &&
-        (_prevTable.isNotEmpty || _lastNonEmptyTable.isNotEmpty);
-    final tableSnapshot =
-        _tableForBitoHold(List<DurakTablePairApi>.of(_prevTable));
+        (prevTableSnapshot.isNotEmpty || _lastNonEmptyTable.isNotEmpty);
+    // Бита: можно обогатить снимок защитами из lastNonEmpty.
+    // Take: prev, либо один раз lastNonEmpty (если busy проглотил prev) — потом чистим.
+    final List<DurakTablePairApi> tableSnapshot;
+    if (bitoGrew) {
+      tableSnapshot = _tableForBitoHold(prevTableSnapshot);
+    } else if (prevTableSnapshot.isNotEmpty) {
+      tableSnapshot = prevTableSnapshot;
+    } else if (view.table.isEmpty &&
+        view.lastWasTake &&
+        _lastNonEmptyTable.isNotEmpty) {
+      tableSnapshot = List<DurakTablePairApi>.of(_lastNonEmptyTable);
+    } else {
+      tableSnapshot = const [];
+    }
     final oppDeals = _opponentDealDeltas(view);
     // Добор на сервере идёт со СТАРЫМ атакующим (до смены хода после биты).
     final refillAttacker =
@@ -2452,6 +2465,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _prevAttackerIndex = view.attackerIndex;
     _prevDefenderIndex = view.defenderIndex;
     _syncPrevOppHandCounts(view);
+    // Сразу очистить — иначе _fxNeedsReplay снова увидит «непустой стол» и зациклит take.
+    if ((remoteTake || localTakeResolved || bitoGrew) && view.table.isEmpty) {
+      _lastNonEmptyTable = const [];
+    }
 
     // Только реальный добор (дельта руки), не «все карты которых нет в order».
     final incoming = _incomingDealCards(hand, dealt);
