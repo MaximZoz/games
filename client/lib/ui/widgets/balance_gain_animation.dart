@@ -218,18 +218,17 @@ Future<void> playBalanceGain({
   });
 }
 
-/// Анимация списания: полёт монеты из тулбара в чип «−N» + счётчик вниз.
+/// Анимация списания: сначала счётчик баланса вниз, затем полёт монеты из тулбара.
 ///
 /// Ставка уже списана на старте партии — [toBronze] = актуальный баланс,
 /// [fromBronze] = to + lost (визуально «снимаем» ставку в конце).
+/// Чип «−N» показывают после этой анимации (см. [playGameSettledLoss]).
 Future<void> playBalanceLoss({
   required WidgetRef ref,
   required BuildContext context,
   required int fromBronze,
   required int toBronze,
   int? lostBronze,
-  GlobalKey? targetKey,
-  Rect? targetRect,
 }) {
   final controller = ref.read(balanceGainProvider.notifier);
   return controller.enqueue(() async {
@@ -262,6 +261,11 @@ Future<void> playBalanceLoss({
       await Future<void>.delayed(const Duration(milliseconds: 40));
       if (!context.mounted) return;
 
+      // 1) Сначала списываем баланс в тулбаре.
+      await _countBalance(controller: controller, from: from, to: to);
+      if (!context.mounted) return;
+
+      // 2) Потом полёт монеты из тулбара вниз (чип «−N» ещё не показан).
       final coinKeys = ref.read(toolbarCoinKeysProvider);
       var startRect = globalRectOfKey(coinKeys[flyType]);
       if (startRect == null) {
@@ -270,19 +274,16 @@ Future<void> playBalanceLoss({
           if (startRect != null) break;
         }
       }
-
-      final endRect = targetRect ?? globalRectOfKey(targetKey);
-      if (startRect != null && endRect != null && context.mounted) {
+      if (startRect != null && context.mounted) {
+        final fromPt = _centerOf(startRect);
         await _flyCoin(
           context: context,
-          from: _centerOf(startRect),
-          to: _centerOf(endRect),
+          from: fromPt,
+          to: Offset(fromPt.dx, fromPt.dy + 96),
           coinType: flyType,
-          size: math.max(18, endRect.shortestSide.clamp(16, 28)),
+          size: math.max(18, startRect.shortestSide.clamp(16, 28)),
         );
       }
-      if (!context.mounted) return;
-      await _countBalance(controller: controller, from: from, to: to);
     } finally {
       controller.end();
     }

@@ -1461,7 +1461,10 @@ Future<bool> playGameSettledReward({
   }
 }
 
-/// Проигрыш ставки: чип «−N» и анимация списания в тулбаре.
+/// Проигрыш ставки: списание в тулбаре → полёт монеты.
+///
+/// Чип «−N» экран показывает сам после успешного return
+/// (сначала анимация, потом блок проигрыша).
 ///
 /// Ставка уже удержана на старте — после refresh баланс не должен упасть ещё раз;
 /// показываем from = to + lost → to.
@@ -1469,7 +1472,6 @@ Future<bool> playGameSettledLoss({
   required WidgetRef ref,
   required BuildContext context,
   required int lostBronze,
-  GlobalKey? targetKey,
 }) async {
   if (lostBronze <= 0) {
     unawaited(ref.read(authStateProvider.notifier).refresh());
@@ -1502,7 +1504,6 @@ Future<bool> playGameSettledLoss({
       fromBronze: fromBalance,
       toBronze: toBalance,
       lostBronze: lostBronze,
-      targetKey: targetKey,
     );
     return true;
   } finally {

@@ -110,6 +110,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _isFindingGame = false;
   String? _prevGameStatus;
   bool _balanceGainPlayed = false;
+  /// Чип «−N» при проигрыше — только после анимации списания.
+  bool _lossChipRevealed = false;
   /// Mid-game выход «в ноль»: observation + салют/монеты — один раз.
   bool _midFinishedHandled = false;
   /// Салют уже запущен — не размонтировать при чужих ходах (стол снова не пуст).
@@ -181,6 +183,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
       _balanceGainPlayed = false;
+      _lossChipRevealed = false;
       _midFinishedHandled = false;
       _confettiArmed = false;
       _lockedMidDraw = null;
@@ -3714,8 +3717,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         ref: ref,
         context: context,
         lostBronze: lostBronze,
-        targetKey: _winRewardKey,
       );
+      if (mounted) setState(() => _lossChipRevealed = true);
       return;
     }
     await playGameSettledReward(
@@ -3860,6 +3863,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _markFxDone();
           _prevGameStatus = null;
           _balanceGainPlayed = false;
+          _lossChipRevealed = false;
           _midFinishedHandled = false;
           _confettiArmed = false;
           _lockedMidDraw = null;
@@ -5644,7 +5648,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         !view.iAmEliminated) {
       return false;
     }
-    return _rewardChipBronze(view) != 0;
+    final delta = _rewardChipBronze(view);
+    if (delta == 0) return false;
+    // Проигрыш: чип только после списания и анимации.
+    if (delta < 0 && !_lossChipRevealed) return false;
+    return true;
   }
 
   /// Дельта для чипа: «+N» при кредите, «−ставка» при проигрыше.
@@ -5656,8 +5664,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         view.myPlace <= view.tiedLeaders) {
       return 0;
     }
-    final credit = _rewardBronze(view);
-    if (credit > 0) return credit;
+    final net = _rewardBronze(view);
+    if (net > 0) return net;
     if (view.isOver || view.iAmEliminated) return -view.stakeBronze;
     return 0;
   }

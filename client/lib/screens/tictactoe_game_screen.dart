@@ -77,6 +77,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
+  /// Чип «−N» при проигрыше — только после анимации списания.
+  bool _lossChipRevealed = false;
   /// chat_id из GetGame — MakeMove раньше мог не вернуть его (иконка мигала).
   String? _stickyGroupChatId;
 
@@ -103,6 +105,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       _rematchPollTimer?.cancel();
       _prevGameStatus = null;
       _balanceGainPlayed = false;
+      _lossChipRevealed = false;
       _stickyGroupChatId = null;
       ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
@@ -709,8 +712,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ? game.playerUserIds.length
                 : (game.maxPlayers > 2 ? game.maxPlayers : 2);
             final iLost = isOver && !iWon && !isDraw && game.stakeBronze > 0;
-            final showRewardChip =
-                isOver && game.stakeBronze > 0 && (iWon || iLost);
+            final showRewardChip = isOver &&
+                game.stakeBronze > 0 &&
+                (iWon || (iLost && _lossChipRevealed));
             // Чистый выигрыш / проигрыш ставки (как меняется баланс до матча).
             final rewardBronze = iWon
                 ? stakeWinnerNetProfit(
@@ -1020,8 +1024,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref: ref,
         context: context,
         lostBronze: lostBronze,
-        targetKey: _winRewardKey,
       );
+      if (mounted) setState(() => _lossChipRevealed = true);
       return;
     }
     if (creditBronze <= 0) {
@@ -1188,6 +1192,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           if (!mounted) return;
           _prevGameStatus = null;
           _balanceGainPlayed = false;
+          _lossChipRevealed = false;
           ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
               null;
           ref.invalidate(gameStateProvider(widget.gameId));

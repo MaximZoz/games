@@ -50,6 +50,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
+  /// Чип «−N» при проигрыше — только после анимации списания.
+  bool _lossChipRevealed = false;
   String? _prevGameStatus;
 
   /// Локальная расстановка на фазе setup.
@@ -72,6 +74,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
       _localShips = const [];
       _selectedShipIndex = null;
       _balanceGainPlayed = false;
+      _lossChipRevealed = false;
       _prevGameStatus = null;
       setState(() {
         _rematchLobbyId = null;
@@ -163,6 +166,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
         winnerCount: 1,
       );
     }
+    if (!_lossChipRevealed) return 0;
     return -game.stakeBronze;
   }
 
@@ -181,8 +185,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
         ref: ref,
         context: context,
         lostBronze: lostBronze,
-        targetKey: _winRewardKey,
       );
+      if (mounted) setState(() => _lossChipRevealed = true);
       return;
     }
     await playGameSettledReward(
