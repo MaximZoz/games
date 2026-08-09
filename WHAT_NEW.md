@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Проигрыш: сначала списание и анимация, потом чип −N
+- Ставки: не предлагать сумму выше баланса (серебро=100 бронзы)
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

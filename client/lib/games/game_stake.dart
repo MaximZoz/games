@@ -3,6 +3,42 @@
 // Победа в крестиках: банк делится между winnerCount победителями
 // (1 победитель → stake×N).
 // Дурак multi: доли по местам выхода (см. durakPlaceCredit).
+//
+// Баланс единый: balance_bronze, 1 серебро = 100 бронзы, 1 золото = 100 серебра.
+
+/// Хватает ли кошелька на ставку (весь balance_bronze, не «остаток бронзы»).
+bool canAffordStake({
+  required int balanceBronze,
+  required int stakeBronze,
+}) {
+  if (stakeBronze <= 0) return true;
+  return balanceBronze >= stakeBronze;
+}
+
+/// Разблокированные ставки, которые можно оплатить сейчас.
+List<int> affordableStakeOptions(int balanceBronze, List<int> options) {
+  return [
+    for (final s in options)
+      if (s > 0 && s <= balanceBronze) s,
+  ];
+}
+
+/// Если текущая ставка не по карману — ближайшая меньшая из [options].
+int clampStakeToAffordable(
+  int stakeBronze,
+  int balanceBronze,
+  List<int> options,
+) {
+  if (canAffordStake(
+    balanceBronze: balanceBronze,
+    stakeBronze: stakeBronze,
+  )) {
+    return stakeBronze;
+  }
+  final affordable = affordableStakeOptions(balanceBronze, options);
+  if (affordable.isEmpty) return stakeBronze;
+  return affordable.last;
+}
 
 /// Выплата одному победителю из банка (кредит на баланс).
 int stakeWinnerCredit({
