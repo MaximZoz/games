@@ -3774,8 +3774,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         return;
       }
       _lockMidFinishOutcome(view);
-      final credit = _rewardBronze(view);
-      final displayReward = credit > 0 ? credit : 0;
+      final credit = _rewardCredit(view);
+      final displayReward = _rewardBronze(view);
       final lost = (credit <= 0 && view.stakeBronze > 0) ? view.stakeBronze : 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -3812,10 +3812,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       for (final peerId in _peerIds(view)) {
         ref.read(gameInvitesProvider.notifier).removeByCreatorId(peerId);
       }
-      final credit = view.isDraw
-          ? view.stakeBronze
-          : _rewardBronze(view);
-      final displayReward = credit > 0 ? credit : 0;
+      final credit = _rewardCredit(view);
+      // В «+N» — чистый плюс к доматчевому балансу (как в крестиках).
+      final displayReward = _rewardBronze(view);
       final lost = (!view.isDraw && credit <= 0 && view.stakeBronze > 0)
           ? view.stakeBronze
           : 0;
@@ -5671,7 +5670,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return l10n.gameYouPlaced(_lockedMidPlace!);
   }
 
-  int _rewardBronze(DurakGameView view) {
+  /// Сколько сервер реально зачислит на баланс (банк / возврат ставки).
+  int _rewardCredit(DurakGameView view) {
     if (view.isDraw) return view.stakeBronze;
     if (view.myPlace <= 0) return 0;
     final n = view.playerIds.length >= 2 ? view.playerIds.length : 2;
@@ -5686,13 +5686,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final placesFilled = (!view.isOver && view.iAmFinished)
         ? durakPlaceShareNumerators(n).length.clamp(1, n)
         : view.winnerPlaceOrder.length.clamp(1, n);
-    // Показываем фактическое начисление (кредит), не только «чистый» плюс.
     return durakPlaceCredit(
       stake: view.stakeBronze,
       playerCount: n,
       place: view.myPlace,
       placesFilled: placesFilled,
     );
+  }
+
+  /// Чистый плюс относительно доматчевого баланса (для чипа «+N»).
+  int _rewardBronze(DurakGameView view) {
+    if (view.isDraw) return 0;
+    final credit = _rewardCredit(view);
+    if (credit <= 0) return 0;
+    return (credit - view.stakeBronze).clamp(0, credit);
   }
 
   /// Имя победителя (1-е место) или соперника в 1×1.
