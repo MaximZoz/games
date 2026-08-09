@@ -30,7 +30,11 @@ class GameRegistry {
     return _byId[key];
   }
 
-  bool contains(String? id) => find(id) != null;
+  /// Есть ли игра с таким id (без fallback на tictactoe).
+  bool contains(String? id) {
+    final v = (id ?? '').trim();
+    return v.isNotEmpty && _byId.containsKey(v);
+  }
 
   /// Нормализация `game_type`: неизвестное → первая зарегистрированная (ttt).
   String normalizeId(String? raw) {

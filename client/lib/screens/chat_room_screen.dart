@@ -27,6 +27,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
@@ -3735,8 +3736,10 @@ class _ChatInviteCard extends ConsumerWidget {
     )) {
       return;
     }
-    final gameType =
-        link.gameType == 'durak' ? 'durak' : 'tictactoe';
+    // Тип из реестра (новые игры — после регистрации дескриптора).
+    final gameType = gameRegistry.contains(link.gameType)
+        ? link.gameType
+        : gameRegistry.normalizeId(link.gameType);
     try {
       if (gameType == 'durak') {
         final result =
