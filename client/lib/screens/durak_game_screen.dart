@@ -162,7 +162,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     try {
       final path =
           GoRouter.of(context).routeInformationProvider.value.uri.path;
-      return path.contains('/games/durak/game/');
+      // Онлайн: /games/durak/game/<id>; офлайн: /games/durak/offline
+      return path.contains('/games/durak/game/') ||
+          path.contains('/games/durak/offline');
     } catch (_) {
       final route = ModalRoute.of(context);
       return route?.isCurrent == true && TickerMode.of(context);

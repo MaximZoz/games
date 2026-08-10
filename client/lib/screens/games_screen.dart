@@ -1857,7 +1857,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 }
 
-/// Карточка «Морской бой» — ставка и время хода; offline не поддерживается.
+/// Карточка «Морской бой» — ставка и время хода; офлайн — игра с ботом.
 class _BattleshipGameCard extends ConsumerStatefulWidget {
   const _BattleshipGameCard({
     required this.isOffline,
@@ -2099,56 +2099,21 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         isMedium: isMedium,
       ),
       chips: chips,
-      actions: widget.isOffline
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.textSecondary.withValues(alpha: 0.22),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                  horizontal: 12,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.wifi_off_rounded,
-                      size: 18,
-                      color: AppColors.textSecondary.withValues(alpha: 0.9),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        context.l10n.gamesInDevelopment,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : GameCardActionsRow(
-              createLabel: context.l10n.gamesCreate,
-              creatingLabel: context.l10n.commonCreating,
-              onCreate: () => _create('invite'),
-              findLabel: context.l10n.gamesFindMatch,
-              findingLabel: context.l10n.commonSearching,
-              onFind: () => _create('matchmake'),
-              isCreating: _creating,
-              isFinding: _finding,
-              isDesktop: isDesktop,
-              isMedium: isMedium,
-            ),
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () => context.push('/games/battleship/offline'),
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
     );
   }
 
@@ -2159,6 +2124,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
       content: rulesTextLines(battleshipRuleLines(
         turnTimeSec: _turnTimeSec,
         stakeBronze: _stakeBronze,
+        offlineBot: widget.isOffline,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,
