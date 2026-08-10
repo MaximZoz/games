@@ -24,6 +24,8 @@ import 'package:multigames_client/utils/user_error.dart';
 /// Цвета клеток Морского боя.
 const Color _kWater = Color(0xFF90CAF9);
 const Color _kShip = Color(0xFF607D8B);
+const Color _kConflictShip = Color(0xFFE57373);
+const Color _kPreviewOk = Color(0xFF81C784);
 const Color _kHit = Color(0xFFE53935);
 const Color _kMiss = Color(0xFFFFFFFF);
 const Color _kSelectedShip = Color(0xFF455A64);
@@ -250,7 +252,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   }
 
   Future<void> _confirmPlace() async {
-    if (_busy || !validateBattleshipShips(_localShips)) return;
+    if (_busy) return;
+    if (!validateBattleshipShips(_localShips)) {
+      showAppSnackBar(
+        context,
+        message: context.l10n.gamesBattleshipShipsMustNotTouch,
+        kind: AppSnackKind.error,
+      );
+      return;
+    }
     setState(() => _busy = true);
     try {
       await ref
@@ -278,7 +288,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     final idx = _selectedShipIndex;
     if (idx == null) return;
     final ship = _localShips[idx];
-    final next = tryPlaceShip(
+    // Разрешаем поставить даже с касанием — UI подсветит конфликт красным.
+    final next = placeShipAllowTouch(
       _localShips,
       idx,
       cell,
@@ -294,7 +305,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     required int dropCell,
   }) {
     if (_busy) return;
-    final next = tryMoveShipFromGrab(
+    // Оставляем корабль на новой позиции даже при касании/пересечении.
+    final next = moveShipFromGrabAllowTouch(
       _localShips,
       shipIndex,
       grabOffset,
@@ -314,18 +326,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     if (rotated == null) return;
     final next = _localShips.map((s) => List<int>.from(s)).toList();
     next[idx] = rotated;
-    if (!validateBattleshipShips(next)) {
-      // Поворот может временно нарушить соседство — пробуем сдвиг head.
-      final placed = tryPlaceShip(
-        _localShips,
-        idx,
-        rotated.first,
-        horizontal: isShipHorizontal(rotated),
-      );
-      if (placed == null) return;
-      setState(() => _localShips = placed);
-      return;
-    }
     setState(() => _localShips = next);
   }
 
@@ -806,9 +806,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                   icon: const Icon(Icons.rotate_right_rounded),
                 ),
                 FilledButton(
-                  onPressed: _busy || !validateBattleshipShips(_localShips)
-                      ? null
-                      : () => unawaited(_confirmPlace()),
+                  onPressed:
+                      _busy ? null : () => unawaited(_confirmPlace()),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accentStart,
                   ),
@@ -1044,9 +1043,12 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
     final grab = _grabOffset;
     final hover = _hoverCell;
     if (shipIdx == null || grab == null || hover == null) return const {};
-    final next = tryMoveShipFromGrab(widget.ships, shipIdx, grab, hover);
-    if (next == null) return const {};
-    return next[shipIdx].toSet();
+    if (shipIdx >= widget.ships.length) return const {};
+    // Превью всегда по геометрии — даже при касании/пересечении.
+    // Если не влезает в поле — оставляем исходную позицию (корабль не «пропадает»).
+    final cells = previewMoveShipCells(widget.ships[shipIdx], grab, hover);
+    if (cells != null) return cells.toSet();
+    return widget.ships[shipIdx].toSet();
   }
 
   bool get _previewValid {
@@ -1082,7 +1084,8 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
       if (dist > 6) _didDrag = true;
     }
     final cell = _cellAt(d.localPosition);
-    if (cell == _hoverCell) return;
+    // Вне поля — сохраняем последнюю клетку, чтобы превью/корабль не исчезали.
+    if (cell == null || cell == _hoverCell) return;
     setState(() => _hoverCell = cell);
   }
 
@@ -1119,6 +1122,11 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
     final board =
         size * kBattleshipBoardSize + _gap * (kBattleshipBoardSize - 1);
     final occupied = <int>{for (final s in widget.ships) ...s};
+    final conflictIdx = conflictingShipIndices(widget.ships);
+    final conflictCells = <int>{
+      for (final i in conflictIdx)
+        if (i >= 0 && i < widget.ships.length) ...widget.ships[i],
+    };
     final selected = widget.selectedShipIndex != null &&
             widget.selectedShipIndex! < widget.ships.length
         ? widget.ships[widget.selectedShipIndex!].toSet()
@@ -1157,9 +1165,11 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
           itemBuilder: (context, index) {
             Color color = _kWater;
             if (preview.contains(index)) {
-              color = previewOk ? const Color(0xFF81C784) : const Color(0xFFE57373);
+              color = previewOk ? _kPreviewOk : _kConflictShip;
             } else if (_didDrag && draggingShip.contains(index)) {
               color = _kShip.withValues(alpha: 0.35);
+            } else if (conflictCells.contains(index)) {
+              color = _kConflictShip;
             } else if (selected.contains(index)) {
               color = _kSelectedShip;
             } else if (occupied.contains(index)) {

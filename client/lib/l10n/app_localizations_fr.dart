@@ -552,6 +552,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesBattleshipYouLost => 'You lost';
 
   @override
+  String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
+
+  @override
   String get rulesBattleshipTitle => 'Battleship — rules';
 
   @override

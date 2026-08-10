@@ -552,6 +552,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesBattleshipYouLost => 'Сіз жеңілдіңіз';
 
   @override
+  String get gamesBattleshipShipsMustNotTouch => 'Кемелер бір-біріне тиіспеуі керек';
+
+  @override
   String get rulesBattleshipTitle => 'Теңіз шайқасы — ережелер';
 
   @override
