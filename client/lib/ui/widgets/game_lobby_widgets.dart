@@ -237,7 +237,7 @@ class LobbyMultiPlayersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = playersCount ?? players.length;
-    final seats = maxPlayers.clamp(2, 4);
+    final seats = maxPlayers.clamp(2, 6);
     return GradientCard(
       animate: false,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),

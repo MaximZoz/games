@@ -20,6 +20,7 @@ import 'package:multigames_client/games/framework/game_registry.dart';
 abstract final class LobbyGameKind {
   static const tictactoe = 'tictactoe';
   static const durak = 'durak';
+  static const poker = 'poker';
 
   static String normalize(String? raw) => gameRegistry.normalizeId(raw);
 

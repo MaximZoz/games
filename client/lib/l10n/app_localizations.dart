@@ -1283,6 +1283,132 @@ abstract class AppLocalizations {
   /// **'Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.'**
   String get rulesPokerWin;
 
+  /// No description provided for @pokerFold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фолд'**
+  String get pokerFold;
+
+  /// No description provided for @pokerCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чек'**
+  String get pokerCheck;
+
+  /// No description provided for @pokerCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колл {amount}'**
+  String pokerCall(int amount);
+
+  /// No description provided for @pokerCallShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колл'**
+  String get pokerCallShort;
+
+  /// No description provided for @pokerRaise.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рейз'**
+  String get pokerRaise;
+
+  /// No description provided for @pokerRaiseTo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рейз до {amount}'**
+  String pokerRaiseTo(int amount);
+
+  /// No description provided for @pokerRaiseTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рейз'**
+  String get pokerRaiseTitle;
+
+  /// No description provided for @pokerAllIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ва-банк'**
+  String get pokerAllIn;
+
+  /// No description provided for @pokerAllInBadge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ва-банк'**
+  String get pokerAllInBadge;
+
+  /// No description provided for @pokerFolded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пас'**
+  String get pokerFolded;
+
+  /// No description provided for @pokerPot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Банк: {amount}'**
+  String pokerPot(int amount);
+
+  /// No description provided for @pokerYourTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш ход'**
+  String get pokerYourTurn;
+
+  /// No description provided for @pokerToAct.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ходит {name}'**
+  String pokerToAct(String name);
+
+  /// No description provided for @pokerWinner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выиграл {name}'**
+  String pokerWinner(String name);
+
+  /// No description provided for @pokerYouWonHand.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы забрали банк!'**
+  String get pokerYouWonHand;
+
+  /// No description provided for @pokerHandOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раздача окончена'**
+  String get pokerHandOver;
+
+  /// No description provided for @pokerStreetPreflop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Префлоп'**
+  String get pokerStreetPreflop;
+
+  /// No description provided for @pokerStreetFlop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Флоп'**
+  String get pokerStreetFlop;
+
+  /// No description provided for @pokerStreetTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тёрн'**
+  String get pokerStreetTurn;
+
+  /// No description provided for @pokerStreetRiver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ривер'**
+  String get pokerStreetRiver;
+
+  /// No description provided for @pokerStreetShowdown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вскрытие'**
+  String get pokerStreetShowdown;
+
   /// No description provided for @gamesRules.
   ///
   /// In ru, this message translates to:

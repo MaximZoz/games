@@ -276,6 +276,62 @@
   "rulesPokerIntro": "Техасский холдем. Каждому раздают 2 карты в руку; на стол выходят 5 общих карт.",
   "rulesPokerPlay": "Раунды ставок: префлоп, флоп, тёрн и ривер. Можно фолд, колл, бет или рейз.",
   "rulesPokerWin": "Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.",
+  "pokerFold": "Фолд",
+  "pokerCheck": "Чек",
+  "pokerCall": "Колл {amount}",
+  "@pokerCall": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerCallShort": "Колл",
+  "pokerRaise": "Рейз",
+  "pokerRaiseTo": "Рейз до {amount}",
+  "@pokerRaiseTo": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerRaiseTitle": "Рейз",
+  "pokerAllIn": "Ва-банк",
+  "pokerAllInBadge": "Ва-банк",
+  "pokerFolded": "Пас",
+  "pokerPot": "Банк: {amount}",
+  "@pokerPot": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerYourTurn": "Ваш ход",
+  "pokerToAct": "Ходит {name}",
+  "@pokerToAct": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerWinner": "Выиграл {name}",
+  "@pokerWinner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHand": "Вы забрали банк!",
+  "pokerHandOver": "Раздача окончена",
+  "pokerStreetPreflop": "Префлоп",
+  "pokerStreetFlop": "Флоп",
+  "pokerStreetTurn": "Тёрн",
+  "pokerStreetRiver": "Ривер",
+  "pokerStreetShowdown": "Вскрытие",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",

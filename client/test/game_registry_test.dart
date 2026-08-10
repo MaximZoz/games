@@ -3,14 +3,15 @@ import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 
 void main() {
-  test('registry contains tictactoe, durak and battleship', () {
+  test('registry contains tictactoe, durak, battleship and poker', () {
     expect(gameRegistry.contains('tictactoe'), isTrue);
     expect(gameRegistry.contains('durak'), isTrue);
     expect(gameRegistry.contains('battleship'), isTrue);
+    expect(gameRegistry.contains('poker'), isTrue);
     expect(gameRegistry.contains('chess'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
     expect(gameRegistry.all.map((g) => g.id).toList(),
-        containsAll(['tictactoe', 'durak', 'battleship']));
+        containsAll(['tictactoe', 'durak', 'battleship', 'poker']));
   });
 
   test('normalize unknown falls back to tictactoe', () {
@@ -19,6 +20,7 @@ void main() {
     expect(gameRegistry.normalizeId('nope'), 'tictactoe');
     expect(gameRegistry.normalizeId('durak'), 'durak');
     expect(gameRegistry.normalizeId('battleship'), 'battleship');
+    expect(gameRegistry.normalizeId('poker'), 'poker');
   });
 
   test('paths and parse round-trip via navigation helpers', () {
@@ -40,12 +42,17 @@ void main() {
     expect(ttt.supportsDrawOffer(3), isFalse);
     final bs = gameRegistry['battleship']!;
     expect(bs.supportsDrawOffer(2), isFalse);
+    final poker = gameRegistry['poker']!;
+    expect(poker.supportsDrawOffer(2), isTrue);
+    expect(poker.supportsDrawOffer(6), isFalse);
   });
 
-  test('offline supported for tictactoe, durak, battleship', () {
+  test('offline supported for tictactoe, durak, battleship, poker', () {
     expect(gameRegistry['tictactoe']!.supportsOffline, isTrue);
     expect(gameRegistry['durak']!.supportsOffline, isTrue);
     expect(gameRegistry['battleship']!.supportsOffline, isTrue);
     expect(gameRegistry['battleship']!.offlinePath, '/games/battleship/offline');
+    expect(gameRegistry['poker']!.supportsOffline, isTrue);
+    expect(gameRegistry['poker']!.offlinePath, '/games/poker/offline');
   });
 }

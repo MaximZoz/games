@@ -13,6 +13,7 @@ const (
 	GameTypeTicTacToe  = "tictactoe"
 	GameTypeDurak      = "durak"
 	GameTypeBattleship = "battleship"
+	GameTypePoker      = "poker"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -57,6 +58,12 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.GridSize = 10
 		s.Variant = "classic"
 		s.FirstMoveRestriction = false
+	}
+	if gameType == GameTypePoker {
+		s.TurnTimeSec = 60
+		s.MaxPlayers = 6
+		s.GameMode = "holdem"
+		s.Variant = "holdem"
 	}
 	return s
 }

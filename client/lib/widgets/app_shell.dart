@@ -473,7 +473,8 @@ class AppShell extends ConsumerWidget {
             if (currentPath != '/games' &&
                 !currentPath.startsWith('/games/tictactoe/offline') &&
                 !currentPath.startsWith('/games/durak/offline') &&
-                !currentPath.startsWith('/games/battleship/offline')) {
+                !currentPath.startsWith('/games/battleship/offline') &&
+                !currentPath.startsWith('/games/poker/offline')) {
               context.go('/games');
             } else {
               navigationShell.goBranch(branch, initialLocation: true);
