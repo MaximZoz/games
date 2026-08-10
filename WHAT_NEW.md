@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Ставки: не предлагать сумму выше баланса (серебро=100 бронзы)
+- Морской бой: сразу случайная расстановка, drag-and-drop и поворот
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

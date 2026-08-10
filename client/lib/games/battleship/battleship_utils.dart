@@ -8,6 +8,41 @@ const int kBattleshipCellCount = kBattleshipBoardSize * kBattleshipBoardSize;
 /// Классический русский флот.
 const List<int> kBattleshipFleet = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
 
+/// Горизонтальный ли корабль (одиночная клетка — считаем горизонтальным).
+bool isShipHorizontal(List<int> ship) {
+  if (ship.length <= 1) return true;
+  final row = ship.first ~/ kBattleshipBoardSize;
+  return ship.every((c) => c ~/ kBattleshipBoardSize == row);
+}
+
+/// Перенос корабля: клетка с индексом [grabOffset] в корабле должна
+/// оказаться в [dropCell]. Учитывает ориентацию и валидацию касаний.
+List<List<int>>? tryMoveShipFromGrab(
+  List<List<int>> ships,
+  int shipIndex,
+  int grabOffset,
+  int dropCell,
+) {
+  if (shipIndex < 0 || shipIndex >= ships.length) return null;
+  if (dropCell < 0 || dropCell >= kBattleshipCellCount) return null;
+  final ship = ships[shipIndex];
+  if (grabOffset < 0 || grabOffset >= ship.length) return null;
+  final horiz = isShipHorizontal(ship);
+  final dropR = dropCell ~/ kBattleshipBoardSize;
+  final dropC = dropCell % kBattleshipBoardSize;
+  late final int headCell;
+  if (horiz) {
+    final hc = dropC - grabOffset;
+    if (hc < 0) return null;
+    headCell = dropR * kBattleshipBoardSize + hc;
+  } else {
+    final hr = dropR - grabOffset;
+    if (hr < 0) return null;
+    headCell = hr * kBattleshipBoardSize + dropC;
+  }
+  return tryPlaceShip(ships, shipIndex, headCell, horizontal: horiz);
+}
+
 /// Поворот корабля вокруг [headCell] (первая клетка в списке).
 /// Возвращает новый список клеток или `null`, если не влезает в поле.
 List<int>? rotateShip(List<int> ship) {

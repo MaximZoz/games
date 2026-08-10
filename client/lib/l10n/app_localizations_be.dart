@@ -534,6 +534,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Гатова';
 
   @override
+  String get gamesBattleshipRotate => 'Павярнуць';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Расстаноўка';
 
   @override

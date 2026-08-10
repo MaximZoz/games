@@ -534,6 +534,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Готово';
 
   @override
+  String get gamesBattleshipRotate => 'Повернуть';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Расстановка';
 
   @override

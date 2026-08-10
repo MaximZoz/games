@@ -534,6 +534,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'Pivoter';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override
