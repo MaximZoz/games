@@ -558,7 +558,24 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesBattleshipTitle => 'Марскі бой — правілы';
 
   @override
-  String get rulesBattleshipBody => 'Расстаўце караблі на полі 10×10, затым страляйце па клетках суперніка. Перамагае той, хто першым патопіць увесь флот праціўніка.';
+  String get rulesBattleshipPlayers => 'Гульцы: 2.';
+
+  @override
+  String rulesBattleshipSetupTime(String time) {
+    return 'Час на расстаноўку: $time.';
+  }
+
+  @override
+  String get rulesBattleshipIntro => 'Поле 10×10. Флот: адзін чатырохпалубны, два трохпалубныя, тры двухпалубныя і чатыры аднапалубныя. Караблі нельга ставіць ушчыльную, у тым ліку па дыяганалі.';
+
+  @override
+  String get rulesBattleshipSetup => 'Калі час на расстаноўку выйшаў, застаецца бягучая сапраўдная расстаноўка; калі яна няслушная — выкарыстоўваецца стандартная.';
+
+  @override
+  String get rulesBattleshipPlay => 'Пасля расстаноўкі першым ходзіць выпадковы гулец. Страляйце па клетках суперніка: трапленне дае яшчэ адзін ход, промах перадае ход. На сваім ходзе відаць поле суперніка, на ягоным — ваша.';
+
+  @override
+  String get rulesBattleshipWin => 'Перамагае той, хто першым патопіць увесь флот суперніка.';
 
   @override
   String get gamesPoker => 'Покер';

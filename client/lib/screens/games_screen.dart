@@ -7,6 +7,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
+import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/framework/game_session_api.dart';
@@ -641,7 +642,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       ));
     }
     if (inv.isBattleship) {
-      return Text(context.l10n.rulesBattleshipBody);
+      return rulesTextLines(battleshipRuleLines(
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
     }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
@@ -918,7 +923,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
         final Widget body;
         if (lobby.isBattleship) {
-          body = Text(context.l10n.rulesBattleshipBody);
+          body = rulesTextLines(battleshipRuleLines(
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+            l10n: context.l10n,
+          ));
         } else if (lobby.isDurak) {
           body = rulesTextLines(durakRuleLines(
             mode: lobby.gameMode,
@@ -2147,7 +2156,11 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
     showGameRulesDialog(
       context: context,
       title: context.l10n.rulesBattleshipTitle,
-      content: Text(context.l10n.rulesBattleshipBody),
+      content: rulesTextLines(battleshipRuleLines(
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+        l10n: context.l10n,
+      )),
       closeLabel: context.l10n.commonClose,
     );
   }

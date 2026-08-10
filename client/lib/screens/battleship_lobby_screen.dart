@@ -11,6 +11,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
+import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -237,7 +238,11 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
                 onPressed: () => showGameRulesDialog(
                   context: context,
                   title: context.l10n.rulesBattleshipTitle,
-                  content: Text(context.l10n.rulesBattleshipBody),
+                  content: rulesTextLines(battleshipRuleLines(
+                    turnTimeSec: lobby.turnTimeSec,
+                    stakeBronze: lobby.stakeBronze,
+                    l10n: context.l10n,
+                  )),
                   closeLabel: context.l10n.commonClose,
                 ),
               ),

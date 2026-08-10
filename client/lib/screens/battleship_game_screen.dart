@@ -9,6 +9,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
+import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -880,12 +881,19 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
             IconButton(
               tooltip: context.l10n.gamesRulesTitle,
               icon: const Icon(Icons.rule_rounded),
-              onPressed: () => showGameRulesDialog(
-                context: context,
-                title: context.l10n.rulesBattleshipTitle,
-                content: Text(context.l10n.rulesBattleshipBody),
-                closeLabel: context.l10n.commonClose,
-              ),
+              onPressed: () {
+                final game = gameAsync.valueOrNull;
+                showGameRulesDialog(
+                  context: context,
+                  title: context.l10n.rulesBattleshipTitle,
+                  content: rulesTextLines(battleshipRuleLines(
+                    turnTimeSec: game?.turnTimeSec ?? 0,
+                    stakeBronze: game?.stakeBronze ?? 2,
+                    l10n: context.l10n,
+                  )),
+                  closeLabel: context.l10n.commonClose,
+                );
+              },
             ),
           ],
         ),
