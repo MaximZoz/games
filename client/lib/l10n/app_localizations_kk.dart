@@ -558,7 +558,24 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesBattleshipTitle => 'Теңіз шайқасы — ережелер';
 
   @override
-  String get rulesBattleshipBody => 'Кемелерді 10×10 өріске орналастырыңыз, содан кейін қарсыластың ұяшықтарына атыңыз. Жеңу үшін қарсы флотты толығымен батырыңыз.';
+  String get rulesBattleshipPlayers => 'Ойыншылар: 2.';
+
+  @override
+  String rulesBattleshipSetupTime(String time) {
+    return 'Орналастыру уақыты: $time.';
+  }
+
+  @override
+  String get rulesBattleshipIntro => 'Өріс 10×10. Флот: бір 4 палубалы, екі 3 палубалы, үш 2 палубалы және төрт 1 палубалы. Кемелер бір-біріне тиіспеуі керек, диагональ бойынша да.';
+
+  @override
+  String get rulesBattleshipSetup => 'Орналастыру уақыты бітсе, ағымдағы жарамды орналасу сақталады; жарамсыз болса — әдепкі орналасу қолданылады.';
+
+  @override
+  String get rulesBattleshipPlay => 'Орналастырудан кейін бірінші болып кездейсоқ ойыншы жүреді. Қарсыластың ұяшықтарына атыңыз: тию қосымша жүріс береді, өткізу жүрісті ауыстырады. Өз жүрісіңізде қарсыластың өрісі, оның жүрісінде — сіздікі көрінеді.';
+
+  @override
+  String get rulesBattleshipWin => 'Қарсы флотты толығымен батырған бірінші ойыншы жеңеді.';
 
   @override
   String get gamesPoker => 'Покер';

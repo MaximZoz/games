@@ -198,7 +198,19 @@
   "gamesBattleshipYouLost": "You lost",
   "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
   "rulesBattleshipTitle": "Battleship — rules",
-  "rulesBattleshipBody": "Place your ships on a 10×10 grid, then fire at the opponent’s cells. Sink the entire enemy fleet to win.",
+  "rulesBattleshipPlayers": "Players: 2.",
+  "rulesBattleshipSetupTime": "Setup time: {time}.",
+  "@rulesBattleshipSetupTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesBattleshipIntro": "10×10 grid. Fleet: one 4-deck, two 3-deck, three 2-deck and four 1-deck ships. Ships must not touch, including diagonally.",
+  "rulesBattleshipSetup": "If setup time runs out, the current valid placement is kept; if it is invalid, a default layout is used.",
+  "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
+  "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesInDevelopment": "In sviluppo",
   "rulesPokerPlayers": "Giocatori: {players}.",
