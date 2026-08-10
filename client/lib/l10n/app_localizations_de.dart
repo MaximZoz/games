@@ -534,6 +534,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'Drehen';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override
@@ -549,10 +552,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesBattleshipYouLost => 'You lost';
 
   @override
+  String get gamesBattleshipShipsMustNotTouch => 'Ships must not touch';
+
+  @override
   String get rulesBattleshipTitle => 'Battleship — rules';
 
   @override
-  String get rulesBattleshipBody => 'Place your ships on a 10×10 grid, then fire at the opponent’s cells. Sink the entire enemy fleet to win.';
+  String get rulesBattleshipPlayers => 'Players: 2.';
+
+  @override
+  String rulesBattleshipSetupTime(String time) {
+    return 'Setup time: $time.';
+  }
+
+  @override
+  String get rulesBattleshipIntro => '10×10 grid. Fleet: one 4-deck, two 3-deck, three 2-deck and four 1-deck ships. Ships must not touch, including diagonally.';
+
+  @override
+  String get rulesBattleshipSetup => 'If setup time runs out, the current valid placement is kept; if it is invalid, a default layout is used.';
+
+  @override
+  String get rulesBattleshipPlay => 'After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.';
+
+  @override
+  String get rulesBattleshipWin => 'The first to sink the entire enemy fleet wins.';
 
   @override
   String get gamesPoker => 'Poker';
@@ -730,6 +753,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gameYouWon => 'Du hast gewonnen!';
+
+  @override
+  String get gameYouLost => 'Du hast verloren';
 
   @override
   String get gameYouWonOpponentLeft => 'Du hast gewonnen — Gegner hat verlassen';

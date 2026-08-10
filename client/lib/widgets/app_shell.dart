@@ -472,7 +472,8 @@ class AppShell extends ConsumerWidget {
           Router.neglect(context, () {
             if (currentPath != '/games' &&
                 !currentPath.startsWith('/games/tictactoe/offline') &&
-                !currentPath.startsWith('/games/durak/offline')) {
+                !currentPath.startsWith('/games/durak/offline') &&
+                !currentPath.startsWith('/games/battleship/offline')) {
               context.go('/games');
             } else {
               navigationShell.goBranch(branch, initialLocation: true);

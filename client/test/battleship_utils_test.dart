@@ -2,6 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 
 void main() {
+  group('defaultBattleshipShips', () {
+    test('валидна и совпадает с серверным дефолтом', () {
+      final ships = defaultBattleshipShips();
+      expect(validateBattleshipShips(ships), isTrue);
+      expect(ships.first, [0, 1, 2, 3]);
+      expect(ships.length, kBattleshipFleet.length);
+    });
+  });
+
   group('validateBattleshipShips', () {
     test('принимает валидную расстановку', () {
       final ships = generateRandomBattleshipShips(42);
@@ -76,6 +85,87 @@ void main() {
     test('не влезает в поле → null', () {
       // Горизонтальный у нижнего края: вертикальный вниз выйдет за поле.
       expect(rotateShip([90, 91, 92]), isNull);
+    });
+  });
+
+  group('moveShipFromGrabAllowTouch', () {
+    test('ставит корабль даже при касании', () {
+      final ships = generateRandomBattleshipShips(42);
+      final idx = ships.indexWhere((s) => s.length == 1);
+      final other = ships.firstWhere((s) => s.length >= 3).first;
+      expect(tryMoveShipFromGrab(ships, idx, 0, other), isNull);
+      final next = moveShipFromGrabAllowTouch(ships, idx, 0, other);
+      expect(next, isNotNull);
+      expect(next![idx], [other]);
+      expect(validateBattleshipShips(next), isFalse);
+      expect(conflictingShipIndices(next), contains(idx));
+    });
+  });
+
+  group('conflictingShipIndices', () {
+    test('пустой при валидной расстановке', () {
+      final ships = generateRandomBattleshipShips(42);
+      expect(conflictingShipIndices(ships), isEmpty);
+    });
+  });
+
+  group('tryMoveShipFromGrab', () {
+    test('переносит корабль так, что схваченная клетка попадает в drop', () {
+      final ships = generateRandomBattleshipShips(42);
+      final idx = ships.indexWhere((s) => s.length == 1);
+      expect(idx, greaterThanOrEqualTo(0));
+      int? free;
+      for (var cell = 0; cell < kBattleshipCellCount; cell++) {
+        final trial = tryMoveShipFromGrab(ships, idx, 0, cell);
+        if (trial != null && trial[idx].first != ships[idx].first) {
+          free = cell;
+          break;
+        }
+      }
+      expect(free, isNotNull);
+      final next = tryMoveShipFromGrab(ships, idx, 0, free!);
+      expect(next, isNotNull);
+      expect(next![idx], [free]);
+      expect(validateBattleshipShips(next), isTrue);
+    });
+
+    test('отклоняет касание при переносе', () {
+      final ships = generateRandomBattleshipShips(42);
+      final idx = ships.indexWhere((s) => s.length == 1);
+      final other = ships.firstWhere((s) => s.length >= 3).first;
+      // Клетка рядом с чужим кораблём — касание.
+      expect(tryMoveShipFromGrab(ships, idx, 0, other), isNull);
+    });
+
+    test('сдвиг за середину сохраняет ориентацию', () {
+      // Горизонтальная четвёрка; хватаем 2-ю клетку (offset=1), кладём на 61 → head=60.
+      final ships = <List<int>>[
+        [0, 1, 2, 3],
+        [20, 21, 22],
+        [40, 41, 42],
+        [60, 61],
+        [63, 64],
+        [66, 67],
+        [80],
+        [82],
+        [84],
+        [86],
+      ];
+      // Проверим валидность; если fallback невалиден — возьмём random.
+      final base = validateBattleshipShips(ships)
+          ? ships
+          : generateRandomBattleshipShips(99);
+      final idx = base.indexWhere((s) => s.length == 4 && isShipHorizontal(s));
+      if (idx < 0) return;
+      const grabOffset = 1;
+      // Ищем drop, где tryMove даёт новый head.
+      for (var cell = 0; cell < kBattleshipCellCount; cell++) {
+        final next = tryMoveShipFromGrab(base, idx, grabOffset, cell);
+        if (next == null) continue;
+        expect(next[idx][grabOffset], cell);
+        expect(isShipHorizontal(next[idx]), isTrue);
+        break;
+      }
     });
   });
 

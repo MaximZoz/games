@@ -30,6 +30,12 @@ class OfflineDurakSession extends ChangeNotifier {
   static const Duration bitoRevealDelay = Duration(milliseconds: 1000);
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
+  /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
+  static Duration openingDealGrace(int players) {
+    final p = players.clamp(2, 4);
+    return Duration(milliseconds: 1500 + 6 * p * 280 + 800);
+  }
+
   late DurakGame _game;
   late List<DurakBot> _bots;
   late List<String> _playerIds;
@@ -38,6 +44,7 @@ class OfflineDurakSession extends ChangeNotifier {
   Timer? _revealTimer;
   bool _disposed = false;
   bool _lastWasTake = false;
+  bool _dealGraceDone = false;
   String? _revealPhase; // bito_reveal | take_reveal
 
   DurakGame get engine => _game;
@@ -71,6 +78,7 @@ class OfflineDurakSession extends ChangeNotifier {
     _revealTimer?.cancel();
     _revealPhase = null;
     _lastWasTake = false;
+    _dealGraceDone = false;
     final n = playerCount.clamp(2, 4);
     _game = DurakGame.startNew(
       playerCount: n,
@@ -225,6 +233,7 @@ class OfflineDurakSession extends ChangeNotifier {
     if (_revealPhase != null) {
       throw GamesException(400, 'wait');
     }
+    _dealGraceDone = true;
     try {
       switch (type) {
         case 'attack':
@@ -345,6 +354,7 @@ class OfflineDurakSession extends ChangeNotifier {
   void _scheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _game.isOver || _revealPhase != null) return;
+    if (!_dealGraceDone) return;
     final botIdx = _actingBotIndex();
     if (botIdx == null) return;
     _botTimer = Timer(botDelay, () {
@@ -405,9 +415,18 @@ class OfflineDurakSession extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Стартовать ботов, если первый ход не наш.
+  /// Стартовать ботов после анимации раздачи (как OpeningDealGrace онлайн).
   void ensureStarted() {
-    _scheduleBot();
+    if (_dealGraceDone) {
+      _scheduleBot();
+      return;
+    }
+    if (_botTimer?.isActive == true) return;
+    _botTimer = Timer(openingDealGrace(playerCount), () {
+      if (_disposed) return;
+      _dealGraceDone = true;
+      _scheduleBot();
+    });
   }
 }
 

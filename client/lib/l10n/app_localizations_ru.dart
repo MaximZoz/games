@@ -534,6 +534,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Готово';
 
   @override
+  String get gamesBattleshipRotate => 'Повернуть';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Расстановка';
 
   @override
@@ -549,10 +552,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesBattleshipYouLost => 'Вы проиграли';
 
   @override
+  String get gamesBattleshipShipsMustNotTouch => 'Корабли не должны соприкасаться';
+
+  @override
   String get rulesBattleshipTitle => 'Морской бой — правила';
 
   @override
-  String get rulesBattleshipBody => 'Расставьте корабли на поле 10×10, затем стреляйте по клеткам соперника. Побеждает тот, кто первым потопит весь флот противника.';
+  String get rulesBattleshipPlayers => 'Игроки: 2.';
+
+  @override
+  String rulesBattleshipSetupTime(String time) {
+    return 'Время на расстановку: $time.';
+  }
+
+  @override
+  String get rulesBattleshipIntro => 'Поле 10×10. Флот: один четырёхпалубный, два трёхпалубных, три двухпалубных и четыре однопалубных. Корабли нельзя ставить вплотную, в том числе по диагонали.';
+
+  @override
+  String get rulesBattleshipSetup => 'Если время на расстановку вышло, остаётся текущая валидная расстановка; если она невалидна — используется стандартная.';
+
+  @override
+  String get rulesBattleshipPlay => 'После расстановки первым ходит случайный игрок. Стреляйте по клеткам соперника: попадание даёт ещё один ход, промах передаёт ход. На своём ходе видно поле соперника, на его ходе — ваше.';
+
+  @override
+  String get rulesBattleshipWin => 'Побеждает тот, кто первым потопит весь флот противника.';
 
   @override
   String get gamesPoker => 'Покер';
@@ -730,6 +753,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gameYouWon => 'Вы победили!';
+
+  @override
+  String get gameYouLost => 'Вы проиграли';
 
   @override
   String get gameYouWonOpponentLeft => 'Вы победили, соперник вышел';

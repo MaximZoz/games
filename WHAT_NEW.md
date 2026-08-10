@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак: пауза «Беру» / take_reveal — 1 секунда
+- Офлайн Морской бой и починка FX/сортировки в офлайн Дураке
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

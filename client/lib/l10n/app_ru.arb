@@ -242,13 +242,27 @@
   "gamesBattleship": "Морской бой",
   "gamesBattleshipRandomPlace": "Расставить случайно",
   "gamesBattleshipConfirmPlace": "Готово",
+  "gamesBattleshipRotate": "Повернуть",
   "gamesBattleshipSetupPhase": "Расстановка",
   "gamesBattleshipBattlePhase": "Бой",
   "gamesBattleshipWaitingOpponentSetup": "Ожидание соперника…",
   "gamesBattleshipYouWon": "Вы победили!",
   "gamesBattleshipYouLost": "Вы проиграли",
+  "gamesBattleshipShipsMustNotTouch": "Корабли не должны соприкасаться",
   "rulesBattleshipTitle": "Морской бой — правила",
-  "rulesBattleshipBody": "Расставьте корабли на поле 10×10, затем стреляйте по клеткам соперника. Побеждает тот, кто первым потопит весь флот противника.",
+  "rulesBattleshipPlayers": "Игроки: 2.",
+  "rulesBattleshipSetupTime": "Время на расстановку: {time}.",
+  "@rulesBattleshipSetupTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesBattleshipIntro": "Поле 10×10. Флот: один четырёхпалубный, два трёхпалубных, три двухпалубных и четыре однопалубных. Корабли нельзя ставить вплотную, в том числе по диагонали.",
+  "rulesBattleshipSetup": "Если время на расстановку вышло, остаётся текущая валидная расстановка; если она невалидна — используется стандартная.",
+  "rulesBattleshipPlay": "После расстановки первым ходит случайный игрок. Стреляйте по клеткам соперника: попадание даёт ещё один ход, промах передаёт ход. На своём ходе видно поле соперника, на его ходе — ваше.",
+  "rulesBattleshipWin": "Побеждает тот, кто первым потопит весь флот противника.",
   "gamesPoker": "Покер",
   "gamesInDevelopment": "В разработке",
   "rulesPokerPlayers": "Игроки: {players}.",
@@ -352,6 +366,7 @@
   "gameBot": "Бот",
   "gameOpponent": "Соперник",
   "gameYouWon": "Вы победили!",
+  "gameYouLost": "Вы проиграли",
   "gameYouWonOpponentLeft": "Вы победили, соперник вышел",
   "gameYouWonOpponentTimeout": "Вы победили, время соперника вышло",
   "gameDraw": "Ничья",

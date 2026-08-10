@@ -43,7 +43,18 @@ func IsRestrictedChatMessageAllowed(body string) bool {
 		IsCoinsCreditMessage(text)
 }
 
-// InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру».
+// isInviteLobbyGameType — типы игр, для которых в чате есть ссылка-приглашение.
+func isInviteLobbyGameType(gameType string) bool {
+	switch gameType {
+	case "tictactoe", "durak", "battleship":
+		return true
+	default:
+		return false
+	}
+}
+
+// InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру»
+// (/games/{tictactoe|durak|battleship}/lobby/{id}…).
 func InviteLobbyIDFromBody(body string) (string, bool) {
 	text := strings.TrimSpace(body)
 	if text == "" {
@@ -70,7 +81,7 @@ func InviteLobbyIDFromBody(body string) (string, bool) {
 	if len(parts) < 4 {
 		return "", false
 	}
-	if parts[0] != "games" || parts[1] != "tictactoe" || parts[2] != "lobby" {
+	if parts[0] != "games" || parts[2] != "lobby" || !isInviteLobbyGameType(parts[1]) {
 		return "", false
 	}
 	id := strings.TrimSpace(parts[3])
@@ -105,9 +116,9 @@ func DeleteInviteLobbyShareMessages(
 	if lobbyID == "" || pool == nil {
 		return nil, nil
 	}
-	// LIKE по фрагменту пути — уже сужает выборку до кандидатов; точная
+	// LIKE по фрагменту пути — кандидаты по любому типу игры; точная
 	// проверка InviteLobbyIDFromBody отсекает ложные совпадения.
-	likePat := "%/games/tictactoe/lobby/" + lobbyID + "%"
+	likePat := "%/lobby/" + lobbyID + "%"
 	rows, err := pool.Query(ctx, `
 		SELECT id, chat_id, body
 		FROM chat_messages

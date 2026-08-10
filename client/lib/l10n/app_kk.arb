@@ -190,13 +190,27 @@
   "gamesBattleship": "Теңіз шайқасы",
   "gamesBattleshipRandomPlace": "Кездейсоқ орналастыру",
   "gamesBattleshipConfirmPlace": "Дайын",
+  "gamesBattleshipRotate": "Бұру",
   "gamesBattleshipSetupPhase": "Орналастыру",
   "gamesBattleshipBattlePhase": "Шайқас",
   "gamesBattleshipWaitingOpponentSetup": "Қарсыласты күту…",
   "gamesBattleshipYouWon": "Сіз жеңдіңіз!",
   "gamesBattleshipYouLost": "Сіз жеңілдіңіз",
+  "gamesBattleshipShipsMustNotTouch": "Кемелер бір-біріне тиіспеуі керек",
   "rulesBattleshipTitle": "Теңіз шайқасы — ережелер",
-  "rulesBattleshipBody": "Кемелерді 10×10 өріске орналастырыңыз, содан кейін қарсыластың ұяшықтарына атыңыз. Жеңу үшін қарсы флотты толығымен батырыңыз.",
+  "rulesBattleshipPlayers": "Ойыншылар: 2.",
+  "rulesBattleshipSetupTime": "Орналастыру уақыты: {time}.",
+  "@rulesBattleshipSetupTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesBattleshipIntro": "Өріс 10×10. Флот: бір 4 палубалы, екі 3 палубалы, үш 2 палубалы және төрт 1 палубалы. Кемелер бір-біріне тиіспеуі керек, диагональ бойынша да.",
+  "rulesBattleshipSetup": "Орналастыру уақыты бітсе, ағымдағы жарамды орналасу сақталады; жарамсыз болса — әдепкі орналасу қолданылады.",
+  "rulesBattleshipPlay": "Орналастырудан кейін бірінші болып кездейсоқ ойыншы жүреді. Қарсыластың ұяшықтарына атыңыз: тию қосымша жүріс береді, өткізу жүрісті ауыстырады. Өз жүрісіңізде қарсыластың өрісі, оның жүрісінде — сіздікі көрінеді.",
+  "rulesBattleshipWin": "Қарсы флотты толығымен батырған бірінші ойыншы жеңеді.",
   "gamesPoker": "Покер",
   "gamesInDevelopment": "Әзірленуде",
   "rulesPokerPlayers": "Ойыншылар: {players}.",
@@ -274,6 +288,7 @@
   "gameBot": "Бот",
   "gameOpponent": "Қарсылас",
   "gameYouWon": "Сіз жеңдіңіз!",
+  "gameYouLost": "Сіз жеңілдіңіз",
   "gameYouWonOpponentLeft": "Сіз жеңдіңіз — қарсылас шығып кетті",
   "gameYouWonOpponentTimeout": "Сіз жеңдіңіз — қарсыластың уақыты бітті",
   "gameDraw": "Тең ойын",

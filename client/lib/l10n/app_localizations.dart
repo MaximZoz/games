@@ -1163,6 +1163,12 @@ abstract class AppLocalizations {
   /// **'Готово'**
   String get gamesBattleshipConfirmPlace;
 
+  /// No description provided for @gamesBattleshipRotate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повернуть'**
+  String get gamesBattleshipRotate;
+
   /// No description provided for @gamesBattleshipSetupPhase.
   ///
   /// In ru, this message translates to:
@@ -1193,17 +1199,53 @@ abstract class AppLocalizations {
   /// **'Вы проиграли'**
   String get gamesBattleshipYouLost;
 
+  /// No description provided for @gamesBattleshipShipsMustNotTouch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Корабли не должны соприкасаться'**
+  String get gamesBattleshipShipsMustNotTouch;
+
   /// No description provided for @rulesBattleshipTitle.
   ///
   /// In ru, this message translates to:
   /// **'Морской бой — правила'**
   String get rulesBattleshipTitle;
 
-  /// No description provided for @rulesBattleshipBody.
+  /// No description provided for @rulesBattleshipPlayers.
   ///
   /// In ru, this message translates to:
-  /// **'Расставьте корабли на поле 10×10, затем стреляйте по клеткам соперника. Побеждает тот, кто первым потопит весь флот противника.'**
-  String get rulesBattleshipBody;
+  /// **'Игроки: 2.'**
+  String get rulesBattleshipPlayers;
+
+  /// No description provided for @rulesBattleshipSetupTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на расстановку: {time}.'**
+  String rulesBattleshipSetupTime(String time);
+
+  /// No description provided for @rulesBattleshipIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поле 10×10. Флот: один четырёхпалубный, два трёхпалубных, три двухпалубных и четыре однопалубных. Корабли нельзя ставить вплотную, в том числе по диагонали.'**
+  String get rulesBattleshipIntro;
+
+  /// No description provided for @rulesBattleshipSetup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если время на расстановку вышло, остаётся текущая валидная расстановка; если она невалидна — используется стандартная.'**
+  String get rulesBattleshipSetup;
+
+  /// No description provided for @rulesBattleshipPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'После расстановки первым ходит случайный игрок. Стреляйте по клеткам соперника: попадание даёт ещё один ход, промах передаёт ход. На своём ходе видно поле соперника, на его ходе — ваше.'**
+  String get rulesBattleshipPlay;
+
+  /// No description provided for @rulesBattleshipWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает тот, кто первым потопит весь флот противника.'**
+  String get rulesBattleshipWin;
 
   /// No description provided for @gamesPoker.
   ///
@@ -1534,6 +1576,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вы победили!'**
   String get gameYouWon;
+
+  /// No description provided for @gameYouLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли'**
+  String get gameYouLost;
 
   /// No description provided for @gameYouWonOpponentLeft.
   ///

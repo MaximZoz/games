@@ -7,10 +7,12 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
+import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/framework/game_session_api.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -213,13 +215,27 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         _selectedStakeBronze = saved.stakeBronze;
       });
     });
-    final availableStakes =
+    // Разблокированные ставки; для выбора — только те, что можно оплатить
+    // всем balance_bronze (1 серебро = 100 бронзы). Иначе «2» с серебряной
+    // монетой (=200) при балансе 1с+1бр даёт «Недостаточно монет».
+    final unlockedStakes =
         caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
+    final balanceBronze =
+        ref.watch(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final affordable =
+        affordableStakeOptions(balanceBronze, unlockedStakes);
+    final availableStakes =
+        affordable.isNotEmpty ? affordable : unlockedStakes;
     if (!availableStakes.contains(_selectedStakeBronze) &&
         availableStakes.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        setState(() => _selectedStakeBronze = availableStakes.first);
+        final next = clampStakeToAffordable(
+          _selectedStakeBronze,
+          balanceBronze,
+          availableStakes,
+        );
+        setState(() => _selectedStakeBronze = next);
         if (_settingsHydrated) _persistSettings();
       });
     }
@@ -349,11 +365,40 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
+  /// Обновить баланс и убедиться, что ставка по карману (весь кошелёк).
+  Future<bool> _ensureStakeAffordable(int stakeBronze) async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final caps = ref.read(inventoryCapabilitiesProvider).valueOrNull;
+    final unlocked =
+        caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
+    final next = clampStakeToAffordable(stakeBronze, balance, unlocked);
+    if (next != stakeBronze) {
+      setState(() => _selectedStakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _createGame(BuildContext context, String mode) async {
     // Async: после конца партии пин/кэш могли ещё держать старый gameId.
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable(_selectedStakeBronze)) return;
     if (!context.mounted) return;
     setState(() {
       if (mode == 'invite') {
@@ -597,7 +642,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       ));
     }
     if (inv.isBattleship) {
-      return Text(context.l10n.rulesBattleshipBody);
+      return rulesTextLines(battleshipRuleLines(
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
     }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
@@ -874,7 +923,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
         final Widget body;
         if (lobby.isBattleship) {
-          body = Text(context.l10n.rulesBattleshipBody);
+          body = rulesTextLines(battleshipRuleLines(
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+            l10n: context.l10n,
+          ));
         } else if (lobby.isDurak) {
           body = rulesTextLines(durakRuleLines(
             mode: lobby.gameMode,
@@ -1513,10 +1566,38 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         );
   }
 
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final next = clampStakeToAffordable(_stakeBronze, balance, options);
+    if (next != _stakeBronze) {
+      setState(() => _stakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _create(String mode) async {
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable()) return;
     if (!context.mounted) return;
     setState(() {
       _creating = mode == 'invite';
@@ -1776,7 +1857,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   }
 }
 
-/// Карточка «Морской бой» — ставка и время хода; offline не поддерживается.
+/// Карточка «Морской бой» — ставка и время хода; офлайн — игра с ботом.
 class _BattleshipGameCard extends ConsumerStatefulWidget {
   const _BattleshipGameCard({
     required this.isOffline,
@@ -1828,10 +1909,38 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         );
   }
 
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final next = clampStakeToAffordable(_stakeBronze, balance, options);
+    if (next != _stakeBronze) {
+      setState(() => _stakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
   Future<void> _create(String mode) async {
     if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
       return;
     }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable()) return;
     if (!context.mounted) return;
     setState(() {
       _creating = mode == 'invite';
@@ -1954,6 +2063,15 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
     final busy = _creating || _finding;
 
     final chips = <Widget>[
+      // Как в крестиках: «2» игрока, всегда тёмная и неактивная.
+      GameCardChip(
+        selected: false,
+        icon: Icons.groups_rounded,
+        label: '2',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
       if (!widget.isOffline)
         GameCardChip(
           selected: true,
@@ -1963,14 +2081,6 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
-      GameCardChip(
-        selected: true,
-        icon: Icons.grid_on_rounded,
-        label: '10×10',
-        onTap: null,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
     ];
 
     return GameCardShell(
@@ -1989,56 +2099,21 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         isMedium: isMedium,
       ),
       chips: chips,
-      actions: widget.isOffline
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.textSecondary.withValues(alpha: 0.22),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-                  horizontal: 12,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.wifi_off_rounded,
-                      size: 18,
-                      color: AppColors.textSecondary.withValues(alpha: 0.9),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        context.l10n.gamesInDevelopment,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : GameCardActionsRow(
-              createLabel: context.l10n.gamesCreate,
-              creatingLabel: context.l10n.commonCreating,
-              onCreate: () => _create('invite'),
-              findLabel: context.l10n.gamesFindMatch,
-              findingLabel: context.l10n.commonSearching,
-              onFind: () => _create('matchmake'),
-              isCreating: _creating,
-              isFinding: _finding,
-              isDesktop: isDesktop,
-              isMedium: isMedium,
-            ),
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () => context.push('/games/battleship/offline'),
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
     );
   }
 
@@ -2046,7 +2121,12 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
     showGameRulesDialog(
       context: context,
       title: context.l10n.rulesBattleshipTitle,
-      content: Text(context.l10n.rulesBattleshipBody),
+      content: rulesTextLines(battleshipRuleLines(
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+        offlineBot: widget.isOffline,
+        l10n: context.l10n,
+      )),
       closeLabel: context.l10n.commonClose,
     );
   }

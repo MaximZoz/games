@@ -1722,6 +1722,10 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 	opponentID := m["opponent_id"]
 	gameID := m["game_id"]
 	status := m["status"]
+	// Игра уже началась — chat-карточки «Войти в игру» больше не нужны.
+	if status == lobbyStatusInGame {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
+	}
 
 	// Участники всегда видят лобби. Для открытого поиска и invite-по-ссылке
 	// любой авторизованный пользователь может просмотреть waiting-лобби.
