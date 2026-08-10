@@ -7,6 +7,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_rules.dart';
@@ -134,11 +135,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     super.dispose();
   }
 
+  bool get _isOffline =>
+      OfflineBattleshipRegistry.instance.isOffline(widget.gameId);
+
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (_isOffline) return;
       final known = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
       if (known != null && known.isOver) {
         _clearSessionForFinishedGame();
@@ -295,6 +300,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     }
     if (_prevGameStatus == 'over') return;
     _prevGameStatus = 'over';
+    // Офлайн: без ставок и наград — только UI.
+    if (_isOffline) return;
     final iWon = _isWinner(game, me);
     final pot = stakeWinnerCredit(
       stake: game.stakeBronze,
@@ -711,6 +718,28 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Future<void> _rematch() async {
     setState(() => _isRematching = true);
     try {
+      if (_isOffline) {
+        final session = OfflineBattleshipRegistry.instance.get(widget.gameId);
+        if (session != null) {
+          _shipsSyncedFromServer = false;
+          _setupAutoSubmitted = false;
+          _localShips = const [];
+          _selectedShipIndex = null;
+          _balanceGainPlayed = false;
+          _lossChipRevealed = false;
+          _prevGameStatus = null;
+          _lastFxKey = '';
+          _fxInProgress = false;
+          _pulseHitCell = null;
+          _fxShowMineBoard = null;
+          _hitPulse.stop();
+          _hitPulse.reset();
+          session.restart();
+          ref.invalidate(battleshipGameProvider(widget.gameId));
+          if (mounted) setState(() => _isRematching = false);
+          return;
+        }
+      }
       final lobbyId =
           await ref.read(battleshipRepositoryProvider).rematch(widget.gameId);
       if (!mounted) return;
@@ -853,7 +882,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   @override
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(battleshipGameProvider(widget.gameId));
-    final me = ref.watch(authStateProvider).valueOrNull?.id;
+    var me = ref.watch(authStateProvider).valueOrNull?.id;
+    if (_isOffline && (me == null || me.isEmpty)) {
+      me = OfflineBattleshipRegistry.instance.get(widget.gameId)?.humanUserId;
+    }
     final narrow = isNarrow(context);
 
     ref.listen(battleshipGameProvider(widget.gameId), (_, next) {
@@ -889,6 +921,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: game?.turnTimeSec ?? 0,
                     stakeBronze: game?.stakeBronze ?? 2,
+                    offlineBot: _isOffline,
                     l10n: context.l10n,
                   )),
                   closeLabel: context.l10n.commonClose,
@@ -984,22 +1017,36 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                           ),
                         if (isOver) ...[
                           const SizedBox(height: 10),
-                          GameRematchSection(
-                            rematchLobbyId: _rematchLobbyId,
-                            rematchDeclined: _rematchDeclined,
-                            iDeclinedRematch: _iDeclinedRematch,
-                            isRematching: _isRematching,
-                            isAcceptingRematch: _isAcceptingRematch,
-                            isFindingGame: _isFindingGame,
-                            peerIds: _peerIds(game, me),
-                            invites: ref.watch(gameInvitesProvider),
-                            onRematch: () => unawaited(_rematch()),
-                            onAccept: (id) => unawaited(_acceptRematch(id)),
-                            onDecline: (id) => unawaited(_declineRematch(id)),
-                            onCancelWait: () => unawaited(_cancelRematchWait()),
-                            onFindGame: () => unawaited(_findGame()),
-                            compact: true,
-                          ),
+                          if (_isOffline)
+                            FilledButton.icon(
+                              onPressed: _isRematching
+                                  ? null
+                                  : () => unawaited(_rematch()),
+                              icon: const Icon(Icons.replay_rounded, size: 18),
+                              label: Text(context.l10n.offlinePlayAgain),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.accentStart,
+                                foregroundColor: Colors.white,
+                              ),
+                            )
+                          else
+                            GameRematchSection(
+                              rematchLobbyId: _rematchLobbyId,
+                              rematchDeclined: _rematchDeclined,
+                              iDeclinedRematch: _iDeclinedRematch,
+                              isRematching: _isRematching,
+                              isAcceptingRematch: _isAcceptingRematch,
+                              isFindingGame: _isFindingGame,
+                              peerIds: _peerIds(game, me),
+                              invites: ref.watch(gameInvitesProvider),
+                              onRematch: () => unawaited(_rematch()),
+                              onAccept: (id) => unawaited(_acceptRematch(id)),
+                              onDecline: (id) => unawaited(_declineRematch(id)),
+                              onCancelWait: () =>
+                                  unawaited(_cancelRematchWait()),
+                              onFindGame: () => unawaited(_findGame()),
+                              compact: true,
+                            ),
                         ],
                         Expanded(
                           child: game.isSetup

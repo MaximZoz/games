@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, LobbyPlayer;
 
@@ -454,6 +455,13 @@ class BattleshipRepository {
   }
 
   Future<BattleshipGameView> getGame(String gameId) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
+      final session = OfflineBattleshipRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.view;
+    }
     final res = await _sendAuth(
       (token) => ApiClient.get(
         Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId'),
@@ -471,6 +479,13 @@ class BattleshipRepository {
     String gameId,
     List<List<int>> ships,
   ) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
+      final session = OfflineBattleshipRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.placeShips(ships);
+    }
     final res = await _sendAuth(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId/place_ships'),
@@ -489,6 +504,13 @@ class BattleshipRepository {
   }
 
   Future<BattleshipGameView> shoot(String gameId, int cell) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
+      final session = OfflineBattleshipRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.shoot(cell);
+    }
     final res = await _sendAuth(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId/shoot'),
@@ -507,6 +529,13 @@ class BattleshipRepository {
   }
 
   Future<BattleshipGameView> forfeit(String gameId) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
+      final session = OfflineBattleshipRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      return session.forfeit();
+    }
     final res = await _sendAuth(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId/forfeit'),
@@ -543,6 +572,14 @@ class BattleshipRepository {
   }
 
   Future<String> rematch(String gameId) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
+      final session = OfflineBattleshipRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      session.restart();
+      return '';
+    }
     final res = await _sendAuth(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/battleship/rematch'),

@@ -41,4 +41,11 @@ void main() {
     final bs = gameRegistry['battleship']!;
     expect(bs.supportsDrawOffer(2), isFalse);
   });
+
+  test('offline supported for tictactoe, durak, battleship', () {
+    expect(gameRegistry['tictactoe']!.supportsOffline, isTrue);
+    expect(gameRegistry['durak']!.supportsOffline, isTrue);
+    expect(gameRegistry['battleship']!.supportsOffline, isTrue);
+    expect(gameRegistry['battleship']!.offlinePath, '/games/battleship/offline');
+  });
 }

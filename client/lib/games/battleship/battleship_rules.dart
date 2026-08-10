@@ -10,18 +10,23 @@ const int kBattleshipSetupTimeSec = 60;
 List<String> battleshipRuleLines({
   required int turnTimeSec,
   required int stakeBronze,
+  bool offlineBot = false,
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
   return [
     t.rulesBattleshipPlayers,
-    t.rulesBattleshipSetupTime(formatTurnTime(kBattleshipSetupTimeSec)),
-    turnTimeSec == 0
-        ? t.rulesNoTimeLimit
-        : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-    if (stakeBronze > 0) t.rulesStake(formatStakeAmount(stakeBronze)),
+    if (offlineBot)
+      t.rulesDurakOfflineBot
+    else ...[
+      t.rulesBattleshipSetupTime(formatTurnTime(kBattleshipSetupTimeSec)),
+      turnTimeSec == 0
+          ? t.rulesNoTimeLimit
+          : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
+      if (stakeBronze > 0) t.rulesStake(formatStakeAmount(stakeBronze)),
+    ],
     t.rulesBattleshipIntro,
-    t.rulesBattleshipSetup,
+    if (!offlineBot) t.rulesBattleshipSetup,
     t.rulesBattleshipPlay,
     t.rulesBattleshipWin,
   ];
