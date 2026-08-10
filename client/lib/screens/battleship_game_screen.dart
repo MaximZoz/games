@@ -34,6 +34,9 @@ const Color _kMiss = Color(0xFFFFFFFF);
 const Color _kSelectedShip = Color(0xFF455A64);
 const Color _kSunkShip = Color(0xFF37474F);
 const Color _kSunkFrame = Color(0xFF212121);
+/// Мои потопленные — красным (в отличие от тёмных кораблей соперника).
+const Color _kSunkShipMine = Color(0xFFE53935);
+const Color _kSunkFrameMine = Color(0xFFB71C1C);
 const Duration _kShotRevealDelay = Duration(seconds: 1);
 
 class BattleshipGameScreen extends ConsumerStatefulWidget {
@@ -1194,7 +1197,12 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       cellBuilder: (cell) {
         final sunkShip = sunkMap[cell];
         if (sunkShip != null) {
-          return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
+          return _SunkShipCell(
+            cell: cell,
+            shipCells: sunkShip.toSet(),
+            fill: _kSunkShipMine,
+            frame: _kSunkFrameMine,
+          );
         }
         final ship = myOccupied.contains(cell);
         final shot = oppShots.contains(cell) ||
@@ -1296,11 +1304,18 @@ class _CellPaint extends StatelessWidget {
   }
 }
 
-/// Потопленный корабль: без крестиков, общая тёмная заливка и рамка по контуру.
+/// Потопленный корабль: без крестиков, заливка и рамка по контуру.
 class _SunkShipCell extends StatelessWidget {
-  const _SunkShipCell({required this.cell, required this.shipCells});
+  const _SunkShipCell({
+    required this.cell,
+    required this.shipCells,
+    this.fill = _kSunkShip,
+    this.frame = _kSunkFrame,
+  });
   final int cell;
   final Set<int> shipCells;
+  final Color fill;
+  final Color frame;
 
   @override
   Widget build(BuildContext context) {
@@ -1321,12 +1336,12 @@ class _SunkShipCell extends StatelessWidget {
     const w = 2.5;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: _kSunkShip,
+        color: fill,
         border: Border(
-          top: BorderSide(color: _kSunkFrame, width: has(-1, 0) ? 0 : w),
-          bottom: BorderSide(color: _kSunkFrame, width: has(1, 0) ? 0 : w),
-          left: BorderSide(color: _kSunkFrame, width: has(0, -1) ? 0 : w),
-          right: BorderSide(color: _kSunkFrame, width: has(0, 1) ? 0 : w),
+          top: BorderSide(color: frame, width: has(-1, 0) ? 0 : w),
+          bottom: BorderSide(color: frame, width: has(1, 0) ? 0 : w),
+          left: BorderSide(color: frame, width: has(0, -1) ? 0 : w),
+          right: BorderSide(color: frame, width: has(0, 1) ? 0 : w),
         ),
       ),
       child: const SizedBox.expand(),

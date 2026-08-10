@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Морской бой: анимация выстрела, потопленные корабли, карточка и ничья
+- Морской бой: красные свои потопленные, setup 1 мин, чип игроков
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

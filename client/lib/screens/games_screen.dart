@@ -2054,6 +2054,15 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
     final busy = _creating || _finding;
 
     final chips = <Widget>[
+      // Как в крестиках: «2» игрока, всегда тёмная и неактивная.
+      GameCardChip(
+        selected: false,
+        icon: Icons.groups_rounded,
+        label: '2',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
       if (!widget.isOffline)
         GameCardChip(
           selected: true,
@@ -2063,14 +2072,6 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
-      GameCardChip(
-        selected: true,
-        icon: Icons.grid_on_rounded,
-        label: '10×10',
-        onTap: null,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
     ];
 
     return GameCardShell(
