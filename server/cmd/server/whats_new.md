@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Тест Морского боя: убрать unused_local_variable в analyze
 - Морской бой: сразу случайная расстановка, drag-and-drop и поворот
 
 ## en

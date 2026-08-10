@@ -127,8 +127,7 @@ void main() {
           : generateRandomBattleshipShips(99);
       final idx = base.indexWhere((s) => s.length == 4 && isShipHorizontal(s));
       if (idx < 0) return;
-      final ship = base[idx];
-      final grabOffset = 1;
+      const grabOffset = 1;
       // Ищем drop, где tryMove даёт новый head.
       for (var cell = 0; cell < kBattleshipCellCount; cell++) {
         final next = tryMoveShipFromGrab(base, idx, grabOffset, cell);
