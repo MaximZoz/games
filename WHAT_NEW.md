@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Морской бой: одно поле, таймаут расстановки, случайный первый ход
+- Морской бой: анимация выстрела, потопленные корабли, карточка и ничья
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

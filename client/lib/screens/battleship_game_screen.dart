@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
@@ -19,6 +21,7 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 /// Цвета клеток Морского боя.
@@ -29,6 +32,9 @@ const Color _kPreviewOk = Color(0xFF81C784);
 const Color _kHit = Color(0xFFE53935);
 const Color _kMiss = Color(0xFFFFFFFF);
 const Color _kSelectedShip = Color(0xFF455A64);
+const Color _kSunkShip = Color(0xFF37474F);
+const Color _kSunkFrame = Color(0xFF212121);
+const Duration _kShotRevealDelay = Duration(seconds: 1);
 
 class BattleshipGameScreen extends ConsumerStatefulWidget {
   const BattleshipGameScreen({super.key, required this.gameId});
@@ -63,10 +69,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   bool _shipsSyncedFromServer = false;
   bool _setupAutoSubmitted = false;
 
-  /// Анимация попадания по клетке [lastShot].
+  /// Анимация попадания/промаха + удержание поля 1с перед сменой хода.
   late final AnimationController _hitPulse;
-  int _lastAnimatedShotKey = -1;
+  String _lastFxKey = '';
+  bool _fxInProgress = false;
   int? _pulseHitCell;
+  bool _fxHit = false;
+  /// Во время FX: true = своё поле, false = поле соперника, null = по ходу.
+  bool? _fxShowMineBoard;
 
   @override
   void initState() {
@@ -95,8 +105,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _balanceGainPlayed = false;
       _lossChipRevealed = false;
       _prevGameStatus = null;
-      _lastAnimatedShotKey = -1;
+      _lastFxKey = '';
+      _fxInProgress = false;
       _pulseHitCell = null;
+      _fxShowMineBoard = null;
       _hitPulse.stop();
       _hitPulse.reset();
       setState(() {
@@ -167,6 +179,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   String _statusText(BattleshipGameView game, String? me) {
     final l10n = context.l10n;
     if (game.isOver) {
+      if (game.isDraw) return l10n.gameDraw;
       return _isWinner(game, me)
           ? l10n.gamesBattleshipYouWon
           : l10n.gameYouLost;
@@ -185,21 +198,49 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         : l10n.gamesOpponentTurn;
   }
 
-  void _maybePulseHit(BattleshipGameView game) {
-    if (!game.lastShotHit || game.lastShot < 0) return;
-    final key = game.lastShot + 1000 * (game.lastShotBy?.hashCode ?? 0);
-    if (key == _lastAnimatedShotKey) return;
-    _lastAnimatedShotKey = key;
-    _pulseHitCell = game.lastShot;
+  String _fxKey(BattleshipGameView game) =>
+      '${game.lastShot}|${game.lastShotBy}|${game.myShots.length}|${game.opponentShots.length}';
+
+  Future<void> _playShotReveal({
+    required int cell,
+    required bool hit,
+    required bool onMyBoard,
+  }) async {
+    if (!mounted) return;
+    _fxInProgress = true;
+    setState(() {
+      _pulseHitCell = cell;
+      _fxHit = hit;
+      _fxShowMineBoard = onMyBoard;
+    });
     _hitPulse
       ..stop()
-      ..forward(from: 0).whenComplete(() {
-        if (!mounted) return;
-        if (_pulseHitCell == game.lastShot) {
-          setState(() => _pulseHitCell = null);
-        }
-      });
-    if (mounted) setState(() {});
+      ..forward(from: 0);
+    await Future<void>.delayed(_kShotRevealDelay);
+    if (!mounted) return;
+    setState(() {
+      _pulseHitCell = null;
+      _fxShowMineBoard = null;
+      _fxInProgress = false;
+    });
+  }
+
+  void _maybeRevealRemoteShot(BattleshipGameView game, String? me) {
+    if (game.lastShot < 0) return;
+    if (_fxInProgress) return;
+    final key = _fxKey(game);
+    if (key == _lastFxKey) return;
+    // Свой выстрел проигрывается в _shoot.
+    if (me != null && game.lastShotBy == me) {
+      _lastFxKey = key;
+      return;
+    }
+    _lastFxKey = key;
+    unawaited(_playShotReveal(
+      cell: game.lastShot,
+      hit: game.lastShotHit,
+      onMyBoard: true,
+    ));
   }
 
   int _rewardChipBronze(BattleshipGameView game, String? me) {
@@ -406,10 +447,19 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   Future<void> _shoot(int cell) async {
-    if (_busy) return;
+    if (_busy || _fxInProgress) return;
     setState(() => _busy = true);
     try {
-      await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
+      final view =
+          await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
+      if (!mounted) return;
+      final shotCell = view.lastShot >= 0 ? view.lastShot : cell;
+      _lastFxKey = _fxKey(view);
+      await _playShotReveal(
+        cell: shotCell,
+        hit: view.lastShotHit,
+        onMyBoard: false,
+      );
       if (!mounted) return;
       ref.invalidate(battleshipGameProvider(widget.gameId));
     } on GamesException catch (e) {
@@ -418,6 +468,180 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _confirmOfferDraw() async {
+    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.isOver || game.hasBotOpponent) return;
+    final ok = await confirmGameActionDialog(
+      context: context,
+      title: context.l10n.gameOfferDrawTitle,
+      message: context.l10n.gameOfferDrawConfirm,
+      cancelLabel: context.l10n.commonCancel,
+      confirmLabel: context.l10n.gameOfferDraw,
+    );
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(battleshipRepositoryProvider).offerDraw(widget.gameId);
+      if (!mounted) return;
+      ref.invalidate(battleshipGameProvider(widget.gameId));
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    }
+  }
+
+  Future<void> _confirmAcceptDraw() async {
+    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
+    final me = ref.read(authStateProvider).valueOrNull?.id;
+    final offerBy = game?.drawOfferBy?.trim();
+    if (game == null || me == null || offerBy == null || offerBy == me) return;
+    final ok = await confirmGameActionDialog(
+      context: context,
+      title: context.l10n.gameAcceptDrawTitle,
+      message: context.l10n.gameAcceptDrawConfirm,
+      cancelLabel: context.l10n.commonCancel,
+      confirmLabel: context.l10n.gameDraw,
+    );
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(battleshipRepositoryProvider).acceptDraw(widget.gameId);
+      if (!mounted) return;
+      ref.invalidate(battleshipGameProvider(widget.gameId));
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    }
+  }
+
+  Future<void> _addFriend(
+    String userId,
+    String displayName, {
+    String? requestId,
+  }) async {
+    try {
+      final repo = ref.read(friendsRepositoryProvider);
+      if (requestId != null && requestId.isNotEmpty) {
+        await repo.acceptRequest(requestId);
+        if (!mounted) return;
+        ref.invalidate(friendsSnapshotProvider);
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsRequestAccepted,
+          kind: AppSnackKind.success,
+        );
+      } else {
+        await repo.sendRequest(userId);
+        if (!mounted) return;
+        ref.invalidate(friendsSnapshotProvider);
+        showAppSnackBar(
+          context,
+          message: context.l10n.friendsRequestSent,
+          kind: AppSnackKind.success,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _openChat(String userId, String displayName) async {
+    try {
+      final chatId =
+          await ref.read(chatsRepositoryProvider).startChat(userId);
+      if (!mounted || chatId.isEmpty) return;
+      final uri = Uri(
+        path: '/chats/$chatId',
+        queryParameters: {
+          'name': displayName,
+          'from': 'games',
+          'game': '/games/battleship/game/${widget.gameId}',
+        },
+      );
+      context.push(uri.toString());
+    } catch (_) {
+      if (!mounted) return;
+      context.push(
+        Uri(
+          path: '/chats',
+          queryParameters: {
+            'peer': userId,
+            'game': '/games/battleship/game/${widget.gameId}',
+          },
+        ).toString(),
+      );
+    }
+  }
+
+  Widget _buildOpponentCard(BattleshipGameView game, String? me) {
+    final peers = _peerIds(game, me);
+    if (peers.isEmpty) return const SizedBox.shrink();
+    final oppId = peers.first;
+    final name = game.displayNameOf(oppId)?.trim().isNotEmpty == true
+        ? game.displayNameOf(oppId)!.trim()
+        : context.l10n.gamesOpponentTurn;
+    final avatar = game.avatarOf(oppId);
+    final isBot = oppId.startsWith('bot:');
+    final chats = ref.watch(chatsListProvider).valueOrNull;
+    var unread = 0;
+    if (chats != null) {
+      for (final c in chats) {
+        if (c.user.id == oppId) unread += c.unreadCount;
+      }
+    }
+    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
+    final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
+    final outgoing =
+        friends?.outgoing.where((r) => r.user.id == oppId).toList() ??
+            const [];
+    final incoming =
+        friends?.incoming.where((r) => r.user.id == oppId).toList() ??
+            const [];
+    final hasOutgoing = outgoing.isNotEmpty;
+    final hasIncoming = incoming.isNotEmpty;
+    final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
+    final compact = MediaQuery.sizeOf(context).width < 420;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GameOpponentCard(
+        displayName: name,
+        avatarKind: avatar.kind,
+        avatarValue: avatar.value,
+        frameCode: avatar.frameCode,
+        frameColor: avatar.frameColor,
+        isBot: isBot,
+        messageUnread: unread,
+        infoTooltip: context.l10n.userInfoTitle,
+        messageTooltip: context.l10n.gameWriteMessage,
+        compact: compact,
+        maxWidth: 300,
+        showAddFriend: !isBot && !isFriend,
+        addFriendEnabled: !hasOutgoing,
+        addFriendBadge: hasIncoming ? 1 : 0,
+        addFriendTooltip: hasIncoming
+            ? context.l10n.friendsAcceptRequest
+            : (hasOutgoing
+                ? context.l10n.friendsRequestSent
+                : context.l10n.friendsAdd),
+        onAddFriendTap: () => unawaited(_addFriend(
+              oppId,
+              name,
+              requestId: hasIncoming ? incomingRequestId : null,
+            )),
+        onInfoTap: () => unawaited(showUserProfileDialog(
+              context: context,
+              ref: ref,
+              userId: oppId,
+              displayName: name,
+              avatarKind: avatar.kind,
+              avatarValue: avatar.value,
+              frameCode: avatar.frameCode,
+              frameColor: avatar.frameColor,
+              messageFrom: 'games',
+              messageReturnPath: '/games/battleship/game/${widget.gameId}',
+            )),
+        onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
+      ),
+    );
   }
 
   Future<void> _confirmSurrender() async {
@@ -632,7 +856,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       final game = next.valueOrNull;
       if (game == null) return;
       _syncLocalShips(game);
-      _maybePulseHit(game);
+      final me = ref.read(authStateProvider).valueOrNull?.id;
+      _maybeRevealRemoteShot(game, me);
     });
 
     return SwipeBackScope(
@@ -688,6 +913,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                           ),
                           child: Column(
                             children: [
+                              if (!isOver) _buildOpponentCard(game, me),
                               if (!isOver)
                                 Text(
                                   game.isSetup
@@ -807,20 +1033,39 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 ),
                 if (gameAsync.valueOrNull != null &&
                     !gameAsync.valueOrNull!.isOver)
-                  Positioned(
-                    right: 4,
-                    top: 4,
-                    child: GameActionsOverlay(
-                      canDraw: false,
-                      iOfferedDraw: false,
-                      opponentOfferedDraw: false,
-                      onSurrender: () => unawaited(_confirmSurrender()),
-                      onDraw: () {},
-                      surrenderTooltip: context.l10n.gameSurrender,
-                      drawTooltip: context.l10n.gameOfferDraw,
-                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-                      drawOfferedTooltip: context.l10n.gameDrawOffered,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final g = gameAsync.valueOrNull!;
+                      final offerBy = g.drawOfferBy?.trim();
+                      final iOffered = offerBy != null &&
+                          me != null &&
+                          offerBy == me;
+                      final oppOffered = offerBy != null &&
+                          me != null &&
+                          offerBy.isNotEmpty &&
+                          offerBy != me;
+                      final canDraw = g.isBattle &&
+                          !g.isOver &&
+                          !g.hasBotOpponent;
+                      return Positioned(
+                        right: 4,
+                        top: 4,
+                        child: GameActionsOverlay(
+                          canDraw: canDraw,
+                          iOfferedDraw: iOffered,
+                          opponentOfferedDraw: oppOffered,
+                          onSurrender: () => unawaited(_confirmSurrender()),
+                          onDraw: () => oppOffered
+                              ? unawaited(_confirmAcceptDraw())
+                              : unawaited(_confirmOfferDraw()),
+                          surrenderTooltip: context.l10n.gameSurrender,
+                          drawTooltip: context.l10n.gameOfferDraw,
+                          acceptDrawTooltip:
+                              context.l10n.gameAcceptDrawTitle,
+                          drawOfferedTooltip: context.l10n.gameDrawOffered,
+                        ),
+                      );
+                    },
                   ),
               ],
             ),
@@ -909,10 +1154,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   Widget _buildBattle(BattleshipGameView game, String? me, bool narrow) {
     final myTurn = game.isTurnOf(me);
-    // Одно поле: мой ход / конец — поле соперника; ход соперника — моё поле.
-    final showMyBoard = !game.isOver && !myTurn;
+    // Одно поле: мой ход / конец — поле соперника; ход соперника — моё.
+    // Во время FX удерживаем поле, куда пришёл выстрел, ещё 1с.
+    final showMyBoard = _fxShowMineBoard ?? (!game.isOver && !myTurn);
     final cellSize = narrow ? 30.0 : 36.0;
-    final pulseCell = game.lastShotHit ? _pulseHitCell : null;
+    final pulseCell = _pulseHitCell;
 
     final board = showMyBoard
         ? _buildMyDefenseBoard(game, cellSize: cellSize, pulseCell: pulseCell)
@@ -920,7 +1166,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
             game,
             cellSize: cellSize,
             pulseCell: pulseCell,
-            canShoot: myTurn && !game.isOver && !_busy,
+            canShoot: myTurn && !game.isOver && !_busy && !_fxInProgress,
           );
 
     return Padding(
@@ -936,17 +1182,30 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }) {
     final myOccupied = <int>{for (final s in game.myShips) ...s};
     final oppShots = game.opponentShots.toSet();
+    final sunkMap = <int, List<int>>{
+      for (final ship in game.mySunkShips)
+        for (final c in ship) c: ship,
+    };
     return _BattleshipBoard(
       cellSize: cellSize,
       pulseCell: pulseCell,
+      pulseHit: _fxHit,
       pulseAnimation: _hitPulse,
       cellBuilder: (cell) {
+        final sunkShip = sunkMap[cell];
+        if (sunkShip != null) {
+          return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
+        }
         final ship = myOccupied.contains(cell);
-        final shot = oppShots.contains(cell);
+        final shot = oppShots.contains(cell) ||
+            (pulseCell == cell && _fxShowMineBoard == true);
         if (shot && ship) {
           return const _CellPaint(color: _kHit, mark: _CellMark.hit);
         }
-        if (shot) {
+        if (shot && !ship && pulseCell == cell && !_fxHit) {
+          return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
+        }
+        if (shot && !ship) {
           return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
         }
         if (ship) return const _CellPaint(color: _kShip);
@@ -963,17 +1222,26 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }) {
     final myShots = game.myShots.toSet();
     final myHits = game.myHits.toSet();
-    final sunk = game.opponentShipsHit.toSet();
+    final sunkMap = <int, List<int>>{
+      for (final ship in game.opponentSunkShips)
+        for (final c in ship) c: ship,
+    };
     final revealed = <int>{for (final s in game.opponentShips) ...s};
     return _BattleshipBoard(
       cellSize: cellSize,
       pulseCell: pulseCell,
+      pulseHit: _fxHit,
       pulseAnimation: _hitPulse,
       cellBuilder: (cell) {
-        if (sunk.contains(cell) || myHits.contains(cell)) {
+        final sunkShip = sunkMap[cell];
+        if (sunkShip != null) {
+          return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
+        }
+        final isFx = pulseCell == cell && _fxShowMineBoard == false;
+        if (myHits.contains(cell) || (isFx && _fxHit)) {
           return const _CellPaint(color: _kHit, mark: _CellMark.hit);
         }
-        if (myShots.contains(cell)) {
+        if (myShots.contains(cell) || (isFx && !_fxHit)) {
           return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
         }
         if (revealed.contains(cell)) {
@@ -983,7 +1251,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       },
       onTap: canShoot
           ? (cell) {
-              if (myShots.contains(cell)) return;
+              if (myShots.contains(cell) || myHits.contains(cell)) return;
+              if (sunkMap.containsKey(cell)) return;
               unawaited(_shoot(cell));
             }
           : null,
@@ -1027,12 +1296,51 @@ class _CellPaint extends StatelessWidget {
   }
 }
 
+/// Потопленный корабль: без крестиков, общая тёмная заливка и рамка по контуру.
+class _SunkShipCell extends StatelessWidget {
+  const _SunkShipCell({required this.cell, required this.shipCells});
+  final int cell;
+  final Set<int> shipCells;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = cell ~/ kBattleshipBoardSize;
+    final c = cell % kBattleshipBoardSize;
+    bool has(int dr, int dc) {
+      final nr = r + dr;
+      final nc = c + dc;
+      if (nr < 0 ||
+          nr >= kBattleshipBoardSize ||
+          nc < 0 ||
+          nc >= kBattleshipBoardSize) {
+        return false;
+      }
+      return shipCells.contains(nr * kBattleshipBoardSize + nc);
+    }
+
+    const w = 2.5;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _kSunkShip,
+        border: Border(
+          top: BorderSide(color: _kSunkFrame, width: has(-1, 0) ? 0 : w),
+          bottom: BorderSide(color: _kSunkFrame, width: has(1, 0) ? 0 : w),
+          left: BorderSide(color: _kSunkFrame, width: has(0, -1) ? 0 : w),
+          right: BorderSide(color: _kSunkFrame, width: has(0, 1) ? 0 : w),
+        ),
+      ),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
 class _BattleshipBoard extends StatelessWidget {
   const _BattleshipBoard({
     required this.cellBuilder,
     this.onTap,
     this.cellSize = 32,
     this.pulseCell,
+    this.pulseHit = true,
     this.pulseAnimation,
   });
 
@@ -1040,6 +1348,7 @@ class _BattleshipBoard extends StatelessWidget {
   final void Function(int cell)? onTap;
   final double cellSize;
   final int? pulseCell;
+  final bool pulseHit;
   final Animation<double>? pulseAnimation;
 
   @override
@@ -1047,6 +1356,7 @@ class _BattleshipBoard extends StatelessWidget {
     final size = cellSize.clamp(28.0, 40.0);
     const gap = 2.0;
     final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+    final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
     return SizedBox(
       width: board,
       height: board,
@@ -1072,7 +1382,7 @@ class _BattleshipBoard extends StatelessWidget {
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: _kHit.withValues(alpha: 0.55 * (1 - t)),
+                          color: glow.withValues(alpha: 0.55 * (1 - t)),
                           blurRadius: 10 * (1 - t),
                           spreadRadius: 2 * (1 - t),
                         ),
