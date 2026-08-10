@@ -88,8 +88,10 @@ class BattleshipGameView {
     required this.p2Ready,
     required this.myShips,
     required this.myShots,
+    required this.myHits,
     required this.opponentShots,
     required this.opponentShipsHit,
+    required this.opponentShips,
     required this.isMyTurn,
     required this.turn,
     required this.turnTimeSec,
@@ -99,6 +101,8 @@ class BattleshipGameView {
     this.winner,
     this.forfeit = false,
     this.lastShot = -1,
+    this.lastShotHit = false,
+    this.lastShotBy,
     this.p1DisplayName,
     this.p2DisplayName,
     this.p1AvatarKind = 'letter',
@@ -117,8 +121,12 @@ class BattleshipGameView {
   final bool p2Ready;
   final List<List<int>> myShips;
   final List<int> myShots;
+  /// Клетки моих выстрелов, попавшие в корабли соперника.
+  final List<int> myHits;
   final List<int> opponentShots;
   final List<int> opponentShipsHit;
+  /// Полный флот соперника — только после конца партии.
+  final List<List<int>> opponentShips;
   final bool isMyTurn;
   final String turn;
   final int turnTimeSec;
@@ -128,6 +136,8 @@ class BattleshipGameView {
   final String? winner;
   final bool forfeit;
   final int lastShot;
+  final bool lastShotHit;
+  final String? lastShotBy;
   final String? p1DisplayName;
   final String? p2DisplayName;
   final String p1AvatarKind;
@@ -138,6 +148,24 @@ class BattleshipGameView {
   bool get isOver => status == 'over';
   bool get isSetup => phase == 'setup';
   bool get isBattle => phase == 'battle';
+
+  bool isTurnOf(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    if (isMyTurn && turn.isEmpty) return true;
+    return isBattle && !isOver && turn == userId;
+  }
+
+  String? displayNameOf(String userId) {
+    if (userId == p1UserId) {
+      final n = p1DisplayName?.trim() ?? '';
+      return n.isEmpty ? null : n;
+    }
+    if (userId == p2UserId) {
+      final n = p2DisplayName?.trim() ?? '';
+      return n.isEmpty ? null : n;
+    }
+    return null;
+  }
 
   factory BattleshipGameView.fromJson(Map<String, dynamic> json) {
     List<List<int>> parseShips(dynamic raw) {
@@ -153,10 +181,15 @@ class BattleshipGameView {
       return raw.map((e) => (e as num).toInt()).toList();
     }
 
+    final turn = (json['turn'] ?? '').toString();
+    final status = (json['status'] ?? 'active').toString();
+    final phase = (json['phase'] ?? 'setup').toString();
+    final isMyTurnFlag = json['is_my_turn'] == true;
+
     return BattleshipGameView(
       id: (json['game_id'] ?? json['id'] ?? '').toString(),
-      status: (json['status'] ?? 'active').toString(),
-      phase: (json['phase'] ?? 'setup').toString(),
+      status: status,
+      phase: phase,
       lobbyId: (json['lobby_id'] ?? '').toString(),
       p1UserId: (json['p1_user_id'] ?? '').toString(),
       p2UserId: (json['p2_user_id'] ?? '').toString(),
@@ -164,10 +197,12 @@ class BattleshipGameView {
       p2Ready: json['p2_ready'] == true,
       myShips: parseShips(json['my_ships']),
       myShots: parseInts(json['my_shots']),
+      myHits: parseInts(json['my_hits']),
       opponentShots: parseInts(json['opponent_shots']),
       opponentShipsHit: parseInts(json['opponent_ships_hit']),
-      isMyTurn: json['is_my_turn'] == true,
-      turn: (json['turn'] ?? '').toString(),
+      opponentShips: parseShips(json['opponent_ships']),
+      isMyTurn: isMyTurnFlag,
+      turn: turn,
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       setupDeadline: (json['setup_deadline'] as num?)?.toInt() ?? 0,
@@ -177,6 +212,10 @@ class BattleshipGameView {
           : (json['winner'] as String).trim(),
       forfeit: json['forfeit'] == true,
       lastShot: (json['last_shot'] as num?)?.toInt() ?? -1,
+      lastShotHit: json['last_shot_hit'] == true,
+      lastShotBy: (json['last_shot_by'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['last_shot_by'] as String).trim(),
       p1DisplayName: (json['p1_display_name'] as String?)?.trim(),
       p2DisplayName: (json['p2_display_name'] as String?)?.trim(),
       p1AvatarKind: (json['p1_avatar_kind'] ?? 'letter').toString(),

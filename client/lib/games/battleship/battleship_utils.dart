@@ -351,17 +351,21 @@ List<List<int>> generateRandomBattleshipShips([int? seed]) {
     }
     if (ok && _validatePlacement(ships)) return ships;
   }
-  // Fallback
+  return defaultBattleshipShips();
+}
+
+/// Дефолтная валидная расстановка (как на сервере при таймауте setup).
+List<List<int>> defaultBattleshipShips() {
   return [
     [0, 1, 2, 3],
     [5, 6, 7],
-    [9, 19, 29],
-    [20, 21],
-    [23, 24],
-    [26, 27],
-    [40],
-    [42],
-    [44],
-    [46],
+    [20, 21, 22],
+    [40, 41],
+    [43, 44],
+    [46, 47],
+    [60],
+    [62],
+    [64],
+    [66],
   ];
 }

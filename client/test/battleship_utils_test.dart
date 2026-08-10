@@ -2,6 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 
 void main() {
+  group('defaultBattleshipShips', () {
+    test('валидна и совпадает с серверным дефолтом', () {
+      final ships = defaultBattleshipShips();
+      expect(validateBattleshipShips(ships), isTrue);
+      expect(ships.first, [0, 1, 2, 3]);
+      expect(ships.length, kBattleshipFleet.length);
+    });
+  });
+
   group('validateBattleshipShips', () {
     test('принимает валидную расстановку', () {
       final ships = generateRandomBattleshipShips(42);

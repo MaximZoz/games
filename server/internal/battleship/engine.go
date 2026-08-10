@@ -228,6 +228,18 @@ func CollectSunkCells(ships Ships, shots []int) []int {
 	return out
 }
 
+// CollectHitCells — клетки выстрелов, попавших в корабли (в т.ч. ещё не потопленные).
+func CollectHitCells(ships Ships, shots []int) []int {
+	var out []int
+	for _, c := range shots {
+		if IsHit(ships, c) {
+			out = append(out, c)
+		}
+	}
+	sort.Ints(out)
+	return out
+}
+
 // RandomShips расставляет флот случайно с соблюдением ValidateShips.
 func RandomShips(rng *rand.Rand) Ships {
 	if rng == nil {
@@ -301,6 +313,11 @@ func RandomShips(rng *rand.Rand) Ships {
 		}
 	}
 	// Детерминированный fallback: горизонтальные ряды с зазором.
+	return fallbackShips()
+}
+
+// DefaultShips — фиксированная валидная расстановка (таймаут setup без своей).
+func DefaultShips() Ships {
 	return fallbackShips()
 }
 
