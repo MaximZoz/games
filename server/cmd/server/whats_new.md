@@ -3,14 +3,11 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Что нового: покер Texas Hold'em
 - Клиент покера (Texas Hold'em): офлайн-движок, экраны и интеграция
 - Добавлен HTTP API для покера Texas Hold'em
 - Add Texas Hold'em No-Limit poker engine
 
 ## en
-- Durak: keep auto-bito pause so opponent defend card is visible
-- Durak: cards land in the slot immediately, no snap from center
-- Durak: smoother animations without jank
-- CI: pass BUILD_ID (git sha) to Fly deploy
-- Durak: win/draw outcome once after take or beat
+- Poker Texas Hold'em: lobbies, invites, online and offline (1–6 players)
 
