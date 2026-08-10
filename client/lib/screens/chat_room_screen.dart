@@ -2576,35 +2576,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                       alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 14, top: 6),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _ChatInviteCard(
-                              link: inviteLink,
-                              messageId: message.id,
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatBubbleDateTime(message.createdAt),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                                if (mine) ...[
-                                  const SizedBox(width: 4),
-                                  MessageStatusTicks(
-                                    deliveredAt: message.deliveredAt,
-                                    readAt: message.readAt,
-                                    size: 14,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
+                        child: _ChatInviteCardGate(
+                          link: inviteLink,
+                          messageId: message.id,
+                          createdAtLabel: _formatBubbleDateTime(message.createdAt),
+                          deliveredAt: message.deliveredAt,
+                          readAt: message.readAt,
+                          mine: mine,
+                          onExpired: () => _removeMessageLocally(message.id),
                         ),
                       ),
                     );
@@ -3706,14 +3685,128 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
   }
 }
 
-class _ChatInviteCard extends ConsumerWidget {
-  const _ChatInviteCard({
+/// Проверяет лобби при показе: нет лобби / игра началась → карточка исчезает.
+class _ChatInviteCardGate extends ConsumerStatefulWidget {
+  const _ChatInviteCardGate({
     required this.link,
     required this.messageId,
+    required this.createdAtLabel,
+    required this.deliveredAt,
+    required this.readAt,
+    required this.mine,
+    required this.onExpired,
   });
 
   final InviteLobbyLink link;
   final String messageId;
+  final String createdAtLabel;
+  final String? deliveredAt;
+  final String? readAt;
+  final bool mine;
+  final VoidCallback onExpired;
+
+  @override
+  ConsumerState<_ChatInviteCardGate> createState() =>
+      _ChatInviteCardGateState();
+}
+
+class _ChatInviteCardGateState extends ConsumerState<_ChatInviteCardGate> {
+  bool _alive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_validateLobby());
+    });
+  }
+
+  Future<void> _validateLobby() async {
+    final expired = await _isLobbyInviteExpired(ref, widget.link);
+    if (!mounted || !expired) return;
+    setState(() => _alive = false);
+    widget.onExpired();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_alive) return const SizedBox.shrink();
+    // Пока проверяем — карточка видна; join/GetLobby сами дожмут 404/in_game.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ChatInviteCard(
+          link: widget.link,
+          messageId: widget.messageId,
+          onExpired: () {
+            if (!_alive) return;
+            setState(() => _alive = false);
+            widget.onExpired();
+          },
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.createdAtLabel,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+            if (widget.mine) ...[
+              const SizedBox(width: 4),
+              MessageStatusTicks(
+                deliveredAt: widget.deliveredAt,
+                readAt: widget.readAt,
+                size: 14,
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+Future<bool> _isLobbyInviteExpired(WidgetRef ref, InviteLobbyLink link) async {
+  final lobbyId = link.lobbyId.trim();
+  if (lobbyId.isEmpty) return true;
+  try {
+    final gt = gameRegistry.contains(link.gameType)
+        ? link.gameType
+        : gameRegistry.normalizeId(link.gameType);
+    if (gt == 'durak') {
+      final lobby =
+          await ref.read(durakRepositoryProvider).getLobby(lobbyId);
+      return lobby.status == 'in_game';
+    }
+    if (gt == 'battleship') {
+      final lobby =
+          await ref.read(battleshipRepositoryProvider).getLobby(lobbyId);
+      return lobby.status == 'in_game';
+    }
+    final lobby = await ref.read(gamesRepositoryProvider).getLobby(lobbyId);
+    return lobby.status == 'in_game';
+  } on GamesException catch (e) {
+    // 404 — лобби нет; GetLobby на сервере уже чистит chat-сообщения.
+    return e.statusCode == 404;
+  } catch (_) {
+    return false;
+  }
+}
+
+class _ChatInviteCard extends ConsumerWidget {
+  const _ChatInviteCard({
+    required this.link,
+    required this.messageId,
+    this.onExpired,
+  });
+
+  final InviteLobbyLink link;
+  final String messageId;
+  final VoidCallback? onExpired;
 
   Future<void> _acceptAndGo(BuildContext context, WidgetRef ref) async {
     final lobbyId = link.lobbyId.trim();
@@ -3850,8 +3943,25 @@ class _ChatInviteCard extends ConsumerWidget {
         }
         return;
       }
-      if (e.statusCode == 404) {
-        context.go(link.appPathFromMessage(messageId));
+      if (e.statusCode == 404 ||
+          (e.statusCode == 409 &&
+              e.message.toLowerCase().contains('already started'))) {
+        onExpired?.call();
+        showAppSnackBar(
+          context,
+          message: formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+        return;
+      }
+      if (e.statusCode == 400 &&
+          e.message.toLowerCase().contains('not joinable')) {
+        onExpired?.call();
+        showAppSnackBar(
+          context,
+          message: formatUserError(e),
+          kind: AppSnackKind.error,
+        );
         return;
       }
       showAppSnackBar(

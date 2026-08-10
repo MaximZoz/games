@@ -323,6 +323,7 @@ func (h *GamesHandler) JoinBattleshipLobby(w http.ResponseWriter, r *http.Reques
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -332,10 +333,12 @@ func (h *GamesHandler) JoinBattleshipLobby(w http.ResponseWriter, r *http.Reques
 	}
 	status := m["status"]
 	if status == lobbyStatusInGame {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusConflict, "game already started with another opponent")
 		return
 	}
 	if status != lobbyStatusWaitingInvite && status != lobbyStatusWaitingMatchmake {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusBadRequest, "lobby not joinable")
 		return
 	}
@@ -569,6 +572,7 @@ func (h *GamesHandler) startBattleshipGame(
 	if _, err := pipe.Exec(ctx); err != nil {
 		return "", err
 	}
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 	_ = phase
 	_ = turn
 	_ = turnDeadline
@@ -665,6 +669,7 @@ func (h *GamesHandler) createBattleshipGameWithBot(
 	if _, err := pipe.Exec(ctx); err != nil {
 		return "", err
 	}
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 	return gameID, nil
 }
 
