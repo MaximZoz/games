@@ -79,6 +79,27 @@ void main() {
     });
   });
 
+  group('moveShipFromGrabAllowTouch', () {
+    test('ставит корабль даже при касании', () {
+      final ships = generateRandomBattleshipShips(42);
+      final idx = ships.indexWhere((s) => s.length == 1);
+      final other = ships.firstWhere((s) => s.length >= 3).first;
+      expect(tryMoveShipFromGrab(ships, idx, 0, other), isNull);
+      final next = moveShipFromGrabAllowTouch(ships, idx, 0, other);
+      expect(next, isNotNull);
+      expect(next![idx], [other]);
+      expect(validateBattleshipShips(next), isFalse);
+      expect(conflictingShipIndices(next), contains(idx));
+    });
+  });
+
+  group('conflictingShipIndices', () {
+    test('пустой при валидной расстановке', () {
+      final ships = generateRandomBattleshipShips(42);
+      expect(conflictingShipIndices(ships), isEmpty);
+    });
+  });
+
   group('tryMoveShipFromGrab', () {
     test('переносит корабль так, что схваченная клетка попадает в drop', () {
       final ships = generateRandomBattleshipShips(42);

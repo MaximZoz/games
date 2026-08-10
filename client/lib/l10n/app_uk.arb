@@ -196,6 +196,7 @@
   "gamesBattleshipWaitingOpponentSetup": "Очікування суперника…",
   "gamesBattleshipYouWon": "Ви перемогли!",
   "gamesBattleshipYouLost": "Ви програли",
+  "gamesBattleshipShipsMustNotTouch": "Кораблі не повинні торкатися",
   "rulesBattleshipTitle": "Морський бій — правила",
   "rulesBattleshipBody": "Розставте кораблі на полі 10×10, потім стріляйте по клітинках суперника. Перемагає той, хто першим потопить увесь флот противника.",
   "gamesPoker": "Покер",

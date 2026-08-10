@@ -15,6 +15,73 @@ bool isShipHorizontal(List<int> ship) {
   return ship.every((c) => c ~/ kBattleshipBoardSize == row);
 }
 
+/// Клетки корабля длины [length] с головой [headCell] (без валидации соседей).
+/// `null`, если не влезает в поле.
+List<int>? shipCellsAt({
+  required int length,
+  required int headCell,
+  required bool horizontal,
+}) {
+  if (length <= 0 || length > 4) return null;
+  if (headCell < 0 || headCell >= kBattleshipCellCount) return null;
+  final hr = headCell ~/ kBattleshipBoardSize;
+  final hc = headCell % kBattleshipBoardSize;
+  final cells = <int>[];
+  for (var i = 0; i < length; i++) {
+    late final int c;
+    if (horizontal) {
+      if (hc + i >= kBattleshipBoardSize) return null;
+      c = hr * kBattleshipBoardSize + (hc + i);
+    } else {
+      if (hr + i >= kBattleshipBoardSize) return null;
+      c = (hr + i) * kBattleshipBoardSize + hc;
+    }
+    cells.add(c);
+  }
+  return cells;
+}
+
+/// Голова корабля при переносе: клетка [grabOffset] должна оказаться в [dropCell].
+int? headCellFromGrab({
+  required List<int> ship,
+  required int grabOffset,
+  required int dropCell,
+}) {
+  if (grabOffset < 0 || grabOffset >= ship.length) return null;
+  if (dropCell < 0 || dropCell >= kBattleshipCellCount) return null;
+  final horiz = isShipHorizontal(ship);
+  final dropR = dropCell ~/ kBattleshipBoardSize;
+  final dropC = dropCell % kBattleshipBoardSize;
+  if (horiz) {
+    final hc = dropC - grabOffset;
+    if (hc < 0) return null;
+    return dropR * kBattleshipBoardSize + hc;
+  }
+  final hr = dropR - grabOffset;
+  if (hr < 0) return null;
+  return hr * kBattleshipBoardSize + dropC;
+}
+
+/// Превью клеток при переносе (даже если будет касание/пересечение).
+/// `null` только если корабль не влезает в поле.
+List<int>? previewMoveShipCells(
+  List<int> ship,
+  int grabOffset,
+  int dropCell,
+) {
+  final head = headCellFromGrab(
+    ship: ship,
+    grabOffset: grabOffset,
+    dropCell: dropCell,
+  );
+  if (head == null) return null;
+  return shipCellsAt(
+    length: ship.length,
+    headCell: head,
+    horizontal: isShipHorizontal(ship),
+  );
+}
+
 /// Перенос корабля: клетка с индексом [grabOffset] в корабле должна
 /// оказаться в [dropCell]. Учитывает ориентацию и валидацию касаний.
 List<List<int>>? tryMoveShipFromGrab(
@@ -24,23 +91,74 @@ List<List<int>>? tryMoveShipFromGrab(
   int dropCell,
 ) {
   if (shipIndex < 0 || shipIndex >= ships.length) return null;
-  if (dropCell < 0 || dropCell >= kBattleshipCellCount) return null;
   final ship = ships[shipIndex];
-  if (grabOffset < 0 || grabOffset >= ship.length) return null;
-  final horiz = isShipHorizontal(ship);
-  final dropR = dropCell ~/ kBattleshipBoardSize;
-  final dropC = dropCell % kBattleshipBoardSize;
-  late final int headCell;
-  if (horiz) {
-    final hc = dropC - grabOffset;
-    if (hc < 0) return null;
-    headCell = dropR * kBattleshipBoardSize + hc;
-  } else {
-    final hr = dropR - grabOffset;
-    if (hr < 0) return null;
-    headCell = hr * kBattleshipBoardSize + dropC;
+  final head = headCellFromGrab(
+    ship: ship,
+    grabOffset: grabOffset,
+    dropCell: dropCell,
+  );
+  if (head == null) return null;
+  return tryPlaceShip(
+    ships,
+    shipIndex,
+    head,
+    horizontal: isShipHorizontal(ship),
+  );
+}
+
+/// Перенос без проверки касаний (только границы поля) — для UI-редактирования.
+List<List<int>>? moveShipFromGrabAllowTouch(
+  List<List<int>> ships,
+  int shipIndex,
+  int grabOffset,
+  int dropCell,
+) {
+  if (shipIndex < 0 || shipIndex >= ships.length) return null;
+  final ship = ships[shipIndex];
+  final cells = previewMoveShipCells(ship, grabOffset, dropCell);
+  if (cells == null) return null;
+  final next = ships.map((s) => List<int>.from(s)).toList();
+  next[shipIndex] = cells;
+  return next;
+}
+
+/// Индексы кораблей, которые пересекаются или соприкасаются с другими.
+Set<int> conflictingShipIndices(List<List<int>> ships) {
+  final bad = <int>{};
+  if (ships.isEmpty) return bad;
+  for (var i = 0; i < ships.length; i++) {
+    for (var j = i + 1; j < ships.length; j++) {
+      if (_shipsConflict(ships[i], ships[j])) {
+        bad.add(i);
+        bad.add(j);
+      }
+    }
   }
-  return tryPlaceShip(ships, shipIndex, headCell, horizontal: horiz);
+  return bad;
+}
+
+bool _shipsConflict(List<int> a, List<int> b) {
+  final setB = b.toSet();
+  for (final c in a) {
+    if (setB.contains(c)) return true;
+    final r = c ~/ kBattleshipBoardSize;
+    final col = c % kBattleshipBoardSize;
+    for (var dr = -1; dr <= 1; dr++) {
+      for (var dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        final nr = r + dr;
+        final nc = col + dc;
+        if (nr < 0 ||
+            nr >= kBattleshipBoardSize ||
+            nc < 0 ||
+            nc >= kBattleshipBoardSize) {
+          continue;
+        }
+        if (setB.contains(nr * kBattleshipBoardSize + nc)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 /// Поворот корабля вокруг [headCell] (первая клетка в списке).
@@ -77,26 +195,34 @@ List<List<int>>? tryPlaceShip(
   bool horizontal = true,
 }) {
   if (shipIndex < 0 || shipIndex >= ships.length) return null;
-  if (headCell < 0 || headCell >= kBattleshipCellCount) return null;
-  final len = ships[shipIndex].length;
-  if (len <= 0 || len > 4) return null;
-  final hr = headCell ~/ kBattleshipBoardSize;
-  final hc = headCell % kBattleshipBoardSize;
-  final cells = <int>[];
-  for (var i = 0; i < len; i++) {
-    late final int c;
-    if (horizontal) {
-      if (hc + i >= kBattleshipBoardSize) return null;
-      c = hr * kBattleshipBoardSize + (hc + i);
-    } else {
-      if (hr + i >= kBattleshipBoardSize) return null;
-      c = (hr + i) * kBattleshipBoardSize + hc;
-    }
-    cells.add(c);
-  }
+  final cells = shipCellsAt(
+    length: ships[shipIndex].length,
+    headCell: headCell,
+    horizontal: horizontal,
+  );
+  if (cells == null) return null;
   final next = ships.map((s) => List<int>.from(s)).toList();
   next[shipIndex] = cells;
   if (!_validatePlacement(next)) return null;
+  return next;
+}
+
+/// Размещение без проверки касаний (только границы поля).
+List<List<int>>? placeShipAllowTouch(
+  List<List<int>> ships,
+  int shipIndex,
+  int headCell, {
+  bool horizontal = true,
+}) {
+  if (shipIndex < 0 || shipIndex >= ships.length) return null;
+  final cells = shipCellsAt(
+    length: ships[shipIndex].length,
+    headCell: headCell,
+    horizontal: horizontal,
+  );
+  if (cells == null) return null;
+  final next = ships.map((s) => List<int>.from(s)).toList();
+  next[shipIndex] = cells;
   return next;
 }
 

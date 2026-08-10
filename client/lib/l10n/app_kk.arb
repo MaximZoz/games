@@ -196,6 +196,7 @@
   "gamesBattleshipWaitingOpponentSetup": "Қарсыласты күту…",
   "gamesBattleshipYouWon": "Сіз жеңдіңіз!",
   "gamesBattleshipYouLost": "Сіз жеңілдіңіз",
+  "gamesBattleshipShipsMustNotTouch": "Кемелер бір-біріне тиіспеуі керек",
   "rulesBattleshipTitle": "Теңіз шайқасы — ережелер",
   "rulesBattleshipBody": "Кемелерді 10×10 өріске орналастырыңыз, содан кейін қарсыластың ұяшықтарына атыңыз. Жеңу үшін қарсы флотты толығымен батырыңыз.",
   "gamesPoker": "Покер",

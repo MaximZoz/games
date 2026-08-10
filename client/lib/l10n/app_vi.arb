@@ -196,6 +196,7 @@
   "gamesBattleshipWaitingOpponentSetup": "Waiting for opponent…",
   "gamesBattleshipYouWon": "You won!",
   "gamesBattleshipYouLost": "You lost",
+  "gamesBattleshipShipsMustNotTouch": "Ships must not touch",
   "rulesBattleshipTitle": "Battleship — rules",
   "rulesBattleshipBody": "Place your ships on a 10×10 grid, then fire at the opponent’s cells. Sink the entire enemy fleet to win.",
   "gamesPoker": "Poker",

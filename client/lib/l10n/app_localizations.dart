@@ -1199,6 +1199,12 @@ abstract class AppLocalizations {
   /// **'Вы проиграли'**
   String get gamesBattleshipYouLost;
 
+  /// No description provided for @gamesBattleshipShipsMustNotTouch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Корабли не должны соприкасаться'**
+  String get gamesBattleshipShipsMustNotTouch;
+
   /// No description provided for @rulesBattleshipTitle.
   ///
   /// In ru, this message translates to:

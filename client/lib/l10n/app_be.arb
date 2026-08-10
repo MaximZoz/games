@@ -196,6 +196,7 @@
   "gamesBattleshipWaitingOpponentSetup": "Чаканне суперніка…",
   "gamesBattleshipYouWon": "Вы перамаглі!",
   "gamesBattleshipYouLost": "Вы прайгралі",
+  "gamesBattleshipShipsMustNotTouch": "Караблі не павінны датыкацца",
   "rulesBattleshipTitle": "Марскі бой — правілы",
   "rulesBattleshipBody": "Расстаўце караблі на полі 10×10, затым страляйце па клетках суперніка. Перамагае той, хто першым патопіць увесь флот праціўніка.",
   "gamesPoker": "Покер",
