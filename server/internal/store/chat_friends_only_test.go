@@ -49,13 +49,21 @@ func TestIsInviteLobbyShareBody(t *testing.T) {
 }
 
 func TestInviteLobbyIDFromBody(t *testing.T) {
-	id, ok := InviteLobbyIDFromBody(
-		"https://example.com/games/tictactoe/lobby/abc-123?mode=invite",
-	)
-	if !ok || id != "abc-123" {
-		t.Fatalf("got (%q, %v), want (abc-123, true)", id, ok)
+	cases := []struct {
+		body string
+		id   string
+		ok   bool
+	}{
+		{"https://example.com/games/tictactoe/lobby/abc-123?mode=invite", "abc-123", true},
+		{"/games/durak/lobby/dur-1?mode=invite", "dur-1", true},
+		{"https://example.com/games/battleship/lobby/bs-9?mode=invite", "bs-9", true},
+		{"not a link", "", false},
+		{"/games/poker/lobby/x?mode=invite", "", false},
 	}
-	if _, ok := InviteLobbyIDFromBody("not a link"); ok {
-		t.Fatal("expected false for plain text")
+	for _, tc := range cases {
+		id, ok := InviteLobbyIDFromBody(tc.body)
+		if ok != tc.ok || id != tc.id {
+			t.Fatalf("body %q: got (%q, %v), want (%q, %v)", tc.body, id, ok, tc.id, tc.ok)
+		}
 	}
 }

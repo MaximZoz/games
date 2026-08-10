@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Морской бой: красные свои потопленные, setup 1 мин, чип игроков
+- Чат: убирать приглашения в игру, если лобби закрыто или партия началась
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

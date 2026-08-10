@@ -424,6 +424,7 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 	key := "lobby:" + lobbyID
 	m, err := h.Rdb.HGetAll(ctx, key).Result()
 	if err != nil || len(m) == 0 {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusNotFound, "lobby not found")
 		return
 	}
@@ -433,6 +434,7 @@ func (h *GamesHandler) JoinDurakLobby(w http.ResponseWriter, r *http.Request, lo
 	}
 	status := m["status"]
 	if status != lobbyStatusWaitingInvite && status != lobbyStatusWaitingMatchmake {
+		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		WriteErr(w, r, http.StatusBadRequest, "lobby not joinable")
 		return
 	}
@@ -641,6 +643,7 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 
 	// Приглашённые, кто ещё не вошёл — убрать карточку; лобби уходит из списка.
 	h.notifyAndClearLobbyInvites(ctx, lobbyID)
+	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 
 	for _, u := range players {
 		clearUserActiveLobby(ctx, h.Rdb, u)
