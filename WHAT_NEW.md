@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Офлайн Морской бой и починка FX/сортировки в офлайн Дураке
+- Add Texas Hold'em No-Limit poker engine
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible
