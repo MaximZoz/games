@@ -321,6 +321,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveDurak(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/poker/") {
+		h.servePoker(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -2892,7 +2896,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType {
+	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType || m["game_type"] == pokerGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3845,8 +3849,8 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
-	// Durak: участие определяется по player_ids CSV.
-	if gm["game_type"] == durakGameType {
+	// Durak / Poker: участие определяется по player_ids CSV.
+	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType {
 		players := parsePlayerIDsCSV(gm["player_ids"])
 		for _, p := range players {
 			if p == userID.String() {
@@ -4246,7 +4250,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		gt = "tictactoe"
 	}
 	inGame := false
-	if gt == durakGameType {
+	if gt == durakGameType || gt == pokerGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4312,6 +4316,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyDurakTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == battleshipGameType {
 				h.applyBattleshipTimeout(ctx, gameID, m)
+			} else if m["game_type"] == pokerGameType {
+				h.applyPokerTurnTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4363,6 +4369,25 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"lobby_id":   m["lobby_id"],
 						"is_my_turn": m["turn"] == userID.String(),
 						"game_type":  battleshipGameType,
+					}
+				}
+			} else if m["game_type"] == pokerGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				inGame := false
+				for _, p := range players {
+					if p == userID.String() {
+						inGame = true
+						break
+					}
+				}
+				if !inGame {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": pokerGameType,
 					}
 				}
 			} else {

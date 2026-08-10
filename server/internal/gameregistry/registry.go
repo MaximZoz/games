@@ -87,5 +87,6 @@ func Default() *Registry {
 	r.Register(NewTicTacToe())
 	r.Register(NewDurak())
 	r.Register(NewBattleship())
+	r.Register(NewPoker())
 	return r
 }

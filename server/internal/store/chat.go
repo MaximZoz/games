@@ -46,7 +46,7 @@ func IsRestrictedChatMessageAllowed(body string) bool {
 // isInviteLobbyGameType — типы игр, для которых в чате есть ссылка-приглашение.
 func isInviteLobbyGameType(gameType string) bool {
 	switch gameType {
-	case "tictactoe", "durak", "battleship":
+	case "tictactoe", "durak", "battleship", "poker":
 		return true
 	default:
 		return false
@@ -54,7 +54,7 @@ func isInviteLobbyGameType(gameType string) bool {
 }
 
 // InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру»
-// (/games/{tictactoe|durak|battleship}/lobby/{id}…).
+// (/games/{tictactoe|durak|battleship|poker}/lobby/{id}…).
 func InviteLobbyIDFromBody(body string) (string, bool) {
 	text := strings.TrimSpace(body)
 	if text == "" {
