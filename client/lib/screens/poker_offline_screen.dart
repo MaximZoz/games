@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/games/poker/poker_offline_session.dart';
+import 'package:multigames_client/screens/poker_game_screen.dart';
+import 'package:multigames_client/ui/app_theme.dart';
+
+/// Офлайн покер: тот же [PokerGameScreen], что и онлайн, с локальными ботами.
+class PokerOfflineScreen extends ConsumerStatefulWidget {
+  const PokerOfflineScreen({super.key, this.playerCount = 2});
+
+  final int playerCount;
+
+  @override
+  ConsumerState<PokerOfflineScreen> createState() => _PokerOfflineScreenState();
+}
+
+class _PokerOfflineScreenState extends ConsumerState<PokerOfflineScreen> {
+  String? _gameId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_gameId != null) return;
+    final me = ref.read(authStateProvider).valueOrNull?.id ?? 'local:player';
+    final players = widget.playerCount.clamp(2, 6);
+    final session = OfflinePokerSession.create(
+      humanUserId: me,
+      playerCount: players,
+    );
+    _gameId = session.gameId;
+  }
+
+  @override
+  void dispose() {
+    final id = _gameId;
+    if (id != null) {
+      OfflinePokerRegistry.instance.get(id)?.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final id = _gameId;
+    if (id == null) {
+      return const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.accentStart),
+        ),
+      );
+    }
+    return PokerGameScreen(gameId: id);
+  }
+}

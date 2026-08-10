@@ -10,6 +10,8 @@ import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/poker/poker_provider.dart';
+import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/framework/game_session_api.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
@@ -557,6 +559,43 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       }
       return;
     }
+    if (inv.gameType == 'poker') {
+      try {
+        final res =
+            await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'poker',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'poker');
+          if (context.mounted) {
+            context.go('/games/poker/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'poker',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/poker/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -643,6 +682,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
     if (inv.isBattleship) {
       return rulesTextLines(battleshipRuleLines(
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
+    }
+    if (inv.isPoker) {
+      return rulesTextLines(pokerRuleLines(
+        players: inv.maxPlayers,
         turnTimeSec: inv.turnTimeSec,
         stakeBronze: inv.stakeBronze,
         l10n: context.l10n,
@@ -933,6 +980,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             mode: lobby.gameMode,
             players: lobby.maxPlayers,
             deckSize: lobby.deckSize,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+          ));
+        } else if (lobby.isPoker) {
+          body = rulesTextLines(pokerRuleLines(
+            players: lobby.maxPlayers,
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
           ));
@@ -1276,11 +1329,19 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 size: isDesktop ? 36 : 32,
                                                 color: AppColors.accentStart,
                                               )
-                                            : Icon(
-                                                Icons.grid_3x3_rounded,
-                                                size: isDesktop ? 36 : 32,
-                                                color: AppColors.accentStart,
-                                              ),
+                                            : lobby.isPoker
+                                                ? Icon(
+                                                    Icons.casino_rounded,
+                                                    size: isDesktop ? 36 : 32,
+                                                    color:
+                                                        AppColors.accentStart,
+                                                  )
+                                                : Icon(
+                                                    Icons.grid_3x3_rounded,
+                                                    size: isDesktop ? 36 : 32,
+                                                    color:
+                                                        AppColors.accentStart,
+                                                  ),
                                     SizedBox(width: isDesktop ? 16 : 12),
                                     Expanded(
                                       child: Column(
@@ -1292,8 +1353,10 @@ class _LobbiesPageContent extends StatelessWidget {
                                                 ? context.l10n.gamesBattleship
                                                 : lobby.isDurak
                                                     ? context.l10n.gamesDurak
-                                                    : context
-                                                        .l10n.gamesTicTacToe,
+                                                    : lobby.isPoker
+                                                        ? context.l10n.gamesPoker
+                                                        : context
+                                                            .l10n.gamesTicTacToe,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w700,
                                               color: AppColors.textPrimary,
@@ -1370,8 +1433,11 @@ class _LobbiesPageContent extends StatelessWidget {
                                                         : lobby.isDurak
                                                             ? Icons
                                                                 .swap_horiz_rounded
-                                                            : Icons
-                                                                .extension_rounded,
+                                                            : lobby.isPoker
+                                                                ? Icons
+                                                                    .groups_rounded
+                                                                : Icons
+                                                                    .extension_rounded,
                                                     size: 14,
                                                     color:
                                                         AppColors.textSecondary,
@@ -1382,8 +1448,10 @@ class _LobbiesPageContent extends StatelessWidget {
                                                         ? '10×10'
                                                         : lobby.isDurak
                                                             ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                            : variantShortLabel(
-                                                                lobby.variant),
+                                                            : lobby.isPoker
+                                                                ? 'NLHE · ${lobby.maxPlayers}'
+                                                                : variantShortLabel(
+                                                                    lobby.variant),
                                                     style: TextStyle(
                                                       fontSize:
                                                           isDesktop ? 14 : 13,
@@ -2133,7 +2201,8 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
 }
 
 /// Карточка «Покер» — превью настроек; игра пока в разработке.
-class _PokerGameCard extends StatefulWidget {
+/// Карточка «Покер» (Texas Hold'em) — игроки/время/ставка; офлайн — игра с ботами.
+class _PokerGameCard extends ConsumerStatefulWidget {
   const _PokerGameCard({
     required this.isOffline,
     required this.stakeOptionsList,
@@ -2143,21 +2212,164 @@ class _PokerGameCard extends StatefulWidget {
   final List<int> stakeOptionsList;
 
   @override
-  State<_PokerGameCard> createState() => _PokerGameCardState();
+  ConsumerState<_PokerGameCard> createState() => _PokerGameCardState();
 }
 
-class _PokerGameCardState extends State<_PokerGameCard> {
-  static const _playerOptions = <int>[2, 4, 6, 9];
+class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
+  // 1 игрок = мгновенная партия с ботом; 2–6 — стол на N мест.
+  static const _playerOptions = <int>[1, 2, 3, 4, 5, 6];
 
-  int _players = 6;
+  int _players = 2;
   int _turnTimeSec = 60;
   int _stakeBronze = 2;
+  bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('poker')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _players = saved.maxPlayers.clamp(1, 6);
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('poker').notifier).updateLocal(
+          UserGameSettings(
+            gameType: 'poker',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            maxPlayers: _players,
+          ),
+        );
+  }
+
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance =
+        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final next = clampStakeToAffordable(_stakeBronze, balance, options);
+    if (next != _stakeBronze) {
+      setState(() => _stakeBronze = next);
+      _persistSettings();
+    }
+    return false;
+  }
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
+    if (!context.mounted) return;
+    if (!await _ensureStakeAffordable()) return;
+    if (!context.mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final repo = ref.read(pokerRepositoryProvider);
+      final result = await repo.createLobby(
+        mode: mode,
+        maxPlayers: _players,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+      );
+      if (!mounted) return;
+      final lobbyId = result.lobbyId;
+      final gameId = result.gameId;
+      if (gameId != null && gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'poker',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'poker');
+        context.push('/games/poker/game/$gameId');
+      } else if (lobbyId.isEmpty) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.commonTryLater,
+          kind: AppSnackKind.error,
+        );
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'poker',
+              ),
+            );
+        context.push('/games/poker/lobby/$lobbyId?mode=$mode');
+      }
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(e)
+            ? finishCurrentGameMessage
+            : formatUserError(e),
+        kind: AppSnackKind.error,
+      );
+      if (isFinishCurrentGameError(e)) {
+        try {
+          final active =
+              await ref.read(activeGameProvider.notifier).refresh();
+          if (!mounted) return;
+          if (active != null) goToActiveSession(context, active);
+        } catch (_) {}
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context,
+          message: formatUserError(e), kind: AppSnackKind.error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
 
   void _cyclePlayers() {
     final i = _playerOptions.indexOf(_players);
     setState(() {
       _players = _playerOptions[(i < 0 ? 0 : i + 1) % _playerOptions.length];
     });
+    _persistSettings();
   }
 
   void _cycleTurnTime() {
@@ -2166,6 +2378,7 @@ class _PokerGameCardState extends State<_PokerGameCard> {
       _turnTimeSec =
           turnTimeOptions[(i < 0 ? 0 : i + 1) % turnTimeOptions.length];
     });
+    _persistSettings();
   }
 
   void _cycleStake() {
@@ -2176,35 +2389,44 @@ class _PokerGameCardState extends State<_PokerGameCard> {
     setState(() {
       _stakeBronze = options[(idx < 0 ? 0 : idx + 1) % options.length];
     });
+    _persistSettings();
   }
 
   void _showRules(BuildContext context) {
-    final l10n = context.l10n;
-    final lines = <String>[
-      l10n.rulesPokerPlayers(_players),
-      if (!widget.isOffline)
-        _turnTimeSec <= 0
-            ? l10n.rulesNoTimeLimit
-            : l10n.rulesTurnTime(formatTurnTime(_turnTimeSec)),
-      if (!widget.isOffline && _stakeBronze > 0)
-        l10n.rulesStake(formatStakeAmount(_stakeBronze)),
-      l10n.rulesPokerIntro,
-      l10n.rulesPokerPlay,
-      l10n.rulesPokerWin,
-    ];
     showGameRulesDialog(
       context: context,
       title: context.l10n.gamesRulesTitle,
-      content: rulesTextLines(lines),
+      content: rulesTextLines(pokerRuleLines(
+        players: _players < 2 ? 2 : _players,
+        turnTimeSec: _turnTimeSec,
+        stakeBronze: _stakeBronze,
+        offlineBot: widget.isOffline,
+        l10n: context.l10n,
+      )),
       closeLabel: context.l10n.commonClose,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('poker'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _players = saved.maxPlayers.clamp(1, 6);
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      });
+    });
+
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
+    final busy = _creating || _finding;
     final available = widget.stakeOptionsList.isEmpty
         ? freeStakeOptions
         : widget.stakeOptionsList;
@@ -2212,6 +2434,7 @@ class _PokerGameCardState extends State<_PokerGameCard> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
       });
     }
 
@@ -2220,7 +2443,7 @@ class _PokerGameCardState extends State<_PokerGameCard> {
         selected: true,
         icon: Icons.groups_rounded,
         label: '$_players',
-        onTap: _cyclePlayers,
+        onTap: busy ? null : _cyclePlayers,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2229,7 +2452,7 @@ class _PokerGameCardState extends State<_PokerGameCard> {
           selected: true,
           icon: Icons.timer_outlined,
           label: formatTurnTime(_turnTimeSec),
-          onTap: _cycleTurnTime,
+          onTap: busy ? null : _cycleTurnTime,
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
@@ -2244,48 +2467,35 @@ class _PokerGameCardState extends State<_PokerGameCard> {
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline ? null : _cycleStake,
-        onInfoTap: () => _showRules(context),
+        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
       chips: chips,
-      actions: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.textSecondary.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.textSecondary.withValues(alpha: 0.22),
-          ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-            horizontal: 12,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.construction_rounded,
-                size: 18,
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesInDevelopment,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isMedium ? 14 : (isDesktop ? 15 : 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () {
+          final n = _players < 2 ? 2 : _players;
+          context.push(
+            Uri(
+              path: '/games/poker/offline',
+              queryParameters: {'players': '$n'},
+            ).toString(),
+          );
+        },
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     );
   }
@@ -2978,7 +3188,9 @@ class _InviteCard extends ConsumerWidget {
                                     ? Icons.grid_on_rounded
                                     : inv.isDurak
                                         ? Icons.swap_horiz_rounded
-                                        : Icons.extension_rounded,
+                                        : inv.isPoker
+                                            ? Icons.groups_rounded
+                                            : Icons.extension_rounded,
                                 size: iconSz,
                                 color: AppColors.textSecondary,
                               ),

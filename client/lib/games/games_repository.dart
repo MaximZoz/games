@@ -495,6 +495,8 @@ class LobbyItem {
 
   bool get isBattleship => gameType == 'battleship';
 
+  bool get isPoker => gameType == 'poker';
+
   LobbyItem({
     required this.id,
     required this.creatorId,

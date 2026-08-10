@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Клиент покера (Texas Hold'em): офлайн-движок, экраны и интеграция
 - Добавлен HTTP API для покера Texas Hold'em
 - Add Texas Hold'em No-Limit poker engine
 

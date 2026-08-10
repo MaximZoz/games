@@ -598,6 +598,79 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesPokerWin => 'Wygrywa najlepszy układ z pięciu kart (własne + wspólne) albo ostatni po foldach.';
 
   @override
+  String get pokerFold => 'Fold';
+
+  @override
+  String get pokerCheck => 'Check';
+
+  @override
+  String pokerCall(int amount) {
+    return 'Call $amount';
+  }
+
+  @override
+  String get pokerCallShort => 'Call';
+
+  @override
+  String get pokerRaise => 'Raise';
+
+  @override
+  String pokerRaiseTo(int amount) {
+    return 'Raise to $amount';
+  }
+
+  @override
+  String get pokerRaiseTitle => 'Raise';
+
+  @override
+  String get pokerAllIn => 'All-in';
+
+  @override
+  String get pokerAllInBadge => 'All-in';
+
+  @override
+  String get pokerFolded => 'Folded';
+
+  @override
+  String pokerPot(int amount) {
+    return 'Pot: $amount';
+  }
+
+  @override
+  String get pokerYourTurn => 'Your turn';
+
+  @override
+  String pokerToAct(String name) {
+    return '$name to act';
+  }
+
+  @override
+  String pokerWinner(String name) {
+    return '$name wins';
+  }
+
+  @override
+  String get pokerYouWonHand => 'You won the pot!';
+
+  @override
+  String get pokerHandOver => 'Hand over';
+
+  @override
+  String get pokerStreetPreflop => 'Pre-flop';
+
+  @override
+  String get pokerStreetFlop => 'Flop';
+
+  @override
+  String get pokerStreetTurn => 'Turn';
+
+  @override
+  String get pokerStreetRiver => 'River';
+
+  @override
+  String get pokerStreetShowdown => 'Showdown';
+
+  @override
   String get gamesRules => 'Zasady';
 
   @override
