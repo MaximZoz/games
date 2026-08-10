@@ -21,7 +21,7 @@ const (
 	battleshipPhaseSetup = "setup"
 	battleshipPhaseBattle = "battle"
 	battleshipStatusOver = "over"
-	battleshipSetupSec   = 180
+	battleshipSetupSec   = 60 // расстановка по умолчанию — 1 минута
 )
 
 func battleshipMatchmakeKey(turnTimeSec, stakeBronze int) string {
