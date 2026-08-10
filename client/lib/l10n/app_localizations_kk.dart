@@ -534,6 +534,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Дайын';
 
   @override
+  String get gamesBattleshipRotate => 'Бұру';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Орналастыру';
 
   @override

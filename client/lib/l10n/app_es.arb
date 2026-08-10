@@ -190,6 +190,7 @@
   "gamesBattleship": "Battleship",
   "gamesBattleshipRandomPlace": "Place randomly",
   "gamesBattleshipConfirmPlace": "Ready",
+  "gamesBattleshipRotate": "Girar",
   "gamesBattleshipSetupPhase": "Setup",
   "gamesBattleshipBattlePhase": "Battle",
   "gamesBattleshipWaitingOpponentSetup": "Waiting for opponent…",

@@ -534,6 +534,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'تدوير';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

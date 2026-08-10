@@ -534,6 +534,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'Döndür';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

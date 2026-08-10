@@ -232,10 +232,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
 
   void _syncLocalShips(BattleshipGameView game) {
     if (_shipsSyncedFromServer) return;
+    if (!game.isSetup) return;
+    // Сразу показываем расстановку: с сервера (если уже есть) или случайную.
     if (game.myShips.isNotEmpty) {
       _localShips = game.myShips.map((s) => List<int>.from(s)).toList();
-      _shipsSyncedFromServer = true;
+    } else {
+      _localShips = generateRandomBattleshipShips();
     }
+    _shipsSyncedFromServer = true;
   }
 
   Future<void> _randomPlace() async {
@@ -274,11 +278,33 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     final idx = _selectedShipIndex;
     if (idx == null) return;
     final ship = _localShips[idx];
-    final horiz = ship.length <= 1 ||
-        ship.every((c) => c ~/ kBattleshipBoardSize == ship.first ~/ kBattleshipBoardSize);
-    final next = tryPlaceShip(_localShips, idx, cell, horizontal: horiz);
+    final next = tryPlaceShip(
+      _localShips,
+      idx,
+      cell,
+      horizontal: isShipHorizontal(ship),
+    );
     if (next == null) return;
     setState(() => _localShips = next);
+  }
+
+  void _onSetupShipDropped({
+    required int shipIndex,
+    required int grabOffset,
+    required int dropCell,
+  }) {
+    if (_busy) return;
+    final next = tryMoveShipFromGrab(
+      _localShips,
+      shipIndex,
+      grabOffset,
+      dropCell,
+    );
+    if (next == null) return;
+    setState(() {
+      _localShips = next;
+      _selectedShipIndex = shipIndex;
+    });
   }
 
   void _rotateSelected() {
@@ -289,15 +315,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     final next = _localShips.map((s) => List<int>.from(s)).toList();
     next[idx] = rotated;
     if (!validateBattleshipShips(next)) {
-      // Поворот может временно нарушить соседство — пробуем через tryPlaceShip.
-      final horiz = rotated.length <= 1 ||
-          rotated.every(
-            (c) =>
-                c ~/ kBattleshipBoardSize ==
-                rotated.first ~/ kBattleshipBoardSize,
-          );
-      final placed =
-          tryPlaceShip(_localShips, idx, rotated.first, horizontal: horiz);
+      // Поворот может временно нарушить соседство — пробуем сдвиг head.
+      final placed = tryPlaceShip(
+        _localShips,
+        idx,
+        rotated.first,
+        horizontal: isShipHorizontal(rotated),
+      );
       if (placed == null) return;
       setState(() => _localShips = placed);
       return;
@@ -567,6 +591,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                   skipLoadingOnReload: true,
                   skipLoadingOnRefresh: true,
                   data: (game) {
+                    // Сразу при входе в setup — случайная (или серверная) расстановка.
+                    _syncLocalShips(game);
                     final isOver = game.isOver;
                     final showSurrender = !isOver;
                     _maybeSettleGame(game, me);
@@ -730,11 +756,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   Widget _buildSetup(BattleshipGameView game, String? me, bool narrow) {
     final ready = _iAmReady(game, me);
     final ships = ready && game.myShips.isNotEmpty ? game.myShips : _localShips;
-    final occupied = <int>{for (final s in ships) ...s};
-    final selectedCells = _selectedShipIndex != null &&
-            _selectedShipIndex! < ships.length
-        ? ships[_selectedShipIndex!].toSet()
-        : <int>{};
+    final selectedIdx = _selectedShipIndex;
 
     return Padding(
       padding: EdgeInsets.all(narrow ? 12 : 20),
@@ -742,21 +764,26 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
         children: [
           Expanded(
             child: Center(
-              child: _BattleshipBoard(
-                cellSize: narrow ? 28 : 34,
-                cellBuilder: (cell) {
-                  final isShip = occupied.contains(cell);
-                  final selected = selectedCells.contains(cell);
-                  return _CellPaint(
-                    color: selected
-                        ? _kSelectedShip
-                        : isShip
-                            ? _kShip
-                            : _kWater,
-                  );
-                },
-                onTap: ready ? null : _onSetupCellTap,
-              ),
+              child: ready
+                  ? _BattleshipBoard(
+                      cellSize: narrow ? 28 : 34,
+                      cellBuilder: (cell) {
+                        final occupied = <int>{for (final s in ships) ...s};
+                        return _CellPaint(
+                          color: occupied.contains(cell) ? _kShip : _kWater,
+                        );
+                      },
+                    )
+                  : _BattleshipSetupBoard(
+                      cellSize: narrow ? 28 : 34,
+                      ships: ships,
+                      selectedShipIndex: selectedIdx,
+                      enabled: !_busy,
+                      onTapCell: _onSetupCellTap,
+                      onShipDropped: _onSetupShipDropped,
+                      onShipSelected: (i) =>
+                          setState(() => _selectedShipIndex = i),
+                    ),
             ),
           ),
           if (!ready) ...[
@@ -771,12 +798,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                   icon: const Icon(Icons.casino_rounded, size: 18),
                   label: Text(context.l10n.gamesBattleshipRandomPlace),
                 ),
-                if (_selectedShipIndex != null)
-                  IconButton.outlined(
-                    onPressed: _busy ? null : _rotateSelected,
-                    tooltip: context.l10n.gamesBattleshipSetupPhase,
-                    icon: const Icon(Icons.rotate_right_rounded),
-                  ),
+                IconButton.outlined(
+                  onPressed: _busy || selectedIdx == null
+                      ? null
+                      : _rotateSelected,
+                  tooltip: context.l10n.gamesBattleshipRotate,
+                  icon: const Icon(Icons.rotate_right_rounded),
+                ),
                 FilledButton(
                   onPressed: _busy || !validateBattleshipShips(_localShips)
                       ? null
@@ -943,6 +971,203 @@ class _BattleshipBoard extends StatelessWidget {
             child: child,
           );
         },
+      ),
+    );
+  }
+}
+
+/// Доска расстановки: drag-and-drop кораблей + превью валидности.
+class _BattleshipSetupBoard extends StatefulWidget {
+  const _BattleshipSetupBoard({
+    required this.ships,
+    required this.selectedShipIndex,
+    required this.enabled,
+    required this.onTapCell,
+    required this.onShipDropped,
+    required this.onShipSelected,
+    this.cellSize = 32,
+  });
+
+  final List<List<int>> ships;
+  final int? selectedShipIndex;
+  final bool enabled;
+  final void Function(int cell) onTapCell;
+  final void Function({
+    required int shipIndex,
+    required int grabOffset,
+    required int dropCell,
+  }) onShipDropped;
+  final void Function(int shipIndex) onShipSelected;
+  final double cellSize;
+
+  @override
+  State<_BattleshipSetupBoard> createState() => _BattleshipSetupBoardState();
+}
+
+class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
+  static const double _gap = 2;
+
+  int? _dragShipIndex;
+  int? _grabOffset;
+  int? _hoverCell;
+  Offset? _panStart;
+  bool _didDrag = false;
+
+  double get _size => widget.cellSize.clamp(28.0, 36.0);
+
+  int? _cellAt(Offset local) {
+    final step = _size + _gap;
+    final col = (local.dx / step).floor();
+    final row = (local.dy / step).floor();
+    if (col < 0 ||
+        col >= kBattleshipBoardSize ||
+        row < 0 ||
+        row >= kBattleshipBoardSize) {
+      return null;
+    }
+    // Учитывать зазор: тап в gap — ближайшая клетка.
+    final inCellX = local.dx - col * step;
+    final inCellY = local.dy - row * step;
+    if (inCellX > _size || inCellY > _size) return null;
+    return row * kBattleshipBoardSize + col;
+  }
+
+  int? _shipIndexAt(int cell) {
+    for (var i = 0; i < widget.ships.length; i++) {
+      if (widget.ships[i].contains(cell)) return i;
+    }
+    return null;
+  }
+
+  Set<int> get _previewCells {
+    final shipIdx = _dragShipIndex;
+    final grab = _grabOffset;
+    final hover = _hoverCell;
+    if (shipIdx == null || grab == null || hover == null) return const {};
+    final next = tryMoveShipFromGrab(widget.ships, shipIdx, grab, hover);
+    if (next == null) return const {};
+    return next[shipIdx].toSet();
+  }
+
+  bool get _previewValid {
+    final shipIdx = _dragShipIndex;
+    final grab = _grabOffset;
+    final hover = _hoverCell;
+    if (shipIdx == null || grab == null || hover == null) return false;
+    return tryMoveShipFromGrab(widget.ships, shipIdx, grab, hover) != null;
+  }
+
+  void _onPanStart(DragStartDetails d) {
+    if (!widget.enabled) return;
+    final cell = _cellAt(d.localPosition);
+    if (cell == null) return;
+    final shipIdx = _shipIndexAt(cell);
+    if (shipIdx == null) return;
+    final offset = widget.ships[shipIdx].indexOf(cell);
+    setState(() {
+      _dragShipIndex = shipIdx;
+      _grabOffset = offset;
+      _hoverCell = cell;
+      _panStart = d.localPosition;
+      _didDrag = false;
+    });
+    widget.onShipSelected(shipIdx);
+  }
+
+  void _onPanUpdate(DragUpdateDetails d) {
+    if (_dragShipIndex == null) return;
+    final start = _panStart;
+    if (start != null && !_didDrag) {
+      final dist = (d.localPosition - start).distance;
+      if (dist > 6) _didDrag = true;
+    }
+    final cell = _cellAt(d.localPosition);
+    if (cell == _hoverCell) return;
+    setState(() => _hoverCell = cell);
+  }
+
+  void _onPanEnd(DragEndDetails _) {
+    final shipIdx = _dragShipIndex;
+    final grab = _grabOffset;
+    final hover = _hoverCell;
+    final dragged = _didDrag;
+    setState(() {
+      _dragShipIndex = null;
+      _grabOffset = null;
+      _hoverCell = null;
+      _panStart = null;
+      _didDrag = false;
+    });
+    if (shipIdx == null || grab == null) return;
+    if (!dragged) {
+      // Короткий жест — обычный тап.
+      final cell = hover;
+      if (cell != null) widget.onTapCell(cell);
+      return;
+    }
+    if (hover == null) return;
+    widget.onShipDropped(
+      shipIndex: shipIdx,
+      grabOffset: grab,
+      dropCell: hover,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = _size;
+    final board =
+        size * kBattleshipBoardSize + _gap * (kBattleshipBoardSize - 1);
+    final occupied = <int>{for (final s in widget.ships) ...s};
+    final selected = widget.selectedShipIndex != null &&
+            widget.selectedShipIndex! < widget.ships.length
+        ? widget.ships[widget.selectedShipIndex!].toSet()
+        : <int>{};
+    final preview = _previewCells;
+    final previewOk = _previewValid;
+    final draggingShip = _dragShipIndex != null &&
+            _dragShipIndex! < widget.ships.length
+        ? widget.ships[_dragShipIndex!].toSet()
+        : <int>{};
+
+    return SizedBox(
+      width: board,
+      height: board,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanStart: _onPanStart,
+        onPanUpdate: _onPanUpdate,
+        onPanEnd: _onPanEnd,
+        onTapUp: widget.enabled
+            ? (d) {
+                // Тап по воде / кораблю без drag (если pan не сработал).
+                if (_dragShipIndex != null) return;
+                final cell = _cellAt(d.localPosition);
+                if (cell != null) widget.onTapCell(cell);
+              }
+            : null,
+        child: GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: kBattleshipBoardSize,
+            mainAxisSpacing: _gap,
+            crossAxisSpacing: _gap,
+          ),
+          itemCount: kBattleshipCellCount,
+          itemBuilder: (context, index) {
+            Color color = _kWater;
+            if (preview.contains(index)) {
+              color = previewOk ? const Color(0xFF81C784) : const Color(0xFFE57373);
+            } else if (_didDrag && draggingShip.contains(index)) {
+              color = _kShip.withValues(alpha: 0.35);
+            } else if (selected.contains(index)) {
+              color = _kSelectedShip;
+            } else if (occupied.contains(index)) {
+              color = _kShip;
+            }
+            return _CellPaint(color: color);
+          },
+        ),
       ),
     );
   }

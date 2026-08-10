@@ -534,6 +534,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'Xoay';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

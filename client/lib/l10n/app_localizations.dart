@@ -1163,6 +1163,12 @@ abstract class AppLocalizations {
   /// **'Готово'**
   String get gamesBattleshipConfirmPlace;
 
+  /// No description provided for @gamesBattleshipRotate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повернуть'**
+  String get gamesBattleshipRotate;
+
   /// No description provided for @gamesBattleshipSetupPhase.
   ///
   /// In ru, this message translates to:

@@ -534,6 +534,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => 'Otočit';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

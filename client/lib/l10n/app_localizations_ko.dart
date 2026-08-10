@@ -534,6 +534,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => '회전';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

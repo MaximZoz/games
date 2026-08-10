@@ -190,6 +190,7 @@
   "gamesBattleship": "Теңіз шайқасы",
   "gamesBattleshipRandomPlace": "Кездейсоқ орналастыру",
   "gamesBattleshipConfirmPlace": "Дайын",
+  "gamesBattleshipRotate": "Бұру",
   "gamesBattleshipSetupPhase": "Орналастыру",
   "gamesBattleshipBattlePhase": "Шайқас",
   "gamesBattleshipWaitingOpponentSetup": "Қарсыласты күту…",

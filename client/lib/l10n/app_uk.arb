@@ -190,6 +190,7 @@
   "gamesBattleship": "Морський бій",
   "gamesBattleshipRandomPlace": "Розставити випадково",
   "gamesBattleshipConfirmPlace": "Готово",
+  "gamesBattleshipRotate": "Повернути",
   "gamesBattleshipSetupPhase": "Розстановка",
   "gamesBattleshipBattlePhase": "Бій",
   "gamesBattleshipWaitingOpponentSetup": "Очікування суперника…",

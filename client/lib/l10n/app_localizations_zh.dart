@@ -534,6 +534,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesBattleshipConfirmPlace => 'Ready';
 
   @override
+  String get gamesBattleshipRotate => '旋转';
+
+  @override
   String get gamesBattleshipSetupPhase => 'Setup';
 
   @override

@@ -242,6 +242,7 @@
   "gamesBattleship": "Морской бой",
   "gamesBattleshipRandomPlace": "Расставить случайно",
   "gamesBattleshipConfirmPlace": "Готово",
+  "gamesBattleshipRotate": "Повернуть",
   "gamesBattleshipSetupPhase": "Расстановка",
   "gamesBattleshipBattlePhase": "Бой",
   "gamesBattleshipWaitingOpponentSetup": "Ожидание соперника…",
