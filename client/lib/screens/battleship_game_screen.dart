@@ -39,7 +39,8 @@ class BattleshipGameScreen extends ConsumerStatefulWidget {
       _BattleshipGameScreenState();
 }
 
-class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
+class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
+    with SingleTickerProviderStateMixin {
   bool _busy = false;
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
@@ -60,6 +61,21 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   List<List<int>> _localShips = const [];
   int? _selectedShipIndex;
   bool _shipsSyncedFromServer = false;
+  bool _setupAutoSubmitted = false;
+
+  /// Анимация попадания по клетке [lastShot].
+  late final AnimationController _hitPulse;
+  int _lastAnimatedShotKey = -1;
+  int? _pulseHitCell;
+
+  @override
+  void initState() {
+    super.initState();
+    _hitPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+  }
 
   @override
   void didChangeDependencies() {
@@ -73,11 +89,16 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     if (oldWidget.gameId != widget.gameId) {
       _rematchPollTimer?.cancel();
       _shipsSyncedFromServer = false;
+      _setupAutoSubmitted = false;
       _localShips = const [];
       _selectedShipIndex = null;
       _balanceGainPlayed = false;
       _lossChipRevealed = false;
       _prevGameStatus = null;
+      _lastAnimatedShotKey = -1;
+      _pulseHitCell = null;
+      _hitPulse.stop();
+      _hitPulse.reset();
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
@@ -93,6 +114,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
   void dispose() {
     _rematchPollTimer?.cancel();
     _realtimeSubscription?.close();
+    _hitPulse.dispose();
     super.dispose();
   }
 
@@ -155,8 +177,29 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
       }
       return '';
     }
-    if (game.isMyTurn) return l10n.gamesMyTurn;
-    return l10n.gamesOpponentTurn;
+    if (game.isTurnOf(me)) return l10n.gamesMyTurn;
+    // Как в крестиках: «Ход {логин}».
+    final turnName = game.displayNameOf(game.turn)?.trim() ?? '';
+    return turnName.isNotEmpty
+        ? l10n.gameTurnOf(turnName)
+        : l10n.gamesOpponentTurn;
+  }
+
+  void _maybePulseHit(BattleshipGameView game) {
+    if (!game.lastShotHit || game.lastShot < 0) return;
+    final key = game.lastShot + 1000 * (game.lastShotBy?.hashCode ?? 0);
+    if (key == _lastAnimatedShotKey) return;
+    _lastAnimatedShotKey = key;
+    _pulseHitCell = game.lastShot;
+    _hitPulse
+      ..stop()
+      ..forward(from: 0).whenComplete(() {
+        if (!mounted) return;
+        if (_pulseHitCell == game.lastShot) {
+          setState(() => _pulseHitCell = null);
+        }
+      });
+    if (mounted) setState(() {});
   }
 
   int _rewardChipBronze(BattleshipGameView game, String? me) {
@@ -273,6 +316,39 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Таймаут расстановки: отправляем текущую валидную, иначе дефолтную.
+  Future<void> _onSetupExpired() async {
+    if (_setupAutoSubmitted || _busy) {
+      ref.invalidate(battleshipGameProvider(widget.gameId));
+      return;
+    }
+    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
+    final me = ref.read(authStateProvider).valueOrNull?.id;
+    if (game == null || !game.isSetup || _iAmReady(game, me)) {
+      ref.invalidate(battleshipGameProvider(widget.gameId));
+      return;
+    }
+    _setupAutoSubmitted = true;
+    var ships = _localShips;
+    if (!validateBattleshipShips(ships)) {
+      ships = defaultBattleshipShips();
+    }
+    setState(() {
+      _localShips = ships;
+      _busy = true;
+    });
+    try {
+      await ref
+          .read(battleshipRepositoryProvider)
+          .placeShips(widget.gameId, ships);
+    } catch (_) {
+      // Сервер мог уже дожать таймаут — просто обновим состояние.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+      ref.invalidate(battleshipGameProvider(widget.gameId));
     }
   }
 
@@ -554,7 +630,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
 
     ref.listen(battleshipGameProvider(widget.gameId), (_, next) {
       final game = next.valueOrNull;
-      if (game != null) _syncLocalShips(game);
+      if (game == null) return;
+      _syncLocalShips(game);
+      _maybePulseHit(game);
     });
 
     return SwipeBackScope(
@@ -598,6 +676,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                     _maybeSettleGame(game, me);
                     final chip = _rewardChipBronze(game, me);
                     final status = _statusText(game, me);
+                    final myTurn = game.isTurnOf(me);
                     return Column(
                       children: [
                         Padding(
@@ -641,9 +720,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                               key: ValueKey('setup_${game.setupDeadline}'),
                               turnDeadline: game.setupDeadline,
                               isMyTurn: true,
-                              onExpired: () => ref.invalidate(
-                                battleshipGameProvider(widget.gameId),
-                              ),
+                              onExpired: () => unawaited(_onSetupExpired()),
                               labelBuilder: (s) =>
                                   context.l10n.gameSecondsLeft(s),
                             ),
@@ -659,7 +736,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                                 '${game.turn}_${game.turnDeadline}',
                               ),
                               turnDeadline: game.turnDeadline,
-                              isMyTurn: game.isMyTurn,
+                              isMyTurn: myTurn,
                               turnTimeSec: game.turnTimeSec,
                               onExpired: () => ref.invalidate(
                                 battleshipGameProvider(widget.gameId),
@@ -690,7 +767,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
                         Expanded(
                           child: game.isSetup
                               ? _buildSetup(game, me, narrow)
-                              : _buildBattle(game, narrow),
+                              : _buildBattle(game, me, narrow),
                         ),
                         if (showSurrender) const SizedBox(height: 48),
                       ],
@@ -830,71 +907,86 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen> {
     );
   }
 
-  Widget _buildBattle(BattleshipGameView game, bool narrow) {
-    final myOccupied = <int>{for (final s in game.myShips) ...s};
-    final oppShots = game.opponentShots.toSet();
-    final myShots = game.myShots.toSet();
-    final oppHits = game.opponentShipsHit.toSet();
+  Widget _buildBattle(BattleshipGameView game, String? me, bool narrow) {
+    final myTurn = game.isTurnOf(me);
+    // Одно поле: мой ход / конец — поле соперника; ход соперника — моё поле.
+    final showMyBoard = !game.isOver && !myTurn;
+    final cellSize = narrow ? 30.0 : 36.0;
+    final pulseCell = game.lastShotHit ? _pulseHitCell : null;
 
-    Widget myBoard() => _BattleshipBoard(
-          cellSize: narrow ? 26 : 32,
-          cellBuilder: (cell) {
-            final ship = myOccupied.contains(cell);
-            final shot = oppShots.contains(cell);
-            if (shot && ship) {
-              return const _CellPaint(color: _kHit, mark: _CellMark.hit);
-            }
-            if (shot) {
-              return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
-            }
-            if (ship) return const _CellPaint(color: _kShip);
-            return const _CellPaint(color: _kWater);
-          },
-        );
-
-    Widget oppBoard() => _BattleshipBoard(
-          cellSize: narrow ? 28 : 34,
-          cellBuilder: (cell) {
-            final hit = oppHits.contains(cell);
-            final shot = myShots.contains(cell);
-            if (hit) {
-              return const _CellPaint(color: _kHit, mark: _CellMark.hit);
-            }
-            if (shot) {
-              return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
-            }
-            return const _CellPaint(color: _kWater);
-          },
-          onTap: (!game.isOver && game.isMyTurn && !_busy)
-              ? (cell) {
-                  if (myShots.contains(cell) || oppHits.contains(cell)) {
-                    return;
-                  }
-                  unawaited(_shoot(cell));
-                }
-              : null,
-        );
-
-    final boards = narrow
-        ? Column(
-            children: [
-              Flexible(child: Center(child: oppBoard())),
-              const SizedBox(height: 12),
-              Flexible(child: Center(child: myBoard())),
-            ],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: Center(child: myBoard())),
-              const SizedBox(width: 16),
-              Expanded(child: Center(child: oppBoard())),
-            ],
+    final board = showMyBoard
+        ? _buildMyDefenseBoard(game, cellSize: cellSize, pulseCell: pulseCell)
+        : _buildOpponentAttackBoard(
+            game,
+            cellSize: cellSize,
+            pulseCell: pulseCell,
+            canShoot: myTurn && !game.isOver && !_busy,
           );
 
     return Padding(
       padding: EdgeInsets.all(narrow ? 10 : 16),
-      child: boards,
+      child: Center(child: board),
+    );
+  }
+
+  Widget _buildMyDefenseBoard(
+    BattleshipGameView game, {
+    required double cellSize,
+    int? pulseCell,
+  }) {
+    final myOccupied = <int>{for (final s in game.myShips) ...s};
+    final oppShots = game.opponentShots.toSet();
+    return _BattleshipBoard(
+      cellSize: cellSize,
+      pulseCell: pulseCell,
+      pulseAnimation: _hitPulse,
+      cellBuilder: (cell) {
+        final ship = myOccupied.contains(cell);
+        final shot = oppShots.contains(cell);
+        if (shot && ship) {
+          return const _CellPaint(color: _kHit, mark: _CellMark.hit);
+        }
+        if (shot) {
+          return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
+        }
+        if (ship) return const _CellPaint(color: _kShip);
+        return const _CellPaint(color: _kWater);
+      },
+    );
+  }
+
+  Widget _buildOpponentAttackBoard(
+    BattleshipGameView game, {
+    required double cellSize,
+    int? pulseCell,
+    required bool canShoot,
+  }) {
+    final myShots = game.myShots.toSet();
+    final myHits = game.myHits.toSet();
+    final sunk = game.opponentShipsHit.toSet();
+    final revealed = <int>{for (final s in game.opponentShips) ...s};
+    return _BattleshipBoard(
+      cellSize: cellSize,
+      pulseCell: pulseCell,
+      pulseAnimation: _hitPulse,
+      cellBuilder: (cell) {
+        if (sunk.contains(cell) || myHits.contains(cell)) {
+          return const _CellPaint(color: _kHit, mark: _CellMark.hit);
+        }
+        if (myShots.contains(cell)) {
+          return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
+        }
+        if (revealed.contains(cell)) {
+          return const _CellPaint(color: _kShip);
+        }
+        return const _CellPaint(color: _kWater);
+      },
+      onTap: canShoot
+          ? (cell) {
+              if (myShots.contains(cell)) return;
+              unawaited(_shoot(cell));
+            }
+          : null,
     );
   }
 }
@@ -940,15 +1032,19 @@ class _BattleshipBoard extends StatelessWidget {
     required this.cellBuilder,
     this.onTap,
     this.cellSize = 32,
+    this.pulseCell,
+    this.pulseAnimation,
   });
 
   final Widget Function(int cell) cellBuilder;
   final void Function(int cell)? onTap;
   final double cellSize;
+  final int? pulseCell;
+  final Animation<double>? pulseAnimation;
 
   @override
   Widget build(BuildContext context) {
-    final size = cellSize.clamp(28.0, 36.0);
+    final size = cellSize.clamp(28.0, 40.0);
     const gap = 2.0;
     final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
     return SizedBox(
@@ -963,7 +1059,32 @@ class _BattleshipBoard extends StatelessWidget {
         ),
         itemCount: kBattleshipCellCount,
         itemBuilder: (context, index) {
-          final child = cellBuilder(index);
+          Widget child = cellBuilder(index);
+          if (pulseCell == index && pulseAnimation != null) {
+            child = AnimatedBuilder(
+              animation: pulseAnimation!,
+              builder: (context, c) {
+                final t = pulseAnimation!.value;
+                final scale = 1.0 + 0.35 * (1 - (2 * t - 1).abs());
+                return Transform.scale(
+                  scale: scale,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: _kHit.withValues(alpha: 0.55 * (1 - t)),
+                          blurRadius: 10 * (1 - t),
+                          spreadRadius: 2 * (1 - t),
+                        ),
+                      ],
+                    ),
+                    child: c,
+                  ),
+                );
+              },
+              child: child,
+            );
+          }
           if (onTap == null) return child;
           return GestureDetector(
             onTap: () => onTap!(index),

@@ -3,8 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Тест Морского боя: убрать unused_local_variable в analyze
-- Морской бой: сразу случайная расстановка, drag-and-drop и поворот
+- Морской бой: одно поле, таймаут расстановки, случайный первый ход
 
 ## en
 - Durak: keep auto-bito pause so opponent defend card is visible

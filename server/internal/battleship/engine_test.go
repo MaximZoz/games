@@ -111,6 +111,10 @@ func TestHitSunk(t *testing.T) {
 	if !AllSunk(ships, all) {
 		t.Fatal("should be all sunk")
 	}
+	hits := CollectHitCells(ships, []int{0, 1, 99})
+	if len(hits) != 2 || hits[0] != 0 || hits[1] != 1 {
+		t.Fatalf("CollectHitCells: %v", hits)
+	}
 	sunk := CollectSunkCells(ships, []int{0, 1, 2, 3, 99})
 	if len(sunk) != 4 {
 		t.Fatalf("sunk cells %v", sunk)
