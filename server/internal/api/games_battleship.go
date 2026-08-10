@@ -79,6 +79,10 @@ func (h *GamesHandler) serveBattleship(w http.ResponseWriter, r *http.Request) {
 			h.BattleshipShoot(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitBattleshipGame(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+			h.BattleshipOfferDraw(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+			h.BattleshipAcceptDraw(w, r, gameID)
 		default:
 			WriteErr(w, r, http.StatusNotFound, "not found")
 		}
@@ -986,6 +990,11 @@ func (h *GamesHandler) applyBattleshipShot(
 	m["last_shot"] = strconv.Itoa(cell)
 	m["last_shot_hit"] = strconv.FormatBool(hit)
 	m["last_shot_by"] = m[side+"_user_id"]
+	// Любой выстрел снимает предложение ничьей.
+	if strings.TrimSpace(m["draw_offer_by"]) != "" {
+		h.Rdb.HDel(ctx, key, "draw_offer_by")
+		delete(m, "draw_offer_by")
+	}
 
 	if battleship.AllSunk(oppShips, myShots) {
 		winner := m[side+"_user_id"]
@@ -1130,6 +1139,80 @@ func (h *GamesHandler) ForfeitBattleshipGame(w http.ResponseWriter, r *http.Requ
 	h.broadcastBattleshipState(ctx, gameID, m)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": battleshipStatusOver, "forfeit": true})
+}
+
+func (h *GamesHandler) BattleshipOfferDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 || m["game_type"] != battleshipGameType {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	if m["status"] != gameStatusActive || m["phase"] != battleshipPhaseBattle {
+		WriteErr(w, r, http.StatusBadRequest, "not in battle")
+		return
+	}
+	if battleshipSide(m, userID.String()) == "" {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if isBot(m["p1_user_id"]) || isBot(m["p2_user_id"]) {
+		WriteErr(w, r, http.StatusBadRequest, "draw only in pvp")
+		return
+	}
+	h.Rdb.HSet(ctx, key, "draw_offer_by", userID.String())
+	m["draw_offer_by"] = userID.String()
+	h.broadcastBattleshipState(ctx, gameID, m)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"offered": true})
+}
+
+func (h *GamesHandler) BattleshipAcceptDraw(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "game:" + gameID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 || m["game_type"] != battleshipGameType {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	if m["status"] != gameStatusActive {
+		WriteErr(w, r, http.StatusBadRequest, "game is over")
+		return
+	}
+	offeredBy := strings.TrimSpace(m["draw_offer_by"])
+	if offeredBy == "" || offeredBy == userID.String() {
+		WriteErr(w, r, http.StatusBadRequest, "no draw offer")
+		return
+	}
+	if battleshipSide(m, userID.String()) == "" {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	h.Rdb.HSet(ctx, key,
+		"status", battleshipStatusOver,
+		"winner", "",
+		"draw", "1",
+	)
+	h.Rdb.HDel(ctx, key, "draw_offer_by")
+	m["status"] = battleshipStatusOver
+	m["winner"] = ""
+	m["draw"] = "1"
+	delete(m, "draw_offer_by")
+	h.finishBattleshipGame(ctx, gameID, m, "draw")
+	h.broadcastBattleshipState(ctx, gameID, m)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"draw": true})
 }
 
 func (h *GamesHandler) BattleshipRematch(w http.ResponseWriter, r *http.Request) {
@@ -1500,6 +1583,8 @@ func (h *GamesHandler) battleshipViewFor(ctx context.Context, m map[string]strin
 		"last_shot":              atoiDefault(m["last_shot"], -1),
 		"last_shot_hit":          m["last_shot_hit"] == "true",
 		"last_shot_by":           m["last_shot_by"],
+		"draw_offer_by":          strings.TrimSpace(m["draw_offer_by"]),
+		"draw":                   m["draw"] == "1",
 	}
 	if dl := m["turn_deadline"]; dl != "" {
 		if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
@@ -1520,8 +1605,9 @@ func (h *GamesHandler) battleshipViewFor(ctx context.Context, m map[string]strin
 	if m["timeout"] == "1" {
 		out["timeout"] = true
 	}
-	// Потопленные клетки соперника видны всегда; полный флот — только после конца.
+	// Потопленные клетки/корабли соперника видны всегда; полный флот — только после конца.
 	out["opponent_ships_hit"] = battleship.CollectSunkCells(oppShips, myShots)
+	out["opponent_sunk_ships"] = battleship.CollectSunkShips(oppShips, myShots)
 	if status == battleshipStatusOver {
 		out["opponent_ships"] = oppShips
 	}

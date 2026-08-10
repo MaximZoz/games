@@ -91,6 +91,7 @@ class BattleshipGameView {
     required this.myHits,
     required this.opponentShots,
     required this.opponentShipsHit,
+    required this.opponentSunkShips,
     required this.opponentShips,
     required this.isMyTurn,
     required this.turn,
@@ -100,6 +101,8 @@ class BattleshipGameView {
     required this.stakeBronze,
     this.winner,
     this.forfeit = false,
+    this.draw = false,
+    this.drawOfferBy,
     this.lastShot = -1,
     this.lastShotHit = false,
     this.lastShotBy,
@@ -109,6 +112,10 @@ class BattleshipGameView {
     this.p2AvatarKind = 'letter',
     this.p1AvatarValue,
     this.p2AvatarValue,
+    this.p1FrameCode,
+    this.p2FrameCode,
+    this.p1FrameColor,
+    this.p2FrameColor,
   });
 
   final String id;
@@ -125,6 +132,8 @@ class BattleshipGameView {
   final List<int> myHits;
   final List<int> opponentShots;
   final List<int> opponentShipsHit;
+  /// Потопленные корабли соперника (группы клеток).
+  final List<List<int>> opponentSunkShips;
   /// Полный флот соперника — только после конца партии.
   final List<List<int>> opponentShips;
   final bool isMyTurn;
@@ -135,6 +144,8 @@ class BattleshipGameView {
   final int stakeBronze;
   final String? winner;
   final bool forfeit;
+  final bool draw;
+  final String? drawOfferBy;
   final int lastShot;
   final bool lastShotHit;
   final String? lastShotBy;
@@ -144,16 +155,25 @@ class BattleshipGameView {
   final String p2AvatarKind;
   final String? p1AvatarValue;
   final String? p2AvatarValue;
+  final String? p1FrameCode;
+  final String? p2FrameCode;
+  final String? p1FrameColor;
+  final String? p2FrameColor;
 
   bool get isOver => status == 'over';
   bool get isSetup => phase == 'setup';
   bool get isBattle => phase == 'battle';
+  bool get isDraw => draw || (isOver && (winner == null || winner!.isEmpty));
 
   bool isTurnOf(String? userId) {
     if (userId == null || userId.isEmpty) return false;
-    if (isMyTurn && turn.isEmpty) return true;
-    return isBattle && !isOver && turn == userId;
+    if (!isBattle || isOver) return false;
+    if (turn.isNotEmpty) return turn == userId;
+    return isMyTurn;
   }
+
+  bool get hasBotOpponent =>
+      p1UserId.startsWith('bot:') || p2UserId.startsWith('bot:');
 
   String? displayNameOf(String userId) {
     if (userId == p1UserId) {
@@ -165,6 +185,30 @@ class BattleshipGameView {
       return n.isEmpty ? null : n;
     }
     return null;
+  }
+
+  ({String kind, String? value, String? frameCode, String? frameColor})
+      avatarOf(String userId) {
+    if (userId == p1UserId) {
+      return (
+        kind: p1AvatarKind,
+        value: p1AvatarValue,
+        frameCode: p1FrameCode,
+        frameColor: p1FrameColor,
+      );
+    }
+    return (
+      kind: p2AvatarKind,
+      value: p2AvatarValue,
+      frameCode: p2FrameCode,
+      frameColor: p2FrameColor,
+    );
+  }
+
+  /// Мои корабли, полностью потопленные выстрелами соперника.
+  List<List<int>> get mySunkShips {
+    final shots = opponentShots.toSet();
+    return myShips.where((s) => s.every(shots.contains)).toList();
   }
 
   factory BattleshipGameView.fromJson(Map<String, dynamic> json) {
@@ -200,6 +244,7 @@ class BattleshipGameView {
       myHits: parseInts(json['my_hits']),
       opponentShots: parseInts(json['opponent_shots']),
       opponentShipsHit: parseInts(json['opponent_ships_hit']),
+      opponentSunkShips: parseShips(json['opponent_sunk_ships']),
       opponentShips: parseShips(json['opponent_ships']),
       isMyTurn: isMyTurnFlag,
       turn: turn,
@@ -211,6 +256,10 @@ class BattleshipGameView {
           ? null
           : (json['winner'] as String).trim(),
       forfeit: json['forfeit'] == true,
+      draw: json['draw'] == true,
+      drawOfferBy: (json['draw_offer_by'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['draw_offer_by'] as String).trim(),
       lastShot: (json['last_shot'] as num?)?.toInt() ?? -1,
       lastShotHit: json['last_shot_hit'] == true,
       lastShotBy: (json['last_shot_by'] as String?)?.trim().isEmpty ?? true
@@ -222,6 +271,10 @@ class BattleshipGameView {
       p2AvatarKind: (json['p2_avatar_kind'] ?? 'letter').toString(),
       p1AvatarValue: json['p1_avatar_value']?.toString(),
       p2AvatarValue: json['p2_avatar_value']?.toString(),
+      p1FrameCode: json['p1_frame_code']?.toString(),
+      p2FrameCode: json['p2_frame_code']?.toString(),
+      p1FrameColor: json['p1_frame_color']?.toString(),
+      p2FrameColor: json['p2_frame_color']?.toString(),
     );
   }
 }
@@ -465,6 +518,28 @@ class BattleshipRepository {
     return BattleshipGameView.fromJson(
       jsonDecode(res.body) as Map<String, dynamic>,
     );
+  }
+
+  Future<void> offerDraw(String gameId) async {
+    final res = await _sendAuth(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId/draw-offer'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'BattleshipRepository.offerDraw',
+      ),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);
+  }
+
+  Future<void> acceptDraw(String gameId) async {
+    final res = await _sendAuth(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/battleship/game/$gameId/draw-accept'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'BattleshipRepository.acceptDraw',
+      ),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);
   }
 
   Future<String> rematch(String gameId) async {
