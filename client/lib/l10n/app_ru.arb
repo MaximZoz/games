@@ -363,6 +363,7 @@
   },
   "pokerTableYouWon": "Вы выиграли стол!",
   "pokerNextHandSoon": "Следующая раздача…",
+  "pokerShowCards": "Показать карты",
   "rulesPokerTable": "Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач.",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",

@@ -3,10 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-
-- Покер: ставка у аватара, hero по центру, компактные карты
-- Морской бой: фикс таймера расстановки — не сбрасывать в 0 с
+- Покер: 4 с пауза после раздачи и кнопка «Показать карты»
 
 ## en
-- Poker Texas Hold'em: lobbies, invites, online and offline (1–6 players)
+- Poker: 4s pause after each hand; optional Show cards on fold-win
 

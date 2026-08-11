@@ -296,6 +296,7 @@
   "pokerBlinds": "Blinds {sb}/{bb}",
   "pokerTableYouWon": "You won the table!",
   "pokerNextHandSoon": "Next hand…",
+  "pokerShowCards": "Show cards",
   "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every few hands.",
   "gamesRules": "חוקים",
   "gamesRulesTitle": "חוקי המשחק",

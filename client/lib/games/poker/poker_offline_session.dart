@@ -25,7 +25,7 @@ class OfflinePokerSession extends ChangeNotifier {
   static const int smallBlind = 5;
   static const int bigBlind = 10;
   static const Duration botDelay = Duration(milliseconds: 700);
-  static const Duration nextHandDelay = Duration(milliseconds: 2500);
+  static const Duration nextHandDelay = Duration(seconds: 4);
 
   late PokerEngine _engine;
   late List<String> _playerIds;
@@ -110,15 +110,15 @@ class OfflinePokerSession extends ChangeNotifier {
     final isTableOver = g.tableOver;
     // is_over для UI = весь стол окончен (показываем rematch/итоги).
     final isOver = isTableOver;
-    final reveal = isHandOver ||
-        g.street == PokerStreet.showdown ||
-        g.street == PokerStreet.over;
+    // Contested showdown — карты всем; фолд-вина — только после «Показать».
+    final autoReveal = g.street == PokerStreet.showdown;
 
     final players = <PokerPlayerView>[];
     for (var i = 0; i < g.players.length; i++) {
       final p = g.players[i];
       final meta = _players[i];
-      final showHole = i == me || (reveal && !p.folded);
+      final showHole =
+          i == me || (!p.folded && (autoReveal || p.shown));
       players.add(PokerPlayerView(
         id: p.userId,
         displayName: meta.displayName,
@@ -130,6 +130,7 @@ class OfflinePokerSession extends ChangeNotifier {
         folded: p.folded,
         allIn: p.allIn,
         isActing: g.status == PokerStatus.active && i == g.actingIndex,
+        shown: p.shown,
         holeCards: showHole
             ? p.hole.map(PokerApiCard.fromCard).toList()
             : null,
@@ -210,11 +211,22 @@ class OfflinePokerSession extends ChangeNotifier {
       handsPerLevel: g.handsPerLevel,
       isHandOver: isHandOver,
       isTableOver: isTableOver,
+      canShowCards: g.canShowCards(me),
       myHandRank: myHandRank,
       myHandCards: myHandCards,
       highlightedCards: myHandCards,
       winnerHands: winnerHands,
     );
+  }
+
+  Future<void> showCards() async {
+    if (_disposed) return;
+    try {
+      _engine.showCards(me);
+    } on StateError catch (e) {
+      throw GamesException(400, e.message);
+    }
+    notifyListeners();
   }
 
   Future<void> applyMove({required String type, int? amount}) async {
