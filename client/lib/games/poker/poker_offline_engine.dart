@@ -234,6 +234,7 @@ class PokerEnginePlayer {
   bool allIn = false;
   final int seat;
   bool hasActed = false; // ходил ли на текущей улице
+  bool shown = false; // добровольно показал карты после фолд-вины
 }
 
 /// Банк (основной или побочный) и места, претендующие на него.
@@ -755,6 +756,7 @@ class PokerEngine {
       p.totalBet = 0;
       p.allIn = false;
       p.hasActed = false;
+      p.shown = false;
       p.hole = const [];
       if (p.chips > 0) {
         p.folded = false;
@@ -793,6 +795,36 @@ class PokerEngine {
     if (actingIndex < 0) {
       _advanceStreet();
     }
+  }
+
+  /// Добровольно показать карты после фолд-вины (пауза перед следующей раздачей).
+  void showCards(int playerIndex) {
+    if (playerIndex < 0 || playerIndex >= players.length) {
+      throw StateError('poker: bad player index $playerIndex');
+    }
+    if (!handOver || tableOver) {
+      throw StateError('poker: cannot show cards now');
+    }
+    if (street != PokerStreet.over) {
+      throw StateError('poker: cards already shown at showdown');
+    }
+    final p = players[playerIndex];
+    if (p.folded) {
+      throw StateError('poker: folded player cannot show');
+    }
+    if (!winners.contains(playerIndex)) {
+      throw StateError('poker: only winner can show');
+    }
+    p.shown = true;
+  }
+
+  /// Можно ли нажать «Показать карты» в паузе перед следующей раздачей.
+  bool canShowCards(int playerIndex) {
+    if (playerIndex < 0 || playerIndex >= players.length) return false;
+    if (!handOver || tableOver || street != PokerStreet.over) return false;
+    final p = players[playerIndex];
+    if (p.folded || p.shown) return false;
+    return winners.contains(playerIndex);
   }
 
   /// Лучшая 5-карточная комбинация игрока по его картам и борду (минимум 5 карт).

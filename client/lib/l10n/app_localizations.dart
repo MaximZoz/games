@@ -1493,6 +1493,12 @@ abstract class AppLocalizations {
   /// **'Следующая раздача…'**
   String get pokerNextHandSoon;
 
+  /// No description provided for @pokerShowCards.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать карты'**
+  String get pokerShowCards;
+
   /// No description provided for @rulesPokerTable.
   ///
   /// In ru, this message translates to:

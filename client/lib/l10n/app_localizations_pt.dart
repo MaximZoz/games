@@ -717,6 +717,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pokerNextHandSoon => 'Next hand…';
 
   @override
+  String get pokerShowCards => 'Show cards';
+
+  @override
   String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every few hands.';
 
   @override

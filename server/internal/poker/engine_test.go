@@ -93,6 +93,78 @@ func TestFoldAroundWins(t *testing.T) {
 	}
 }
 
+func TestShowCardsAfterFoldWin(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
+	if err := g.Apply(0, Action{Type: ActionFold}); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.Apply(1, Action{Type: ActionFold}); err != nil {
+		t.Fatal(err)
+	}
+	if !g.CanShowCards(2) {
+		t.Fatal("winner should be able to show cards")
+	}
+	if g.CanShowCards(0) || g.CanShowCards(1) {
+		t.Fatal("folded players cannot show")
+	}
+	if err := g.ShowCards(0); err == nil {
+		t.Fatal("expected error for non-winner show")
+	}
+	if err := g.ShowCards(2); err != nil {
+		t.Fatal(err)
+	}
+	if !g.Players[2].Shown {
+		t.Fatal("winner should be marked shown")
+	}
+	if g.CanShowCards(2) {
+		t.Fatal("cannot show twice")
+	}
+}
+
+func TestShowCardsRejectedOnShowdown(t *testing.T) {
+	// Heads-up check-down to showdown, then ShowCards must fail.
+	g, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
+	// Preflop: SB/dealer acts first — call, BB check.
+	if err := g.Apply(0, Action{Type: ActionCall}); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.Apply(1, Action{Type: ActionCheck}); err != nil {
+		t.Fatal(err)
+	}
+	// Flop/turn/river: BB acts first postflop in HU? Actually first live from dealer+1.
+	for g.Street != StreetShowdown && g.Street != StreetOver && !g.HandOver {
+		idx := g.ActingIndex
+		if idx < 0 {
+			break
+		}
+		acts := g.LegalActions(idx)
+		var a Action
+		hasCheck := false
+		for _, s := range acts {
+			if s == "check" {
+				hasCheck = true
+			}
+		}
+		if hasCheck {
+			a = Action{Type: ActionCheck}
+		} else {
+			a = Action{Type: ActionCall}
+		}
+		if err := g.Apply(idx, a); err != nil {
+			t.Fatalf("street=%s act=%v: %v", g.Street, a, err)
+		}
+	}
+	if g.Street != StreetShowdown {
+		t.Fatalf("want showdown, got %s handOver=%v", g.Street, g.HandOver)
+	}
+	if g.CanShowCards(0) || g.CanShowCards(1) {
+		t.Fatal("showdown should not offer ShowCards")
+	}
+	if err := g.ShowCards(g.Winners[0]); err == nil {
+		t.Fatal("expected error showing at showdown")
+	}
+}
+
 func TestNotYourTurn(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
 	if err := g.Apply(2, Action{Type: ActionFold}); err == nil {

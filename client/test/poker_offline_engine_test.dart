@@ -203,6 +203,29 @@ void main() {
       expect(end.isTableOver, isFalse);
       expect(end.isHandOver, isTrue);
       expect(end.winners.contains(0), isFalse);
+      // Фолд-вина: карты победителя скрыты, кнопка «Показать» только у победителя.
+      expect(end.canShowCards, isFalse);
+      expect(end.players[1].holeCards, isNull);
+    });
+
+    test('uncontested winner can show cards before next hand', () {
+      final g = PokerEngine.newGame(
+        playerIds: const ['p0', 'p1', 'p2'],
+        startingChips: 1000,
+        smallBlind: 5,
+        bigBlind: 10,
+        dealerIndex: 0,
+        rng: Random(1),
+      );
+      // UTG folds, SB folds → BB wins uncontested.
+      g.apply(0, const PokerAction(PokerActionType.fold));
+      g.apply(1, const PokerAction(PokerActionType.fold));
+      expect(g.street, PokerStreet.over);
+      expect(g.canShowCards(2), isTrue);
+      expect(g.canShowCards(0), isFalse);
+      g.showCards(2);
+      expect(g.players[2].shown, isTrue);
+      expect(g.canShowCards(2), isFalse);
     });
 
     test('view exposes cash-table fields on a fresh table', () {

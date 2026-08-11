@@ -57,6 +57,7 @@ type Player struct {
 	AllIn    bool    `json:"allIn"`
 	Seat     int     `json:"seat"`
 	HasActed bool    `json:"hasActed"` // ходил ли на текущей улице
+	Shown    bool    `json:"shown"`    // добровольно показал карты после фолд-вины
 }
 
 // SidePot — банк (основной или побочный) и места, претендующие на него.
@@ -674,6 +675,7 @@ func (g *Game) StartNextHand(rng *rand.Rand) error {
 		g.Players[i].TotalBet = 0
 		g.Players[i].AllIn = false
 		g.Players[i].HasActed = false
+		g.Players[i].Shown = false
 		g.Players[i].Hole = [2]Card{}
 		if g.Players[i].Chips > 0 {
 			g.Players[i].Folded = false
@@ -727,6 +729,56 @@ func (g *Game) StartNextHand(rng *rand.Rand) error {
 		g.advanceStreet()
 	}
 	return nil
+}
+
+// ShowCards добровольно показывает карманные карты победителя после фолд-вины
+// (раздача окончена без вскрытия). На contested showdown карты уже открыты.
+func (g *Game) ShowCards(playerIndex int) error {
+	if playerIndex < 0 || playerIndex >= len(g.Players) {
+		return fmt.Errorf("poker: bad player index %d", playerIndex)
+	}
+	if !g.HandOver || g.TableOver {
+		return fmt.Errorf("poker: cannot show cards now")
+	}
+	if g.Street != StreetOver {
+		return fmt.Errorf("poker: cards already shown at showdown")
+	}
+	p := &g.Players[playerIndex]
+	if p.Folded {
+		return fmt.Errorf("poker: folded player cannot show")
+	}
+	isWinner := false
+	for _, w := range g.Winners {
+		if w == playerIndex {
+			isWinner = true
+			break
+		}
+	}
+	if !isWinner {
+		return fmt.Errorf("poker: only winner can show")
+	}
+	p.Shown = true
+	return nil
+}
+
+// CanShowCards — можно ли игроку нажать «Показать карты» в паузе перед следующей раздачей.
+func (g *Game) CanShowCards(playerIndex int) bool {
+	if playerIndex < 0 || playerIndex >= len(g.Players) {
+		return false
+	}
+	if !g.HandOver || g.TableOver || g.Street != StreetOver {
+		return false
+	}
+	p := g.Players[playerIndex]
+	if p.Folded || p.Shown {
+		return false
+	}
+	for _, w := range g.Winners {
+		if w == playerIndex {
+			return true
+		}
+	}
+	return false
 }
 
 // BestHandFor возвращает лучшую 5-карточную комбинацию игрока по его карманным

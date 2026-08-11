@@ -717,6 +717,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerNextHandSoon => 'Следующая раздача…';
 
   @override
+  String get pokerShowCards => 'Показать карты';
+
+  @override
   String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач.';
 
   @override

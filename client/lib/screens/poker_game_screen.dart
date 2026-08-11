@@ -1492,14 +1492,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool cardsOnLeft = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
-    final showdown = game.isShowdown;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
     final headsUp = game.players.length == 2;
     final dim = p.folded;
 
-    // Карты соперника — только на вскрытии, сбоку от аватарки (не сверху).
-    final reveal = showdown &&
-        !p.folded &&
+    // Чужие hole_cards приходят только на showdown или после «Показать карты».
+    final reveal = !p.folded &&
         p.holeCards != null &&
         p.holeCards!.length >= 2;
     final showCards = reveal;
@@ -2019,11 +2017,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   Widget _buildBottomBar(PokerGameView game, bool narrow) {
     final comboLabel = _handRankLabel(game.myHandRank);
     final comboAccent = _shouldHighlightCombo(game) ||
-        (game.isShowdown &&
+        (game.isHandOver &&
             game.me != null &&
             _winnerSeats(game).contains(game.me!.seat));
     final showActions =
         !game.isOver && !game.isHandOver && game.isMyTurn;
+    final showCardsBtn = game.canShowCards && !game.isOver;
 
     const comboSlot = 30.0;
     const actionSlot = 52.0;
@@ -2051,12 +2050,59 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               height: actionSlot,
               child: showActions
                   ? _buildActionBar(game)
-                  : const SizedBox.shrink(),
+                  : showCardsBtn
+                      ? Center(child: _buildShowCardsButton())
+                      : const SizedBox.shrink(),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildShowCardsButton() {
+    return SizedBox(
+      height: 48,
+      child: FilledButton(
+        onPressed: _busy ? null : () => unawaited(_showCards()),
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF3E7CB1),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+          minimumSize: const Size(160, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          context.l10n.pokerShowCards,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCards() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await ref.read(pokerRepositoryProvider).showCards(widget.gameId);
+      if (!_isOffline && mounted) {
+        ref.invalidate(pokerGameProvider(widget.gameId));
+      }
+    } on GamesException catch (e) {
+      if (mounted) {
+        showAppSnackBar(context,
+            message: formatUserError(e), kind: AppSnackKind.error);
+      }
+    } catch (e) {
+      if (mounted) {
+        showAppSnackBar(context,
+            message: formatUserError(e), kind: AppSnackKind.error);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Widget _comboLabel(String text, {required bool highlight}) {

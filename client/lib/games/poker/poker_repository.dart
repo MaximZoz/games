@@ -61,6 +61,7 @@ class PokerPlayerView {
     required this.folded,
     required this.allIn,
     required this.isActing,
+    this.shown = false,
     this.holeCards,
   });
 
@@ -76,8 +77,9 @@ class PokerPlayerView {
   final bool folded;
   final bool allIn;
   final bool isActing;
+  final bool shown;
 
-  /// Карманные карты: свои всегда; чужие — только на вскрытии, если не сброшены.
+  /// Карманные карты: свои всегда; чужие — на showdown или после «Показать».
   final List<PokerApiCard>? holeCards;
 
   bool get isBot => id.startsWith('bot:');
@@ -99,6 +101,7 @@ class PokerPlayerView {
       folded: json['folded'] == true,
       allIn: json['all_in'] == true,
       isActing: json['is_acting'] == true,
+      shown: json['shown'] == true,
       holeCards: hole is List
           ? hole
               .whereType<Map>()
@@ -174,6 +177,7 @@ class PokerGameView {
     this.handsPerLevel = 0,
     this.isHandOver = false,
     this.isTableOver = false,
+    this.canShowCards = false,
     this.myHandRank,
     this.myHandCards = const [],
     this.highlightedCards = const [],
@@ -215,6 +219,8 @@ class PokerGameView {
   final int handsPerLevel;
   final bool isHandOver;
   final bool isTableOver;
+  /// Победитель фолд-вины может показать карты в паузе перед следующей раздачей.
+  final bool canShowCards;
   final String? myHandRank;
   final List<PokerApiCard> myHandCards;
   final List<PokerApiCard> highlightedCards;
@@ -228,9 +234,12 @@ class PokerGameView {
   /// Ходы в текущей раздаче завершены (вскрытие/победа), но стол может идти.
   bool get handFinished => isHandOver || isOver;
 
-  /// Показывать подсветку/затемнение карт (вскрытие или конец раздачи).
-  bool get isShowdown =>
-      handFinished || street == 'showdown' || street == 'over';
+  /// Contested showdown (полное вскрытие) — не путать с фолд-виной (`street == over`).
+  bool get isShowdown => street == 'showdown';
+
+  /// Раздача закончилась без полного вскрытия (все сфолдили).
+  bool get isUncontestedWin =>
+      isHandOver && street == 'over';
 
   /// Набор подсвеченных карт (ранг*100+масть-код) для быстрой проверки.
   Set<int> get highlightKeys {
@@ -316,6 +325,7 @@ class PokerGameView {
       handsPerLevel: (json['hands_per_level'] as num?)?.toInt() ?? 0,
       isHandOver: json['is_hand_over'] == true,
       isTableOver: json['is_table_over'] == true,
+      canShowCards: json['can_show_cards'] == true,
       myHandRank: (json['my_hand_rank']?.toString().trim().isEmpty ?? true)
           ? null
           : json['my_hand_rank'].toString(),
@@ -687,6 +697,26 @@ class PokerRepository {
           },
           body: jsonEncode(body),
           operation: 'PokerRepository.move',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
+  /// Показать карты после фолд-вины (пауза перед следующей раздачей).
+  Future<void> showCards(String gameId) async {
+    if (OfflinePokerRegistry.instance.isOffline(gameId)) {
+      final session = OfflinePokerRegistry.instance.get(gameId);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
+      }
+      await session.showCards();
+      return;
+    }
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/poker/game/$gameId/show'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+          operation: 'PokerRepository.showCards',
         ));
     if (r.statusCode != 200) _fail(r);
   }

@@ -21,7 +21,7 @@ const (
 	pokerBotID         = "bot:poker"
 	pokerStatusOver    = "over"
 	pokerBotDelay      = 700 * time.Millisecond
-	pokerNextHandDelay = 2500 * time.Millisecond
+	pokerNextHandDelay = 4 * time.Second
 )
 
 func pokerMatchmakeLockKey(turnTimeSec, maxPlayers, stakeBronze int) string {
@@ -75,6 +75,8 @@ func (h *GamesHandler) servePoker(w http.ResponseWriter, r *http.Request) {
 			h.GetPokerGame(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
 			h.PokerMove(w, r, gameID)
+		case len(parts) == 3 && parts[2] == "show" && r.Method == http.MethodPost:
+			h.PokerShowCards(w, r, gameID)
 		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
 			h.ForfeitPokerGame(w, r, gameID)
 		default:
@@ -1132,7 +1134,44 @@ func (h *GamesHandler) onPokerHandFinished(gameID string) {
 	h.schedulePokerNextHand(gameID)
 }
 
-// schedulePokerNextHand через ~2.5 с стартует следующую раздачу за столом.
+// PokerShowCards — добровольно показать карты после фолд-вины (пауза перед следующей раздачей).
+func (h *GamesHandler) PokerShowCards(w http.ResponseWriter, r *http.Request, gameID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "game not found")
+		return
+	}
+	if m["game_type"] != pokerGameType {
+		WriteErr(w, r, http.StatusBadRequest, "wrong game type")
+		return
+	}
+	state, err := poker.Decode(m["state"])
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "bad state")
+		return
+	}
+	idx := pokerPlayerIndex(state, userID.String())
+	if idx < 0 {
+		WriteErr(w, r, http.StatusForbidden, "not a player")
+		return
+	}
+	if err := state.ShowCards(idx); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	h.savePokerState(ctx, gameID, m, state)
+	h.broadcastPokerState(gameID, m)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+}
+
+// schedulePokerNextHand через ~4 с стартует следующую раздачу за столом.
 // Сериализуется Redis-локом, чтобы не запустить раздачу дважды.
 func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 	if h.Rdb == nil {
@@ -1328,7 +1367,8 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 	isTableOver := state.TableOver
 	// is_over для клиента = вся партия окончена (показать rematch/итоги).
 	isOver := isTableOver
-	reveal := isHandOver || state.Street == poker.StreetShowdown || state.Street == poker.StreetOver
+	// Contested showdown — карты всем; фолд-вина — только если победитель нажал «Показать».
+	autoReveal := state.Street == poker.StreetShowdown
 
 	playerIDs := make([]string, len(state.Players))
 	for i := range state.Players {
@@ -1361,6 +1401,7 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 			"bet":       p.Bet,
 			"folded":    p.Folded,
 			"all_in":    p.AllIn,
+			"shown":     p.Shown,
 			"is_acting": state.Status == poker.StatusActive && i == state.ActingIndex,
 		}
 		if isBot(p.UserID) {
@@ -1382,8 +1423,8 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 				}
 			}
 		}
-		// Карманные карты: свои всегда; чужие — только на вскрытии и если не сброшены.
-		if i == myIdx || (reveal && !p.Folded) {
+		// Карманные карты: свои всегда; чужие — на showdown или если добровольно показаны.
+		if i == myIdx || (!p.Folded && (autoReveal || p.Shown)) {
 			entry["hole_cards"] = []poker.Card{p.Hole[0], p.Hole[1]}
 		}
 		players[i] = entry
@@ -1495,6 +1536,7 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"hands_per_level": state.HandsPerLevel,
 		"is_hand_over":    isHandOver,
 		"is_table_over":   isTableOver,
+		"can_show_cards":  myIdx >= 0 && state.CanShowCards(myIdx),
 		// Подсказки по комбинациям для UI.
 		"my_hand_rank":      myHandRank,
 		"my_hand_cards":     myHandCards,
