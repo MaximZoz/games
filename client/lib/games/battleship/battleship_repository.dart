@@ -99,6 +99,7 @@ class BattleshipGameView {
     required this.turnTimeSec,
     required this.turnDeadline,
     required this.setupDeadline,
+    this.setupSecondsLeft = 0,
     required this.stakeBronze,
     this.winner,
     this.forfeit = false,
@@ -142,6 +143,8 @@ class BattleshipGameView {
   final int turnTimeSec;
   final int turnDeadline;
   final int setupDeadline;
+  /// Остаток секунд на расстановку с сервера (устойчиво к перекосу часов).
+  final int setupSecondsLeft;
   final int stakeBronze;
   final String? winner;
   final bool forfeit;
@@ -252,6 +255,7 @@ class BattleshipGameView {
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       setupDeadline: (json['setup_deadline'] as num?)?.toInt() ?? 0,
+      setupSecondsLeft: (json['setup_seconds_left'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
       winner: (json['winner'] as String?)?.trim().isEmpty ?? true
           ? null
