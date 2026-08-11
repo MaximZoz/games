@@ -1424,43 +1424,41 @@ class _LobbiesPageContent extends StatelessWidget {
                                                   ),
                                                 ],
                                               ),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    lobby.isBattleship
-                                                        ? Icons.grid_on_rounded
-                                                        : lobby.isDurak
-                                                            ? Icons
-                                                                .swap_horiz_rounded
-                                                            : lobby.isPoker
-                                                                ? Icons
-                                                                    .groups_rounded
-                                                                : Icons
-                                                                    .extension_rounded,
-                                                    size: 14,
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    lobby.isBattleship
-                                                        ? '10×10'
-                                                        : lobby.isDurak
-                                                            ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                            : lobby.isPoker
-                                                                ? 'NLHE · ${lobby.maxPlayers}'
-                                                                : variantShortLabel(
-                                                                    lobby.variant),
-                                                    style: TextStyle(
-                                                      fontSize:
-                                                          isDesktop ? 14 : 13,
+                                              if (!lobby.isPoker)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      lobby.isBattleship
+                                                          ? Icons.grid_on_rounded
+                                                          : lobby.isDurak
+                                                              ? Icons
+                                                                  .swap_horiz_rounded
+                                                              : Icons
+                                                                  .extension_rounded,
+                                                      size: 14,
                                                       color: AppColors
                                                           .textSecondary,
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      lobby.isBattleship
+                                                          ? '10×10'
+                                                          : lobby.isDurak
+                                                              ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                              : variantShortLabel(
+                                                                  lobby.variant),
+                                                      style: TextStyle(
+                                                        fontSize: isDesktop
+                                                            ? 14
+                                                            : 13,
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -3180,26 +3178,27 @@ class _InviteCard extends ConsumerWidget {
                               style: const TextStyle(
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
-                            const SizedBox(width: 4),
-                            Tooltip(
-                              message: context.l10n.gamesRulesTitle,
-                              child: Icon(
-                                inv.isBattleship
-                                    ? Icons.grid_on_rounded
-                                    : inv.isDurak
-                                        ? Icons.swap_horiz_rounded
-                                        : inv.isPoker
-                                            ? Icons.groups_rounded
-                                            : Icons.extension_rounded,
-                                size: iconSz,
-                                color: AppColors.textSecondary,
+                            if (inv.modeLabel.isNotEmpty) ...[
+                              const SizedBox(width: 4),
+                              Tooltip(
+                                message: context.l10n.gamesRulesTitle,
+                                child: Icon(
+                                  inv.isBattleship
+                                      ? Icons.grid_on_rounded
+                                      : inv.isDurak
+                                          ? Icons.swap_horiz_rounded
+                                          : Icons.extension_rounded,
+                                  size: iconSz,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                            Text(
-                              inv.modeLabel,
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppColors.textSecondary),
-                            ),
+                              Text(
+                                inv.modeLabel,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
                             if (inv.isDurak) ...[
                               DurakGameIcon(
                                 size: iconSz,
