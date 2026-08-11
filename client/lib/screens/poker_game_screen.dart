@@ -1055,23 +1055,22 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   cardsOnLeft: oppAnchors[i].x < -0.05,
                 ),
               ),
-            // Своя карточка + крупные карты — на столе снизу.
+            // Своя карточка по центру низа — ровно напротив верхнего соперника.
             if (me >= 0 && me < game.players.length)
               Align(
                 alignment: heroAnchor,
                 child: _buildHeroOnTable(game, narrow),
               ),
-            // Ставки на фетре рядом с каждым игроком (цифра + мини-стопка).
+            // Ставки соперников на фетре у их мест (hero-ставка — у аватара).
             for (final p in game.players)
-              if (p.bet > 0 && !p.folded)
+              if (p.bet > 0 &&
+                  !p.folded &&
+                  (me < 0 || p.seat != game.players[me].seat))
                 Align(
                   alignment: _betAlignment(
-                    game: game,
                     seat: p.seat,
-                    me: me,
                     oppAnchors: oppAnchors,
                     opponents: opponents,
-                    heroAnchor: heroAnchor,
                   ),
                   child: _tableBetLabel(p.bet),
                 ),
@@ -1086,7 +1085,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   me: me,
                   oppAnchors: oppAnchors,
                   opponents: opponents,
-                  heroAnchor: heroAnchor,
                 ),
                 child: _dealerBadge(size: narrow ? 22 : 26),
               ),
@@ -1096,24 +1094,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Позиция ставки на фетре — между игроком и центром стола.
+  /// Позиция ставки соперника — рядом с его местом, ближе к центру стола.
   Alignment _betAlignment({
-    required PokerGameView game,
     required int seat,
-    required int me,
     required List<Alignment> oppAnchors,
     required List<PokerPlayerView> opponents,
-    required Alignment heroAnchor,
   }) {
-    if (me >= 0 &&
-        me < game.players.length &&
-        game.players[me].seat == seat) {
-      return const Alignment(0, 0.55);
-    }
     for (var i = 0; i < opponents.length; i++) {
       if (opponents[i].seat == seat) {
         final a = oppAnchors[i];
-        return Alignment(a.x * 0.42, a.y * 0.38);
+        // Чуть к центру от аватарки — не перекрывает банк/борд.
+        return Alignment(a.x * 0.62, a.y * 0.58 + 0.08);
       }
     }
     return Alignment.center;
@@ -1125,18 +1116,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required int me,
     required List<Alignment> oppAnchors,
     required List<PokerPlayerView> opponents,
-    required Alignment heroAnchor,
   }) {
     if (me >= 0 &&
         me < game.players.length &&
         game.players[me].seat == dealerSeat) {
-      // Рядом с hero, чуть правее и выше карточки.
-      return const Alignment(0.32, 0.70);
+      // Рядом с hero по центру низа.
+      return const Alignment(0.16, 0.78);
     }
     for (var i = 0; i < opponents.length; i++) {
       if (opponents[i].seat == dealerSeat) {
         final a = oppAnchors[i];
-        // Фишка D на фетре рядом с игроком (к центру).
         return Alignment(
           a.x * 0.70 + (a.x >= 0 ? 0.10 : -0.10),
           a.y * 0.70 + 0.06,
@@ -1144,6 +1133,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
     }
     return Alignment.center;
+  }
+
+  /// Размер своих карт: читаемые, но не перекрывают боковые места при 6 игроках.
+  Size _heroCardSize(bool narrow, int playerCount) {
+    if (playerCount <= 2) {
+      return narrow ? const Size(46, 66) : const Size(52, 74);
+    }
+    if (playerCount <= 4) {
+      return narrow ? const Size(40, 57) : const Size(46, 66);
+    }
+    return narrow ? const Size(34, 48) : const Size(38, 54);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -1224,9 +1224,20 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ],
         ),
         const SizedBox(height: 6),
-        _PotBadge(
-          amount: game.pot,
-          label: context.l10n.pokerPot(game.pot),
+        // Банк + якорь анимации фишек рядом с бейджем (без дубля суммы под бордом).
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KeyedSubtree(
+              key: _tableChipsKey,
+              child: _TableChipStack(amount: game.pot),
+            ),
+            const SizedBox(width: 6),
+            _PotBadge(
+              amount: game.pot,
+              label: context.l10n.pokerPot(game.pot),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         Row(
@@ -1249,35 +1260,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ),
               ),
           ],
-        ),
-        const SizedBox(height: 8),
-        // Стопка + сумма банка на фетре (как в референсах).
-        KeyedSubtree(
-          key: _tableChipsKey,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _TableChipStack(amount: game.pot),
-              if (game.pot > 0) ...[
-                const SizedBox(width: 6),
-                Text(
-                  '${game.pot}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
         ),
       ],
     );
@@ -1871,12 +1853,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Свои крупные карты сбоку + компактная карточка — всё на фетре снизу.
+  /// Hero по центру низа (напротив верхнего): якорь = аватар/неймплейт.
+  /// Карты и ставка — Positioned сбоку, не смещают Align.
   Widget _buildHeroOnTable(PokerGameView game, bool narrow) {
     final me = game.me;
     if (me == null) return const SizedBox.shrink();
-    // Свои карты заметно крупнее борда и карт соперников.
-    final heroCards = narrow ? const Size(90, 128) : const Size(104, 148);
+    final heroCards = _heroCardSize(narrow, game.players.length);
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
     final acting = me.isActing && !game.isOver && !game.isHandOver;
@@ -1884,6 +1866,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final dim = me.folded;
     final plateW = narrow ? 100.0 : 112.0;
     const borderW = 2.5;
+    // Сильный оверлап — компактный веер у аватара.
+    const overlap = 0.48;
     final myWinCombo = isWinner
         ? _handRankLabel(_winnerHandForSeat(game, me.seat)?.rank) ??
             _handRankLabel(game.myHandRank)
@@ -1936,105 +1920,141 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    // Только аватар+неймплейт задают размер для Align — центр = низ стола.
+    final plateColumn = KeyedSubtree(
+      key: _seatKey(me.seat),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: dim ? 0.35 : 1,
+            child: GamePlayerAvatar(
+              displayName: _playerName(me),
+              avatarKind: me.avatarKind,
+              avatarValue: me.avatarValue,
+              frameCode: me.frameCode,
+              frameColor: me.frameColor,
+              compact: true,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TurnTimerBorder(
+            key: ValueKey('poker-hero-${game.turnDeadline}'),
+            active: acting,
+            turnDeadline: game.turnDeadline,
+            turnTimeSec: game.turnTimeSec,
+            borderWidth: borderW,
+            radius: 12,
+            showIdleBorder: false,
+            child: namePlate,
+          ),
+          if (myWinCombo != null) ...[
+            const SizedBox(height: 4),
+            _comboLabel(myWinCombo, highlight: true),
+          ],
+        ],
+      ),
+    );
+
+    final cardsWidth = heroCards.width * (1 + overlap);
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
       children: [
         if (me.holeCards != null)
-          SizedBox(
-            width: heroCards.width * 1.7,
-            height: heroCards.height,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                for (var i = 0; i < me.holeCards!.length; i++)
-                  Positioned(
-                    left: i * heroCards.width * 0.58,
-                    child: Transform.rotate(
-                      angle: (i == 0 ? -0.06 : 0.06),
-                      child: _EntranceCard(
-                        key: ValueKey(
-                          'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
-                        ),
-                        child: PlayingCardWidget(
-                          card: me.holeCards![i].toPlayingCard(),
-                          size: heroCards,
-                          highlighted: hasHighlight &&
-                              highlightKeys.contains(
-                                PokerGameView.cardKeyOf(me.holeCards![i]),
-                              ),
-                          dimmed: hasHighlight &&
-                              !highlightKeys.contains(
-                                PokerGameView.cardKeyOf(me.holeCards![i]),
-                              ),
-                          animate: false,
+          Positioned(
+            // Слева от аватара, за пределами якоря — стол/соперники свободны.
+            right: plateW * 0.78,
+            bottom: 20,
+            child: SizedBox(
+              width: cardsWidth,
+              height: heroCards.height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  for (var i = 0; i < me.holeCards!.length; i++)
+                    Positioned(
+                      left: i * heroCards.width * overlap,
+                      child: Transform.rotate(
+                        angle: i == 0 ? -0.06 : 0.06,
+                        child: _EntranceCard(
+                          key: ValueKey(
+                            'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+                          ),
+                          child: PlayingCardWidget(
+                            card: me.holeCards![i].toPlayingCard(),
+                            size: heroCards,
+                            highlighted: hasHighlight &&
+                                highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
+                                ),
+                            dimmed: hasHighlight &&
+                                !highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
+                                ),
+                            animate: false,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        const SizedBox(width: 8),
-        KeyedSubtree(
-          key: _seatKey(me.seat),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 220),
-                opacity: dim ? 0.35 : 1,
-                child: GamePlayerAvatar(
-                  displayName: _playerName(me),
-                  avatarKind: me.avatarKind,
-                  avatarValue: me.avatarValue,
-                  frameCode: me.frameCode,
-                  frameColor: me.frameColor,
-                  compact: true,
-                ),
-              ),
-              const SizedBox(height: 4),
-              TurnTimerBorder(
-                key: ValueKey('poker-hero-${game.turnDeadline}'),
-                active: acting,
-                turnDeadline: game.turnDeadline,
-                turnTimeSec: game.turnTimeSec,
-                borderWidth: borderW,
-                radius: 12,
-                showIdleBorder: false,
-                child: namePlate,
-              ),
-              if (myWinCombo != null) ...[
-                const SizedBox(height: 4),
-                _comboLabel(myWinCombo, highlight: true),
-              ],
-            ],
+        // Ставка справа от аватара (к центру стола), не на фетре под бордом.
+        if (me.bet > 0 && !me.folded)
+          Positioned(
+            left: plateW * 0.82,
+            bottom: 48,
+            child: _tableBetLabel(me.bet),
           ),
-        ),
+        plateColumn,
       ],
     );
   }
 
-  /// Под столом: подпись комбинации + панель действий.
+  /// Под столом: комбинация + панель действий с фиксированной высотой
+  /// (стол не прыгает при появлении/скрытии кнопок).
   Widget _buildBottomBar(PokerGameView game, bool narrow) {
     final comboLabel = _handRankLabel(game.myHandRank);
     final comboAccent = _shouldHighlightCombo(game) ||
         (game.isShowdown &&
             game.me != null &&
             _winnerSeats(game).contains(game.me!.seat));
+    final showActions =
+        !game.isOver && !game.isHandOver && game.isMyTurn;
+
+    const comboSlot = 30.0;
+    const actionSlot = 52.0;
+    final bottomPad = narrow ? 8.0 : 12.0;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(12, 2, 12, narrow ? 8 : 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (comboLabel != null) ...[
-            _comboLabel(comboLabel, highlight: comboAccent),
+      padding: EdgeInsets.fromLTRB(12, 2, 12, bottomPad),
+      child: SizedBox(
+        height: comboSlot + 6 + actionSlot,
+        child: Column(
+          children: [
+            SizedBox(
+              height: comboSlot,
+              child: comboLabel != null
+                  ? Center(
+                      child: _comboLabel(
+                        comboLabel,
+                        highlight: comboAccent,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             const SizedBox(height: 6),
+            SizedBox(
+              height: actionSlot,
+              child: showActions
+                  ? _buildActionBar(game)
+                  : const SizedBox.shrink(),
+            ),
           ],
-          if (!game.isOver && !game.isHandOver && game.isMyTurn)
-            _buildActionBar(game),
-        ],
+        ),
       ),
     );
   }
@@ -2108,11 +2128,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         ),
     ];
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
-      children: buttons,
+    // Одна строка фиксированной высоты — без Wrap, чтобы стол не прыгал.
+    return Row(
+      children: [
+        for (var i = 0; i < buttons.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(child: buttons[i]),
+        ],
+      ],
     );
   }
 
@@ -2121,19 +2144,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required Color color,
     required VoidCallback? onTap,
   }) {
-    return FilledButton(
-      onPressed: onTap,
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+    return SizedBox(
+      height: 48,
+      child: FilledButton(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          minimumSize: const Size(0, 48),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+        ),
       ),
     );
   }
