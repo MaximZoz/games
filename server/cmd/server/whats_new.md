@@ -3,8 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Покер: фикс хода «оба ждут», ставка/D сбоку, карты компактнее
 - Покер: нормальный размер карт и масти без «квадратиков» на web
 
 ## en
-- Poker: balanced hole-card size; suit glyphs drawn as paths (no web tofu)
+- Poker: sane hole-card size, web suits, turn-sync fix, bet/D beside seat
 

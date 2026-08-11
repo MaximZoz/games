@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -58,12 +60,20 @@ final pokerGameProvider = FutureProvider.autoDispose
       if (data == null) return;
       final type = data['type']?.toString() ?? '';
       final gid = data['game_id']?.toString();
-      if ((type == 'game_state' || type == 'game_started') && gid == gameId) {
+      // Рефетч по состоянию игры и при реконнекте WS (иначе оба «ждут соперника»).
+      if (type == 'realtime_connected' ||
+          ((type == 'game_state' || type == 'game_started') && gid == gameId)) {
         ref.invalidateSelf();
       }
     },
   );
   ref.onDispose(sub.close);
+
+  // Лёгкий poll — страховка, если ping game_state потерялся.
+  final poll = Stream.periodic(const Duration(seconds: 4)).listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(poll.cancel);
 
   Object? lastError;
   for (var attempt = 0; attempt < 4; attempt++) {

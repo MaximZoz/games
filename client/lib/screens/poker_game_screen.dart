@@ -199,8 +199,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       return l10n.pokerHandOver;
     }
-    if (game.isMyTurn) return l10n.pokerYourTurn;
     final acting = game.actingIndex;
+    // Свой индекс актёра — всегда «Ваш ход», даже если legalActions ещё пусты.
+    if (!game.isOver &&
+        !game.isHandOver &&
+        game.myIndex >= 0 &&
+        acting == game.myIndex) {
+      return l10n.pokerYourTurn;
+    }
     if (acting >= 0 && acting < game.players.length) {
       return l10n.pokerToAct(_playerName(game.players[acting]));
     }
@@ -773,9 +779,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final showReward = isOver &&
         game.stakeBronze > 0 &&
         (rewardBronze != 0);
+    // Таймер всем за столом — по истечении оба рефетчат (анти-залипание хода).
     final showTimer = !isOver &&
         !game.isHandOver &&
-        game.isMyTurn &&
+        game.actingIndex >= 0 &&
         game.turnTimeSec > 0 &&
         game.turnDeadline > 0;
     // Пауза между раздачами (стол ещё идёт) — подсказка о следующей раздаче.
@@ -1135,15 +1142,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
-  /// Размер своих карт: чуть крупнее борда, читаемый веер из-за аватара.
+  /// Размер своих карт: чуть крупнее борда, без гигантского веера.
   Size _heroCardSize(bool narrow, int playerCount) {
     if (playerCount <= 2) {
-      return narrow ? const Size(62, 88) : const Size(72, 102);
+      return narrow ? const Size(56, 80) : const Size(64, 92);
     }
     if (playerCount <= 4) {
-      return narrow ? const Size(54, 77) : const Size(62, 88);
+      return narrow ? const Size(48, 68) : const Size(56, 80);
     }
-    return narrow ? const Size(46, 66) : const Size(52, 74);
+    return narrow ? const Size(42, 60) : const Size(48, 68);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -2016,12 +2023,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
             ),
           ),
+        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
+        plateColumn,
+        // Ставка и D справа от профиля (выше неймплейта) — не прячутся под аватаром/картами.
         if (showBet || isDealer)
           Positioned(
-            left: plateW * 0.88,
-            bottom: 2,
+            left: plateW + 8,
+            bottom: namePlateH + avatarPlateGap + 2,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (showBet) _tableBetLabel(me.bet),
                 if (isDealer) ...[
@@ -2031,8 +2042,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ],
             ),
           ),
-        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
-        plateColumn,
       ],
     );
   }
@@ -2045,8 +2054,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         (game.isHandOver &&
             game.me != null &&
             _winnerSeats(game).contains(game.me!.seat));
-    final showActions =
-        !game.isOver && !game.isHandOver && game.isMyTurn;
+    final showActions = !game.isOver &&
+        !game.isHandOver &&
+        game.isMyTurn &&
+        game.legalActions.isNotEmpty;
     final showCardsBtn = game.canShowCards && !game.isOver;
 
     const comboSlot = 30.0;

@@ -920,15 +920,21 @@ func (h *GamesHandler) savePokerState(ctx context.Context, gameID string, m map[
 	}
 	fields := []any{"state", encoded}
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
-	if state.Status == poker.StatusOver {
+	// Redis status=over только когда весь стол окончен. Между раздачами (HandOver)
+	// оставляем active — иначе GetActive сбрасывает active_game и клиенты «теряют» стол.
+	if state.TableOver {
 		fields = append(fields, "status", pokerStatusOver, "turn_deadline", "0", "turn_actor_idx", "-1")
 		m["status"] = pokerStatusOver
+		m["turn_deadline"] = "0"
+		m["turn_actor_idx"] = "-1"
 	} else {
-		// Активная раздача (в т.ч. после старта следующей за столом): статус
-		// снова active, чтобы прошлый «over» между раздачами не блокировал ходы.
 		fields = append(fields, "status", gameStatusActive)
 		m["status"] = gameStatusActive
-		if turnT > 0 {
+		if state.HandOver || state.ActingIndex < 0 {
+			fields = append(fields, "turn_deadline", "0", "turn_actor_idx", "-1")
+			m["turn_deadline"] = "0"
+			m["turn_actor_idx"] = "-1"
+		} else if turnT > 0 {
 			dl := time.Now().UTC().Unix() + int64(turnT)
 			fields = append(fields,
 				"turn_deadline", strconv.FormatInt(dl, 10),
@@ -1204,6 +1210,10 @@ func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 		delete(m, "forfeit")
 		delete(m, "timeout")
 		h.savePokerState(ctx, gameID, m, state)
+		// Подстрахуем active_game у людей на случай сброса между раздачами.
+		for _, u := range pokerHumans(m) {
+			setUserActiveGame(ctx, h.Rdb, u, gameID)
+		}
 		h.broadcastPokerState(gameID, m)
 		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
 			isBot(state.Players[state.ActingIndex].UserID) {
@@ -1518,6 +1528,11 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"dealer_index":  state.DealerIndex,
 		"acting_index":  state.ActingIndex,
 		"my_index":      myIdx,
+		"is_my_turn": myIdx >= 0 &&
+			!isTableOver &&
+			!state.HandOver &&
+			state.Status == poker.StatusActive &&
+			myIdx == state.ActingIndex,
 		"legal_actions": legal,
 		"call_amount":   callAmount,
 		"min_raise_to":  minRaiseTo,
