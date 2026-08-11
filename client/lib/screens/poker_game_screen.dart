@@ -846,8 +846,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         ),
         // Rematch/итоги — только когда окончен весь стол.
         if (isOver) _buildEndSection(game),
+        // Весь стол (включая свою карточку и карты) — на фетре.
         Expanded(child: _buildTable(game, narrow)),
-        _buildHeroArea(game, narrow),
+        // Под столом — только комбинация и кнопки хода.
+        _buildBottomBar(game, narrow),
       ],
     );
   }
@@ -986,7 +988,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Овальный стол: соперники по дуге сверху, банк и борд в центре.
+  /// Овальный стол: все игроки (включая hero) на фетре, банк/борд в центре.
   Widget _buildTable(PokerGameView game, bool narrow) {
     final me = game.myIndex;
     final opponents = <PokerPlayerView>[];
@@ -994,50 +996,85 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       if (i == me) continue;
       opponents.add(game.players[i]);
     }
-    final anchors = _seatAnchors(opponents.length);
+    final oppAnchors = _seatAnchors(opponents.length);
+    // Своя позиция — низ стола (на фетре, не под ним).
+    const heroAnchor = Alignment(0, 0.92);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardSize = _communityCardSize(constraints.maxWidth, narrow);
+        final dealerSeat = game.dealerIndex >= 0 &&
+                game.dealerIndex < game.players.length
+            ? game.players[game.dealerIndex].seat
+            : -1;
         return Stack(
+          clipBehavior: Clip.none,
           children: [
-            // Фетр-стол.
-            Center(
-              child: Container(
-                margin: EdgeInsets.symmetric(
-                  horizontal: narrow ? 14 : 40,
-                  vertical: 14,
+            // Фетр-стол — занимает почти всю область, чтобы hero был на нём.
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: narrow ? 10 : 36,
+                  vertical: narrow ? 6 : 12,
                 ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(160),
-                  gradient: const RadialGradient(
-                    colors: [Color(0xFF1F7A4D), Color(0xFF135C39)],
-                    radius: 0.9,
-                  ),
-                  border: Border.all(
-                    color: const Color(0xFF0C3D26),
-                    width: 6,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(160),
+                    gradient: const RadialGradient(
+                      colors: [Color(0xFF1F7A4D), Color(0xFF135C39)],
+                      radius: 0.9,
                     ),
-                  ],
+                    border: Border.all(
+                      color: const Color(0xFF0C3D26),
+                      width: 6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
             // Банк + борд по центру.
             Align(
-              alignment: const Alignment(0, 0.05),
+              alignment: const Alignment(0, -0.05),
               child: _buildCenter(game, narrow, cardSize),
             ),
             // Соперники.
             for (var i = 0; i < opponents.length; i++)
               Align(
-                alignment: anchors[i],
-                child: _buildSeat(game, opponents[i], narrow),
+                alignment: oppAnchors[i],
+                child: _buildSeat(
+                  game,
+                  opponents[i],
+                  narrow,
+                  towardCenter: _towardCenter(oppAnchors[i]),
+                ),
+              ),
+            // Своя карточка + крупные карты — на столе снизу.
+            if (me >= 0 && me < game.players.length)
+              Align(
+                alignment: heroAnchor,
+                child: _buildHeroOnTable(game, narrow),
+              ),
+            // Фишка дилера на столе — плавно едет к новому дилеру.
+            if (dealerSeat >= 0)
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 480),
+                curve: Curves.easeInOutCubic,
+                alignment: _dealerAlignment(
+                  game: game,
+                  dealerSeat: dealerSeat,
+                  me: me,
+                  oppAnchors: oppAnchors,
+                  opponents: opponents,
+                  heroAnchor: heroAnchor,
+                ),
+                child: _dealerBadge(size: narrow ? 22 : 26),
               ),
           ],
         );
@@ -1045,34 +1082,64 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
+  /// Смещение ставки от места игрока к центру стола.
+  Alignment _towardCenter(Alignment seat) {
+    // Чуть ближе к центру, чем сам игрок.
+    return Alignment(seat.x * 0.55, seat.y * 0.45);
+  }
+
+  Alignment _dealerAlignment({
+    required PokerGameView game,
+    required int dealerSeat,
+    required int me,
+    required List<Alignment> oppAnchors,
+    required List<PokerPlayerView> opponents,
+    required Alignment heroAnchor,
+  }) {
+    if (me >= 0 &&
+        me < game.players.length &&
+        game.players[me].seat == dealerSeat) {
+      // Рядом с hero, чуть правее и выше карточки.
+      return Alignment(0.28, 0.72);
+    }
+    for (var i = 0; i < opponents.length; i++) {
+      if (opponents[i].seat == dealerSeat) {
+        final a = oppAnchors[i];
+        // Фишка D на фетре рядом с игроком (к центру).
+        return Alignment(a.x * 0.72 + (a.x >= 0 ? 0.08 : -0.08), a.y * 0.72);
+      }
+    }
+    return Alignment.center;
+  }
+
   List<Alignment> _seatAnchors(int n) {
     switch (n) {
       case 0:
         return const [];
       case 1:
-        return const [Alignment(0, -1)];
+        return const [Alignment(0, -0.92)];
       case 2:
-        return const [Alignment(-0.8, -0.85), Alignment(0.8, -0.85)];
+        return const [Alignment(-0.85, -0.75), Alignment(0.85, -0.75)];
       case 3:
         return const [
-          Alignment(-0.98, -0.15),
-          Alignment(0, -1),
-          Alignment(0.98, -0.15),
+          Alignment(-0.95, -0.1),
+          Alignment(0, -0.92),
+          Alignment(0.95, -0.1),
         ];
       case 4:
         return const [
-          Alignment(-0.98, -0.1),
-          Alignment(-0.6, -1),
-          Alignment(0.6, -1),
-          Alignment(0.98, -0.1),
+          Alignment(-0.95, -0.05),
+          Alignment(-0.55, -0.92),
+          Alignment(0.55, -0.92),
+          Alignment(0.95, -0.05),
         ];
       default:
         return const [
-          Alignment(-0.98, -0.05),
-          Alignment(-0.7, -1),
-          Alignment(0, -1),
-          Alignment(0.7, -1),
-          Alignment(0.98, -0.05),
+          Alignment(-0.95, 0.05),
+          Alignment(-0.7, -0.88),
+          Alignment(0, -0.92),
+          Alignment(0.7, -0.88),
+          Alignment(0.95, 0.05),
         ];
     }
   }
@@ -1143,10 +1210,33 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ],
         ),
         const SizedBox(height: 8),
-        // Стопка фишек под картами — цель анимации ставок/выигрыша.
+        // Стопка + сумма банка на фетре (как в референсах).
         KeyedSubtree(
           key: _tableChipsKey,
-          child: _TableChipStack(amount: game.pot),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TableChipStack(amount: game.pot),
+              if (game.pot > 0) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '${game.pot}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -1370,13 +1460,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     });
   }
 
-  /// Фиксированная рамка игрока: во время игры без карт; на вскрытии —
-  /// крупные карманные карты сверху (слот всегда зарезервирован — без скачков).
+  /// Компактное место игрока (как в 888poker): карты → аватар → неймплейт.
+  /// Рамка хода только вокруг неймплейта; ставка — на фетре к центру.
   Widget _buildSeat(
     PokerGameView game,
     PokerPlayerView p,
     bool narrow, {
     bool isSelf = false,
+    Alignment towardCenter = Alignment.center,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final showdown = game.isShowdown;
@@ -1384,150 +1475,216 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final hasHighlight = showdown && highlightKeys.isNotEmpty;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
     final headsUp = game.players.length == 2;
-    // Соперникам карты только на вскрытии; себе — слот пустой (свои карты в hero).
-    final showOppCards = !isSelf &&
-        showdown &&
-        !p.folded &&
+    final dim = p.folded;
+
+    // Карты соперника: в раздаче — оверлап рубашек; на вскрытии — лицом.
+    final showCards = !isSelf && !p.folded;
+    final reveal = showdown &&
         p.holeCards != null &&
         p.holeCards!.isNotEmpty;
-    final holeSize = narrow ? const Size(46, 66) : const Size(54, 77);
-    final frameW = narrow ? 122.0 : 136.0;
-    // Фиксированная высота контента рамки (аватар + имя + стек + ставка).
-    const frameBodyH = 112.0;
+    final holeSize = reveal
+        ? (narrow ? const Size(42, 60) : const Size(48, 68))
+        : (narrow ? const Size(28, 40) : const Size(32, 46));
+    final plateW = narrow ? 104.0 : 118.0;
     const borderW = 2.5;
 
-    final frameBody = AnimatedOpacity(
-      duration: const Duration(milliseconds: 220),
-      opacity: p.folded ? 0.42 : 1,
-      child: Container(
-        key: isSelf ? null : _seatKey(p.seat),
-        width: frameW,
-        height: frameBodyH,
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: p.folded ? 0.55 : 0.38),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isWinner
-                ? const Color(0xFFF5B301)
-                : Colors.white.withValues(alpha: 0.08),
-            width: isWinner ? 2 : 1,
+    final namePlate = Container(
+      width: plateW,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: dim ? 0.55 : 0.72),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isWinner
+              ? const Color(0xFFF5B301)
+              : Colors.white.withValues(alpha: 0.06),
+          width: isWinner ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _playerName(p),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: dim ? 0.45 : 1),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: (!isSelf && headsUp)
-                      ? () => unawaited(_showPlayerCard(p))
-                      : null,
-                  behavior: HitTestBehavior.opaque,
-                  child: GamePlayerAvatar(
-                    displayName: _playerName(p),
-                    avatarKind: p.avatarKind,
-                    avatarValue: p.avatarValue,
-                    frameCode: p.frameCode,
-                    frameColor: p.frameColor,
-                    compact: true,
-                  ),
-                ),
-                if (p.seat == game.dealerIndex) ...[
-                  const SizedBox(width: 4),
-                  _dealerBadge(size: 20),
-                ],
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              _playerName(p),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: p.folded ? 0.7 : 1),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              p.folded
-                  ? context.l10n.pokerFolded
+          const SizedBox(height: 1),
+          Text(
+            p.folded
+                ? context.l10n.pokerFolded
+                : p.allIn
+                    ? context.l10n.pokerAllInBadge
+                    : '${p.chips}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: dim
+                  ? Colors.white38
                   : p.allIn
-                      ? context.l10n.pokerAllInBadge
-                      : '${p.chips}',
-              style: TextStyle(
-                color: p.folded
-                    ? Colors.white54
-                    : p.allIn
-                        ? const Color(0xFFFBBF24)
-                        : Colors.white.withValues(alpha: 0.85),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+                      ? const Color(0xFFFBBF24)
+                      : const Color(0xFFF5D76E),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
             ),
-            // Место под бэйдж ставки всегда одинаковое — без скачка layout.
-            SizedBox(
-              height: 22,
-              child: p.bet > 0 && !p.folded
-                  ? Center(child: _betChip(p.bet))
-                  : null,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
-    // Layout-высота только под рамку (+ padding таймера). Карты на вскрытии
-    // рисуются поверх через Stack — позиция рамки на столе не меняется.
-    return SizedBox(
-      width: frameW + borderW * 2,
-      height: frameBodyH + borderW * 2,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          TurnTimerBorder(
-            key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
-            active: acting,
-            turnDeadline: game.turnDeadline,
-            turnTimeSec: game.turnTimeSec,
-            borderWidth: borderW,
-            radius: 18,
-            showIdleBorder: false,
-            child: isSelf
-                ? KeyedSubtree(key: _seatKey(p.seat), child: frameBody)
-                : frameBody,
-          ),
-          if (showOppCards)
-            Positioned(
-              bottom: frameBodyH + borderW * 2 + 4,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final c in p.holeCards!)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: _EntranceCard(
-                        key: ValueKey(
-                          'opp_${game.handNumber}_${p.seat}_${c.rank}_${c.suit}',
-                        ),
-                        child: PlayingCardWidget(
-                          card: c.toPlayingCard(),
+    final seatBody = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showCards)
+          SizedBox(
+            width: holeSize.width * 1.55,
+            height: holeSize.height,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: 0,
+                  child: reveal
+                      ? PlayingCardWidget(
+                          card: p.holeCards![0].toPlayingCard(),
                           size: holeSize,
                           highlighted: hasHighlight &&
-                              highlightKeys
-                                  .contains(PokerGameView.cardKeyOf(c)),
+                              highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(p.holeCards![0])),
                           dimmed: hasHighlight &&
-                              !highlightKeys
-                                  .contains(PokerGameView.cardKeyOf(c)),
+                              !highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(p.holeCards![0])),
                           animate: false,
-                        ),
-                      ),
-                    ),
-                ],
+                        )
+                      : CardBackWidget(size: holeSize, outlined: true),
+                ),
+                Positioned(
+                  left: holeSize.width * 0.42,
+                  child: reveal
+                      ? PlayingCardWidget(
+                          card: p.holeCards![1].toPlayingCard(),
+                          size: holeSize,
+                          highlighted: hasHighlight &&
+                              highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(p.holeCards![1])),
+                          dimmed: hasHighlight &&
+                              !highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(p.holeCards![1])),
+                          animate: false,
+                        )
+                      : CardBackWidget(size: holeSize, outlined: true),
+                ),
+              ],
+            ),
+          ),
+        if (showCards) const SizedBox(height: 4),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 220),
+          opacity: dim ? 0.4 : 1,
+          child: GestureDetector(
+            onTap: (!isSelf && headsUp)
+                ? () => unawaited(_showPlayerCard(p))
+                : null,
+            behavior: HitTestBehavior.opaque,
+            child: GamePlayerAvatar(
+              displayName: _playerName(p),
+              avatarKind: p.avatarKind,
+              avatarValue: p.avatarValue,
+              frameCode: p.frameCode,
+              frameColor: p.frameColor,
+              compact: true,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        // Рамка только на ход (TurnTimerBorder) — idle без обводки.
+        TurnTimerBorder(
+          key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
+          active: acting,
+          turnDeadline: game.turnDeadline,
+          turnTimeSec: game.turnTimeSec,
+          borderWidth: borderW,
+          radius: 12,
+          showIdleBorder: false,
+          child: namePlate,
+        ),
+      ],
+    );
+
+    return SizedBox(
+      key: _seatKey(p.seat),
+      width: plateW + 28,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          seatBody,
+          // Ставка на фетре: фишки + цифра рядом (не в карточке игрока).
+          if (p.bet > 0 && !p.folded)
+            Positioned(
+              top: towardCenter.y < 0 ? null : (showCards ? holeSize.height + 52 : 52),
+              bottom: towardCenter.y < 0 ? -28 : null,
+              child: _tableBetLabel(p.bet),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Ставка на столе: мини-стопка + сумма.
+  Widget _tableBetLabel(int amount) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _miniChipStack(),
+        const SizedBox(width: 4),
+        Text(
+          '$amount',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.65),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _miniChipStack() {
+    return SizedBox(
+      width: 18,
+      height: 14,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          for (var i = 0; i < 3; i++)
+            Positioned(
+              bottom: i * 2.2,
+              child: Container(
+                width: 14 - i * 0.4,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.lerp(const Color(0xFFE8C547), Colors.white, i * 0.1)!,
+                      const Color(0xFFC9A227),
+                    ],
+                  ),
+                  border: Border.all(color: Colors.white, width: 0.8),
+                ),
               ),
             ),
         ],
@@ -1678,79 +1835,167 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _betChip(int amount) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: AppColors.accentStart.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          '$amount',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Свои карты + своя рамка (как у соперников, без клика) + действия.
-  Widget _buildHeroArea(PokerGameView game, bool narrow) {
+  /// Свои крупные карты + компактная карточка — всё на фетре снизу.
+  Widget _buildHeroOnTable(PokerGameView game, bool narrow) {
     final me = game.me;
-    final heroCards = narrow ? const Size(54, 77) : const Size(64, 91);
+    if (me == null) return const SizedBox.shrink();
+    // Свои карты заметно крупнее борда и карт соперников.
+    final heroCards = narrow ? const Size(78, 112) : const Size(92, 132);
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
-    final comboLabel = _handRankLabel(game.myHandRank);
-    final comboAccent = hasHighlight ||
-        (game.isShowdown &&
-            me != null &&
-            _winnerSeats(game).contains(me.seat));
+    final acting = me.isActing && !game.isOver && !game.isHandOver;
+    final isWinner = game.isHandOver && _winnerSeats(game).contains(me.seat);
+    final dim = me.folded;
+    final plateW = narrow ? 104.0 : 118.0;
+    const borderW = 2.5;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(12, 4, 12, narrow ? 8 : 14),
+    final namePlate = Container(
+      width: plateW,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: dim ? 0.55 : 0.72),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isWinner
+              ? const Color(0xFFF5B301)
+              : Colors.white.withValues(alpha: 0.06),
+          width: isWinner ? 1.5 : 1,
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (me != null) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (me.holeCards != null)
-                  for (final c in me.holeCards!)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _EntranceCard(
-                        key: ValueKey(
-                            'hero_${game.handNumber}_${c.rank}_${c.suit}'),
-                        child: PlayingCardWidget(
-                          card: c.toPlayingCard(),
-                          size: heroCards,
-                          highlighted: hasHighlight &&
-                              highlightKeys
-                                  .contains(PokerGameView.cardKeyOf(c)),
-                          dimmed: hasHighlight &&
-                              !highlightKeys
-                                  .contains(PokerGameView.cardKeyOf(c)),
-                          animate: false,
+          Text(
+            _playerName(me),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: dim ? 0.45 : 1),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            me.folded
+                ? context.l10n.pokerFolded
+                : me.allIn
+                    ? context.l10n.pokerAllInBadge
+                    : '${me.chips}',
+            style: TextStyle(
+              color: dim
+                  ? Colors.white38
+                  : me.allIn
+                      ? const Color(0xFFFBBF24)
+                      : const Color(0xFFF5D76E),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (me.holeCards != null)
+              SizedBox(
+                width: heroCards.width * 1.65,
+                height: heroCards.height,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (var i = 0; i < me.holeCards!.length; i++)
+                      Positioned(
+                        left: i * heroCards.width * 0.55,
+                        child: _EntranceCard(
+                          key: ValueKey(
+                            'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+                          ),
+                          child: PlayingCardWidget(
+                            card: me.holeCards![i].toPlayingCard(),
+                            size: heroCards,
+                            highlighted: hasHighlight &&
+                                highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
+                                ),
+                            dimmed: hasHighlight &&
+                                !highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
+                                ),
+                            animate: false,
+                          ),
                         ),
                       ),
+                  ],
+                ),
+              ),
+            const SizedBox(width: 8),
+            KeyedSubtree(
+              key: _seatKey(me.seat),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 220),
+                    opacity: dim ? 0.4 : 1,
+                    child: GamePlayerAvatar(
+                      displayName: _playerName(me),
+                      avatarKind: me.avatarKind,
+                      avatarValue: me.avatarValue,
+                      frameCode: me.frameCode,
+                      frameColor: me.frameColor,
+                      compact: true,
                     ),
-                const SizedBox(width: 10),
-                // Своя рамка — та же, что у соперников; аватар не кликабелен.
-                _buildSeat(game, me, narrow, isSelf: true),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  TurnTimerBorder(
+                    key: ValueKey('poker-hero-${game.turnDeadline}'),
+                    active: acting,
+                    turnDeadline: game.turnDeadline,
+                    turnTimeSec: game.turnTimeSec,
+                    borderWidth: borderW,
+                    radius: 12,
+                    showIdleBorder: false,
+                    child: namePlate,
+                  ),
+                ],
+              ),
             ),
-            if (comboLabel != null) ...[
-              const SizedBox(height: 6),
-              _comboLabel(comboLabel, highlight: comboAccent),
-            ],
-            const SizedBox(height: 8),
+          ],
+        ),
+        // Своя ставка на фетре — над карточкой, к центру стола.
+        if (me.bet > 0 && !me.folded)
+          Positioned(
+            top: -26,
+            child: _tableBetLabel(me.bet),
+          ),
+      ],
+    );
+  }
+
+  /// Под столом: подпись комбинации + панель действий.
+  Widget _buildBottomBar(PokerGameView game, bool narrow) {
+    final comboLabel = _handRankLabel(game.myHandRank);
+    final comboAccent = _shouldHighlightCombo(game) ||
+        (game.isShowdown &&
+            game.me != null &&
+            _winnerSeats(game).contains(game.me!.seat));
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 2, 12, narrow ? 8 : 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (comboLabel != null) ...[
+            _comboLabel(comboLabel, highlight: comboAccent),
+            const SizedBox(height: 6),
           ],
           if (!game.isOver && !game.isHandOver && game.isMyTurn)
             _buildActionBar(game),
