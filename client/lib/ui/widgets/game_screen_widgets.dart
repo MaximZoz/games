@@ -600,6 +600,9 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
   Timer? _timer;
   int _remaining = 0;
   bool _expiredFired = false;
+  /// Был ли остаток > 0 хотя бы раз. Без этого onExpired не зовём — иначе при
+  /// перекосе часов / устаревшем дедлайне срабатывает мгновенный автоход.
+  bool _sawPositive = false;
   AnimationController? _blink;
 
   @override
@@ -619,6 +622,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.turnDeadline != widget.turnDeadline) {
       _expiredFired = false;
+      _sawPositive = false;
       _timer?.cancel();
       _updateRemaining();
       _startTimer();
@@ -657,7 +661,12 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       _updateRemaining();
       _syncBlink();
       // Только свой ход: чужой/скрытый виджет не должен штрафовать соперника.
-      if (_remaining <= 0 && !_expiredFired && widget.isMyTurn) {
+      // И только если таймер реально тикал с positive remaining — иначе при
+      // дедлайне уже в прошлом (перекос часов) будет мгновенный автоход.
+      if (_remaining <= 0 &&
+          !_expiredFired &&
+          widget.isMyTurn &&
+          _sawPositive) {
         _expiredFired = true;
         widget.onExpired();
       }
@@ -667,6 +676,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
   void _updateRemaining() {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
     final r = widget.turnDeadline - now;
+    if (r > 0) _sawPositive = true;
     if (r != _remaining && mounted) {
       setState(() => _remaining = r.clamp(0, 999));
     } else if (r <= 0 && _remaining != 0 && mounted) {
