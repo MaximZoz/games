@@ -671,6 +671,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerStreetShowdown => 'Вскрытие';
 
   @override
+  String get pokerHandHighCard => 'Старшая карта';
+
+  @override
+  String get pokerHandOnePair => 'Пара';
+
+  @override
+  String get pokerHandTwoPair => 'Две пары';
+
+  @override
+  String get pokerHandThreeOfAKind => 'Тройка';
+
+  @override
+  String get pokerHandStraight => 'Стрит';
+
+  @override
+  String get pokerHandFlush => 'Флеш';
+
+  @override
+  String get pokerHandFullHouse => 'Фулл-хаус';
+
+  @override
+  String get pokerHandFourOfAKind => 'Каре';
+
+  @override
+  String get pokerHandStraightFlush => 'Стрит-флеш';
+
+  @override
+  String get pokerHandRoyalFlush => 'Роял-флеш';
+
+  @override
+  String pokerHandNumber(int n) {
+    return 'Раздача $n';
+  }
+
+  @override
+  String pokerBlinds(int sb, int bb) {
+    return 'Блайнды $sb/$bb';
+  }
+
+  @override
+  String get pokerTableYouWon => 'Вы выиграли стол!';
+
+  @override
+  String get pokerNextHandSoon => 'Следующая раздача…';
+
+  @override
+  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач.';
+
+  @override
   String get gamesRules => 'Правила';
 
   @override

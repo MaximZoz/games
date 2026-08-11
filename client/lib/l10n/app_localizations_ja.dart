@@ -671,6 +671,55 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pokerStreetShowdown => 'Showdown';
 
   @override
+  String get pokerHandHighCard => 'High card';
+
+  @override
+  String get pokerHandOnePair => 'One pair';
+
+  @override
+  String get pokerHandTwoPair => 'Two pair';
+
+  @override
+  String get pokerHandThreeOfAKind => 'Three of a kind';
+
+  @override
+  String get pokerHandStraight => 'Straight';
+
+  @override
+  String get pokerHandFlush => 'Flush';
+
+  @override
+  String get pokerHandFullHouse => 'Full house';
+
+  @override
+  String get pokerHandFourOfAKind => 'Four of a kind';
+
+  @override
+  String get pokerHandStraightFlush => 'Straight flush';
+
+  @override
+  String get pokerHandRoyalFlush => 'Royal flush';
+
+  @override
+  String pokerHandNumber(int n) {
+    return 'Hand $n';
+  }
+
+  @override
+  String pokerBlinds(int sb, int bb) {
+    return 'Blinds $sb/$bb';
+  }
+
+  @override
+  String get pokerTableYouWon => 'You won the table!';
+
+  @override
+  String get pokerNextHandSoon => 'Next hand…';
+
+  @override
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every few hands.';
+
+  @override
   String get gamesRules => 'ルール';
 
   @override

@@ -1409,6 +1409,96 @@ abstract class AppLocalizations {
   /// **'Вскрытие'**
   String get pokerStreetShowdown;
 
+  /// No description provided for @pokerHandHighCard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Старшая карта'**
+  String get pokerHandHighCard;
+
+  /// No description provided for @pokerHandOnePair.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пара'**
+  String get pokerHandOnePair;
+
+  /// No description provided for @pokerHandTwoPair.
+  ///
+  /// In ru, this message translates to:
+  /// **'Две пары'**
+  String get pokerHandTwoPair;
+
+  /// No description provided for @pokerHandThreeOfAKind.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тройка'**
+  String get pokerHandThreeOfAKind;
+
+  /// No description provided for @pokerHandStraight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стрит'**
+  String get pokerHandStraight;
+
+  /// No description provided for @pokerHandFlush.
+  ///
+  /// In ru, this message translates to:
+  /// **'Флеш'**
+  String get pokerHandFlush;
+
+  /// No description provided for @pokerHandFullHouse.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фулл-хаус'**
+  String get pokerHandFullHouse;
+
+  /// No description provided for @pokerHandFourOfAKind.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каре'**
+  String get pokerHandFourOfAKind;
+
+  /// No description provided for @pokerHandStraightFlush.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стрит-флеш'**
+  String get pokerHandStraightFlush;
+
+  /// No description provided for @pokerHandRoyalFlush.
+  ///
+  /// In ru, this message translates to:
+  /// **'Роял-флеш'**
+  String get pokerHandRoyalFlush;
+
+  /// No description provided for @pokerHandNumber.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раздача {n}'**
+  String pokerHandNumber(int n);
+
+  /// No description provided for @pokerBlinds.
+  ///
+  /// In ru, this message translates to:
+  /// **'Блайнды {sb}/{bb}'**
+  String pokerBlinds(int sb, int bb);
+
+  /// No description provided for @pokerTableYouWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выиграли стол!'**
+  String get pokerTableYouWon;
+
+  /// No description provided for @pokerNextHandSoon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Следующая раздача…'**
+  String get pokerNextHandSoon;
+
+  /// No description provided for @rulesPokerTable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач.'**
+  String get rulesPokerTable;
+
   /// No description provided for @gamesRules.
   ///
   /// In ru, this message translates to:

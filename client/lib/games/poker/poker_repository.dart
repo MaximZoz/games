@@ -109,6 +109,35 @@ class PokerPlayerView {
   }
 }
 
+/// Лучшая комбинация победителя на вскрытии: место, ранг и 5 карт.
+class PokerWinnerHand {
+  const PokerWinnerHand({
+    required this.seat,
+    this.rank,
+    this.cards = const [],
+  });
+
+  final int seat;
+  final String? rank;
+  final List<PokerApiCard> cards;
+
+  factory PokerWinnerHand.fromJson(Map<String, dynamic> json) {
+    final cards = json['cards'];
+    return PokerWinnerHand(
+      seat: (json['seat'] as num?)?.toInt() ?? 0,
+      rank: (json['rank']?.toString().trim().isEmpty ?? true)
+          ? null
+          : json['rank'].toString(),
+      cards: cards is List
+          ? cards
+              .whereType<Map>()
+              .map((e) => PokerApiCard.fromJson(e.cast<String, dynamic>()))
+              .toList()
+          : const [],
+    );
+  }
+}
+
 /// Полный view партии покера — GET /api/games/poker/game/:id.
 class PokerGameView {
   const PokerGameView({
@@ -140,6 +169,15 @@ class PokerGameView {
     required this.isOver,
     required this.isForfeit,
     required this.isTimeout,
+    this.handNumber = 1,
+    this.blindLevel = 0,
+    this.handsPerLevel = 0,
+    this.isHandOver = false,
+    this.isTableOver = false,
+    this.myHandRank,
+    this.myHandCards = const [],
+    this.highlightedCards = const [],
+    this.winnerHands = const [],
   });
 
   final String id;
@@ -171,10 +209,47 @@ class PokerGameView {
   final bool isForfeit;
   final bool isTimeout;
 
+  // Кэш-стол: прогресс партии, уровни блайндов и подсказки по комбинациям.
+  final int handNumber;
+  final int blindLevel;
+  final int handsPerLevel;
+  final bool isHandOver;
+  final bool isTableOver;
+  final String? myHandRank;
+  final List<PokerApiCard> myHandCards;
+  final List<PokerApiCard> highlightedCards;
+  final List<PokerWinnerHand> winnerHands;
+
   bool get isMyTurn =>
       !isOver && myIndex >= 0 && myIndex == actingIndex && legalActions.isNotEmpty;
 
   bool get iWon => myIndex >= 0 && winners.contains(myIndex);
+
+  /// Ходы в текущей раздаче завершены (вскрытие/победа), но стол может идти.
+  bool get handFinished => isHandOver || isOver;
+
+  /// Показывать подсветку/затемнение карт (вскрытие или конец раздачи).
+  bool get isShowdown =>
+      handFinished || street == 'showdown' || street == 'over';
+
+  /// Набор подсвеченных карт (ранг*100+масть-код) для быстрой проверки.
+  Set<int> get highlightKeys {
+    final source = highlightedCards.isNotEmpty ? highlightedCards : myHandCards;
+    return {for (final c in source) _cardKey(c)};
+  }
+
+  static int _cardKey(PokerApiCard c) {
+    final s = switch (c.suit.toUpperCase().trim()) {
+      'H' => 0,
+      'D' => 1,
+      'C' => 2,
+      'S' => 3,
+      _ => 4,
+    };
+    return c.rank * 10 + s;
+  }
+
+  static int cardKeyOf(PokerApiCard c) => _cardKey(c);
 
   bool canDo(String action) => legalActions.contains(action);
 
@@ -231,9 +306,34 @@ class PokerGameView {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      isOver: json['is_over'] == true || (json['status'] ?? '') == 'over',
+      // is_over относится ко ВСЕМУ столу (кэш-стол): статус «over» между
+      // раздачами не должен показывать rematch — опираемся на явные флаги.
+      isOver: json['is_over'] == true || json['is_table_over'] == true,
       isForfeit: json['is_forfeit'] == true,
       isTimeout: json['is_timeout'] == true,
+      handNumber: (json['hand_number'] as num?)?.toInt() ?? 1,
+      blindLevel: (json['blind_level'] as num?)?.toInt() ?? 0,
+      handsPerLevel: (json['hands_per_level'] as num?)?.toInt() ?? 0,
+      isHandOver: json['is_hand_over'] == true,
+      isTableOver: json['is_table_over'] == true,
+      myHandRank: (json['my_hand_rank']?.toString().trim().isEmpty ?? true)
+          ? null
+          : json['my_hand_rank'].toString(),
+      myHandCards: (json['my_hand_cards'] as List?)
+              ?.whereType<Map>()
+              .map((e) => PokerApiCard.fromJson(e.cast<String, dynamic>()))
+              .toList() ??
+          const [],
+      highlightedCards: (json['highlighted_cards'] as List?)
+              ?.whereType<Map>()
+              .map((e) => PokerApiCard.fromJson(e.cast<String, dynamic>()))
+              .toList() ??
+          const [],
+      winnerHands: (json['winner_hands'] as List?)
+              ?.whereType<Map>()
+              .map((e) => PokerWinnerHand.fromJson(e.cast<String, dynamic>()))
+              .toList() ??
+          const [],
     );
   }
 }
