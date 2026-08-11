@@ -82,6 +82,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   bool _fxHit = false;
   /// Во время FX: true = своё поле, false = поле соперника, null = по ходу.
   bool? _fxShowMineBoard;
+  /// Сразу после победного выстрела — скрыть таймер, не дожидаясь invalidate.
+  bool _hideTimers = false;
 
   @override
   void initState() {
@@ -114,6 +116,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _fxInProgress = false;
       _pulseHitCell = null;
       _fxShowMineBoard = null;
+      _hideTimers = false;
       _hitPulse.stop();
       _hitPulse.reset();
       setState(() {
@@ -466,6 +469,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       if (!mounted) return;
       final shotCell = view.lastShot >= 0 ? view.lastShot : cell;
       _lastFxKey = _fxKey(view);
+      // Победа/конец — сразу убрать таймер (invalidate идёт после анимации).
+      if (view.isOver && !_hideTimers) {
+        setState(() => _hideTimers = true);
+      }
       await _playShotReveal(
         cell: shotCell,
         hit: view.lastShotHit,
@@ -732,6 +739,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           _fxInProgress = false;
           _pulseHitCell = null;
           _fxShowMineBoard = null;
+          _hideTimers = false;
           _hitPulse.stop();
           _hitPulse.reset();
           session.restart();
@@ -892,6 +900,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       final game = next.valueOrNull;
       if (game == null) return;
       _syncLocalShips(game);
+      if (game.isOver && !_hideTimers) {
+        setState(() => _hideTimers = true);
+      }
       final me = ref.read(authStateProvider).valueOrNull?.id;
       _maybeRevealRemoteShot(game, me);
     });
@@ -981,7 +992,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             ],
                           ),
                         ),
-                        if (game.isSetup &&
+                        if (!isOver &&
+                            !_hideTimers &&
+                            game.isSetup &&
                             !_iAmReady(game, me) &&
                             game.setupDeadline > 0)
                           Padding(
@@ -995,8 +1008,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                   context.l10n.gameSecondsLeft(s),
                             ),
                           ),
-                        if (game.isBattle &&
-                            !isOver &&
+                        if (!isOver &&
+                            !_hideTimers &&
+                            game.isBattle &&
                             game.turnTimeSec > 0 &&
                             game.turnDeadline > 0)
                           Padding(
