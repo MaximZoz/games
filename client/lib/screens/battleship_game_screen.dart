@@ -73,6 +73,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   int? _selectedShipIndex;
   bool _shipsSyncedFromServer = false;
   bool _setupAutoSubmitted = false;
+  /// Локальный unix-дедлайн расстановки (от setup_seconds_left), без перекоса часов.
+  int _setupLocalDeadline = 0;
+  int _setupDeadlineKey = 0;
 
   /// Анимация попадания/промаха + удержание поля 1с перед сменой хода.
   late final AnimationController _hitPulse;
@@ -107,6 +110,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _rematchPollTimer?.cancel();
       _shipsSyncedFromServer = false;
       _setupAutoSubmitted = false;
+      _setupLocalDeadline = 0;
+      _setupDeadlineKey = 0;
       _localShips = const [];
       _selectedShipIndex = null;
       _balanceGainPlayed = false;
@@ -374,14 +379,57 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     }
   }
 
+  /// Синхронизирует локальный дедлайн расстановки с серверным остатком секунд.
+  void _syncSetupLocalDeadline(BattleshipGameView game) {
+    if (!game.isSetup || game.setupDeadline <= 0) {
+      _setupLocalDeadline = 0;
+      _setupDeadlineKey = 0;
+      return;
+    }
+    if (game.setupDeadline == _setupDeadlineKey && _setupLocalDeadline > 0) {
+      return;
+    }
+    _setupDeadlineKey = game.setupDeadline;
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+    // Предпочитаем относительный остаток с сервера — нет мгновенного «0 с»
+    // из‑за расхождения часов клиента и сервера.
+    var left = game.setupSecondsLeft;
+    if (left <= 0 && game.setupDeadline > now) {
+      left = game.setupDeadline - now;
+    }
+    if (left < 0) left = 0;
+    if (left > 60) left = 60;
+    _setupLocalDeadline = now + left;
+  }
+
   /// Таймаут расстановки: отправляем текущую валидную, иначе дефолтную.
   Future<void> _onSetupExpired() async {
     if (_setupAutoSubmitted || _busy) {
       ref.invalidate(battleshipGameProvider(widget.gameId));
       return;
     }
-    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     final me = ref.read(authStateProvider).valueOrNull?.id;
+    // Перепроверяем сервер: не авто-ставим, если у сервера ещё есть время.
+    try {
+      final fresh = await ref
+          .read(battleshipRepositoryProvider)
+          .getGame(widget.gameId);
+      if (!mounted) return;
+      if (!fresh.isSetup || _iAmReady(fresh, me)) {
+        ref.invalidate(battleshipGameProvider(widget.gameId));
+        return;
+      }
+      if (fresh.setupSecondsLeft > 0) {
+        // Клиентский таймер обогнал сервер — пересинхронизируем, не сдаёмся.
+        _syncSetupLocalDeadline(fresh);
+        if (mounted) setState(() {});
+        ref.invalidate(battleshipGameProvider(widget.gameId));
+        return;
+      }
+    } catch (_) {
+      // Нет сети — всё равно попробуем сдать текущую расстановку ниже.
+    }
+    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     if (game == null || !game.isSetup || _iAmReady(game, me)) {
       ref.invalidate(battleshipGameProvider(widget.gameId));
       return;
@@ -951,12 +999,23 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   data: (game) {
                     // Сразу при входе в setup — случайная (или серверная) расстановка.
                     _syncLocalShips(game);
+                    _syncSetupLocalDeadline(game);
                     final isOver = game.isOver;
                     final showSurrender = !isOver;
                     _maybeSettleGame(game, me);
                     final chip = _rewardChipBronze(game, me);
                     final status = _statusText(game, me);
                     final myTurn = game.isTurnOf(me);
+                    final nowSec =
+                        DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+                    final setupDeadline = _setupLocalDeadline > 0
+                        ? _setupLocalDeadline
+                        : game.setupDeadline;
+                    final showSetupTimer = !isOver &&
+                        !_hideTimers &&
+                        game.isSetup &&
+                        !_iAmReady(game, me) &&
+                        setupDeadline > nowSec;
                     return Column(
                       children: [
                         Padding(
@@ -992,16 +1051,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             ],
                           ),
                         ),
-                        if (!isOver &&
-                            !_hideTimers &&
-                            game.isSetup &&
-                            !_iAmReady(game, me) &&
-                            game.setupDeadline > 0)
+                        if (showSetupTimer)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: GameTurnCountdown(
                               key: ValueKey('setup_${game.setupDeadline}'),
-                              turnDeadline: game.setupDeadline,
+                              turnDeadline: setupDeadline,
+                              turnTimeSec: 60,
                               isMyTurn: true,
                               onExpired: () => unawaited(_onSetupExpired()),
                               labelBuilder: (s) =>

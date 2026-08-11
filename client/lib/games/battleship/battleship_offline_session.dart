@@ -220,6 +220,7 @@ class OfflineBattleshipSession extends ChangeNotifier {
       turnTimeSec: 0,
       turnDeadline: 0,
       setupDeadline: 0,
+      setupSecondsLeft: 0,
       stakeBronze: 0,
       winner: _winner,
       forfeit: _forfeit,
