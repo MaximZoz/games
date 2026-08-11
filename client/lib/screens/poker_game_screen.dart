@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -51,6 +52,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
   bool _prevOver = false;
+  bool _balanceGainPlayed = false;
+  bool _lossChipRevealed = false;
+  final GlobalKey _winRewardKey = GlobalKey();
 
   // ---- анимация появления борда + полёт фишек ----
   /// Цель анимации фишек — стопка под общими картами (не бейдж «Банк»).
@@ -63,6 +67,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   int _prevHandNumber = -1;
   bool _prevHandOver = false;
   final Map<int, int> _prevBets = {};
+  final Map<int, bool> _prevFolded = {};
+  int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
 
   bool get _isOffline =>
@@ -96,6 +102,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _isAcceptingRematch = false;
         _isFindingGame = false;
         _prevOver = false;
+        _balanceGainPlayed = false;
+        _lossChipRevealed = false;
       });
     }
   }
@@ -164,9 +172,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final l10n = context.l10n;
     final me = game.myIndex;
     final iWon = me >= 0 && game.winners.contains(me);
-    // Весь стол окончен — итоговая победа/поражение.
+    // Весь стол окончен — как в дураке / крестиках.
     if (game.isOver) {
-      if (iWon) return l10n.pokerTableYouWon;
+      if (iWon) {
+        if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
+        if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        return l10n.gameYouWon;
+      }
+      if (game.stakeBronze > 0) return l10n.gameYouLost;
       if (game.winners.isNotEmpty) {
         final w = game.winners.first;
         if (w >= 0 && w < game.players.length) {
@@ -175,7 +188,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       return l10n.pokerHandOver;
     }
-    // Раздача завершена, стол продолжается — «забрали банк».
+    // Раздача завершена, стол продолжается.
     if (game.isHandOver) {
       if (iWon) return l10n.pokerYouWonHand;
       if (game.winners.isNotEmpty) {
@@ -192,6 +205,87 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       return l10n.pokerToAct(_playerName(game.players[acting]));
     }
     return '';
+  }
+
+  int _rewardChipBronze(PokerGameView game) {
+    if (!game.isOver || game.stakeBronze <= 0) return 0;
+    final me = game.myIndex;
+    final iWon = me >= 0 && game.winners.contains(me);
+    if (iWon) {
+      return stakeWinnerNetProfit(
+        stake: game.stakeBronze,
+        playerCount: game.players.length.clamp(2, 9),
+        winnerCount: game.winners.isEmpty ? 1 : game.winners.length,
+      );
+    }
+    if (!_lossChipRevealed) return 0;
+    return -game.stakeBronze;
+  }
+
+  Future<void> _onGameSettled({
+    required int creditBronze,
+    required int displayRewardBronze,
+    int lostBronze = 0,
+  }) async {
+    if (_balanceGainPlayed) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    _balanceGainPlayed = true;
+    if (lostBronze > 0 && creditBronze <= 0) {
+      await playGameSettledLoss(
+        ref: ref,
+        context: context,
+        lostBronze: lostBronze,
+      );
+      if (mounted) setState(() => _lossChipRevealed = true);
+      return;
+    }
+    await playGameSettledReward(
+      ref: ref,
+      context: context,
+      creditBronze: creditBronze,
+      displayRewardBronze: displayRewardBronze,
+      sourceKey: displayRewardBronze > 0 ? _winRewardKey : null,
+    );
+  }
+
+  void _maybeSettleGame(PokerGameView game) {
+    if (!game.isOver) return;
+    if (_balanceGainPlayed || _isOffline) return;
+    // Сразу, чтобы повторные build не ставили анимацию в очередь дважды.
+    _balanceGainPlayed = true;
+    if (game.stakeBronze <= 0) {
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    final me = game.myIndex;
+    final iWon = me >= 0 && game.winners.contains(me);
+    final n = game.players.length.clamp(2, 9);
+    final winnersN = game.winners.isEmpty ? 1 : game.winners.length;
+    final pot = stakeWinnerCredit(
+      stake: game.stakeBronze,
+      playerCount: n,
+      winnerCount: winnersN,
+    );
+    final net = stakeWinnerNetProfit(
+      stake: game.stakeBronze,
+      playerCount: n,
+      winnerCount: winnersN,
+    );
+    final credit = iWon ? pot : 0;
+    final display = iWon ? net : 0;
+    final lost = (!iWon && game.stakeBronze > 0) ? game.stakeBronze : 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Сбрасываем флаг: _onGameSettled снова выставит его сам.
+      _balanceGainPlayed = false;
+      unawaited(_onGameSettled(
+        creditBronze: credit,
+        displayRewardBronze: display,
+        lostBronze: lost,
+      ));
+    });
   }
 
   /// Локализованное название комбинации по каноническому имени ранга сервера.
@@ -592,10 +686,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _prevOver = true;
         if (!_isOffline) {
           _clearSessionForFinishedGame();
-          unawaited(ref.read(authStateProvider.notifier).refresh());
+          _maybeSettleGame(game);
         }
       } else if (!game.isOver) {
         _prevOver = false;
+        _balanceGainPlayed = false;
+        _lossChipRevealed = false;
       }
     });
 
@@ -667,8 +763,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   Widget _buildContent(PokerGameView game, bool narrow) {
     _syncDeal(game);
     _syncChipFx(game);
+    _syncFoldFx(game);
+    if (game.isOver && !_balanceGainPlayed && !_isOffline) {
+      _maybeSettleGame(game);
+    }
     final isOver = game.isOver;
     final status = _statusText(game);
+    final rewardBronze = _rewardChipBronze(game);
+    final showReward = isOver &&
+        game.stakeBronze > 0 &&
+        (rewardBronze != 0);
     final showTimer = !isOver &&
         !game.isHandOver &&
         game.isMyTurn &&
@@ -695,10 +799,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               if (status.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: GameStatusLine(
-                    text: status,
-                    highlight: game.isMyTurn && !isOver && !game.isHandOver,
-                  ),
+                  child: isOver
+                      ? GameStatusWithReward(
+                          statusText: status,
+                          showReward: showReward,
+                          rewardBronze: rewardBronze,
+                          rewardKey: _winRewardKey,
+                          fontSize: 18,
+                        )
+                      : GameStatusLine(
+                          text: status,
+                          highlight:
+                              game.isMyTurn && !isOver && !game.isHandOver,
+                        ),
                 ),
               if (betweenHands)
                 Padding(
@@ -1257,121 +1370,280 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     });
   }
 
-  Widget _buildSeat(PokerGameView game, PokerPlayerView p, bool narrow) {
-    final isDealer = p.seat == game.dealerIndex;
+  /// Фиксированная рамка игрока: во время игры без карт; на вскрытии —
+  /// крупные карманные карты сверху (слот всегда зарезервирован — без скачков).
+  Widget _buildSeat(
+    PokerGameView game,
+    PokerPlayerView p,
+    bool narrow, {
+    bool isSelf = false,
+  }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
-    final cardSize = narrow ? const Size(30, 43) : const Size(34, 49);
-    final showHole = p.holeCards != null && p.holeCards!.isNotEmpty;
     final showdown = game.isShowdown;
     final highlightKeys = game.highlightKeys;
-    // На вскрытии подсвечиваем карты победившей комбинации у всех открытых.
     final hasHighlight = showdown && highlightKeys.isNotEmpty;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
     final headsUp = game.players.length == 2;
+    // Соперникам карты только на вскрытии; себе — слот пустой (свои карты в hero).
+    final showOppCards = !isSelf &&
+        showdown &&
+        !p.folded &&
+        p.holeCards != null &&
+        p.holeCards!.isNotEmpty;
+    final holeSize = narrow ? const Size(46, 66) : const Size(54, 77);
+    final frameW = narrow ? 122.0 : 136.0;
+    // Фиксированная высота контента рамки (аватар + имя + стек + ставка).
+    const frameBodyH = 112.0;
+    const borderW = 2.5;
 
-    return Container(
-      key: _seatKey(p.seat),
-      width: narrow ? 120 : 138,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: acting ? 0.5 : 0.32),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: acting
-              ? AppColors.accentStart
-              : isWinner
-                  ? const Color(0xFFF5B301)
-                  : Colors.white.withValues(alpha: 0.08),
-          width: acting || isWinner ? 2 : 1,
+    final frameBody = AnimatedOpacity(
+      duration: const Duration(milliseconds: 220),
+      opacity: p.folded ? 0.42 : 1,
+      child: Container(
+        key: isSelf ? null : _seatKey(p.seat),
+        width: frameW,
+        height: frameBodyH,
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: p.folded ? 0.55 : 0.38),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isWinner
+                ? const Color(0xFFF5B301)
+                : Colors.white.withValues(alpha: 0.08),
+            width: isWinner ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: (!isSelf && headsUp)
+                      ? () => unawaited(_showPlayerCard(p))
+                      : null,
+                  behavior: HitTestBehavior.opaque,
+                  child: GamePlayerAvatar(
+                    displayName: _playerName(p),
+                    avatarKind: p.avatarKind,
+                    avatarValue: p.avatarValue,
+                    frameCode: p.frameCode,
+                    frameColor: p.frameColor,
+                    compact: true,
+                  ),
+                ),
+                if (p.seat == game.dealerIndex) ...[
+                  const SizedBox(width: 4),
+                  _dealerBadge(size: 20),
+                ],
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              _playerName(p),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: p.folded ? 0.7 : 1),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              p.folded
+                  ? context.l10n.pokerFolded
+                  : p.allIn
+                      ? context.l10n.pokerAllInBadge
+                      : '${p.chips}',
+              style: TextStyle(
+                color: p.folded
+                    ? Colors.white54
+                    : p.allIn
+                        ? const Color(0xFFFBBF24)
+                        : Colors.white.withValues(alpha: 0.85),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            // Место под бэйдж ставки всегда одинаковое — без скачка layout.
+            SizedBox(
+              height: 22,
+              child: p.bet > 0 && !p.folded
+                  ? Center(child: _betChip(p.bet))
+                  : null,
+            ),
+          ],
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    );
+
+    // Layout-высота только под рамку (+ padding таймера). Карты на вскрытии
+    // рисуются поверх через Stack — позиция рамки на столе не меняется.
+    return SizedBox(
+      width: frameW + borderW * 2,
+      height: frameBodyH + borderW * 2,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-          // Карманные карты соперника (рубашки или вскрытые). При фолде —
-          // плавно тускнеют и уменьшаются (сброс в биту).
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 260),
-            opacity: p.folded ? 0.32 : 1,
-            child: AnimatedScale(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutCubic,
-              scale: p.folded ? 0.85 : 1,
+          TurnTimerBorder(
+            key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
+            active: acting,
+            turnDeadline: game.turnDeadline,
+            turnTimeSec: game.turnTimeSec,
+            borderWidth: borderW,
+            radius: 18,
+            showIdleBorder: false,
+            child: isSelf
+                ? KeyedSubtree(key: _seatKey(p.seat), child: frameBody)
+                : frameBody,
+          ),
+          if (showOppCards)
+            Positioned(
+              bottom: frameBodyH + borderW * 2 + 4,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (var i = 0; i < 2; i++)
+                  for (final c in p.holeCards!)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: (!p.folded && showHole)
-                          ? PlayingCardWidget(
-                              card: p.holeCards![i].toPlayingCard(),
-                              size: cardSize,
-                              highlighted: showdown &&
-                                  highlightKeys.contains(
-                                      PokerGameView.cardKeyOf(p.holeCards![i])),
-                              dimmed: hasHighlight &&
-                                  !highlightKeys.contains(
-                                      PokerGameView.cardKeyOf(p.holeCards![i])),
-                              animate: false,
-                            )
-                          : CardBackWidget(size: cardSize, outlined: true),
+                      child: _EntranceCard(
+                        key: ValueKey(
+                          'opp_${game.handNumber}_${p.seat}_${c.rank}_${c.suit}',
+                        ),
+                        child: PlayingCardWidget(
+                          card: c.toPlayingCard(),
+                          size: holeSize,
+                          highlighted: hasHighlight &&
+                              highlightKeys
+                                  .contains(PokerGameView.cardKeyOf(c)),
+                          dimmed: hasHighlight &&
+                              !highlightKeys
+                                  .contains(PokerGameView.cardKeyOf(c)),
+                          animate: false,
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: headsUp ? () => unawaited(_showPlayerCard(p)) : null,
-                behavior: HitTestBehavior.opaque,
-                child: GamePlayerAvatar(
-                  displayName: _playerName(p),
-                  avatarKind: p.avatarKind,
-                  avatarValue: p.avatarValue,
-                  frameCode: p.frameCode,
-                  frameColor: p.frameColor,
-                  compact: true,
-                ),
-              ),
-              if (isDealer) ...[
-                const SizedBox(width: 4),
-                _dealerBadge(size: 20),
-              ],
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            _playerName(p),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            p.folded
-                ? context.l10n.pokerFolded
-                : p.allIn
-                    ? context.l10n.pokerAllInBadge
-                    : '${p.chips}',
-            style: TextStyle(
-              color: p.allIn
-                  ? const Color(0xFFFBBF24)
-                  : Colors.white.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (p.bet > 0) _betChip(p.bet),
         ],
       ),
     );
+  }
+
+  /// Анимация сброса: рубашки летят от рамки соперника к центру стола.
+  void _syncFoldFx(PokerGameView game) {
+    if (game.handNumber != _foldHand) {
+      _foldHand = game.handNumber;
+      _prevFolded
+        ..clear()
+        ..addEntries(game.players.map((p) => MapEntry(p.seat, p.folded)));
+      return;
+    }
+    for (final p in game.players) {
+      final was = _prevFolded[p.seat] ?? false;
+      if (p.folded && !was) {
+        final seat = p.seat;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(_throwFoldCards(seat));
+        });
+      }
+    }
+    _prevFolded
+      ..clear()
+      ..addEntries(game.players.map((p) => MapEntry(p.seat, p.folded)));
+  }
+
+  Future<void> _throwFoldCards(int seat) async {
+    if (!mounted || _disposed) return;
+    final from = globalRectOf(_seatKey(seat));
+    final to = globalRectOf(_tableChipsKey);
+    if (from == null || to == null) return;
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    const cardSize = Size(34, 48);
+    for (var i = 0; i < 2; i++) {
+      if (!mounted || _disposed) return;
+      final start = from.center.translate((i == 0 ? -10 : 10).toDouble(), -8);
+      final end = to.center.translate((i == 0 ? -14 : 14).toDouble(), -6);
+      _spawnFoldCardFly(
+        overlay: overlay,
+        from: start,
+        to: end,
+        size: cardSize,
+        delayMs: i * 70,
+        spin: i == 0 ? -0.55 : 0.7,
+      );
+    }
+  }
+
+  void _spawnFoldCardFly({
+    required OverlayState overlay,
+    required Offset from,
+    required Offset to,
+    required Size size,
+    required int delayMs,
+    required double spin,
+  }) {
+    Future<void>.delayed(Duration(milliseconds: delayMs), () {
+      if (!mounted || _disposed) return;
+      late OverlayEntry entry;
+      final controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 480),
+      );
+      _chipControllers.add(controller);
+      final curved =
+          CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
+      entry = OverlayEntry(
+        builder: (_) {
+          return IgnorePointer(
+            child: AnimatedBuilder(
+              animation: curved,
+              builder: (context, _) {
+                final t = curved.value;
+                final x = from.dx + (to.dx - from.dx) * t;
+                final y = from.dy +
+                    (to.dy - from.dy) * t -
+                    36 * math.sin(math.pi * t);
+                final rot = spin * t;
+                final opacity = (1.0 - t * 0.85).clamp(0.0, 1.0);
+                final scale = 1.0 - 0.35 * t;
+                return Stack(
+                  children: [
+                    Positioned(
+                      left: x - size.width / 2,
+                      top: y - size.height / 2,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Transform.rotate(
+                          angle: rot,
+                          child: Transform.scale(
+                            scale: scale,
+                            child: CardBackWidget(size: size, outlined: true),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        },
+      );
+      overlay.insert(entry);
+      controller.forward().whenComplete(() {
+        entry.remove();
+        curved.dispose();
+        controller.dispose();
+        _chipControllers.remove(controller);
+      });
+    });
   }
 
   Widget _dealerBadge({double size = 24}) {
@@ -1427,10 +1699,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Свои карты + подпись комбинации + панель действий.
+  /// Свои карты + своя рамка (как у соперников, без клика) + действия.
   Widget _buildHeroArea(PokerGameView game, bool narrow) {
     final me = game.me;
-    // Hero чуть компактнее крупного борда — акцент на общих картах.
     final heroCards = narrow ? const Size(54, 77) : const Size(64, 91);
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
@@ -1470,38 +1741,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                         ),
                       ),
                     ),
-                const SizedBox(width: 12),
-                KeyedSubtree(
-                  key: _seatKey(me.seat),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _dealerHeroBadge(game),
-                          Text(
-                            '${me.chips}',
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (me.bet > 0)
-                        Text(
-                          '+${me.bet}',
-                          style: const TextStyle(
-                            color: AppColors.accentStart,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                const SizedBox(width: 10),
+                // Своя рамка — та же, что у соперников; аватар не кликабелен.
+                _buildSeat(game, me, narrow, isSelf: true),
               ],
             ),
             if (comboLabel != null) ...[
@@ -1540,18 +1782,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           letterSpacing: 0.3,
         ),
       ),
-    );
-  }
-
-  Widget _dealerHeroBadge(PokerGameView game) {
-    final me = game.myIndex;
-    if (me < 0 || me >= game.players.length) return const SizedBox.shrink();
-    if (game.players[me].seat != game.dealerIndex) {
-      return const SizedBox.shrink();
-    }
-    return Padding(
-      padding: const EdgeInsets.only(right: 6),
-      child: _dealerBadge(),
     );
   }
 
