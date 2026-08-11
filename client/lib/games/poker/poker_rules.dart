@@ -24,5 +24,6 @@ List<String> pokerRuleLines({
     t.rulesPokerIntro,
     t.rulesPokerPlay,
     t.rulesPokerWin,
+    t.rulesPokerTable,
   ];
 }

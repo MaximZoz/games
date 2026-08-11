@@ -332,6 +332,38 @@
   "pokerStreetTurn": "Тёрн",
   "pokerStreetRiver": "Ривер",
   "pokerStreetShowdown": "Вскрытие",
+  "pokerHandHighCard": "Старшая карта",
+  "pokerHandOnePair": "Пара",
+  "pokerHandTwoPair": "Две пары",
+  "pokerHandThreeOfAKind": "Тройка",
+  "pokerHandStraight": "Стрит",
+  "pokerHandFlush": "Флеш",
+  "pokerHandFullHouse": "Фулл-хаус",
+  "pokerHandFourOfAKind": "Каре",
+  "pokerHandStraightFlush": "Стрит-флеш",
+  "pokerHandRoyalFlush": "Роял-флеш",
+  "pokerHandNumber": "Раздача {n}",
+  "@pokerHandNumber": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerBlinds": "Блайнды {sb}/{bb}",
+  "@pokerBlinds": {
+    "placeholders": {
+      "sb": {
+        "type": "int"
+      },
+      "bb": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerTableYouWon": "Вы выиграли стол!",
+  "pokerNextHandSoon": "Следующая раздача…",
+  "rulesPokerTable": "Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач.",
   "gamesRules": "Правила",
   "gamesRulesTitle": "Правила игры",
   "gamesCreate": "Создать игру",

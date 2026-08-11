@@ -25,6 +25,7 @@ class OfflinePokerSession extends ChangeNotifier {
   static const int smallBlind = 5;
   static const int bigBlind = 10;
   static const Duration botDelay = Duration(milliseconds: 700);
+  static const Duration nextHandDelay = Duration(milliseconds: 2500);
 
   late PokerEngine _engine;
   late List<String> _playerIds;
@@ -32,6 +33,7 @@ class OfflinePokerSession extends ChangeNotifier {
   final Random _rng = Random();
   int _dealer = 0;
   Timer? _botTimer;
+  Timer? _nextHandTimer;
   bool _disposed = false;
   bool _started = false;
 
@@ -57,6 +59,7 @@ class OfflinePokerSession extends ChangeNotifier {
 
   void _startFresh() {
     _botTimer?.cancel();
+    _nextHandTimer?.cancel();
     final n = playerCount.clamp(2, 6);
     _playerIds = [
       humanUserId,
@@ -103,8 +106,11 @@ class OfflinePokerSession extends ChangeNotifier {
 
   PokerGameView toView() {
     final g = _engine;
-    final isOver = g.isOver;
-    final reveal = isOver ||
+    final isHandOver = g.handOver || g.isOver;
+    final isTableOver = g.tableOver;
+    // is_over для UI = весь стол окончен (показываем rematch/итоги).
+    final isOver = isTableOver;
+    final reveal = isHandOver ||
         g.street == PokerStreet.showdown ||
         g.street == PokerStreet.over;
 
@@ -145,6 +151,31 @@ class OfflinePokerSession extends ChangeNotifier {
       if (minRaiseTo > maxRaiseTo) minRaiseTo = maxRaiseTo;
     }
 
+    // Комбинация зрителя (для подсказки ранга и подсветки карт).
+    String? myHandRank;
+    List<PokerApiCard> myHandCards = const [];
+    final myBest = g.bestHandFor(me);
+    if (myBest != null) {
+      myHandRank = pokerHandRankName(myBest.rank);
+      myHandCards = myBest.cards.map(PokerApiCard.fromCard).toList();
+    }
+
+    // На вскрытии — лучшие комбинации победителей (ранг + 5 карт) для UI.
+    final winnerHands = <PokerWinnerHand>[];
+    if (isHandOver) {
+      for (final wseat in g.winners) {
+        if (wseat < 0 || wseat >= g.players.length) continue;
+        final hv = g.bestHandFor(wseat);
+        winnerHands.add(PokerWinnerHand(
+          seat: g.players[wseat].seat,
+          rank: hv == null ? null : pokerHandRankName(hv.rank),
+          cards: hv == null
+              ? const []
+              : hv.cards.map(PokerApiCard.fromCard).toList(),
+        ));
+      }
+    }
+
     return PokerGameView(
       id: gameId,
       status: isOver ? PokerStatus.over : PokerStatus.active,
@@ -174,6 +205,15 @@ class OfflinePokerSession extends ChangeNotifier {
       isOver: isOver,
       isForfeit: false,
       isTimeout: false,
+      handNumber: g.handNumber,
+      blindLevel: g.blindLevel,
+      handsPerLevel: g.handsPerLevel,
+      isHandOver: isHandOver,
+      isTableOver: isTableOver,
+      myHandRank: myHandRank,
+      myHandCards: myHandCards,
+      highlightedCards: myHandCards,
+      winnerHands: winnerHands,
     );
   }
 
@@ -190,6 +230,7 @@ class OfflinePokerSession extends ChangeNotifier {
     }
     notifyListeners();
     _scheduleBot();
+    _scheduleNextHandIfNeeded();
   }
 
   void _scheduleBot() {
@@ -213,21 +254,44 @@ class OfflinePokerSession extends ChangeNotifier {
       }
       notifyListeners();
       _scheduleBot();
+      _scheduleNextHandIfNeeded();
+    });
+  }
+
+  /// После завершения раздачи (но не всего стола) — через паузу стартуем
+  /// следующую раздачу тем же составом.
+  void _scheduleNextHandIfNeeded() {
+    if (_disposed) return;
+    if (!_engine.handOver || _engine.tableOver) return;
+    if (_nextHandTimer?.isActive ?? false) return;
+    _nextHandTimer = Timer(nextHandDelay, () {
+      if (_disposed) return;
+      if (!_engine.handOver || _engine.tableOver) return;
+      try {
+        _engine.startNextHand(_rng);
+      } on StateError {
+        return;
+      }
+      notifyListeners();
+      _scheduleBot();
     });
   }
 
   Future<void> forfeit() async {
     if (_disposed || _engine.isOver) return;
     _botTimer?.cancel();
-    _engine.forceFold(me);
+    _nextHandTimer?.cancel();
+    _engine.forfeitPlayer(me);
     notifyListeners();
     _scheduleBot();
+    _scheduleNextHandIfNeeded();
   }
 
   @override
   void dispose() {
     _disposed = true;
     _botTimer?.cancel();
+    _nextHandTimer?.cancel();
     OfflinePokerRegistry.instance.remove(gameId);
     super.dispose();
   }

@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	pokerGameType   = "poker"
-	pokerBotID      = "bot:poker"
-	pokerStatusOver = "over"
-	pokerBotDelay   = 700 * time.Millisecond
+	pokerGameType      = "poker"
+	pokerBotID         = "bot:poker"
+	pokerStatusOver    = "over"
+	pokerBotDelay      = 700 * time.Millisecond
+	pokerNextHandDelay = 2500 * time.Millisecond
 )
 
 func pokerMatchmakeLockKey(turnTimeSec, maxPlayers, stakeBronze int) string {
@@ -703,8 +704,8 @@ func (h *GamesHandler) PokerMove(w http.ResponseWriter, r *http.Request, gameID 
 	}
 	h.savePokerState(ctx, gameID, m, state)
 	h.broadcastPokerState(gameID, m)
-	if state.IsOver() {
-		h.onPokerGameFinished(ctx, gameID, m, state, "normal")
+	if state.IsOver() || state.HandOver {
+		h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
 	} else if isBot(state.Players[state.ActingIndex].UserID) {
 		h.schedulePokerBotAct(gameID)
 	}
@@ -761,53 +762,29 @@ func (h *GamesHandler) ForfeitPokerGame(w http.ResponseWriter, r *http.Request, 
 		WriteErr(w, r, http.StatusForbidden, "not a player")
 		return
 	}
-	// Сдача = фолд. Если сейчас ход не за игроком — форсируем фолд через состояние.
-	h.pokerForceFold(state, idx)
+	// Сдача = выбывание из-за стола: игрок сбрасывает карты и теряет фишки.
+	// Если это оставляет фишки лишь у одного — стол закончен (рассчитываем).
+	// Иначе стол продолжается без выбывшего.
+	state.ForfeitPlayer(idx)
 	h.savePokerState(ctx, gameID, m, state)
 	m["forfeit"] = "1"
 	h.Rdb.HSet(ctx, "game:"+gameID, "forfeit", "1")
 	h.broadcastPokerState(gameID, m)
-	if state.IsOver() {
-		h.onPokerGameFinished(ctx, gameID, m, state, "forfeit")
-	} else if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
-		isBot(state.Players[state.ActingIndex].UserID) {
-		h.schedulePokerBotAct(gameID)
+	if state.TableOver {
+		h.onPokerTableFinished(ctx, gameID, m, state, "forfeit")
+	} else {
+		// Освобождаем самого выбывшего игрока — он больше не в активной партии.
+		clearUserActiveGame(ctx, h.Rdb, userID)
+		if state.IsOver() || state.HandOver {
+			// Форфейт завершил текущую раздачу — планируем следующую.
+			h.schedulePokerNextHand(gameID)
+		} else if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
+			isBot(state.Players[state.ActingIndex].UserID) {
+			h.schedulePokerBotAct(gameID)
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": m["status"], "forfeit": true})
-}
-
-// pokerForceFold сбрасывает карты игрока idx, даже если сейчас ходит другой.
-// Если игрок и так acting — обычный Apply(fold); иначе выставляем Folded вручную
-// и, при необходимости, досдаём борд/закрываем раздачу.
-func (h *GamesHandler) pokerForceFold(state *poker.Game, idx int) {
-	if idx < 0 || idx >= len(state.Players) {
-		return
-	}
-	if state.Status != poker.StatusActive {
-		return
-	}
-	if idx == state.ActingIndex && !state.Players[idx].Folded && !state.Players[idx].AllIn {
-		_ = state.Apply(idx, poker.Action{Type: poker.ActionFold})
-		return
-	}
-	// Не его ход — помечаем фолд и проверяем, не остался ли один игрок.
-	state.Players[idx].Folded = true
-	notFolded := 0
-	winner := -1
-	for i := range state.Players {
-		if !state.Players[i].Folded {
-			notFolded++
-			winner = i
-		}
-	}
-	if notFolded == 1 && winner >= 0 {
-		state.Players[winner].Chips += state.Pot
-		state.Winners = []int{winner}
-		state.WinnerUserIDs = []string{state.Players[winner].UserID}
-		state.Street = poker.StreetOver
-		state.Status = poker.StatusOver
-	}
 }
 
 // ---- Rematch ----
@@ -944,17 +921,27 @@ func (h *GamesHandler) savePokerState(ctx context.Context, gameID string, m map[
 	if state.Status == poker.StatusOver {
 		fields = append(fields, "status", pokerStatusOver, "turn_deadline", "0", "turn_actor_idx", "-1")
 		m["status"] = pokerStatusOver
-	} else if turnT > 0 {
-		dl := time.Now().UTC().Unix() + int64(turnT)
-		fields = append(fields,
-			"turn_deadline", strconv.FormatInt(dl, 10),
-			"turn_actor_idx", strconv.Itoa(state.ActingIndex),
-		)
-		m["turn_deadline"] = strconv.FormatInt(dl, 10)
-		m["turn_actor_idx"] = strconv.Itoa(state.ActingIndex)
 	} else {
-		fields = append(fields, "turn_actor_idx", strconv.Itoa(state.ActingIndex))
-		m["turn_actor_idx"] = strconv.Itoa(state.ActingIndex)
+		// Активная раздача (в т.ч. после старта следующей за столом): статус
+		// снова active, чтобы прошлый «over» между раздачами не блокировал ходы.
+		fields = append(fields, "status", gameStatusActive)
+		m["status"] = gameStatusActive
+		if turnT > 0 {
+			dl := time.Now().UTC().Unix() + int64(turnT)
+			fields = append(fields,
+				"turn_deadline", strconv.FormatInt(dl, 10),
+				"turn_actor_idx", strconv.Itoa(state.ActingIndex),
+			)
+			m["turn_deadline"] = strconv.FormatInt(dl, 10)
+			m["turn_actor_idx"] = strconv.Itoa(state.ActingIndex)
+		} else {
+			fields = append(fields,
+				"turn_deadline", "0",
+				"turn_actor_idx", strconv.Itoa(state.ActingIndex),
+			)
+			m["turn_deadline"] = "0"
+			m["turn_actor_idx"] = strconv.Itoa(state.ActingIndex)
+		}
 	}
 	m["state"] = encoded
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
@@ -1009,9 +996,9 @@ func (h *GamesHandler) schedulePokerBotAct(gameID string) {
 			}
 			h.savePokerState(ctx, gameID, m, state)
 			h.broadcastPokerState(gameID, m)
-			over := state.IsOver()
+			over := state.IsOver() || state.HandOver
 			if over {
-				h.onPokerGameFinished(ctx, gameID, m, state, "normal")
+				h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
 			}
 			h.Rdb.Del(ctx, lockKey)
 			if over {
@@ -1109,8 +1096,8 @@ func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string,
 	fresh["timeout"] = "1"
 	h.Rdb.HSet(ctx, "game:"+gameID, "timeout", "1")
 	h.broadcastPokerState(gameID, fresh)
-	if state.IsOver() {
-		h.onPokerGameFinished(ctx, gameID, fresh, state, "timeout")
+	if state.IsOver() || state.HandOver {
+		h.onPokerHandOrTableOver(ctx, gameID, fresh, state, "timeout")
 	} else if isBot(state.Players[state.ActingIndex].UserID) {
 		h.schedulePokerBotAct(gameID)
 	}
@@ -1127,7 +1114,66 @@ func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string,
 
 // ---- Finish / settlement ----
 
-func (h *GamesHandler) onPokerGameFinished(ctx context.Context, gameID string, m map[string]string, state *poker.Game, finishReason string) {
+// onPokerHandOrTableOver вызывается, когда текущая раздача завершилась. Если весь
+// стол окончен (фишки у одного игрока) — рассчитываем монеты и закрываем лобби.
+// Иначе — раздача просто закончилась: сохраняем результат и через паузу стартуем
+// следующую раздачу тем же составом.
+func (h *GamesHandler) onPokerHandOrTableOver(ctx context.Context, gameID string, m map[string]string, state *poker.Game, finishReason string) {
+	if state.TableOver {
+		h.onPokerTableFinished(ctx, gameID, m, state, finishReason)
+		return
+	}
+	h.onPokerHandFinished(gameID)
+}
+
+// onPokerHandFinished — раздача завершена, но стол продолжается: планируем старт
+// следующей раздачи. Состояние и трансляция уже сохранены вызывающим.
+func (h *GamesHandler) onPokerHandFinished(gameID string) {
+	h.schedulePokerNextHand(gameID)
+}
+
+// schedulePokerNextHand через ~2.5 с стартует следующую раздачу за столом.
+// Сериализуется Redis-локом, чтобы не запустить раздачу дважды.
+func (h *GamesHandler) schedulePokerNextHand(gameID string) {
+	if h.Rdb == nil {
+		return
+	}
+	go func() {
+		time.Sleep(pokerNextHandDelay)
+		ctx := context.Background()
+		lockKey := "poker_next_hand_lock:" + gameID
+		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 10*time.Second).Result()
+		if !locked {
+			return
+		}
+		defer h.Rdb.Del(ctx, lockKey)
+
+		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if err != nil || len(m) == 0 || m["game_type"] != pokerGameType {
+			return
+		}
+		state, err := poker.Decode(m["state"])
+		if err != nil || !state.HandOver || state.TableOver {
+			return
+		}
+		rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+		if err := state.StartNextHand(rng); err != nil {
+			return
+		}
+		// Сбрасываем флаги прошлой раздачи.
+		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit", "timeout")
+		delete(m, "forfeit")
+		delete(m, "timeout")
+		h.savePokerState(ctx, gameID, m, state)
+		h.broadcastPokerState(gameID, m)
+		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
+			isBot(state.Players[state.ActingIndex].UserID) {
+			h.schedulePokerBotAct(gameID)
+		}
+	}()
+}
+
+func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, m map[string]string, state *poker.Game, finishReason string) {
 	humans := pokerHumans(m)
 	clearUsersFinishedGame(ctx, h.Rdb, humans, gameID)
 
@@ -1278,8 +1324,11 @@ func pokerPlayerIndex(state *poker.Game, userID string) int {
 
 func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, viewer string, m map[string]string, gameID string) map[string]any {
 	myIdx := pokerPlayerIndex(state, viewer)
-	isOver := state.IsOver()
-	reveal := isOver || state.Street == poker.StreetShowdown || state.Street == poker.StreetOver
+	isHandOver := state.HandOver || state.IsOver()
+	isTableOver := state.TableOver
+	// is_over для клиента = вся партия окончена (показать rematch/итоги).
+	isOver := isTableOver
+	reveal := isHandOver || state.Street == poker.StreetShowdown || state.Street == poker.StreetOver
 
 	playerIDs := make([]string, len(state.Players))
 	for i := range state.Players {
@@ -1368,9 +1417,37 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 
+	// status — «сырой» статус движка (раздача active/over), не путать с is_over
+	// (весь стол). Между раздачами статус будет over на время паузы.
 	status := m["status"]
-	if isOver {
+	if state.Status == poker.StatusOver {
 		status = pokerStatusOver
+	}
+
+	// Инфо о комбинации зрителя (для подсветки и подписи ранга).
+	var myHandRank string
+	var myHandCards []poker.Card
+	if myIdx >= 0 {
+		if hv, err := state.BestHandFor(myIdx); err == nil {
+			myHandRank = hv.Rank.String()
+			myHandCards = hv.Cards
+		}
+	}
+
+	// На вскрытии — лучшие комбинации победителей (ранг + 5 карт) для UI.
+	winnerHands := make([]map[string]any, 0, len(state.Winners))
+	if isHandOver {
+		for _, wseat := range state.Winners {
+			if wseat < 0 || wseat >= len(state.Players) {
+				continue
+			}
+			wh := map[string]any{"seat": state.Players[wseat].Seat}
+			if hv, err := state.BestHandFor(wseat); err == nil {
+				wh["rank"] = hv.Rank.String()
+				wh["cards"] = hv.Cards
+			}
+			winnerHands = append(winnerHands, wh)
+		}
 	}
 
 	winners := state.Winners
@@ -1412,6 +1489,17 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"is_over":       isOver,
 		"is_forfeit":    m["forfeit"] == "1",
 		"is_timeout":    m["timeout"] == "1",
+		// Кэш-стол: прогресс партии и уровни блайндов.
+		"hand_number":     state.HandNumber,
+		"blind_level":     state.BlindLevel,
+		"hands_per_level": state.HandsPerLevel,
+		"is_hand_over":    isHandOver,
+		"is_table_over":   isTableOver,
+		// Подсказки по комбинациям для UI.
+		"my_hand_rank":      myHandRank,
+		"my_hand_cards":     myHandCards,
+		"highlighted_cards": myHandCards,
+		"winner_hands":      winnerHands,
 	}
 }
 

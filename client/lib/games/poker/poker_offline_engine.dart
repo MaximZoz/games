@@ -53,11 +53,40 @@ enum PokerHandRank {
   royalFlush,
 }
 
-/// Результат оценки руки: категория + тай-брейкеры (по убыванию значимости).
+/// Каноническое имя ранга (совпадает с сервером: "OnePair", "Flush", …).
+/// Используется в [PokerGameView.myHandRank] и подписи комбинации в UI.
+String pokerHandRankName(PokerHandRank rank) {
+  switch (rank) {
+    case PokerHandRank.highCard:
+      return 'HighCard';
+    case PokerHandRank.onePair:
+      return 'OnePair';
+    case PokerHandRank.twoPair:
+      return 'TwoPair';
+    case PokerHandRank.threeOfAKind:
+      return 'ThreeOfAKind';
+    case PokerHandRank.straight:
+      return 'Straight';
+    case PokerHandRank.flush:
+      return 'Flush';
+    case PokerHandRank.fullHouse:
+      return 'FullHouse';
+    case PokerHandRank.fourOfAKind:
+      return 'FourOfAKind';
+    case PokerHandRank.straightFlush:
+      return 'StraightFlush';
+    case PokerHandRank.royalFlush:
+      return 'RoyalFlush';
+  }
+}
+
+/// Результат оценки руки: категория + тай-брейкеры (по убыванию значимости) +
+/// сами 5 карт лучшей комбинации (для подсветки в UI).
 class PokerHandValue {
-  const PokerHandValue(this.rank, this.tie);
+  const PokerHandValue(this.rank, this.tie, [this.cards = const []]);
   final PokerHandRank rank;
   final List<int> tie;
+  final List<PlayingCard> cards;
 
   /// >0 если [this] сильнее [other], <0 если слабее, 0 — равны.
   int compare(PokerHandValue other) {
@@ -126,43 +155,44 @@ PokerHandValue _eval5(List<PlayingCard> cards) {
   final ranksDesc = c.map((x) => x.rank.value).toList()
     ..sort((a, b) => b.compareTo(a));
 
+  PokerHandValue mk(PokerHandRank rank, List<int> tie) =>
+      PokerHandValue(rank, tie, c);
+
   if (isStraight && flush) {
     if (straight == 14) {
-      return PokerHandValue(PokerHandRank.royalFlush, [straight]);
+      return mk(PokerHandRank.royalFlush, [straight]);
     }
-    return PokerHandValue(PokerHandRank.straightFlush, [straight]);
+    return mk(PokerHandRank.straightFlush, [straight]);
   }
   if (groups[0].count == 4) {
-    return PokerHandValue(
-        PokerHandRank.fourOfAKind, [groups[0].rank, groups[1].rank]);
+    return mk(PokerHandRank.fourOfAKind, [groups[0].rank, groups[1].rank]);
   }
   if (groups[0].count == 3 && groups.length > 1 && groups[1].count == 2) {
-    return PokerHandValue(
-        PokerHandRank.fullHouse, [groups[0].rank, groups[1].rank]);
+    return mk(PokerHandRank.fullHouse, [groups[0].rank, groups[1].rank]);
   }
   if (flush) {
-    return PokerHandValue(PokerHandRank.flush, ranksDesc);
+    return mk(PokerHandRank.flush, ranksDesc);
   }
   if (isStraight) {
-    return PokerHandValue(PokerHandRank.straight, [straight]);
+    return mk(PokerHandRank.straight, [straight]);
   }
   if (groups[0].count == 3) {
-    return PokerHandValue(PokerHandRank.threeOfAKind,
+    return mk(PokerHandRank.threeOfAKind,
         [groups[0].rank, groups[1].rank, groups[2].rank]);
   }
   if (groups[0].count == 2 && groups.length > 1 && groups[1].count == 2) {
-    return PokerHandValue(PokerHandRank.twoPair,
+    return mk(PokerHandRank.twoPair,
         [groups[0].rank, groups[1].rank, groups[2].rank]);
   }
   if (groups[0].count == 2) {
-    return PokerHandValue(PokerHandRank.onePair, [
+    return mk(PokerHandRank.onePair, [
       groups[0].rank,
       groups[1].rank,
       groups[2].rank,
       groups[3].rank,
     ]);
   }
-  return PokerHandValue(PokerHandRank.highCard, ranksDesc);
+  return mk(PokerHandRank.highCard, ranksDesc);
 }
 
 class _RankGroup {
@@ -243,6 +273,15 @@ class PokerEngine {
   List<int> winners = [];
   List<String> winnerUserIds = [];
 
+  // Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
+  int handNumber = 1; // номер текущей раздачи, с 1
+  int blindLevel = 0; // уровень блайндов, с 0
+  int handsPerLevel = 3; // раздач на один уровень блайндов
+  int baseSmallBlind = 0; // стартовый малый блайнд
+  int baseBigBlind = 0; // стартовый большой блайнд
+  bool tableOver = false; // весь стол окончен (фишки у одного)
+  bool handOver = false; // текущая раздача завершена, стол — нет
+
   /// Создаёт новую раздачу с блайндами и раздачей карт.
   factory PokerEngine.newGame({
     required List<String> playerIds,
@@ -259,7 +298,14 @@ class PokerEngine {
     final g = PokerEngine._(rng ?? Random());
     g.smallBlind = smallBlind;
     g.bigBlind = bigBlind;
+    g.baseSmallBlind = smallBlind;
+    g.baseBigBlind = bigBlind;
     g.minRaise = bigBlind;
+    g.handNumber = 1;
+    g.blindLevel = 0;
+    g.handsPerLevel = 3;
+    g.tableOver = false;
+    g.handOver = false;
     g.dealerIndex = dealerIndex % n;
     g.players = [
       for (var i = 0; i < n; i++)
@@ -526,7 +572,19 @@ class PokerEngine {
     winners = [winner];
     winnerUserIds = [players[winner].userId];
     street = PokerStreet.over;
+    _markHandOver();
+  }
+
+  /// Завершает текущую раздачу: статус «over» (гвард в [apply]) и [handOver].
+  /// Если фишки остались максимум у одного игрока — весь стол окончен.
+  void _markHandOver() {
     status = PokerStatus.over;
+    handOver = true;
+    var withChips = 0;
+    for (final p in players) {
+      if (p.chips > 0) withChips++;
+    }
+    tableOver = withChips <= 1;
   }
 
   void _showdown() {
@@ -542,7 +600,7 @@ class PokerEngine {
     final w = winnerSet.toList()..sort();
     winners = w;
     winnerUserIds = [for (final i in w) players[i].userId];
-    status = PokerStatus.over;
+    _markHandOver();
   }
 
   List<PokerSidePot> _buildSidePots() {
@@ -642,6 +700,153 @@ class PokerEngine {
 
   bool get isOver => status == PokerStatus.over;
 
+  /// Первое место с фишками (>0), начиная с [start] по кругу; -1 если таких нет.
+  int _nextSeatWithChips(int start) {
+    final n = players.length;
+    for (var k = 0; k < n; k++) {
+      final i = ((start % n) + n + k) % n;
+      if (players[i].chips > 0) return i;
+    }
+    return -1;
+  }
+
+  /// Начинает следующую раздачу за столом: сохраняет фишки, вращает дилера,
+  /// при необходимости поднимает блайнды, тасует колоду и раздаёт карты.
+  /// Выбывшие (0 фишек) остаются на местах, но пропускают раздачу.
+  void startNextHand(Random rng) {
+    if (!handOver || tableOver) {
+      throw StateError(
+          'poker: cannot start next hand (handOver=$handOver tableOver=$tableOver)');
+    }
+
+    final nextDealer = _nextSeatWithChips(dealerIndex + 1);
+    if (nextDealer < 0) {
+      throw StateError('poker: no players with chips');
+    }
+    dealerIndex = nextDealer;
+
+    handNumber++;
+    // Каждые handsPerLevel раздач поднимаем уровень блайндов.
+    if (handsPerLevel > 0 &&
+        handNumber > 1 &&
+        (handNumber - 1) % handsPerLevel == 0) {
+      blindLevel++;
+    }
+    // Блайнды удваиваются на каждом уровне: BB = base << level, SB = BB/2.
+    final bb = baseBigBlind << blindLevel;
+    var sb = bb ~/ 2;
+    if (sb < 1) sb = 1;
+    bigBlind = bb;
+    smallBlind = sb;
+    minRaise = bb;
+
+    _deck = _freshDeck()..shuffle(_rng);
+    _deckPos = 0;
+    community = [];
+    sidePots = [];
+    winners = [];
+    winnerUserIds = [];
+    pot = 0;
+    currentBet = 0;
+
+    final liveSeats = <int>[];
+    for (final p in players) {
+      p.bet = 0;
+      p.totalBet = 0;
+      p.allIn = false;
+      p.hasActed = false;
+      p.hole = const [];
+      if (p.chips > 0) {
+        p.folded = false;
+        liveSeats.add(p.seat);
+      } else {
+        p.folded = true;
+      }
+    }
+    if (liveSeats.length < 2) {
+      throw StateError('poker: need at least 2 players with chips');
+    }
+
+    if (liveSeats.length == 2) {
+      sbIndex = dealerIndex;
+      bbIndex = _nextSeatWithChips(dealerIndex + 1);
+    } else {
+      sbIndex = _nextSeatWithChips(dealerIndex + 1);
+      bbIndex = _nextSeatWithChips(sbIndex + 1);
+    }
+    _postBet(sbIndex, smallBlind);
+    _postBet(bbIndex, bigBlind);
+    currentBet = bigBlind;
+
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].folded) continue;
+      players[i].hole = [_deal(), _deal()];
+    }
+
+    street = PokerStreet.preflop;
+    status = PokerStatus.active;
+    handOver = false;
+
+    actingIndex = _firstLiveFrom(bbIndex + 1);
+    _updatePot();
+    // Если ходить некому (все живые уже all-in из-за блайндов) — докрутить борд.
+    if (actingIndex < 0) {
+      _advanceStreet();
+    }
+  }
+
+  /// Лучшая 5-карточная комбинация игрока по его картам и борду (минимум 5 карт).
+  PokerHandValue? bestHandFor(int playerIndex) {
+    if (playerIndex < 0 || playerIndex >= players.length) return null;
+    final p = players[playerIndex];
+    final cards = <PlayingCard>[...p.hole, ...community];
+    if (cards.length < 5) return null;
+    return evaluateBestHand(cards);
+  }
+
+  /// Убирает игрока со стола (сдача/выход): обнуляет фишки и сбрасывает карты.
+  /// Если это завершает текущую раздачу или весь стол — состояние обновится.
+  void forfeitPlayer(int idx) {
+    if (idx < 0 || idx >= players.length) return;
+
+    if (status == PokerStatus.active) {
+      // Обнуляем фишки ДО фолда, чтобы корректно посчитать tableOver.
+      players[idx].chips = 0;
+      players[idx].folded = true;
+      players[idx].hasActed = true;
+
+      final nf = _notFolded();
+      if (nf.length == 1) {
+        _awardUncontested(nf[0]);
+        return;
+      }
+      if (actingIndex == idx) {
+        actingIndex = _firstLiveFrom(idx + 1);
+        if (actingIndex < 0 || _bettingComplete()) {
+          _advanceStreet();
+        }
+      }
+      return;
+    }
+
+    // Раздача не активна (пауза между раздачами) — просто убираем со стола.
+    players[idx].chips = 0;
+    players[idx].folded = true;
+    final withChips = <int>[];
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].chips > 0) withChips.add(i);
+    }
+    if (withChips.length <= 1) {
+      tableOver = true;
+      handOver = true;
+      status = PokerStatus.over;
+      if (withChips.length == 1) {
+        winners = [withChips[0]];
+        winnerUserIds = [players[withChips[0]].userId];
+      }
+    }
+  }
+
   /// Сдача = фолд. Если сейчас ходит другой — форсируем фолд напрямую.
   void forceFold(int idx) {
     if (idx < 0 || idx >= players.length) return;
@@ -660,11 +865,7 @@ class PokerEngine {
       }
     }
     if (notFolded == 1 && winner >= 0) {
-      players[winner].chips += pot;
-      winners = [winner];
-      winnerUserIds = [players[winner].userId];
-      street = PokerStreet.over;
-      status = PokerStatus.over;
+      _awardUncontested(winner);
     }
   }
 }
