@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: убрать NLHE с приглашений; ставка и D у края аватара
+- Покер: крупные карты из-за аватара и фикс просвечивания
 
 ## en
 - Poker: remove NLHE from invites; bet and dealer chip by seat edge
