@@ -1052,7 +1052,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   game,
                   opponents[i],
                   narrow,
-                  towardCenter: _towardCenter(oppAnchors[i]),
+                  cardsOnLeft: oppAnchors[i].x < -0.05,
                 ),
               ),
             // Своя карточка + крупные карты — на столе снизу.
@@ -1061,10 +1061,24 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 alignment: heroAnchor,
                 child: _buildHeroOnTable(game, narrow),
               ),
+            // Ставки на фетре рядом с каждым игроком (цифра + мини-стопка).
+            for (final p in game.players)
+              if (p.bet > 0 && !p.folded)
+                Align(
+                  alignment: _betAlignment(
+                    game: game,
+                    seat: p.seat,
+                    me: me,
+                    oppAnchors: oppAnchors,
+                    opponents: opponents,
+                    heroAnchor: heroAnchor,
+                  ),
+                  child: _tableBetLabel(p.bet),
+                ),
             // Фишка дилера на столе — плавно едет к новому дилеру.
             if (dealerSeat >= 0)
               AnimatedAlign(
-                duration: const Duration(milliseconds: 480),
+                duration: const Duration(milliseconds: 520),
                 curve: Curves.easeInOutCubic,
                 alignment: _dealerAlignment(
                   game: game,
@@ -1082,10 +1096,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Смещение ставки от места игрока к центру стола.
-  Alignment _towardCenter(Alignment seat) {
-    // Чуть ближе к центру, чем сам игрок.
-    return Alignment(seat.x * 0.55, seat.y * 0.45);
+  /// Позиция ставки на фетре — между игроком и центром стола.
+  Alignment _betAlignment({
+    required PokerGameView game,
+    required int seat,
+    required int me,
+    required List<Alignment> oppAnchors,
+    required List<PokerPlayerView> opponents,
+    required Alignment heroAnchor,
+  }) {
+    if (me >= 0 &&
+        me < game.players.length &&
+        game.players[me].seat == seat) {
+      return const Alignment(0, 0.55);
+    }
+    for (var i = 0; i < opponents.length; i++) {
+      if (opponents[i].seat == seat) {
+        final a = oppAnchors[i];
+        return Alignment(a.x * 0.42, a.y * 0.38);
+      }
+    }
+    return Alignment.center;
   }
 
   Alignment _dealerAlignment({
@@ -1100,16 +1131,26 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         me < game.players.length &&
         game.players[me].seat == dealerSeat) {
       // Рядом с hero, чуть правее и выше карточки.
-      return Alignment(0.28, 0.72);
+      return const Alignment(0.32, 0.70);
     }
     for (var i = 0; i < opponents.length; i++) {
       if (opponents[i].seat == dealerSeat) {
         final a = oppAnchors[i];
         // Фишка D на фетре рядом с игроком (к центру).
-        return Alignment(a.x * 0.72 + (a.x >= 0 ? 0.08 : -0.08), a.y * 0.72);
+        return Alignment(
+          a.x * 0.70 + (a.x >= 0 ? 0.10 : -0.10),
+          a.y * 0.70 + 0.06,
+        );
       }
     }
     return Alignment.center;
+  }
+
+  PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
+    for (final wh in game.winnerHands) {
+      if (wh.seat == seat) return wh;
+    }
+    return null;
   }
 
   List<Alignment> _seatAnchors(int n) {
@@ -1460,33 +1501,39 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     });
   }
 
-  /// Компактное место игрока (как в 888poker): карты → аватар → неймплейт.
-  /// Рамка хода только вокруг неймплейта; ставка — на фетре к центру.
+  /// Место соперника: аватар + неймплейт; карты — сбоку (не сверху).
+  /// Рамка хода только вокруг неймплейта; ставка рисуется отдельно на фетре.
   Widget _buildSeat(
     PokerGameView game,
     PokerPlayerView p,
     bool narrow, {
-    bool isSelf = false,
-    Alignment towardCenter = Alignment.center,
+    bool cardsOnLeft = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final showdown = game.isShowdown;
-    final highlightKeys = game.highlightKeys;
-    final hasHighlight = showdown && highlightKeys.isNotEmpty;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
     final headsUp = game.players.length == 2;
     final dim = p.folded;
 
-    // Карты соперника: в раздаче — оверлап рубашек; на вскрытии — лицом.
-    final showCards = !isSelf && !p.folded;
+    // Карты соперника — только на вскрытии, сбоку от аватарки (не сверху).
     final reveal = showdown &&
+        !p.folded &&
         p.holeCards != null &&
-        p.holeCards!.isNotEmpty;
-    final holeSize = reveal
-        ? (narrow ? const Size(42, 60) : const Size(48, 68))
-        : (narrow ? const Size(28, 40) : const Size(32, 46));
-    final plateW = narrow ? 104.0 : 118.0;
+        p.holeCards!.length >= 2;
+    final showCards = reveal;
+    final holeSize = narrow ? const Size(48, 68) : const Size(56, 80);
+    final plateW = narrow ? 100.0 : 112.0;
     const borderW = 2.5;
+
+    // Подсветка карт победителя — из его winner_hand, не из моей комбинации.
+    final wh = _winnerHandForSeat(game, p.seat);
+    final oppHighlight = {
+      if (wh != null)
+        for (final c in wh.cards) PokerGameView.cardKeyOf(c),
+    };
+    final hasOppHl = reveal && isWinner && oppHighlight.isNotEmpty;
+    final winnerCombo =
+        (reveal && isWinner) ? _handRankLabel(wh?.rank) : null;
 
     final namePlate = Container(
       width: plateW,
@@ -1510,7 +1557,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: dim ? 0.45 : 1),
+              color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -1537,59 +1584,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
-    final seatBody = Column(
+    final avatarAndPlate = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showCards)
-          SizedBox(
-            width: holeSize.width * 1.55,
-            height: holeSize.height,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  left: 0,
-                  child: reveal
-                      ? PlayingCardWidget(
-                          card: p.holeCards![0].toPlayingCard(),
-                          size: holeSize,
-                          highlighted: hasHighlight &&
-                              highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(p.holeCards![0])),
-                          dimmed: hasHighlight &&
-                              !highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(p.holeCards![0])),
-                          animate: false,
-                        )
-                      : CardBackWidget(size: holeSize, outlined: true),
-                ),
-                Positioned(
-                  left: holeSize.width * 0.42,
-                  child: reveal
-                      ? PlayingCardWidget(
-                          card: p.holeCards![1].toPlayingCard(),
-                          size: holeSize,
-                          highlighted: hasHighlight &&
-                              highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(p.holeCards![1])),
-                          dimmed: hasHighlight &&
-                              !highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(p.holeCards![1])),
-                          animate: false,
-                        )
-                      : CardBackWidget(size: holeSize, outlined: true),
-                ),
-              ],
-            ),
-          ),
-        if (showCards) const SizedBox(height: 4),
         AnimatedOpacity(
           duration: const Duration(milliseconds: 220),
-          opacity: dim ? 0.4 : 1,
+          opacity: dim ? 0.35 : 1,
           child: GestureDetector(
-            onTap: (!isSelf && headsUp)
-                ? () => unawaited(_showPlayerCard(p))
-                : null,
+            onTap: headsUp ? () => unawaited(_showPlayerCard(p)) : null,
             behavior: HitTestBehavior.opaque,
             child: GamePlayerAvatar(
               displayName: _playerName(p),
@@ -1602,7 +1604,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ),
         ),
         const SizedBox(height: 4),
-        // Рамка только на ход (TurnTimerBorder) — idle без обводки.
+        // Рамка только на ход — idle без обводки, padding стабильный.
         TurnTimerBorder(
           key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
           active: acting,
@@ -1613,24 +1615,58 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           showIdleBorder: false,
           child: namePlate,
         ),
+        if (winnerCombo != null) ...[
+          const SizedBox(height: 4),
+          _comboLabel(winnerCombo, highlight: true),
+        ],
       ],
     );
 
-    return SizedBox(
+    Widget? cards;
+    if (showCards) {
+      cards = SizedBox(
+        width: holeSize.width * 1.7,
+        height: holeSize.height,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (var i = 0; i < 2; i++)
+              Positioned(
+                left: i * holeSize.width * 0.55,
+                child: PlayingCardWidget(
+                  card: p.holeCards![i].toPlayingCard(),
+                  size: holeSize,
+                  highlighted: hasOppHl &&
+                      oppHighlight.contains(
+                        PokerGameView.cardKeyOf(p.holeCards![i]),
+                      ),
+                  dimmed: hasOppHl &&
+                      !oppHighlight.contains(
+                        PokerGameView.cardKeyOf(p.holeCards![i]),
+                      ),
+                  animate: false,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return KeyedSubtree(
       key: _seatKey(p.seat),
-      width: plateW + 28,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          seatBody,
-          // Ставка на фетре: фишки + цифра рядом (не в карточке игрока).
-          if (p.bet > 0 && !p.folded)
-            Positioned(
-              top: towardCenter.y < 0 ? null : (showCards ? holeSize.height + 52 : 52),
-              bottom: towardCenter.y < 0 ? -28 : null,
-              child: _tableBetLabel(p.bet),
-            ),
+          if (cards != null && cardsOnLeft) ...[
+            cards,
+            const SizedBox(width: 6),
+          ],
+          avatarAndPlate,
+          if (cards != null && !cardsOnLeft) ...[
+            const SizedBox(width: 6),
+            cards,
+          ],
         ],
       ),
     );
@@ -1835,19 +1871,23 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Свои крупные карты + компактная карточка — всё на фетре снизу.
+  /// Свои крупные карты сбоку + компактная карточка — всё на фетре снизу.
   Widget _buildHeroOnTable(PokerGameView game, bool narrow) {
     final me = game.me;
     if (me == null) return const SizedBox.shrink();
     // Свои карты заметно крупнее борда и карт соперников.
-    final heroCards = narrow ? const Size(78, 112) : const Size(92, 132);
+    final heroCards = narrow ? const Size(90, 128) : const Size(104, 148);
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
     final acting = me.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(me.seat);
     final dim = me.folded;
-    final plateW = narrow ? 104.0 : 118.0;
+    final plateW = narrow ? 100.0 : 112.0;
     const borderW = 2.5;
+    final myWinCombo = isWinner
+        ? _handRankLabel(_winnerHandForSeat(game, me.seat)?.rank) ??
+            _handRankLabel(game.myHandRank)
+        : null;
 
     final namePlate = Container(
       width: plateW,
@@ -1871,7 +1911,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: dim ? 0.45 : 1),
+              color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -1896,86 +1936,81 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.bottomCenter,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (me.holeCards != null)
-              SizedBox(
-                width: heroCards.width * 1.65,
-                height: heroCards.height,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (var i = 0; i < me.holeCards!.length; i++)
-                      Positioned(
-                        left: i * heroCards.width * 0.55,
-                        child: _EntranceCard(
-                          key: ValueKey(
-                            'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
-                          ),
-                          child: PlayingCardWidget(
-                            card: me.holeCards![i].toPlayingCard(),
-                            size: heroCards,
-                            highlighted: hasHighlight &&
-                                highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(me.holeCards![i]),
-                                ),
-                            dimmed: hasHighlight &&
-                                !highlightKeys.contains(
-                                  PokerGameView.cardKeyOf(me.holeCards![i]),
-                                ),
-                            animate: false,
-                          ),
+        if (me.holeCards != null)
+          SizedBox(
+            width: heroCards.width * 1.7,
+            height: heroCards.height,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (var i = 0; i < me.holeCards!.length; i++)
+                  Positioned(
+                    left: i * heroCards.width * 0.58,
+                    child: Transform.rotate(
+                      angle: (i == 0 ? -0.06 : 0.06),
+                      child: _EntranceCard(
+                        key: ValueKey(
+                          'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+                        ),
+                        child: PlayingCardWidget(
+                          card: me.holeCards![i].toPlayingCard(),
+                          size: heroCards,
+                          highlighted: hasHighlight &&
+                              highlightKeys.contains(
+                                PokerGameView.cardKeyOf(me.holeCards![i]),
+                              ),
+                          dimmed: hasHighlight &&
+                              !highlightKeys.contains(
+                                PokerGameView.cardKeyOf(me.holeCards![i]),
+                              ),
+                          animate: false,
                         ),
                       ),
-                  ],
-                ),
-              ),
-            const SizedBox(width: 8),
-            KeyedSubtree(
-              key: _seatKey(me.seat),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 220),
-                    opacity: dim ? 0.4 : 1,
-                    child: GamePlayerAvatar(
-                      displayName: _playerName(me),
-                      avatarKind: me.avatarKind,
-                      avatarValue: me.avatarValue,
-                      frameCode: me.frameCode,
-                      frameColor: me.frameColor,
-                      compact: true,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  TurnTimerBorder(
-                    key: ValueKey('poker-hero-${game.turnDeadline}'),
-                    active: acting,
-                    turnDeadline: game.turnDeadline,
-                    turnTimeSec: game.turnTimeSec,
-                    borderWidth: borderW,
-                    radius: 12,
-                    showIdleBorder: false,
-                    child: namePlate,
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
-        ),
-        // Своя ставка на фетре — над карточкой, к центру стола.
-        if (me.bet > 0 && !me.folded)
-          Positioned(
-            top: -26,
-            child: _tableBetLabel(me.bet),
           ),
+        const SizedBox(width: 8),
+        KeyedSubtree(
+          key: _seatKey(me.seat),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                opacity: dim ? 0.35 : 1,
+                child: GamePlayerAvatar(
+                  displayName: _playerName(me),
+                  avatarKind: me.avatarKind,
+                  avatarValue: me.avatarValue,
+                  frameCode: me.frameCode,
+                  frameColor: me.frameColor,
+                  compact: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              TurnTimerBorder(
+                key: ValueKey('poker-hero-${game.turnDeadline}'),
+                active: acting,
+                turnDeadline: game.turnDeadline,
+                turnTimeSec: game.turnTimeSec,
+                borderWidth: borderW,
+                radius: 12,
+                showIdleBorder: false,
+                child: namePlate,
+              ),
+              if (myWinCombo != null) ...[
+                const SizedBox(height: 4),
+                _comboLabel(myWinCombo, highlight: true),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
