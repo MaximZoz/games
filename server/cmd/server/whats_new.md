@@ -3,8 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: 4 с пауза после раздачи и кнопка «Показать карты»
+- Покер: убрать NLHE с приглашений; ставка и D у края аватара
 
 ## en
-- Poker: 4s pause after each hand; optional Show cards on fold-win
+- Poker: remove NLHE from invites; bet and dealer chip by seat edge
 

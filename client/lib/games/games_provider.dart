@@ -64,6 +64,7 @@ class GameInvite {
   bool get isPoker => gameType == 'poker';
 
   /// Подпись режима для карточки приглашения.
+  /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
   String get modeLabel {
     if (isDurak) {
       return durakModeLabel(durakMode);
@@ -72,7 +73,7 @@ class GameInvite {
       return '10×10';
     }
     if (isPoker) {
-      return 'NLHE';
+      return '';
     }
     return variantLabel(variant);
   }

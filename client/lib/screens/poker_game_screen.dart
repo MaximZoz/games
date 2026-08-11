@@ -1074,15 +1074,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   ),
                   child: _tableBetLabel(p.bet),
                 ),
-            // Фишка дилера на столе — плавно едет к новому дилеру.
-            if (dealerSeat >= 0)
+            // Фишка дилера у соперников — под ставкой у края (у hero — в его Stack).
+            if (dealerSeat >= 0 &&
+                (me < 0 || game.players[me].seat != dealerSeat))
               AnimatedAlign(
                 duration: const Duration(milliseconds: 520),
                 curve: Curves.easeInOutCubic,
                 alignment: _dealerAlignment(
-                  game: game,
                   dealerSeat: dealerSeat,
-                  me: me,
                   oppAnchors: oppAnchors,
                   opponents: opponents,
                 ),
@@ -1094,7 +1093,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Позиция ставки соперника — рядом с его местом, ближе к центру стола.
+  /// Ставка соперника — сбоку от аватара, ближе к краю стола (не к банку).
   Alignment _betAlignment({
     required int seat,
     required List<Alignment> oppAnchors,
@@ -1103,36 +1102,37 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     for (var i = 0; i < opponents.length; i++) {
       if (opponents[i].seat == seat) {
         final a = oppAnchors[i];
-        // Чуть к центру от аватарки — не перекрывает банк/борд.
-        return Alignment(a.x * 0.62, a.y * 0.58 + 0.08);
+        if (a.x.abs() >= 0.5) {
+          // Боковые места: ещё ближе к боковому краю, чуть ниже/выше аватара.
+          return Alignment(
+            (a.x * 0.96 + (a.x > 0 ? 0.08 : -0.08)).clamp(-0.98, 0.98),
+            a.y,
+          );
+        }
+        // Верх/низ: слева от аватара и ближе к внешнему краю овала.
+        final sideX = (a.x - 0.18).clamp(-0.98, 0.98);
+        final edgeY = a.y < 0
+            ? (a.y * 0.98 - 0.02).clamp(-0.98, 0.0)
+            : (a.y * 0.98 + 0.02).clamp(0.0, 0.98);
+        return Alignment(sideX, edgeY);
       }
     }
     return Alignment.center;
   }
 
+  /// Дилер — прямо под ставкой у того же края стола.
   Alignment _dealerAlignment({
-    required PokerGameView game,
     required int dealerSeat,
-    required int me,
     required List<Alignment> oppAnchors,
     required List<PokerPlayerView> opponents,
   }) {
-    if (me >= 0 &&
-        me < game.players.length &&
-        game.players[me].seat == dealerSeat) {
-      // Рядом с hero по центру низа.
-      return const Alignment(0.16, 0.78);
-    }
-    for (var i = 0; i < opponents.length; i++) {
-      if (opponents[i].seat == dealerSeat) {
-        final a = oppAnchors[i];
-        return Alignment(
-          a.x * 0.70 + (a.x >= 0 ? 0.10 : -0.10),
-          a.y * 0.70 + 0.06,
-        );
-      }
-    }
-    return Alignment.center;
+    final bet = _betAlignment(
+      seat: dealerSeat,
+      oppAnchors: oppAnchors,
+      opponents: opponents,
+    );
+    // «Под ставкой» на экране = чуть ниже; всё ещё у края, не у банка.
+    return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
   /// Размер своих карт: читаемые, но не перекрывают боковые места при 6 игроках.
@@ -1956,6 +1956,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
 
     final cardsWidth = heroCards.width * (1 + overlap);
+    final isDealer = game.dealerIndex == game.myIndex;
+    final showBet = me.bet > 0 && !me.folded;
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.bottomCenter,
@@ -2000,12 +2002,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
             ),
           ),
-        // Ставка справа от аватара (к центру стола), не на фетре под бордом.
-        if (me.bet > 0 && !me.folded)
+        // Ставка сбоку у края стола; фишка D — под ставкой (тоже у края).
+        if (showBet || isDealer)
           Positioned(
-            left: plateW * 0.82,
-            bottom: 48,
-            child: _tableBetLabel(me.bet),
+            left: plateW * 0.88,
+            bottom: 2,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showBet) _tableBetLabel(me.bet),
+                if (isDealer) ...[
+                  if (showBet) const SizedBox(height: 4),
+                  _dealerBadge(size: narrow ? 22 : 26),
+                ],
+              ],
+            ),
           ),
         plateColumn,
       ],
