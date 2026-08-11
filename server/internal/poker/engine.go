@@ -89,6 +89,15 @@ type Game struct {
 
 	Winners       []int    `json:"winners"`
 	WinnerUserIDs []string `json:"winnerUserIds"`
+
+	// Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
+	HandNumber     int  `json:"handNumber"`     // номер текущей раздачи, с 1
+	BlindLevel     int  `json:"blindLevel"`     // уровень блайндов, с 0
+	HandsPerLevel  int  `json:"handsPerLevel"`  // раздач на один уровень блайндов
+	BaseSmallBlind int  `json:"baseSmallBlind"` // стартовый малый блайнд
+	BaseBigBlind   int  `json:"baseBigBlind"`   // стартовый большой блайнд
+	TableOver      bool `json:"tableOver"`      // весь стол окончен (фишки у одного)
+	HandOver       bool `json:"handOver"`       // текущая раздача завершена, стол — нет
 }
 
 // NewGame создаёт новую раздачу: раздаёт карты, ставит блайнды и передаёт ход
@@ -112,15 +121,22 @@ func NewGame(playerIDs []string, startingChips, smallBlind, bigBlind int, rng *r
 	}
 
 	g := &Game{
-		Players:     make([]Player, n),
-		Community:   []Card{},
-		Deck:        NewShuffledDeck(rng),
-		Street:      StreetPreflop,
-		Status:      StatusActive,
-		DealerIndex: 0,
-		SmallBlind:  smallBlind,
-		BigBlind:    bigBlind,
-		MinRaise:    bigBlind,
+		Players:        make([]Player, n),
+		Community:      []Card{},
+		Deck:           NewShuffledDeck(rng),
+		Street:         StreetPreflop,
+		Status:         StatusActive,
+		DealerIndex:    0,
+		SmallBlind:     smallBlind,
+		BigBlind:       bigBlind,
+		MinRaise:       bigBlind,
+		HandNumber:     1,
+		BlindLevel:     0,
+		HandsPerLevel:  3,
+		BaseSmallBlind: smallBlind,
+		BaseBigBlind:   bigBlind,
+		HandOver:       false,
+		TableOver:      false,
 	}
 	for i, id := range playerIDs {
 		g.Players[i] = Player{UserID: id, Chips: startingChips, Seat: i}
@@ -425,7 +441,22 @@ func (g *Game) awardUncontested(winner int) {
 	g.Winners = []int{winner}
 	g.WinnerUserIDs = []string{g.Players[winner].UserID}
 	g.Street = StreetOver
+	g.markHandOver()
+}
+
+// markHandOver завершает текущую раздачу: выставляет статус «over» (для гварда в
+// Apply) и HandOver. Если фишки остались максимум у одного игрока — весь стол
+// закончен (TableOver).
+func (g *Game) markHandOver() {
 	g.Status = StatusOver
+	g.HandOver = true
+	withChips := 0
+	for i := range g.Players {
+		if g.Players[i].Chips > 0 {
+			withChips++
+		}
+	}
+	g.TableOver = withChips <= 1
 }
 
 // showdown строит банки, определяет победителей и распределяет фишки.
@@ -455,7 +486,7 @@ func (g *Game) showdown() {
 	for i, w := range winners {
 		g.WinnerUserIDs[i] = g.Players[w].UserID
 	}
-	g.Status = StatusOver
+	g.markHandOver()
 }
 
 // buildSidePots строит основной и побочные банки из вкладов игроков.
@@ -581,6 +612,192 @@ func (g *Game) orderFromDealer(seats []int) []int {
 	return out
 }
 
+// nextSeatWithChips возвращает индекс первого места с фишками (>0), начиная с
+// start по кругу. -1 если таких мест нет.
+func (g *Game) nextSeatWithChips(start int) int {
+	n := len(g.Players)
+	for k := 0; k < n; k++ {
+		i := ((start % n) + n + k) % n
+		if g.Players[i].Chips > 0 {
+			return i
+		}
+	}
+	return -1
+}
+
+// StartNextHand начинает следующую раздачу за тем же столом: сохраняет фишки,
+// вращает дилера, при необходимости поднимает блайнды, тасует колоду и раздаёт
+// карты. Выбывшие (0 фишек) остаются на местах, но пропускают раздачу.
+func (g *Game) StartNextHand(rng *rand.Rand) error {
+	if !g.HandOver || g.TableOver {
+		return fmt.Errorf("poker: cannot start next hand (handOver=%v tableOver=%v)", g.HandOver, g.TableOver)
+	}
+	if rng == nil {
+		return fmt.Errorf("poker: rng is required")
+	}
+
+	// Вращаем дилера на следующее место с фишками.
+	nextDealer := g.nextSeatWithChips(g.DealerIndex + 1)
+	if nextDealer < 0 {
+		return fmt.Errorf("poker: no players with chips")
+	}
+	g.DealerIndex = nextDealer
+
+	g.HandNumber++
+	// Каждые HandsPerLevel раздач поднимаем уровень блайндов.
+	if g.HandsPerLevel > 0 && g.HandNumber > 1 && (g.HandNumber-1)%g.HandsPerLevel == 0 {
+		g.BlindLevel++
+	}
+	// Блайнды удваиваются на каждом уровне: BB = BaseBigBlind << level, SB = BB/2.
+	bb := g.BaseBigBlind << uint(g.BlindLevel)
+	sb := bb / 2
+	if sb < 1 {
+		sb = 1
+	}
+	g.BigBlind = bb
+	g.SmallBlind = sb
+	g.MinRaise = bb
+
+	// Свежая колода и чистый борд.
+	g.Deck = NewShuffledDeck(rng)
+	g.Community = []Card{}
+	g.SidePots = nil
+	g.Winners = nil
+	g.WinnerUserIDs = nil
+	g.Pot = 0
+	g.CurrentBet = 0
+
+	// Сброс состояния игроков; выбывших помечаем folded, чтобы они пропускали ход.
+	liveSeats := make([]int, 0, len(g.Players))
+	for i := range g.Players {
+		g.Players[i].Bet = 0
+		g.Players[i].TotalBet = 0
+		g.Players[i].AllIn = false
+		g.Players[i].HasActed = false
+		g.Players[i].Hole = [2]Card{}
+		if g.Players[i].Chips > 0 {
+			g.Players[i].Folded = false
+			liveSeats = append(liveSeats, i)
+		} else {
+			g.Players[i].Folded = true
+		}
+	}
+	if len(liveSeats) < 2 {
+		// Не должно происходить (иначе TableOver), но подстрахуемся.
+		return fmt.Errorf("poker: need at least 2 players with chips")
+	}
+
+	// Позиции блайндов. Хедз-ап (2 живых): дилер = малый блайнд.
+	if len(liveSeats) == 2 {
+		g.SBIndex = g.DealerIndex
+		g.BBIndex = g.nextSeatWithChips(g.DealerIndex + 1)
+	} else {
+		g.SBIndex = g.nextSeatWithChips(g.DealerIndex + 1)
+		g.BBIndex = g.nextSeatWithChips(g.SBIndex + 1)
+	}
+	g.postBet(g.SBIndex, g.SmallBlind)
+	g.postBet(g.BBIndex, g.BigBlind)
+	g.CurrentBet = g.BigBlind
+
+	// Раздаём по 2 карты живым игрокам.
+	for i := range g.Players {
+		if g.Players[i].Folded {
+			continue
+		}
+		c1, err := g.Deck.Deal()
+		if err != nil {
+			return err
+		}
+		c2, err := g.Deck.Deal()
+		if err != nil {
+			return err
+		}
+		g.Players[i].Hole = [2]Card{c1, c2}
+	}
+
+	g.Street = StreetPreflop
+	g.Status = StatusActive
+	g.HandOver = false
+
+	// Первым ходит игрок слева от большого блайнда (UTG).
+	g.ActingIndex = g.firstLiveFrom(g.BBIndex + 1)
+	g.updatePot()
+	// Если ходить некому (все живые уже all-in из-за блайндов) — докрутить борд.
+	if g.ActingIndex < 0 {
+		g.advanceStreet()
+	}
+	return nil
+}
+
+// BestHandFor возвращает лучшую 5-карточную комбинацию игрока по его карманным
+// картам и борду, если карт достаточно (минимум 5).
+func (g *Game) BestHandFor(playerIndex int) (HandValue, error) {
+	if playerIndex < 0 || playerIndex >= len(g.Players) {
+		return HandValue{}, fmt.Errorf("poker: bad player index %d", playerIndex)
+	}
+	p := g.Players[playerIndex]
+	cards := make([]Card, 0, 7)
+	if p.Hole[0] != (Card{}) {
+		cards = append(cards, p.Hole[0])
+	}
+	if p.Hole[1] != (Card{}) {
+		cards = append(cards, p.Hole[1])
+	}
+	cards = append(cards, g.Community...)
+	if len(cards) < 5 {
+		return HandValue{}, fmt.Errorf("poker: not enough cards to evaluate (%d)", len(cards))
+	}
+	return EvaluateBest(cards)
+}
+
+// ForfeitPlayer убирает игрока со стола (сдача/выход): обнуляет фишки и сбрасывает
+// карты. Если это завершает текущую раздачу или весь стол — состояние обновится.
+func (g *Game) ForfeitPlayer(idx int) {
+	if idx < 0 || idx >= len(g.Players) {
+		return
+	}
+
+	if g.Status == StatusActive {
+		// Обнуляем фишки ДО фолда, чтобы корректно посчитать TableOver, если
+		// сброс завершит раздачу.
+		g.Players[idx].Chips = 0
+		g.Players[idx].Folded = true
+		g.Players[idx].HasActed = true
+
+		nf := g.notFolded()
+		if len(nf) == 1 {
+			g.awardUncontested(nf[0])
+			return
+		}
+		if g.ActingIndex == idx {
+			g.ActingIndex = g.firstLiveFrom(idx + 1)
+			if g.ActingIndex < 0 || g.bettingComplete() {
+				g.advanceStreet()
+			}
+		}
+		return
+	}
+
+	// Раздача не активна (пауза между раздачами) — просто убираем со стола.
+	g.Players[idx].Chips = 0
+	g.Players[idx].Folded = true
+	withChips := make([]int, 0, len(g.Players))
+	for i := range g.Players {
+		if g.Players[i].Chips > 0 {
+			withChips = append(withChips, i)
+		}
+	}
+	if len(withChips) <= 1 {
+		g.TableOver = true
+		g.HandOver = true
+		g.Status = StatusOver
+		if len(withChips) == 1 {
+			g.Winners = []int{withChips[0]}
+			g.WinnerUserIDs = []string{g.Players[withChips[0]].UserID}
+		}
+	}
+}
+
 // IsOver — завершена ли игра.
 func (g *Game) IsOver() bool {
 	return g.Status == StatusOver
@@ -614,6 +831,19 @@ func Decode(raw string) (*Game, error) {
 	}
 	if g.Deck == nil {
 		g.Deck = &Deck{Cards: []Card{}}
+	}
+	// Обратная совместимость со «старыми» состояниями (одна раздача = игра).
+	if g.HandNumber == 0 {
+		g.HandNumber = 1
+	}
+	if g.HandsPerLevel == 0 {
+		g.HandsPerLevel = 3
+	}
+	if g.BaseBigBlind == 0 {
+		g.BaseBigBlind = g.BigBlind
+	}
+	if g.BaseSmallBlind == 0 {
+		g.BaseSmallBlind = g.SmallBlind
 	}
 	return &g, nil
 }

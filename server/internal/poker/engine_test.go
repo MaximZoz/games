@@ -296,6 +296,280 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 	}
 }
 
+// playHandToEnd проигрывает текущую раздачу пассивно (чек/колл) до конца.
+func playHandToEnd(t *testing.T, g *Game) {
+	t.Helper()
+	for i := 0; i < 1000 && !g.HandOver; i++ {
+		idx := g.ActingIndex
+		if idx < 0 {
+			t.Fatalf("no acting player but hand not over")
+		}
+		acts := g.LegalActions(idx)
+		choice := ""
+		for _, a := range acts {
+			if a == string(ActionCheck) {
+				choice = a
+				break
+			}
+		}
+		if choice == "" {
+			for _, a := range acts {
+				if a == string(ActionCall) {
+					choice = a
+					break
+				}
+			}
+		}
+		if choice == "" {
+			t.Fatalf("no passive action available: %v", acts)
+		}
+		if err := g.Apply(idx, Action{Type: ActionType(choice)}); err != nil {
+			t.Fatalf("apply %s: %v", choice, err)
+		}
+	}
+}
+
+func TestHandOverButTableContinues(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
+	if g.HandOver || g.TableOver {
+		t.Fatal("fresh game should not be hand/table over")
+	}
+	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 3 {
+		t.Fatalf("cash-table defaults wrong: hand=%d level=%d hpl=%d", g.HandNumber, g.BlindLevel, g.HandsPerLevel)
+	}
+	if g.BaseSmallBlind != 5 || g.BaseBigBlind != 10 {
+		t.Fatalf("base blinds wrong: sb=%d bb=%d", g.BaseSmallBlind, g.BaseBigBlind)
+	}
+	playHandToEnd(t, g)
+	if !g.HandOver {
+		t.Fatal("hand should be over")
+	}
+	if g.Status != StatusOver {
+		t.Fatalf("status should be over, got %s", g.Status)
+	}
+	if g.TableOver {
+		t.Fatal("table should not be over — every player still has chips")
+	}
+}
+
+func TestTwoHandsCarryChips(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
+	playHandToEnd(t, g)
+	if g.TableOver {
+		t.Fatal("table should not be over after one hand")
+	}
+	total1 := 0
+	for i := range g.Players {
+		total1 += g.Players[i].Chips
+	}
+	if total1 != 3000 {
+		t.Fatalf("chips not conserved after hand 1: %d", total1)
+	}
+	prevDealer := g.DealerIndex
+	if err := g.StartNextHand(newRNG()); err != nil {
+		t.Fatalf("StartNextHand: %v", err)
+	}
+	if g.HandNumber != 2 {
+		t.Fatalf("hand number should be 2, got %d", g.HandNumber)
+	}
+	if g.HandOver || g.Status != StatusActive {
+		t.Fatalf("new hand should be active, not over")
+	}
+	if g.DealerIndex == prevDealer {
+		t.Fatalf("dealer should rotate, stayed at %d", prevDealer)
+	}
+	// Blinds already posted for hand 2.
+	total2 := 0
+	for i := range g.Players {
+		total2 += g.Players[i].Chips + g.Players[i].TotalBet
+	}
+	if total2 != 3000 {
+		t.Fatalf("chips not conserved into hand 2: %d", total2)
+	}
+	// New deck: hole cards dealt again.
+	for i := range g.Players {
+		if g.Players[i].Hole[0] == (Card{}) {
+			t.Fatalf("player %d missing hole cards in hand 2", i)
+		}
+	}
+	if len(g.Community) != 0 {
+		t.Fatalf("community should be cleared, got %d", len(g.Community))
+	}
+	playHandToEnd(t, g)
+	total3 := 0
+	for i := range g.Players {
+		total3 += g.Players[i].Chips
+	}
+	if total3 != 3000 {
+		t.Fatalf("chips not conserved after hand 2: %d", total3)
+	}
+}
+
+func TestTableOverWhenOneHasAllChips(t *testing.T) {
+	// p0 already holds everything; p1/p2 are broke. The next hand can't start and
+	// a finished hand must be table-over.
+	g := &Game{
+		Players: []Player{
+			{UserID: "p0", Seat: 0, Chips: 300, TotalBet: 300, Hole: [2]Card{{Ace, Hearts}, {Ace, Spades}}},
+			{UserID: "p1", Seat: 1, Chips: 0, TotalBet: 0, Folded: true},
+			{UserID: "p2", Seat: 2, Chips: 0, TotalBet: 0, Hole: [2]Card{{King, Clubs}, {King, Diamonds}}},
+		},
+		Community:      cards(t, "2D", "7S", "9C", "JD", "4D"),
+		DealerIndex:    0,
+		Street:         StreetRiver,
+		Status:         StatusActive,
+		HandsPerLevel:  3,
+		HandNumber:     4,
+		BaseSmallBlind: 5,
+		BaseBigBlind:   10,
+	}
+	g.showdown()
+	if !g.HandOver {
+		t.Fatal("hand should be over")
+	}
+	if !g.TableOver {
+		t.Fatal("table should be over — only p0 has chips")
+	}
+	if err := g.StartNextHand(newRNG()); err == nil {
+		t.Fatal("StartNextHand must fail when table is over")
+	}
+}
+
+func TestBlindsDoubleEveryThreeHands(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 100000, 5, 10, newRNG())
+	// Hand 1: level 0, BB=10.
+	if g.BigBlind != 10 || g.SmallBlind != 5 || g.BlindLevel != 0 {
+		t.Fatalf("hand1 blinds wrong: sb=%d bb=%d lvl=%d", g.SmallBlind, g.BigBlind, g.BlindLevel)
+	}
+	wantBB := map[int]int{2: 10, 3: 10, 4: 20, 5: 20, 6: 20, 7: 40, 8: 40, 9: 40, 10: 80}
+	wantLvl := map[int]int{2: 0, 3: 0, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2, 9: 2, 10: 3}
+	for hand := 2; hand <= 10; hand++ {
+		playHandToEnd(t, g)
+		if g.TableOver {
+			t.Fatalf("table unexpectedly over before hand %d", hand)
+		}
+		if err := g.StartNextHand(newRNG()); err != nil {
+			t.Fatalf("StartNextHand for hand %d: %v", hand, err)
+		}
+		if g.HandNumber != hand {
+			t.Fatalf("hand number = %d, want %d", g.HandNumber, hand)
+		}
+		if g.BlindLevel != wantLvl[hand] {
+			t.Fatalf("hand %d: blind level = %d, want %d", hand, g.BlindLevel, wantLvl[hand])
+		}
+		if g.BigBlind != wantBB[hand] {
+			t.Fatalf("hand %d: BB = %d, want %d", hand, g.BigBlind, wantBB[hand])
+		}
+		if g.SmallBlind != wantBB[hand]/2 {
+			t.Fatalf("hand %d: SB = %d, want %d", hand, g.SmallBlind, wantBB[hand]/2)
+		}
+	}
+}
+
+func TestStartNextHandRotatesDealer(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2", "p3"}, 1000, 5, 10, newRNG())
+	dealers := []int{g.DealerIndex}
+	for hand := 2; hand <= 5; hand++ {
+		playHandToEnd(t, g)
+		if g.TableOver {
+			break
+		}
+		if err := g.StartNextHand(newRNG()); err != nil {
+			t.Fatalf("StartNextHand: %v", err)
+		}
+		dealers = append(dealers, g.DealerIndex)
+	}
+	// Dealer must advance to a different seat each hand (all seats have chips).
+	for i := 1; i < len(dealers); i++ {
+		if dealers[i] == dealers[i-1] {
+			t.Fatalf("dealer did not rotate at step %d: %v", i, dealers)
+		}
+	}
+}
+
+func TestForfeitEliminatesAndMayEndTable(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
+	// p1 forfeits mid-hand: folds, chips zeroed, p0 wins uncontested -> table over.
+	g.ForfeitPlayer(1)
+	if !g.HandOver {
+		t.Fatal("hand should end when opponent forfeits")
+	}
+	if g.Players[1].Chips != 0 {
+		t.Fatalf("forfeiting player should have 0 chips, got %d", g.Players[1].Chips)
+	}
+	if !g.TableOver {
+		t.Fatal("heads-up forfeit should end the table")
+	}
+	if len(g.Winners) != 1 || g.Winners[0] != 0 {
+		t.Fatalf("winner should be seat 0, got %v", g.Winners)
+	}
+}
+
+func TestForfeitInMultiwayContinuesTable(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
+	// UTG (seat0) forfeits: folds + zeroed, but SB/BB still contest the hand.
+	g.ForfeitPlayer(0)
+	if g.Players[0].Chips != 0 || !g.Players[0].Folded {
+		t.Fatal("forfeiting player should be folded with 0 chips")
+	}
+	if g.HandOver {
+		t.Fatal("hand should continue with two live players")
+	}
+	playHandToEnd(t, g)
+	if g.TableOver {
+		t.Fatal("table should continue — two players still have chips")
+	}
+	// Next hand should exclude the forfeited player.
+	if err := g.StartNextHand(newRNG()); err != nil {
+		t.Fatalf("StartNextHand: %v", err)
+	}
+	if !g.Players[0].Folded {
+		t.Fatal("eliminated player must stay folded in the next hand")
+	}
+	if g.Players[0].Hole[0] != (Card{}) {
+		t.Fatal("eliminated player must not receive cards")
+	}
+}
+
+func TestStartNextHandEncodeDecode(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
+	playHandToEnd(t, g)
+	_ = g.StartNextHand(newRNG())
+	raw, err := Encode(g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g2, err := Decode(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g2.HandNumber != g.HandNumber || g2.BlindLevel != g.BlindLevel ||
+		g2.HandsPerLevel != g.HandsPerLevel || g2.BaseSmallBlind != g.BaseSmallBlind ||
+		g2.BaseBigBlind != g.BaseBigBlind || g2.HandOver != g.HandOver || g2.TableOver != g.TableOver {
+		t.Fatalf("cash-table fields not preserved through encode/decode")
+	}
+}
+
+func TestBestHandForNeedsEnoughCards(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
+	// Preflop: only 2 hole cards, no community -> not enough.
+	if _, err := g.BestHandFor(0); err == nil {
+		t.Fatal("expected error evaluating with < 5 cards")
+	}
+	g.Community = cards(t, "AH", "KH", "QH", "JH", "TH")
+	g.Players[0].Hole = [2]Card{{Two, Clubs}, {Three, Clubs}}
+	hv, err := g.BestHandFor(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hv.Rank != RoyalFlush {
+		t.Fatalf("expected royal flush from the board, got %s", hv.Rank)
+	}
+	if len(hv.Cards) != 5 {
+		t.Fatalf("best hand should have 5 cards, got %d", len(hv.Cards))
+	}
+}
+
 func TestAllInShowdownConservesChips(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 100, 5, 10, newRNG())
 	// Все идут all-in по очереди; раздача докручивается до вскрытия.

@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Морской бой: скрывать и останавливать таймер после победы
+- Покер: кэш-стол из множества раздач до победителя
 
 ## en
 - Poker Texas Hold'em: lobbies, invites, online and offline (1–6 players)
