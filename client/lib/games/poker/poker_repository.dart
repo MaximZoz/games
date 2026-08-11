@@ -226,8 +226,10 @@ class PokerGameView {
   final List<PokerApiCard> highlightedCards;
   final List<PokerWinnerHand> winnerHands;
 
+  /// Свой ход по индексу актёра (кнопки смотрят на [legalActions] отдельно).
+  /// Не требуем non-empty legalActions — иначе при рассинхроне оба видят «ход соперника».
   bool get isMyTurn =>
-      !isOver && myIndex >= 0 && myIndex == actingIndex && legalActions.isNotEmpty;
+      !isOver && !isHandOver && myIndex >= 0 && myIndex == actingIndex;
 
   bool get iWon => myIndex >= 0 && winners.contains(myIndex);
 

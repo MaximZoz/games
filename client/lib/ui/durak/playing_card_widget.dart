@@ -85,7 +85,7 @@ class PlayingCardWidget extends StatelessWidget {
           size: size,
           painter: _PlayingCardFacePainter(
             rank: card.rank.label,
-            suit: card.suit.symbol,
+            suit: card.suit,
             color: color,
           ),
         ),
@@ -117,6 +117,7 @@ class PlayingCardWidget extends StatelessWidget {
 }
 
 /// Рисует ранг/масть в заданных rect без RenderFlex/RenderParagraph overflow.
+/// Масти — Path (не Unicode ♠/♥): на Flutter Web глифы часто превращаются в «□/X».
 class _PlayingCardFacePainter extends CustomPainter {
   _PlayingCardFacePainter({
     required this.rank,
@@ -125,7 +126,7 @@ class _PlayingCardFacePainter extends CustomPainter {
   });
 
   final String rank;
-  final String suit;
+  final Suit suit;
   final Color color;
 
   @override
@@ -138,18 +139,12 @@ class _PlayingCardFacePainter extends CustomPainter {
     _paintCorner(canvas, Rect.fromLTWH(padX, padY, cornerW, cornerH));
 
     final center = Rect.fromLTRB(
-      size.width * 0.18,
-      size.height * 0.26,
-      size.width * 0.82,
-      size.height * 0.74,
+      size.width * 0.22,
+      size.height * 0.28,
+      size.width * 0.78,
+      size.height * 0.72,
     );
-    _paintFittedText(
-      canvas,
-      center,
-      suit,
-      fontSize: size.height * 0.42,
-      weight: FontWeight.w800,
-    );
+    _paintSuit(canvas, center);
 
     canvas.save();
     final br = Rect.fromLTWH(
@@ -185,13 +180,103 @@ class _PlayingCardFacePainter extends CustomPainter {
       fontSize: box.height * 0.48,
       weight: FontWeight.w800,
     );
-    _paintFittedText(
-      canvas,
-      suitBox,
-      suit,
-      fontSize: box.height * 0.44,
-      weight: FontWeight.w700,
-    );
+    _paintSuit(canvas, suitBox.deflate(box.width * 0.08));
+  }
+
+  void _paintSuit(Canvas canvas, Rect box) {
+    if (box.width <= 0 || box.height <= 0) return;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    canvas.drawPath(_suitPath(suit, box), paint);
+  }
+
+  /// Геометрия масти в [box] — стабильно на web/CanvasKit без шрифтовых глифов.
+  static Path _suitPath(Suit suit, Rect box) {
+    final cx = box.center.dx;
+    final cy = box.center.dy;
+    final w = box.width;
+    final h = box.height;
+    switch (suit) {
+      case Suit.hearts:
+        final p = Path();
+        p.moveTo(cx, cy + h * 0.38);
+        p.cubicTo(
+          cx - w * 0.55,
+          cy + h * 0.05,
+          cx - w * 0.48,
+          cy - h * 0.42,
+          cx,
+          cy - h * 0.12,
+        );
+        p.cubicTo(
+          cx + w * 0.48,
+          cy - h * 0.42,
+          cx + w * 0.55,
+          cy + h * 0.05,
+          cx,
+          cy + h * 0.38,
+        );
+        p.close();
+        return p;
+      case Suit.diamonds:
+        return Path()
+          ..moveTo(cx, cy - h * 0.42)
+          ..lineTo(cx + w * 0.38, cy)
+          ..lineTo(cx, cy + h * 0.42)
+          ..lineTo(cx - w * 0.38, cy)
+          ..close();
+      case Suit.spades:
+        final p = Path();
+        p.moveTo(cx, cy - h * 0.42);
+        p.cubicTo(
+          cx + w * 0.55,
+          cy - h * 0.05,
+          cx + w * 0.42,
+          cy + h * 0.22,
+          cx,
+          cy + h * 0.12,
+        );
+        p.cubicTo(
+          cx - w * 0.42,
+          cy + h * 0.22,
+          cx - w * 0.55,
+          cy - h * 0.05,
+          cx,
+          cy - h * 0.42,
+        );
+        p.close();
+        // Ножка
+        p.addRect(Rect.fromCenter(
+          center: Offset(cx, cy + h * 0.30),
+          width: w * 0.16,
+          height: h * 0.28,
+        ));
+        p.addOval(Rect.fromCenter(
+          center: Offset(cx, cy + h * 0.38),
+          width: w * 0.42,
+          height: h * 0.16,
+        ));
+        return p;
+      case Suit.clubs:
+        final r = w * 0.22;
+        final p = Path()
+          ..addOval(Rect.fromCircle(center: Offset(cx, cy - h * 0.18), radius: r))
+          ..addOval(Rect.fromCircle(center: Offset(cx - w * 0.20, cy + h * 0.06), radius: r))
+          ..addOval(Rect.fromCircle(center: Offset(cx + w * 0.20, cy + h * 0.06), radius: r));
+        p.addRect(Rect.fromCenter(
+          center: Offset(cx, cy + h * 0.30),
+          width: w * 0.14,
+          height: h * 0.32,
+        ));
+        p.addOval(Rect.fromCenter(
+          center: Offset(cx, cy + h * 0.40),
+          width: w * 0.38,
+          height: h * 0.14,
+        ));
+        return p;
+    }
   }
 
   void _paintFittedText(
@@ -444,55 +529,30 @@ class DurakTrumpSuitBadge extends StatelessWidget {
       alignment: Alignment.center,
       child: CustomPaint(
         size: Size.square(size * 0.64),
-        painter: _SuitGlyphPainter(symbol: suit.symbol, color: color),
+        painter: _SuitGlyphPainter(suit: suit, color: color),
       ),
     );
   }
 }
 
 class _SuitGlyphPainter extends CustomPainter {
-  _SuitGlyphPainter({required this.symbol, required this.color});
+  _SuitGlyphPainter({required this.suit, required this.color});
 
-  final String symbol;
+  final Suit suit;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: symbol,
-        style: TextStyle(
-          color: color,
-          fontSize: size.shortestSide,
-          fontWeight: FontWeight.w800,
-          height: 1,
-          leadingDistribution: TextLeadingDistribution.even,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: false,
-        applyHeightToLastDescent: false,
-      ),
-    )..layout();
-    final tw = tp.width;
-    final th = tp.height;
-    if (tw <= 0 || th <= 0) return;
-    final scale = (size.shortestSide * 0.92) / (tw > th ? tw : th);
-    canvas.save();
-    canvas.clipRect(Offset.zero & size);
-    canvas.translate(
-      (size.width - tw * scale) / 2,
-      (size.height - th * scale) / 2,
-    );
-    canvas.scale(scale);
-    tp.paint(canvas, Offset.zero);
-    canvas.restore();
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final box = Offset.zero & size;
+    canvas.drawPath(_PlayingCardFacePainter._suitPath(suit, box), paint);
   }
 
   @override
   bool shouldRepaint(covariant _SuitGlyphPainter oldDelegate) {
-    return oldDelegate.symbol != symbol || oldDelegate.color != color;
+    return oldDelegate.suit != suit || oldDelegate.color != color;
   }
 }

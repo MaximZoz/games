@@ -199,8 +199,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       return l10n.pokerHandOver;
     }
-    if (game.isMyTurn) return l10n.pokerYourTurn;
     final acting = game.actingIndex;
+    // Свой индекс актёра — всегда «Ваш ход», даже если legalActions ещё пусты.
+    if (!game.isOver &&
+        !game.isHandOver &&
+        game.myIndex >= 0 &&
+        acting == game.myIndex) {
+      return l10n.pokerYourTurn;
+    }
     if (acting >= 0 && acting < game.players.length) {
       return l10n.pokerToAct(_playerName(game.players[acting]));
     }
@@ -773,9 +779,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final showReward = isOver &&
         game.stakeBronze > 0 &&
         (rewardBronze != 0);
+    // Таймер всем за столом — по истечении оба рефетчат (анти-залипание хода).
     final showTimer = !isOver &&
         !game.isHandOver &&
-        game.isMyTurn &&
+        game.actingIndex >= 0 &&
         game.turnTimeSec > 0 &&
         game.turnDeadline > 0;
     // Пауза между раздачами (стол ещё идёт) — подсказка о следующей раздаче.
@@ -1135,15 +1142,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
-  /// Размер своих карт: заметно крупнее борда; при 6 игроках чуть компактнее.
+  /// Размер своих карт: чуть крупнее борда, без гигантского веера.
   Size _heroCardSize(bool narrow, int playerCount) {
     if (playerCount <= 2) {
-      return narrow ? const Size(92, 132) : const Size(108, 154);
+      return narrow ? const Size(56, 80) : const Size(64, 92);
     }
     if (playerCount <= 4) {
-      return narrow ? const Size(80, 114) : const Size(92, 132);
+      return narrow ? const Size(48, 68) : const Size(56, 80);
     }
-    return narrow ? const Size(68, 97) : const Size(78, 111);
+    return narrow ? const Size(42, 60) : const Size(48, 68);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -1963,10 +1970,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final isDealer = game.dealerIndex == game.myIndex;
     final showBet = me.bet > 0 && !me.folded;
-    // Низ карт — на уровне низа аватара: неймплейт не перекрывает и не «ловит» глифы.
+    // Низ веера на уровне низа аватара — неймплейт свободен, карты целиком видны.
     const cardsBottom = namePlateH + avatarPlateGap;
-    // Веер шире аватара — углы выглядывают слева/справа и сверху.
-    final peekOut = heroCards.width * 0.52;
+    final peekOut = heroCards.width * 0.38;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -1977,57 +1983,56 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             left: -peekOut,
             right: -peekOut,
             bottom: cardsBottom,
-            height: heroCards.height * 0.92,
+            height: heroCards.height,
             child: IgnorePointer(
-              child: RepaintBoundary(
-                child: Opacity(
-                  opacity: dim ? 0.4 : 1,
-                  child: ClipRect(
-                    // Жёстко режем низ — никакого пересечения с неймплейтом (web-ghost).
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        for (var i = 0; i < me.holeCards!.length; i++)
-                          Transform.translate(
-                            offset: Offset(
-                              (i == 0 ? -1 : 1) * heroCards.width * 0.26,
-                              -avatarSize * 0.35,
+              child: Opacity(
+                opacity: dim ? 0.4 : 1,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (var i = 0; i < me.holeCards!.length; i++)
+                      Transform.translate(
+                        offset: Offset(
+                          (i == 0 ? -1 : 1) * heroCards.width * 0.22,
+                          -avatarSize * 0.28,
+                        ),
+                        child: Transform.rotate(
+                          angle: i == 0 ? -0.14 : 0.14,
+                          alignment: Alignment.bottomCenter,
+                          child: PlayingCardWidget(
+                            key: ValueKey(
+                              'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
                             ),
-                            child: Transform.rotate(
-                              angle: i == 0 ? -0.18 : 0.18,
-                              alignment: Alignment.bottomCenter,
-                              child: PlayingCardWidget(
-                                key: ValueKey(
-                                  'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+                            card: me.holeCards![i].toPlayingCard(),
+                            size: heroCards,
+                            highlighted: hasHighlight &&
+                                highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
                                 ),
-                                card: me.holeCards![i].toPlayingCard(),
-                                size: heroCards,
-                                highlighted: hasHighlight &&
-                                    highlightKeys.contains(
-                                      PokerGameView.cardKeyOf(me.holeCards![i]),
-                                    ),
-                                dimmed: hasHighlight &&
-                                    !highlightKeys.contains(
-                                      PokerGameView.cardKeyOf(me.holeCards![i]),
-                                    ),
-                                animate: false,
-                              ),
-                            ),
+                            dimmed: hasHighlight &&
+                                !highlightKeys.contains(
+                                  PokerGameView.cardKeyOf(me.holeCards![i]),
+                                ),
+                            animate: false,
                           ),
-                      ],
-                    ),
-                  ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
           ),
+        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
+        plateColumn,
+        // Ставка и D справа от профиля (выше неймплейта) — не прячутся под аватаром/картами.
         if (showBet || isDealer)
           Positioned(
-            left: plateW * 0.88,
-            bottom: 2,
+            left: plateW + 8,
+            bottom: namePlateH + avatarPlateGap + 2,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (showBet) _tableBetLabel(me.bet),
                 if (isDealer) ...[
@@ -2037,8 +2042,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ],
             ),
           ),
-        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
-        plateColumn,
       ],
     );
   }
@@ -2051,8 +2054,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         (game.isHandOver &&
             game.me != null &&
             _winnerSeats(game).contains(game.me!.seat));
-    final showActions =
-        !game.isOver && !game.isHandOver && game.isMyTurn;
+    final showActions = !game.isOver &&
+        !game.isHandOver &&
+        game.isMyTurn &&
+        game.legalActions.isNotEmpty;
     final showCardsBtn = game.canShowCards && !game.isOver;
 
     const comboSlot = 30.0;
