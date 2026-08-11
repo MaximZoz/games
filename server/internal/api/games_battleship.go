@@ -1451,6 +1451,12 @@ func (h *GamesHandler) applyBattleshipTimeout(ctx context.Context, gameID string
 }
 
 func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, m map[string]string, finishReason string) {
+	// Останавливаем таймеры хода/расстановки — клиент сразу скрывает countdown.
+	key := "game:" + gameID
+	h.Rdb.HSet(ctx, key, "turn_deadline", "0", "setup_deadline", "0")
+	m["turn_deadline"] = "0"
+	m["setup_deadline"] = "0"
+
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	h.settleBattleshipCoins(ctx, m, stakeBronze)
 	for _, uid := range []string{m["p1_user_id"], m["p2_user_id"]} {
@@ -1591,14 +1597,19 @@ func (h *GamesHandler) battleshipViewFor(ctx context.Context, m map[string]strin
 		"draw_offer_by":          strings.TrimSpace(m["draw_offer_by"]),
 		"draw":                   m["draw"] == "1",
 	}
-	if dl := m["turn_deadline"]; dl != "" {
-		if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
-			out["turn_deadline"] = n
+	if status == battleshipStatusOver {
+		out["turn_deadline"] = 0
+		out["setup_deadline"] = 0
+	} else {
+		if dl := m["turn_deadline"]; dl != "" {
+			if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
+				out["turn_deadline"] = n
+			}
 		}
-	}
-	if dl := m["setup_deadline"]; dl != "" {
-		if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
-			out["setup_deadline"] = n
+		if dl := m["setup_deadline"]; dl != "" {
+			if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
+				out["setup_deadline"] = n
+			}
 		}
 	}
 	if m["winner"] != "" {
