@@ -9,7 +9,6 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
-import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/poker/poker_offline_engine.dart'
     show PokerActionType, PokerStreet;
 import 'package:multigames_client/games/poker/poker_offline_session.dart';
@@ -25,6 +24,7 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 /// Экран партии Texas Hold'em — общий для онлайна и офлайна.
@@ -52,12 +52,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _isFindingGame = false;
   bool _prevOver = false;
 
-  // ---- анимация раздачи борда (полёт из колоды) ----
-  final GlobalKey _deckKey = GlobalKey();
-  final GlobalKey _potKey = GlobalKey();
+  // ---- анимация появления борда + полёт фишек ----
+  /// Цель анимации фишек — стопка под общими картами (не бейдж «Банк»).
+  final GlobalKey _tableChipsKey = GlobalKey();
   final Map<int, GlobalKey> _seatKeys = {};
-  final List<GlobalKey> _slotKeys = List.generate(5, (_) => GlobalKey());
-  int _shownCommunity = 0; // сколько карт борда уже «приземлилось»
+  int _shownCommunity = 0; // сколько карт борда уже показано
   int _dealHand = -1; // номер раздачи, чей борд сейчас отслеживаем
   bool _dealing = false;
   bool _disposed = false;
@@ -740,74 +739,106 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  // ---- deal-from-deck animation ------------------------------------------
+  // ---- появление карт борда (fade/scale, без колоды) ---------------------
 
-  /// Синхронизирует «приземление» карт борда с анимацией полёта из колоды.
-  /// Гарантированно показывает карты (snap) если анимацию сыграть нельзя.
+  /// Показывает новые общие карты по одной с короткой задержкой.
   void _syncDeal(PokerGameView game) {
     final len = game.community.length;
-    // Новая раздача (номер сменился или борд сбросился) — сброс счётчика.
     if (game.handNumber != _dealHand || len < _shownCommunity) {
       _dealHand = game.handNumber;
-      _shownCommunity = len;
+      _shownCommunity = 0;
       _dealing = false;
-      return;
     }
     if (len <= _shownCommunity || _dealing) return;
     _dealing = true;
-    final from = _shownCommunity;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _runDeal(game, from, len);
-    });
+    unawaited(_revealCommunity(len));
   }
 
-  Future<void> _runDeal(PokerGameView game, int from, int to) async {
-    final deckRect = globalRectOf(_deckKey);
-    final cards = <PlayingCard>[];
-    final froms = <Rect>[];
-    final tos = <Rect>[];
-    Size cardSize = const Size(56, 80);
-    for (var i = from; i < to && i < game.community.length; i++) {
-      final slotRect = globalRectOf(_slotKeys[i]);
-      if (deckRect == null || slotRect == null) {
-        // Не можем анимировать — просто показываем карты.
-        if (mounted && !_disposed) setState(() => _shownCommunity = to);
+  Future<void> _revealCommunity(int to) async {
+    while (_shownCommunity < to) {
+      if (!mounted || _disposed) {
         _dealing = false;
         return;
       }
-      cardSize = slotRect.size;
-      cards.add(game.community[i].toPlayingCard());
-      froms.add(Rect.fromLTWH(
-        deckRect.center.dx - cardSize.width / 2,
-        deckRect.center.dy - cardSize.height / 2,
-        cardSize.width,
-        cardSize.height,
-      ));
-      tos.add(slotRect);
+      await Future<void>.delayed(
+        Duration(milliseconds: _shownCommunity == 0 ? 30 : 95),
+      );
+      if (!mounted || _disposed) {
+        _dealing = false;
+        return;
+      }
+      setState(() => _shownCommunity++);
     }
-    if (cards.isEmpty) {
-      if (mounted && !_disposed) setState(() => _shownCommunity = to);
-      _dealing = false;
+    _dealing = false;
+  }
+
+  Future<void> _showPlayerCard(PokerPlayerView p) async {
+    if (!mounted) return;
+    if (p.isBot) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: GradientCard(
+              animate: false,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GamePlayerAvatar(
+                    displayName: _playerName(p),
+                    avatarKind: p.avatarKind,
+                    avatarValue: p.avatarValue,
+                    frameCode: p.frameCode,
+                    frameColor: p.frameColor,
+                    compact: false,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _playerName(p),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${p.chips}',
+                    style: const TextStyle(
+                      color: AppColors.accentStart,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(context.l10n.commonClose),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
       return;
     }
-    try {
-      await playCardsFlyAnimation(
-        context: context,
-        cards: cards,
-        cardSize: cardSize,
-        froms: froms,
-        tos: tos,
-        duration: const Duration(milliseconds: 320),
-        stagger: const Duration(milliseconds: 100),
-        faceDown: true,
-        flipToFace: true,
-        arcLift: 26,
-      );
-    } catch (_) {
-      // ignore — snap below
-    }
-    if (mounted && !_disposed) setState(() => _shownCommunity = to);
-    _dealing = false;
+    await showUserProfileDialog(
+      context: context,
+      ref: ref,
+      userId: p.id,
+      displayName: _playerName(p),
+      avatarKind: p.avatarKind,
+      avatarValue: p.avatarValue,
+      frameCode: p.frameCode,
+      frameColor: p.frameColor,
+      messageFrom: 'games',
+      messageReturnPath: '/games/poker/game/${widget.gameId}',
+    );
   }
 
   Widget _buildEndSection(PokerGameView game) {
@@ -933,15 +964,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     }
   }
 
-  /// Размер общей карты, вписанный в доступную ширину (борд + колода + отступы).
-  /// Ширина = 5·w (карты) + 0.72·w (колода) + фиксированные зазоры (≈54).
+  /// Размер общей карты: 5 карт в ряд с небольшими зазорами.
   Size _communityCardSize(double maxWidth, bool narrow) {
-    // Борд — главный визуальный якорь стола: крупнее карманных карт соперников
-    // и близко к размеру своих (hero), чтобы карты не «терялись» на фетре.
-    final maxW = narrow ? 68.0 : 86.0;
-    const minW = 40.0;
-    final avail = maxWidth - (narrow ? 16.0 : 48.0);
-    var w = (avail - 48.0) / 5.72;
+    final maxW = narrow ? 74.0 : 96.0;
+    const minW = 44.0;
+    final avail = maxWidth - (narrow ? 20.0 : 56.0);
+    var w = (avail - 28.0) / 5;
     if (w > maxW) w = maxW;
     if (w < minW) w = minW;
     return Size(w, w / 0.7);
@@ -975,25 +1003,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ],
         ),
         const SizedBox(height: 6),
-        KeyedSubtree(
-          key: _potKey,
-          child: _PotBadge(
-            amount: game.pot,
-            label: context.l10n.pokerPot(game.pot),
-          ),
+        _PotBadge(
+          amount: game.pot,
+          label: context.l10n.pokerPot(game.pot),
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildDeck(cardSize),
-            SizedBox(width: narrow ? 8 : 12),
             for (var i = 0; i < 5; i++)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: narrow ? 2 : 3),
+                padding: EdgeInsets.symmetric(horizontal: narrow ? 2.5 : 4),
                 child: SizedBox(
-                  key: _slotKeys[i],
                   width: cardSize.width,
                   height: cardSize.height,
                   child: _communitySlot(
@@ -1007,6 +1029,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
           ],
         ),
+        const SizedBox(height: 8),
+        // Стопка фишек под картами — цель анимации ставок/выигрыша.
+        KeyedSubtree(
+          key: _tableChipsKey,
+          child: _TableChipStack(amount: game.pot),
+        ),
       ],
     );
   }
@@ -1018,47 +1046,20 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required Set<int> highlightKeys,
     required bool hasHighlight,
   }) {
-    // Карта показывается только после «приземления» (см. _syncDeal).
     if (i >= _shownCommunity || i >= game.community.length) {
       return _emptyCardSlot(cardSize);
     }
     final c = game.community[i];
     final hl = hasHighlight && highlightKeys.contains(PokerGameView.cardKeyOf(c));
     final dim = hasHighlight && !hl;
-    return PlayingCardWidget(
-      card: c.toPlayingCard(),
-      size: cardSize,
-      highlighted: hl,
-      dimmed: dim,
-      animate: false,
-    );
-  }
-
-  /// Колода на столе: стопка рубашек с лёгким сдвигом (3–4 слоя).
-  Widget _buildDeck(Size communityCardSize) {
-    final deckSize = Size(
-      communityCardSize.width * 0.72,
-      communityCardSize.height * 0.72,
-    );
-    const layers = 4;
-    return SizedBox(
-      key: _deckKey,
-      width: deckSize.width + 8,
-      height: deckSize.height + (layers - 1) * 2.5 + 4,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (var l = layers - 1; l >= 0; l--)
-            Positioned(
-              left: l * 1.6,
-              top: l * 2.2,
-              child: CardBackWidget(
-                size: deckSize,
-                outlined: true,
-                elevated: l == 0,
-              ),
-            ),
-        ],
+    return _EntranceCard(
+      key: ValueKey('board_${game.handNumber}_${i}_${c.rank}_${c.suit}'),
+      child: PlayingCardWidget(
+        card: c.toPlayingCard(),
+        size: cardSize,
+        highlighted: hl,
+        dimmed: dim,
+        animate: false,
       ),
     );
   }
@@ -1096,7 +1097,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   GlobalKey _seatKey(int seat) =>
       _seatKeys.putIfAbsent(seat, GlobalKey.new);
 
-  /// Фишки: ставка игрока → банк; при выигрыше раздачи банк → победитель.
+  /// Фишки: ставка → центр стола под картами; выигрыш → карточка победителя.
   void _syncChipFx(PokerGameView game) {
     if (game.handNumber != _prevHandNumber) {
       _prevHandNumber = game.handNumber;
@@ -1107,7 +1108,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       return;
     }
     if (!game.isHandOver) {
-      // Каждая новая ставка — фишки летят от места к банку.
       final growers = <int>[
         for (final p in game.players)
           if (p.bet > (_prevBets[p.seat] ?? 0)) p.seat,
@@ -1115,27 +1115,39 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       if (growers.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           for (final seat in growers.take(4)) {
-            unawaited(_flyChips(fromKey: _seatKey(seat), toKey: _potKey));
+            unawaited(
+              _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
+            );
           }
         });
       }
     }
-    // Банк к победителю (конец раздачи).
+    // Банк со стола — к карточке победителя.
     if (game.isHandOver && !_prevHandOver && game.winners.isNotEmpty) {
-      final w = game.winners.first;
+      final seats = _winnerSeats(game);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        unawaited(_flyChips(
-          fromKey: _potKey,
-          toKey: _seatKey(w),
-          count: 5,
-          color: const Color(0xFFF5B301),
-        ));
+        for (final seat in seats.take(2)) {
+          unawaited(_flyChips(
+            fromKey: _tableChipsKey,
+            toKey: _seatKey(seat),
+            count: 5,
+            color: const Color(0xFFF5B301),
+          ));
+        }
       });
     }
     _prevHandOver = game.isHandOver;
     _prevBets
       ..clear()
       ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+  }
+
+  /// `winners` в API — индексы игроков; для UI нужны seat-ключи.
+  Set<int> _winnerSeats(PokerGameView game) {
+    return {
+      for (final i in game.winners)
+        if (i >= 0 && i < game.players.length) game.players[i].seat,
+    };
   }
 
   Future<void> _flyChips({
@@ -1178,7 +1190,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       late OverlayEntry entry;
       final controller = AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 420),
+        duration: const Duration(milliseconds: 520),
       );
       _chipControllers.add(controller);
       final curved = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
@@ -1254,7 +1266,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final highlightKeys = game.highlightKeys;
     // На вскрытии подсвечиваем карты победившей комбинации у всех открытых.
     final hasHighlight = showdown && highlightKeys.isNotEmpty;
-    final isWinner = game.isHandOver && game.winners.contains(p.seat);
+    final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
+    final headsUp = game.players.length == 2;
 
     return Container(
       key: _seatKey(p.seat),
@@ -1312,13 +1325,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              GamePlayerAvatar(
-                displayName: _playerName(p),
-                avatarKind: p.avatarKind,
-                avatarValue: p.avatarValue,
-                frameCode: p.frameCode,
-                frameColor: p.frameColor,
-                compact: true,
+              GestureDetector(
+                onTap: headsUp ? () => unawaited(_showPlayerCard(p)) : null,
+                behavior: HitTestBehavior.opaque,
+                child: GamePlayerAvatar(
+                  displayName: _playerName(p),
+                  avatarKind: p.avatarKind,
+                  avatarValue: p.avatarValue,
+                  frameCode: p.frameCode,
+                  frameColor: p.frameColor,
+                  compact: true,
+                ),
               ),
               if (isDealer) ...[
                 const SizedBox(width: 4),
@@ -1418,8 +1435,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
     final comboLabel = _handRankLabel(game.myHandRank);
-    final comboAccent =
-        hasHighlight || (game.isShowdown && game.winners.contains(me?.seat));
+    final comboAccent = hasHighlight ||
+        (game.isShowdown &&
+            me != null &&
+            _winnerSeats(game).contains(me.seat));
 
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 4, 12, narrow ? 8 : 14),
@@ -1452,33 +1471,36 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                       ),
                     ),
                 const SizedBox(width: 12),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        _dealerHeroBadge(game),
+                KeyedSubtree(
+                  key: _seatKey(me.seat),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _dealerHeroBadge(game),
+                          Text(
+                            '${me.chips}',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (me.bet > 0)
                         Text(
-                          '${me.chips}',
+                          '+${me.bet}',
                           style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            color: AppColors.accentStart,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ],
-                    ),
-                    if (me.bet > 0)
-                      Text(
-                        '+${me.bet}',
-                        style: const TextStyle(
-                          color: AppColors.accentStart,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1669,6 +1691,57 @@ class _PotBadgeState extends State<_PotBadge>
             fontSize: 15,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Стопка фишек в центре стола под бордом — якорь анимации ставок/банка.
+class _TableChipStack extends StatelessWidget {
+  const _TableChipStack({required this.amount});
+
+  final int amount;
+
+  @override
+  Widget build(BuildContext context) {
+    if (amount <= 0) {
+      return const SizedBox(width: 36, height: 18);
+    }
+    final layers = amount >= 80 ? 4 : (amount >= 30 ? 3 : 2);
+    return SizedBox(
+      width: 40,
+      height: 16.0 + layers * 3.5,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          for (var i = 0; i < layers; i++)
+            Positioned(
+              bottom: i * 3.2,
+              child: Container(
+                width: 22 - i * 0.6,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.lerp(const Color(0xFFE8C547), Colors.white, i * 0.08)!,
+                      Color.lerp(const Color(0xFFC9A227), Colors.black, 0.2)!,
+                    ],
+                  ),
+                  border: Border.all(color: Colors.white, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.28),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
