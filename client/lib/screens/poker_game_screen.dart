@@ -1135,15 +1135,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
-  /// Размер своих карт: крупный веер из-за аватара; при 6 игроках чуть компактнее.
+  /// Размер своих карт: заметно крупнее борда; при 6 игроках чуть компактнее.
   Size _heroCardSize(bool narrow, int playerCount) {
     if (playerCount <= 2) {
-      return narrow ? const Size(74, 106) : const Size(86, 122);
+      return narrow ? const Size(92, 132) : const Size(108, 154);
     }
     if (playerCount <= 4) {
-      return narrow ? const Size(64, 92) : const Size(74, 106);
+      return narrow ? const Size(80, 114) : const Size(92, 132);
     }
-    return narrow ? const Size(54, 78) : const Size(62, 88);
+    return narrow ? const Size(68, 97) : const Size(78, 111);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -1852,8 +1852,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Hero по центру низа: карты крупным веером выглядывают из-за аватара.
-  /// Якорь Align = аватар/неймплейт; карты Positioned сзади и не смещают центр.
+  /// Hero по центру низа: крупный веер выглядывает из-за аватара.
+  /// Профиль (аватар+неймплейт) — единственный якорь Align, карты его не сдвигают.
   Widget _buildHeroOnTable(PokerGameView game, bool narrow) {
     final me = game.me;
     if (me == null) return const SizedBox.shrink();
@@ -1865,12 +1865,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final dim = me.folded;
     final plateW = narrow ? 100.0 : 112.0;
     const borderW = 2.5;
+    // Compact GamePlayerAvatar: FramedAvatar size = 36.
+    const avatarSize = 36.0;
+    const avatarPlateGap = 4.0;
+    // Непрозрачный неймплейт + запас по высоте (padding/строки/рамка хода).
+    const namePlateH = 44.0;
     final myWinCombo = isWinner
         ? _handRankLabel(_winnerHandForSeat(game, me.seat)?.rank) ??
             _handRankLabel(game.myHandRank)
         : null;
 
-    // Непрозрачный фон — иначе на web карты «просвечивают» сквозь неймплейт.
     final namePlate = Container(
       width: plateW,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -1918,7 +1922,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
-    // Только аватар+неймплейт задают размер для Align — центр = низ стола.
+    // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
     final plateColumn = KeyedSubtree(
       key: _seatKey(me.seat),
       child: Column(
@@ -1936,8 +1940,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               compact: true,
             ),
           ),
-          const SizedBox(height: 4),
-          // Isolates nameplate from card paint layers (web ghosting).
+          const SizedBox(height: avatarPlateGap),
           RepaintBoundary(
             child: TurnTimerBorder(
               key: ValueKey('poker-hero-${game.turnDeadline}'),
@@ -1960,8 +1963,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final isDealer = game.dealerIndex == game.myIndex;
     final showBet = me.bet > 0 && !me.folded;
-    // Веер из-за аватара: карты шире якоря, выглядывают слева/справа и сверху.
-    final peekOut = heroCards.width * 0.42;
+    // Низ карт — на уровне низа аватара: неймплейт не перекрывает и не «ловит» глифы.
+    const cardsBottom = namePlateH + avatarPlateGap;
+    // Веер шире аватара — углы выглядывают слева/справа и сверху.
+    final peekOut = heroCards.width * 0.52;
+
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.bottomCenter,
@@ -1970,51 +1976,52 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           Positioned(
             left: -peekOut,
             right: -peekOut,
-            // Нижний край карт у аватара — неймплейт перекрывает низ, не «просвечивает».
-            bottom: 34,
-            height: heroCards.height,
-            child: RepaintBoundary(
-              child: Opacity(
-                opacity: dim ? 0.35 : 1,
-                child: Stack(
-                  alignment: Alignment.bottomCenter,
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (var i = 0; i < me.holeCards!.length; i++)
-                      Transform.translate(
-                        offset: Offset(
-                          (i == 0 ? -1 : 1) * heroCards.width * 0.28,
-                          -6,
-                        ),
-                        child: Transform.rotate(
-                          angle: i == 0 ? -0.20 : 0.20,
-                          alignment: Alignment.bottomCenter,
-                          child: _EntranceCard(
-                            key: ValueKey(
-                              'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+            bottom: cardsBottom,
+            height: heroCards.height * 0.92,
+            child: IgnorePointer(
+              child: RepaintBoundary(
+                child: Opacity(
+                  opacity: dim ? 0.4 : 1,
+                  child: ClipRect(
+                    // Жёстко режем низ — никакого пересечения с неймплейтом (web-ghost).
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        for (var i = 0; i < me.holeCards!.length; i++)
+                          Transform.translate(
+                            offset: Offset(
+                              (i == 0 ? -1 : 1) * heroCards.width * 0.26,
+                              -avatarSize * 0.35,
                             ),
-                            child: PlayingCardWidget(
-                              card: me.holeCards![i].toPlayingCard(),
-                              size: heroCards,
-                              highlighted: hasHighlight &&
-                                  highlightKeys.contains(
-                                    PokerGameView.cardKeyOf(me.holeCards![i]),
-                                  ),
-                              dimmed: hasHighlight &&
-                                  !highlightKeys.contains(
-                                    PokerGameView.cardKeyOf(me.holeCards![i]),
-                                  ),
-                              animate: false,
+                            child: Transform.rotate(
+                              angle: i == 0 ? -0.18 : 0.18,
+                              alignment: Alignment.bottomCenter,
+                              child: PlayingCardWidget(
+                                key: ValueKey(
+                                  'hero_${game.handNumber}_${me.holeCards![i].rank}_${me.holeCards![i].suit}',
+                                ),
+                                card: me.holeCards![i].toPlayingCard(),
+                                size: heroCards,
+                                highlighted: hasHighlight &&
+                                    highlightKeys.contains(
+                                      PokerGameView.cardKeyOf(me.holeCards![i]),
+                                    ),
+                                dimmed: hasHighlight &&
+                                    !highlightKeys.contains(
+                                      PokerGameView.cardKeyOf(me.holeCards![i]),
+                                    ),
+                                animate: false,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        // Ставка сбоку у края стола; фишка D — под ставкой (тоже у края).
         if (showBet || isDealer)
           Positioned(
             left: plateW * 0.88,
@@ -2030,7 +2037,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ],
             ),
           ),
-        // Аватар и неймплейт поверх карт — карты выглядывают из-за аватара.
+        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
         plateColumn,
       ],
     );
