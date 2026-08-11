@@ -40,7 +40,8 @@ class PokerGameScreen extends ConsumerStatefulWidget {
   ConsumerState<PokerGameScreen> createState() => _PokerGameScreenState();
 }
 
-class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
+class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
+    with TickerProviderStateMixin {
   bool _busy = false;
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
@@ -53,11 +54,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
 
   // ---- анимация раздачи борда (полёт из колоды) ----
   final GlobalKey _deckKey = GlobalKey();
+  final GlobalKey _potKey = GlobalKey();
+  final Map<int, GlobalKey> _seatKeys = {};
   final List<GlobalKey> _slotKeys = List.generate(5, (_) => GlobalKey());
   int _shownCommunity = 0; // сколько карт борда уже «приземлилось»
   int _dealHand = -1; // номер раздачи, чей борд сейчас отслеживаем
   bool _dealing = false;
   bool _disposed = false;
+  int _prevHandNumber = -1;
+  bool _prevHandOver = false;
+  final Map<int, int> _prevBets = {};
+  final List<AnimationController> _chipControllers = [];
 
   bool get _isOffline =>
       OfflinePokerRegistry.instance.isOffline(widget.gameId);
@@ -65,6 +72,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
   @override
   void dispose() {
     _disposed = true;
+    for (final c in _chipControllers) {
+      c.dispose();
+    }
+    _chipControllers.clear();
     super.dispose();
   }
 
@@ -656,6 +667,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
 
   Widget _buildContent(PokerGameView game, bool narrow) {
     _syncDeal(game);
+    _syncChipFx(game);
     final isOver = game.isOver;
     final status = _statusText(game);
     final showTimer = !isOver &&
@@ -924,19 +936,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
   /// Размер общей карты, вписанный в доступную ширину (борд + колода + отступы).
   /// Ширина = 5·w (карты) + 0.72·w (колода) + фиксированные зазоры (≈54).
   Size _communityCardSize(double maxWidth, bool narrow) {
-    final maxW = narrow ? 56.0 : 70.0;
-    const minW = 30.0;
-    final avail = maxWidth - (narrow ? 28.0 : 80.0);
-    var w = (avail - 54.0) / 5.72;
+    // Борд — главный визуальный якорь стола: крупнее карманных карт соперников
+    // и близко к размеру своих (hero), чтобы карты не «терялись» на фетре.
+    final maxW = narrow ? 68.0 : 86.0;
+    const minW = 40.0;
+    final avail = maxWidth - (narrow ? 16.0 : 48.0);
+    var w = (avail - 48.0) / 5.72;
     if (w > maxW) w = maxW;
     if (w < minW) w = minW;
     return Size(w, w / 0.7);
   }
 
+  /// Подсвечивать карты комбинации: на вскрытии всегда; в раздаче — от пары и выше.
+  bool _shouldHighlightCombo(PokerGameView game) {
+    if (game.isShowdown) return game.highlightKeys.isNotEmpty;
+    final rank = game.myHandRank;
+    if (rank == null || rank.isEmpty || rank == 'HighCard') return false;
+    return game.highlightKeys.isNotEmpty;
+  }
+
   Widget _buildCenter(PokerGameView game, bool narrow, Size cardSize) {
-    final showdown = game.isShowdown;
     final highlightKeys = game.highlightKeys;
-    final hasHighlight = showdown && highlightKeys.isNotEmpty;
+    final hasHighlight = _shouldHighlightCombo(game);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -954,7 +975,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        _PotBadge(amount: game.pot, label: context.l10n.pokerPot(game.pot)),
+        KeyedSubtree(
+          key: _potKey,
+          child: _PotBadge(
+            amount: game.pot,
+            label: context.l10n.pokerPot(game.pot),
+          ),
+        ),
         const SizedBox(height: 10),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -964,7 +991,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
             SizedBox(width: narrow ? 8 : 12),
             for (var i = 0; i < 5; i++)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: narrow ? 3 : 4),
+                padding: EdgeInsets.symmetric(horizontal: narrow ? 2 : 3),
                 child: SizedBox(
                   key: _slotKeys[i],
                   width: cardSize.width,
@@ -973,7 +1000,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
                     game,
                     i,
                     cardSize,
-                    showdown: showdown,
                     highlightKeys: highlightKeys,
                     hasHighlight: hasHighlight,
                   ),
@@ -989,7 +1015,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
     PokerGameView game,
     int i,
     Size cardSize, {
-    required bool showdown,
     required Set<int> highlightKeys,
     required bool hasHighlight,
   }) {
@@ -998,7 +1023,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
       return _emptyCardSlot(cardSize);
     }
     final c = game.community[i];
-    final hl = showdown && highlightKeys.contains(PokerGameView.cardKeyOf(c));
+    final hl = hasHighlight && highlightKeys.contains(PokerGameView.cardKeyOf(c));
     final dim = hasHighlight && !hl;
     return PlayingCardWidget(
       card: c.toPlayingCard(),
@@ -1068,6 +1093,158 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
     );
   }
 
+  GlobalKey _seatKey(int seat) =>
+      _seatKeys.putIfAbsent(seat, GlobalKey.new);
+
+  /// Фишки: ставка игрока → банк; при выигрыше раздачи банк → победитель.
+  void _syncChipFx(PokerGameView game) {
+    if (game.handNumber != _prevHandNumber) {
+      _prevHandNumber = game.handNumber;
+      _prevHandOver = false;
+      _prevBets
+        ..clear()
+        ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+      return;
+    }
+    if (!game.isHandOver) {
+      // Каждая новая ставка — фишки летят от места к банку.
+      final growers = <int>[
+        for (final p in game.players)
+          if (p.bet > (_prevBets[p.seat] ?? 0)) p.seat,
+      ];
+      if (growers.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          for (final seat in growers.take(4)) {
+            unawaited(_flyChips(fromKey: _seatKey(seat), toKey: _potKey));
+          }
+        });
+      }
+    }
+    // Банк к победителю (конец раздачи).
+    if (game.isHandOver && !_prevHandOver && game.winners.isNotEmpty) {
+      final w = game.winners.first;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_flyChips(
+          fromKey: _potKey,
+          toKey: _seatKey(w),
+          count: 5,
+          color: const Color(0xFFF5B301),
+        ));
+      });
+    }
+    _prevHandOver = game.isHandOver;
+    _prevBets
+      ..clear()
+      ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+  }
+
+  Future<void> _flyChips({
+    required GlobalKey fromKey,
+    required GlobalKey toKey,
+    int count = 3,
+    Color color = const Color(0xFFE8C547),
+  }) async {
+    if (!mounted || _disposed) return;
+    final from = globalRectOf(fromKey);
+    final to = globalRectOf(toKey);
+    if (from == null || to == null) return;
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    for (var i = 0; i < count; i++) {
+      if (!mounted || _disposed) return;
+      final jitter = Offset(
+        (i - count / 2) * 6,
+        (i % 2 == 0 ? -1 : 1) * 4.0,
+      );
+      _spawnChipFly(
+        overlay: overlay,
+        from: from.center.translate(jitter.dx, jitter.dy),
+        to: to.center,
+        color: color,
+        delayMs: i * 55,
+      );
+    }
+  }
+
+  void _spawnChipFly({
+    required OverlayState overlay,
+    required Offset from,
+    required Offset to,
+    required Color color,
+    required int delayMs,
+  }) {
+    Future<void>.delayed(Duration(milliseconds: delayMs), () {
+      if (!mounted || _disposed) return;
+      late OverlayEntry entry;
+      final controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 420),
+      );
+      _chipControllers.add(controller);
+      final curved = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
+      entry = OverlayEntry(
+        builder: (_) {
+          return IgnorePointer(
+            child: AnimatedBuilder(
+              animation: curved,
+              builder: (context, _) {
+                final t = curved.value;
+                final x = from.dx + (to.dx - from.dx) * t;
+                final y = from.dy + (to.dy - from.dy) * t -
+                    28 * math.sin(math.pi * t);
+                final s = 1.0 - 0.25 * t;
+                return Stack(
+                  children: [
+                    Positioned(
+                      left: x - 9,
+                      top: y - 9,
+                      child: Opacity(
+                        opacity: (1 - t * 0.15).clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: s,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  color,
+                                  Color.lerp(color, Colors.black, 0.25)!,
+                                ],
+                              ),
+                              border: Border.all(color: Colors.white, width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        },
+      );
+      overlay.insert(entry);
+      controller.forward().whenComplete(() {
+        entry.remove();
+        curved.dispose();
+        controller.dispose();
+        _chipControllers.remove(controller);
+      });
+    });
+  }
+
   Widget _buildSeat(PokerGameView game, PokerPlayerView p, bool narrow) {
     final isDealer = p.seat == game.dealerIndex;
     final acting = p.isActing && !game.isOver && !game.isHandOver;
@@ -1075,10 +1252,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
     final showHole = p.holeCards != null && p.holeCards!.isNotEmpty;
     final showdown = game.isShowdown;
     final highlightKeys = game.highlightKeys;
+    // На вскрытии подсвечиваем карты победившей комбинации у всех открытых.
     final hasHighlight = showdown && highlightKeys.isNotEmpty;
     final isWinner = game.isHandOver && game.winners.contains(p.seat);
 
     return Container(
+      key: _seatKey(p.seat),
       width: narrow ? 120 : 138,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
@@ -1234,11 +1413,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
   /// Свои карты + подпись комбинации + панель действий.
   Widget _buildHeroArea(PokerGameView game, bool narrow) {
     final me = game.me;
-    final heroCards = narrow ? const Size(56, 80) : const Size(66, 94);
-    final showdown = game.isShowdown;
+    // Hero чуть компактнее крупного борда — акцент на общих картах.
+    final heroCards = narrow ? const Size(54, 77) : const Size(64, 91);
     final highlightKeys = game.highlightKeys;
-    final hasHighlight = showdown && highlightKeys.isNotEmpty;
+    final hasHighlight = _shouldHighlightCombo(game);
     final comboLabel = _handRankLabel(game.myHandRank);
+    final comboAccent =
+        hasHighlight || (game.isShowdown && game.winners.contains(me?.seat));
 
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 4, 12, narrow ? 8 : 14),
@@ -1260,7 +1441,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
                         child: PlayingCardWidget(
                           card: c.toPlayingCard(),
                           size: heroCards,
-                          highlighted: showdown &&
+                          highlighted: hasHighlight &&
                               highlightKeys
                                   .contains(PokerGameView.cardKeyOf(c)),
                           dimmed: hasHighlight &&
@@ -1303,7 +1484,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen> {
             ),
             if (comboLabel != null) ...[
               const SizedBox(height: 6),
-              _comboLabel(comboLabel, highlight: showdown),
+              _comboLabel(comboLabel, highlight: comboAccent),
             ],
             const SizedBox(height: 8),
           ],
