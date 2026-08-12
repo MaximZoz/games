@@ -117,3 +117,53 @@ int durakPlaceNetProfit({
   );
   return (credit - stake).clamp(0, credit);
 }
+
+/// Кредит с банка покера за место (place — 1-е, 2-е, …).
+///
+/// 2: 1-й весь банк; 3: 2/3 + возврат ставки + 0; 4: 3/4 + возврат + 0+0;
+/// 5: 3/5 + возврат×2 + 0+0; 6: 4/6 + возврат×2 + 0×3.
+int pokerPlaceCredit({
+  required int stake,
+  required int playerCount,
+  required int place,
+}) {
+  if (stake <= 0 || playerCount < 2 || place < 1 || place > playerCount) {
+    return 0;
+  }
+  final pot = stake * playerCount;
+  switch (playerCount) {
+    case 2:
+      return place == 1 ? pot : 0;
+    case 3:
+      if (place == 1) return pot * 2 ~/ 3;
+      if (place == 2) return stake;
+      return 0;
+    case 4:
+      if (place == 1) return pot * 3 ~/ 4;
+      if (place == 2) return stake;
+      return 0;
+    case 5:
+      if (place == 1) return pot * 3 ~/ 5;
+      if (place == 2 || place == 3) return stake;
+      return 0;
+    case 6:
+      if (place == 1) return pot * 4 ~/ 6;
+      if (place == 2 || place == 3) return stake;
+      return 0;
+    default:
+      return place == 1 ? pot : 0;
+  }
+}
+
+int pokerPlaceNetProfit({
+  required int stake,
+  required int playerCount,
+  required int place,
+}) {
+  final credit = pokerPlaceCredit(
+    stake: stake,
+    playerCount: playerCount,
+    place: place,
+  );
+  return (credit - stake).clamp(0, credit);
+}

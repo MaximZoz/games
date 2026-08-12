@@ -91,6 +91,9 @@ type Game struct {
 	Winners       []int    `json:"winners"`
 	WinnerUserIDs []string `json:"winnerUserIds"`
 
+	// EliminatedOrder — UserID в порядке выбытия (первый выбывший — худшее место).
+	EliminatedOrder []string `json:"eliminatedOrder,omitempty"`
+
 	// Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
 	HandNumber     int  `json:"handNumber"`     // номер текущей раздачи, с 1
 	BlindLevel     int  `json:"blindLevel"`     // уровень блайндов, с 0
@@ -458,6 +461,76 @@ func (g *Game) markHandOver() {
 		}
 	}
 	g.TableOver = withChips <= 1
+	g.noteEliminations()
+}
+
+// noteEliminations добавляет в EliminatedOrder игроков с нулём фишек (по местам).
+func (g *Game) noteEliminations() {
+	known := make(map[string]bool, len(g.EliminatedOrder))
+	for _, id := range g.EliminatedOrder {
+		known[id] = true
+	}
+	for i := range g.Players {
+		p := &g.Players[i]
+		if p.Chips > 0 || p.UserID == "" || known[p.UserID] {
+			continue
+		}
+		g.EliminatedOrder = append(g.EliminatedOrder, p.UserID)
+		known[p.UserID] = true
+	}
+}
+
+// PlaceOf — итоговое место игрока (1 = победитель). 0 — ещё не определено.
+func (g *Game) PlaceOf(userID string) int {
+	if userID == "" || len(g.Players) < 2 {
+		return 0
+	}
+	n := len(g.Players)
+	if g.TableOver {
+		for _, wid := range g.WinnerUserIDs {
+			if wid == userID {
+				return 1
+			}
+		}
+	}
+	for i, id := range g.EliminatedOrder {
+		if id == userID {
+			// Первый выбывший → место n; последний выбывший → место 2.
+			return n - i
+		}
+	}
+	return 0
+}
+
+// FinishPlaces — карта userID→место после окончания стола (иначе только выбывшие).
+func (g *Game) FinishPlaces() map[string]int {
+	out := make(map[string]int, len(g.Players))
+	n := len(g.Players)
+	if g.TableOver {
+		for _, wid := range g.WinnerUserIDs {
+			if wid != "" {
+				out[wid] = 1
+			}
+		}
+	}
+	for i, id := range g.EliminatedOrder {
+		if id == "" {
+			continue
+		}
+		if _, ok := out[id]; ok {
+			continue
+		}
+		out[id] = n - i
+	}
+	return out
+}
+
+// IsEliminated — игрок без фишек (выбыл, стол может ещё идти).
+func (g *Game) IsEliminated(idx int) bool {
+	if idx < 0 || idx >= len(g.Players) {
+		return false
+	}
+	return g.Players[idx].Chips <= 0
 }
 
 // showdown строит банки, определяет победителей и распределяет фишки.
@@ -821,6 +894,7 @@ func (g *Game) ForfeitPlayer(idx int) {
 			g.awardUncontested(nf[0])
 			return
 		}
+		g.noteEliminations()
 		if g.ActingIndex == idx {
 			g.ActingIndex = g.firstLiveFrom(idx + 1)
 			if g.ActingIndex < 0 || g.bettingComplete() {
@@ -833,6 +907,7 @@ func (g *Game) ForfeitPlayer(idx int) {
 	// Раздача не активна (пауза между раздачами) — просто убираем со стола.
 	g.Players[idx].Chips = 0
 	g.Players[idx].Folded = true
+	g.noteEliminations()
 	withChips := make([]int, 0, len(g.Players))
 	for i := range g.Players {
 		if g.Players[i].Chips > 0 {

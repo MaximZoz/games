@@ -61,7 +61,7 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 	}
 	if gameType == GameTypePoker {
 		s.TurnTimeSec = 60
-		s.MaxPlayers = 6
+		s.MaxPlayers = 2
 		s.GameMode = "holdem"
 		s.Variant = "holdem"
 	}

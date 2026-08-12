@@ -769,14 +769,20 @@ func (h *GamesHandler) ForfeitPokerGame(w http.ResponseWriter, r *http.Request, 
 	// Иначе стол продолжается без выбывшего.
 	state.ForfeitPlayer(idx)
 	h.savePokerState(ctx, gameID, m, state)
-	m["forfeit"] = "1"
-	h.Rdb.HSet(ctx, "game:"+gameID, "forfeit", "1")
+	// Не ставим глобальный forfeit, если стол продолжается (как в дураке multi) —
+	// иначе у оставшихся в конце будет «Соперник сдался».
+	if state.TableOver {
+		m["forfeit"] = "1"
+		h.Rdb.HSet(ctx, "game:"+gameID, "forfeit", "1")
+	} else {
+		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit")
+		delete(m, "forfeit")
+	}
 	h.broadcastPokerState(gameID, m)
+	h.promotePokerEliminatedPlayers(ctx, gameID, m, state)
 	if state.TableOver {
 		h.onPokerTableFinished(ctx, gameID, m, state, "forfeit")
 	} else {
-		// Освобождаем самого выбывшего игрока — он больше не в активной партии.
-		clearUserActiveGame(ctx, h.Rdb, userID)
 		if state.IsOver() || state.HandOver {
 			// Форфейт завершил текущую раздачу — планируем следующую.
 			h.schedulePokerNextHand(gameID)
@@ -1127,11 +1133,82 @@ func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string,
 // Иначе — раздача просто закончилась: сохраняем результат и через паузу стартуем
 // следующую раздачу тем же составом.
 func (h *GamesHandler) onPokerHandOrTableOver(ctx context.Context, gameID string, m map[string]string, state *poker.Game, finishReason string) {
+	h.promotePokerEliminatedPlayers(ctx, gameID, m, state)
 	if state.TableOver {
 		h.onPokerTableFinished(ctx, gameID, m, state, finishReason)
 		return
 	}
 	h.onPokerHandFinished(gameID)
+}
+
+// promotePokerEliminatedPlayers — выбывший (0 фишек) → observation; ранняя выплата доли места.
+func (h *GamesHandler) promotePokerEliminatedPlayers(ctx context.Context, gameID string, m map[string]string, state *poker.Game) {
+	if state == nil || h.Rdb == nil {
+		return
+	}
+	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
+	n := len(state.Players)
+	for i := range state.Players {
+		if !state.IsEliminated(i) {
+			continue
+		}
+		pid := state.Players[i].UserID
+		if isBot(pid) {
+			continue
+		}
+		u, err := uuid.Parse(pid)
+		if err != nil {
+			continue
+		}
+		// Стол ещё идёт — active → observation (как дурак).
+		if !state.TableOver {
+			moveActiveToObserving(ctx, h.Rdb, u, gameID)
+		}
+		if state.TableOver || stakeBronze <= 0 || h.Pool == nil {
+			continue
+		}
+		place := state.PlaceOf(pid)
+		if place < 1 {
+			continue
+		}
+		credit := poker.PlaceCredit(stakeBronze, n, place)
+		ok, err := h.Rdb.HSetNX(ctx, "game:"+gameID, "early_paid:"+pid, strconv.Itoa(credit)).Result()
+		if err != nil || !ok {
+			continue
+		}
+		if credit <= 0 {
+			continue
+		}
+		if err := store.AddCoins(ctx, h.Pool, u, credit); err != nil {
+			h.Rdb.HDel(ctx, "game:"+gameID, "early_paid:"+pid)
+		}
+	}
+}
+
+func (h *GamesHandler) pokerEarlyPaid(ctx context.Context, gameID, playerID string) int {
+	if h.Rdb == nil || playerID == "" {
+		return 0
+	}
+	v, err := h.Rdb.HGet(ctx, "game:"+gameID, "early_paid:"+playerID).Int()
+	if err != nil || v < 0 {
+		return 0
+	}
+	return v
+}
+
+func (h *GamesHandler) pokerPayCreditDelta(ctx context.Context, gameID, playerID string, credit int) {
+	if credit <= 0 || isBot(playerID) || h.Pool == nil {
+		return
+	}
+	u, err := uuid.Parse(playerID)
+	if err != nil {
+		return
+	}
+	delta := credit - h.pokerEarlyPaid(ctx, gameID, playerID)
+	if delta <= 0 {
+		return
+	}
+	_ = store.AddCoins(ctx, h.Pool, u, delta)
 }
 
 // onPokerHandFinished — раздача завершена, но стол продолжается: планируем старт
@@ -1210,9 +1287,15 @@ func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 		delete(m, "forfeit")
 		delete(m, "timeout")
 		h.savePokerState(ctx, gameID, m, state)
-		// Подстрахуем active_game у людей на случай сброса между раздачами.
-		for _, u := range pokerHumans(m) {
-			setUserActiveGame(ctx, h.Rdb, u, gameID)
+		// Active только у игроков с фишками; выбывшие остаются в observation.
+		for i := range state.Players {
+			pid := state.Players[i].UserID
+			if isBot(pid) || state.Players[i].Chips <= 0 {
+				continue
+			}
+			if u, err := uuid.Parse(pid); err == nil {
+				setUserActiveGame(ctx, h.Rdb, u, gameID)
+			}
 		}
 		h.broadcastPokerState(gameID, m)
 		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
@@ -1262,7 +1345,7 @@ func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, 
 	h.recordPokerGameResult(ctx, gameID, m, state, stakeBronze, finishReason)
 }
 
-// settlePokerCoins — банк stake×N делится между победителями (людям начисляем).
+// settlePokerCoins — банк stake×N по местам (см. poker.PlaceCredit); учитывает early_paid.
 func (h *GamesHandler) settlePokerCoins(ctx context.Context, gameID string, m map[string]string, state *poker.Game, stakeBronze int) {
 	if stakeBronze <= 0 || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1271,77 +1354,126 @@ func (h *GamesHandler) settlePokerCoins(ctx context.Context, gameID string, m ma
 	if err != nil || !ok {
 		return
 	}
-	ids := make([]string, len(state.Players))
-	for i := range state.Players {
-		ids[i] = state.Players[i].UserID
-	}
-	if len(ids) < 2 {
+	n := len(state.Players)
+	if n < 2 {
 		return
 	}
-	winners := state.WinnerUserIDs
-	if len(winners) == 0 {
+	places := state.FinishPlaces()
+	if len(places) == 0 {
+		// Fallback: старое поведение — банк победителям поровну.
+		winners := state.WinnerUserIDs
+		if len(winners) == 0 {
+			return
+		}
+		pot := stakeBronze * n
+		each := pot / len(winners)
+		rem := pot % len(winners)
+		for i, wid := range winners {
+			credit := each
+			if i == 0 {
+				credit += rem
+			}
+			h.pokerPayCreditDelta(ctx, gameID, wid, credit)
+		}
 		return
 	}
-	pot := stakeBronze * len(ids)
-	each := pot / len(winners)
-	rem := pot % len(winners)
-	for i, wid := range winners {
-		credit := each
-		if i == 0 {
-			credit += rem
-		}
-		if isBot(wid) || credit <= 0 {
-			continue
-		}
-		if u, err := uuid.Parse(wid); err == nil {
-			_ = store.AddCoins(ctx, h.Pool, u, credit)
-		}
+	for pid, place := range places {
+		credit := poker.PlaceCredit(stakeBronze, n, place)
+		h.pokerPayCreditDelta(ctx, gameID, pid, credit)
 	}
 }
 
-// recordPokerGameResult — head-to-head статистика только для стола на 2 игрока.
+// recordPokerGameResult — статистика: 1×1 как раньше; multi — победитель vs каждый человек.
 func (h *GamesHandler) recordPokerGameResult(ctx context.Context, gameID string, m map[string]string, state *poker.Game, stakeBronze int, finishReason string) {
-	if len(state.Players) != 2 {
+	if len(state.Players) < 2 {
 		return
 	}
-	xID, oID := state.Players[0].UserID, state.Players[1].UserID
-	winnerSet := map[string]bool{}
-	for _, wid := range state.WinnerUserIDs {
-		winnerSet[wid] = true
+	var durationSec int
+	if t, ok := parseGameStartedAt(m["started_at"]); ok {
+		durationSec = clampNonNegative(int(time.Since(t).Seconds()))
 	}
-	result := "draw"
-	var winnerID string
-	switch {
-	case winnerSet[xID] && !winnerSet[oID]:
-		result = "x_won"
-		winnerID = xID
-	case winnerSet[oID] && !winnerSet[xID]:
-		result = "o_won"
-		winnerID = oID
-	}
-	gr := store.GameResult{
-		GameID:       gameID,
-		GameType:     pokerGameType,
-		Result:       result,
-		FinishReason: finishReason,
-		StakeBronze:  stakeBronze,
-		AgainstBot:   isBot(xID) || isBot(oID),
-	}
-	if u, err := uuid.Parse(xID); err == nil {
-		gr.XUserID = u
-	}
-	if u, err := uuid.Parse(oID); err == nil {
-		gr.OUserID = u
-	}
-	if winnerID != "" && !isBot(winnerID) {
-		if wu, err := uuid.Parse(winnerID); err == nil {
-			gr.WinnerUserID = &wu
+
+	humans := make([]string, 0, len(state.Players))
+	for i := range state.Players {
+		pid := state.Players[i].UserID
+		if !isBot(pid) {
+			humans = append(humans, pid)
 		}
 	}
-	if t, ok := parseGameStartedAt(m["started_at"]); ok {
-		gr.DurationSec = clampNonNegative(int(time.Since(t).Seconds()))
+	if len(humans) == 0 {
+		return
 	}
-	_ = store.RecordGameResult(ctx, h.Pool, gr)
+
+	var tableWinner string
+	for _, wid := range state.WinnerUserIDs {
+		if wid != "" {
+			tableWinner = wid
+			break
+		}
+	}
+	if tableWinner == "" {
+		places := state.FinishPlaces()
+		for pid, place := range places {
+			if place == 1 {
+				tableWinner = pid
+				break
+			}
+		}
+	}
+
+	recordPair := func(rowGameID, xID, oID, winnerID string) {
+		result := "draw"
+		switch {
+		case winnerID == xID && winnerID != "":
+			result = "x_won"
+		case winnerID == oID && winnerID != "":
+			result = "o_won"
+		}
+		gr := store.GameResult{
+			GameID:       rowGameID,
+			GameType:     pokerGameType,
+			Result:       result,
+			FinishReason: finishReason,
+			StakeBronze:  stakeBronze,
+			AgainstBot:   isBot(xID) || isBot(oID),
+			DurationSec:  durationSec,
+		}
+		if u, err := uuid.Parse(xID); err == nil {
+			gr.XUserID = u
+		}
+		if u, err := uuid.Parse(oID); err == nil {
+			gr.OUserID = u
+		}
+		if winnerID != "" && !isBot(winnerID) {
+			if wu, err := uuid.Parse(winnerID); err == nil {
+				gr.WinnerUserID = &wu
+			}
+		}
+		_ = store.RecordGameResult(ctx, h.Pool, gr)
+	}
+
+	if len(state.Players) == 2 {
+		xID, oID := state.Players[0].UserID, state.Players[1].UserID
+		winnerID := ""
+		if tableWinner == xID || tableWinner == oID {
+			winnerID = tableWinner
+		}
+		recordPair(gameID, xID, oID, winnerID)
+		return
+	}
+
+	// Multi: H2H победителя с каждым другим человеком (и с ботом — against_bot).
+	if tableWinner == "" {
+		return
+	}
+	for i := range state.Players {
+		oid := state.Players[i].UserID
+		if oid == "" || oid == tableWinner {
+			continue
+		}
+		rowID := gameID + ":" + oid
+		recordPair(rowID, tableWinner, oid, tableWinner)
+	}
 }
 
 // ---- View ----
@@ -1509,6 +1641,16 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 	if winnerIDs == nil {
 		winnerIDs = []string{}
 	}
+	elimOrder := state.EliminatedOrder
+	if elimOrder == nil {
+		elimOrder = []string{}
+	}
+	myPlace := 0
+	iAmEliminated := false
+	if myIdx >= 0 {
+		myPlace = state.PlaceOf(viewer)
+		iAmEliminated = state.IsEliminated(myIdx) && !isTableOver
+	}
 
 	return map[string]any{
 		"id":            gameID,
@@ -1531,6 +1673,7 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"is_my_turn": myIdx >= 0 &&
 			!isTableOver &&
 			!state.HandOver &&
+			!iAmEliminated &&
 			state.Status == poker.StatusActive &&
 			myIdx == state.ActingIndex,
 		"legal_actions": legal,
@@ -1551,7 +1694,11 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"hands_per_level": state.HandsPerLevel,
 		"is_hand_over":    isHandOver,
 		"is_table_over":   isTableOver,
-		"can_show_cards":  myIdx >= 0 && state.CanShowCards(myIdx),
+		"can_show_cards":  myIdx >= 0 && !iAmEliminated && state.CanShowCards(myIdx),
+		// Места / выбывание (как дурак).
+		"my_place":          myPlace,
+		"i_am_eliminated":   iAmEliminated,
+		"eliminated_order":  elimOrder,
 		// Подсказки по комбинациям для UI.
 		"my_hand_rank":      myHandRank,
 		"my_hand_cards":     myHandCards,

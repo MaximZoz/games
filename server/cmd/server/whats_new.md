@@ -3,13 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: ставка и дилер рядом с игроком
+- Покер: места/банк 3–6, статистика, наблюдатель, пауза итога, настройки
 
 ## en
-- Poker: bet and dealer chip back near the player (not at screen edge)
-=======
-- Покер: результат и реванш в одном окне
-
-## en
-- Poker: end result and rematch in one dialog ? no truncated status/reward
+- Poker: place-based pot splits (3?6 players), stats, observe after bust
+- Poker: short delay before end dialog; lobby card settings saved to cache/DB
 

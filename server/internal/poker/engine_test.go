@@ -68,6 +68,36 @@ func TestHeadsUpBlinds(t *testing.T) {
 	}
 }
 
+func TestEliminatedOrderPlaces(t *testing.T) {
+	g, err := NewGame([]string{"a", "b", "c", "d"}, 100, 5, 10, newRNG())
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.Players[0].Chips = 0
+	g.Players[1].Chips = 0
+	g.Players[2].Chips = 50
+	g.Players[3].Chips = 150
+	g.noteEliminations()
+	if len(g.EliminatedOrder) != 2 || g.EliminatedOrder[0] != "a" || g.EliminatedOrder[1] != "b" {
+		t.Fatalf("elim=%v", g.EliminatedOrder)
+	}
+	if g.PlaceOf("a") != 4 || g.PlaceOf("b") != 3 {
+		t.Fatalf("places a=%d b=%d", g.PlaceOf("a"), g.PlaceOf("b"))
+	}
+	g.Players[2].Chips = 0
+	g.Winners = []int{3}
+	g.WinnerUserIDs = []string{"d"}
+	g.TableOver = true
+	g.noteEliminations()
+	if g.PlaceOf("d") != 1 || g.PlaceOf("c") != 2 {
+		t.Fatalf("final places d=%d c=%d", g.PlaceOf("d"), g.PlaceOf("c"))
+	}
+	places := g.FinishPlaces()
+	if places["d"] != 1 || places["c"] != 2 || places["b"] != 3 || places["a"] != 4 {
+		t.Fatalf("finish=%v", places)
+	}
+}
+
 func TestFoldAroundWins(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 1000, 5, 10, newRNG())
 	// seat0 (UTG) folds

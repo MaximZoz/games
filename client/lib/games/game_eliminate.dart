@@ -12,13 +12,13 @@ void enterGameObservation(
 }) {
   final prev = ref.read(activeGameProvider).valueOrNull;
   final prevObs = ref.read(observationGameProvider);
-  // Не затирать durak→tictactoe дефолтом с экрана крестиков.
+  // Не затирать durak/poker→tictactoe дефолтом с экрана крестиков.
   var gt = normalizeGameType(gameType);
-  if (prevObs != null &&
-      prevObs.gameId == gameId &&
-      normalizeGameType(prevObs.gameType) == 'durak' &&
-      gt != 'durak') {
-    gt = 'durak';
+  if (prevObs != null && prevObs.gameId == gameId) {
+    final prevGt = normalizeGameType(prevObs.gameType);
+    if ((prevGt == 'durak' || prevGt == 'poker') && gt != prevGt) {
+      gt = prevGt;
+    }
   }
   ref.read(activeGameProvider.notifier).setObservationLocal(
         ObservationItem(

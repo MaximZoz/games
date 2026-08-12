@@ -79,6 +79,7 @@ class OfflineWarmup {
         _awaitIgnore(ref.read(inventoryCapabilitiesProvider.future)),
         _awaitIgnore(ref.read(userGameSettingsProvider('tictactoe').future)),
         _awaitIgnore(ref.read(userGameSettingsProvider('durak').future)),
+        _awaitIgnore(ref.read(userGameSettingsProvider('poker').future)),
         _awaitIgnore(ref.read(achievementsListProvider.future)),
         _awaitIgnore(ref.read(achievementsUnclaimedCountProvider.future)),
         _awaitIgnore(ref.read(collectionIncomeProvider.future)),
@@ -92,6 +93,8 @@ class OfflineWarmup {
           ref.read(userGameSettingsProvider('tictactoe')).valueOrNull;
       final durakSettings =
           ref.read(userGameSettingsProvider('durak')).valueOrNull;
+      final pokerSettings =
+          ref.read(userGameSettingsProvider('poker')).valueOrNull;
       final achievements = ref.read(achievementsListProvider).valueOrNull;
       final income = ref.read(collectionIncomeProvider).valueOrNull;
       final daily = ref.read(dailyRewardStatusProvider).valueOrNull;
@@ -113,6 +116,13 @@ class OfflineWarmup {
           uid,
           durakSettings,
           gameType: 'durak',
+        );
+      }
+      if (pokerSettings != null) {
+        await OfflineDiskCache.saveGameSettings(
+          uid,
+          pokerSettings,
+          gameType: 'poker',
         );
       }
       if (achievements != null) {
