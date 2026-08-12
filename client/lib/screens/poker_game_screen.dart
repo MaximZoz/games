@@ -66,6 +66,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _disposed = false;
   int _prevHandNumber = -1;
   bool _prevHandOver = false;
+  int _prevPot = -1;
   final Map<int, int> _prevBets = {};
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
@@ -801,8 +802,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           child: _buildTable(
             game,
             narrow,
-            topInset: topOverlay * 0.35,
-            bottomInset: bottomReserve * 0.55,
+            // Полный запас под шапку/кнопки — иначе «Пара» и карты наезжают.
+            topInset: topOverlay + 4,
+            bottomInset: bottomReserve + (narrow ? 8 : 12),
           ),
         ),
         Positioned(
@@ -1072,8 +1074,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       opponents.add(game.players[i]);
     }
     final oppAnchors = _seatAnchors(opponents.length);
-    // Своя позиция — низ фетра (над зоной кнопок).
-    const heroAnchor = Alignment(0, 0.92);
+    // Своя позиция — низ рабочей зоны (над комбо/кнопками).
+    const heroAnchor = Alignment(0, 1.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1122,7 +1124,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   clipBehavior: Clip.none,
                   children: [
                     Align(
-                      alignment: const Alignment(0, -0.05),
+                      // Чуть выше центра — зазор между бордом и картами hero.
+                      alignment: const Alignment(0, -0.22),
                       child: _buildCenter(game, narrow, cardSize),
                     ),
                     for (var i = 0; i < opponents.length; i++)
@@ -1216,15 +1219,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
-  /// Размер своих карт: чуть крупнее борда, без гигантского веера.
+  /// Размер своих карт: компактный веер, не перекрывает борд.
   Size _heroCardSize(bool narrow, int playerCount) {
     if (playerCount <= 2) {
-      return narrow ? const Size(56, 80) : const Size(64, 92);
-    }
-    if (playerCount <= 4) {
       return narrow ? const Size(48, 68) : const Size(56, 80);
     }
-    return narrow ? const Size(42, 60) : const Size(48, 68);
+    if (playerCount <= 4) {
+      return narrow ? const Size(42, 60) : const Size(50, 72);
+    }
+    return narrow ? const Size(38, 54) : const Size(44, 62);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -1404,11 +1407,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   GlobalKey _seatKey(int seat) =>
       _seatKeys.putIfAbsent(seat, GlobalKey.new);
 
-  /// Фишки: ставка → центр стола под картами; выигрыш → карточка победителя.
+  /// Фишки: доклады в банк (колл/рейз/блайнды) → стопка у банка;
+  /// выигрыш → карточка победителя.
+  ///
+  /// Колл часто закрывает улицу: в одном апдейте `bet` снова 0, а `pot`
+  /// вырос — поэтому смотрим и рост ставки, и рост банка.
   void _syncChipFx(PokerGameView game) {
     if (game.handNumber != _prevHandNumber) {
       _prevHandNumber = game.handNumber;
       _prevHandOver = false;
+      _prevPot = game.pot;
       _prevBets
         ..clear()
         ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
@@ -1419,9 +1427,22 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         for (final p in game.players)
           if (p.bet > (_prevBets[p.seat] ?? 0)) p.seat,
       ];
-      if (growers.isNotEmpty) {
+      // Колл/рейз, закрывшие улицу: ставки сброшены, банк вырос.
+      final potGrew = _prevPot >= 0 && game.pot > _prevPot;
+      final donors = <int>[
+        ...growers,
+        if (growers.isEmpty && potGrew)
+          for (final e in _prevBets.entries)
+            if (e.value > 0) e.key,
+      ];
+      // Фоллбэк: рост банка без явных доноров — от текущего/прошлого актёра.
+      if (donors.isEmpty && potGrew && game.myIndex >= 0) {
+        donors.add(game.players[game.myIndex].seat);
+      }
+      final unique = <int>{...donors};
+      if (unique.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          for (final seat in growers.take(4)) {
+          for (final seat in unique.take(4)) {
             unawaited(
               _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
             );
@@ -1444,6 +1465,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       });
     }
     _prevHandOver = game.isHandOver;
+    _prevPot = game.pot;
     _prevBets
       ..clear()
       ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
@@ -2000,8 +2022,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
+    final isDealer = game.dealerIndex == game.myIndex;
+    final showBet = me.bet > 0 && !me.folded;
+    // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
+    const cardsBottom = namePlateH + avatarPlateGap;
+    final peekOut = heroCards.width * 0.34;
     // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
-    final plateColumn = KeyedSubtree(
+    // Live-комбо («Пара») — в нижней панели, не дублируем под аватаром.
+    final plateOnly = KeyedSubtree(
       key: _seatKey(me.seat),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -2031,19 +2059,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               child: namePlate,
             ),
           ),
-          if (myWinCombo != null) ...[
-            const SizedBox(height: 4),
-            _comboLabel(myWinCombo, highlight: true),
-          ],
         ],
       ),
     );
-
-    final isDealer = game.dealerIndex == game.myIndex;
-    final showBet = me.bet > 0 && !me.folded;
-    // Низ веера на уровне низа аватара — неймплейт свободен, карты целиком видны.
-    const cardsBottom = namePlateH + avatarPlateGap;
-    final peekOut = heroCards.width * 0.38;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -2066,10 +2084,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                       Transform.translate(
                         offset: Offset(
                           (i == 0 ? -1 : 1) * heroCards.width * 0.22,
-                          -avatarSize * 0.28,
+                          -avatarSize * 0.08,
                         ),
                         child: Transform.rotate(
-                          angle: i == 0 ? -0.14 : 0.14,
+                          angle: i == 0 ? -0.12 : 0.12,
                           alignment: Alignment.bottomCenter,
                           child: PlayingCardWidget(
                             key: ValueKey(
@@ -2095,8 +2113,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           ),
         // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
-        plateColumn,
-        // Ставка и D справа от профиля (выше неймплейта) — не прячутся под аватаром/картами.
+        plateOnly,
+        // Ставка и D справа от профиля (выше неймплейта).
         if (showBet || isDealer)
           Positioned(
             left: plateW + 8,
@@ -2112,6 +2130,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ],
               ],
             ),
+          ),
+        // Комбо победителя — сбоку снизу, не поверх неймплейта.
+        if (myWinCombo != null)
+          Positioned(
+            right: plateW + 6,
+            bottom: 0,
+            child: _comboLabel(myWinCombo, highlight: true),
           ),
       ],
     );
