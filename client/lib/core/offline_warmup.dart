@@ -14,6 +14,7 @@ import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/cards/suit_asset_cache.dart';
 
 /// Прогрев данных и локальных ассетов для бесшовного офлайна.
 ///
@@ -165,6 +166,9 @@ class OfflineWarmup {
     // (они в конце каталога после emotions/game).
     try {
       await FlagAssetCache.preloadAll();
+    } catch (_) {}
+    try {
+      await SuitAssetCache.preloadAll();
     } catch (_) {}
 
     final names = <String>{};

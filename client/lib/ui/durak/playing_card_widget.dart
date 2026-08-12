@@ -1,15 +1,18 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/cards/suit_asset_cache.dart';
 
 /// Отрисовка одной игральной карты.
 ///
-/// Лицо рисуется [CustomPainter] + [TextPainter] (не через [Text]/[Column]):
-/// на Flutter Web глифы ♠/♥ дают layout-overflow (жёлтые полосы), особенно
-/// при [Transform.scale] / [AnimatedScale] при вытаскивании из веера.
+/// Ранг — [TextPainter]; масть — PNG из [SuitAssetCache] (как флаги),
+/// без системного unicode ♥♦♣♠ (на Web часто «квадратики»).
 ///
 /// Рамок нет: подсказка — только фиолетовая тень ([highlighted] / [dropTarget]).
-class PlayingCardWidget extends StatelessWidget {
+class PlayingCardWidget extends StatefulWidget {
   const PlayingCardWidget({
     super.key,
     required this.card,
@@ -34,12 +37,49 @@ class PlayingCardWidget extends StatelessWidget {
   final bool animate;
 
   @override
+  State<PlayingCardWidget> createState() => _PlayingCardWidgetState();
+}
+
+class _PlayingCardWidgetState extends State<PlayingCardWidget> {
+  ui.Image? _suitImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _suitImage = SuitAssetCache.imageFor(widget.card.suit);
+    if (_suitImage == null) {
+      unawaited(_ensureSuit());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PlayingCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.card.suit != widget.card.suit) {
+      _suitImage = SuitAssetCache.imageFor(widget.card.suit);
+      if (_suitImage == null) {
+        unawaited(_ensureSuit());
+      }
+    }
+  }
+
+  Future<void> _ensureSuit() async {
+    final img = await SuitAssetCache.load(widget.card.suit);
+    if (!mounted) return;
+    if (img != _suitImage) {
+      setState(() => _suitImage = img);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final card = widget.card;
+    final size = widget.size;
     final color = card.suit.isRed
         ? const Color(0xFFD84A4A)
         : const Color(0xFF1B1B24);
     final radius = size.width * 0.15;
-    final hint = dropTarget || highlighted;
+    final hint = widget.dropTarget || widget.highlighted;
 
     final decoration = BoxDecoration(
       color: Colors.white,
@@ -47,11 +87,12 @@ class PlayingCardWidget extends StatelessWidget {
       boxShadow: [
         if (hint)
           BoxShadow(
-            color: AppColors.accentStart.withValues(alpha: dropTarget ? 0.5 : 0.38),
-            blurRadius: dropTarget ? 16 : 12,
-            spreadRadius: dropTarget ? 1.5 : 0.8,
+            color: AppColors.accentStart
+                .withValues(alpha: widget.dropTarget ? 0.5 : 0.38),
+            blurRadius: widget.dropTarget ? 16 : 12,
+            spreadRadius: widget.dropTarget ? 1.5 : 0.8,
           ),
-        if (elevated)
+        if (widget.elevated)
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.22),
             blurRadius: 14,
@@ -66,12 +107,14 @@ class PlayingCardWidget extends StatelessWidget {
           ),
       ],
     );
-    final foreground = dimmed
+    final foreground = widget.dimmed
         ? BoxDecoration(
             color: Colors.black.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(radius),
           )
         : null;
+
+    final suitImage = _suitImage ?? SuitAssetCache.imageFor(card.suit);
 
     // MediaQuery textScaler не должен раздувать глифы на web/a11y.
     final face = MediaQuery(
@@ -85,7 +128,8 @@ class PlayingCardWidget extends StatelessWidget {
           size: size,
           painter: _PlayingCardFacePainter(
             rank: card.rank.label,
-            suit: card.suit.symbol,
+            suit: card.suit,
+            suitImage: suitImage,
             color: color,
           ),
         ),
@@ -93,7 +137,7 @@ class PlayingCardWidget extends StatelessWidget {
     );
 
     // Размер снаружи — сразу (не AnimatedContainer width/height).
-    final body = animate
+    final body = widget.animate
         ? AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             curve: Curves.easeOutCubic,
@@ -121,11 +165,13 @@ class _PlayingCardFacePainter extends CustomPainter {
   _PlayingCardFacePainter({
     required this.rank,
     required this.suit,
+    required this.suitImage,
     required this.color,
   });
 
   final String rank;
-  final String suit;
+  final Suit suit;
+  final ui.Image? suitImage;
   final Color color;
 
   @override
@@ -143,13 +189,7 @@ class _PlayingCardFacePainter extends CustomPainter {
       size.width * 0.82,
       size.height * 0.74,
     );
-    _paintFittedText(
-      canvas,
-      center,
-      suit,
-      fontSize: size.height * 0.42,
-      weight: FontWeight.w800,
-    );
+    _paintSuit(canvas, center);
 
     canvas.save();
     final br = Rect.fromLTWH(
@@ -185,13 +225,28 @@ class _PlayingCardFacePainter extends CustomPainter {
       fontSize: box.height * 0.48,
       weight: FontWeight.w800,
     );
-    _paintFittedText(
-      canvas,
-      suitBox,
-      suit,
-      fontSize: box.height * 0.44,
-      weight: FontWeight.w700,
-    );
+    _paintSuit(canvas, suitBox);
+  }
+
+  void _paintSuit(Canvas canvas, Rect box) {
+    if (box.width <= 0 || box.height <= 0) return;
+    final img = suitImage;
+    if (img == null) return;
+
+    final iw = img.width.toDouble();
+    final ih = img.height.toDouble();
+    if (iw <= 0 || ih <= 0) return;
+
+    final sx = box.width / iw;
+    final sy = box.height / ih;
+    final scale = sx < sy ? sx : sy;
+    final dw = iw * scale;
+    final dh = ih * scale;
+    final dx = box.left + (box.width - dw) / 2;
+    final dy = box.top + (box.height - dh) / 2;
+    final dst = Rect.fromLTWH(dx, dy, dw, dh);
+    final src = Rect.fromLTWH(0, 0, iw, ih);
+    canvas.drawImageRect(img, src, dst, Paint()..filterQuality = FilterQuality.medium);
   }
 
   void _paintFittedText(
@@ -247,6 +302,7 @@ class _PlayingCardFacePainter extends CustomPainter {
   bool shouldRepaint(covariant _PlayingCardFacePainter oldDelegate) {
     return oldDelegate.rank != rank ||
         oldDelegate.suit != suit ||
+        oldDelegate.suitImage != suitImage ||
         oldDelegate.color != color;
   }
 }
@@ -388,7 +444,8 @@ class _DurakDropSlotState extends State<DurakDropSlot>
               width: widget.size.width,
               height: widget.size.height,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: widget.active ? 0.1 + 0.08 * t : 0.04),
+                color: color.withValues(
+                    alpha: widget.active ? 0.1 + 0.08 * t : 0.04),
                 borderRadius: BorderRadius.circular(radius),
                 boxShadow: widget.active
                     ? [
@@ -409,7 +466,7 @@ class _DurakDropSlotState extends State<DurakDropSlot>
 }
 
 /// Значок козырной масти, когда колода пуста.
-class DurakTrumpSuitBadge extends StatelessWidget {
+class DurakTrumpSuitBadge extends StatefulWidget {
   const DurakTrumpSuitBadge({
     super.key,
     required this.suit,
@@ -420,11 +477,46 @@ class DurakTrumpSuitBadge extends StatelessWidget {
   final double size;
 
   @override
+  State<DurakTrumpSuitBadge> createState() => _DurakTrumpSuitBadgeState();
+}
+
+class _DurakTrumpSuitBadgeState extends State<DurakTrumpSuitBadge> {
+  ui.Image? _suitImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _suitImage = SuitAssetCache.imageFor(widget.suit);
+    if (_suitImage == null) {
+      unawaited(_ensureSuit());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant DurakTrumpSuitBadge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.suit != widget.suit) {
+      _suitImage = SuitAssetCache.imageFor(widget.suit);
+      if (_suitImage == null) {
+        unawaited(_ensureSuit());
+      }
+    }
+  }
+
+  Future<void> _ensureSuit() async {
+    final img = await SuitAssetCache.load(widget.suit);
+    if (!mounted) return;
+    if (img != _suitImage) {
+      setState(() => _suitImage = img);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final color = suit.isRed ? const Color(0xFFD84A4A) : const Color(0xFF1B1B24);
+    final suitImage = _suitImage ?? SuitAssetCache.imageFor(widget.suit);
     return Container(
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
@@ -442,57 +534,45 @@ class DurakTrumpSuitBadge extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: CustomPaint(
-        size: Size.square(size * 0.64),
-        painter: _SuitGlyphPainter(symbol: suit.symbol, color: color),
-      ),
+      child: suitImage == null
+          ? const SizedBox.shrink()
+          : CustomPaint(
+              size: Size.square(widget.size * 0.64),
+              painter: _SuitAssetPainter(image: suitImage),
+            ),
     );
   }
 }
 
-class _SuitGlyphPainter extends CustomPainter {
-  _SuitGlyphPainter({required this.symbol, required this.color});
+class _SuitAssetPainter extends CustomPainter {
+  _SuitAssetPainter({required this.image});
 
-  final String symbol;
-  final Color color;
+  final ui.Image image;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: symbol,
-        style: TextStyle(
-          color: color,
-          fontSize: size.shortestSide,
-          fontWeight: FontWeight.w800,
-          height: 1,
-          leadingDistribution: TextLeadingDistribution.even,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: false,
-        applyHeightToLastDescent: false,
-      ),
-    )..layout();
-    final tw = tp.width;
-    final th = tp.height;
-    if (tw <= 0 || th <= 0) return;
-    final scale = (size.shortestSide * 0.92) / (tw > th ? tw : th);
-    canvas.save();
-    canvas.clipRect(Offset.zero & size);
-    canvas.translate(
-      (size.width - tw * scale) / 2,
-      (size.height - th * scale) / 2,
+    final iw = image.width.toDouble();
+    final ih = image.height.toDouble();
+    if (iw <= 0 || ih <= 0) return;
+    final scale = size.shortestSide / (iw > ih ? iw : ih);
+    final dw = iw * scale;
+    final dh = ih * scale;
+    final dst = Rect.fromLTWH(
+      (size.width - dw) / 2,
+      (size.height - dh) / 2,
+      dw,
+      dh,
     );
-    canvas.scale(scale);
-    tp.paint(canvas, Offset.zero);
-    canvas.restore();
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, iw, ih),
+      dst,
+      Paint()..filterQuality = FilterQuality.medium,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _SuitGlyphPainter oldDelegate) {
-    return oldDelegate.symbol != symbol || oldDelegate.color != color;
+  bool shouldRepaint(covariant _SuitAssetPainter oldDelegate) {
+    return oldDelegate.image != image;
   }
 }
