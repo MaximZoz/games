@@ -3,8 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: классические масти и стабильный стол
+- Покер: убрать цифровой таймер хода из шапки
 
 ## en
-- Poker: classic suit glyphs; stable table height; opponent profile no longer shifts
+- Poker: removed the turn countdown from the header
 
