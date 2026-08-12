@@ -708,8 +708,13 @@ func (h *GamesHandler) PokerMove(w http.ResponseWriter, r *http.Request, gameID 
 	h.broadcastPokerState(gameID, m)
 	if state.IsOver() || state.HandOver {
 		h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
-	} else if isBot(state.Players[state.ActingIndex].UserID) {
-		h.schedulePokerBotAct(gameID)
+	} else if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
+		nextID := state.Players[state.ActingIndex].UserID
+		if isBot(nextID) {
+			h.schedulePokerBotAct(gameID)
+		} else {
+			h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
@@ -1021,7 +1026,9 @@ func (h *GamesHandler) schedulePokerBotAct(gameID string) {
 			if state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
 				return
 			}
-			if !isBot(state.Players[state.ActingIndex].UserID) {
+			nextID := state.Players[state.ActingIndex].UserID
+			if !isBot(nextID) {
+				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
 				return
 			}
 			// Следующий тоже бот — продолжаем цикл (с новой паузой).
@@ -1112,8 +1119,13 @@ func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string,
 	h.broadcastPokerState(gameID, fresh)
 	if state.IsOver() || state.HandOver {
 		h.onPokerHandOrTableOver(ctx, gameID, fresh, state, "timeout")
-	} else if isBot(state.Players[state.ActingIndex].UserID) {
-		h.schedulePokerBotAct(gameID)
+	} else if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
+		nextID := state.Players[state.ActingIndex].UserID
+		if isBot(nextID) {
+			h.schedulePokerBotAct(gameID)
+		} else {
+			h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+		}
 	}
 	// Обновить снимок для вызывающего.
 	for k, v := range fresh {
@@ -1298,9 +1310,13 @@ func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 			}
 		}
 		h.broadcastPokerState(gameID, m)
-		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) &&
-			isBot(state.Players[state.ActingIndex].UserID) {
-			h.schedulePokerBotAct(gameID)
+		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
+			nextID := state.Players[state.ActingIndex].UserID
+			if isBot(nextID) {
+				h.schedulePokerBotAct(gameID)
+			} else {
+				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+			}
 		}
 	}()
 }

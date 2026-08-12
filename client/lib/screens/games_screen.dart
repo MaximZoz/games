@@ -12,7 +12,7 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
-import 'package:multigames_client/games/framework/game_session_api.dart';
+import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -341,8 +341,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     // Всегда matchmake: multi схлопывается на сервере в одно лобби.
                     onFindGame: () => _createGame(context, 'matchmake'),
                     onPlayOffline: playOffline,
-                    activeAsync: activeAsync,
-                    observation: observation,
                     contentPadding: contentPadding,
                   ),
                   _LobbiesPageContent(
@@ -357,6 +355,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onShowCreatorInfo: _showCreatorInfo,
                     onShowInviteRules: _showInviteRules,
                     contentPadding: contentPadding,
+                    activeAsync: activeAsync,
+                    observation: observation,
                   ),
                 ],
               ),
@@ -1040,8 +1040,6 @@ class _GamesPageContent extends ConsumerWidget {
     required this.onCreateGame,
     required this.onFindGame,
     required this.onPlayOffline,
-    required this.activeAsync,
-    required this.observation,
     required this.contentPadding,
   });
 
@@ -1061,8 +1059,6 @@ class _GamesPageContent extends ConsumerWidget {
   final VoidCallback onCreateGame;
   final VoidCallback onFindGame;
   final VoidCallback onPlayOffline;
-  final AsyncValue<ActiveGameItem?> activeAsync;
-  final ObservationItem? observation;
   final double contentPadding;
 
   @override
@@ -1122,70 +1118,6 @@ class _GamesPageContent extends ConsumerWidget {
       );
     }
 
-    Widget? observationCard() {
-      final active = activeAsync.valueOrNull;
-      final obs = observation;
-      if (obs == null || obs.gameId.trim().isEmpty) return null;
-      if (active?.type == 'game' && active?.gameId == obs.gameId) {
-        return null;
-      }
-      return GradientCard(
-        animate: false,
-        padding: const EdgeInsets.all(16),
-        child: InkWell(
-          onTap: () async {
-            // Тип партии через реестр + фасад (не хардкод durak/ttt).
-            var gt = normalizeGameType(obs.gameType);
-            final resolved =
-                await ref.read(gameSessionApiProvider).resolveGameType(obs.gameId);
-            if (resolved == null) return;
-            gt = resolved;
-            ref.read(activeGameProvider.notifier).setObservationLocal(
-                  ObservationItem(
-                    gameId: obs.gameId,
-                    lobbyId: obs.lobbyId,
-                    gameType: gt,
-                  ),
-                );
-            if (!context.mounted) return;
-            context.push(gamePathFor(obs.gameId, gameType: gt));
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Row(
-            children: [
-              const Icon(Icons.visibility_rounded,
-                  size: 40, color: AppColors.accentStart),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.gamesObservation,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      context.l10n.gamesObservationHint,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final obs = observationCard();
     // ListView без minHeight на весь экран: иначе при скролле карточки
     // «уезжают» в пустоту и визуально пропадают.
     return ListView(
@@ -1199,16 +1131,12 @@ class _GamesPageContent extends ConsumerWidget {
       ),
       children: [
         gameCards(MediaQuery.sizeOf(context).width - contentPadding * 2),
-        if (obs != null) ...[
-          const SizedBox(height: 20),
-          obs,
-        ],
       ],
     );
   }
 }
 
-class _LobbiesPageContent extends StatelessWidget {
+class _LobbiesPageContent extends ConsumerWidget {
   const _LobbiesPageContent({
     required this.lobbiesAsync,
     required this.invites,
@@ -1221,6 +1149,8 @@ class _LobbiesPageContent extends StatelessWidget {
     required this.onShowCreatorInfo,
     required this.onShowInviteRules,
     required this.contentPadding,
+    required this.activeAsync,
+    required this.observation,
   });
 
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
@@ -1234,6 +1164,8 @@ class _LobbiesPageContent extends StatelessWidget {
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
   final double contentPadding;
+  final AsyncValue<ActiveGameItem?> activeAsync;
+  final ObservationItem? observation;
 
   Widget _invitesSection(BuildContext context) {
     if (invites.isEmpty) return const SizedBox.shrink();
@@ -1292,12 +1224,20 @@ class _LobbiesPageContent extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final obs = observation;
     return ListView(
       primary: false,
       physics: const ClampingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
       children: [
+        if (obs != null) ...[
+          GameObservationCard(
+            observation: obs,
+            active: activeAsync.valueOrNull,
+          ),
+          const SizedBox(height: 16),
+        ],
         _invitesSection(context),
         lobbiesAsync.when(
                     data: (lobbies) {
@@ -1620,10 +1560,9 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
 
   void _persistSettings() {
     ref.read(userGameSettingsProvider('durak').notifier).updateLocal(
-          UserGameSettings(
+          gameCardSettings(
             gameType: 'durak',
             turnTimeSec: _turnTimeSec,
-            variant: _gameMode,
             stakeBronze: _stakeBronze,
             deckSize: _deckSize,
             maxPlayers: _players,
@@ -1967,7 +1906,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
 
   void _persistSettings() {
     ref.read(userGameSettingsProvider('battleship').notifier).updateLocal(
-          UserGameSettings(
+          gameCardSettings(
             gameType: 'battleship',
             turnTimeSec: _turnTimeSec,
             stakeBronze: _stakeBronze,
@@ -2247,7 +2186,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
 
   void _persistSettings() {
     ref.read(userGameSettingsProvider('poker').notifier).updateLocal(
-          UserGameSettings(
+          gameCardSettings(
             gameType: 'poker',
             turnTimeSec: _turnTimeSec,
             stakeBronze: _stakeBronze,

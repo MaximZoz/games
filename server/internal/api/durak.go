@@ -1403,6 +1403,10 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			m["draw"] = "1"
 		}
 		h.onDurakGameFinished(ctx, gameID, m, state)
+	} else if state.Status == durak.StatusActive {
+		if actor := durakTurnActorIdx(state); actor >= 0 && actor < len(state.PlayerIDs) {
+			h.notifyYourTurnUser(gameID, state.PlayerIDs[actor], durakGameType)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
