@@ -3,9 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: анимация монет при колле и фикс наложений
-- Покер: стол на весь экран и масти из PNG-ассетов
+- Покер: реванш Принять/Отклонить поверх стола
+- Покер: аватары к кромке, фикс обрезки статуса, малые экраны
 
 ## en
-- Poker: fullscreen table; suit assets; call chip animation; fixed card/badge overlaps
+- Poker: rematch Accept/Decline on a readable overlay; edge seats; unclipped status reward
 
