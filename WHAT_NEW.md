@@ -3,8 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: убрать цифровой таймер хода из шапки
+- Покер: стол на весь экран и масти из PNG-ассетов
 
 ## en
-- Poker: removed the turn countdown from the header
+- Poker: fullscreen table; suit icons from assets (no tofu squares)
 
