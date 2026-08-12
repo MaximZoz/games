@@ -3,11 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Что нового: наблюдение в лобби и пуш хода
-- Покер/игры: наблюдение в лобби, ставки, анимация фолда, пуш хода
+- Покер: ставка героя рядом с блоком; банк только после сбора
+- Что нового: только фикс ставки героя
+- Покер: ставка героя сбоку от неймплейта, не внутри блока
 
 ## en
-- Poker: place-based pot, stats, observe after bust, delay before end dialog
-- Observation card on Lobby tab; your-turn push for durak/poker/battleship
-- Poker: bet chips next to profile; chip fly on fold and blinds
+- Poker: hero bet beside nameplate; pot/animation only when bets are collected
 

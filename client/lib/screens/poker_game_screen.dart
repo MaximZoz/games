@@ -71,13 +71,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _disposed = false;
   int _prevHandNumber = -1;
   bool _prevHandOver = false;
-  int _prevPot = -1;
   final Map<int, int> _prevBets = {};
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
-  /// Места, для которых уже запустили optimistic-полёт фишек (колл/рейз).
-  final Set<int> _optimisticChipSeats = {};
   /// Фолд со ставкой: уже отправили фишки в банк (не дублировать).
   final Set<int> _foldChipFlownSeats = {};
 
@@ -375,25 +372,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _move(String type, {int? amount}) async {
     if (_busy) return;
-    // Сразу «подкидываем» монеты в банк — не ждём ответ (колл часто
-    // закрывает улицу и bet в снапшоте уже 0).
+    // Колл/рейз/ва-банк: фишки остаются ставкой у места — в банк НЕ летят.
+    // В банк анимируем только при сборе улицы / фолде со ставкой / выплате.
     final gameSnap = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
         (_isOffline
             ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
             : null);
     final meSnap = gameSnap?.me;
     if (meSnap != null &&
-        (type == PokerActionType.call ||
-            type == PokerActionType.raise ||
-            type == PokerActionType.allIn)) {
-      _optimisticChipSeats.add(meSnap.seat);
-      unawaited(
-        _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
-      );
-    } else if (meSnap != null &&
         type == PokerActionType.fold &&
         meSnap.bet > 0) {
-      // Фолд со ставкой на улице — фишки уходят в банк.
       _foldChipFlownSeats.add(meSnap.seat);
       unawaited(
         _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
@@ -1427,20 +1415,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ),
         ],
         SizedBox(height: gap),
-        // Банк = тот же размер, что «Раздача» / «Блайнды».
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            KeyedSubtree(
-              key: _tableChipsKey,
-              child: _TableChipStack(amount: game.pot),
-            ),
-            const SizedBox(width: 6),
-            _PotBadge(
-              amount: game.pot,
-              label: context.l10n.pokerPot(game.pot),
-            ),
-          ],
+        // Банк — только уже собранные фишки (без текущих ставок на улице).
+        Builder(
+          builder: (context) {
+            final collected = _collectedPot(game);
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                KeyedSubtree(
+                  key: _tableChipsKey,
+                  child: _TableChipStack(amount: collected),
+                ),
+                if (collected > 0) ...[
+                  const SizedBox(width: 6),
+                  _PotBadge(
+                    amount: collected,
+                    label: context.l10n.pokerPot(collected),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
         SizedBox(height: gap),
         Row(
@@ -1539,30 +1534,43 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   GlobalKey _seatKey(int seat) =>
       _seatKeys.putIfAbsent(seat, GlobalKey.new);
 
-  /// Фишки: доклады в банк (колл/рейз/блайнды) → стопка у банка;
-  /// выигрыш → карточка победителя.
-  ///
-  /// Колл часто закрывает улицу: в одном апдейте `bet` снова 0, а `pot`
-  /// вырос — поэтому смотрим и рост ставки, и рост банка.
+  /// Собранный банк: без текущих ставок активных игроков.
+  /// Ставки фолдов уже «в банке» (бейдж ставки у места скрыт).
+  int _collectedPot(PokerGameView game) {
+    var street = 0;
+    for (final p in game.players) {
+      if (!p.folded) street += p.bet;
+    }
+    final collected = game.pot - street;
+    return collected < 0 ? 0 : collected;
+  }
+
+  /// Фишки в банк — только когда ставки реально собираются (конец улицы /
+  /// фолд со ставкой / выплата), не на каждый колл/рейз.
   void _syncChipFx(PokerGameView game) {
     if (game.handNumber != _prevHandNumber) {
-      final hadPrev = _prevHandNumber >= 0;
       _prevHandNumber = game.handNumber;
       _prevHandOver = false;
-      _prevPot = game.pot;
       _foldChipFlownSeats.clear();
       _prevBets
         ..clear()
         ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
-      // Новая раздача: анимация блайндов (фишки → банк).
-      if (hadPrev && !game.isHandOver) {
-        final blindSeats = <int>{
-          for (final p in game.players)
-            if (p.bet > 0) p.seat,
+      // Блайнды остаются ставкой у мест — в банк не летят.
+      return;
+    }
+    if (!game.isHandOver) {
+      // Сбор улицы: у кого-то была ставка, теперь у всех bet==0.
+      final hadStreetBets = _prevBets.values.any((b) => b > 0);
+      final streetCleared =
+          hadStreetBets && game.players.every((p) => p.bet <= 0);
+      if (streetCleared) {
+        final donors = <int>{
+          for (final e in _prevBets.entries)
+            if (e.value > 0 && !_foldChipFlownSeats.contains(e.key)) e.key,
         };
-        if (blindSeats.isNotEmpty) {
+        if (donors.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            for (final seat in blindSeats.take(3)) {
+            for (final seat in donors.take(4)) {
               unawaited(
                 _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
               );
@@ -1570,45 +1578,25 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           });
         }
       }
-      return;
-    }
-    if (!game.isHandOver) {
-      final growers = <int>[
-        for (final p in game.players)
-          if (p.bet > (_prevBets[p.seat] ?? 0)) p.seat,
-      ];
-      // Колл/рейз, закрывшие улицу: ставки сброшены, банк вырос.
-      final potGrew = _prevPot >= 0 && game.pot > _prevPot;
-      final donors = <int>[
-        ...growers,
-        if (growers.isEmpty && potGrew)
-          for (final e in _prevBets.entries)
-            if (e.value > 0) e.key,
-      ];
-      // Фоллбэк: рост банка без явных доноров — от текущего/прошлого актёра.
-      if (donors.isEmpty && potGrew && game.myIndex >= 0) {
-        donors.add(game.players[game.myIndex].seat);
-      }
-      final unique = <int>{...donors};
-      // Не дублируем optimistic-полёт после колла/рейза.
-      unique.removeAll(_optimisticChipSeats);
-      _optimisticChipSeats.clear();
-      if (unique.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          for (final seat in unique.take(4)) {
-            unawaited(
-              _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
-            );
-          }
-        });
-      } else {
-        _optimisticChipSeats.clear();
-      }
     }
     // Банк со стола — к карточке победителя.
     if (game.isHandOver && !_prevHandOver && game.winners.isNotEmpty) {
+      // Если улица не успела «очиститься» отдельным кадром — добираем ставки.
+      final leftover = <int>{
+        for (final e in _prevBets.entries)
+          if (e.value > 0 && !_foldChipFlownSeats.contains(e.key)) e.key,
+      };
       final seats = _winnerSeats(game);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        for (final seat in leftover.take(4)) {
+          unawaited(
+            _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
+          );
+        }
+        if (leftover.isNotEmpty) {
+          await Future<void>.delayed(const Duration(milliseconds: 280));
+        }
+        if (!mounted || _disposed) return;
         for (final seat in seats.take(2)) {
           unawaited(_flyChips(
             fromKey: _tableChipsKey,
@@ -1620,7 +1608,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       });
     }
     _prevHandOver = game.isHandOver;
-    _prevPot = game.pot;
     _prevBets
       ..clear()
       ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
@@ -2234,11 +2221,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
     const cardsBottom = namePlateH + avatarPlateGap;
     final peekOut = heroCards.width * 0.34;
-    // Сразу справа от неймплейта (не на рамку): plateW/2 — край, +gap.
-    final betLeft = plateW / 2 + (narrow ? 10.0 : 8.0);
-    // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
-    // Live-комбо («Пара») — в нижней панели, не дублируем под аватаром.
-    final plateOnly = KeyedSubtree(
+    // Как у соперника (HU): ставка слева от неймплейта, снаружи чёрного блока.
+    final betGap = narrow ? 16.0 : 12.0;
+    final betColumn = (showBet || isDealer)
+        ? Padding(
+            padding: EdgeInsets.only(right: betGap, bottom: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (showBet) _tableBetLabel(me.bet),
+                if (isDealer) ...[
+                  if (showBet) const SizedBox(height: 4),
+                  _dealerBadge(size: narrow ? 22 : 26),
+                ],
+              ],
+            ),
+          )
+        : null;
+
+    // Row: ставка — соседний виджет, не child чёрного Container.
+    final plateRow = KeyedSubtree(
       key: _seatKey(me.seat),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -2256,17 +2259,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           ),
           const SizedBox(height: avatarPlateGap),
-          RepaintBoundary(
-            child: TurnTimerBorder(
-              key: ValueKey('poker-hero-${game.turnDeadline}'),
-              active: acting,
-              turnDeadline: game.turnDeadline,
-              turnTimeSec: game.turnTimeSec,
-              borderWidth: borderW,
-              radius: 12,
-              showIdleBorder: false,
-              child: namePlate,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (betColumn != null) betColumn,
+              RepaintBoundary(
+                child: TurnTimerBorder(
+                  key: ValueKey('poker-hero-${game.turnDeadline}'),
+                  active: acting,
+                  turnDeadline: game.turnDeadline,
+                  turnTimeSec: game.turnTimeSec,
+                  borderWidth: borderW,
+                  radius: 12,
+                  showIdleBorder: false,
+                  child: namePlate,
+                ),
+              ),
+              if (myWinCombo != null) ...[
+                const SizedBox(width: 6),
+                _comboLabel(myWinCombo, highlight: true),
+              ],
+            ],
           ),
         ],
       ),
@@ -2322,32 +2336,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
             ),
           ),
-        // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
-        plateOnly,
-        // Ставка/D рядом с профилем (правее веера), не у края стола.
-        if (showBet || isDealer)
-          Positioned(
-            left: betLeft,
-            bottom: 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showBet) _tableBetLabel(me.bet),
-                if (isDealer) ...[
-                  if (showBet) const SizedBox(height: 4),
-                  _dealerBadge(size: narrow ? 22 : 26),
-                ],
-              ],
-            ),
-          ),
-        // Комбо победителя — сбоку снизу, не поверх неймплейта.
-        if (myWinCombo != null)
-          Positioned(
-            right: plateW + 6,
-            bottom: 0,
-            child: _comboLabel(myWinCombo, highlight: true),
-          ),
+        // Аватар + неймплейт + ставка снаружи (как у соперника).
+        plateRow,
       ],
     );
   }
