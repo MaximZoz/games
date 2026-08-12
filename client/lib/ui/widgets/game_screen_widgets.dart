@@ -1532,6 +1532,8 @@ class GameStatusWithReward extends StatelessWidget {
     required this.rewardBronze,
     required this.rewardKey,
     this.fontSize,
+    this.maxLines = 1,
+    this.wrap = false,
   });
 
   final String statusText;
@@ -1541,41 +1543,59 @@ class GameStatusWithReward extends StatelessWidget {
   final GlobalKey rewardKey;
   final double? fontSize;
 
+  /// Сколько строк статуса; в диалоге конца партии — 2+.
+  final int maxLines;
+
+  /// Если true — статус и награда могут переноситься столбцом на узкой ширине.
+  final bool wrap;
+
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           fontSize: fontSize ?? 16,
-          height: 1.1,
+          height: 1.15,
         );
     if (!showReward) {
       return Text(
         statusText,
         textAlign: TextAlign.center,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
         style: style,
       );
     }
-    // Без Flexible+жёсткой высоты снаружи: иначе «−2» и монета обрезаются.
+    final text = Text(
+      statusText,
+      textAlign: TextAlign.center,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    final chip = GameRewardChip(
+      key: rewardKey,
+      rewardBronze: rewardBronze,
+    );
+    if (wrap) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          text,
+          const SizedBox(height: 8),
+          chip,
+        ],
+      );
+    }
+    // Без жёсткой высоты снаружи: иначе «−2» и монета обрезаются.
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Flexible(
-          child: Text(
-            statusText,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
-        ),
+        Flexible(child: text),
         const SizedBox(width: 6),
-        GameRewardChip(
-          key: rewardKey,
-          rewardBronze: rewardBronze,
-        ),
+        chip,
       ],
     );
   }
@@ -1799,12 +1819,12 @@ class GameRematchSection extends StatelessWidget {
 
   Widget _buildRematchButtons(BuildContext context) {
     final btnPadding = compact
-        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: compact ? 8 : 12,
-      runSpacing: compact ? 6 : 8,
+    // В одну колонку на всю ширину — всё читается в одном окне.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
           onPressed: isRematching ? null : onRematch,
@@ -1825,8 +1845,10 @@ class GameRematchSection extends StatelessWidget {
             backgroundColor: AppColors.accentStart,
             foregroundColor: Colors.white,
             padding: btnPadding,
+            minimumSize: const Size(0, 44),
           ),
         ),
+        SizedBox(height: compact ? 8 : 10),
         OutlinedButton.icon(
           onPressed: isFindingGame ? null : onFindGame,
           icon: isFindingGame
@@ -1841,8 +1863,10 @@ class GameRematchSection extends StatelessWidget {
               : context.l10n.gameOtherOpponent),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
+            backgroundColor: Colors.white,
             side: const BorderSide(color: AppColors.accentStart),
             padding: btnPadding,
+            minimumSize: const Size(0, 44),
           ),
         ),
       ],
