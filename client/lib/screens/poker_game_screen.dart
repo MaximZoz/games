@@ -71,6 +71,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
+  /// Места, для которых уже запустили optimistic-полёт фишек (колл/рейз).
+  final Set<int> _optimisticChipSeats = {};
 
   bool get _isOffline =>
       OfflinePokerRegistry.instance.isOffline(widget.gameId);
@@ -329,6 +331,23 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _move(String type, {int? amount}) async {
     if (_busy) return;
+    // Сразу «подкидываем» монеты в банк — не ждём ответ (колл часто
+    // закрывает улицу и bet в снапшоте уже 0).
+    if (type == PokerActionType.call ||
+        type == PokerActionType.raise ||
+        type == PokerActionType.allIn) {
+      final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
+          (_isOffline
+              ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
+              : null);
+      final me = game?.me;
+      if (me != null) {
+        _optimisticChipSeats.add(me.seat);
+        unawaited(
+          _flyChips(fromKey: _seatKey(me.seat), toKey: _tableChipsKey),
+        );
+      }
+    }
     setState(() => _busy = true);
     try {
       await ref
@@ -777,25 +796,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final isOver = game.isOver;
     final status = _statusText(game);
     final rewardBronze = _rewardChipBronze(game);
-    final showReward = isOver &&
-        game.stakeBronze > 0 &&
-        (rewardBronze != 0);
+    final showReward =
+        isOver && game.stakeBronze > 0 && rewardBronze != 0;
     final betweenHands = game.isHandOver && !isOver;
 
     const comboSlot = 30.0;
     const actionSlot = 52.0;
     final bottomPad = narrow ? 6.0 : 10.0;
-    // Запас только под кнопки/комбо — аватары прижаты к кромке фетра.
-    final bottomReserve = isOver
-        ? 96.0
-        : comboSlot + 6 + actionSlot + bottomPad;
+    final showActions = !isOver &&
+        !game.isHandOver &&
+        game.isMyTurn &&
+        game.legalActions.isNotEmpty;
+    final showCardsBtn = game.canShowCards && !isOver;
+    final hasCombo = _handRankLabel(game.myHandRank) != null;
+    // Hero выезжает вверх только когда есть кнопки; поле/борд не двигаются.
+    final heroLift = showActions || showCardsBtn
+        ? comboSlot + 6 + actionSlot + bottomPad
+        : (hasCombo ? comboSlot + bottomPad : bottomPad);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final short = constraints.maxHeight < 560;
         final veryShort = constraints.maxHeight < 480;
-        // Статус — intrinsic height (без клипа «−2»/монеты).
-        final statusMaxW = constraints.maxWidth - (narrow ? 24 : 40);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -806,97 +828,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 narrow,
                 short: short,
                 veryShort: veryShort,
-                // Минимальный inset: места на кромке, центр не под кнопками.
-                topInset: veryShort ? 2 : 4,
-                bottomInset: bottomReserve * (veryShort ? 0.72 : 0.85),
-              ),
-            ),
-            // Улица + статус поверх — не выталкивают аватары к центру.
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  narrow ? 10 : 16,
-                  2,
-                  narrow ? 10 : 16,
-                  0,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _streetLabel(game.street),
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: short ? 11 : 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                        shadows: const [
-                          Shadow(color: Color(0x99000000), blurRadius: 6),
-                        ],
-                      ),
-                    ),
-                    if (status.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: statusMaxW),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.94),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.18),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: showReward ? 8 : 12,
-                              vertical: showReward ? 5 : 4,
-                            ),
-                            child: isOver
-                                ? GameStatusWithReward(
-                                    statusText: status,
-                                    showReward: showReward,
-                                    rewardBronze: rewardBronze,
-                                    rewardKey: _winRewardKey,
-                                    fontSize: short ? 14 : 16,
-                                  )
-                                : GameStatusLine(
-                                    text: status,
-                                    highlight: game.isMyTurn &&
-                                        !isOver &&
-                                        !game.isHandOver,
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (betweenHands) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.pokerNextHandSoon,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          shadows: [
-                            Shadow(color: Color(0x99000000), blurRadius: 6),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                status: status,
+                showReward: showReward,
+                rewardBronze: rewardBronze,
+                betweenHands: betweenHands,
+                // Hero отдельно анимируется снизу — стол/борд фиксированы.
+                heroBottom: isOver ? 12.0 : heroLift,
               ),
             ),
             if (isOver)
-              // Поверх стола и аватаров — иначе «Принять/Отклонить» не видно.
               Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black.withValues(alpha: 0.42),
@@ -1072,14 +1012,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Овальный стол: аватары на кромке фетра, банк/борд в центре.
+  /// Овальный стол: аватары на кромке, борд фиксирован; hero выезжает снизу.
   Widget _buildTable(
     PokerGameView game,
     bool narrow, {
-    double topInset = 0,
-    double bottomInset = 0,
     bool short = false,
     bool veryShort = false,
+    required String status,
+    required bool showReward,
+    required int rewardBronze,
+    required bool betweenHands,
+    required double heroBottom,
   }) {
     final me = game.myIndex;
     final opponents = <PokerPlayerView>[];
@@ -1088,8 +1031,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       opponents.add(game.players[i]);
     }
     final oppAnchors = _seatAnchors(opponents.length);
-    // Hero — самый низ рабочей зоны (кромка над кнопками).
-    const heroAnchor = Alignment(0, 1.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1104,10 +1045,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             : -1;
         final feltPadH = narrow ? 0.0 : 4.0;
         final feltPadV = narrow ? 0.0 : 2.0;
-        // На высоком экране — более «овальный» стол; на узком — почти fullscreen.
         final radius = narrow
             ? (constraints.maxWidth * 0.22).clamp(28.0, 44.0)
             : (constraints.maxWidth * 0.18).clamp(40.0, 64.0);
+        final sidePad = narrow ? 2.0 : 6.0;
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1132,25 +1073,24 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ),
               ),
             ),
-            // Места на кромке; bottomInset только чтобы hero не ушёл под кнопки.
+            // Борд + соперники — фиксированная зона (не прыгает с кнопками).
             Positioned.fill(
               child: Padding(
-                padding: EdgeInsets.only(
-                  top: topInset,
-                  bottom: bottomInset,
-                  left: narrow ? 2 : 6,
-                  right: narrow ? 2 : 6,
-                ),
+                padding: EdgeInsets.fromLTRB(sidePad, 4, sidePad, 8),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Align(
-                      alignment: Alignment(0, veryShort ? -0.05 : -0.08),
+                      alignment: Alignment(0, veryShort ? -0.02 : -0.06),
                       child: _buildCenter(
                         game,
                         narrow,
                         cardSize,
                         compact: short || veryShort,
+                        status: status,
+                        showReward: showReward,
+                        rewardBronze: rewardBronze,
+                        betweenHands: betweenHands,
                       ),
                     ),
                     for (var i = 0; i < opponents.length; i++)
@@ -1161,15 +1101,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                           opponents[i],
                           narrow,
                           cardsOnLeft: oppAnchors[i].x < -0.05,
-                          compact: short || veryShort,
-                        ),
-                      ),
-                    if (me >= 0 && me < game.players.length)
-                      Align(
-                        alignment: heroAnchor,
-                        child: _buildHeroOnTable(
-                          game,
-                          narrow,
                           compact: short || veryShort,
                         ),
                       ),
@@ -1201,6 +1132,22 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ),
               ),
             ),
+            // Hero у нижнего края; при кнопках — выезд вверх, борд на месте.
+            if (me >= 0 && me < game.players.length)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                left: sidePad,
+                right: sidePad,
+                bottom: heroBottom,
+                child: Center(
+                  child: _buildHeroOnTable(
+                    game,
+                    narrow,
+                    compact: short || veryShort,
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -1249,21 +1196,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
   }
 
-  /// Размер своих карт: компактный веер, не перекрывает борд.
+  /// Размер своих карт: чуть крупнее борда, без гигантского веера.
   Size _heroCardSize(bool narrow, int playerCount, {bool compact = false}) {
     if (compact) {
       if (playerCount <= 2) {
-        return narrow ? const Size(40, 56) : const Size(46, 66);
+        return narrow ? const Size(48, 68) : const Size(54, 76);
       }
-      return narrow ? const Size(34, 48) : const Size(40, 56);
+      return narrow ? const Size(40, 56) : const Size(46, 66);
     }
     if (playerCount <= 2) {
-      return narrow ? const Size(46, 66) : const Size(54, 76);
+      return narrow ? const Size(54, 76) : const Size(62, 88);
     }
     if (playerCount <= 4) {
-      return narrow ? const Size(40, 56) : const Size(48, 68);
+      return narrow ? const Size(48, 68) : const Size(56, 80);
     }
-    return narrow ? const Size(36, 50) : const Size(42, 60);
+    return narrow ? const Size(42, 60) : const Size(48, 68);
   }
 
   PokerWinnerHand? _winnerHandForSeat(PokerGameView game, int seat) {
@@ -1336,15 +1283,89 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow,
     Size cardSize, {
     bool compact = false,
+    required String status,
+    required bool showReward,
+    required int rewardBronze,
+    required bool betweenHands,
   }) {
     final highlightKeys = game.highlightKeys;
     final hasHighlight = _shouldHighlightCombo(game);
-    final gap = compact ? 4.0 : 8.0;
+    final gap = compact ? 4.0 : 6.0;
+    final isOver = game.isOver;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Банк рядом с якорем анимации фишек.
+        // Улица + чей ход — в центре, не поверх аватара соперника.
+        Text(
+          _streetLabel(game.street),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: compact ? 11 : 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            shadows: const [
+              Shadow(color: Color(0x99000000), blurRadius: 6),
+            ],
+          ),
+        ),
+        if (status.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: narrow ? 260 : 320,
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: showReward ? 8 : 12,
+                  vertical: showReward ? 5 : 4,
+                ),
+                child: isOver
+                    ? GameStatusWithReward(
+                        statusText: status,
+                        showReward: showReward,
+                        rewardBronze: rewardBronze,
+                        rewardKey: _winRewardKey,
+                        fontSize: compact ? 14 : 16,
+                      )
+                    : GameStatusLine(
+                        text: status,
+                        highlight: game.isMyTurn &&
+                            !isOver &&
+                            !game.isHandOver,
+                      ),
+              ),
+            ),
+          ),
+        ],
+        if (betweenHands) ...[
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.pokerNextHandSoon,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              shadows: [
+                Shadow(color: Color(0x99000000), blurRadius: 6),
+              ],
+            ),
+          ),
+        ],
+        SizedBox(height: gap),
+        // Банк = тот же размер, что «Раздача» / «Блайнды».
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1382,7 +1403,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ],
         ),
         SizedBox(height: gap),
-        // Раздача/блайнды — под бордом, не под аватаром соперника.
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1490,6 +1510,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         donors.add(game.players[game.myIndex].seat);
       }
       final unique = <int>{...donors};
+      // Не дублируем optimistic-полёт после колла/рейза.
+      unique.removeAll(_optimisticChipSeats);
+      _optimisticChipSeats.clear();
       if (unique.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           for (final seat in unique.take(4)) {
@@ -1498,6 +1521,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             );
           }
         });
+      } else {
+        _optimisticChipSeats.clear();
       }
     }
     // Банк со стола — к карточке победителя.
@@ -2226,34 +2251,34 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     const actionSlot = 52.0;
     final bottomPad = narrow ? 8.0 : 12.0;
 
+    final showActionRow = showActions || showCardsBtn;
+    // Без кнопок не резервируем пустой ряд — hero остаётся у нижнего края.
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 2, 12, bottomPad),
-      child: SizedBox(
-        height: comboSlot + 6 + actionSlot,
-        child: Column(
-          children: [
-            SizedBox(
-              height: comboSlot,
-              child: comboLabel != null
-                  ? Center(
-                      child: _comboLabel(
-                        comboLabel,
-                        highlight: comboAccent,
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: comboSlot,
+            child: comboLabel != null
+                ? Center(
+                    child: _comboLabel(
+                      comboLabel,
+                      highlight: comboAccent,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (showActionRow) ...[
             const SizedBox(height: 6),
             SizedBox(
               height: actionSlot,
               child: showActions
                   ? _buildActionBar(game)
-                  : showCardsBtn
-                      ? Center(child: _buildShowCardsButton())
-                      : const SizedBox.shrink(),
+                  : Center(child: _buildShowCardsButton()),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -2461,10 +2486,11 @@ class _PotBadgeState extends State<_PotBadge>
       animation: _c,
       builder: (context, child) {
         final t = math.sin(math.pi * _c.value);
-        return Transform.scale(scale: 1 + 0.14 * t, child: child);
+        return Transform.scale(scale: 1 + 0.1 * t, child: child);
       },
+      // Тот же размер, что «Раздача» / «Блайнды» (_infoBadge).
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.32),
           borderRadius: BorderRadius.circular(999),
@@ -2473,8 +2499,8 @@ class _PotBadgeState extends State<_PotBadge>
           widget.label,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
           ),
         ),
       ),
