@@ -3,9 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: нижняя панель без пустого ряда кнопок
-- Покер: банк как раздача, крупнее карты, колл-анимация, hero у края
+- Покер: ставка и дилер у кромки стола
+- Покер: ставка и монеты не наезжают на карточку
 
 ## en
-- Poker: pot badge size match; bigger hole cards; call chip fly; status off avatar; hero edge slide
+- Poker: bet chips and dealer sit on the table rim, not behind the avatar
 

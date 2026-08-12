@@ -1039,10 +1039,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           narrow,
           short: short || veryShort,
         );
-        final dealerSeat = game.dealerIndex >= 0 &&
-                game.dealerIndex < game.players.length
-            ? game.players[game.dealerIndex].seat
-            : -1;
         final feltPadH = narrow ? 0.0 : 4.0;
         final feltPadV = narrow ? 0.0 : 2.0;
         final radius = narrow
@@ -1104,25 +1100,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                           compact: short || veryShort,
                         ),
                       ),
-                    for (final p in game.players)
-                      if (p.bet > 0 &&
-                          !p.folded &&
-                          (me < 0 || p.seat != game.players[me].seat))
+                    // Ставки/D соперников — у кромки фетра (не рядом с аватаром).
+                    for (var i = 0; i < opponents.length; i++)
+                      if (opponents[i].bet > 0 && !opponents[i].folded)
                         Align(
-                          alignment: _betAlignment(
-                            seat: p.seat,
-                            oppAnchors: oppAnchors,
-                            opponents: opponents,
-                          ),
-                          child: _tableBetLabel(p.bet),
+                          alignment: _rimChipAlignment(oppAnchors[i]),
+                          child: _tableBetLabel(opponents[i].bet),
                         ),
-                    if (dealerSeat >= 0 &&
-                        (me < 0 || game.players[me].seat != dealerSeat))
-                      AnimatedAlign(
-                        duration: const Duration(milliseconds: 520),
-                        curve: Curves.easeInOutCubic,
-                        alignment: _dealerAlignment(
-                          dealerSeat: dealerSeat,
+                    if (game.dealerIndex >= 0 &&
+                        game.dealerIndex < game.players.length &&
+                        (me < 0 ||
+                            game.players[game.dealerIndex].seat !=
+                                game.players[me].seat))
+                      Align(
+                        alignment: _rimDealerAlignment(
+                          game: game,
                           oppAnchors: oppAnchors,
                           opponents: opponents,
                         ),
@@ -1132,7 +1124,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ),
               ),
             ),
-            // Hero у нижнего края; при кнопках — выезд вверх, борд на месте.
+            // Hero у нижнего края; ставка/D — у правой кромки (видно над кнопками).
             if (me >= 0 && me < game.players.length)
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 260),
@@ -1140,12 +1132,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 left: sidePad,
                 right: sidePad,
                 bottom: heroBottom,
-                child: Center(
-                  child: _buildHeroOnTable(
-                    game,
-                    narrow,
-                    compact: short || veryShort,
-                  ),
+                child: _buildHeroEdgeRow(
+                  game,
+                  narrow,
+                  compact: short || veryShort,
                 ),
               ),
           ],
@@ -1154,46 +1144,82 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  /// Ставка соперника — сбоку от аватара, ближе к краю стола (не к банку).
-  Alignment _betAlignment({
-    required int seat,
-    required List<Alignment> oppAnchors,
-    required List<PokerPlayerView> opponents,
+  /// Hero + ставка/D у правой кромки — не в куче с картами по центру.
+  Widget _buildHeroEdgeRow(
+    PokerGameView game,
+    bool narrow, {
+    bool compact = false,
   }) {
-    for (var i = 0; i < opponents.length; i++) {
-      if (opponents[i].seat == seat) {
-        final a = oppAnchors[i];
-        if (a.x.abs() >= 0.5) {
-          // Боковые места: ещё ближе к боковому краю, чуть ниже/выше аватара.
-          return Alignment(
-            (a.x * 0.96 + (a.x > 0 ? 0.08 : -0.08)).clamp(-0.98, 0.98),
-            a.y,
-          );
-        }
-        // Верх/низ: слева от аватара и ближе к внешнему краю овала.
-        final sideX = (a.x - 0.18).clamp(-0.98, 0.98);
-        final edgeY = a.y < 0
-            ? (a.y * 0.98 - 0.02).clamp(-0.98, 0.0)
-            : (a.y * 0.98 + 0.02).clamp(0.0, 0.98);
-        return Alignment(sideX, edgeY);
-      }
-    }
-    return Alignment.center;
+    final me = game.me;
+    if (me == null) return const SizedBox.shrink();
+    final showBet = me.bet > 0 && !me.folded;
+    final isDealer = game.dealerIndex == game.myIndex;
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      clipBehavior: Clip.none,
+      children: [
+        Center(
+          child: _buildHeroOnTable(game, narrow, compact: compact),
+        ),
+        if (showBet || isDealer)
+          Positioned(
+            right: narrow ? 2 : 8,
+            bottom: 6,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (showBet) _tableBetLabel(me.bet),
+                if (isDealer) ...[
+                  if (showBet) const SizedBox(height: 4),
+                  _dealerBadge(size: narrow ? 22 : 26),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
-  /// Дилер — прямо под ставкой у того же края стола.
-  Alignment _dealerAlignment({
-    required int dealerSeat,
+  /// Фишки ставки соперника у внешней кромки стола.
+  Alignment _rimChipAlignment(Alignment seat) {
+    if (seat.y < -0.35) {
+      // Верх: слева у кромки.
+      return Alignment(
+        (seat.x - 0.38).clamp(-0.92, 0.92),
+        -0.97,
+      );
+    }
+    if (seat.y > 0.35) {
+      return const Alignment(0.78, 0.96);
+    }
+    // Боковые места — ещё ближе к боковому краю.
+    final outward = seat.x >= 0 ? 0.1 : -0.1;
+    return Alignment(
+      (seat.x + outward).clamp(-0.98, 0.98),
+      seat.y,
+    );
+  }
+
+  /// D чуть ниже/рядом со ставкой у той же кромки (только соперники).
+  Alignment _rimDealerAlignment({
+    required PokerGameView game,
     required List<Alignment> oppAnchors,
     required List<PokerPlayerView> opponents,
   }) {
-    final bet = _betAlignment(
-      seat: dealerSeat,
-      oppAnchors: oppAnchors,
-      opponents: opponents,
-    );
-    // «Под ставкой» на экране = чуть ниже; всё ещё у края, не у банка.
-    return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.98));
+    final dealer = game.players[game.dealerIndex];
+    var seat = const Alignment(0, -1);
+    for (var i = 0; i < opponents.length; i++) {
+      if (opponents[i].seat == dealer.seat) {
+        seat = oppAnchors[i];
+        break;
+      }
+    }
+    final bet = _rimChipAlignment(seat);
+    if (seat.y < -0.35) {
+      return Alignment(bet.x, (bet.y + 0.09).clamp(-0.98, 0.0));
+    }
+    return Alignment(bet.x, (bet.y + 0.08).clamp(-0.98, 0.98));
   }
 
   /// Размер своих карт: чуть крупнее борда, без гигантского веера.
@@ -1784,6 +1810,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
 
     final cardsWidth = holeSize.width * 1.55;
+
     return KeyedSubtree(
       key: _seatKey(p.seat),
       child: Stack(
@@ -1823,6 +1850,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
             ),
           plateColumn,
+          // Ставка/D — отдельно у кромки стола (_rimChipAlignment), не здесь.
           if (winnerCombo != null)
             Positioned(
               bottom: -26,
@@ -2112,9 +2140,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       ),
     );
 
-    final isDealer = game.dealerIndex == game.myIndex;
-    final showBet = me.bet > 0 && !me.folded;
     // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
+    // Ставка/D — у кромки фетра (_rimChipAlignment), не в этом Stack.
     const cardsBottom = namePlateH + avatarPlateGap;
     final peekOut = heroCards.width * 0.34;
     // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
@@ -2205,23 +2232,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ),
         // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
         plateOnly,
-        // Ставка и D справа от профиля (выше неймплейта).
-        if (showBet || isDealer)
-          Positioned(
-            left: plateW + 8,
-            bottom: namePlateH + avatarPlateGap + 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showBet) _tableBetLabel(me.bet),
-                if (isDealer) ...[
-                  if (showBet) const SizedBox(height: 4),
-                  _dealerBadge(size: narrow ? 22 : 26),
-                ],
-              ],
-            ),
-          ),
         // Комбо победителя — сбоку снизу, не поверх неймплейта.
         if (myWinCombo != null)
           Positioned(
