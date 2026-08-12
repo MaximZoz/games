@@ -1693,32 +1693,51 @@ class GameRematchSection extends StatelessWidget {
       );
     }
     if (rematchOffer != null) {
+      final btnPad = compact
+          ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
+          : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             context.l10n.gameRematchOffer,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: compact ? 13 : 14,
+              color: AppColors.textPrimary,
+              fontSize: compact ? 15 : 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: compact ? 8 : 12),
+          SizedBox(height: compact ? 12 : 14),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
-                onPressed: () => onDecline(rematchOffer.lobbyId),
-                child: Text(context.l10n.commonDecline),
-              ),
-              SizedBox(width: compact ? 8 : 12),
-              FilledButton(
-                onPressed: () => onAccept(rematchOffer.lobbyId),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onDecline(rematchOffer.lobbyId),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                      color: AppColors.textSecondary.withValues(alpha: 0.45),
+                    ),
+                    padding: btnPad,
+                    minimumSize: const Size(0, 44),
+                  ),
+                  child: Text(context.l10n.commonDecline),
                 ),
-                child: Text(context.l10n.commonAccept),
+              ),
+              SizedBox(width: compact ? 10 : 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => onAccept(rematchOffer.lobbyId),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    foregroundColor: Colors.white,
+                    padding: btnPad,
+                    minimumSize: const Size(0, 44),
+                  ),
+                  child: Text(context.l10n.commonAccept),
+                ),
               ),
             ],
           ),

@@ -895,13 +895,36 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 ),
               ),
             ),
-            // Реванш — снизу, не поверх соперника.
             if (isOver)
-              Positioned(
-                left: 12,
-                right: 12,
-                bottom: bottomPad,
-                child: _buildEndSection(game),
+              // Поверх стола и аватаров — иначе «Принять/Отклонить» не видно.
+              Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.42),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        narrow ? 16 : 28,
+                        24,
+                        narrow ? 16 : 28,
+                        bottomPad + 8,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 360),
+                        child: GradientCard(
+                          animate: false,
+                          margin: EdgeInsets.zero,
+                          padding: EdgeInsets.fromLTRB(
+                            narrow ? 16 : 20,
+                            18,
+                            narrow ? 16 : 20,
+                            16,
+                          ),
+                          child: _buildEndSection(game),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               )
             else
               Positioned(
@@ -1019,36 +1042,33 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Widget _buildEndSection(PokerGameView game) {
-    return Material(
-      color: Colors.transparent,
-      child: Center(
-        child: _isOffline
-            ? FilledButton.icon(
-                onPressed: _isRematching ? null : () => unawaited(_rematch()),
-                icon: const Icon(Icons.replay_rounded, size: 18),
-                label: Text(context.l10n.offlinePlayAgain),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
-                ),
-              )
-            : GameRematchSection(
-                rematchLobbyId: _rematchLobbyId,
-                rematchDeclined: _rematchDeclined,
-                iDeclinedRematch: _iDeclinedRematch,
-                isRematching: _isRematching,
-                isAcceptingRematch: _isAcceptingRematch,
-                isFindingGame: _isFindingGame,
-                peerIds: _peerIds(game),
-                invites: ref.watch(gameInvitesProvider),
-                onRematch: () => unawaited(_rematch()),
-                onAccept: (id) => unawaited(_acceptRematch(id)),
-                onDecline: (id) => unawaited(_declineRematch(id)),
-                onCancelWait: () => unawaited(_cancelRematchWait()),
-                onFindGame: () => unawaited(_findGame()),
-                compact: true,
-              ),
-      ),
+    if (_isOffline) {
+      return FilledButton.icon(
+        onPressed: _isRematching ? null : () => unawaited(_rematch()),
+        icon: const Icon(Icons.replay_rounded, size: 18),
+        label: Text(context.l10n.offlinePlayAgain),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 44),
+        ),
+      );
+    }
+    return GameRematchSection(
+      rematchLobbyId: _rematchLobbyId,
+      rematchDeclined: _rematchDeclined,
+      iDeclinedRematch: _iDeclinedRematch,
+      isRematching: _isRematching,
+      isAcceptingRematch: _isAcceptingRematch,
+      isFindingGame: _isFindingGame,
+      peerIds: _peerIds(game),
+      invites: ref.watch(gameInvitesProvider),
+      onRematch: () => unawaited(_rematch()),
+      onAccept: (id) => unawaited(_acceptRematch(id)),
+      onDecline: (id) => unawaited(_declineRematch(id)),
+      onCancelWait: () => unawaited(_cancelRematchWait()),
+      onFindGame: () => unawaited(_findGame()),
+      compact: true,
     );
   }
 

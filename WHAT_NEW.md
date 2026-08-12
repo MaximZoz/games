@@ -3,8 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Покер: реванш Принять/Отклонить поверх стола
 - Покер: аватары к кромке, фикс обрезки статуса, малые экраны
 
 ## en
-- Poker: edge-seated avatars; unclipped loss reward chip; better small-screen fit
+- Poker: rematch Accept/Decline on a readable overlay; edge seats; unclipped status reward
 
