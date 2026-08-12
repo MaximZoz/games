@@ -42,4 +42,34 @@ void main() {
       );
     });
   });
+
+  group('pokerPlaceCredit', () {
+    test('банк сохраняется для 2–6 игроков', () {
+      for (final n in [2, 3, 4, 5, 6]) {
+        for (final stake in [2, 10, 50]) {
+          var sum = 0;
+          for (var place = 1; place <= n; place++) {
+            sum += pokerPlaceCredit(
+              stake: stake,
+              playerCount: n,
+              place: place,
+            );
+          }
+          expect(sum, stake * n, reason: 'n=$n stake=$stake');
+        }
+      }
+    });
+
+    test('доли 3/4/5/6 игроков', () {
+      expect(pokerPlaceCredit(stake: 10, playerCount: 3, place: 1), 20);
+      expect(pokerPlaceCredit(stake: 10, playerCount: 3, place: 2), 10);
+      expect(pokerPlaceCredit(stake: 10, playerCount: 4, place: 1), 30);
+      expect(pokerPlaceCredit(stake: 10, playerCount: 5, place: 1), 30);
+      expect(pokerPlaceCredit(stake: 10, playerCount: 6, place: 1), 40);
+      expect(
+        pokerPlaceNetProfit(stake: 10, playerCount: 3, place: 2),
+        0,
+      );
+    });
+  });
 }

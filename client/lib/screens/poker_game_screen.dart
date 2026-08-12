@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -54,6 +55,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _prevOver = false;
   bool _balanceGainPlayed = false;
   bool _lossChipRevealed = false;
+  /// Пауза перед итоговым окном — сначала видно карты/борд.
+  bool _endDialogReady = false;
+  bool _endDialogScheduled = false;
+  bool _observeEntered = false;
   final GlobalKey _winRewardKey = GlobalKey();
 
   // ---- анимация появления борда + полёт фишек ----
@@ -107,8 +112,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _prevOver = false;
         _balanceGainPlayed = false;
         _lossChipRevealed = false;
+        _endDialogReady = false;
+        _endDialogScheduled = false;
+        _observeEntered = false;
       });
     }
+  }
+
+  void _scheduleEndDialog() {
+    if (_endDialogScheduled || _endDialogReady) return;
+    _endDialogScheduled = true;
+    unawaited(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 2200));
+      if (!mounted) return;
+      setState(() => _endDialogReady = true);
+    }());
   }
 
   void _initializeProviderBindings() {
@@ -174,14 +192,18 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   String _statusText(PokerGameView game) {
     final l10n = context.l10n;
     final me = game.myIndex;
-    final iWon = me >= 0 && game.winners.contains(me);
+    final place = game.myPlace;
+    final iWon = game.iWon;
     // Весь стол окончен — как в дураке / крестиках.
     if (game.isOver) {
-      if (iWon) {
-        if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
-        if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
+      if (iWon || place == 1) {
+        if (game.players.length <= 2) {
+          if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
+          if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        }
         return l10n.gameYouWon;
       }
+      if (place > 1) return l10n.gameYouPlaced(place);
       if (game.stakeBronze > 0) return l10n.gameYouLost;
       if (game.winners.isNotEmpty) {
         final w = game.winners.first;
@@ -191,9 +213,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       return l10n.pokerHandOver;
     }
+    if (game.iAmEliminated) {
+      if (place > 1) return l10n.gameYouPlaced(place);
+      return l10n.gameYouEliminated;
+    }
     // Раздача завершена, стол продолжается.
     if (game.isHandOver) {
-      if (iWon) return l10n.pokerYouWonHand;
+      final handWon = me >= 0 && game.winners.contains(me);
+      if (handWon) return l10n.pokerYouWonHand;
       if (game.winners.isNotEmpty) {
         final w = game.winners.first;
         if (w >= 0 && w < game.players.length) {
@@ -206,6 +233,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Свой индекс актёра — всегда «Ваш ход», даже если legalActions ещё пусты.
     if (!game.isOver &&
         !game.isHandOver &&
+        !game.iAmEliminated &&
         game.myIndex >= 0 &&
         acting == game.myIndex) {
       return l10n.pokerYourTurn;
@@ -216,17 +244,41 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return '';
   }
 
+  int _placeCredit(PokerGameView game) {
+    final n = game.players.length.clamp(2, 6);
+    final place = game.myPlace > 0
+        ? game.myPlace
+        : (game.iWon ? 1 : (game.isOver ? n : 0));
+    if (place <= 0) return 0;
+    return pokerPlaceCredit(
+      stake: game.stakeBronze,
+      playerCount: n,
+      place: place,
+    );
+  }
+
+  int _placeNet(PokerGameView game) {
+    final n = game.players.length.clamp(2, 6);
+    final place = game.myPlace > 0
+        ? game.myPlace
+        : (game.iWon ? 1 : (game.isOver ? n : 0));
+    if (place <= 0) return 0;
+    return pokerPlaceNetProfit(
+      stake: game.stakeBronze,
+      playerCount: n,
+      place: place,
+    );
+  }
+
   int _rewardChipBronze(PokerGameView game) {
-    if (!game.isOver || game.stakeBronze <= 0) return 0;
-    final me = game.myIndex;
-    final iWon = me >= 0 && game.winners.contains(me);
-    if (iWon) {
-      return stakeWinnerNetProfit(
-        stake: game.stakeBronze,
-        playerCount: game.players.length.clamp(2, 9),
-        winnerCount: game.winners.isEmpty ? 1 : game.winners.length,
-      );
+    if ((!game.isOver && !game.iAmEliminated) || game.stakeBronze <= 0) {
+      return 0;
     }
+    final net = _placeNet(game);
+    if (net > 0) return net;
+    final credit = _placeCredit(game);
+    // «Ничего» (возврат ставки) — без чипа ±.
+    if (credit >= game.stakeBronze) return 0;
     if (!_lossChipRevealed) return 0;
     return -game.stakeBronze;
   }
@@ -260,7 +312,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   void _maybeSettleGame(PokerGameView game) {
-    if (!game.isOver) return;
+    // Итог стола или mid-game выбытие с известным местом.
+    final settleNow = game.isOver || (game.iAmEliminated && game.myPlace > 0);
+    if (!settleNow) return;
     if (_balanceGainPlayed || _isOffline) return;
     // Сразу, чтобы повторные build не ставили анимацию в очередь дважды.
     _balanceGainPlayed = true;
@@ -268,23 +322,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
-    final me = game.myIndex;
-    final iWon = me >= 0 && game.winners.contains(me);
-    final n = game.players.length.clamp(2, 9);
-    final winnersN = game.winners.isEmpty ? 1 : game.winners.length;
-    final pot = stakeWinnerCredit(
-      stake: game.stakeBronze,
-      playerCount: n,
-      winnerCount: winnersN,
-    );
-    final net = stakeWinnerNetProfit(
-      stake: game.stakeBronze,
-      playerCount: n,
-      winnerCount: winnersN,
-    );
-    final credit = iWon ? pot : 0;
-    final display = iWon ? net : 0;
-    final lost = (!iWon && game.stakeBronze > 0) ? game.stakeBronze : 0;
+    final credit = _placeCredit(game);
+    final display = _placeNet(game);
+    final lost = (credit < game.stakeBronze && game.stakeBronze > 0)
+        ? game.stakeBronze
+        : 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // Сбрасываем флаг: _onGameSettled снова выставит его сам.
@@ -488,7 +530,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _confirmSurrender() async {
     final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
-    if (game == null || game.isOver) return;
+    if (game == null || game.isOver || game.iAmEliminated) return;
     final ok = await confirmGameActionDialog(
       context: context,
       title: context.l10n.gameSurrenderTitle,
@@ -497,41 +539,72 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       confirmLabel: context.l10n.gameSurrender,
     );
     if (!ok || !mounted) return;
-    try {
-      clearBlockingGamePin(ref, ifGameId: widget.gameId);
-      await ref.read(pokerRepositoryProvider).forfeit(widget.gameId);
-    } catch (_) {}
-    if (!mounted) return;
-    if (!_isOffline) ref.invalidate(pokerGameProvider(widget.gameId));
-    unawaited(ref.read(activeGameProvider.notifier).refresh());
+    unawaited(() async {
+      try {
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        await ref.read(pokerRepositoryProvider).forfeit(widget.gameId);
+      } catch (_) {}
+      if (!mounted) return;
+      if (!_isOffline) {
+        ref.invalidate(pokerGameProvider(widget.gameId));
+        try {
+          final next = await ref.read(pokerGameProvider(widget.gameId).future);
+          final multi = next.players.length > 2;
+          if (multi && !next.isOver) {
+            enterGameObservation(ref, widget.gameId, gameType: 'poker');
+            _observeEntered = true;
+          }
+        } catch (_) {}
+      }
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
+    }());
   }
 
   Future<void> _onClosePressed() async {
     final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
+    final eliminated = game?.iAmEliminated == true;
     await handleGameScreenClose(
       context: context,
-      isActive: game != null && !game.isOver,
+      isActive: game != null && !game.isOver && !eliminated,
+      canLeaveFreely: eliminated,
       onLeaveFinished: () async {
         if (!mounted) return;
-        _navigateToGames();
+        if (eliminated && game != null && !game.isOver) {
+          enterGameObservation(ref, widget.gameId, gameType: 'poker');
+          _observeEntered = true;
+        }
+        _navigateToGames(keepObservation: true);
       },
       onForfeitAndLeave: () async {
         if (!mounted) return;
+        final multi = (game?.players.length ?? 0) > 2;
         try {
           clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(pokerRepositoryProvider).forfeit(widget.gameId);
         } catch (_) {}
         if (!mounted) return;
-        _navigateToGames();
+        if (multi) {
+          enterGameObservation(ref, widget.gameId, gameType: 'poker');
+          _observeEntered = true;
+        }
+        _navigateToGames(keepObservation: multi);
         unawaited(ref.read(activeGameProvider.notifier).refresh());
       },
     );
   }
 
-  void _navigateToGames() {
+  void _navigateToGames({bool keepObservation = false}) {
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
-    _clearSessionForFinishedGame();
+    if (!keepObservation) {
+      _clearSessionForFinishedGame();
+    } else {
+      clearBlockingGamePin(ref, ifGameId: widget.gameId);
+      final prev = ref.read(activeGameProvider).valueOrNull;
+      if (prev?.gameId == widget.gameId) {
+        ref.read(activeGameProvider.notifier).clearLocal();
+      }
+    }
     context.go('/games');
     if (rematchLobbyId != null) {
       unawaited(
@@ -708,16 +781,31 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     ref.listen(pokerGameProvider(widget.gameId), (_, next) {
       final game = next.valueOrNull;
       if (game == null) return;
+      if (game.iAmEliminated && !_observeEntered && !game.isOver && !_isOffline) {
+        _observeEntered = true;
+        enterGameObservation(ref, widget.gameId, gameType: 'poker');
+        _maybeSettleGame(game);
+      }
       if (game.isOver && !_prevOver) {
         _prevOver = true;
+        _scheduleEndDialog();
         if (!_isOffline) {
           _clearSessionForFinishedGame();
-          _maybeSettleGame(game);
+          // Сеттл после паузы вместе с диалогом — чтобы сначала увидеть карты.
+          unawaited(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 2200));
+            if (!mounted) return;
+            _maybeSettleGame(game);
+          }());
         }
       } else if (!game.isOver) {
         _prevOver = false;
         _balanceGainPlayed = false;
         _lossChipRevealed = false;
+        if (!game.iAmEliminated) {
+          _endDialogReady = false;
+          _endDialogScheduled = false;
+        }
       }
     });
 
@@ -736,7 +824,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           centerTitle: true,
           actions: [
             if (gameAsync.valueOrNull != null &&
-                !gameAsync.valueOrNull!.isOver)
+                !gameAsync.valueOrNull!.isOver &&
+                !gameAsync.valueOrNull!.iAmEliminated)
               IconButton(
                 tooltip: context.l10n.gameSurrender,
                 icon: const Icon(Icons.flag_outlined),
@@ -790,14 +879,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     _syncDeal(game);
     _syncChipFx(game);
     _syncFoldFx(game);
-    if (game.isOver && !_balanceGainPlayed && !_isOffline) {
-      _maybeSettleGame(game);
+    if (game.isOver && !_endDialogScheduled && !_endDialogReady) {
+      _scheduleEndDialog();
     }
     final isOver = game.isOver;
+    final showEndDialog = isOver && _endDialogReady;
     final status = _statusText(game);
     final rewardBronze = _rewardChipBronze(game);
     final showReward =
-        isOver && game.stakeBronze > 0 && rewardBronze != 0;
+        showEndDialog && game.stakeBronze > 0 && rewardBronze != 0;
     final betweenHands = game.isHandOver && !isOver;
 
     const comboSlot = 30.0;
@@ -828,16 +918,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 narrow,
                 short: short,
                 veryShort: veryShort,
-                // Когда стол окончен — статус только в общем диалоге ниже.
-                status: isOver ? '' : status,
+                // Пока ждём итоговое окно — статус на столе, чтобы видеть карты.
+                status: showEndDialog ? '' : status,
                 showReward: false,
                 rewardBronze: rewardBronze,
                 betweenHands: betweenHands,
                 // Hero отдельно анимируется снизу — стол/борд фиксированы.
-                heroBottom: isOver ? 12.0 : heroLift,
+                heroBottom: showEndDialog ? 12.0 : heroLift,
               ),
             ),
-            if (isOver)
+            if (showEndDialog)
               Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black.withValues(alpha: 0.42),

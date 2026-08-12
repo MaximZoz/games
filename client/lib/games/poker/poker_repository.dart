@@ -178,6 +178,9 @@ class PokerGameView {
     this.isHandOver = false,
     this.isTableOver = false,
     this.canShowCards = false,
+    this.myPlace = 0,
+    this.iAmEliminated = false,
+    this.eliminatedOrder = const [],
     this.myHandRank,
     this.myHandCards = const [],
     this.highlightedCards = const [],
@@ -221,6 +224,11 @@ class PokerGameView {
   final bool isTableOver;
   /// Победитель фолд-вины может показать карты в паузе перед следующей раздачей.
   final bool canShowCards;
+  /// Итоговое место (1 = победитель). 0 — ещё не известно.
+  final int myPlace;
+  /// Выбыл (0 фишек), стол ещё идёт — режим наблюдателя.
+  final bool iAmEliminated;
+  final List<String> eliminatedOrder;
   final String? myHandRank;
   final List<PokerApiCard> myHandCards;
   final List<PokerApiCard> highlightedCards;
@@ -229,9 +237,14 @@ class PokerGameView {
   /// Свой ход по индексу актёра (кнопки смотрят на [legalActions] отдельно).
   /// Не требуем non-empty legalActions — иначе при рассинхроне оба видят «ход соперника».
   bool get isMyTurn =>
-      !isOver && !isHandOver && myIndex >= 0 && myIndex == actingIndex;
+      !isOver &&
+      !isHandOver &&
+      !iAmEliminated &&
+      myIndex >= 0 &&
+      myIndex == actingIndex;
 
-  bool get iWon => myIndex >= 0 && winners.contains(myIndex);
+  bool get iWon =>
+      myPlace == 1 || (myPlace <= 0 && myIndex >= 0 && winners.contains(myIndex));
 
   /// Ходы в текущей раздаче завершены (вскрытие/победа), но стол может идти.
   bool get handFinished => isHandOver || isOver;
@@ -328,6 +341,12 @@ class PokerGameView {
       isHandOver: json['is_hand_over'] == true,
       isTableOver: json['is_table_over'] == true,
       canShowCards: json['can_show_cards'] == true,
+      myPlace: (json['my_place'] as num?)?.toInt() ?? 0,
+      iAmEliminated: json['i_am_eliminated'] == true,
+      eliminatedOrder: (json['eliminated_order'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       myHandRank: (json['my_hand_rank']?.toString().trim().isEmpty ?? true)
           ? null
           : json['my_hand_rank'].toString(),

@@ -14,6 +14,7 @@ import (
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
+	"multigames/server/internal/poker"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -4382,6 +4383,20 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				}
 				if !inGame {
 					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if st, serr := poker.Decode(m["state"]); serr == nil {
+					idx := pokerPlayerIndex(st, userID.String())
+					// Без фишек, стол идёт — observation, не active.
+					if idx >= 0 && st.IsEliminated(idx) && !st.TableOver {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+						h.promotePokerEliminatedPlayers(ctx, gameID, m, st)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": pokerGameType,
+						}
+					}
 				} else {
 					active = map[string]any{
 						"type":      "game",

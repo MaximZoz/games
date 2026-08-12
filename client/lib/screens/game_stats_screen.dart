@@ -153,6 +153,10 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
       return l10n.gamesTicTacToe;
     case 'durak':
       return l10n.gamesDurak;
+    case 'battleship':
+      return l10n.gamesBattleship;
+    case 'poker':
+      return l10n.gamesPoker;
     default:
       return gameType;
   }
@@ -164,6 +168,10 @@ Widget _gameTypeIconWidget(String gameType, {double size = 22}) {
       return Icon(Icons.grid_3x3_rounded, color: Colors.white, size: size);
     case 'durak':
       return DurakGameIcon(size: size, color: Colors.white);
+    case 'battleship':
+      return Icon(Icons.sailing_rounded, color: Colors.white, size: size);
+    case 'poker':
+      return Icon(Icons.style_rounded, color: Colors.white, size: size);
     default:
       return Icon(Icons.sports_esports_rounded, color: Colors.white, size: size);
   }
