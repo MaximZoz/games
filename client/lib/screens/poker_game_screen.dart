@@ -779,19 +779,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final showReward = isOver &&
         game.stakeBronze > 0 &&
         (rewardBronze != 0);
-    // Таймер всем за столом — по истечении оба рефетчат (анти-залипание хода).
-    final showTimer = !isOver &&
-        !game.isHandOver &&
-        game.actingIndex >= 0 &&
-        game.turnTimeSec > 0 &&
-        game.turnDeadline > 0;
     // Пауза между раздачами (стол ещё идёт) — подсказка о следующей раздаче.
     final betweenHands = game.isHandOver && !isOver;
 
-    // Фиксированные слоты шапки/низа — стол не прыгает при таймере/кнопках.
+    // Фиксированные слоты шапки/низа — стол не прыгает при смене статуса/кнопок.
+    // Цифровой таймер хода в шапке не показываем (рамка хода на неймплейте остаётся).
     const streetH = 18.0;
     const statusH = 26.0;
-    const timerSlotH = 30.0;
+    const hintSlotH = 30.0;
     const comboSlot = 30.0;
     const actionSlot = 52.0;
     final bottomPad = narrow ? 8.0 : 12.0;
@@ -809,7 +804,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 0,
               ),
               child: SizedBox(
-                height: streetH + statusH + timerSlotH,
+                height: streetH + statusH + hintSlotH,
                 child: Column(
                   children: [
                     SizedBox(
@@ -848,36 +843,18 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                             ),
                     ),
                     SizedBox(
-                      height: timerSlotH,
+                      height: hintSlotH,
                       child: Center(
-                        child: showTimer
-                            ? GameTurnCountdown(
-                                key: ValueKey(
-                                  '${game.actingIndex}_${game.turnDeadline}',
+                        child: betweenHands
+                            ? Text(
+                                context.l10n.pokerNextHandSoon,
+                                style: const TextStyle(
+                                  color: AppColors.accentStart,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                turnDeadline: game.turnDeadline,
-                                isMyTurn: game.isMyTurn,
-                                turnTimeSec: game.turnTimeSec,
-                                onExpired: () {
-                                  if (!_isOffline) {
-                                    ref.invalidate(
-                                      pokerGameProvider(widget.gameId),
-                                    );
-                                  }
-                                },
-                                labelBuilder: (s) =>
-                                    context.l10n.gameSecondsLeft(s),
                               )
-                            : betweenHands
-                                ? Text(
-                                    context.l10n.pokerNextHandSoon,
-                                    style: const TextStyle(
-                                      color: AppColors.accentStart,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
+                            : const SizedBox.shrink(),
                       ),
                     ),
                   ],
