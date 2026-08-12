@@ -3,9 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: ставка и дилер у кромки стола
-- Покер: ставка и монеты не наезжают на карточку
+- Покер: результат и реванш в одном окне
 
 ## en
-- Poker: bet chips and dealer sit on the table rim, not behind the avatar
+- Poker: end result and rematch in one dialog ? no truncated status/reward
 

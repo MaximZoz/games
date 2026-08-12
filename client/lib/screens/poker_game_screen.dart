@@ -828,8 +828,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 narrow,
                 short: short,
                 veryShort: veryShort,
-                status: status,
-                showReward: showReward,
+                // Когда стол окончен — статус только в общем диалоге ниже.
+                status: isOver ? '' : status,
+                showReward: false,
                 rewardBronze: rewardBronze,
                 betweenHands: betweenHands,
                 // Hero отдельно анимируется снизу — стол/борд фиксированы.
@@ -859,7 +860,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                             narrow ? 16 : 20,
                             16,
                           ),
-                          child: _buildEndSection(game),
+                          // Статус + награда + реванш — одно окно, всё вмещается.
+                          child: _buildEndDialog(
+                            game,
+                            status: status,
+                            showReward: showReward,
+                            rewardBronze: rewardBronze,
+                            narrow: narrow,
+                          ),
                         ),
                       ),
                     ),
@@ -981,34 +989,59 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _buildEndSection(PokerGameView game) {
-    if (_isOffline) {
-      return FilledButton.icon(
-        onPressed: _isRematching ? null : () => unawaited(_rematch()),
-        icon: const Icon(Icons.replay_rounded, size: 18),
-        label: Text(context.l10n.offlinePlayAgain),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 44),
-        ),
-      );
-    }
-    return GameRematchSection(
-      rematchLobbyId: _rematchLobbyId,
-      rematchDeclined: _rematchDeclined,
-      iDeclinedRematch: _iDeclinedRematch,
-      isRematching: _isRematching,
-      isAcceptingRematch: _isAcceptingRematch,
-      isFindingGame: _isFindingGame,
-      peerIds: _peerIds(game),
-      invites: ref.watch(gameInvitesProvider),
-      onRematch: () => unawaited(_rematch()),
-      onAccept: (id) => unawaited(_acceptRematch(id)),
-      onDecline: (id) => unawaited(_declineRematch(id)),
-      onCancelWait: () => unawaited(_cancelRematchWait()),
-      onFindGame: () => unawaited(_findGame()),
-      compact: true,
+  /// Одно окно конца стола: результат, награда и кнопки реванша.
+  Widget _buildEndDialog(
+    PokerGameView game, {
+    required String status,
+    required bool showReward,
+    required int rewardBronze,
+    required bool narrow,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (status.isNotEmpty) ...[
+          GameStatusWithReward(
+            statusText: status,
+            showReward: showReward,
+            rewardBronze: rewardBronze,
+            rewardKey: _winRewardKey,
+            fontSize: narrow ? 15 : 16,
+            maxLines: 3,
+            wrap: true,
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (_isOffline)
+          FilledButton.icon(
+            onPressed: _isRematching ? null : () => unawaited(_rematch()),
+            icon: const Icon(Icons.replay_rounded, size: 18),
+            label: Text(context.l10n.offlinePlayAgain),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 44),
+            ),
+          )
+        else
+          GameRematchSection(
+            rematchLobbyId: _rematchLobbyId,
+            rematchDeclined: _rematchDeclined,
+            iDeclinedRematch: _iDeclinedRematch,
+            isRematching: _isRematching,
+            isAcceptingRematch: _isAcceptingRematch,
+            isFindingGame: _isFindingGame,
+            peerIds: _peerIds(game),
+            invites: ref.watch(gameInvitesProvider),
+            onRematch: () => unawaited(_rematch()),
+            onAccept: (id) => unawaited(_acceptRematch(id)),
+            onDecline: (id) => unawaited(_declineRematch(id)),
+            onCancelWait: () => unawaited(_cancelRematchWait()),
+            onFindGame: () => unawaited(_findGame()),
+            compact: true,
+          ),
+      ],
     );
   }
 
