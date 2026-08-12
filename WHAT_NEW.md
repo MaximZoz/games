@@ -6,5 +6,8 @@
 - Покер: ставка и дилер рядом с игроком
 
 ## en
-- Poker: bet and dealer chip back near the player (not at screen edge)
+- Покер: результат и реванш в одном окне
+
+## en
+- Poker: end result and rematch in one dialog ? no truncated status/reward
 
