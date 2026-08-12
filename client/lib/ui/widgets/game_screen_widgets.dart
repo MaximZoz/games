@@ -1544,9 +1544,10 @@ class GameStatusWithReward extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
-          fontSize: fontSize,
+          fontSize: fontSize ?? 16,
+          height: 1.1,
         );
     if (!showReward) {
       return Text(
@@ -1555,18 +1556,22 @@ class GameStatusWithReward extends StatelessWidget {
         style: style,
       );
     }
+    // Без Flexible+жёсткой высоты снаружи: иначе «−2» и монета обрезаются.
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Flexible(
           child: Text(
             statusText,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: style,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         GameRewardChip(
           key: rewardKey,
           rewardBronze: rewardBronze,
@@ -1593,7 +1598,7 @@ class GameRewardChip extends StatelessWidget {
         ? '+${formatStakeAmount(abs)}'
         : '−${formatStakeAmount(abs)}';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
@@ -1603,19 +1608,23 @@ class GameRewardChip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
+              height: 1.0,
+              leadingDistribution: TextLeadingDistribution.even,
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
+          // Чуть меньше 20 — стабильно влезает в узкий статус-слот.
           CoinIcon(
             coinType: stakeCoinType(abs),
-            size: 20,
+            size: 18,
             showBorder: true,
           ),
         ],
