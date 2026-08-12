@@ -2234,8 +2234,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
     const cardsBottom = namePlateH + avatarPlateGap;
     final peekOut = heroCards.width * 0.34;
-    // Сразу справа от неймплейта (не на рамку): plateW/2 — край, +gap.
-    final betLeft = plateW / 2 + (narrow ? 10.0 : 8.0);
+    // Как у соперника: снаружи неймплейта (left от края Stack = plateW + gap).
+    final betGap = narrow ? 8.0 : 6.0;
     // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
     // Live-комбо («Пара») — в нижней панели, не дублируем под аватаром.
     final plateOnly = KeyedSubtree(
@@ -2324,10 +2324,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ),
         // Аватар поверх веера — карты выглядывают из-за него, профиль не двигается.
         plateOnly,
-        // Ставка/D рядом с профилем (правее веера), не у края стола.
+        // Ставка/D сбоку от неймплейта (как у соперника), не внутри чёрного блока.
         if (showBet || isDealer)
           Positioned(
-            left: betLeft,
+            left: plateW + betGap,
             bottom: 2,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -2341,10 +2341,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ],
             ),
           ),
-        // Комбо победителя — сбоку снизу, не поверх неймплейта.
+        // Комбо победителя — с другой стороны от ставки.
         if (myWinCombo != null)
           Positioned(
-            right: plateW + 6,
+            right: plateW + betGap,
             bottom: 0,
             child: _comboLabel(myWinCombo, highlight: true),
           ),
