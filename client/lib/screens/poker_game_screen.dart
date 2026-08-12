@@ -2251,34 +2251,34 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     const actionSlot = 52.0;
     final bottomPad = narrow ? 8.0 : 12.0;
 
+    final showActionRow = showActions || showCardsBtn;
+    // Без кнопок не резервируем пустой ряд — hero остаётся у нижнего края.
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 2, 12, bottomPad),
-      child: SizedBox(
-        height: comboSlot + 6 + actionSlot,
-        child: Column(
-          children: [
-            SizedBox(
-              height: comboSlot,
-              child: comboLabel != null
-                  ? Center(
-                      child: _comboLabel(
-                        comboLabel,
-                        highlight: comboAccent,
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: comboSlot,
+            child: comboLabel != null
+                ? Center(
+                    child: _comboLabel(
+                      comboLabel,
+                      highlight: comboAccent,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (showActionRow) ...[
             const SizedBox(height: 6),
             SizedBox(
               height: actionSlot,
               child: showActions
                   ? _buildActionBar(game)
-                  : showCardsBtn
-                      ? Center(child: _buildShowCardsButton())
-                      : const SizedBox.shrink(),
+                  : Center(child: _buildShowCardsButton()),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
