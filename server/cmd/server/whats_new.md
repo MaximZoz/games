@@ -3,9 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: ставка и дилер у кромки стола
-- Покер: ставка и монеты не наезжают на карточку
+- Покер: ставка и дилер рядом с игроком
 
 ## en
-- Poker: bet chips and dealer sit on the table rim, not behind the avatar
+- Poker: bet and dealer chip back near the player (not at screen edge)
 
