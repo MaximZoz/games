@@ -78,6 +78,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   final List<AnimationController> _chipControllers = [];
   /// Места, для которых уже запустили optimistic-полёт фишек (колл/рейз).
   final Set<int> _optimisticChipSeats = {};
+  /// Фолд со ставкой: уже отправили фишки в банк (не дублировать).
+  final Set<int> _foldChipFlownSeats = {};
 
   bool get _isOffline =>
       OfflinePokerRegistry.instance.isOffline(widget.gameId);
@@ -375,20 +377,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     if (_busy) return;
     // Сразу «подкидываем» монеты в банк — не ждём ответ (колл часто
     // закрывает улицу и bet в снапшоте уже 0).
-    if (type == PokerActionType.call ||
-        type == PokerActionType.raise ||
-        type == PokerActionType.allIn) {
-      final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
-          (_isOffline
-              ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
-              : null);
-      final me = game?.me;
-      if (me != null) {
-        _optimisticChipSeats.add(me.seat);
-        unawaited(
-          _flyChips(fromKey: _seatKey(me.seat), toKey: _tableChipsKey),
-        );
-      }
+    final gameSnap = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
+        (_isOffline
+            ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
+            : null);
+    final meSnap = gameSnap?.me;
+    if (meSnap != null &&
+        (type == PokerActionType.call ||
+            type == PokerActionType.raise ||
+            type == PokerActionType.allIn)) {
+      _optimisticChipSeats.add(meSnap.seat);
+      unawaited(
+        _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
+      );
+    } else if (meSnap != null &&
+        type == PokerActionType.fold &&
+        meSnap.bet > 0) {
+      // Фолд со ставкой на улице — фишки уходят в банк.
+      _foldChipFlownSeats.add(meSnap.seat);
+      unawaited(
+        _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
+      );
     }
     setState(() => _busy = true);
     try {
@@ -1537,12 +1546,30 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   /// вырос — поэтому смотрим и рост ставки, и рост банка.
   void _syncChipFx(PokerGameView game) {
     if (game.handNumber != _prevHandNumber) {
+      final hadPrev = _prevHandNumber >= 0;
       _prevHandNumber = game.handNumber;
       _prevHandOver = false;
       _prevPot = game.pot;
+      _foldChipFlownSeats.clear();
       _prevBets
         ..clear()
         ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+      // Новая раздача: анимация блайндов (фишки → банк).
+      if (hadPrev && !game.isHandOver) {
+        final blindSeats = <int>{
+          for (final p in game.players)
+            if (p.bet > 0) p.seat,
+        };
+        if (blindSeats.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            for (final seat in blindSeats.take(3)) {
+              unawaited(
+                _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
+              );
+            }
+          });
+        }
+      }
       return;
     }
     if (!game.isHandOver) {
@@ -1841,8 +1868,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final isDealer = game.dealerIndex >= 0 &&
         game.dealerIndex < game.players.length &&
         game.players[game.dealerIndex].seat == p.seat;
-    // Рядом с местом, с небольшим зазором — не на аватар и не у края экрана.
-    const betGap = 10.0;
+    // Зазор от неймплейта: на телефоне чуть больше, чтобы ставка не
+    // наезжала на рамку профиля.
+    final betGap = narrow ? 16.0 : 12.0;
 
     return KeyedSubtree(
       key: _seatKey(p.seat),
@@ -1983,8 +2011,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       final was = _prevFolded[p.seat] ?? false;
       if (p.folded && !was) {
         final seat = p.seat;
+        final hadBet = (_prevBets[seat] ?? 0) > 0;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           unawaited(_throwFoldCards(seat));
+          // Соперник (или мы без локального полёта) сбросил со ставкой.
+          if (hadBet && !_foldChipFlownSeats.contains(seat)) {
+            _foldChipFlownSeats.add(seat);
+            unawaited(
+              _flyChips(fromKey: _seatKey(seat), toKey: _tableChipsKey),
+            );
+          }
         });
       }
     }
@@ -2198,8 +2234,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
     const cardsBottom = namePlateH + avatarPlateGap;
     final peekOut = heroCards.width * 0.34;
-    // Чуть правее веера карт — рядом с профилем, не у края экрана.
-    final betLeft = plateW / 2 + heroCards.width * 0.62;
+    // Сразу справа от неймплейта (не на рамку): plateW/2 — край, +gap.
+    final betLeft = plateW / 2 + (narrow ? 10.0 : 8.0);
     // Только этот столбец задаёт размер Stack → Align не прыгает при появлении карт.
     // Live-комбо («Пара») — в нижней панели, не дублируем под аватаром.
     final plateOnly = KeyedSubtree(

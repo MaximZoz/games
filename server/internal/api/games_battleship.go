@@ -893,6 +893,7 @@ func (h *GamesHandler) beginBattleshipBattle(ctx context.Context, gameID string,
 	h.Rdb.HSet(ctx, key, fields...)
 	m["phase"] = battleshipPhaseBattle
 	m["turn"] = turn
+	h.notifyYourTurnUser(gameID, turn, battleshipGameType)
 }
 
 type battleshipShootBody struct {
@@ -1029,6 +1030,10 @@ func (h *GamesHandler) applyBattleshipShot(
 	}
 	h.Rdb.HSet(ctx, key, fields...)
 	h.broadcastBattleshipState(ctx, gameID, m)
+	// Пуш только когда ход перешёл другому (промах).
+	if !hit {
+		h.notifyYourTurnUser(gameID, m["turn"], battleshipGameType)
+	}
 	return nil
 }
 

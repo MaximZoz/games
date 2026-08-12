@@ -42,11 +42,14 @@ String? _tagFromPath(String path) {
   if (p == '/friends' || p.startsWith('/friends?') || p.startsWith('/friends/')) {
     return 'friend_request';
   }
-  final lobby =
-      RegExp(r'^/games/tictactoe/lobby/([^/?#]+)').firstMatch(p);
-  if (lobby != null) return 'game_invite_${lobby.group(1)}';
-  final game = RegExp(r'^/games/tictactoe/game/([^/?#]+)').firstMatch(p);
-  if (game != null) return 'game_turn_${game.group(1)}';
+  final lobby = RegExp(
+    r'^/games/(tictactoe|durak|battleship|poker)/lobby/([^/?#]+)',
+  ).firstMatch(p);
+  if (lobby != null) return 'game_invite_${lobby.group(2)}';
+  final game = RegExp(
+    r'^/games/(tictactoe|durak|battleship|poker)/game/([^/?#]+)',
+  ).firstMatch(p);
+  if (game != null) return 'game_turn_${game.group(2)}';
   if (p == '/coins/login' || p.startsWith('/coins/login?')) {
     return 'daily_reward';
   }
@@ -133,7 +136,9 @@ int _pathSpecificity(String path) {
   if (p.isEmpty || p == '/') return 0;
   if (p == '/chats' || p == '/games' || p == '/friends') return 1;
   if (RegExp(r'^/chats/[^/?#]+').hasMatch(p)) return 3;
-  if (RegExp(r'^/games/tictactoe/(game|lobby)/[^/?#]+').hasMatch(p)) {
+  if (RegExp(
+    r'^/games/(tictactoe|durak|battleship|poker)/(game|lobby)/[^/?#]+',
+  ).hasMatch(p)) {
     return 3;
   }
   return 2;

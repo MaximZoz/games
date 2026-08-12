@@ -3773,25 +3773,38 @@ func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID s
 	h.publishGameStartedTyped(userIDs, gameID, lobbyID, "tictactoe")
 }
 
-// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
+// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (крестики: mark → user).
 // Показ на клиенте подавляется SW, если пользователь уже смотрит этот матч.
 func (h *GamesHandler) notifyYourTurn(gameID, nextTurn string, m map[string]string) {
+	nextID := markOwnerUserID(m, nextTurn)
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
+	h.notifyYourTurnUser(gameID, nextID, gameType)
+}
+
+// notifyYourTurnUser — общий пуш «ваш ход» для любой игры (ttt/durak/poker/battleship).
+func (h *GamesHandler) notifyYourTurnUser(gameID, userID, gameType string) {
 	if h.Push == nil || strings.TrimSpace(gameID) == "" {
 		return
 	}
-	nextID := markOwnerUserID(m, nextTurn)
-	if nextID == "" || isBot(nextID) {
+	if userID == "" || isBot(userID) {
 		return
 	}
-	uid, err := uuid.Parse(nextID)
+	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return
+	}
+	gt := strings.TrimSpace(gameType)
+	if gt == "" {
+		gt = "tictactoe"
 	}
 	lang := i18n.LangRU
 	h.Push.NotifyUsers([]uuid.UUID{uid}, store.WebPushCategoryGames, PushPayload{
 		Title: i18n.Content(lang, "push.your_turn_title"),
 		Body:  i18n.Content(lang, "push.your_turn_body"),
-		URL:   "/games/tictactoe/game/" + gameID,
+		URL:   "/games/" + gt + "/game/" + gameID,
 		Tag:   "game_turn_" + gameID,
 		Kind:  "game_turn",
 	})
@@ -4344,11 +4357,13 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 						h.promoteDurakFinishedPlayers(ctx, gameID, m, st)
 					} else {
+						actor := durakTurnActorIdx(st)
 						active = map[string]any{
-							"type":      "game",
-							"game_id":   gameID,
-							"lobby_id":  m["lobby_id"],
-							"game_type": durakGameType,
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  durakGameType,
+							"is_my_turn": idx >= 0 && actor == idx,
 						}
 					}
 				} else {
@@ -4390,11 +4405,18 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 						h.promotePokerEliminatedPlayers(ctx, gameID, m, st)
 					} else {
+						myTurn := idx >= 0 &&
+							!st.TableOver &&
+							!st.HandOver &&
+							st.Status == poker.StatusActive &&
+							idx == st.ActingIndex &&
+							!st.IsEliminated(idx)
 						active = map[string]any{
-							"type":      "game",
-							"game_id":   gameID,
-							"lobby_id":  m["lobby_id"],
-							"game_type": pokerGameType,
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  pokerGameType,
+							"is_my_turn": myTurn,
 						}
 					}
 				} else {
