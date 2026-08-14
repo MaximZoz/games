@@ -1190,11 +1190,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required double heroBottom,
   }) {
     final me = game.myIndex;
-    final opponents = <PokerPlayerView>[];
-    for (var i = 0; i < game.players.length; i++) {
-      if (i == me) continue;
-      opponents.add(game.players[i]);
-    }
+    final opponents = _opponentsInDisplayOrder(game);
     final oppAnchors = _seatAnchors(opponents.length);
 
     return LayoutBuilder(
@@ -1315,7 +1311,22 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return null;
   }
 
-  /// Якоря соперников — у самой кромки фетра (как в референсе).
+  /// Соперники по кругу от героя (по часовой): слева снизу → верх → справа снизу.
+  /// Так якоря 6-max совпадают с раскладкой «Оппонент 1…5».
+  List<PokerPlayerView> _opponentsInDisplayOrder(PokerGameView game) {
+    final me = game.myIndex;
+    final n = game.players.length;
+    if (n == 0) return const [];
+    if (me < 0 || me >= n) return List.of(game.players);
+    final out = <PokerPlayerView>[];
+    for (var k = 1; k < n; k++) {
+      out.add(game.players[(me + k) % n]);
+    }
+    return out;
+  }
+
+  /// Якоря соперников на кромке фетра.
+  /// 6-max: два слева и два справа (низ + верх), центр свободен под борд.
   List<Alignment> _seatAnchors(int n) {
     switch (n) {
       case 0:
@@ -1325,25 +1336,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       case 2:
         return const [Alignment(-0.92, -0.82), Alignment(0.92, -0.82)];
       case 3:
+        // 4 за столом: слева/справа в верхней половине, не у борда.
         return const [
-          Alignment(-1.0, -0.05),
+          Alignment(-1.0, -0.48),
           Alignment(0, -1.0),
-          Alignment(1.0, -0.05),
+          Alignment(1.0, -0.48),
         ];
       case 4:
+        // 5 за столом: низ-бок + верх-бок с каждой стороны.
         return const [
-          Alignment(-1.0, 0.0),
-          Alignment(-0.55, -1.0),
-          Alignment(0.55, -1.0),
-          Alignment(1.0, 0.0),
+          Alignment(-0.95, 0.48),
+          Alignment(-0.88, -0.82),
+          Alignment(0.88, -0.82),
+          Alignment(0.95, 0.48),
         ];
       default:
+        // 6 за столом: ~7:30, 10:30, 12, 1:30, 4:30 — середина стола пустая.
         return const [
-          Alignment(-1.0, 0.08),
-          Alignment(-0.72, -0.95),
+          Alignment(-0.95, 0.52),
+          Alignment(-0.88, -0.78),
           Alignment(0, -1.0),
-          Alignment(0.72, -0.95),
-          Alignment(1.0, 0.08),
+          Alignment(0.88, -0.78),
+          Alignment(0.95, 0.52),
         ];
     }
   }
