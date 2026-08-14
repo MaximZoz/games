@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: боковые места при 4 и 6 игроках выше — не наезжают на раздачу
+- Покер: раскладка 6 мест как в референсе — боковые сверху и снизу, борд свободен
 
 ## en
-- Poker: side seats higher at 4/6 players — clear of the board
+- Poker: 6-max seats match reference — upper/lower sides, board clear
