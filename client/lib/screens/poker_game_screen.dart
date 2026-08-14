@@ -216,9 +216,40 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return p.isBot ? context.l10n.gameBot : context.l10n.gameOpponent;
   }
 
-  String _statusText(PokerGameView game) {
+  /// «A и B» / «A, B и C».
+  String _joinWinnerNames(List<String> names) {
+    final andWord = context.l10n.pokerListAnd;
+    if (names.isEmpty) return '';
+    if (names.length == 1) return names.first;
+    if (names.length == 2) return '${names[0]} $andWord ${names[1]}';
+    final head = names.sublist(0, names.length - 1).join(', ');
+    return '$head $andWord ${names.last}';
+  }
+
+  /// Статус победителей раздачи: один / несколько / вы среди них.
+  String _winnersStatus(PokerGameView game) {
     final l10n = context.l10n;
     final me = game.myIndex;
+    final names = <String>[];
+    var includesMe = false;
+    for (final i in game.winners) {
+      if (i < 0 || i >= game.players.length) continue;
+      if (i == me) {
+        includesMe = true;
+        continue;
+      }
+      names.add(_playerName(game.players[i]));
+    }
+    if (!includesMe && names.isEmpty) return l10n.pokerHandOver;
+    if (includesMe && names.isEmpty) return l10n.pokerYouWonHand;
+    final joined = _joinWinnerNames(names);
+    if (includesMe) return l10n.pokerYouWonHandWith(joined);
+    if (names.length == 1) return l10n.pokerWinner(names.first);
+    return l10n.pokerWinners(joined);
+  }
+
+  String _statusText(PokerGameView game) {
+    final l10n = context.l10n;
     final place = game.myPlace;
     final iWon = game.iWon;
     // Весь стол окончен — как в дураке / крестиках.
@@ -232,12 +263,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       if (place > 1) return l10n.gameYouPlaced(place);
       if (game.stakeBronze > 0) return l10n.gameYouLost;
-      if (game.winners.isNotEmpty) {
-        final w = game.winners.first;
-        if (w >= 0 && w < game.players.length) {
-          return l10n.pokerWinner(_playerName(game.players[w]));
-        }
-      }
+      if (game.winners.isNotEmpty) return _winnersStatus(game);
       return l10n.pokerHandOver;
     }
     if (game.iAmEliminated) {
@@ -246,14 +272,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     }
     // Раздача завершена, стол продолжается.
     if (game.isHandOver) {
-      final handWon = me >= 0 && game.winners.contains(me);
-      if (handWon) return l10n.pokerYouWonHand;
-      if (game.winners.isNotEmpty) {
-        final w = game.winners.first;
-        if (w >= 0 && w < game.players.length) {
-          return l10n.pokerWinner(_playerName(game.players[w]));
-        }
-      }
+      if (game.winners.isNotEmpty) return _winnersStatus(game);
       return l10n.pokerHandOver;
     }
     // Во время улицы не показываем «Ваш ход» / «Ходит X» — ход виден по

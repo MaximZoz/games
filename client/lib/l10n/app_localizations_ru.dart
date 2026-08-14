@@ -649,8 +649,22 @@ class AppLocalizationsRu extends AppLocalizations {
     return 'Выиграл $name';
   }
 
+
   @override
   String get pokerYouWonHand => 'Вы забрали банк!';
+
+  @override
+  String pokerWinners(String names) {
+    return 'Выиграли $names';
+  }
+
+  @override
+  String pokerYouWonHandWith(String names) {
+    return 'Вы и $names забрали банк!';
+  }
+
+  @override
+  String get pokerListAnd => 'и';
 
   @override
   String get pokerHandOver => 'Раздача окончена';

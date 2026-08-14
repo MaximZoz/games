@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Друзья: галочка «Принять» во входящей заявке зелёная
+- Покер: при нескольких победителях пишем «Выиграли A и B»
 
 ## en
-- Friends: accept checkmark on incoming requests is green
+- Poker: multi-winner pots show “A and B win”
