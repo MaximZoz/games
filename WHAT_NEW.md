@@ -3,3 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Убрать лишнюю проверку null в AppBar покера
+- WHAT_NEW: английский текст для профиля и чата в покере
+- Покер: профиль по тапу на игрока и иконка группового чата у крестика
+
+## en
+- Poker: tap player for profile; group chat icon next to close
+
