@@ -2277,29 +2277,30 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final isDealer = game.dealerIndex == game.myIndex;
     final showBet = me.bet > 0 && !me.folded;
-    // Веер чуть выше неймплейта, без сильного выноса вверх (не наезжает на борд).
-    const cardsBottom = namePlateH + avatarPlateGap;
+    // Ставка/D — НАД неймплейтом (к центру стола), не сбоку на строке стека:
+    // иначе мини-стопка визуально «вместо баланса» в чёрном блоке.
+    const betRowH = 20.0;
+    final betBlockH = (showBet || isDealer) ? betRowH + 4.0 : 0.0;
+    // Веер чуть выше неймплейта (+ блок ставки), без выноса на борд.
+    final cardsBottom = namePlateH + avatarPlateGap + betBlockH;
     final peekOut = heroCards.width * 0.34;
-    // Как у соперника (HU): ставка слева от неймплейта, снаружи чёрного блока.
-    final betGap = narrow ? 16.0 : 12.0;
-    final betColumn = (showBet || isDealer)
-        ? Padding(
-            padding: EdgeInsets.only(right: betGap, bottom: 2),
-            child: Column(
+
+    final betAbove = (showBet || isDealer)
+        ? SizedBox(
+            height: betRowH,
+            child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (showBet) _tableBetLabel(me.bet),
-                if (isDealer) ...[
-                  if (showBet) const SizedBox(height: 4),
-                  _dealerBadge(size: narrow ? 22 : 26),
-                ],
+                if (showBet && isDealer) const SizedBox(width: 8),
+                if (isDealer) _dealerBadge(size: narrow ? 20 : 24),
               ],
             ),
           )
         : null;
 
-    // Row: ставка — соседний виджет, не child чёрного Container.
+    // Неймплейт: только имя + стек (число). Ставка снаружи сверху.
     final plateRow = KeyedSubtree(
       key: _seatKey(me.seat),
       child: Column(
@@ -2317,12 +2318,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               compact: true,
             ),
           ),
+          if (betAbove != null) ...[
+            const SizedBox(height: 4),
+            betAbove,
+          ],
           const SizedBox(height: avatarPlateGap),
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (betColumn != null) betColumn,
               RepaintBoundary(
                 child: TurnTimerBorder(
                   key: ValueKey('poker-hero-${game.turnDeadline}'),
