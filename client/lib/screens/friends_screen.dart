@@ -1088,6 +1088,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required String tooltip,
     required VoidCallback? onPressed,
     bool danger = false,
+    bool success = false,
     bool loading = false,
   }) {
     return FramedIconButton(
@@ -1099,7 +1100,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       iconSize: 18,
       borderRadius: 10,
       borderWidth: 1.5,
-      iconColor: danger ? Colors.red.shade700 : AppColors.textPrimary,
+      iconColor: danger
+          ? Colors.red.shade700
+          : success
+              ? const Color(0xFF16A34A)
+              : AppColors.textPrimary,
     );
   }
 
@@ -1110,12 +1115,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required Future<void> Function(FriendsRepository repo) call,
     required String success,
     bool danger = false,
+    bool successStyle = false,
   }) {
     final busy = _busy(key);
     return _buildCompactIconButton(
       icon: icon,
       tooltip: tooltip,
       danger: danger,
+      success: successStyle,
       loading: busy,
       onPressed: busy
           ? null
