@@ -14,6 +14,7 @@ import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -114,6 +115,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _lossChipRevealed = false;
   /// Mid-game выход «в ноль»: observation + салют/монеты — один раз.
   bool _midFinishedHandled = false;
+  /// Повторный вход из «Наблюдение» — без анимации/refresh монет.
+  bool _openedAsObserver = false;
+  bool _openModeCaptured = false;
   /// Салют уже запущен — не размонтировать при чужих ходах (стол снова не пуст).
   bool _confettiArmed = false;
   /// Зафиксированный итог mid-finish: не менять текст при сдаче остальных.
@@ -175,7 +179,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _captureOpenMode();
     _initializeProviderBindings();
+  }
+
+  void _captureOpenMode() {
+    if (_openModeCaptured) return;
+    _openModeCaptured = true;
+    _openedAsObserver = openedAsGameObserver(ref, widget.gameId) ||
+        isGameBalanceSettled(ref, widget.gameId);
+    if (_openedAsObserver) {
+      _balanceGainPlayed = true;
+      _midFinishedHandled = true;
+    }
   }
 
   @override
@@ -187,6 +203,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _balanceGainPlayed = false;
       _lossChipRevealed = false;
       _midFinishedHandled = false;
+      _openedAsObserver = false;
+      _openModeCaptured = false;
       _confettiArmed = false;
       _lockedMidDraw = null;
       _lockedMidPlace = null;
@@ -214,6 +232,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _isAcceptingRematch = false;
         _isFindingGame = false;
       });
+      _captureOpenMode();
     }
   }
 
@@ -3709,11 +3728,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     required int displayRewardBronze,
     int lostBronze = 0,
   }) async {
+    // Повторный вход в наблюдение — не трогаем баланс и не крутим ±.
+    if (_openedAsObserver || isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      return;
+    }
     if (_balanceGainPlayed) {
-      unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
     _balanceGainPlayed = true;
+    markGameBalanceSettled(ref, widget.gameId);
     if (lostBronze > 0 && creditBronze <= 0) {
       await playGameSettledLoss(
         ref: ref,
@@ -3764,6 +3788,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           view.myPlace == 1) {
         _confettiArmed = true;
       }
+      _prevGameStatus = view.status;
+      return;
+    }
+    // Повторный вход из «Наблюдение»: UI-lock без ±монет.
+    if (_openedAsObserver || isGameBalanceSettled(ref, widget.gameId)) {
+      if (!view.isOver &&
+          view.iAmFinished &&
+          !view.iAmEliminated &&
+          view.table.isEmpty &&
+          !view.isTableReveal) {
+        _lockMidFinishOutcome(view);
+      }
+      _balanceGainPlayed = true;
       _prevGameStatus = view.status;
       return;
     }
