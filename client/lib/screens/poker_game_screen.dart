@@ -76,11 +76,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   int _prevHandNumber = -1;
   bool _prevHandOver = false;
   final Map<int, int> _prevBets = {};
+  final Map<int, int> _prevChips = {};
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
-  /// Колл: уже запустили полёт фишек в банк (не дублировать при сборе улицы).
-  final Set<int> _callChipFlownSeats = {};
   /// Фолд со ставкой: уже отправили фишки в банк (не дублировать).
   final Set<int> _foldChipFlownSeats = {};
 
