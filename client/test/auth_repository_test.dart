@@ -40,6 +40,20 @@ void main() {
     });
   });
 
+  group('AuthRepository.oauthStartUrl', () {
+    test('google start URL goes to OAuth redirect, not GIS overlay', () {
+      final repo = AuthRepository();
+      final url = repo.oauthStartUrl(
+        provider: 'google',
+        poll: true,
+        navigate: true,
+      );
+      expect(url, contains('/api/auth/oauth/google/start'));
+      expect(url, contains('mode=poll'));
+      expect(url, contains('navigate=1'));
+    });
+  });
+
   group('AuthRepository (storage)', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
