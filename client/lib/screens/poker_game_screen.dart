@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
@@ -853,6 +854,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
     });
 
+    final game = gameAsync.valueOrNull;
+    final groupChatId = (game?.chatId ?? '').trim();
+    final showGroupChat =
+        !_isOffline && game != null && groupChatId.isNotEmpty && !game.isOver;
+    final groupUnread = !showGroupChat
+        ? 0
+        : ref.watch(chatsListProvider.select((async) {
+            final list = async.valueOrNull;
+            if (list == null) return 0;
+            for (final c in list) {
+              if (c.chatID == groupChatId) return c.unreadCount;
+            }
+            return 0;
+          }));
+
     return SwipeBackScope(
       enabled: true,
       onBack: _onClosePressed,
@@ -860,9 +876,23 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.close_rounded),
-            onPressed: _onClosePressed,
+          leadingWidth: showGroupChat ? 96 : 48,
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close_rounded),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: _onClosePressed,
+              ),
+              if (showGroupChat && game != null)
+                GameIconWithBadge(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: context.l10n.chatGroupTooltip,
+                  badge: groupUnread,
+                  onPressed: () => _openGroupChat(game),
+                ),
+            ],
           ),
           title: Text(context.l10n.gamesPoker),
           centerTitle: true,
@@ -1052,6 +1082,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       setState(() => _shownCommunity++);
     }
     _dealing = false;
+  }
+
+  void _openGroupChat(PokerGameView game) {
+    final chatId = (game.chatId ?? '').trim();
+    if (chatId.isEmpty) return;
+    final uri = Uri(
+      path: '/chats/$chatId',
+      queryParameters: {
+        'from': 'games',
+        'game': '/games/poker/game/${widget.gameId}',
+      },
+    );
+    context.push(uri.toString());
   }
 
   Future<void> _showPlayerCard(PokerPlayerView p) async {
@@ -1817,7 +1860,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
-    final headsUp = game.players.length == 2;
     final dim = p.folded;
 
     // Чужие hole_cards приходят только на showdown или после «Показать карты».
@@ -1902,7 +1944,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           duration: const Duration(milliseconds: 220),
           opacity: dim ? 0.35 : 1,
           child: GestureDetector(
-            onTap: headsUp ? () => unawaited(_showPlayerCard(p)) : null,
+            onTap: () => unawaited(_showPlayerCard(p)),
             behavior: HitTestBehavior.opaque,
             child: GamePlayerAvatar(
               displayName: _playerName(p),
@@ -1916,15 +1958,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         ),
         const SizedBox(height: 4),
         // Рамка только на ход — idle без обводки, padding стабильный.
-        TurnTimerBorder(
-          key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
-          active: acting,
-          turnDeadline: game.turnDeadline,
-          turnTimeSec: game.turnTimeSec,
-          borderWidth: borderW,
-          radius: 10,
-          showIdleBorder: false,
-          child: namePlate,
+        GestureDetector(
+          onTap: () => unawaited(_showPlayerCard(p)),
+          behavior: HitTestBehavior.opaque,
+          child: TurnTimerBorder(
+            key: ValueKey('poker-seat-${p.seat}-${game.turnDeadline}'),
+            active: acting,
+            turnDeadline: game.turnDeadline,
+            turnTimeSec: game.turnTimeSec,
+            borderWidth: borderW,
+            radius: 10,
+            showIdleBorder: false,
+            child: namePlate,
+          ),
         ),
       ],
     );
@@ -2331,13 +2377,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           AnimatedOpacity(
             duration: const Duration(milliseconds: 220),
             opacity: dim ? 0.35 : 1,
-            child: GamePlayerAvatar(
-              displayName: _playerName(me),
-              avatarKind: me.avatarKind,
-              avatarValue: me.avatarValue,
-              frameCode: me.frameCode,
-              frameColor: me.frameColor,
-              compact: true,
+            child: GestureDetector(
+              onTap: () => unawaited(_showPlayerCard(me)),
+              behavior: HitTestBehavior.opaque,
+              child: GamePlayerAvatar(
+                displayName: _playerName(me),
+                avatarKind: me.avatarKind,
+                avatarValue: me.avatarValue,
+                frameCode: me.frameCode,
+                frameColor: me.frameColor,
+                compact: true,
+              ),
             ),
           ),
           if (betAbove != null) ...[
@@ -2349,16 +2399,20 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              RepaintBoundary(
-                child: TurnTimerBorder(
-                  key: ValueKey('poker-hero-${game.turnDeadline}'),
-                  active: acting,
-                  turnDeadline: game.turnDeadline,
-                  turnTimeSec: game.turnTimeSec,
-                  borderWidth: borderW,
-                  radius: 10,
-                  showIdleBorder: false,
-                  child: namePlate,
+              GestureDetector(
+                onTap: () => unawaited(_showPlayerCard(me)),
+                behavior: HitTestBehavior.opaque,
+                child: RepaintBoundary(
+                  child: TurnTimerBorder(
+                    key: ValueKey('poker-hero-${game.turnDeadline}'),
+                    active: acting,
+                    turnDeadline: game.turnDeadline,
+                    turnTimeSec: game.turnTimeSec,
+                    borderWidth: borderW,
+                    radius: 10,
+                    showIdleBorder: false,
+                    child: namePlate,
+                  ),
                 ),
               ),
               if (myWinCombo != null) ...[
