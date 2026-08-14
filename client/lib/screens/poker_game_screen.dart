@@ -76,11 +76,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   int _prevHandNumber = -1;
   bool _prevHandOver = false;
   final Map<int, int> _prevBets = {};
+  final Map<int, int> _prevChips = {};
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
-  /// Колл: уже запустили полёт фишек в банк (не дублировать при сборе улицы).
-  final Set<int> _callChipFlownSeats = {};
   /// Фолд со ставкой: уже отправили фишки в банк (не дублировать).
   final Set<int> _foldChipFlownSeats = {};
 
@@ -400,20 +399,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _move(String type, {int? amount}) async {
     if (_busy) return;
-    // Колл → фишки летят в банк (часто в том же кадре улица закрывается,
-    // и prevBets ещё без нашей докладки). Рейз — только ставка у места.
-    // Сбор улицы / фолд со ставкой / выплата — отдельно в _syncChipFx.
+    // Колл/рейз: фишки остаются ставкой у места — в банк НЕ летят.
+    // В банк — только сбор улицы (карты открылись) / фолд со ставкой / вскрытие.
     final gameSnap = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
         (_isOffline
             ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
             : null);
     final meSnap = gameSnap?.me;
-    if (meSnap != null && type == PokerActionType.call) {
-      _callChipFlownSeats.add(meSnap.seat);
-      unawaited(
-        _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
-      );
-    } else if (meSnap != null &&
+    if (meSnap != null &&
         type == PokerActionType.fold &&
         meSnap.bet > 0) {
       _foldChipFlownSeats.add(meSnap.seat);
@@ -1594,35 +1587,39 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return collected < 0 ? 0 : collected;
   }
 
-  /// Фишки в банк: колл (см. _move), сбор улицы, фолд со ставкой, выплата.
-  /// Рейз — без полёта в банк (ставка остаётся у места).
+  /// Фишки в банк: сбор улицы (открытие карт), фолд со ставкой, вскрытие/выплата.
+  /// Колл и рейз — без полёта: ставка остаётся у места.
   void _syncChipFx(PokerGameView game) {
     if (game.handNumber != _prevHandNumber) {
       _prevHandNumber = game.handNumber;
       _prevHandOver = false;
       _foldChipFlownSeats.clear();
-      _callChipFlownSeats.clear();
       _prevBets
         ..clear()
         ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+      _prevChips
+        ..clear()
+        ..addEntries(game.players.map((p) => MapEntry(p.seat, p.chips)));
       // Блайнды остаются ставкой у мест — в банк не летят.
       return;
     }
     if (!game.isHandOver) {
-      // Сбор улицы: у кого-то была ставка, теперь у всех bet==0.
+      // Сбор улицы: у кого-то была ставка, теперь у всех bet==0
+      // (обычно вместе с флопом/тёрном/ривером).
       final hadStreetBets = _prevBets.values.any((b) => b > 0);
       final streetCleared =
           hadStreetBets && game.players.every((p) => p.bet <= 0);
       if (streetCleared) {
         final donors = <int>{
           for (final e in _prevBets.entries)
-            if (e.value > 0 &&
-                !_foldChipFlownSeats.contains(e.key) &&
-                !_callChipFlownSeats.contains(e.key))
-              e.key,
+            if (e.value > 0 && !_foldChipFlownSeats.contains(e.key)) e.key,
         };
-        // Колл в том же кадре, что и сбор: у коллера prev bet мог быть 0 —
-        // его полёт уже из _move; остальных добираем здесь.
+        // Колл в том же кадре, что и сбор: prev bet мог быть 0, но стек упал.
+        for (final p in game.players) {
+          if (_foldChipFlownSeats.contains(p.seat)) continue;
+          final prev = _prevChips[p.seat];
+          if (prev != null && p.chips < prev) donors.add(p.seat);
+        }
         if (donors.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             for (final seat in donors.take(4)) {
@@ -1632,19 +1629,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             }
           });
         }
-        _callChipFlownSeats.clear();
       }
     }
-    // Банк со стола — к карточке победителя.
+    // Вскрытие / конец раздачи: оставшиеся ставки → банк → победителю.
     if (game.isHandOver && !_prevHandOver && game.winners.isNotEmpty) {
-      // Если улица не успела «очиститься» отдельным кадром — добираем ставки.
       final leftover = <int>{
         for (final e in _prevBets.entries)
-          if (e.value > 0 &&
-              !_foldChipFlownSeats.contains(e.key) &&
-              !_callChipFlownSeats.contains(e.key))
-            e.key,
+          if (e.value > 0 && !_foldChipFlownSeats.contains(e.key)) e.key,
       };
+      for (final p in game.players) {
+        if (_foldChipFlownSeats.contains(p.seat)) continue;
+        final prev = _prevChips[p.seat];
+        if (prev != null && p.chips < prev) leftover.add(p.seat);
+      }
       final seats = _winnerSeats(game);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         for (final seat in leftover.take(4)) {
@@ -1670,6 +1667,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     _prevBets
       ..clear()
       ..addEntries(game.players.map((p) => MapEntry(p.seat, p.bet)));
+    _prevChips
+      ..clear()
+      ..addEntries(game.players.map((p) => MapEntry(p.seat, p.chips)));
   }
 
   /// `winners` в API — индексы игроков; для UI нужны seat-ключи.

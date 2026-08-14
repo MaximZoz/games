@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Друзья: галочка «Принять» во входящей заявке зелёная
+- Покер: при колле фишки не летят в банк — только при сборе улицы и вскрытии
 
 ## en
-- Friends: accept checkmark on incoming requests is green
+- Poker: call no longer flies chips to pot — only on street collect and showdown
