@@ -1020,6 +1020,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 tooltip: l10n.friendsAcceptRequest,
                 call: (repo) => repo.acceptRequest(item.requestId),
                 success: l10n.friendsRequestAccepted,
+                successStyle: true,
               ),
               const SizedBox(width: 4),
               _buildActionIcon(
@@ -1207,6 +1208,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         _buildCompactIconButton(
           icon: Icons.check_rounded,
           tooltip: l10n.friendsAcceptRequest,
+          success: true,
           loading: acceptBusy,
           onPressed: acceptBusy
               ? null
