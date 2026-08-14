@@ -1315,7 +1315,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return null;
   }
 
-  /// Якоря соперников — у самой кромки фетра (как в референсе).
+  /// Якоря соперников — у кромки фетра; боковые выше центра, чтобы
+  /// не наезжать на борд / «Раздача» (4 и 6 за столом).
   List<Alignment> _seatAnchors(int n) {
     switch (n) {
       case 0:
@@ -1325,25 +1326,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       case 2:
         return const [Alignment(-0.92, -0.82), Alignment(0.92, -0.82)];
       case 3:
+        // 4 за столом: слева/справа в верхней половине, не у борда.
         return const [
-          Alignment(-1.0, -0.05),
+          Alignment(-1.0, -0.48),
           Alignment(0, -1.0),
-          Alignment(1.0, -0.05),
+          Alignment(1.0, -0.48),
         ];
       case 4:
         return const [
-          Alignment(-1.0, 0.0),
+          Alignment(-1.0, -0.42),
           Alignment(-0.55, -1.0),
           Alignment(0.55, -1.0),
-          Alignment(1.0, 0.0),
+          Alignment(1.0, -0.42),
         ];
       default:
+        // 6 за столом: боковые выше центра, топ-трое у верхней кромки.
         return const [
-          Alignment(-1.0, 0.08),
+          Alignment(-1.0, -0.36),
           Alignment(-0.72, -0.95),
           Alignment(0, -1.0),
           Alignment(0.72, -0.95),
-          Alignment(1.0, 0.08),
+          Alignment(1.0, -0.36),
         ];
     }
   }

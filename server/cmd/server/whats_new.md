@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Наблюдение: повторный вход в партию больше не пересчитывает монеты
+- Покер: боковые места при 4 и 6 игроках выше — не наезжают на раздачу
 
 ## en
-- Observation: re-entering a game no longer recalculates coins
+- Poker: side seats higher at 4/6 players — clear of the board
