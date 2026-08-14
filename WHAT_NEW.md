@@ -3,11 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: при колле фишки героя летят в банк
-- Покер: ставка героя рядом с блоком; банк только после сбора
-- Что нового: только фикс ставки героя
-- Покер: ставка героя сбоку от неймплейта, не внутри блока
+- Наблюдение: повторный вход в партию больше не пересчитывает монеты
 
 ## en
-- Poker: call chips fly to pot; hero bet beside nameplate; pot after collection
-
+- Observation: re-entering a game no longer recalculates coins

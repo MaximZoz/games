@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -59,6 +60,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _endDialogReady = false;
   bool _endDialogScheduled = false;
   bool _observeEntered = false;
+  /// Повторный вход из «Наблюдение» — без анимации/refresh монет.
+  bool _openedAsObserver = false;
+  bool _openModeCaptured = false;
   final GlobalKey _winRewardKey = GlobalKey();
 
   // ---- анимация появления борда + полёт фишек ----
@@ -96,7 +100,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _captureOpenMode();
     _initializeProviderBindings();
+  }
+
+  void _captureOpenMode() {
+    if (_openModeCaptured) return;
+    _openModeCaptured = true;
+    _openedAsObserver = openedAsGameObserver(ref, widget.gameId) ||
+        isGameBalanceSettled(ref, widget.gameId);
+    if (_openedAsObserver) {
+      _observeEntered = true;
+      _balanceGainPlayed = true;
+    }
   }
 
   @override
@@ -116,7 +132,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _endDialogReady = false;
         _endDialogScheduled = false;
         _observeEntered = false;
+        _openedAsObserver = false;
+        _openModeCaptured = false;
       });
+      _captureOpenMode();
     }
   }
 
@@ -136,8 +155,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _isOffline) return;
       final known = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
+      final observing =
+          ref.read(observationGameProvider)?.gameId == widget.gameId;
+      final eliminated = known?.iAmEliminated == true;
       if (known != null && known.isOver) {
         _clearSessionForFinishedGame();
+      } else if (eliminated || observing || _openedAsObserver) {
+        // Наблюдение: не пинить как active и не переводить в «свою игру».
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        enterGameObservation(ref, widget.gameId, gameType: 'poker');
       } else {
         pinBlockingGame(ref, widget.gameId, gameType: 'poker');
         final prev = ref.read(activeGameProvider).valueOrNull;
@@ -289,11 +315,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required int displayRewardBronze,
     int lostBronze = 0,
   }) async {
+    // Повторный вход в наблюдение — не трогаем баланс и не крутим ±.
+    if (_openedAsObserver || isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      return;
+    }
     if (_balanceGainPlayed) {
-      unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
     _balanceGainPlayed = true;
+    markGameBalanceSettled(ref, widget.gameId);
     if (lostBronze > 0 && creditBronze <= 0) {
       await playGameSettledLoss(
         ref: ref,
@@ -316,10 +347,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Итог стола или mid-game выбытие с известным местом.
     final settleNow = game.isOver || (game.iAmEliminated && game.myPlace > 0);
     if (!settleNow) return;
+    if (_openedAsObserver || isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      return;
+    }
     if (_balanceGainPlayed || _isOffline) return;
     // Сразу, чтобы повторные build не ставили анимацию в очередь дважды.
     _balanceGainPlayed = true;
     if (game.stakeBronze <= 0) {
+      markGameBalanceSettled(ref, widget.gameId);
       unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
@@ -805,9 +841,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         }
       } else if (!game.isOver) {
         _prevOver = false;
-        _balanceGainPlayed = false;
-        _lossChipRevealed = false;
+        // Выбывший наблюдатель: не сбрасывать settle — иначе ±монет снова.
         if (!game.iAmEliminated) {
+          _balanceGainPlayed = false;
+          _lossChipRevealed = false;
           _endDialogReady = false;
           _endDialogScheduled = false;
         }

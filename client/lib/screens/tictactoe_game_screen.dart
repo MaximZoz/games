@@ -8,6 +8,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
@@ -79,17 +80,31 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   bool _balanceGainPlayed = false;
   /// Чип «−N» при проигрыше — только после анимации списания.
   bool _lossChipRevealed = false;
+  /// Повторный вход из «Наблюдение» — без анимации/refresh монет.
+  bool _openedAsObserver = false;
+  bool _openModeCaptured = false;
   /// chat_id из GetGame — MakeMove раньше мог не вернуть его (иконка мигала).
   String? _stickyGroupChatId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _captureOpenMode();
     _initializeProviderBindings();
     final route = ModalRoute.of(context);
     if (route != null) {
       chatsRouteObserver.unsubscribe(this);
       chatsRouteObserver.subscribe(this, route);
+    }
+  }
+
+  void _captureOpenMode() {
+    if (_openModeCaptured) return;
+    _openModeCaptured = true;
+    _openedAsObserver = openedAsGameObserver(ref, widget.gameId) ||
+        isGameBalanceSettled(ref, widget.gameId);
+    if (_openedAsObserver) {
+      _balanceGainPlayed = true;
     }
   }
 
@@ -106,6 +121,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       _prevGameStatus = null;
       _balanceGainPlayed = false;
       _lossChipRevealed = false;
+      _openedAsObserver = false;
+      _openModeCaptured = false;
       _stickyGroupChatId = null;
       ref.invalidate(gameStateProvider(widget.gameId));
       setState(() {
@@ -117,6 +134,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         _isAcceptingRematch = false;
         _isFindingGame = false;
       });
+      _captureOpenMode();
     }
   }
 
@@ -1014,12 +1032,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     required int displayRewardBronze,
     int lostBronze = 0,
   }) async {
+    if (_openedAsObserver || isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      return;
+    }
     if (_balanceGainPlayed) {
-      unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
     if (lostBronze > 0 && creditBronze <= 0) {
       _balanceGainPlayed = true;
+      markGameBalanceSettled(ref, widget.gameId);
       await playGameSettledLoss(
         ref: ref,
         context: context,
@@ -1029,10 +1051,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       return;
     }
     if (creditBronze <= 0) {
+      markGameBalanceSettled(ref, widget.gameId);
       unawaited(ref.read(authStateProvider.notifier).refresh());
       return;
     }
     _balanceGainPlayed = true;
+    markGameBalanceSettled(ref, widget.gameId);
     // Общий сценарий начисления — тот же, что у Дурака.
     await playGameSettledReward(
       ref: ref,
