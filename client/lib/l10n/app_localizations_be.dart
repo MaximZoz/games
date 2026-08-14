@@ -649,8 +649,22 @@ class AppLocalizationsBe extends AppLocalizations {
     return '$name wins';
   }
 
+
   @override
   String get pokerYouWonHand => 'You won the pot!';
+
+  @override
+  String pokerWinners(String names) {
+    return '$names win';
+  }
+
+  @override
+  String pokerYouWonHandWith(String names) {
+    return 'You and $names won the pot!';
+  }
+
+  @override
+  String get pokerListAnd => 'and';
 
   @override
   String get pokerHandOver => 'Hand over';

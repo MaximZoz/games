@@ -291,6 +291,23 @@
   "pokerToAct": "{name} to act",
   "pokerWinner": "{name} wins",
   "pokerYouWonHand": "You won the pot!",
+  "pokerWinners": "{names} win",
+  "@pokerWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHandWith": "You and {names} won the pot!",
+  "@pokerYouWonHandWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerListAnd": "and",
   "pokerHandOver": "Hand over",
   "pokerStreetPreflop": "Pre-flop",
   "pokerStreetFlop": "Flop",

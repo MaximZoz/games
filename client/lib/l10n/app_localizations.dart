@@ -1373,6 +1373,24 @@ abstract class AppLocalizations {
   /// **'Вы забрали банк!'**
   String get pokerYouWonHand;
 
+  /// No description provided for @pokerWinners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выиграли {names}'**
+  String pokerWinners(String names);
+
+  /// No description provided for @pokerYouWonHandWith.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы и {names} забрали банк!'**
+  String pokerYouWonHandWith(String names);
+
+  /// No description provided for @pokerListAnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'и'**
+  String get pokerListAnd;
+
   /// No description provided for @pokerHandOver.
   ///
   /// In ru, this message translates to:

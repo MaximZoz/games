@@ -326,6 +326,23 @@
     }
   },
   "pokerYouWonHand": "Вы забрали банк!",
+  "pokerWinners": "Выиграли {names}",
+  "@pokerWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHandWith": "Вы и {names} забрали банк!",
+  "@pokerYouWonHandWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerListAnd": "и",
   "pokerHandOver": "Раздача окончена",
   "pokerStreetPreflop": "Префлоп",
   "pokerStreetFlop": "Флоп",
