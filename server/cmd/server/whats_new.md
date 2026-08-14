@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: раскладка 6 мест как в референсе — боковые сверху и снизу, борд свободен
+- Покер: ставка героя над неймплейтом — в блоке снова виден стек, не монетка ставки
 
 ## en
-- Poker: 6-max seats match reference — upper/lower sides, board clear
+- Poker: hero bet above nameplate — stack number visible again, not bet chip
