@@ -256,18 +256,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       }
       return l10n.pokerHandOver;
     }
-    final acting = game.actingIndex;
-    // Свой индекс актёра — всегда «Ваш ход», даже если legalActions ещё пусты.
-    if (!game.isOver &&
-        !game.isHandOver &&
-        !game.iAmEliminated &&
-        game.myIndex >= 0 &&
-        acting == game.myIndex) {
-      return l10n.pokerYourTurn;
-    }
-    if (acting >= 0 && acting < game.players.length) {
-      return l10n.pokerToAct(_playerName(game.players[acting]));
-    }
+    // Во время улицы не показываем «Ваш ход» / «Ходит X» — ход виден по
+    // рамке таймера у места и кнопкам действий; бейдж съедает место на столе.
     return '';
   }
 
