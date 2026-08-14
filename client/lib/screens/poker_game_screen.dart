@@ -1810,9 +1810,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         ? (narrow ? const Size(36, 50) : const Size(42, 60))
         : (narrow ? const Size(44, 62) : const Size(52, 74));
     final plateW = compact
-        ? (narrow ? 88.0 : 100.0)
-        : (narrow ? 96.0 : 108.0);
-    const borderW = 2.5;
+        ? (narrow ? 72.0 : 80.0)
+        : (narrow ? 78.0 : 86.0);
+    const borderW = 2.0;
 
     // Подсветка карт победителя — из его winner_hand, не из моей комбинации.
     final wh = _winnerHandForSeat(game, p.seat);
@@ -1827,10 +1827,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Непрозрачный фон — иначе на web карты «просвечивают» сквозь неймплейт.
     final namePlate = Container(
       width: plateW,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: dim ? const Color(0xFF2A2A2A) : const Color(0xFF161616),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isWinner
               ? const Color(0xFFF5B301)
@@ -1848,11 +1848,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
+              height: 1.15,
             ),
           ),
-          const SizedBox(height: 1),
           Text(
             p.folded
                 ? context.l10n.pokerFolded
@@ -1866,8 +1866,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   : p.allIn
                       ? const Color(0xFFFBBF24)
                       : const Color(0xFFF5D76E),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
+              height: 1.15,
             ),
           ),
         ],
@@ -1902,7 +1903,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           turnDeadline: game.turnDeadline,
           turnTimeSec: game.turnTimeSec,
           borderWidth: borderW,
-          radius: 12,
+          radius: 10,
           showIdleBorder: false,
           child: namePlate,
         ),
@@ -2215,14 +2216,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final isWinner = game.isHandOver && _winnerSeats(game).contains(me.seat);
     final dim = me.folded;
     final plateW = compact
-        ? (narrow ? 88.0 : 100.0)
-        : (narrow ? 96.0 : 108.0);
-    const borderW = 2.5;
+        ? (narrow ? 72.0 : 80.0)
+        : (narrow ? 78.0 : 86.0);
+    const borderW = 2.0;
     // Compact GamePlayerAvatar: FramedAvatar size = 36.
     const avatarSize = 36.0;
     const avatarPlateGap = 3.0;
-    // Непрозрачный неймплейт + запас по высоте (padding/строки/рамка хода).
-    const namePlateH = 42.0;
+    // Компактный неймплейт + запас под рамку хода.
+    const namePlateH = 34.0;
     final myWinCombo = isWinner
         ? _handRankLabel(_winnerHandForSeat(game, me.seat)?.rank) ??
             _handRankLabel(game.myHandRank)
@@ -2230,10 +2231,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final namePlate = Container(
       width: plateW,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: dim ? const Color(0xFF2A2A2A) : const Color(0xFF161616),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isWinner
               ? const Color(0xFFF5B301)
@@ -2251,8 +2252,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: dim ? 0.4 : 1),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
+              height: 1.15,
             ),
           ),
           Text(
@@ -2267,8 +2269,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   : me.allIn
                       ? const Color(0xFFFBBF24)
                       : const Color(0xFFF5D76E),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
+              height: 1.15,
             ),
           ),
         ],
@@ -2334,7 +2337,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   turnDeadline: game.turnDeadline,
                   turnTimeSec: game.turnTimeSec,
                   borderWidth: borderW,
-                  radius: 12,
+                  radius: 10,
                   showIdleBorder: false,
                   child: namePlate,
                 ),
