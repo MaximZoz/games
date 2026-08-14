@@ -885,7 +885,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: _onClosePressed,
               ),
-              if (showGroupChat && game != null)
+              if (showGroupChat)
                 GameIconWithBadge(
                   icon: Icons.chat_bubble_outline_rounded,
                   tooltip: context.l10n.chatGroupTooltip,
