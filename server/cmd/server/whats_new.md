@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Покер: ставка героя над неймплейтом — в блоке снова виден стек, не монетка ставки
+- Покер: компактнее рамка с ником и стеком
 
 ## en
-- Poker: hero bet above nameplate — stack number visible again, not bet chip
+- Poker: smaller name/stack nameplate
