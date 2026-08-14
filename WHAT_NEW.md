@@ -6,5 +6,5 @@
 - Покер: профиль по тапу на игрока и иконка группового чата у крестика
 
 ## en
-- App update
+- Poker: tap player for profile; group chat icon next to close
 
