@@ -3,3 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Друзья: галочка «Принять» во входящей заявке зелёная
+
+## en
+- Friends: accept checkmark on incoming requests is green

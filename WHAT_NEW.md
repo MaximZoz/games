@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-
+- Друзья: галочка «Принять» во входящей заявке зелёная
 
 ## en
-- Poker: smaller name/stack nameplate
+- Friends: accept checkmark on incoming requests is green
