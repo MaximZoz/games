@@ -10,6 +10,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
@@ -684,14 +685,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     return List<PlayingCard>.of(_optimisticAttacks);
   }
 
-  int _compareHandCards(PlayingCard a, PlayingCard b, Suit trump) {
-    final at = a.suit == trump ? 1 : 0;
-    final bt = b.suit == trump ? 1 : 0;
-    if (at != bt) return at.compareTo(bt);
-    final s = a.suit.index.compareTo(b.suit.index);
-    if (s != 0) return s;
-    return a.rank.compareTo(b.rank);
-  }
+  int _compareHandCards(PlayingCard a, PlayingCard b, Suit trump) =>
+      compareDurakHandCards(a, b, trump);
 
   /// Карты, ушедшие из руки (атака/защита). Не путать с взятием:
   /// при take карты в [_handOrder] + [_flyingFromHand] — слоты-дырки в веере.
@@ -1083,9 +1078,33 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
   }
 
-  /// Карта вернулась в веер — убрать слот/glow подсказок.
+  /// Карта вернулась в веер — убрать слот/glow и разложить руку как онлайн.
   void _onCardReturnedToFan(PlayingCard _) {
     _clearHandSelection();
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (view == null || view.myIndex < 0 || view.myIndex >= view.hands.length) {
+      return;
+    }
+    final trump = _suitFromApi(view.trumpSuit);
+    final hand = _apiCardsToPlaying(view.hands[view.myIndex].cards ?? const []);
+    if (hand.length < 2) return;
+    final sorted = List<PlayingCard>.from(hand)
+      ..sort((a, b) => compareDurakHandCards(a, b, trump));
+    final current = _handOrder;
+    if (current != null &&
+        current.length == sorted.length &&
+        _sameCardOrder(current, sorted)) {
+      return;
+    }
+    _sortHandInFan(hand, trump);
+  }
+
+  bool _sameCardOrder(List<PlayingCard> a, List<PlayingCard> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   void _freezeFanLayout(Size cardSize, double spacing, int handCount) {
@@ -2360,9 +2379,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     });
   }
 
+  void _beginTableFx() {
+    _fxScheduled = true;
+    _syncOfflineFxHold();
+  }
+
   void _markFxDone() {
     _fxScheduled = false;
+    _syncOfflineFxHold();
     _requestFxReplay();
+  }
+
+  void _syncOfflineFxHold() {
+    if (!_isOffline) return;
+    OfflineDurakRegistry.instance
+        .get(widget.gameId)
+        ?.setFxHold(_fxScheduled || _busy);
   }
 
   /// Снимок стола для ухода в биту: предпочитаем вариант с защитами.
@@ -2387,7 +2419,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       return;
     }
     if (!_gameUiActive) {
-      // Вне экрана игры — только синхронизируем базу, без overlay-анимаций.
+      // Вне экрана — не затираем «первый кадр», иначе пропадёт раздача.
+      if (_prevDeckCount < 0) return;
       final handLen = view.hands.length > view.myIndex && view.myIndex >= 0
           ? (view.hands[view.myIndex].cards?.length ??
               view.hands[view.myIndex].count)
@@ -2507,7 +2540,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (remoteTake) {
       // Прячем добор до анимации — в этом же кадре, до отрисовки веера.
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
-      _fxScheduled = true;
+      _beginTableFx();
       final taker = refillDefender;
       // В дельте руки соперника — и взятые со стола, и добор; анимируем раздельно.
       final oppDealsDeck = <int, int>{};
@@ -2568,7 +2601,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ];
       if (dealtOnly.isNotEmpty) _pendingDealCards.addAll(dealtOnly);
       _armOppDealPending(oppDeals);
-      _fxScheduled = true;
+      _beginTableFx();
       // Hold + порядок веера синхронно — без кадра пустого стола.
       _takeTableHold = tableSnapshot;
       _leftTableCards.clear();
@@ -2642,7 +2675,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       // Скрыть добор соперников на время биты — не мелькать до колоды.
       _armOppDealPending(oppDeals);
-      _fxScheduled = true;
+      _beginTableFx();
       // Держим снимок стола в ЭТОМ кадре — иначе пустой стол до post-frame
       // и полёт стартует из «центра экрана».
       _takeTableHold = tableSnapshot;
@@ -2718,7 +2751,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         // Свой добор уже/будет в take — только соперники, в порядке атаки.
         if (oppDeals.isNotEmpty) {
           _armOppDealPending(oppDeals);
-          _fxScheduled = true;
+          _beginTableFx();
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) {
               _markFxDone();
@@ -2739,7 +2772,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       } else {
         if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
         _armOppDealPending(oppDeals);
-        _fxScheduled = true;
+        _beginTableFx();
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) {
             _pendingDealCards.clear();
@@ -2784,7 +2817,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       // Колода уменьшилась — добор после биты/взятия (prev уже мог сдвинуться).
       if (incoming.isNotEmpty) _pendingDealCards.addAll(incoming);
       _armOppDealPending(oppDeals);
-      _fxScheduled = true;
+      _beginTableFx();
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
           _pendingDealCards.clear();
@@ -2925,24 +2958,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Свежая партия: руки полные, стол пуст, колода после раздачи — крутим FX.
   bool _shouldAnimateOpeningDeal(DurakGameView view, int myHandLen) {
-    if (view.isOver || view.table.isNotEmpty || view.bitoCount > 0) {
-      return false;
-    }
-    if (view.myIndex < 0 || myHandLen <= 0) return false;
-    final n = view.hands.length;
-    if (n < 2) return false;
-    const handSize = 6;
-    if (myHandLen != handSize) return false;
-    for (var i = 0; i < n; i++) {
-      if (view.hands[i].count != handSize) return false;
-    }
-    final expectedDeck = view.deckSize - n * handSize;
-    return view.deckCount == expectedDeck && expectedDeck >= 0;
+    return shouldAnimateDurakOpeningDeal(
+      isOver: view.isOver,
+      tableIsEmpty: view.table.isEmpty,
+      bitoCount: view.bitoCount,
+      myIndex: view.myIndex,
+      myHandLen: myHandLen,
+      handCounts: [for (final h in view.hands) h.count],
+      deckSize: view.deckSize,
+      deckCount: view.deckCount,
+    );
   }
 
   void _scheduleOpeningDeal(DurakGameView view, List<PlayingCard> myHand) {
     if (_fxScheduled) return;
-    _fxScheduled = true;
+    _beginTableFx();
     final n = view.hands.length;
     const handSize = 6;
     setState(() {
@@ -2968,6 +2998,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _prevDefenderIndex = view.defenderIndex;
       _syncPrevOppHandCounts(view);
     });
+    _syncOfflineFxHold();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         _markFxDone();
@@ -2989,6 +3020,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               _handOrder = List<PlayingCard>.of(myHand);
             }
           });
+          OfflineDurakRegistry.instance.get(widget.gameId)?.markDealReady();
         }
         _markFxDone();
       }
@@ -3426,7 +3458,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _remoteFlyingCardIds.add(_cardId(f.card));
     }
 
-    _fxScheduled = true;
+    _beginTableFx();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || !_gameUiActive) {
         for (final f in flights) {
