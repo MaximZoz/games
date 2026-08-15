@@ -3,10 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Убрать лишнюю проверку null в AppBar покера
-- WHAT_NEW: английский текст для профиля и чата в покере
-- Покер: профиль по тапу на игрока и иконка группового чата у крестика
+- Показать, кто ходит первым в дураке (младший козырь из веера)
+- Починить зависание бота на «Бито» в офлайне
 
 ## en
-- Poker: tap player for profile; group chat icon next to close
-
+- Durak: show who leads first (lowest trump from the fan)
+- Fix offline bot hanging on “Beat”
