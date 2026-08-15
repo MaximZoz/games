@@ -8,8 +8,11 @@ enum PokerOppHolePlacement {
   /// Слева от профиля (для мест на правой кромке — к центру стола).
   inwardLeft,
 
-  /// Над профилем (нижние боковые места — к центру стола, не в бок).
+  /// Над профилем (нижние места — к центру стола, не в бок).
   above,
+
+  /// Под профилем (верхние места — зеркально нижним).
+  below,
 }
 
 /// Якоря соперников на кромке фетра.
@@ -46,18 +49,28 @@ List<Alignment> pokerOpponentSeatAnchors(int n) {
   }
 }
 
-/// Нижняя половина — карты сверху; боковые — к центру стола, не за край.
+/// Низ — карты над профилем; верх — под профилем; середина боков — к центру.
 PokerOppHolePlacement pokerOppHolePlacement(Alignment align) {
   if (align.y > 0.15) return PokerOppHolePlacement.above;
+  if (align.y < -0.15) return PokerOppHolePlacement.below;
   if (align.x < -0.05) return PokerOppHolePlacement.inwardRight;
   if (align.x > 0.05) return PokerOppHolePlacement.inwardLeft;
-  return PokerOppHolePlacement.inwardRight;
+  return PokerOppHolePlacement.below;
 }
 
-/// Смещение hole cards от левого-верхнего угла неймплейта.
+/// Высота колонки аватар+неймплейт (чтобы положить карты строго под неё).
+double pokerOppPlateHeight({required bool compact}) {
+  final avatar = compact ? 36.0 : 44.0;
+  const columnGap = 4.0;
+  const namePlate = 34.0;
+  return avatar + columnGap + namePlate;
+}
+
+/// Смещение hole cards от левого-верхнего угла колонки профиля.
 Offset pokerOppHoleOffset({
   required Alignment align,
   required double plateWidth,
+  required double plateHeight,
   required double cardsWidth,
   required double cardsHeight,
   double gap = 4,
@@ -65,6 +78,8 @@ Offset pokerOppHoleOffset({
   switch (pokerOppHolePlacement(align)) {
     case PokerOppHolePlacement.above:
       return Offset((plateWidth - cardsWidth) / 2, -cardsHeight - gap);
+    case PokerOppHolePlacement.below:
+      return Offset((plateWidth - cardsWidth) / 2, plateHeight + gap);
     case PokerOppHolePlacement.inwardRight:
       return Offset(plateWidth + gap, 0);
     case PokerOppHolePlacement.inwardLeft:
