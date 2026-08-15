@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Karten nachlegen oder auf die Abwehr warten",
   "durakHintThrowInFirst": "Karten nachlegen (max. 5 im ersten Schlag)",
   "durakHintYouFinished": "Du bist raus — warte aufs Ende",
+  "durakFirstLeadYou": "Sie kommen raus",
+  "durakFirstLeadOpponent": "Der Gegner kommt raus",
+  "durakFirstLeadBot": "Der Bot kommt raus",
+  "durakFirstLeadOf": "{name} kommt raus",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Niedrigster Trumpf",
   "durakHintYouLost": "Du hast verloren — du bist der Narr",
   "durakHintYourAttack": "Dein Zug — angreifen",
   "gamesDurak": "Durak",

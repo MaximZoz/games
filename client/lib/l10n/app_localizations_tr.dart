@@ -153,6 +153,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get durakHintYouFinished => 'Çıktınız — sonu bekleniyor';
 
   @override
+  String get durakFirstLeadYou => 'Siz başlıyorsunuz';
+
+  @override
+  String get durakFirstLeadOpponent => 'Rakip başlıyor';
+
+  @override
+  String get durakFirstLeadBot => 'Bot başlıyor';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name başlıyor';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'En düşük koz';
+
+  @override
   String get shopPurchaseQueued => 'Satın alma kaydedildi — çevrimiçi modda uygulanacak';
 
   @override

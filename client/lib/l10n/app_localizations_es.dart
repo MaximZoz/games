@@ -153,6 +153,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get durakHintYouFinished => 'Saliste — esperando el final';
 
   @override
+  String get durakFirstLeadYou => 'Tú sales';
+
+  @override
+  String get durakFirstLeadOpponent => 'Sale el rival';
+
+  @override
+  String get durakFirstLeadBot => 'Sale el bot';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'Sale $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Triunfo más bajo';
+
+  @override
   String get shopPurchaseQueued => 'Compra guardada — se aplicará en modo en línea';
 
   @override

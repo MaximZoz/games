@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Posez des cartes ou attendez la défense",
   "durakHintThrowInFirst": "Posez des cartes (max. 5 au premier tour)",
   "durakHintYouFinished": "Vous êtes sorti — en attente de la fin",
+  "durakFirstLeadYou": "Vous jouez en premier",
+  "durakFirstLeadOpponent": "L’adversaire joue en premier",
+  "durakFirstLeadBot": "Le bot joue en premier",
+  "durakFirstLeadOf": "{name} joue en premier",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Plus petit atout",
   "durakHintYouLost": "Vous avez perdu — vous êtes le durak",
   "durakHintYourAttack": "Votre tour — attaquez",
   "gamesDurak": "Durak",

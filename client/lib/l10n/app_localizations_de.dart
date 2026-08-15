@@ -153,6 +153,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get durakHintYouFinished => 'Du bist raus — warte aufs Ende';
 
   @override
+  String get durakFirstLeadYou => 'Sie kommen raus';
+
+  @override
+  String get durakFirstLeadOpponent => 'Der Gegner kommt raus';
+
+  @override
+  String get durakFirstLeadBot => 'Der Bot kommt raus';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name kommt raus';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Niedrigster Trumpf';
+
+  @override
   String get shopPurchaseQueued => 'Kauf gespeichert — wird im Online-Modus angewendet';
 
   @override

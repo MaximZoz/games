@@ -14,6 +14,16 @@ void sortDurakHand(List<PlayingCard> hand, Suit trump) {
   hand.sort((a, b) => compareDurakHandCards(a, b, trump));
 }
 
+/// Младший козырь в руке — им определяется первый ход.
+PlayingCard? lowestTrumpInHand(Iterable<PlayingCard> hand, Suit trump) {
+  PlayingCard? best;
+  for (final c in hand) {
+    if (c.suit != trump) continue;
+    if (best == null || c.rank.value < best.rank.value) best = c;
+  }
+  return best;
+}
+
 /// Свежая партия: руки по 6, стол пуст — крутить раздачу из колоды в веер.
 bool shouldAnimateDurakOpeningDeal({
   required bool isOver,

@@ -153,6 +153,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get durakHintYouFinished => 'You’re out — waiting for the end';
 
   @override
+  String get durakFirstLeadYou => 'You go first';
+
+  @override
+  String get durakFirstLeadOpponent => 'Opponent goes first';
+
+  @override
+  String get durakFirstLeadBot => 'Bot goes first';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name goes first';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Lowest trump';
+
+  @override
   String get shopPurchaseQueued => 'Purchase saved — will apply in online mode';
 
   @override

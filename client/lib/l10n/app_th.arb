@@ -184,6 +184,18 @@
   "durakHintThrowIn": "ทิ้งไพ่เพิ่มหรือรอการป้องกัน",
   "durakHintThrowInFirst": "ทิ้งไพ่เพิ่ม (สูงสุด 5 ในตาแรก)",
   "durakHintYouFinished": "คุณออกแล้ว — รอจบเกม",
+  "durakFirstLeadYou": "คุณออกก่อน",
+  "durakFirstLeadOpponent": "ฝ่ายตรงข้ามออกก่อน",
+  "durakFirstLeadBot": "บอทออกก่อน",
+  "durakFirstLeadOf": "{name} ออกก่อน",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "ไพ่ทรัมป์ต่ำสุด",
   "durakHintYouLost": "คุณแพ้ — คุณคือคนโง่",
   "durakHintYourAttack": "ตาคุณ — โจมตี",
   "gamesDurak": "ดูรัก",

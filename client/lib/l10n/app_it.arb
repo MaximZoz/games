@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Aggiungi carte o attendi la difesa",
   "durakHintThrowInFirst": "Aggiungi carte (max 5 nel primo scarto)",
   "durakHintYouFinished": "Sei fuori — in attesa del fine",
+  "durakFirstLeadYou": "Tocca a te",
+  "durakFirstLeadOpponent": "Tocca all’avversario",
+  "durakFirstLeadBot": "Tocca al bot",
+  "durakFirstLeadOf": "Tocca a {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Briscola più bassa",
   "durakHintYouLost": "Hai perso — sei il durello",
   "durakHintYourAttack": "Il tuo turno — attacca",
   "gamesDurak": "Durak",

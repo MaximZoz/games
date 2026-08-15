@@ -153,6 +153,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get durakHintYouFinished => 'Je bent uit — wachten op het einde';
 
   @override
+  String get durakFirstLeadYou => 'Jij komt uit';
+
+  @override
+  String get durakFirstLeadOpponent => 'Tegenstander komt uit';
+
+  @override
+  String get durakFirstLeadBot => 'Bot komt uit';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name komt uit';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Laagste troef';
+
+  @override
   String get shopPurchaseQueued => 'Aankoop opgeslagen — wordt toegepast in onlinemodus';
 
   @override

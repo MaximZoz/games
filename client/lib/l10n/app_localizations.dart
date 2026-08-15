@@ -437,6 +437,36 @@ abstract class AppLocalizations {
   /// **'Вы вышли — ждём конца партии'**
   String get durakHintYouFinished;
 
+  /// No description provided for @durakFirstLeadYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы ходите'**
+  String get durakFirstLeadYou;
+
+  /// No description provided for @durakFirstLeadOpponent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соперник ходит'**
+  String get durakFirstLeadOpponent;
+
+  /// No description provided for @durakFirstLeadBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бот ходит'**
+  String get durakFirstLeadBot;
+
+  /// No description provided for @durakFirstLeadOf.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ходит {name}'**
+  String durakFirstLeadOf(String name);
+
+  /// No description provided for @durakFirstLeadReason.
+  ///
+  /// In ru, this message translates to:
+  /// **'Младший козырь'**
+  String get durakFirstLeadReason;
+
   /// No description provided for @shopPurchaseQueued.
   ///
   /// In ru, this message translates to:

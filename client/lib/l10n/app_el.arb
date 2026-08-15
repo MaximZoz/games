@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Ρίξτε φύλλα ή περιμένετε την άμυνα",
   "durakHintThrowInFirst": "Ρίξτε φύλλα (μέγ. 5 στην πρώτη κάλυψη)",
   "durakHintYouFinished": "Έφυγες — περιμένουμε το τέλος",
+  "durakFirstLeadYou": "Παίζετε πρώτοι",
+  "durakFirstLeadOpponent": "Ο αντίπαλος παίζει πρώτος",
+  "durakFirstLeadBot": "Το μποτ παίζει πρώτο",
+  "durakFirstLeadOf": "Πρώτος ο {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Χαμηλότερο ατού",
   "durakHintYouLost": "Έχασες — είσαι ο κάλπης",
   "durakHintYourAttack": "Η σειρά σου — επιτέθηκε",
   "gamesDurak": "Durak",

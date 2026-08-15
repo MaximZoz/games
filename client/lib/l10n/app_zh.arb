@@ -184,6 +184,18 @@
   "durakHintThrowIn": "加牌或等待防守",
   "durakHintThrowInFirst": "加牌（首轮最多 5 张）",
   "durakHintYouFinished": "你已出局 — 等待结束",
+  "durakFirstLeadYou": "你先出",
+  "durakFirstLeadOpponent": "对手先出",
+  "durakFirstLeadBot": "机器人先出",
+  "durakFirstLeadOf": "{name}先出",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "最小王牌",
   "durakHintYouLost": "你输了 — 你是傻瓜",
   "durakHintYourAttack": "你的回合 — 进攻",
   "gamesDurak": "傻瓜牌",

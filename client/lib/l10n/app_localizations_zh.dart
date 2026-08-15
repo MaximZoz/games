@@ -153,6 +153,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get durakHintYouFinished => '你已出局 — 等待结束';
 
   @override
+  String get durakFirstLeadYou => '你先出';
+
+  @override
+  String get durakFirstLeadOpponent => '对手先出';
+
+  @override
+  String get durakFirstLeadBot => '机器人先出';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name先出';
+  }
+
+  @override
+  String get durakFirstLeadReason => '最小王牌';
+
+  @override
   String get shopPurchaseQueued => '购买已保存 — 将在在线模式下生效';
 
   @override

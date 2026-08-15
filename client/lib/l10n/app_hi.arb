@@ -184,6 +184,18 @@
   "durakHintThrowIn": "पत्ते फेंकें या बचाव की प्रतीक्षा करें",
   "durakHintThrowInFirst": "पत्ते फेंकें (पहले बचाव में अधिकतम 5)",
   "durakHintYouFinished": "आप बाहर — अंत की प्रतीक्षा",
+  "durakFirstLeadYou": "आप पहले चलते हैं",
+  "durakFirstLeadOpponent": "प्रतिद्वंद्वी पहले चलता है",
+  "durakFirstLeadBot": "बॉट पहले चलता है",
+  "durakFirstLeadOf": "{name} पहले चलता है",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "सबसे छोटा ट्रम्प",
   "durakHintYouLost": "आप हारे — आप मूर्ख हैं",
   "durakHintYourAttack": "आपकी बारी — हमला करें",
   "gamesDurak": "दुरक",

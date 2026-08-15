@@ -153,6 +153,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get durakHintYouFinished => 'Bạn đã ra — chờ kết thúc';
 
   @override
+  String get durakFirstLeadYou => 'Bạn đi trước';
+
+  @override
+  String get durakFirstLeadOpponent => 'Đối thủ đi trước';
+
+  @override
+  String get durakFirstLeadBot => 'Bot đi trước';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name đi trước';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Át thấp nhất';
+
+  @override
   String get shopPurchaseQueued => 'Đã lưu giao dịch — sẽ áp dụng ở chế độ trực tuyến';
 
   @override

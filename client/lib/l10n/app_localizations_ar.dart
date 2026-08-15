@@ -153,6 +153,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get durakHintYouFinished => 'خرجت — في انتظار النهاية';
 
   @override
+  String get durakFirstLeadYou => 'أنت تبدأ';
+
+  @override
+  String get durakFirstLeadOpponent => 'الخصم يبدأ';
+
+  @override
+  String get durakFirstLeadBot => 'البوت يبدأ';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'يبدأ $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'أدنى ورقة رابحة';
+
+  @override
   String get shopPurchaseQueued => 'تم حفظ الشراء — سيُطبَّق في وضع الاتصال';
 
   @override

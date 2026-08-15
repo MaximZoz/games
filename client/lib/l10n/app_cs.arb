@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Přihazujte karty nebo čekejte na obranu",
   "durakHintThrowInFirst": "Přihazujte karty (max. 5 v prvním odbití)",
   "durakHintYouFinished": "Jste venku — čekáme na konec",
+  "durakFirstLeadYou": "Začínáte vy",
+  "durakFirstLeadOpponent": "Začíná soupeř",
+  "durakFirstLeadBot": "Začíná bot",
+  "durakFirstLeadOf": "Začíná {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Nejnižší trumf",
   "durakHintYouLost": "Prohráli jste — jste hlupák",
   "durakHintYourAttack": "Vaše tah — útočte",
   "gamesDurak": "Durak",

@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Jogue cartas ou aguarde a defesa",
   "durakHintThrowInFirst": "Jogue cartas (máx. 5 na primeira batida)",
   "durakHintYouFinished": "Você saiu — aguardando o fim",
+  "durakFirstLeadYou": "Você sai",
+  "durakFirstLeadOpponent": "O oponente sai",
+  "durakFirstLeadBot": "O bot sai",
+  "durakFirstLeadOf": "{name} sai",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Trunfo mais baixo",
   "durakHintYouLost": "Você perdeu — você é o durak",
   "durakHintYourAttack": "Sua vez — ataque",
   "gamesDurak": "Durak",

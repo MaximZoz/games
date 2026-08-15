@@ -153,6 +153,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get durakHintYouFinished => '脱落しました — 終了を待っています';
 
   @override
+  String get durakFirstLeadYou => 'あなたの番です';
+
+  @override
+  String get durakFirstLeadOpponent => '相手の番です';
+
+  @override
+  String get durakFirstLeadBot => 'ボットの番です';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name の番です';
+  }
+
+  @override
+  String get durakFirstLeadReason => '一番弱い切り札';
+
+  @override
   String get shopPurchaseQueued => '購入を保存しました — オンラインモードで適用されます';
 
   @override

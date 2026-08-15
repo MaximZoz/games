@@ -153,6 +153,23 @@ class AppLocalizationsFi extends AppLocalizations {
   String get durakHintYouFinished => 'Olet ulos — odotetaan loppua';
 
   @override
+  String get durakFirstLeadYou => 'Aloitat sinä';
+
+  @override
+  String get durakFirstLeadOpponent => 'Vastustaja aloittaa';
+
+  @override
+  String get durakFirstLeadBot => 'Botti aloittaa';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name aloittaa';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Matalin valtti';
+
+  @override
   String get shopPurchaseQueued => 'Ostos tallennettu — otetaan käyttöön online-tilassa';
 
   @override

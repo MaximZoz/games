@@ -153,6 +153,23 @@ class AppLocalizationsNb extends AppLocalizations {
   String get durakHintYouFinished => 'Du er ute — venter på slutten';
 
   @override
+  String get durakFirstLeadYou => 'Du går først';
+
+  @override
+  String get durakFirstLeadOpponent => 'Motstanderen går først';
+
+  @override
+  String get durakFirstLeadBot => 'Boten går først';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name går først';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Laveste trumf';
+
+  @override
   String get shopPurchaseQueued => 'Kjøp lagret — brukes i online-modus';
 
   @override

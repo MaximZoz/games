@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
+import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
 
@@ -27,13 +28,14 @@ class OfflineDurakSession extends ChangeNotifier {
 
   static const int me = 0;
   static const Duration botDelay = Duration(milliseconds: 650);
+  static const Duration botHoldRetry = Duration(milliseconds: 400);
   static const Duration bitoRevealDelay = Duration(milliseconds: 1000);
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
   static Duration openingDealGrace(int players) {
     final p = players.clamp(2, 4);
-    return Duration(milliseconds: 1500 + 6 * p * 280 + 800);
+    return Duration(milliseconds: 1500 + 6 * p * 280 + 800 + 1600);
   }
 
   late DurakGame _game;
@@ -190,7 +192,15 @@ class OfflineDurakSession extends ChangeNotifier {
       lastWasTake: _lastWasTake,
       firstRound: g.firstRound,
       tiedLeaders: 0,
+      leadTrump: _leadTrumpCard(g),
     );
+  }
+
+  static DurakApiCard? _leadTrumpCard(DurakGame g) {
+    if (!g.firstRound || g.table.isNotEmpty || g.isOver) return null;
+    if (g.attackerIndex < 0 || g.attackerIndex >= g.hands.length) return null;
+    final card = lowestTrumpInHand(g.hands[g.attackerIndex], g.trump);
+    return card == null ? null : DurakApiCard.fromCard(card);
   }
 
   static String _suitLetter(Suit s) => switch (s) {
@@ -397,34 +407,44 @@ class OfflineDurakSession extends ChangeNotifier {
   @visibleForTesting
   bool get debugBotTimerActive => _botTimer?.isActive == true;
 
+  /// «Бито»/«Готово» не двигают карту — их нельзя глушить застрявшим FX-hold.
+  bool _botMayActDespiteHold(int botIdx) {
+    if (_game.throwerIndex != botIdx) return false;
+    return _game.canAttackerSayBito || _game.canAttackerConfirmTake;
+  }
+
   void _scheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _game.isOver || _revealPhase != null) return;
-    if (!_dealGraceDone || _fxHold) return;
+    if (!_dealGraceDone) return;
     final botIdx = _actingBotIndex();
     if (botIdx == null) return;
-    _botTimer = Timer(botDelay, () {
-      if (_disposed || _revealPhase != null || _fxHold) {
-        if (_fxHold && !_disposed) _scheduleBot();
+    final held = _fxHold && !_botMayActDespiteHold(botIdx);
+    _botTimer = Timer(held ? botHoldRetry : botDelay, () {
+      if (_disposed || _revealPhase != null) return;
+      final liveIdx = _actingBotIndex();
+      if (liveIdx == null) return;
+      if (_fxHold && !_botMayActDespiteHold(liveIdx)) {
+        _scheduleBot();
         return;
       }
       DurakBot? bot;
       for (final b in _bots) {
-        if (b.index == botIdx) {
+        if (b.index == liveIdx) {
           bot = b;
           break;
         }
       }
       final acted = bot?.step(_game) ?? false;
       if (!acted) {
-        if (_game.canConfirmThrowAll && _game.throwerIndex == botIdx) {
-          _game.confirmThrowAll(playerIndex: botIdx);
+        if (_game.canConfirmThrowAll && _game.throwerIndex == liveIdx) {
+          _game.confirmThrowAll(playerIndex: liveIdx);
         } else if (_game.canAttackerSayBito &&
-            _game.throwerIndex == botIdx) {
-          _applyBito(botIdx);
+            _game.throwerIndex == liveIdx) {
+          _applyBito(liveIdx);
         } else if (_game.canAttackerConfirmTake &&
-            _game.throwerIndex == botIdx) {
-          _applyConfirmTake(botIdx);
+            _game.throwerIndex == liveIdx) {
+          _applyConfirmTake(liveIdx);
         }
       } else {
         // Bot may have called take/bito/confirm via engine — sync reveal.

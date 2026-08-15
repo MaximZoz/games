@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Kart atın veya savunmayı bekleyin",
   "durakHintThrowInFirst": "Kart atın (ilk turda en fazla 5)",
   "durakHintYouFinished": "Çıktınız — sonu bekleniyor",
+  "durakFirstLeadYou": "Siz başlıyorsunuz",
+  "durakFirstLeadOpponent": "Rakip başlıyor",
+  "durakFirstLeadBot": "Bot başlıyor",
+  "durakFirstLeadOf": "{name} başlıyor",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "En düşük koz",
   "durakHintYouLost": "Kaybettiniz — siz duraksınız",
   "durakHintYourAttack": "Sizin sıra — saldırın",
   "gamesDurak": "Durak",

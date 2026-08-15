@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Đánh thêm bài hoặc chờ chắn",
   "durakHintThrowInFirst": "Đánh thêm bài (tối đa 5 ở lượt đầu)",
   "durakHintYouFinished": "Bạn đã ra — chờ kết thúc",
+  "durakFirstLeadYou": "Bạn đi trước",
+  "durakFirstLeadOpponent": "Đối thủ đi trước",
+  "durakFirstLeadBot": "Bot đi trước",
+  "durakFirstLeadOf": "{name} đi trước",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Át thấp nhất",
   "durakHintYouLost": "Bạn thua — bạn là kẻ ngốc",
   "durakHintYourAttack": "Lượt của bạn — tấn công",
   "gamesDurak": "Durak",

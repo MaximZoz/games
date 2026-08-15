@@ -646,6 +646,14 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     return best;
   }
 
+  /// Глобальный слот карты в веере — для показа младшего козыря.
+  Rect? globalRectOfCard(PlayingCard card) {
+    if (!mounted) return null;
+    final spacing = _spacingFor(max(_fanCards.length, 1));
+    final fanW = _totalWFor(spacing);
+    return _slotGlobalRect(card, spacing, fanW);
+  }
+
   Rect _slotGlobalRect(PlayingCard card, double baseSpacing, double totalW) {
     final box = context.findRenderObject() as RenderBox?;
     final cards = _layoutCards;

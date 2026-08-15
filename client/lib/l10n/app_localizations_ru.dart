@@ -153,6 +153,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get durakHintYouFinished => 'Вы вышли — ждём конца партии';
 
   @override
+  String get durakFirstLeadYou => 'Вы ходите';
+
+  @override
+  String get durakFirstLeadOpponent => 'Соперник ходит';
+
+  @override
+  String get durakFirstLeadBot => 'Бот ходит';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'Ходит $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Младший козырь';
+
+  @override
   String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
 
   @override

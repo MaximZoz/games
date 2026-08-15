@@ -54,7 +54,26 @@ func OpeningDealGrace(players int) time.Duration {
 	}
 	return 1500*time.Millisecond +
 		time.Duration(6*players)*280*time.Millisecond +
-		800*time.Millisecond
+		800*time.Millisecond +
+		1600*time.Millisecond // показ младшего козыря (кто ходит первым)
+}
+
+// LeadTrump — младший козырь текущего атакующего (первый ход).
+func (s *State) LeadTrump() *Card {
+	if s == nil || s.AttackerIndex < 0 || s.AttackerIndex >= len(s.Hands) {
+		return nil
+	}
+	var best *Card
+	for _, c := range s.Hands[s.AttackerIndex] {
+		if c.Suit != s.Trump {
+			continue
+		}
+		if best == nil || c.Rank < best.Rank {
+			cc := c
+			best = &cc
+		}
+	}
+	return best
 }
 
 // Status — статус партии.

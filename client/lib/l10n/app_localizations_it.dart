@@ -153,6 +153,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get durakHintYouFinished => 'Sei fuori — in attesa del fine';
 
   @override
+  String get durakFirstLeadYou => 'Tocca a te';
+
+  @override
+  String get durakFirstLeadOpponent => 'Tocca all’avversario';
+
+  @override
+  String get durakFirstLeadBot => 'Tocca al bot';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'Tocca a $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Briscola più bassa';
+
+  @override
   String get shopPurchaseQueued => 'Acquisto salvato — verrà applicato in modalità online';
 
   @override

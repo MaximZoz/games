@@ -184,6 +184,18 @@
   "durakHintThrowIn": "카드를 추가하거나 방어를 기다리세요",
   "durakHintThrowInFirst": "카드를 추가하세요 (첫 방어 최대 5장)",
   "durakHintYouFinished": "탈락했습니다 — 종료를 기다립니다",
+  "durakFirstLeadYou": "당신이 먼저입니다",
+  "durakFirstLeadOpponent": "상대가 먼저입니다",
+  "durakFirstLeadBot": "봇이 먼저입니다",
+  "durakFirstLeadOf": "{name}이(가) 먼저입니다",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "가장 낮은 트럼프",
   "durakHintYouLost": "패배했습니다 — 당신이 바보입니다",
   "durakHintYourAttack": "당신 차례 — 공격하세요",
   "gamesDurak": "두라크",
