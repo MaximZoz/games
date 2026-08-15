@@ -436,8 +436,9 @@ func TestHandOverButTableContinues(t *testing.T) {
 	if g.HandOver || g.TableOver {
 		t.Fatal("fresh game should not be hand/table over")
 	}
-	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 3 {
-		t.Fatalf("cash-table defaults wrong: hand=%d level=%d hpl=%d", g.HandNumber, g.BlindLevel, g.HandsPerLevel)
+	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 6 || g.HandsThisLevel != 0 {
+		t.Fatalf("cash-table defaults wrong: hand=%d level=%d hpl=%d htl=%d",
+			g.HandNumber, g.BlindLevel, g.HandsPerLevel, g.HandsThisLevel)
 	}
 	if g.BaseSmallBlind != 5 || g.BaseBigBlind != 10 {
 		t.Fatalf("base blinds wrong: sb=%d bb=%d", g.BaseSmallBlind, g.BaseBigBlind)
@@ -537,15 +538,51 @@ func TestTableOverWhenOneHasAllChips(t *testing.T) {
 	}
 }
 
-func TestBlindsDoubleEveryThreeHands(t *testing.T) {
+func TestHandsPerBlindLevel(t *testing.T) {
+	cases := []struct {
+		live int
+		want int
+	}{
+		{1, 6}, {2, 6}, {3, 6}, {4, 8}, {5, 10}, {6, 12},
+	}
+	for _, tc := range cases {
+		if got := HandsPerBlindLevel(tc.live); got != tc.want {
+			t.Fatalf("live=%d: hpl=%d want %d", tc.live, got, tc.want)
+		}
+	}
+}
+
+func TestNewGameHandsPerLevelByTableSize(t *testing.T) {
+	six, _ := NewGame([]string{"p0", "p1", "p2", "p3", "p4", "p5"}, 1000, 5, 10, newRNG())
+	if six.HandsPerLevel != 12 {
+		t.Fatalf("6-max hpl=%d want 12", six.HandsPerLevel)
+	}
+	hu, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
+	if hu.HandsPerLevel != 6 {
+		t.Fatalf("heads-up hpl=%d want 6 (not 4)", hu.HandsPerLevel)
+	}
+}
+
+func TestBlindsDoubleEveryOrbits(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 100000, 5, 10, newRNG())
-	// Hand 1: level 0, BB=10.
+	// 3 живых → 2 круга = 6 раздач на уровень.
+	if g.HandsPerLevel != 6 {
+		t.Fatalf("3-max hpl=%d want 6", g.HandsPerLevel)
+	}
 	if g.BigBlind != 10 || g.SmallBlind != 5 || g.BlindLevel != 0 {
 		t.Fatalf("hand1 blinds wrong: sb=%d bb=%d lvl=%d", g.SmallBlind, g.BigBlind, g.BlindLevel)
 	}
-	wantBB := map[int]int{2: 10, 3: 10, 4: 20, 5: 20, 6: 20, 7: 40, 8: 40, 9: 40, 10: 80}
-	wantLvl := map[int]int{2: 0, 3: 0, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2, 9: 2, 10: 3}
-	for hand := 2; hand <= 10; hand++ {
+	wantBB := map[int]int{
+		2: 10, 3: 10, 4: 10, 5: 10, 6: 10,
+		7: 20, 8: 20, 9: 20, 10: 20, 11: 20, 12: 20,
+		13: 40,
+	}
+	wantLvl := map[int]int{
+		2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
+		7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1,
+		13: 2,
+	}
+	for hand := 2; hand <= 13; hand++ {
 		playHandToEnd(t, g)
 		if g.TableOver {
 			t.Fatalf("table unexpectedly over before hand %d", hand)
@@ -565,6 +602,56 @@ func TestBlindsDoubleEveryThreeHands(t *testing.T) {
 		if g.SmallBlind != wantBB[hand]/2 {
 			t.Fatalf("hand %d: SB = %d, want %d", hand, g.SmallBlind, wantBB[hand]/2)
 		}
+	}
+}
+
+func TestHandsPerLevelFrozenUntilLevelUp(t *testing.T) {
+	g, _ := NewGame([]string{"p0", "p1", "p2", "p3"}, 100000, 5, 10, newRNG())
+	if g.HandsPerLevel != 8 {
+		t.Fatalf("4-max hpl=%d want 8", g.HandsPerLevel)
+	}
+	playHandToEnd(t, g)
+	g.Players[2].Chips = 0
+	g.Players[3].Chips = 0
+	if err := g.StartNextHand(newRNG()); err != nil {
+		t.Fatal(err)
+	}
+	if g.HandsPerLevel != 8 {
+		t.Fatalf("mid-level bust must not shrink hpl: %d", g.HandsPerLevel)
+	}
+	for hand := 3; hand <= 9; hand++ {
+		playHandToEnd(t, g)
+		if err := g.StartNextHand(newRNG()); err != nil {
+			t.Fatalf("StartNextHand for hand %d: %v", hand, err)
+		}
+	}
+	if g.HandNumber != 9 || g.BlindLevel != 1 {
+		t.Fatalf("hand=%d level=%d, want 9 / 1", g.HandNumber, g.BlindLevel)
+	}
+	if g.HandsPerLevel != 6 {
+		t.Fatalf("after level-up HU hpl=%d want 6", g.HandsPerLevel)
+	}
+	if g.HandsThisLevel != 0 {
+		t.Fatalf("handsThisLevel after level-up = %d, want 0", g.HandsThisLevel)
+	}
+}
+
+func TestDecodeInfersHandsThisLevel(t *testing.T) {
+	raw := `{"players":[{"userId":"p0","chips":1000,"seat":0},{"userId":"p1","chips":1000,"seat":1}],"handNumber":3,"handsPerLevel":3,"blindLevel":0,"baseSmallBlind":5,"baseBigBlind":10,"street":"preflop","status":"active"}`
+	g, err := Decode(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.HandsThisLevel != 2 {
+		t.Fatalf("inferred handsThisLevel=%d want 2", g.HandsThisLevel)
+	}
+	rawNew := `{"players":[{"userId":"p0","chips":1000,"seat":0},{"userId":"p1","chips":1000,"seat":1}],"handNumber":7,"handsPerLevel":6,"handsThisLevel":0,"blindLevel":1,"baseSmallBlind":5,"baseBigBlind":10,"street":"preflop","status":"active"}`
+	g2, err := Decode(rawNew)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g2.HandsThisLevel != 0 {
+		t.Fatalf("explicit 0 must be kept, got %d", g2.HandsThisLevel)
 	}
 }
 
@@ -646,7 +733,8 @@ func TestStartNextHandEncodeDecode(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g2.HandNumber != g.HandNumber || g2.BlindLevel != g.BlindLevel ||
-		g2.HandsPerLevel != g.HandsPerLevel || g2.BaseSmallBlind != g.BaseSmallBlind ||
+		g2.HandsPerLevel != g.HandsPerLevel || g2.HandsThisLevel != g.HandsThisLevel ||
+		g2.BaseSmallBlind != g.BaseSmallBlind ||
 		g2.BaseBigBlind != g.BaseBigBlind || g2.HandOver != g.HandOver || g2.TableOver != g.TableOver {
 		t.Fatalf("cash-table fields not preserved through encode/decode")
 	}

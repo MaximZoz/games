@@ -649,7 +649,6 @@ class AppLocalizationsNb extends AppLocalizations {
     return '$name wins';
   }
 
-
   @override
   String get pokerYouWonHand => 'You won the pot!';
 
@@ -734,7 +733,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every few hands.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits (at least 6 hands), so heads-up lasts longer.';
 
   @override
   String get gamesRules => 'Regler';

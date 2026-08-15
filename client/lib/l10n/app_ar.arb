@@ -314,7 +314,7 @@
   "pokerTableYouWon": "You won the table!",
   "pokerNextHandSoon": "Next hand…",
   "pokerShowCards": "Show cards",
-  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every few hands.",
+  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits (at least 6 hands), so heads-up lasts longer.",
   "gamesRules": "القواعد",
   "gamesRulesTitle": "قواعد اللعبة",
   "gamesCreate": "إنشاء لعبة",

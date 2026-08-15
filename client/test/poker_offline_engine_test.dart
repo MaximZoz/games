@@ -128,6 +128,7 @@ void main() {
       final g = freshHeadsUp(chips: 1000000, seed: 9);
       expect(g.bigBlind, 10);
       expect(g.blindLevel, 0);
+      expect(g.handsPerLevel, 6);
       final perLevel = g.handsPerLevel;
       for (var h = 0; h < perLevel; h++) {
         g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
@@ -137,6 +138,58 @@ void main() {
       expect(g.blindLevel, greaterThanOrEqualTo(1));
       expect(g.bigBlind, greaterThan(10));
       expect(g.smallBlind, g.bigBlind ~/ 2);
+    });
+
+    test('handsPerBlindLevel uses two orbits with a 6-hand floor', () {
+      expect(handsPerBlindLevel(1), 6);
+      expect(handsPerBlindLevel(2), 6);
+      expect(handsPerBlindLevel(3), 6);
+      expect(handsPerBlindLevel(4), 8);
+      expect(handsPerBlindLevel(5), 10);
+      expect(handsPerBlindLevel(6), 12);
+    });
+
+    test('6-max starts with 12 hands per level', () {
+      final g = PokerEngine.newGame(
+        playerIds: const ['p0', 'p1', 'p2', 'p3', 'p4', 'p5'],
+        startingChips: 1000,
+        smallBlind: 5,
+        bigBlind: 10,
+        dealerIndex: 0,
+        rng: Random(1),
+      );
+      expect(g.handsPerLevel, 12);
+    });
+
+    test('busting mid-level does not shrink the current level', () {
+      void foldToHandOver(PokerEngine g) {
+        while (!g.handOver) {
+          g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
+        }
+      }
+
+      final g = PokerEngine.newGame(
+        playerIds: const ['p0', 'p1', 'p2', 'p3'],
+        startingChips: 1000000,
+        smallBlind: 5,
+        bigBlind: 10,
+        dealerIndex: 0,
+        rng: Random(4),
+      );
+      expect(g.handsPerLevel, 8);
+      foldToHandOver(g);
+      g.players[2].chips = 0;
+      g.players[3].chips = 0;
+      g.startNextHand(Random(5));
+      expect(g.handsPerLevel, 8);
+      for (var hand = 3; hand <= 9; hand++) {
+        foldToHandOver(g);
+        g.startNextHand(Random(10 + hand));
+      }
+      expect(g.handNumber, 9);
+      expect(g.blindLevel, 1);
+      expect(g.handsPerLevel, 6);
+      expect(g.handsThisLevel, 0);
     });
 
     test('cannot start next hand while a hand is in progress', () {
