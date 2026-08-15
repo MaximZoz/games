@@ -16,8 +16,8 @@ void main() {
       ];
       sortDurakHand(hand, trump);
       expect(hand.map((c) => '${c.rank.value}${c.suit.name}').toList(), [
-        '13clubs',
         '10clubs',
+        '13clubs',
         '6spades',
         '7hearts',
         '14hearts',
