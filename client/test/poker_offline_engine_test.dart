@@ -128,7 +128,7 @@ void main() {
       final g = freshHeadsUp(chips: 1000000, seed: 9);
       expect(g.bigBlind, 10);
       expect(g.blindLevel, 0);
-      expect(g.handsPerLevel, 6);
+      expect(g.handsPerLevel, 12);
       final perLevel = g.handsPerLevel;
       for (var h = 0; h < perLevel; h++) {
         g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
@@ -140,10 +140,10 @@ void main() {
       expect(g.smallBlind, g.bigBlind ~/ 2);
     });
 
-    test('handsPerBlindLevel uses two orbits with a 6-hand floor', () {
-      expect(handsPerBlindLevel(1), 6);
-      expect(handsPerBlindLevel(2), 6);
-      expect(handsPerBlindLevel(3), 6);
+    test('handsPerBlindLevel: 10 hands 3-max, six orbits heads-up', () {
+      expect(handsPerBlindLevel(1), 12);
+      expect(handsPerBlindLevel(2), 12);
+      expect(handsPerBlindLevel(3), 10);
       expect(handsPerBlindLevel(4), 8);
       expect(handsPerBlindLevel(5), 10);
       expect(handsPerBlindLevel(6), 12);
@@ -188,7 +188,7 @@ void main() {
       }
       expect(g.handNumber, 9);
       expect(g.blindLevel, 1);
-      expect(g.handsPerLevel, 6);
+      expect(g.handsPerLevel, 12);
       expect(g.handsThisLevel, 0);
     });
 

@@ -245,11 +245,16 @@ class PokerSidePot {
 }
 
 const int _orbitsPerBlindLevel = 2;
+const int _headsUpOrbitsPerLevel = 6;
+const int _threeMaxHandsPerLevel = 10;
 const int _minHandsPerBlindLevel = 6;
 
-/// Сколько раздач держать текущие блайнды: два круга дилера, но не меньше 6.
+/// Сколько раздач держать текущие блайнды:
+/// два круга; втроём — 10 раздач; вдвоём — шесть кругов (12 раздач).
 int handsPerBlindLevel(int livePlayers) {
   final live = livePlayers < 2 ? 2 : livePlayers;
+  if (live == 2) return live * _headsUpOrbitsPerLevel;
+  if (live == 3) return _threeMaxHandsPerLevel;
   final n = live * _orbitsPerBlindLevel;
   return n < _minHandsPerBlindLevel ? _minHandsPerBlindLevel : n;
 }
@@ -287,7 +292,7 @@ class PokerEngine {
   // Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
   int handNumber = 1; // номер текущей раздачи, с 1
   int blindLevel = 0; // уровень блайндов, с 0
-  int handsPerLevel = 6; // раздач на текущий уровень (заморожено до повышения)
+  int handsPerLevel = 12; // раздач на текущий уровень (заморожено до повышения)
   int handsThisLevel = 0; // завершённых раздач на текущем уровне
   int baseSmallBlind = 0; // стартовый малый блайнд
   int baseBigBlind = 0; // стартовый большой блайнд
@@ -748,7 +753,7 @@ class PokerEngine {
 
     handNumber++;
     handsThisLevel++;
-    // Уровень держится handsPerLevel раздач (2 круга, минимум 6).
+    // Уровень держится handsPerLevel раздач (2 круга; втроём — 10; вдвоём — 6 кругов).
     // Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
     if (handsPerLevel > 0 && handsThisLevel >= handsPerLevel) {
       blindLevel++;

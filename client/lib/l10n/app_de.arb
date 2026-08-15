@@ -314,7 +314,7 @@
   "pokerTableYouWon": "You won the table!",
   "pokerNextHandSoon": "Next hand…",
   "pokerShowCards": "Show cards",
-  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits (at least 6 hands), so heads-up lasts longer.",
+  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.",
   "gamesRules": "Regeln",
   "gamesRulesTitle": "Spielregeln",
   "gamesCreate": "Spiel erstellen",
