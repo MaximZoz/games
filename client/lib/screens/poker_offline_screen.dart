@@ -22,11 +22,14 @@ class _PokerOfflineScreenState extends ConsumerState<PokerOfflineScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_gameId != null) return;
-    final me = ref.read(authStateProvider).valueOrNull?.id ?? 'local:player';
+    final user = ref.read(authStateProvider).valueOrNull;
     final players = widget.playerCount.clamp(2, 6);
     final session = OfflinePokerSession.create(
-      humanUserId: me,
+      humanUserId: user?.id ?? 'local:player',
       playerCount: players,
+      humanDisplayName: user?.displayName,
+      humanAvatarKind: user?.avatarKind,
+      humanAvatarValue: user?.avatarValue,
     );
     _gameId = session.gameId;
   }

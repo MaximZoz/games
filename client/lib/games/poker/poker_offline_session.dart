@@ -12,6 +12,9 @@ class OfflinePokerSession extends ChangeNotifier {
     required this.gameId,
     required this.humanUserId,
     required this.playerCount,
+    this.humanDisplayName,
+    this.humanAvatarKind = 'letter',
+    this.humanAvatarValue,
   }) {
     _startFresh();
   }
@@ -19,6 +22,9 @@ class OfflinePokerSession extends ChangeNotifier {
   final String gameId;
   final String humanUserId;
   final int playerCount;
+  final String? humanDisplayName;
+  final String humanAvatarKind;
+  final String? humanAvatarValue;
 
   static const int me = 0;
   static const int startingChips = 1000;
@@ -46,12 +52,19 @@ class OfflinePokerSession extends ChangeNotifier {
     required String humanUserId,
     int playerCount = 2,
     String? gameId,
+    String? humanDisplayName,
+    String? humanAvatarKind,
+    String? humanAvatarValue,
   }) {
     final id = gameId ?? newGameId();
     final session = OfflinePokerSession._(
       gameId: id,
       humanUserId: humanUserId.trim().isEmpty ? 'local:player' : humanUserId,
       playerCount: playerCount.clamp(2, 6),
+      humanDisplayName: humanDisplayName,
+      humanAvatarKind:
+          (humanAvatarKind ?? '').trim().isEmpty ? 'letter' : humanAvatarKind!.trim(),
+      humanAvatarValue: humanAvatarValue,
     );
     OfflinePokerRegistry.instance.put(session);
     return session;
@@ -65,13 +78,16 @@ class OfflinePokerSession extends ChangeNotifier {
       humanUserId,
       for (var i = 1; i < n; i++) 'bot:poker:$i',
     ];
+    final heroName = (humanDisplayName ?? '').trim();
     _players = [
       for (var i = 0; i < n; i++)
         _PlayerMeta(
           id: _playerIds[i],
-          displayName: i == me ? null : 'Bot $i',
-          avatarKind: 'letter',
-          avatarValue: i == me ? null : 'B',
+          displayName: i == me
+              ? (heroName.isEmpty ? null : heroName)
+              : 'Bot $i',
+          avatarKind: i == me ? humanAvatarKind : 'letter',
+          avatarValue: i == me ? humanAvatarValue : 'B',
         ),
     ];
     _engine = PokerEngine.newGame(

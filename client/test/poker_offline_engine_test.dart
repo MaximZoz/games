@@ -228,6 +228,29 @@ void main() {
       expect(g.canShowCards(2), isFalse);
     });
 
+    test('hero keeps human name and avatar instead of opponent fallback', () {
+      final session = OfflinePokerSession.create(
+        humanUserId: 'user-1',
+        playerCount: 6,
+        humanDisplayName: 'Zizulya',
+        humanAvatarKind: 'letter',
+        humanAvatarValue: 'Z',
+      );
+      addTearDown(session.dispose);
+      final view = session.toView();
+      final hero = view.me!;
+      expect(hero.id, 'user-1');
+      expect(hero.displayName, 'Zizulya');
+      expect(hero.avatarKind, 'letter');
+      expect(hero.avatarValue, 'Z');
+      expect(view.players[1].displayName, 'Bot 1');
+      expect(view.players[1].avatarValue, 'B');
+
+      session.restart();
+      expect(session.toView().me?.displayName, 'Zizulya');
+      expect(session.toView().me?.avatarValue, 'Z');
+    });
+
     test('view exposes cash-table fields on a fresh table', () {
       final session = OfflinePokerSession.create(
         humanUserId: 'me',
