@@ -153,6 +153,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get durakHintYouFinished => '탈락했습니다 — 종료를 기다립니다';
 
   @override
+  String get durakFirstLeadYou => '당신이 먼저입니다';
+
+  @override
+  String get durakFirstLeadOpponent => '상대가 먼저입니다';
+
+  @override
+  String get durakFirstLeadBot => '봇이 먼저입니다';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name이(가) 먼저입니다';
+  }
+
+  @override
+  String get durakFirstLeadReason => '가장 낮은 트럼프';
+
+  @override
   String get shopPurchaseQueued => '구매가 저장됨 — 온라인 모드에서 적용됩니다';
 
   @override

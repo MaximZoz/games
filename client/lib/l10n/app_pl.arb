@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Dokładaj karty lub czekaj na obronę",
   "durakHintThrowInFirst": "Dokładaj karty (maks. 5 w pierwszym zbiciu)",
   "durakHintYouFinished": "Wyszedłeś — czekamy na koniec",
+  "durakFirstLeadYou": "Ty wychodzisz",
+  "durakFirstLeadOpponent": "Przeciwnik wychodzi",
+  "durakFirstLeadBot": "Bot wychodzi",
+  "durakFirstLeadOf": "Wychodzi {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Najniższy atut",
   "durakHintYouLost": "Przegrałeś — jesteś durniem",
   "durakHintYourAttack": "Twoja tura — atakuj",
   "gamesDurak": "Durak",

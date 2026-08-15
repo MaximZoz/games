@@ -22,6 +22,33 @@ func TestBeats(t *testing.T) {
 	}
 }
 
+func TestLeadTrumpIsLowestOfAttacker(t *testing.T) {
+	st, err := New([]string{"a", "b"}, 36, ModePodkidnoi, 42)
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	got := st.LeadTrump()
+	var want *Card
+	for _, c := range st.Hands[st.AttackerIndex] {
+		if c.Suit != st.Trump {
+			continue
+		}
+		if want == nil || c.Rank < want.Rank {
+			cc := c
+			want = &cc
+		}
+	}
+	if want == nil {
+		if got != nil {
+			t.Fatalf("LeadTrump=%v, want nil", *got)
+		}
+		return
+	}
+	if got == nil || got.Rank != want.Rank || got.Suit != want.Suit {
+		t.Fatalf("LeadTrump=%v, want %v", got, *want)
+	}
+}
+
 func TestNewDeal(t *testing.T) {
 	st, err := New([]string{"a", "b"}, 36, ModePodkidnoi, 42)
 	if err != nil {
@@ -285,12 +312,12 @@ func TestPlaceShareNumerators(t *testing.T) {
 
 func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 	st := &State{
-		PlayerIDs:         []string{"a", "b", "c"},
-		Hands:             [][]Card{{}, {}, {{6, Hearts}}},
-		FinishedIndices:   []int{1, 0}, // b вышел первым, a — вторым
-		LoserIndex:        2,
-		Status:            StatusOver,
-		Deck:              nil,
+		PlayerIDs:       []string{"a", "b", "c"},
+		Hands:           [][]Card{{}, {}, {{6, Hearts}}},
+		FinishedIndices: []int{1, 0}, // b вышел первым, a — вторым
+		LoserIndex:      2,
+		Status:          StatusOver,
+		Deck:            nil,
 	}
 	got := st.WinnerPlaceOrder()
 	if len(got) != 2 || got[0] != 1 || got[1] != 0 {
@@ -301,13 +328,13 @@ func TestWinnerPlaceOrderFinishedSequence(t *testing.T) {
 // Один сдался, двое доиграли: 1-е и 2-е места (дурак среди оставшихся — 2-е), сдавшийся вне списка.
 func TestWinnerPlaceOrderAfterEliminate(t *testing.T) {
 	st := &State{
-		PlayerIDs:          []string{"a", "b", "c"},
-		Hands:              [][]Card{{}, {{6, Hearts}}, {}},
-		FinishedIndices:    []int{0}, // a вышел в ноль
-		LoserIndex:         1,        // b — дурак
-		EliminatedIndices:  []int{2}, // c сдался раньше
-		Status:             StatusOver,
-		Deck:               nil,
+		PlayerIDs:         []string{"a", "b", "c"},
+		Hands:             [][]Card{{}, {{6, Hearts}}, {}},
+		FinishedIndices:   []int{0}, // a вышел в ноль
+		LoserIndex:        1,        // b — дурак
+		EliminatedIndices: []int{2}, // c сдался раньше
+		Status:            StatusOver,
+		Deck:              nil,
 	}
 	got := st.WinnerPlaceOrder()
 	if len(got) != 2 || got[0] != 0 || got[1] != 1 {
@@ -376,8 +403,8 @@ func TestRefillThreePlayersAllGetCards(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{9, Clubs}, {10, Clubs}, {11, Clubs}, {12, Clubs}}, // atk: 4
-			{{9, Hearts}, {10, Hearts}},                         // def: 2
+			{{9, Clubs}, {10, Clubs}, {11, Clubs}, {12, Clubs}},     // atk: 4
+			{{9, Hearts}, {10, Hearts}},                             // def: 2
 			{{9, Spades}, {10, Spades}, {11, Spades}, {12, Spades}}, // mid: 4
 		},
 		Deck: []Card{
@@ -761,7 +788,7 @@ func TestThrowInAfterBeatenPairs(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b"},
 		Hands: [][]Card{
-			{{12, Clubs}, {12, Spades}}, // дамы для подкида
+			{{12, Clubs}, {12, Spades}},            // дамы для подкида
 			{{14, Hearts}, {6, Clubs}, {7, Clubs}}, // 3 карты у защитника
 		},
 		Trump:         Hearts,
@@ -1092,9 +1119,9 @@ func TestThrowInThreePlayers(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{7, Hearts}, {8, Hearts}},         // attacker
-			{{9, Spades}, {10, Clubs}},         // defender
-			{{7, Diamonds}, {8, Clubs}},        // third
+			{{7, Hearts}, {8, Hearts}},  // attacker
+			{{9, Spades}, {10, Clubs}},  // defender
+			{{7, Diamonds}, {8, Clubs}}, // third
 		},
 		Table:         []Pair{{Attack: Card{7, Clubs}}},
 		Trump:         Spades,
@@ -1376,15 +1403,14 @@ func TestThrowInAutoFinishWhenNoMoreCards(t *testing.T) {
 	}
 }
 
-
 // Если атакующему нечего подкинуть после отбоя — авто-пас, ход сразу третьему с картами.
 func TestAutoSkipThrowerWithoutMatchingCards(t *testing.T) {
 	st := &State{
 		PlayerIDs: []string{"a", "b", "c"},
 		Hands: [][]Card{
-			{{10, Hearts}, {11, Hearts}},       // attacker — нет ранга 6
-			{{7, Clubs}, {9, Spades}},          // defender (бьёт 6♣), карта в запасе
-			{{6, Diamonds}, {8, Spades}},       // third — есть 6
+			{{10, Hearts}, {11, Hearts}}, // attacker — нет ранга 6
+			{{7, Clubs}, {9, Spades}},    // defender (бьёт 6♣), карта в запасе
+			{{6, Diamonds}, {8, Spades}}, // third — есть 6
 		},
 		Table:         []Pair{{Attack: Card{6, Clubs}}},
 		Trump:         Spades,

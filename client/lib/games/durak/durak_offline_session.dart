@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
+import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
 
@@ -34,7 +35,7 @@ class OfflineDurakSession extends ChangeNotifier {
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
   static Duration openingDealGrace(int players) {
     final p = players.clamp(2, 4);
-    return Duration(milliseconds: 1500 + 6 * p * 280 + 800);
+    return Duration(milliseconds: 1500 + 6 * p * 280 + 800 + 1600);
   }
 
   late DurakGame _game;
@@ -191,7 +192,15 @@ class OfflineDurakSession extends ChangeNotifier {
       lastWasTake: _lastWasTake,
       firstRound: g.firstRound,
       tiedLeaders: 0,
+      leadTrump: _leadTrumpCard(g),
     );
+  }
+
+  static DurakApiCard? _leadTrumpCard(DurakGame g) {
+    if (!g.firstRound || g.table.isNotEmpty || g.isOver) return null;
+    if (g.attackerIndex < 0 || g.attackerIndex >= g.hands.length) return null;
+    final card = lowestTrumpInHand(g.hands[g.attackerIndex], g.trump);
+    return card == null ? null : DurakApiCard.fromCard(card);
   }
 
   static String _suitLetter(Suit s) => switch (s) {

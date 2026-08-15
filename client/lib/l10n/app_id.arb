@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Tambah kartu atau tunggu pertahanan",
   "durakHintThrowInFirst": "Tambah kartu (maks. 5 di pukulan pertama)",
   "durakHintYouFinished": "Anda keluar — menunggu akhir",
+  "durakFirstLeadYou": "Anda jalan dulu",
+  "durakFirstLeadOpponent": "Lawan jalan dulu",
+  "durakFirstLeadBot": "Bot jalan dulu",
+  "durakFirstLeadOf": "{name} jalan dulu",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Truf terendah",
   "durakHintYouLost": "Anda kalah — Anda durak",
   "durakHintYourAttack": "Giliran Anda — serang",
   "gamesDurak": "Durak",

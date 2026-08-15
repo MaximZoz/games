@@ -184,6 +184,18 @@
   "durakHintThrowIn": "הוסיפו קלפים או חכו להגנה",
   "durakHintThrowInFirst": "הוסיפו קלפים (עד 5 בסיבוב הראשון)",
   "durakHintYouFinished": "יצאת — מחכים לסוף",
+  "durakFirstLeadYou": "אתם מתחילים",
+  "durakFirstLeadOpponent": "היריב מתחיל",
+  "durakFirstLeadBot": "הבוט מתחיל",
+  "durakFirstLeadOf": "{name} מתחיל",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "הקלף החזק הנמוך",
   "durakHintYouLost": "הפסדת — אתה הטיפש",
   "durakHintYourAttack": "תורך — תקוף",
   "gamesDurak": "דוראק",

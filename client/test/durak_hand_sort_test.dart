@@ -26,6 +26,36 @@ void main() {
     });
   });
 
+  group('lowestTrumpInHand', () {
+    test('picks lowest trump and ignores off-suit', () {
+      expect(
+        lowestTrumpInHand(
+          const [
+            PlayingCard(Rank.ace, Suit.hearts),
+            PlayingCard(Rank.six, Suit.spades),
+            PlayingCard(Rank.nine, Suit.hearts),
+            PlayingCard(Rank.king, Suit.clubs),
+          ],
+          Suit.hearts,
+        ),
+        const PlayingCard(Rank.nine, Suit.hearts),
+      );
+    });
+
+    test('null when no trump in hand', () {
+      expect(
+        lowestTrumpInHand(
+          const [
+            PlayingCard(Rank.six, Suit.spades),
+            PlayingCard(Rank.ace, Suit.clubs),
+          ],
+          Suit.hearts,
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('shouldAnimateDurakOpeningDeal', () {
     test('fresh 36-card heads-up qualifies', () {
       expect(
@@ -88,6 +118,15 @@ void main() {
         (a, b) => compareDurakHandCards(a, b, v.trumpCard.toPlayingCard().suit),
       );
       expect(hand, sorted);
+      final expectedLead = lowestTrumpInHand(
+        session.engine.hands[v.attackerIndex],
+        v.trumpCard.toPlayingCard().suit,
+      );
+      if (expectedLead == null) {
+        expect(v.leadTrump, isNull);
+      } else {
+        expect(v.leadTrump?.toPlayingCard(), expectedLead);
+      }
     });
 
     test('fxHold keeps retry timer but bot does not attack', () {

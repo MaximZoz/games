@@ -55,6 +55,18 @@
   "durakHintYouLost": "You lost — you’re the fool",
   "durakHintDrawAllOut": "Draw — everyone went out",
   "durakHintYouFinished": "You’re out — waiting for the end",
+  "durakFirstLeadYou": "You go first",
+  "durakFirstLeadOpponent": "Opponent goes first",
+  "durakFirstLeadBot": "Bot goes first",
+  "durakFirstLeadOf": "{name} goes first",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Lowest trump",
   "shopPurchaseQueued": "Purchase saved — will apply in online mode",
   "shopPurchaseApplied": "{title} — purchase applied",
   "@shopPurchaseApplied": {

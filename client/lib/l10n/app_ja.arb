@@ -184,6 +184,18 @@
   "durakHintThrowIn": "カードを追加するか防御を待つ",
   "durakHintThrowInFirst": "カードを追加（最初の回りは最大5枚）",
   "durakHintYouFinished": "脱落しました — 終了を待っています",
+  "durakFirstLeadYou": "あなたの番です",
+  "durakFirstLeadOpponent": "相手の番です",
+  "durakFirstLeadBot": "ボットの番です",
+  "durakFirstLeadOf": "{name} の番です",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "一番弱い切り札",
   "durakHintYouLost": "負けました — あなたが愚か者です",
   "durakHintYourAttack": "あなたの番 — 攻撃してください",
   "gamesDurak": "ドゥラック",

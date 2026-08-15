@@ -153,6 +153,23 @@ class AppLocalizationsCs extends AppLocalizations {
   String get durakHintYouFinished => 'Jste venku — čekáme na konec';
 
   @override
+  String get durakFirstLeadYou => 'Začínáte vy';
+
+  @override
+  String get durakFirstLeadOpponent => 'Začíná soupeř';
+
+  @override
+  String get durakFirstLeadBot => 'Začíná bot';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'Začíná $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Nejnižší trumf';
+
+  @override
   String get shopPurchaseQueued => 'Nákup uložen — uplatní se v online režimu';
 
   @override

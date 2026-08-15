@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Lägg kort eller vänta på försvaret",
   "durakHintThrowInFirst": "Lägg kort (max 5 i första slaget)",
   "durakHintYouFinished": "Du är ute — väntar på slutet",
+  "durakFirstLeadYou": "Du går först",
+  "durakFirstLeadOpponent": "Motståndaren går först",
+  "durakFirstLeadBot": "Botten går först",
+  "durakFirstLeadOf": "{name} går först",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Lägsta trumf",
   "durakHintYouLost": "Du förlorade — du är dåren",
   "durakHintYourAttack": "Din tur — attackera",
   "gamesDurak": "Durak",

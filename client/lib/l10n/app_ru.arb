@@ -55,6 +55,18 @@
   "durakHintYouLost": "Вы проиграли — вы дурак",
   "durakHintDrawAllOut": "Ничья — все вышли",
   "durakHintYouFinished": "Вы вышли — ждём конца партии",
+  "durakFirstLeadYou": "Вы ходите",
+  "durakFirstLeadOpponent": "Соперник ходит",
+  "durakFirstLeadBot": "Бот ходит",
+  "durakFirstLeadOf": "Ходит {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Младший козырь",
   "shopPurchaseQueued": "Покупка сохранена — применится в режиме онлайн",
   "shopPurchaseApplied": "{title} — покупка применена",
   "@shopPurchaseApplied": {

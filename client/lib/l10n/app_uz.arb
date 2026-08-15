@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Karta tashlang yoki himoyani kuting",
   "durakHintThrowInFirst": "Karta tashlang (birinchi zarba: maks. 5)",
   "durakHintYouFinished": "Siz chiqdingiz — oxirini kutamiz",
+  "durakFirstLeadYou": "Siz yurasiz",
+  "durakFirstLeadOpponent": "Raqib yuradi",
+  "durakFirstLeadBot": "Bot yuradi",
+  "durakFirstLeadOf": "{name} yuradi",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Eng kichik kozir",
   "durakHintYouLost": "Yutqazdingiz — siz duraksiz",
   "durakHintYourAttack": "Sizning yurishingiz — hujum qiling",
   "gamesDurak": "Durak",

@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Echa cartas o espera la defensa",
   "durakHintThrowInFirst": "Echa cartas (máx. 5 en el primer cubierto)",
   "durakHintYouFinished": "Saliste — esperando el final",
+  "durakFirstLeadYou": "Tú sales",
+  "durakFirstLeadOpponent": "Sale el rival",
+  "durakFirstLeadBot": "Sale el bot",
+  "durakFirstLeadOf": "Sale {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Triunfo más bajo",
   "durakHintYouLost": "Perdiste — eres el tonto",
   "durakHintYourAttack": "Tu turno — ataca",
   "gamesDurak": "Durak",

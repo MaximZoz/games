@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Lisää kortteja tai odota puolustusta",
   "durakHintThrowInFirst": "Lisää kortteja (max 5 ensimmäisessä kierroksessa)",
   "durakHintYouFinished": "Olet ulos — odotetaan loppua",
+  "durakFirstLeadYou": "Aloitat sinä",
+  "durakFirstLeadOpponent": "Vastustaja aloittaa",
+  "durakFirstLeadBot": "Botti aloittaa",
+  "durakFirstLeadOf": "{name} aloittaa",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Matalin valtti",
   "durakHintYouLost": "Hävisit — olet durak",
   "durakHintYourAttack": "Sinun vuoro — hyökkää",
   "gamesDurak": "Durak",

@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Kaarten bijleggen of wacht op verdediging",
   "durakHintThrowInFirst": "Kaarten bijleggen (max. 5 in eerste slag)",
   "durakHintYouFinished": "Je bent uit — wachten op het einde",
+  "durakFirstLeadYou": "Jij komt uit",
+  "durakFirstLeadOpponent": "Tegenstander komt uit",
+  "durakFirstLeadBot": "Bot komt uit",
+  "durakFirstLeadOf": "{name} komt uit",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Laagste troef",
   "durakHintYouLost": "Je verloor — je bent de dwaas",
   "durakHintYourAttack": "Jouw beurt — val aan",
   "gamesDurak": "Durak",

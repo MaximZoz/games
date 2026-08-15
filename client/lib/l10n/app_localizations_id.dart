@@ -153,6 +153,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get durakHintYouFinished => 'Anda keluar — menunggu akhir';
 
   @override
+  String get durakFirstLeadYou => 'Anda jalan dulu';
+
+  @override
+  String get durakFirstLeadOpponent => 'Lawan jalan dulu';
+
+  @override
+  String get durakFirstLeadBot => 'Bot jalan dulu';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name jalan dulu';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Truf terendah';
+
+  @override
   String get shopPurchaseQueued => 'Pembelian disimpan — akan diterapkan di mode online';
 
   @override

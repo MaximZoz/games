@@ -184,6 +184,18 @@
   "durakHintThrowIn": "أضف أوراقًا أو انتظر الدفاع",
   "durakHintThrowInFirst": "أضف أوراقًا (بحد أقصى 5 في أول تغطية)",
   "durakHintYouFinished": "خرجت — في انتظار النهاية",
+  "durakFirstLeadYou": "أنت تبدأ",
+  "durakFirstLeadOpponent": "الخصم يبدأ",
+  "durakFirstLeadBot": "البوت يبدأ",
+  "durakFirstLeadOf": "يبدأ {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "أدنى ورقة رابحة",
   "durakHintYouLost": "لقد خسرت — أنت الأحمق",
   "durakHintYourAttack": "دورك — اهاجم",
   "gamesDurak": "دوراك",

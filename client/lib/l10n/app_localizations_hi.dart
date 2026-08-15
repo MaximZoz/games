@@ -153,6 +153,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get durakHintYouFinished => 'आप बाहर — अंत की प्रतीक्षा';
 
   @override
+  String get durakFirstLeadYou => 'आप पहले चलते हैं';
+
+  @override
+  String get durakFirstLeadOpponent => 'प्रतिद्वंद्वी पहले चलता है';
+
+  @override
+  String get durakFirstLeadBot => 'बॉट पहले चलता है';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name पहले चलता है';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'सबसे छोटा ट्रम्प';
+
+  @override
   String get shopPurchaseQueued => 'खरीदारी सहेजी गई — ऑनलाइन मोड में लागू होगी';
 
   @override

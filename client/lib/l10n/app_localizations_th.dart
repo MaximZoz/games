@@ -153,6 +153,23 @@ class AppLocalizationsTh extends AppLocalizations {
   String get durakHintYouFinished => 'คุณออกแล้ว — รอจบเกม';
 
   @override
+  String get durakFirstLeadYou => 'คุณออกก่อน';
+
+  @override
+  String get durakFirstLeadOpponent => 'ฝ่ายตรงข้ามออกก่อน';
+
+  @override
+  String get durakFirstLeadBot => 'บอทออกก่อน';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name ออกก่อน';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'ไพ่ทรัมป์ต่ำสุด';
+
+  @override
   String get shopPurchaseQueued => 'บันทึกการซื้อแล้ว — จะใช้ในโหมดออนไลน์';
 
   @override

@@ -153,6 +153,23 @@ class AppLocalizationsKk extends AppLocalizations {
   String get durakHintYouFinished => 'Сіз шықтыңыз — соңын күтеміз';
 
   @override
+  String get durakFirstLeadYou => 'Сіз жүресіз';
+
+  @override
+  String get durakFirstLeadOpponent => 'Қарсылас жүреді';
+
+  @override
+  String get durakFirstLeadBot => 'Бот жүреді';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name жүреді';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Кіші козырь';
+
+  @override
   String get shopPurchaseQueued => 'Сатып алу сақталды — онлайн режимде қолданылады';
 
   @override

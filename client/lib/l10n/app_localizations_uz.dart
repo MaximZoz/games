@@ -153,6 +153,23 @@ class AppLocalizationsUz extends AppLocalizations {
   String get durakHintYouFinished => 'Siz chiqdingiz — oxirini kutamiz';
 
   @override
+  String get durakFirstLeadYou => 'Siz yurasiz';
+
+  @override
+  String get durakFirstLeadOpponent => 'Raqib yuradi';
+
+  @override
+  String get durakFirstLeadBot => 'Bot yuradi';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name yuradi';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Eng kichik kozir';
+
+  @override
   String get shopPurchaseQueued => 'Xarid saqlandi — onlayn rejimda qo‘llanadi';
 
   @override

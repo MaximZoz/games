@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Карта тастаңыз немесе қорғанысты күтіңіз",
   "durakHintThrowInFirst": "Карта тастаңыз (бірінші соққыда макс. 5)",
   "durakHintYouFinished": "Сіз шықтыңыз — соңын күтеміз",
+  "durakFirstLeadYou": "Сіз жүресіз",
+  "durakFirstLeadOpponent": "Қарсылас жүреді",
+  "durakFirstLeadBot": "Бот жүреді",
+  "durakFirstLeadOf": "{name} жүреді",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Кіші козырь",
   "durakHintYouLost": "Жеңілдіңіз — сіз дурак",
   "durakHintYourAttack": "Сіздің жүріс — шабуылдаңыз",
   "gamesDurak": "Дурак",

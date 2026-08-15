@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Legg kort eller vent på forsvaret",
   "durakHintThrowInFirst": "Legg kort (max 5 i første slag)",
   "durakHintYouFinished": "Du er ute — venter på slutten",
+  "durakFirstLeadYou": "Du går først",
+  "durakFirstLeadOpponent": "Motstanderen går først",
+  "durakFirstLeadBot": "Boten går først",
+  "durakFirstLeadOf": "{name} går først",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Laveste trumf",
   "durakHintYouLost": "Du tapte — du er narren",
   "durakHintYourAttack": "Din tur — angrip",
   "gamesDurak": "Durak",

@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Підкиньте карти або чекайте відбою",
   "durakHintThrowInFirst": "Підкиньте карти (макс. 5 у першому відбої)",
   "durakHintYouFinished": "Ви вийшли — чекаємо кінця партії",
+  "durakFirstLeadYou": "Ви ходите",
+  "durakFirstLeadOpponent": "Суперник ходить",
+  "durakFirstLeadBot": "Бот ходить",
+  "durakFirstLeadOf": "Ходить {name}",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Молодший козир",
   "durakHintYouLost": "Ви програли — ви дурак",
   "durakHintYourAttack": "Ваш хід — атакуйте",
   "gamesDurak": "Дурак",
