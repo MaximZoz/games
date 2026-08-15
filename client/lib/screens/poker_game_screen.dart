@@ -214,7 +214,26 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   String _playerName(PokerPlayerView p) {
     final n = p.displayName?.trim() ?? '';
     if (n.isNotEmpty) return n;
+    final me = ref.read(authStateProvider).valueOrNull;
+    if (me != null && p.id == me.id) {
+      final mine = (me.displayName ?? '').trim();
+      if (mine.isNotEmpty) return mine;
+    }
     return p.isBot ? context.l10n.gameBot : context.l10n.gameOpponent;
+  }
+
+  /// Свой аватар из профиля, если в партии он не пришёл (офлайн с ботами).
+  ({String kind, String? value}) _playerAvatar(PokerPlayerView p) {
+    var kind = p.avatarKind;
+    var value = p.avatarValue;
+    final me = ref.read(authStateProvider).valueOrNull;
+    if (me != null &&
+        p.id == me.id &&
+        (value == null || value.isEmpty)) {
+      kind = me.avatarKind;
+      value = me.avatarValue;
+    }
+    return (kind: kind, value: value);
   }
 
   /// «A и B» / «A, B и C».
@@ -2242,6 +2261,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }) {
     final me = game.me;
     if (me == null) return const SizedBox.shrink();
+    final heroAvatar = _playerAvatar(me);
     final heroCards = _heroCardSize(
       narrow,
       game.players.length,
@@ -2354,8 +2374,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               behavior: HitTestBehavior.opaque,
               child: GamePlayerAvatar(
                 displayName: _playerName(me),
-                avatarKind: me.avatarKind,
-                avatarValue: me.avatarValue,
+                avatarKind: heroAvatar.kind,
+                avatarValue: heroAvatar.value,
                 frameCode: me.frameCode,
                 frameColor: me.frameColor,
                 compact: true,
