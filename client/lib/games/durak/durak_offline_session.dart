@@ -361,6 +361,26 @@ class OfflineDurakSession extends ChangeNotifier {
     if (!hold) _scheduleBot();
   }
 
+  /// Дождаться конца паузы бито/взятия — стол уходит в отбой или в руку.
+  Future<DurakGameView> waitUntilRevealDone({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    if (_disposed || _revealPhase == null) return view;
+    final done = Completer<DurakGameView>();
+    void onChanged() {
+      if (_revealPhase == null && !done.isCompleted) {
+        done.complete(view);
+      }
+    }
+
+    addListener(onChanged);
+    try {
+      return await done.future.timeout(timeout, onTimeout: () => view);
+    } finally {
+      removeListener(onChanged);
+    }
+  }
+
   /// Стартовая раздача на клиенте закончилась — можно пускать ботов.
   void markDealReady() {
     if (_disposed) return;
@@ -384,7 +404,10 @@ class OfflineDurakSession extends ChangeNotifier {
     final botIdx = _actingBotIndex();
     if (botIdx == null) return;
     _botTimer = Timer(botDelay, () {
-      if (_disposed || _revealPhase != null) return;
+      if (_disposed || _revealPhase != null || _fxHold) {
+        if (_fxHold && !_disposed) _scheduleBot();
+        return;
+      }
       DurakBot? bot;
       for (final b in _bots) {
         if (b.index == botIdx) {

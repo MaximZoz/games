@@ -164,12 +164,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Экран партии виден (не чаты / другой таб) — иначе FX не на root overlay.
   bool get _gameUiActive {
     if (!mounted) return false;
+    // Офлайн живёт на /games/durak/offline, но path у shell иногда без
+    // этого суффикса — тогда все полёты (колода/бита/веер) молча no-op.
+    if (_isOffline) {
+      try {
+        return TickerMode.of(context);
+      } catch (_) {
+        return true;
+      }
+    }
     try {
-      final path =
-          GoRouter.of(context).routeInformationProvider.value.uri.path;
-      // Онлайн: /games/durak/game/<id>; офлайн: /games/durak/offline
+      final uri = GoRouter.of(context).routeInformationProvider.value.uri;
+      final path = uri.path;
+      final matched = () {
+        try {
+          return GoRouterState.of(context).uri.path;
+        } catch (_) {
+          return '';
+        }
+      }();
       return path.contains('/games/durak/game/') ||
-          path.contains('/games/durak/offline');
+          path.contains('/games/durak/offline') ||
+          matched.contains('/games/durak/game/') ||
+          matched.contains('/games/durak/offline');
     } catch (_) {
       final route = ModalRoute.of(context);
       return route?.isCurrent == true && TickerMode.of(context);
@@ -1815,10 +1832,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _take() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || !_canTake(view)) return;
+    setState(() => _busy = true);
+    _syncOfflineFxHold();
     try {
       await ref
           .read(durakRepositoryProvider)
           .move(widget.gameId, type: 'take');
+      await _waitOfflineRevealDone();
       ref.invalidate(durakGameProvider(widget.gameId));
       try {
         await ref.read(durakGameProvider(widget.gameId).future);
@@ -1826,6 +1846,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } on GamesException catch (e) {
       if (mounted) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+        _syncOfflineFxHold();
+        _requestFxReplay();
       }
     }
   }
@@ -1838,10 +1864,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   Future<void> _sendDone() async {
+    setState(() => _busy = true);
+    _syncOfflineFxHold();
     try {
       await ref
           .read(durakRepositoryProvider)
           .move(widget.gameId, type: 'done');
+      await _waitOfflineRevealDone();
       ref.invalidate(durakGameProvider(widget.gameId));
       try {
         await ref.read(durakGameProvider(widget.gameId).future);
@@ -1850,7 +1879,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (mounted) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
       }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+        _syncOfflineFxHold();
+        _requestFxReplay();
+      }
     }
+  }
+
+  Future<void> _waitOfflineRevealDone() async {
+    if (!_isOffline) return;
+    final session = OfflineDurakRegistry.instance.get(widget.gameId);
+    if (session == null) return;
+    await session.waitUntilRevealDone();
   }
 
   Future<void> _pass() async {
@@ -1886,6 +1928,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       await ref
           .read(durakRepositoryProvider)
           .move(widget.gameId, type: 'bito');
+      await _waitOfflineRevealDone();
       DurakGameView? fresh;
       try {
         fresh =
@@ -1996,6 +2039,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _bitoCountFreeze = null;
         });
         _releaseFanLayoutSnap();
+        _syncOfflineFxHold();
+        _requestFxReplay();
         Future<void>.delayed(const Duration(milliseconds: 400), () {
           if (mounted) _suppressRemoteBitoFx = false;
         });
@@ -2975,29 +3020,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _beginTableFx();
     final n = view.hands.length;
     const handSize = 6;
-    setState(() {
-      _busy = true;
-      _fanAnimDuringBusy = true;
-      _suppressFanLayoutAnim = true;
-      _handOrder = <PlayingCard>[];
-      _pendingDealCards
-        ..clear()
-        ..addAll(myHand);
-      _oppDealPending.clear();
-      for (var i = 0; i < n; i++) {
-        if (i != view.myIndex) _oppDealPending[i] = handSize;
-      }
-      _deckCountFreeze = view.deckSize;
-      _trumpFaceVisible = false;
-      // База — финальное состояние сервера, чтобы не перезапустить FX.
-      _prevDeckCount = view.deckCount;
-      _prevBitoCount = view.bitoCount;
-      _prevHandLen = myHand.length;
-      _prevTable = List.of(view.table);
-      _prevAttackerIndex = view.attackerIndex;
-      _prevDefenderIndex = view.defenderIndex;
-      _syncPrevOppHandCounts(view);
-    });
+    // Без setState: вызываемся из build (_maybeRunTableFx). Поля читает
+    // этот же кадр — карты уже скрыты, колода «полная», пока летят.
+    _busy = true;
+    _fanAnimDuringBusy = true;
+    _suppressFanLayoutAnim = true;
+    _handOrder = <PlayingCard>[];
+    _pendingDealCards
+      ..clear()
+      ..addAll(myHand);
+    _oppDealPending.clear();
+    for (var i = 0; i < n; i++) {
+      if (i != view.myIndex) _oppDealPending[i] = handSize;
+    }
+    _deckCountFreeze = view.deckSize;
+    _trumpFaceVisible = false;
+    // База — финальное состояние сервера, чтобы не перезапустить FX.
+    _prevDeckCount = view.deckCount;
+    _prevBitoCount = view.bitoCount;
+    _prevHandLen = myHand.length;
+    _prevTable = List.of(view.table);
+    _prevAttackerIndex = view.attackerIndex;
+    _prevDefenderIndex = view.defenderIndex;
+    _syncPrevOppHandCounts(view);
     _syncOfflineFxHold();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
