@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_engine.dart';
 import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_offline_session.dart';
 
@@ -104,6 +105,38 @@ void main() {
       expect(session.debugBotTimerActive, isFalse);
       session.setFxHold(false);
       expect(session.debugFxHold, isFalse);
+    });
+
+    test('waitUntilRevealDone: стол уходит только после паузы take', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:reveal-wait',
+      );
+      addTearDown(session.dispose);
+      session.setFxHold(true);
+      session.markDealReady();
+
+      final g = session.engine;
+      g.attackerIndex = 1;
+      g.throwerIndex = 1;
+      g.turn = DurakTurn.defender;
+      g.table
+        ..clear()
+        ..add(const TablePair(PlayingCard(Rank.six, Suit.clubs)));
+      g.hands[1]
+        ..clear()
+        ..add(const PlayingCard(Rank.ace, Suit.spades));
+
+      await session.applyMove(type: 'take');
+      expect(session.view.phase, 'take_reveal');
+      expect(session.view.table, isNotEmpty);
+
+      final after = await session.waitUntilRevealDone();
+      expect(after.phase, isNot(equals('take_reveal')));
+      expect(after.table, isEmpty);
+      expect(after.lastWasTake, isTrue);
     });
   });
 }
