@@ -246,15 +246,16 @@ class PokerSidePot {
 
 const int _orbitsPerBlindLevel = 2;
 const int _headsUpOrbitsPerLevel = 6;
+const int _threeMaxHandsPerLevel = 10;
 const int _minHandsPerBlindLevel = 6;
 
-int _orbitsForBlindLevel(int livePlayers) =>
-    livePlayers <= 2 ? _headsUpOrbitsPerLevel : _orbitsPerBlindLevel;
-
-/// Сколько раздач держать текущие блайнды: два круга, вдвоём — шесть (12 раздач).
+/// Сколько раздач держать текущие блайнды:
+/// два круга; втроём — 10 раздач; вдвоём — шесть кругов (12 раздач).
 int handsPerBlindLevel(int livePlayers) {
   final live = livePlayers < 2 ? 2 : livePlayers;
-  final n = live * _orbitsForBlindLevel(live);
+  if (live == 2) return live * _headsUpOrbitsPerLevel;
+  if (live == 3) return _threeMaxHandsPerLevel;
+  final n = live * _orbitsPerBlindLevel;
   return n < _minHandsPerBlindLevel ? _minHandsPerBlindLevel : n;
 }
 
@@ -752,7 +753,7 @@ class PokerEngine {
 
     handNumber++;
     handsThisLevel++;
-    // Уровень держится handsPerLevel раздач (2 круга, вдвоём — 6).
+    // Уровень держится handsPerLevel раздач (2 круга; втроём — 10; вдвоём — 6 кругов).
     // Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
     if (handsPerLevel > 0 && handsThisLevel >= handsPerLevel) {
       blindLevel++;

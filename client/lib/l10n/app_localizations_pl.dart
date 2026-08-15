@@ -733,7 +733,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits, or every six orbits heads-up.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
 
   @override
   String get gamesRules => 'Zasady';

@@ -140,10 +140,10 @@ void main() {
       expect(g.smallBlind, g.bigBlind ~/ 2);
     });
 
-    test('handsPerBlindLevel uses two orbits, six in heads-up', () {
+    test('handsPerBlindLevel: 10 hands 3-max, six orbits heads-up', () {
       expect(handsPerBlindLevel(1), 12);
       expect(handsPerBlindLevel(2), 12);
-      expect(handsPerBlindLevel(3), 6);
+      expect(handsPerBlindLevel(3), 10);
       expect(handsPerBlindLevel(4), 8);
       expect(handsPerBlindLevel(5), 10);
       expect(handsPerBlindLevel(6), 12);

@@ -543,7 +543,7 @@ func TestHandsPerBlindLevel(t *testing.T) {
 		live int
 		want int
 	}{
-		{1, 12}, {2, 12}, {3, 6}, {4, 8}, {5, 10}, {6, 12},
+		{1, 12}, {2, 12}, {3, 10}, {4, 8}, {5, 10}, {6, 12},
 	}
 	for _, tc := range cases {
 		if got := HandsPerBlindLevel(tc.live); got != tc.want {
@@ -565,24 +565,22 @@ func TestNewGameHandsPerLevelByTableSize(t *testing.T) {
 
 func TestBlindsDoubleEveryOrbits(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 100000, 5, 10, newRNG())
-	// 3 живых → 2 круга = 6 раздач на уровень.
-	if g.HandsPerLevel != 6 {
-		t.Fatalf("3-max hpl=%d want 6", g.HandsPerLevel)
+	// 3 живых → 10 раздач на уровень.
+	if g.HandsPerLevel != 10 {
+		t.Fatalf("3-max hpl=%d want 10", g.HandsPerLevel)
 	}
 	if g.BigBlind != 10 || g.SmallBlind != 5 || g.BlindLevel != 0 {
 		t.Fatalf("hand1 blinds wrong: sb=%d bb=%d lvl=%d", g.SmallBlind, g.BigBlind, g.BlindLevel)
 	}
 	wantBB := map[int]int{
-		2: 10, 3: 10, 4: 10, 5: 10, 6: 10,
-		7: 20, 8: 20, 9: 20, 10: 20, 11: 20, 12: 20,
-		13: 40,
+		2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10,
+		11: 20,
 	}
 	wantLvl := map[int]int{
-		2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
-		7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1,
-		13: 2,
+		2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0,
+		11: 1,
 	}
-	for hand := 2; hand <= 13; hand++ {
+	for hand := 2; hand <= 11; hand++ {
 		playHandToEnd(t, g)
 		if g.TableOver {
 			t.Fatalf("table unexpectedly over before hand %d", hand)
