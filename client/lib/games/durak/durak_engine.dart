@@ -1,4 +1,5 @@
 import 'card.dart';
+import 'durak_hand_sort.dart';
 
 /// Режим игры.
 const durakModePodkidnoi = 'podkidnoi';
@@ -93,7 +94,7 @@ class DurakGame {
       }
     }
     for (final h in hands) {
-      _sortHand(h, trump);
+      sortDurakHand(h, trump);
     }
     return DurakGame(
       hands: hands,
@@ -105,17 +106,6 @@ class DurakGame {
       mode: normalizedMode,
       firstRound: true,
     );
-  }
-
-  static void _sortHand(List<PlayingCard> hand, Suit trump) {
-    hand.sort((a, b) {
-      final at = a.suit == trump ? 1 : 0;
-      final bt = b.suit == trump ? 1 : 0;
-      if (at != bt) return at.compareTo(bt);
-      final s = a.suit.index.compareTo(b.suit.index);
-      if (s != 0) return s;
-      return a.rank.compareTo(b.rank);
-    });
   }
 
   final List<List<PlayingCard>> hands;
@@ -467,7 +457,7 @@ class DurakGame {
         hands[atk].add(p.attack);
       }
     }
-    _sortHand(hands[atk], trump);
+    sortDurakHand(hands[atk], trump);
     table.clear();
     passed.clear();
     _refillHands();
@@ -521,7 +511,7 @@ class DurakGame {
     }
     table.clear();
     passed.clear();
-    _sortHand(hands[di], trump);
+    sortDurakHand(hands[di], trump);
     _refillHands();
     firstRound = false;
     _checkGameOver();
@@ -637,7 +627,7 @@ class DurakGame {
       for (var i = 0; i < maxDraw; i++) {
         hands[p].add(deck.cards.removeAt(0));
       }
-      _sortHand(hands[p], trump);
+      sortDurakHand(hands[p], trump);
     }
   }
 

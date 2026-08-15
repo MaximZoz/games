@@ -45,6 +45,7 @@ class OfflineDurakSession extends ChangeNotifier {
   bool _disposed = false;
   bool _lastWasTake = false;
   bool _dealGraceDone = false;
+  bool _fxHold = false;
   String? _revealPhase; // bito_reveal | take_reveal
 
   DurakGame get engine => _game;
@@ -79,6 +80,7 @@ class OfflineDurakSession extends ChangeNotifier {
     _revealPhase = null;
     _lastWasTake = false;
     _dealGraceDone = false;
+    _fxHold = false;
     final n = playerCount.clamp(2, 4);
     _game = DurakGame.startNew(
       playerCount: n,
@@ -351,10 +353,34 @@ class OfflineDurakSession extends ChangeNotifier {
     return null;
   }
 
+  /// Экран крутит раздачу/биту/веер — боты ждут, как онлайн ждёт OpeningDealGrace.
+  void setFxHold(bool hold) {
+    if (_disposed) return;
+    if (_fxHold == hold) return;
+    _fxHold = hold;
+    if (!hold) _scheduleBot();
+  }
+
+  /// Стартовая раздача на клиенте закончилась — можно пускать ботов.
+  void markDealReady() {
+    if (_disposed) return;
+    _dealGraceDone = true;
+    _scheduleBot();
+  }
+
+  @visibleForTesting
+  bool get debugFxHold => _fxHold;
+
+  @visibleForTesting
+  bool get debugDealGraceDone => _dealGraceDone;
+
+  @visibleForTesting
+  bool get debugBotTimerActive => _botTimer?.isActive == true;
+
   void _scheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _game.isOver || _revealPhase != null) return;
-    if (!_dealGraceDone) return;
+    if (!_dealGraceDone || _fxHold) return;
     final botIdx = _actingBotIndex();
     if (botIdx == null) return;
     _botTimer = Timer(botDelay, () {
