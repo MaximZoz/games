@@ -244,6 +244,16 @@ class PokerSidePot {
   List<int> eligible;
 }
 
+const int _orbitsPerBlindLevel = 2;
+const int _minHandsPerBlindLevel = 6;
+
+/// Сколько раздач держать текущие блайнды: два круга дилера, но не меньше 6.
+int handsPerBlindLevel(int livePlayers) {
+  final live = livePlayers < 2 ? 2 : livePlayers;
+  final n = live * _orbitsPerBlindLevel;
+  return n < _minHandsPerBlindLevel ? _minHandsPerBlindLevel : n;
+}
+
 /// Полное состояние одной раздачи Texas Hold'em.
 class PokerEngine {
   PokerEngine._(this._rng);
@@ -277,7 +287,8 @@ class PokerEngine {
   // Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
   int handNumber = 1; // номер текущей раздачи, с 1
   int blindLevel = 0; // уровень блайндов, с 0
-  int handsPerLevel = 3; // раздач на один уровень блайндов
+  int handsPerLevel = 6; // раздач на текущий уровень (заморожено до повышения)
+  int handsThisLevel = 0; // завершённых раздач на текущем уровне
   int baseSmallBlind = 0; // стартовый малый блайнд
   int baseBigBlind = 0; // стартовый большой блайнд
   bool tableOver = false; // весь стол окончен (фишки у одного)
@@ -304,7 +315,8 @@ class PokerEngine {
     g.minRaise = bigBlind;
     g.handNumber = 1;
     g.blindLevel = 0;
-    g.handsPerLevel = 3;
+    g.handsPerLevel = handsPerBlindLevel(n);
+    g.handsThisLevel = 0;
     g.tableOver = false;
     g.handOver = false;
     g.dealerIndex = dealerIndex % n;
@@ -701,6 +713,14 @@ class PokerEngine {
 
   bool get isOver => status == PokerStatus.over;
 
+  int _livePlayerCount() {
+    var n = 0;
+    for (final p in players) {
+      if (p.chips > 0) n++;
+    }
+    return n;
+  }
+
   /// Первое место с фишками (>0), начиная с [start] по кругу; -1 если таких нет.
   int _nextSeatWithChips(int start) {
     final n = players.length;
@@ -727,11 +747,13 @@ class PokerEngine {
     dealerIndex = nextDealer;
 
     handNumber++;
-    // Каждые handsPerLevel раздач поднимаем уровень блайндов.
-    if (handsPerLevel > 0 &&
-        handNumber > 1 &&
-        (handNumber - 1) % handsPerLevel == 0) {
+    handsThisLevel++;
+    // Уровень держится handsPerLevel раздач (2 круга, минимум 6).
+    // Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
+    if (handsPerLevel > 0 && handsThisLevel >= handsPerLevel) {
       blindLevel++;
+      handsThisLevel = 0;
+      handsPerLevel = handsPerBlindLevel(_livePlayerCount());
     }
     // Блайнды удваиваются на каждом уровне: BB = base << level, SB = BB/2.
     final bb = baseBigBlind << blindLevel;

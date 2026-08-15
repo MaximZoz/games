@@ -649,7 +649,6 @@ class AppLocalizationsRu extends AppLocalizations {
     return 'Выиграл $name';
   }
 
-
   @override
   String get pokerYouWonHand => 'Вы забрали банк!';
 
@@ -734,7 +733,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerShowCards => 'Показать карты';
 
   @override
-  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые несколько раздач. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.';
+  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые два круга дилера (минимум 6 раздач), поэтому вдвоём партия длится дольше. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.';
 
   @override
   String get gamesRules => 'Правила';

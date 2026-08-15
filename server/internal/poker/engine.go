@@ -97,11 +97,41 @@ type Game struct {
 	// Кэш-стол: партия = много раздач, пока фишки не соберутся у одного игрока.
 	HandNumber     int  `json:"handNumber"`     // номер текущей раздачи, с 1
 	BlindLevel     int  `json:"blindLevel"`     // уровень блайндов, с 0
-	HandsPerLevel  int  `json:"handsPerLevel"`  // раздач на один уровень блайндов
+	HandsPerLevel  int  `json:"handsPerLevel"`  // раздач на текущий уровень (заморожено до повышения)
+	HandsThisLevel int  `json:"handsThisLevel"` // завершённых раздач на текущем уровне
 	BaseSmallBlind int  `json:"baseSmallBlind"` // стартовый малый блайнд
 	BaseBigBlind   int  `json:"baseBigBlind"`   // стартовый большой блайнд
 	TableOver      bool `json:"tableOver"`      // весь стол окончен (фишки у одного)
 	HandOver       bool `json:"handOver"`       // текущая раздача завершена, стол — нет
+}
+
+const (
+	orbitsPerBlindLevel   = 2
+	minHandsPerBlindLevel = 6
+)
+
+// HandsPerBlindLevel — сколько раздач держать текущие блайнды.
+// Два круга дилера (live игроков раздач ≈ один круг), но не меньше 6,
+// чтобы хедз-ап не сжимался быстрее полного стола.
+func HandsPerBlindLevel(livePlayers int) int {
+	if livePlayers < 2 {
+		livePlayers = 2
+	}
+	n := livePlayers * orbitsPerBlindLevel
+	if n < minHandsPerBlindLevel {
+		return minHandsPerBlindLevel
+	}
+	return n
+}
+
+func (g *Game) livePlayerCount() int {
+	n := 0
+	for i := range g.Players {
+		if g.Players[i].Chips > 0 {
+			n++
+		}
+	}
+	return n
 }
 
 // NewGame создаёт новую раздачу: раздаёт карты, ставит блайнды и передаёт ход
@@ -136,7 +166,8 @@ func NewGame(playerIDs []string, startingChips, smallBlind, bigBlind int, rng *r
 		MinRaise:       bigBlind,
 		HandNumber:     1,
 		BlindLevel:     0,
-		HandsPerLevel:  3,
+		HandsPerLevel:  HandsPerBlindLevel(n),
+		HandsThisLevel: 0,
 		BaseSmallBlind: smallBlind,
 		BaseBigBlind:   bigBlind,
 		HandOver:       false,
@@ -718,9 +749,13 @@ func (g *Game) StartNextHand(rng *rand.Rand) error {
 	g.DealerIndex = nextDealer
 
 	g.HandNumber++
-	// Каждые HandsPerLevel раздач поднимаем уровень блайндов.
-	if g.HandsPerLevel > 0 && g.HandNumber > 1 && (g.HandNumber-1)%g.HandsPerLevel == 0 {
+	g.HandsThisLevel++
+	// Уровень держится HandsPerLevel раздач (2 круга, минимум 6).
+	// Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
+	if g.HandsPerLevel > 0 && g.HandsThisLevel >= g.HandsPerLevel {
 		g.BlindLevel++
+		g.HandsThisLevel = 0
+		g.HandsPerLevel = HandsPerBlindLevel(g.livePlayerCount())
 	}
 	// Блайнды удваиваются на каждом уровне: BB = BaseBigBlind << level, SB = BB/2.
 	bb := g.BaseBigBlind << uint(g.BlindLevel)
@@ -964,7 +999,15 @@ func Decode(raw string) (*Game, error) {
 		g.HandNumber = 1
 	}
 	if g.HandsPerLevel == 0 {
-		g.HandsPerLevel = 3
+		g.HandsPerLevel = HandsPerBlindLevel(g.livePlayerCount())
+	}
+	// Старые состояния без handsThisLevel считали уровень по модулю HandNumber.
+	var probe struct {
+		HandsThisLevel *int `json:"handsThisLevel"`
+	}
+	if err := json.Unmarshal([]byte(raw), &probe); err == nil &&
+		probe.HandsThisLevel == nil && g.HandNumber > 1 && g.HandsPerLevel > 0 {
+		g.HandsThisLevel = (g.HandNumber - 1) % g.HandsPerLevel
 	}
 	if g.BaseBigBlind == 0 {
 		g.BaseBigBlind = g.BigBlind
