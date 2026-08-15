@@ -10,22 +10,17 @@ void main() {
       expect(pokerOppHolePlacement(anchors[4]), PokerOppHolePlacement.above);
     });
 
-    test('6-max: upper sides put cards toward the table', () {
+    test('6-max: upper seats put cards below the plate', () {
       final anchors = pokerOpponentSeatAnchors(5);
-      expect(
-        pokerOppHolePlacement(anchors[1]),
-        PokerOppHolePlacement.inwardRight,
-      );
-      expect(
-        pokerOppHolePlacement(anchors[3]),
-        PokerOppHolePlacement.inwardLeft,
-      );
+      expect(pokerOppHolePlacement(anchors[1]), PokerOppHolePlacement.below);
+      expect(pokerOppHolePlacement(anchors[2]), PokerOppHolePlacement.below);
+      expect(pokerOppHolePlacement(anchors[3]), PokerOppHolePlacement.below);
     });
 
-    test('top-center keeps cards on the inward/right side of the plate', () {
+    test('top-center mirrors the bottom: cards under the plate', () {
       expect(
         pokerOppHolePlacement(const Alignment(0, -1)),
-        PokerOppHolePlacement.inwardRight,
+        PokerOppHolePlacement.below,
       );
     });
   });
@@ -42,6 +37,7 @@ void main() {
       final off = pokerOppHoleOffset(
         align: align,
         plateWidth: plate.width,
+        plateHeight: plate.height,
         cardsWidth: cardsWidth,
         cardsHeight: cardsHeight,
       );
@@ -79,6 +75,19 @@ void main() {
           );
         }
       }
+    });
+
+    test('top-center cards sit centered under the plate', () {
+      const align = Alignment(0, -1);
+      final off = pokerOppHoleOffset(
+        align: align,
+        plateWidth: plate.width,
+        plateHeight: plate.height,
+        cardsWidth: cardsWidth,
+        cardsHeight: cardsHeight,
+      );
+      expect(off.dx, (plate.width - cardsWidth) / 2);
+      expect(off.dy, plate.height + 4);
     });
 
     test('old outward placement would clip 6-max side seats', () {

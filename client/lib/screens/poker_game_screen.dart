@@ -1834,7 +1834,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     });
   }
 
-  /// Место соперника: аватар + неймплейт; карты — к центру стола, не за край.
+  /// Место соперника: аватар + неймплейт; вскрытие — над/под профилем.
   /// Рамка хода только вокруг неймплейта; ставка рисуется отдельно на фетре.
   Widget _buildSeat(
     PokerGameView game,
@@ -1962,9 +1962,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final cardsWidth = holeSize.width * 1.55;
     final cardsOnLeft = align.x < -0.05;
+    final holePlace = pokerOppHolePlacement(align);
+    final plateH = pokerOppPlateHeight(compact: compact);
     final holeOffset = pokerOppHoleOffset(
       align: align,
       plateWidth: plateW,
+      plateHeight: plateH,
       cardsWidth: cardsWidth,
       cardsHeight: holeSize.height,
     );
@@ -2037,7 +2040,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           if (winnerCombo != null)
             Positioned(
-              bottom: -26,
+              top: holePlace == PokerOppHolePlacement.below
+                  ? plateH + 4 + holeSize.height + 4
+                  : null,
+              bottom: holePlace == PokerOppHolePlacement.below ? null : -26,
               child: _comboLabel(winnerCombo, highlight: true),
             ),
         ],
