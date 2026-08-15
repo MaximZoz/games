@@ -453,6 +453,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _act(Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
+    _syncOfflineFxHold();
     try {
       await action();
       ref.invalidate(durakGameProvider(widget.gameId));
@@ -462,6 +463,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } finally {
       if (mounted) {
         setState(() => _busy = false);
+        _syncOfflineFxHold();
         _requestFxReplay();
       }
     }
@@ -1256,6 +1258,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _dragGlobal = null;
       _flyingFromHand.addAll(cards);
       _busy = true;
+      _syncOfflineFxHold();
       _flightLockTable = doDefend;
       _flightDefendIdx = doDefend && defendIdx >= 0 ? defendIdx : null;
       if (doTransfer) {
@@ -1451,6 +1454,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _dragGlobal = null;
           _suppressFanLayoutAnim = false;
         });
+        _syncOfflineFxHold();
         _releaseFanLayoutSnap();
         _requestFxReplay();
       } on GamesException catch (e) {
@@ -1472,6 +1476,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           _dragGlobal = null;
           _suppressFanLayoutAnim = false;
         });
+        _syncOfflineFxHold();
         _releaseFanLayoutSnap();
         _requestFxReplay();
       }
@@ -1924,6 +1929,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final flown = _flattenTableCards(snapshot).length;
     List<CardFlyTicket> tickets = const [];
     setState(() => _busy = true);
+    _syncOfflineFxHold();
     try {
       await ref
           .read(durakRepositoryProvider)
@@ -2288,68 +2294,71 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _suppressFanLayoutAnim = false;
       if (manageBusy) _busy = true;
     });
+    if (manageBusy) _syncOfflineFxHold();
 
-    for (var i = 0; i < cards.length; i++) {
-      if (!mounted) return;
-      final card = cards[i];
-      order = [...order, card]
-        ..sort((a, b) => _compareHandCards(a, b, trump));
-      final lay = _handFanVisualLayout(
-        order.length.clamp(1, 52),
-        MediaQuery.sizeOf(context).width,
-      );
-      // Старт с текущей колоды/козыря, потом уменьшаем freeze.
-      final deckFrom = _deckDealFromRect(jitter: i * 1.5);
-      _consumeDeckFreezeSlot();
-      setState(() {
-        _handOrder = order;
-        _pendingDealCards.remove(card);
-        _flyingFromHand.add(card);
-        _frozenFanCardSize = lay.cardSize;
-        _frozenFanHandCount = order.length;
-      });
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-
-      final fan = _fanKey.currentState;
-      final idx = order.indexOf(card);
-      final nAll = order.length;
-      final center = (nAll - 1) / 2.0;
-      final angle = nAll <= 1 || idx < 0
-          ? 0.0
-          : (idx - center) * (0.4 / math.max(nAll - 1, 1));
-      if (fan != null) {
-        await fan.foldCardIn(
-          card: card,
-          from: deckFrom,
-          beginScale: _tableCardSize.width / lay.cardSize.width,
-          flipToFace: true,
-          beginAngle: 0.2,
-          endAngle: angle,
-          flyDuration: flyDuration,
-          settleMs: settleMs,
-          awaitSettle: false,
-          onHandoff: () {
-            if (!mounted) return;
-            setState(() => _flyingFromHand.remove(card));
-          },
+    try {
+      for (var i = 0; i < cards.length; i++) {
+        if (!mounted) return;
+        final card = cards[i];
+        order = [...order, card]
+          ..sort((a, b) => _compareHandCards(a, b, trump));
+        final lay = _handFanVisualLayout(
+          order.length.clamp(1, 52),
+          MediaQuery.sizeOf(context).width,
         );
-      } else if (mounted) {
-        setState(() => _flyingFromHand.remove(card));
-      }
-      if (!mounted) return;
-      if (i + 1 < cards.length) {
-        await Future<void>.delayed(const Duration(milliseconds: 40));
-      }
-    }
+        // Старт с текущей колоды/козыря, потом уменьшаем freeze.
+        final deckFrom = _deckDealFromRect(jitter: i * 1.5);
+        _consumeDeckFreezeSlot();
+        setState(() {
+          _handOrder = order;
+          _pendingDealCards.remove(card);
+          _flyingFromHand.add(card);
+          _frozenFanCardSize = lay.cardSize;
+          _frozenFanHandCount = order.length;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
 
-    if (mounted) {
-      setState(() {
-        if (manageBusy) _busy = false;
-        _fanAnimDuringBusy = false;
-        _pendingDealCards.removeAll(cards);
-      });
-      _releaseFanLayoutSnap();
+        final fan = _fanKey.currentState;
+        final idx = order.indexOf(card);
+        final nAll = order.length;
+        final center = (nAll - 1) / 2.0;
+        final angle = nAll <= 1 || idx < 0
+            ? 0.0
+            : (idx - center) * (0.4 / math.max(nAll - 1, 1));
+        if (fan != null) {
+          await fan.foldCardIn(
+            card: card,
+            from: deckFrom,
+            beginScale: _tableCardSize.width / lay.cardSize.width,
+            flipToFace: true,
+            beginAngle: 0.2,
+            endAngle: angle,
+            flyDuration: flyDuration,
+            settleMs: settleMs,
+            awaitSettle: false,
+            onHandoff: () {
+              if (!mounted) return;
+              setState(() => _flyingFromHand.remove(card));
+            },
+          );
+        } else if (mounted) {
+          setState(() => _flyingFromHand.remove(card));
+        }
+        if (!mounted) return;
+        if (i + 1 < cards.length) {
+          await Future<void>.delayed(const Duration(milliseconds: 40));
+        }
+      }
+    } finally {
+      if (manageBusy) _busy = false;
+      _fanAnimDuringBusy = false;
+      _pendingDealCards.removeAll(cards);
+      if (mounted) {
+        setState(() {});
+        _releaseFanLayoutSnap();
+      }
+      if (manageBusy) _syncOfflineFxHold();
     }
   }
 
@@ -2734,8 +2743,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           return;
         }
         // Дождаться посадки отбоя и коротко показать стол перед уходом в биту.
-        while (_remoteFlyingCardIds.isNotEmpty && mounted) {
+        // Таймаут — иначе застрявший id глушит биту и бота навсегда.
+        var flyWaitMs = 0;
+        while (_remoteFlyingCardIds.isNotEmpty && mounted && flyWaitMs < 2000) {
           await Future<void>.delayed(const Duration(milliseconds: 40));
+          flyWaitMs += 40;
+        }
+        if (_remoteFlyingCardIds.isNotEmpty) {
+          _remoteFlyingCardIds.clear();
         }
         if (!mounted) {
           _markFxDone();
@@ -3516,6 +3531,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         await _animateRemoteCardFlight(f, view);
         if (!mounted) break;
       }
+      if (!mounted) {
+        _remoteFlyingCardIds.clear();
+      }
       _markFxDone();
     });
   }
@@ -3524,8 +3542,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _RemoteTableFlight flight,
     DurakGameView view,
   ) async {
-    if (!mounted || !_gameUiActive) return;
     final id = _cardId(flight.card);
+    if (!mounted || !_gameUiActive) {
+      _remoteFlyingCardIds.remove(id);
+      return;
+    }
     // Id уже добавлен в _scheduleRemoteTableFx — только убедимся.
     if (!_remoteFlyingCardIds.contains(id)) {
       setState(() => _remoteFlyingCardIds.add(id));
@@ -3578,39 +3599,43 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     List<CardFlyTicket> tickets = const [];
     final small = Size(_tableCardSize.width * 0.55, _tableCardSize.height * 0.55);
     final landAngle = flight.isDefense ? _kDefendLandAngle : 0.0;
-    await playCardsFlyAnimation(
-      context: context,
-      cards: [flight.card],
-      cardSize: small,
-      froms: [
-        Rect.fromCenter(
-          center: from.center,
-          width: small.width,
-          height: small.height,
-        ),
-      ],
-      tos: [to],
-      // Рубашка → лицо (faceDown включает flipToFace в playCardsFlyAnimation).
-      faceDown: true,
-      duration: const Duration(milliseconds: 340),
-      stagger: Duration.zero,
-      curve: kDurakFlyCurve,
-      beginScale: 1.0,
-      endScale: _tableCardSize.width / small.width,
-      beginAngles: const [0.22],
-      endAngles: [landAngle],
-      arcLift: 28,
-      keepAtEnd: true,
-      onTickets: (t) => tickets = t,
-    );
-    // Сначала карта на столе под overlay, затем dismiss — без «пустого» кадра
-    // и без долгого двойного силуэта.
-    if (mounted) {
-      setState(() => _remoteFlyingCardIds.remove(id));
-      await WidgetsBinding.instance.endOfFrame;
-    }
-    for (final t in tickets) {
-      t.dismiss();
+    try {
+      await playCardsFlyAnimation(
+        context: context,
+        cards: [flight.card],
+        cardSize: small,
+        froms: [
+          Rect.fromCenter(
+            center: from.center,
+            width: small.width,
+            height: small.height,
+          ),
+        ],
+        tos: [to],
+        // Рубашка → лицо (faceDown включает flipToFace в playCardsFlyAnimation).
+        faceDown: true,
+        duration: const Duration(milliseconds: 340),
+        stagger: Duration.zero,
+        curve: kDurakFlyCurve,
+        beginScale: 1.0,
+        endScale: _tableCardSize.width / small.width,
+        beginAngles: const [0.22],
+        endAngles: [landAngle],
+        arcLift: 28,
+        keepAtEnd: true,
+        onTickets: (t) => tickets = t,
+      );
+      // Сначала карта на столе под overlay, затем dismiss — без «пустого» кадра
+      // и без долгого двойного силуэта.
+      if (mounted) {
+        setState(() => _remoteFlyingCardIds.remove(id));
+        await WidgetsBinding.instance.endOfFrame;
+      }
+    } finally {
+      _remoteFlyingCardIds.remove(id);
+      for (final t in tickets) {
+        t.dismiss();
+      }
     }
   }
 

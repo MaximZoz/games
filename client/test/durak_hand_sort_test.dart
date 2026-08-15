@@ -90,7 +90,7 @@ void main() {
       expect(hand, sorted);
     });
 
-    test('fxHold blocks bots until deal/FX finish', () {
+    test('fxHold keeps retry timer but bot does not attack', () {
       final session = OfflineDurakSession.create(
         humanUserId: 'user-1',
         deckSize: 36,
@@ -98,13 +98,65 @@ void main() {
         gameId: 'offline:durak:fx-hold',
       );
       addTearDown(session.dispose);
+      final g = session.engine;
+      g.attackerIndex = 1;
+      g.throwerIndex = 1;
+      g.turn = DurakTurn.attacker;
+      g.table.clear();
+      if (g.hands[1].isEmpty) {
+        g.hands[1].add(const PlayingCard(Rank.seven, Suit.spades));
+      }
       session.setFxHold(true);
       session.markDealReady();
       expect(session.debugDealGraceDone, isTrue);
       expect(session.debugFxHold, isTrue);
-      expect(session.debugBotTimerActive, isFalse);
+      expect(session.debugBotTimerActive, isTrue);
       session.setFxHold(false);
       expect(session.debugFxHold, isFalse);
+    });
+
+    test('bot says bito after full defense even if fxHold stuck', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:bot-bito',
+      );
+      addTearDown(session.dispose);
+      session.setFxHold(true);
+      session.markDealReady();
+
+      final g = session.engine;
+      final attackSuit = g.trump == Suit.clubs ? Suit.spades : Suit.clubs;
+      final attack = PlayingCard(Rank.six, attackSuit);
+      final defense = PlayingCard(Rank.ace, attackSuit);
+      g.attackerIndex = 1;
+      g.throwerIndex = 1;
+      g.turn = DurakTurn.defender;
+      g.table
+        ..clear()
+        ..add(TablePair(attack));
+      g.hands[0]
+        ..clear()
+        ..add(defense)
+        ..add(PlayingCard(Rank.king, attackSuit == Suit.diamonds ? Suit.spades : Suit.diamonds));
+      g.hands[1]
+        ..clear()
+        ..add(PlayingCard(Rank.six, g.trump));
+
+      await session.applyMove(type: 'defend', card: defense);
+      expect(g.turn, DurakTurn.attackerFollowUp);
+      expect(g.canAttackerSayBito, isTrue);
+      expect(session.debugFxHold, isTrue);
+      expect(session.debugBotTimerActive, isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(session.view.phase, 'bito_reveal');
+      expect(session.view.table, isNotEmpty);
+
+      final after = await session.waitUntilRevealDone();
+      expect(after.table, isEmpty);
+      expect(after.bitoCount, greaterThan(0));
     });
 
     test('waitUntilRevealDone: стол уходит только после паузы take', () async {
