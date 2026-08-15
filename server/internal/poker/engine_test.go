@@ -436,7 +436,7 @@ func TestHandOverButTableContinues(t *testing.T) {
 	if g.HandOver || g.TableOver {
 		t.Fatal("fresh game should not be hand/table over")
 	}
-	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 6 || g.HandsThisLevel != 0 {
+	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 10 || g.HandsThisLevel != 0 {
 		t.Fatalf("cash-table defaults wrong: hand=%d level=%d hpl=%d htl=%d",
 			g.HandNumber, g.BlindLevel, g.HandsPerLevel, g.HandsThisLevel)
 	}
