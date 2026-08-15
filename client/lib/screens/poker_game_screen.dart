@@ -19,6 +19,7 @@ import 'package:multigames_client/games/poker/poker_offline_session.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
+import 'package:multigames_client/games/poker/poker_seat_layout.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
@@ -1302,7 +1303,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                           game,
                           opponents[i],
                           narrow,
-                          cardsOnLeft: oppAnchors[i].x < -0.05,
+                          align: oppAnchors[i],
                           compact: short || veryShort,
                         ),
                       ),
@@ -1370,42 +1371,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return out;
   }
 
-  /// Якоря соперников на кромке фетра.
-  /// 6-max: два слева и два справа (низ + верх), центр свободен под борд.
-  List<Alignment> _seatAnchors(int n) {
-    switch (n) {
-      case 0:
-        return const [];
-      case 1:
-        return const [Alignment(0, -1.0)];
-      case 2:
-        return const [Alignment(-0.92, -0.82), Alignment(0.92, -0.82)];
-      case 3:
-        // 4 за столом: слева/справа в верхней половине, не у борда.
-        return const [
-          Alignment(-1.0, -0.48),
-          Alignment(0, -1.0),
-          Alignment(1.0, -0.48),
-        ];
-      case 4:
-        // 5 за столом: низ-бок + верх-бок с каждой стороны.
-        return const [
-          Alignment(-0.95, 0.48),
-          Alignment(-0.88, -0.82),
-          Alignment(0.88, -0.82),
-          Alignment(0.95, 0.48),
-        ];
-      default:
-        // 6 за столом: ~7:30, 10:30, 12, 1:30, 4:30 — середина стола пустая.
-        return const [
-          Alignment(-0.95, 0.52),
-          Alignment(-0.88, -0.78),
-          Alignment(0, -1.0),
-          Alignment(0.88, -0.78),
-          Alignment(0.95, 0.52),
-        ];
-    }
-  }
+  List<Alignment> _seatAnchors(int n) => pokerOpponentSeatAnchors(n);
 
   /// Размер общей карты: 5 карт в ряд с небольшими зазорами.
   Size _communityCardSize(
@@ -1849,13 +1815,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     });
   }
 
-  /// Место соперника: аватар + неймплейт; карты — сбоку (не сверху).
+  /// Место соперника: аватар + неймплейт; карты — к центру стола, не за край.
   /// Рамка хода только вокруг неймплейта; ставка рисуется отдельно на фетре.
   Widget _buildSeat(
     PokerGameView game,
     PokerPlayerView p,
     bool narrow, {
-    bool cardsOnLeft = false,
+    required Alignment align,
     bool compact = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
@@ -1976,6 +1942,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
 
     final cardsWidth = holeSize.width * 1.55;
+    final cardsOnLeft = align.x < -0.05;
+    final holeOffset = pokerOppHoleOffset(
+      align: align,
+      plateWidth: plateW,
+      cardsWidth: cardsWidth,
+      cardsHeight: holeSize.height,
+    );
     final showBet = p.bet > 0 && !p.folded;
     final isDealer = game.dealerIndex >= 0 &&
         game.dealerIndex < game.players.length &&
@@ -1992,9 +1965,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         children: [
           if (showCards)
             Positioned(
-              // Сбоку от профиля, не в Row — карточка профиля остаётся в якоре Align.
-              left: cardsOnLeft ? -cardsWidth - 4 : null,
-              right: cardsOnLeft ? null : -cardsWidth - 4,
+              left: holeOffset.dx,
+              top: holeOffset.dy,
               child: SizedBox(
                 width: cardsWidth,
                 height: holeSize.height,
