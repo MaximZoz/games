@@ -543,7 +543,7 @@ func TestHandsPerBlindLevel(t *testing.T) {
 		live int
 		want int
 	}{
-		{1, 6}, {2, 6}, {3, 6}, {4, 8}, {5, 10}, {6, 12},
+		{1, 12}, {2, 12}, {3, 6}, {4, 8}, {5, 10}, {6, 12},
 	}
 	for _, tc := range cases {
 		if got := HandsPerBlindLevel(tc.live); got != tc.want {
@@ -558,8 +558,8 @@ func TestNewGameHandsPerLevelByTableSize(t *testing.T) {
 		t.Fatalf("6-max hpl=%d want 12", six.HandsPerLevel)
 	}
 	hu, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
-	if hu.HandsPerLevel != 6 {
-		t.Fatalf("heads-up hpl=%d want 6 (not 4)", hu.HandsPerLevel)
+	if hu.HandsPerLevel != 12 {
+		t.Fatalf("heads-up hpl=%d want 12 (6 orbits)", hu.HandsPerLevel)
 	}
 }
 
@@ -628,8 +628,8 @@ func TestHandsPerLevelFrozenUntilLevelUp(t *testing.T) {
 	if g.HandNumber != 9 || g.BlindLevel != 1 {
 		t.Fatalf("hand=%d level=%d, want 9 / 1", g.HandNumber, g.BlindLevel)
 	}
-	if g.HandsPerLevel != 6 {
-		t.Fatalf("after level-up HU hpl=%d want 6", g.HandsPerLevel)
+	if g.HandsPerLevel != 12 {
+		t.Fatalf("after level-up HU hpl=%d want 12", g.HandsPerLevel)
 	}
 	if g.HandsThisLevel != 0 {
 		t.Fatalf("handsThisLevel after level-up = %d, want 0", g.HandsThisLevel)
