@@ -162,6 +162,12 @@ void main() {
     });
 
     test('busting mid-level does not shrink the current level', () {
+      void foldToHandOver(PokerEngine g) {
+        while (!g.handOver) {
+          g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
+        }
+      }
+
       final g = PokerEngine.newGame(
         playerIds: const ['p0', 'p1', 'p2', 'p3'],
         startingChips: 1000000,
@@ -171,13 +177,13 @@ void main() {
         rng: Random(4),
       );
       expect(g.handsPerLevel, 8);
-      g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
+      foldToHandOver(g);
       g.players[2].chips = 0;
       g.players[3].chips = 0;
       g.startNextHand(Random(5));
       expect(g.handsPerLevel, 8);
       for (var hand = 3; hand <= 9; hand++) {
-        g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
+        foldToHandOver(g);
         g.startNextHand(Random(10 + hand));
       }
       expect(g.handNumber, 9);
