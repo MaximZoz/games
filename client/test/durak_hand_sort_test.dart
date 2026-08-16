@@ -331,5 +331,52 @@ void main() {
       expect(after.table, isEmpty);
       expect(after.lastWasTake, isTrue);
     });
+
+    test('waitUntilRevealDone: бито нотифаит пустой стол до UI-hold', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:bito-empty-notify',
+      );
+      addTearDown(session.dispose);
+      session.markDealReady();
+
+      final g = session.engine;
+      final attackSuit = g.trump == Suit.clubs ? Suit.spades : Suit.clubs;
+      g.attackerIndex = 0;
+      g.throwerIndex = 0;
+      g.turn = DurakTurn.attackerFollowUp;
+      g.table
+        ..clear()
+        ..add(TablePair(
+          PlayingCard(Rank.six, attackSuit),
+          PlayingCard(Rank.ace, attackSuit),
+        ));
+      g.hands[0]
+        ..clear()
+        ..add(PlayingCard(Rank.king, g.trump));
+      g.hands[1]
+        ..clear()
+        ..add(PlayingCard(Rank.seven, attackSuit == Suit.diamonds
+            ? Suit.spades
+            : Suit.diamonds));
+
+      expect(session.view.table, isNotEmpty);
+      await session.applyMove(type: 'bito');
+      expect(session.view.phase, 'bito_reveal');
+      expect(session.view.table, isNotEmpty);
+
+      var notifiedEmpty = false;
+      void onChanged() {
+        if (session.view.table.isEmpty) notifiedEmpty = true;
+      }
+
+      session.addListener(onChanged);
+      addTearDown(() => session.removeListener(onChanged));
+      final after = await session.waitUntilRevealDone();
+      expect(after.table, isEmpty);
+      expect(notifiedEmpty, isTrue);
+    });
   });
 }

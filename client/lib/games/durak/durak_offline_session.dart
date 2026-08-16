@@ -375,6 +375,9 @@ class OfflineDurakSession extends ChangeNotifier {
   }
 
   /// Дождаться конца паузы бито/взятия — стол уходит в отбой или в руку.
+  ///
+  /// По завершении [notifyListeners] уже с пустым столом. UI должен
+  /// заранее поставить hold, иначе кадр без карт и полёт из старых froms.
   Future<DurakGameView> waitUntilRevealDone({
     Duration timeout = const Duration(seconds: 3),
   }) async {

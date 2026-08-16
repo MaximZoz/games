@@ -1825,7 +1825,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _take() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || !_canTake(view)) return;
-    setState(() => _busy = true);
+    final snapshot = _currentTableSnapshot(view);
+    setState(() {
+      _busy = true;
+      _armTableHold(snapshot);
+    });
     _syncOfflineFxHold();
     try {
       await ref
@@ -1839,6 +1843,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } on GamesException catch (e) {
       if (mounted) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+        setState(() => _takeTableHold = null);
       }
     } finally {
       if (mounted) {
@@ -1857,7 +1862,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   Future<void> _sendDone() async {
-    setState(() => _busy = true);
+    final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    final snapshot = view == null
+        ? const <DurakTablePairApi>[]
+        : _currentTableSnapshot(view);
+    setState(() {
+      _busy = true;
+      _armTableHold(snapshot);
+    });
     _syncOfflineFxHold();
     try {
       await ref
@@ -1871,6 +1883,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     } on GamesException catch (e) {
       if (mounted) {
         showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+        setState(() => _takeTableHold = null);
       }
     } finally {
       if (mounted) {
@@ -1909,14 +1922,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   Future<void> _bito() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || !_canBito(view)) return;
-    final snapshot = List<DurakTablePairApi>.of(
-      _prevTable.isNotEmpty ? _prevTable : view.table,
-    );
-    final froms = _tableCardGlobalRects(snapshot);
+    final snapshot = _currentTableSnapshot(view);
     final freezeCount = view.bitoCount;
     final flown = _flattenTableCards(snapshot).length;
     List<CardFlyTicket> tickets = const [];
-    setState(() => _busy = true);
+    // Hold до waitUntilRevealDone: офлайн уже нотифаит пустой стол,
+    // иначе кадр без карт и полёт стартует из протухших froms.
+    setState(() {
+      _busy = true;
+      _armTableHold(snapshot, bitoFreeze: freezeCount);
+    });
+    _suppressRemoteBitoFx = true;
     _syncOfflineFxHold();
     try {
       await ref
@@ -1937,8 +1953,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
       if (resolvedBito) {
         _prevTable = const [];
-        _suppressRemoteBitoFx = true;
         if (snapshot.isNotEmpty && mounted) {
+          await WidgetsBinding.instance.endOfFrame;
+          if (!mounted) return;
+          final froms = _tableCardGlobalRects(snapshot);
           setState(() {
             _hidingTable = true;
             _bitoCountFreeze = freezeCount;
@@ -1958,6 +1976,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           }
           tickets = const [];
         }
+      } else if (mounted) {
+        setState(() {
+          _takeTableHold = null;
+          _bitoCountFreeze = null;
+        });
       }
 
       if (fresh != null) {
@@ -2029,6 +2052,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (mounted) {
         setState(() {
           _hidingTable = false;
+          _takeTableHold = null;
           _busy = false;
           _bitoCountFreeze = null;
         });
@@ -2040,6 +2064,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         });
       }
     }
+  }
+
+  List<DurakTablePairApi> _currentTableSnapshot(DurakGameView view) {
+    if (_prevTable.isNotEmpty) return List<DurakTablePairApi>.of(_prevTable);
+    if (view.table.isNotEmpty) return List<DurakTablePairApi>.of(view.table);
+    if (_lastNonEmptyTable.isNotEmpty) {
+      return List<DurakTablePairApi>.of(_lastNonEmptyTable);
+    }
+    return const [];
+  }
+
+  /// Держать стол на экране, пока офлайн-reveal не очистит view.
+  void _armTableHold(List<DurakTablePairApi> snapshot, {int? bitoFreeze}) {
+    if (snapshot.isEmpty) return;
+    _takeTableHold = List<DurakTablePairApi>.of(snapshot);
+    if (bitoFreeze != null) _bitoCountFreeze = bitoFreeze;
   }
 
   List<PlayingCard> _flattenTableCards(List<DurakTablePairApi> table) {
