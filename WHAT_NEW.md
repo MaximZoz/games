@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Правильные иконки игр в карточке игрока (счёт head-to-head)
 - Убрать застрявшие иконки полёта после выхода из игры
 - Крупнее ранг и масть в углах карт (дурак и покер)
 - Показать, кто ходит первым в дураке (младший козырь из веера)
@@ -13,6 +14,7 @@
 - Починить полёт стола в биту: карты не пропадают на кадр перед анимацией
 
 ## en
+- Correct game icons in the player info score chips
 - Clear leftover fly icons after leaving a game
 - Larger rank and suit in card corners (Durak and poker)
 - Durak: show who leads first (lowest trump from the fan)
