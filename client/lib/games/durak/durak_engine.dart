@@ -83,16 +83,12 @@ class DurakGame {
       }
     }
 
-    var starter = 0;
-    var bestValue = 100;
-    for (var p = 0; p < playerCount; p++) {
-      for (final c in hands[p]) {
-        if (c.suit == trump && c.rank.value < bestValue) {
-          bestValue = c.rank.value;
-          starter = p;
-        }
-      }
-    }
+    final starter = drawUntilTrumpAppears(
+          hands: hands,
+          deck: deck.cards,
+          trump: trump,
+        ) ??
+        0;
     for (final h in hands) {
       sortDurakHand(h, trump);
     }

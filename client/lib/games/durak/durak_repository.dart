@@ -292,6 +292,10 @@ class DurakGameView {
     return attackerIndex == myIndex;
   }
 
+  /// Соперник-бот (офлайн или онлайн) — ничью предлагать некому.
+  bool get hasBotOpponent =>
+      playerIds.any((id) => id.startsWith('bot:'));
+
   /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
     if (isOver || iAmEliminated || iAmFinished || isTableReveal) return false;

@@ -33,9 +33,12 @@ class OfflineDurakSession extends ChangeNotifier {
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
-  static Duration openingDealGrace(int players) {
+  static Duration openingDealGrace(int players, {int extraCards = 0}) {
     final p = players.clamp(2, 4);
-    return Duration(milliseconds: 1500 + 6 * p * 280 + 800 + 1600);
+    final extra = extraCards.clamp(0, 24);
+    return Duration(
+      milliseconds: 1500 + 6 * p * 280 + 800 + 1600 + extra * 220,
+    );
   }
 
   late DurakGame _game;
@@ -372,6 +375,9 @@ class OfflineDurakSession extends ChangeNotifier {
   }
 
   /// Дождаться конца паузы бито/взятия — стол уходит в отбой или в руку.
+  ///
+  /// По завершении [notifyListeners] уже с пустым столом. UI должен
+  /// заранее поставить hold, иначе кадр без карт и полёт из старых froms.
   Future<DurakGameView> waitUntilRevealDone({
     Duration timeout = const Duration(seconds: 3),
   }) async {
@@ -491,7 +497,11 @@ class OfflineDurakSession extends ChangeNotifier {
       return;
     }
     if (_botTimer?.isActive == true) return;
-    _botTimer = Timer(openingDealGrace(playerCount), () {
+    var extra = 0;
+    for (final h in _game.hands) {
+      if (h.length > 6) extra += h.length - 6;
+    }
+    _botTimer = Timer(openingDealGrace(playerCount, extraCards: extra), () {
       if (_disposed) return;
       _dealGraceDone = true;
       _scheduleBot();

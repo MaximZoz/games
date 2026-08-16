@@ -80,10 +80,12 @@ void main() {
     test('deals 6 cards to each player and exposes trump', () {
       final game = DurakGame.startNew(playerCount: 2, seed: 42);
       expect(game.hands.length, 2);
-      expect(game.hands[0].length, 6);
-      expect(game.hands[1].length, 6);
-      // 36 - 12 = 24 в колоде (включая открытый козырь снизу).
-      expect(game.deck.length, 24);
+      expect(game.hands[0].length, greaterThanOrEqualTo(6));
+      expect(game.hands[1].length, greaterThanOrEqualTo(6));
+      expect(
+        game.deck.length,
+        36 - game.hands[0].length - game.hands[1].length,
+      );
       expect(game.openTrumpCard, isNotNull);
       expect(game.openTrumpCard!.suit, game.trump);
     });
@@ -101,13 +103,39 @@ void main() {
             .toList(),
       };
       final anyTrump = trumps.values.any((l) => l.isNotEmpty);
-      if (!anyTrump) return;
+      expect(anyTrump, isTrue);
       final minEach = trumps.map(
         (k, v) => MapEntry(k, v.isEmpty ? 100 : v.reduce((a, b) => a < b ? a : b)),
       );
       final expected =
           minEach.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
       expect(game.attackerIndex, expected);
+    });
+
+    test('draws extra cards when nobody has a trump after the deal', () {
+      DurakGame? found;
+      for (var seed = 0; seed < 8000; seed++) {
+        final game = DurakGame.startNew(
+          playerCount: 2,
+          deckSize: 24,
+          seed: seed,
+        );
+        if (game.hands.any((h) => h.length > 6)) {
+          found = game;
+          break;
+        }
+      }
+      expect(found, isNotNull);
+      final game = found!;
+      expect(game.hands.any((h) => h.any((c) => c.suit == game.trump)), isTrue);
+      expect(
+        game.hands[game.attackerIndex].any((c) => c.suit == game.trump),
+        isTrue,
+      );
+      expect(
+        game.deck.length,
+        24 - game.hands.fold<int>(0, (s, h) => s + h.length),
+      );
     });
   });
 

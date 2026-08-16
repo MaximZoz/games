@@ -628,7 +628,7 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		fields = append(fields, "chat_id", lm)
 	}
 	// Таймер хода — только после стартовой раздачи на клиенте.
-	graceUntil := time.Now().UTC().Unix() + int64(durak.OpeningDealGrace(len(ids))/time.Second)
+	graceUntil := time.Now().UTC().Unix() + int64(durak.OpeningDealGraceFor(state)/time.Second)
 	fields = append(fields,
 		"deal_grace_until", strconv.FormatInt(graceUntil, 10),
 		"turn_deadline", "0",
@@ -940,7 +940,7 @@ func (h *GamesHandler) armDurakTurnAfterDeal(ctx context.Context, gameID string,
 func (h *GamesHandler) scheduleDurakDealGrace(gameID string) {
 	go func() {
 		// Верхняя оценка раздачи; точный arm — по deal_grace_until.
-		timer := time.NewTimer(durak.OpeningDealGrace(4) + 200*time.Millisecond)
+		timer := time.NewTimer(durak.OpeningDealGraceExtra(4, 12) + 200*time.Millisecond)
 		defer timer.Stop()
 		<-timer.C
 		ctx := context.Background()

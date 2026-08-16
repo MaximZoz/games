@@ -56,6 +56,59 @@ void main() {
     });
   });
 
+  group('drawUntilTrumpAppears', () {
+    test('does nothing when someone already has a trump', () {
+      final hands = [
+        [const PlayingCard(Rank.nine, Suit.hearts)],
+        [const PlayingCard(Rank.six, Suit.spades)],
+      ];
+      final deck = [
+        const PlayingCard(Rank.ace, Suit.clubs),
+        const PlayingCard(Rank.six, Suit.hearts),
+      ];
+      expect(
+        drawUntilTrumpAppears(hands: hands, deck: deck, trump: Suit.hearts),
+        0,
+      );
+      expect(hands[0], hasLength(1));
+      expect(deck, hasLength(2));
+    });
+
+    test('players draw one each until a trump appears', () {
+      final hands = [
+        [
+          const PlayingCard(Rank.six, Suit.spades),
+          const PlayingCard(Rank.seven, Suit.spades),
+          const PlayingCard(Rank.eight, Suit.spades),
+          const PlayingCard(Rank.nine, Suit.clubs),
+          const PlayingCard(Rank.ten, Suit.clubs),
+          const PlayingCard(Rank.jack, Suit.clubs),
+        ],
+        [
+          const PlayingCard(Rank.six, Suit.diamonds),
+          const PlayingCard(Rank.seven, Suit.diamonds),
+          const PlayingCard(Rank.eight, Suit.diamonds),
+          const PlayingCard(Rank.nine, Suit.spades),
+          const PlayingCard(Rank.ten, Suit.spades),
+          const PlayingCard(Rank.jack, Suit.diamonds),
+        ],
+      ];
+      final deck = [
+        const PlayingCard(Rank.queen, Suit.clubs),
+        const PlayingCard(Rank.six, Suit.hearts),
+        const PlayingCard(Rank.ace, Suit.hearts),
+      ];
+      expect(
+        drawUntilTrumpAppears(hands: hands, deck: deck, trump: Suit.hearts),
+        1,
+      );
+      expect(hands[0], hasLength(7));
+      expect(hands[1], hasLength(7));
+      expect(hands[1].last, const PlayingCard(Rank.six, Suit.hearts));
+      expect(deck, hasLength(1));
+    });
+  });
+
   group('shouldAnimateDurakOpeningDeal', () {
     test('fresh 36-card heads-up qualifies', () {
       expect(
@@ -68,6 +121,22 @@ void main() {
           handCounts: const [6, 6],
           deckSize: 36,
           deckCount: 24,
+        ),
+        isTrue,
+      );
+    });
+
+    test('fresh deal with extra trump-hunt cards qualifies', () {
+      expect(
+        shouldAnimateDurakOpeningDeal(
+          isOver: false,
+          tableIsEmpty: true,
+          bitoCount: 0,
+          myIndex: 0,
+          myHandLen: 7,
+          handCounts: const [7, 7],
+          deckSize: 36,
+          deckCount: 22,
         ),
         isTrue,
       );
@@ -117,6 +186,9 @@ void main() {
       final sorted = List.of(hand)..sort(
         (a, b) => compareDurakHandCards(a, b, v.trumpCard.toPlayingCard().suit),
       );
+      expect(v.isOver, isFalse);
+      expect(v.firstRound, isTrue);
+      expect(v.hasBotOpponent, isTrue);
       expect(hand, sorted);
       final expectedLead = lowestTrumpInHand(
         session.engine.hands[v.attackerIndex],
@@ -198,6 +270,36 @@ void main() {
       expect(after.bitoCount, greaterThan(0));
     });
 
+    test('restart yields a fresh opening-deal view', () {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:rematch-fx',
+      );
+      addTearDown(session.dispose);
+      session.engine.loserIndex = 0;
+      expect(session.view.isOver, isTrue);
+      session.restart();
+      final v = session.view;
+      expect(v.isOver, isFalse);
+      expect(v.firstRound, isTrue);
+      expect(session.debugDealGraceDone, isFalse);
+      expect(
+        shouldAnimateDurakOpeningDeal(
+          isOver: v.isOver,
+          tableIsEmpty: v.table.isEmpty,
+          bitoCount: v.bitoCount,
+          myIndex: v.myIndex,
+          myHandLen: v.hands[v.myIndex].count,
+          handCounts: [for (final h in v.hands) h.count],
+          deckSize: v.deckSize,
+          deckCount: v.deckCount,
+        ),
+        isTrue,
+      );
+    });
+
     test('waitUntilRevealDone: стол уходит только после паузы take', () async {
       final session = OfflineDurakSession.create(
         humanUserId: 'user-1',
@@ -228,6 +330,53 @@ void main() {
       expect(after.phase, isNot(equals('take_reveal')));
       expect(after.table, isEmpty);
       expect(after.lastWasTake, isTrue);
+    });
+
+    test('waitUntilRevealDone: бито нотифаит пустой стол до UI-hold', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        gameId: 'offline:durak:bito-empty-notify',
+      );
+      addTearDown(session.dispose);
+      session.markDealReady();
+
+      final g = session.engine;
+      final attackSuit = g.trump == Suit.clubs ? Suit.spades : Suit.clubs;
+      g.attackerIndex = 0;
+      g.throwerIndex = 0;
+      g.turn = DurakTurn.attackerFollowUp;
+      g.table
+        ..clear()
+        ..add(TablePair(
+          PlayingCard(Rank.six, attackSuit),
+          PlayingCard(Rank.ace, attackSuit),
+        ));
+      g.hands[0]
+        ..clear()
+        ..add(PlayingCard(Rank.king, g.trump));
+      g.hands[1]
+        ..clear()
+        ..add(PlayingCard(Rank.seven, attackSuit == Suit.diamonds
+            ? Suit.spades
+            : Suit.diamonds));
+
+      expect(session.view.table, isNotEmpty);
+      await session.applyMove(type: 'bito');
+      expect(session.view.phase, 'bito_reveal');
+      expect(session.view.table, isNotEmpty);
+
+      var notifiedEmpty = false;
+      void onChanged() {
+        if (session.view.table.isEmpty) notifiedEmpty = true;
+      }
+
+      session.addListener(onChanged);
+      addTearDown(() => session.removeListener(onChanged));
+      final after = await session.waitUntilRevealDone();
+      expect(after.table, isEmpty);
+      expect(notifiedEmpty, isTrue);
     });
   });
 }
