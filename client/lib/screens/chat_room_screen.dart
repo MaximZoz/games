@@ -61,6 +61,9 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
     this.fromGames = false,
     this.gameReturnPath,
     this.inSplitView = false,
+    this.actingAsUserId,
+    this.onLeave,
+    this.hidePeerActions = false,
   });
 
   final String chatID;
@@ -69,6 +72,15 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
   final bool fromGames;
   final String? gameReturnPath;
   final bool inSplitView;
+
+  /// Админ в поддержке: пузыри/редактирование от имени support-аккаунта.
+  final String? actingAsUserId;
+
+  /// Встроенный режим (админка): назад без ухода на `/chats`.
+  final VoidCallback? onLeave;
+
+  /// Скрыть блок/дружбу/очистку (диалог поддержки в админке).
+  final bool hidePeerActions;
 
   @override
   ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
@@ -150,6 +162,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   String? _peerLanguageHint;
 
   String get _autoTranslatePrefsKey => 'chat_auto_translate_${widget.chatID}';
+
+  String? get _selfId => chatSelfId(
+        actingAsUserId: widget.actingAsUserId,
+        authUserId: ref.read(authStateProvider).valueOrNull?.id,
+      );
 
   @override
   void initState() {
@@ -236,7 +253,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Future<void> _ensureTranslations({String? onlyMessageID}) async {
     if (!_autoTranslate || _translateInFlight || !mounted) return;
-    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    final meID = _selfId;
     if (meID == null || meID.isEmpty) return;
     final targetLang =
         effectiveAppLocale(ref.read(appLocaleProvider)).languageCode;
@@ -375,6 +392,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   /// Для markRead по WS — иначе сообщения помечаются прочитанными «в фоне».
   bool _isChatRoomVisibleInShell() {
     if (_leavingToChats || !mounted) return false;
+    if (widget.onLeave != null) return true;
     return ref.read(currentRoutePathProvider) == '/chats/${widget.chatID}';
   }
 
@@ -403,6 +421,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final chatId = widget.chatID;
     // Локально сразу сбрасываем unread — список чатов без мигания.
     markChatReadInChatsCache(ref, chatId);
+
+    if (widget.onLeave != null) {
+      widget.onLeave!();
+      unawaited(
+        ref.read(chatsRepositoryProvider).markRead(chatId).then<void>(
+              (_) {},
+              onError: (_, __) {},
+            ),
+      );
+      return;
+    }
 
     if (widget.fromGames && widget.gameReturnPath != null) {
       context.go(widget.gameReturnPath!);
@@ -893,7 +922,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   Future<void> _showMessageActions(ChatMessageItem message) async {
-    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    final meID = _selfId;
     final mine = meID != null && message.senderUserID == meID;
     final canEdit = mine &&
         (message.body.trim().isNotEmpty || message.hasImage) &&
@@ -1208,7 +1237,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       // Подарки коллекций: бейдж на Главной/Предметах, даже если подарок
       // пришёл офлайн и пользователь сразу открыл чат (до sync списка).
       // Только ещё не прочитанные — чтобы старые подарки не поднимали бейдж снова.
-      final me = ref.read(authStateProvider).valueOrNull?.id;
+      final me = _selfId;
       // В группе read_at на сообщениях больше не ставится — не поднимаем подарки
       // повторно после локального markRead.
       final groupAlreadyRead =
@@ -1353,7 +1382,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       final item = ChatMessageItem.fromJson(Map<String, dynamic>.from(messageRaw));
       _upsertMessage(item);
       if (!mounted) return;
-      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      final meID = _selfId;
       if (item.senderUserID != meID && _isChatRoomVisibleInShell()) {
         // Доставку отмечает chatsListProvider глобально; здесь только прочтение.
         unawaited(() async {
@@ -1383,7 +1412,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
     if (type == 'chat_delivered') {
       if (chatID != widget.chatID) return;
-      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      final meID = _selfId;
       final delivererID = payload['deliverer_user_id']?.toString();
       if (meID == null || delivererID == null || delivererID == meID) return;
       final at = payload['delivered_at']?.toString() ??
@@ -1397,7 +1426,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     }
     if (type == 'chat_read') {
       if (chatID != widget.chatID) return;
-      final meID = ref.read(authStateProvider).valueOrNull?.id;
+      final meID = _selfId;
       final readerID = payload['reader_user_id']?.toString();
       if (meID == null || readerID == null || readerID == meID) return;
       final at = payload['read_at']?.toString() ??
@@ -2185,6 +2214,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ],
                   ),
           ),
+          if (!widget.hidePeerActions)
           PopupMenuButton<_RoomAction>(
             enabled: !_roomActionInFlight,
             tooltip: context.l10n.chatActions,
@@ -2317,7 +2347,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final members =
         chat.members.where((m) => m.id.isNotEmpty).toList(growable: false);
     if (members.isEmpty) return;
-    final meId = ref.read(authStateProvider).valueOrNull?.id;
+    final meId = _selfId;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -2434,7 +2464,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       unawaited(_loadCapabilities());
     });
 
-    final meID = ref.watch(authStateProvider).valueOrNull?.id;
+    final meID = chatSelfId(
+      actingAsUserId: widget.actingAsUserId,
+      authUserId: ref.watch(authStateProvider).valueOrNull?.id,
+    );
     // Нужен watch: пункты меню «заявка» / «убрать из друзей» зависят от снимка.
     ref.watch(friendsSnapshotProvider);
     ref.watch(appLocaleProvider);
@@ -2461,7 +2494,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final peerPresence =
         currentChat?.isGroup == true || peerUser == null ? null : presence[peerUser.id];
 
-    if (narrowLandscape) {
+    if (narrowLandscape && widget.onLeave == null) {
       Future.microtask(() {
         if (!mounted) return;
         ref.read(mobileToolbarLeadingProvider.notifier).state =
@@ -3388,7 +3421,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   String _replyAuthorLabel(ChatMessageItem message) {
-    final meID = ref.read(authStateProvider).valueOrNull?.id;
+    final meID = _selfId;
     if (meID != null && message.senderUserID == meID) {
       return context.l10n.chatReplySelf;
     }

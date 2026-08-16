@@ -700,3 +700,12 @@ class ChatException implements Exception {
   @override
   String toString() => message;
 }
+
+/// Кто «я» в комнате чата: админ в поддержке действует как support-аккаунт.
+String? chatSelfId({String? actingAsUserId, String? authUserId}) {
+  final acting = actingAsUserId?.trim() ?? '';
+  if (acting.isNotEmpty) return acting;
+  final auth = authUserId?.trim() ?? '';
+  if (auth.isEmpty) return null;
+  return auth;
+}

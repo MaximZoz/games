@@ -113,9 +113,14 @@ final supportChatsProvider =
 
 /// Запрос открыть переписку поддержки с пользователем (из меню админки).
 class AdminOpenSupportChat {
-  const AdminOpenSupportChat({required this.userId, this.peerName});
+  const AdminOpenSupportChat({
+    required this.userId,
+    this.peerName,
+    this.chatId,
+  });
   final String userId;
   final String? peerName;
+  final String? chatId;
 }
 
 final adminOpenSupportChatProvider =
