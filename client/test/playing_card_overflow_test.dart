@@ -4,6 +4,11 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 void main() {
+  test('corner index occupies a large share of the card face', () {
+    expect(kPlayingCardCornerWidthFactor, greaterThanOrEqualTo(0.40));
+    expect(kPlayingCardCornerHeightFactor, greaterThanOrEqualTo(0.38));
+  });
+
   testWidgets('PlayingCardWidget has no overflow at table/hand sizes', (tester) async {
     final cards = [
       for (final s in Suit.values)
