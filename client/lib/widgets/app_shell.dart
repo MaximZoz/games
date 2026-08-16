@@ -27,6 +27,7 @@ import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
@@ -429,6 +430,7 @@ class AppShell extends ConsumerWidget {
     }();
 
     void navigateWithPrefetch(int i) {
+      GameFlyOverlay.dismissAll();
       final item = navItems[i];
       final target = item.path;
       final branch = item.branchIndex;

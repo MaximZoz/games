@@ -30,6 +30,7 @@ import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
@@ -346,6 +347,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _timeoutRetryTimer?.cancel();
     _rematchPollTimer?.cancel();
     _realtimeSubscription?.close();
+    GameFlyOverlay.dismissAll();
     super.dispose();
   }
 

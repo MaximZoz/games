@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 /// Общая кривая полёта: мягкий разгон и длинное торможение без «щелчка» в конце.
 const Curve kDurakFlyCurve = Curves.easeOutQuint;
@@ -24,7 +25,7 @@ class CardFlyTicket {
   void dismiss() {
     if (_dismissed) return;
     _dismissed = true;
-    _entry?.remove();
+    GameFlyOverlay.remove(_entry);
     _curved?.dispose();
     _controller?.dispose();
   }
@@ -62,8 +63,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   final anim = CurvedAnimation(parent: controller, curve: curve);
 
   late final OverlayEntry entry;
-  entry = OverlayEntry(
-    builder: (ctx) {
+  entry = GameFlyOverlay.insert(overlay, (ctx) {
       return IgnorePointer(
         child: AnimatedBuilder(
           animation: anim,
@@ -113,15 +113,13 @@ Future<CardFlyTicket> playCardFlyAnimation({
       );
     },
   );
-
-  overlay.insert(entry);
   try {
     await controller.forward();
   } catch (_) {
     // ignore dispose races
   }
   if (!keepAtEnd) {
-    entry.remove();
+    GameFlyOverlay.remove(entry);
     anim.dispose();
     controller.dispose();
     if (!completer.isCompleted) completer.complete();
