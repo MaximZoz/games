@@ -5,7 +5,13 @@
 ## ru
 - Показать, кто ходит первым в дураке (младший козырь из веера)
 - Починить зависание бота на «Бито» в офлайне
+- Убрать «предложить ничью» в дураке с ботом
+- Починить старт второй партии с ботом
+- Если козыря нет — добор по одной карте, пока не появится
 
 ## en
 - Durak: show who leads first (lowest trump from the fan)
 - Fix offline bot hanging on “Beat”
+- Hide the draw offer in bot Durak games
+- Fix the second bot game not starting
+- If nobody has a trump, draw one card each until one appears

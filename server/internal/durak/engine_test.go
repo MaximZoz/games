@@ -54,14 +54,70 @@ func TestNewDeal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new: %v", err)
 	}
-	if got := len(st.Hands[0]); got != 6 {
-		t.Fatalf("hand[0] = %d, want 6", got)
+	if got := len(st.Hands[0]); got < 6 {
+		t.Fatalf("hand[0] = %d, want >= 6", got)
 	}
-	if got := len(st.Deck); got != 24 {
-		t.Fatalf("deck = %d, want 24 (36-12)", got)
+	if got := len(st.Hands[1]); got < 6 {
+		t.Fatalf("hand[1] = %d, want >= 6", got)
+	}
+	total := len(st.Hands[0]) + len(st.Hands[1])
+	if got := len(st.Deck); got != 36-total {
+		t.Fatalf("deck = %d, want %d", got, 36-total)
 	}
 	if st.TrumpCard.Suit != st.Trump {
 		t.Fatalf("trump mismatch")
+	}
+}
+
+func TestDrawUntilTrump(t *testing.T) {
+	hands := [][]Card{
+		{{6, Spades}, {7, Spades}, {8, Spades}, {9, Clubs}, {10, Clubs}, {11, Clubs}},
+		{{6, Diamonds}, {7, Diamonds}, {8, Diamonds}, {9, Spades}, {10, Spades}, {11, Diamonds}},
+	}
+	deck := []Card{{12, Clubs}, {6, Hearts}, {14, Hearts}}
+	hands, deck, starter := drawUntilTrump(hands, deck, Hearts)
+	if starter != 1 {
+		t.Fatalf("starter=%d, want 1", starter)
+	}
+	if len(hands[0]) != 7 || len(hands[1]) != 7 {
+		t.Fatalf("hands %d/%d, want 7/7", len(hands[0]), len(hands[1]))
+	}
+	if hands[1][6] != (Card{6, Hearts}) {
+		t.Fatalf("drawn trump = %v", hands[1][6])
+	}
+	if len(deck) != 1 {
+		t.Fatalf("deck=%d, want 1 (face-up trump)", len(deck))
+	}
+}
+
+func TestNewDrawsUntilTrump(t *testing.T) {
+	var found *State
+	for seed := int64(0); seed < 8000; seed++ {
+		st, err := New([]string{"a", "b"}, 24, ModePodkidnoi, seed)
+		if err != nil {
+			t.Fatalf("new: %v", err)
+		}
+		if len(st.Hands[0]) > 6 || len(st.Hands[1]) > 6 {
+			found = st
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("expected a 24-card deal that needed extra draws")
+	}
+	has := false
+	for _, h := range found.Hands {
+		for _, c := range h {
+			if c.Suit == found.Trump {
+				has = true
+			}
+		}
+	}
+	if !has {
+		t.Fatal("nobody has trump after extra draws")
+	}
+	if found.LeadTrump() == nil {
+		t.Fatal("LeadTrump missing after extra draws")
 	}
 }
 

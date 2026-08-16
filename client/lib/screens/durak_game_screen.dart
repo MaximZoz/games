@@ -228,26 +228,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       _midFinishedHandled = false;
       _openedAsObserver = false;
       _openModeCaptured = false;
-      _confettiArmed = false;
-      _lockedMidDraw = null;
-      _lockedMidPlace = null;
-      _prevDeckCount = -1;
-      _prevBitoCount = -1;
-      _prevHandLen = -1;
-      _prevTable = const [];
-      _lastNonEmptyTable = const [];
-      _firstLeadVisible = false;
-      _leadRevealHiddenSeat = null;
-      _prevAttackerIndex = -1;
-      _prevDefenderIndex = -1;
-      _prevOppHandCounts.clear();
-      _oppDealPending.clear();
-      _pendingDealCards.clear();
-      _handOrder = null;
-      _trumpFaceVisible = true;
-      _deckCountFreeze = null;
-      _fxScheduled = false;
-      _fxNeedsReplay = false;
+      _resetTableFxForNewDeal();
       setState(() {
         _rematchLobbyId = null;
         _rematchDeclined = false;
@@ -2451,6 +2432,58 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     _requestFxReplay();
   }
 
+  /// Полный сброс FX перед новой раздачей (реванш с ботом на том же экране).
+  void _resetTableFxForNewDeal() {
+    _busy = false;
+    _fxScheduled = false;
+    _fxNeedsReplay = false;
+    _fanAnimDuringBusy = false;
+    _suppressFanLayoutAnim = false;
+    _flightLockTable = false;
+    _flightDefendIdx = null;
+    _hidingTable = false;
+    _takeTableHold = null;
+    _suppressRemoteBitoFx = false;
+    _suppressNextDealFx = false;
+    _trumpFaceVisible = true;
+    _firstLeadVisible = false;
+    _leadRevealHiddenSeat = null;
+    _prevDeckCount = -1;
+    _prevBitoCount = -1;
+    _prevHandLen = -1;
+    _prevAttackerIndex = -1;
+    _prevDefenderIndex = -1;
+    _prevTable = const [];
+    _lastNonEmptyTable = const [];
+    _prevOppHandCounts.clear();
+    _oppDealPending.clear();
+    _pendingDealCards.clear();
+    _flyingFromHand.clear();
+    _incomingFanCards.clear();
+    _flyingToTable.clear();
+    _leftTableCards.clear();
+    _remoteFlyingCardIds.clear();
+    _optimisticAttacks.clear();
+    _optimisticDefends.clear();
+    _selected.clear();
+    _handOrder = null;
+    _deckCountFreeze = null;
+    _bitoCountFreeze = null;
+    _activeCard = null;
+    _holdingFanCard = false;
+    _dragGlobal = null;
+    _frozenFanCardSize = null;
+    _frozenFanHandCount = null;
+    _prevGameStatus = null;
+    _balanceGainPlayed = false;
+    _lossChipRevealed = false;
+    _midFinishedHandled = false;
+    _confettiArmed = false;
+    _lockedMidDraw = null;
+    _lockedMidPlace = null;
+    _syncOfflineFxHold();
+  }
+
   void _syncOfflineFxHold() {
     if (!_isOffline) return;
     OfflineDurakRegistry.instance
@@ -2510,7 +2543,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
 
     // Первый кадр: стартовая раздача или просто запомнить базу.
+    // Завершённую партию не считаем «первым кадром» — иначе реванш
+    // съедает флаг, пока провайдер ещё отдаёт старый isOver.
     if (_prevDeckCount < 0) {
+      if (view.isOver) return;
       if (_shouldAnimateOpeningDeal(view, handLen)) {
         _scheduleOpeningDeal(view, hand);
         return;
@@ -3045,7 +3081,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (_fxScheduled) return;
     _beginTableFx();
     final n = view.hands.length;
-    const handSize = 6;
     // Без setState: вызываемся из build (_maybeRunTableFx). Поля читает
     // этот же кадр — карты уже скрыты, колода «полная», пока летят.
     _busy = true;
@@ -3057,7 +3092,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       ..addAll(myHand);
     _oppDealPending.clear();
     for (var i = 0; i < n; i++) {
-      if (i != view.myIndex) _oppDealPending[i] = handSize;
+      if (i != view.myIndex) {
+        _oppDealPending[i] = view.hands[i].count;
+      }
     }
     _deckCountFreeze = view.deckSize;
     _trumpFaceVisible = false;
@@ -3142,9 +3179,46 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
 
     if (!mounted || !_gameUiActive) return;
+    await _animateTrumpHuntDeals(view, myCards, myIdx);
+    if (!mounted || !_gameUiActive) return;
     await _animateTrumpReveal(view);
     if (!mounted || !_gameUiActive) return;
     await _animateFirstLead(view, myHand);
+  }
+
+  /// Если после раздачи козыря ни у кого не было — добор по одной из колоды.
+  Future<void> _animateTrumpHuntDeals(
+    DurakGameView view,
+    List<PlayingCard> myCards,
+    int myIdx,
+  ) async {
+    final extras = [
+      for (final h in view.hands) (h.count - 6).clamp(0, 99),
+    ];
+    if (extras.every((e) => e <= 0)) return;
+    const fly = Duration(milliseconds: 160);
+    const settle = 90;
+    const gap = Duration(milliseconds: 14);
+    while (extras.any((e) => e > 0)) {
+      for (var seat = 0; seat < extras.length; seat++) {
+        if (extras[seat] <= 0) continue;
+        extras[seat]--;
+        if (!mounted || !_gameUiActive) return;
+        if (seat == view.myIndex) {
+          if (myIdx >= myCards.length) continue;
+          await _animateDealCardsToFan(
+            [myCards[myIdx]],
+            flyDuration: fly,
+            settleMs: settle,
+          );
+          myIdx++;
+        } else {
+          await _animateDealToOpponent(seat, 1, flyDuration: fly);
+        }
+        if (!mounted) return;
+        await Future<void>.delayed(gap);
+      }
+    }
   }
 
   /// Кто ходит первым: вскрыть младший козырь из веера и подпись.
@@ -4093,26 +4167,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       if (_isOffline) {
         final session = OfflineDurakRegistry.instance.get(widget.gameId);
         if (session != null) {
-          // Сброс FX-базы для стартовой раздачи заново.
-          _prevDeckCount = -1;
-          _prevBitoCount = -1;
-          _prevHandLen = -1;
-          _prevTable = const [];
-          _prevAttackerIndex = -1;
-          _prevDefenderIndex = -1;
-          _firstLeadVisible = false;
-          _leadRevealHiddenSeat = null;
-          _prevOppHandCounts.clear();
-          _handOrder = null;
-          _trumpFaceVisible = true;
-          _markFxDone();
-          _prevGameStatus = null;
-          _balanceGainPlayed = false;
-          _lossChipRevealed = false;
-          _midFinishedHandled = false;
-          _confettiArmed = false;
-          _lockedMidDraw = null;
-          _lockedMidPlace = null;
+          _resetTableFxForNewDeal();
           session.restart();
           ref.invalidate(durakGameProvider(widget.gameId));
           if (mounted) setState(() => _isRematching = false);
@@ -4522,7 +4577,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     right: 4,
                     top: topPad + 4,
                     child: GameActionsOverlay(
-                      canDraw: !isMulti && view.playerIds.length == 2,
+                      canDraw: !isMulti &&
+                          view.playerIds.length == 2 &&
+                          !view.hasBotOpponent,
                       iOfferedDraw: _iOfferedDraw(view),
                       opponentOfferedDraw: _opponentOfferedDraw(view),
                       onSurrender: _confirmSurrender,

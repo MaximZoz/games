@@ -24,7 +24,43 @@ PlayingCard? lowestTrumpInHand(Iterable<PlayingCard> hand, Suit trump) {
   return best;
 }
 
-/// Свежая партия: руки по 6, стол пуст — крутить раздачу из колоды в веер.
+/// У кого младший козырь среди всех рук; null — козыря ни у кого нет.
+int? lowestTrumpOwner(List<List<PlayingCard>> hands, Suit trump) {
+  int? owner;
+  PlayingCard? best;
+  for (var p = 0; p < hands.length; p++) {
+    final card = lowestTrumpInHand(hands[p], trump);
+    if (card == null) continue;
+    if (best == null || card.rank.value < best.rank.value) {
+      best = card;
+      owner = p;
+    }
+  }
+  return owner;
+}
+
+/// Если козыря нет — игроки по кругу берут по одной с верха колоды
+/// (открытый козырь в конце не трогаем), пока козырь не появится.
+/// Возвращает, у кого младший козырь после добора.
+int? drawUntilTrumpAppears({
+  required List<List<PlayingCard>> hands,
+  required List<PlayingCard> deck,
+  required Suit trump,
+}) {
+  var owner = lowestTrumpOwner(hands, trump);
+  if (owner != null) return owner;
+  while (owner == null && deck.length > 1) {
+    for (var p = 0; p < hands.length; p++) {
+      if (deck.length <= 1) break;
+      hands[p].add(deck.removeAt(0));
+      owner = lowestTrumpOwner(hands, trump);
+      if (owner != null) return owner;
+    }
+  }
+  return owner;
+}
+
+/// Свежая партия: руки полные (6+ добор козыря), стол пуст — крутить раздачу.
 bool shouldAnimateDurakOpeningDeal({
   required bool isOver,
   required bool tableIsEmpty,
@@ -36,14 +72,21 @@ bool shouldAnimateDurakOpeningDeal({
   required int deckCount,
 }) {
   if (isOver || !tableIsEmpty || bitoCount > 0) return false;
-  if (myIndex < 0 || myHandLen <= 0) return false;
+  if (myIndex < 0 || myHandLen < 6) return false;
   final n = handCounts.length;
   if (n < 2) return false;
   const handSize = 6;
-  if (myHandLen != handSize) return false;
+  var total = 0;
+  var minH = 1 << 20;
+  var maxH = 0;
   for (final c in handCounts) {
-    if (c != handSize) return false;
+    if (c < handSize) return false;
+    total += c;
+    if (c < minH) minH = c;
+    if (c > maxH) maxH = c;
   }
-  final expectedDeck = deckSize - n * handSize;
+  if (maxH - minH > 1) return false;
+  if (myHandLen != handCounts[myIndex]) return false;
+  final expectedDeck = deckSize - total;
   return deckCount == expectedDeck && expectedDeck >= 0;
 }
