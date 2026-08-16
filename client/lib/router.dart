@@ -16,6 +16,7 @@ import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/screens/games_screen.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/screens/home_screen.dart';
 import 'package:multigames_client/screens/inventory_screen.dart';
@@ -175,7 +176,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/games',
     refreshListenable: refreshListenable,
-    observers: [chatsRouteObserver],
+    observers: [chatsRouteObserver, GameFlyOverlayObserver()],
     redirect: (context, state) async {
       final path = state.uri.path;
       final isPublic = _publicPaths.contains(path);

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 /// Веер карт игрока.
 ///
@@ -168,7 +169,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   }
 
   void _removeOverlay() {
-    _overlay?.remove();
+    GameFlyOverlay.remove(_overlay);
     _overlay = null;
   }
 
@@ -180,8 +181,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     if (_overlay != null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    _overlay = OverlayEntry(
-      builder: (ctx) {
+    _overlay = GameFlyOverlay.insert(overlay, (ctx) {
         final card = _liftedCard;
         final center = _liftGlobalCenter;
         if (card == null || center == null) return const SizedBox.shrink();
@@ -217,7 +217,6 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
         );
       },
     );
-    overlay.insert(_overlay!);
   }
 
   Future<void> _animateOverlayTo(
@@ -239,15 +238,14 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final completer = Completer<void>();
     late OverlayEntry entry;
     final duration = Duration(milliseconds: ms ?? (soft ? 260 : 200));
-    entry = OverlayEntry(
-      builder: (ctx) {
+    entry = GameFlyOverlay.insert(overlay, (ctx) {
         return IgnorePointer(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: duration,
             curve: kDurakFlyCurve,
             onEnd: () {
-              entry.remove();
+              GameFlyOverlay.remove(entry);
               if (!completer.isCompleted) completer.complete();
             },
             builder: (context, t, child) {
@@ -288,7 +286,6 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
         );
       },
     );
-    overlay.insert(entry);
     await completer.future;
   }
 

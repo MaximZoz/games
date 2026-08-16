@@ -26,6 +26,7 @@ import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -91,6 +92,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   @override
   void dispose() {
     _disposed = true;
+    GameFlyOverlay.dismissAll();
     for (final c in _chipControllers) {
       c.dispose();
     }
@@ -1771,8 +1773,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       );
       _chipControllers.add(controller);
       final curved = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
-      entry = OverlayEntry(
-        builder: (_) {
+      entry = GameFlyOverlay.insert(overlay, (_) {
           return IgnorePointer(
             child: AnimatedBuilder(
               animation: curved,
@@ -1824,9 +1825,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           );
         },
       );
-      overlay.insert(entry);
       controller.forward().whenComplete(() {
-        entry.remove();
+        GameFlyOverlay.remove(entry);
         curved.dispose();
         controller.dispose();
         _chipControllers.remove(controller);
@@ -2179,8 +2179,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       _chipControllers.add(controller);
       final curved =
           CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
-      entry = OverlayEntry(
-        builder: (_) {
+      entry = GameFlyOverlay.insert(overlay, (_) {
           return IgnorePointer(
             child: AnimatedBuilder(
               animation: curved,
@@ -2216,9 +2215,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           );
         },
       );
-      overlay.insert(entry);
       controller.forward().whenComplete(() {
-        entry.remove();
+        GameFlyOverlay.remove(entry);
         curved.dispose();
         controller.dispose();
         _chipControllers.remove(controller);
