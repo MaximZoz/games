@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/screens/chat_room_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -765,6 +767,7 @@ class _SupportTab extends ConsumerStatefulWidget {
 class _SupportTabState extends ConsumerState<_SupportTab> {
   String? _selectedUserId;
   String? _selectedPeerName;
+  String? _selectedChatId;
 
   @override
   Widget build(BuildContext context) {
@@ -774,6 +777,7 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
       setState(() {
         _selectedUserId = next.userId;
         _selectedPeerName = next.peerName;
+        _selectedChatId = next.chatId;
       });
       // Сбрасываем запрос, чтобы повторное открытие того же юзера сработало.
       ref.read(adminOpenSupportChatProvider.notifier).state = null;
@@ -782,10 +786,12 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
       return _SupportConversation(
         userId: _selectedUserId!,
         peerName: _selectedPeerName,
+        chatId: _selectedChatId,
         onBack: () {
           setState(() {
             _selectedUserId = null;
             _selectedPeerName = null;
+            _selectedChatId = null;
           });
           ref.invalidate(supportChatsProvider);
         },
@@ -836,6 +842,8 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                         : () => setState(() {
                               _selectedUserId = c.peerId;
                               _selectedPeerName = c.peerName;
+                              _selectedChatId =
+                                  c.chatId.trim().isEmpty ? null : c.chatId;
                             }),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -912,9 +920,11 @@ class _SupportConversation extends ConsumerStatefulWidget {
     required this.userId,
     required this.onBack,
     this.peerName,
+    this.chatId,
   });
   final String userId;
   final String? peerName;
+  final String? chatId;
   final VoidCallback onBack;
 
   @override
@@ -923,233 +933,122 @@ class _SupportConversation extends ConsumerStatefulWidget {
 }
 
 class _SupportConversationState extends ConsumerState<_SupportConversation> {
-  final TextEditingController _ctrl = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final List<SupportMessageItem> _messages = [];
+  SupportChatSession? _session;
   bool _loading = true;
-  bool _sending = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    _scrollController.dispose();
-    super.dispose();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
     try {
       final repo = ref.read(adminRepositoryProvider);
-      // isMine считается по support_user_id из ответа API, не по id админа.
-      final msgs = await repo.listSupportMessages(widget.userId, '');
+      final session = await repo.ensureSupportChat(widget.userId);
       if (!mounted) return;
       setState(() {
-        _messages
-          ..clear()
-          ..addAll(msgs.reversed);
+        final fallbackChat = widget.chatId?.trim() ?? '';
+        _session = session.chatId.isNotEmpty
+            ? session
+            : SupportChatSession(
+                chatId: fallbackChat,
+                supportUserId: session.supportUserId,
+                peerId: session.peerId,
+              );
         _loading = false;
       });
       ref.invalidate(supportChatsProvider);
-      _scrollToBottom();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  Future<void> _send() async {
-    final text = _ctrl.text.trim();
-    if (text.isEmpty || _sending) return;
-    _ctrl.clear();
-    setState(() => _sending = true);
-    try {
-      final repo = ref.read(adminRepositoryProvider);
-      await repo.sendSupportMessage(widget.userId, text);
-      if (!mounted) return;
-      setState(() {
-        _messages.add(SupportMessageItem(
-          id: 'tmp-${DateTime.now().millisecondsSinceEpoch}',
-          body: text,
-          createdAt: DateTime.now().toUtc().toIso8601String(),
-          isMine: true,
-        ));
-        _sending = false;
-      });
-      _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _sending = false);
-      showAppSnackBar(
-        context,
-        message: formatUserError(e, fallback: 'Не отправлено'),
-        kind: AppSnackKind.error,
-      );
+      setState(() {
+        _error = formatUserError(e, fallback: context.l10n.supportOpenFailed);
+        _loading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceUnified,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceUnified,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: widget.onBack,
-        ),
-        title: Text(
-          (widget.peerName != null && widget.peerName!.trim().isNotEmpty)
-              ? widget.peerName!.trim()
-              : 'Поддержка',
-          style: const TextStyle(
-              color: AppColors.textPrimary, fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: Column(
+    final l10n = context.l10n;
+    final title = (widget.peerName != null && widget.peerName!.trim().isNotEmpty)
+        ? widget.peerName!.trim()
+        : l10n.commonPlayer;
+    if (_loading) {
+      return Column(
         children: [
-          Expanded(
-            child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.accentStart,
-                    ),
-                  )
-                : _messages.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Нет сообщений',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, i) =>
-                            _MessageBubble(message: _messages[i]),
-                      ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _ctrl,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'Ответ от поддержки…',
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(
-                              color:
-                                  AppColors.accentStart.withValues(alpha: 0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(
-                              color:
-                                  AppColors.accentStart.withValues(alpha: 0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide:
-                              const BorderSide(color: AppColors.accentStart),
-                        ),
-                        filled: true,
-                        fillColor: AppColors.surfaceCard,
-                      ),
-                      onSubmitted: (_) => _send(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _sending ? null : _send,
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.send_rounded, size: 20),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                    ),
-                  ),
-                ],
+          _SupportChatHeader(title: title, onBack: widget.onBack),
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
               ),
             ),
           ),
         ],
-      ),
+      );
+    }
+    if (_error != null || _session == null || _session!.chatId.isEmpty) {
+      return Column(
+        children: [
+          _SupportChatHeader(title: title, onBack: widget.onBack),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _error ?? l10n.supportOpenFailed,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return ChatRoomScreen(
+      chatID: _session!.chatId,
+      peerName: title,
+      actingAsUserId: _session!.supportUserId,
+      hidePeerActions: true,
+      onLeave: widget.onBack,
     );
   }
 }
 
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
-  final SupportMessageItem message;
+class _SupportChatHeader extends StatelessWidget {
+  const _SupportChatHeader({required this.title, required this.onBack});
+
+  final String title;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final isMine = message.isMine;
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.72),
-        decoration: BoxDecoration(
-          color: isMine ? AppColors.accentStart : AppColors.surfaceCard,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(14),
-            topRight: const Radius.circular(14),
-            bottomLeft: Radius.circular(isMine ? 14 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 14),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: context.l10n.commonBack,
+            onPressed: onBack,
           ),
-          border: isMine
-              ? null
-              : Border.all(
-                  color: AppColors.accentStart.withValues(alpha: 0.15)),
-        ),
-        child: Text(
-          message.body,
-          style: TextStyle(
-            color: isMine ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
-            height: 1.3,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -212,7 +212,10 @@ func SendChatMessageOpts(
 		if err != nil {
 			return ChatMessage{}, err
 		}
-		if peerSettings.MessagesFriendsOnly {
+		// Поддержка всегда может писать текст/фото, даже если у пира friends-only.
+		if peerSettings.MessagesFriendsOnly &&
+			!userIsSupport(ctx, pool, senderUserID) &&
+			!userIsSupport(ctx, pool, peerID) {
 			friends, err := AreFriends(ctx, pool, senderUserID, peerID)
 			if err != nil {
 				return ChatMessage{}, err

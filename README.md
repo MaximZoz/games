@@ -195,6 +195,8 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
   - `GET /api/admin/users`
   - `GET /api/admin/logs`, `POST /api/admin/logs/clear`
   - `POST /api/admin/users/set-admin|reset-password|delete`
+  - `GET /api/admin/support/chats`, `GET /api/admin/support/chats/:userId` (chat_id + support_user_id)
+  - `GET|POST /api/admin/support/chats/:userId/messages` (`limit`/`before`; полный чат админ ведёт через `/api/chats/*` от имени поддержки)
 - Realtime: `GET /api/ws?access_token=<jwt>` (WebSocket) — presence, чаты, друзья, игры, награды.
 - Логи:
   - backend request logging middleware;
@@ -213,6 +215,7 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 - Локализация интерфейса (27+ языков).
 - Админка:
   - управление пользователями;
+  - поддержка — тот же чат, что у пользователя (пагинация, фото, ответы, редактирование);
   - просмотр логов с фильтрами (user/source/date range);
   - копирование логов (включая лимиты 120/500/1000/все).
 - Модуль друзей:
