@@ -5,7 +5,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/shimmer_animation_scope.dart';
@@ -129,7 +129,11 @@ class GameStatsBody extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _GameStatsBlock(
                     title: _gameTypeTitle(l10n, g.gameType),
-                    icon: _gameTypeIconWidget(g.gameType, size: 20),
+                    icon: GameTypeIcon(
+                      gameType: g.gameType,
+                      size: 20,
+                      color: Colors.white,
+                    ),
                     wins: g.won,
                     draws: g.drawn,
                     losses: g.lost,
@@ -159,21 +163,6 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
       return l10n.gamesPoker;
     default:
       return gameType;
-  }
-}
-
-Widget _gameTypeIconWidget(String gameType, {double size = 22}) {
-  switch (gameType) {
-    case 'tictactoe':
-      return Icon(Icons.grid_3x3_rounded, color: Colors.white, size: size);
-    case 'durak':
-      return DurakGameIcon(size: size, color: Colors.white);
-    case 'battleship':
-      return Icon(Icons.sailing_rounded, color: Colors.white, size: size);
-    case 'poker':
-      return Icon(Icons.style_rounded, color: Colors.white, size: size);
-    default:
-      return Icon(Icons.sports_esports_rounded, color: Colors.white, size: size);
   }
 }
 
