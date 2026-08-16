@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Крупнее ранг и масть в углах карт (дурак и покер)
 - Показать, кто ходит первым в дураке (младший козырь из веера)
 - Починить зависание бота на «Бито» в офлайне
 - Убрать «предложить ничью» в дураке с ботом
@@ -11,6 +12,7 @@
 - Починить полёт стола в биту: карты не пропадают на кадр перед анимацией
 
 ## en
+- Larger rank and suit in card corners (Durak and poker)
 - Durak: show who leads first (lowest trump from the fan)
 - Fix offline bot hanging on “Beat”
 - Hide the draw offer in bot Durak games

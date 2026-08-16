@@ -160,6 +160,10 @@ class _PlayingCardWidgetState extends State<PlayingCardWidget> {
   }
 }
 
+/// Доля карты под индекс в углу — крупный ранг и масть для слабого зрения.
+const kPlayingCardCornerWidthFactor = 0.44;
+const kPlayingCardCornerHeightFactor = 0.42;
+
 /// Рисует ранг/масть в заданных rect без RenderFlex/RenderParagraph overflow.
 class _PlayingCardFacePainter extends CustomPainter {
   _PlayingCardFacePainter({
@@ -176,18 +180,19 @@ class _PlayingCardFacePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cornerW = size.width * 0.32;
-    final cornerH = size.height * 0.28;
-    final padX = size.width * 0.06;
-    final padY = size.height * 0.035;
+    final cornerW = size.width * kPlayingCardCornerWidthFactor;
+    final cornerH = size.height * kPlayingCardCornerHeightFactor;
+    final padX = size.width * 0.04;
+    final padY = size.height * 0.022;
 
     _paintCorner(canvas, Rect.fromLTWH(padX, padY, cornerW, cornerH));
 
+    // Центр чуть меньше — крупные углы не наезжают на пип.
     final center = Rect.fromLTRB(
-      size.width * 0.18,
-      size.height * 0.26,
-      size.width * 0.82,
-      size.height * 0.74,
+      size.width * 0.22,
+      size.height * 0.34,
+      size.width * 0.78,
+      size.height * 0.66,
     );
     _paintSuit(canvas, center);
 
@@ -206,29 +211,32 @@ class _PlayingCardFacePainter extends CustomPainter {
   }
 
   void _paintCorner(Canvas canvas, Rect box) {
-    final rankBox = Rect.fromLTWH(
-      box.left,
-      box.top,
-      box.width,
-      box.height * 0.52,
-    );
+    final rankH = box.height * 0.58;
+    final rankBox = Rect.fromLTWH(box.left, box.top, box.width, rankH);
+    final suitW = box.width * 0.86;
+    final suitH = box.height * 0.40;
     final suitBox = Rect.fromLTWH(
       box.left,
-      box.top + box.height * 0.48,
-      box.width,
-      box.height * 0.52,
+      box.top + rankH * 0.94,
+      suitW,
+      suitH,
     );
     _paintFittedText(
       canvas,
       rankBox,
       rank,
-      fontSize: box.height * 0.48,
-      weight: FontWeight.w800,
+      fontSize: rankH,
+      weight: FontWeight.w900,
+      align: Alignment.topLeft,
     );
-    _paintSuit(canvas, suitBox);
+    _paintSuit(canvas, suitBox, align: Alignment.topLeft);
   }
 
-  void _paintSuit(Canvas canvas, Rect box) {
+  void _paintSuit(
+    Canvas canvas,
+    Rect box, {
+    Alignment align = Alignment.center,
+  }) {
     if (box.width <= 0 || box.height <= 0) return;
     final img = suitImage;
     if (img == null) return;
@@ -242,8 +250,8 @@ class _PlayingCardFacePainter extends CustomPainter {
     final scale = sx < sy ? sx : sy;
     final dw = iw * scale;
     final dh = ih * scale;
-    final dx = box.left + (box.width - dw) / 2;
-    final dy = box.top + (box.height - dh) / 2;
+    final dx = box.left + (box.width - dw) * (align.x + 1) / 2;
+    final dy = box.top + (box.height - dh) * (align.y + 1) / 2;
     final dst = Rect.fromLTWH(dx, dy, dw, dh);
     final src = Rect.fromLTWH(0, 0, iw, ih);
     canvas.drawImageRect(img, src, dst, Paint()..filterQuality = FilterQuality.medium);
@@ -255,6 +263,7 @@ class _PlayingCardFacePainter extends CustomPainter {
     String text, {
     required double fontSize,
     required FontWeight weight,
+    Alignment align = Alignment.center,
   }) {
     if (box.width <= 0 || box.height <= 0 || text.isEmpty) return;
 
@@ -265,7 +274,8 @@ class _PlayingCardFacePainter extends CustomPainter {
           color: color,
           fontSize: fontSize,
           fontWeight: weight,
-          height: 1,
+          height: 0.92,
+          letterSpacing: text.length > 1 ? -fontSize * 0.06 : 0,
           leadingDistribution: TextLeadingDistribution.even,
         ),
       ),
@@ -281,14 +291,14 @@ class _PlayingCardFacePainter extends CustomPainter {
     final th = tp.height;
     if (tw <= 0 || th <= 0) return;
 
-    // Запас 4% — метрики web-шрифтов иногда чуть больше layout-box.
-    final sx = (box.width * 0.96) / tw;
-    final sy = (box.height * 0.96) / th;
+    // Запас 3% — метрики web-шрифтов иногда чуть больше layout-box.
+    final sx = (box.width * 0.97) / tw;
+    final sy = (box.height * 0.97) / th;
     final scale = sx < sy ? sx : sy;
     if (scale <= 0) return;
 
-    final dx = box.left + (box.width - tw * scale) / 2;
-    final dy = box.top + (box.height - th * scale) / 2;
+    final dx = box.left + (box.width - tw * scale) * (align.x + 1) / 2;
+    final dy = box.top + (box.height - th * scale) * (align.y + 1) / 2;
 
     canvas.save();
     canvas.clipRect(box);
