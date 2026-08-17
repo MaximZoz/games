@@ -709,3 +709,14 @@ String? chatSelfId({String? actingAsUserId, String? authUserId}) {
   if (auth.isEmpty) return null;
   return auth;
 }
+
+/// Собеседник в шапке: в режиме поддержки не берём peer из личного inbox
+/// (там это аккаунт «Поддержка»).
+ChatUserItem? chatRoomPeerUser({
+  String? actingAsUserId,
+  ChatUserItem? listPeer,
+  ChatUserItem? overridePeer,
+}) {
+  if ((actingAsUserId ?? '').trim().isNotEmpty) return overridePeer;
+  return listPeer;
+}

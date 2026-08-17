@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/admin/admin_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/chat_room_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -610,6 +611,8 @@ class _UserCard extends ConsumerWidget {
                       AdminOpenSupportChat(
                     userId: user.id,
                     peerName: name,
+                    avatarKind: user.avatarKind,
+                    avatarValue: user.avatarValue,
                   );
                 },
               ),
@@ -768,16 +771,21 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
   String? _selectedUserId;
   String? _selectedPeerName;
   String? _selectedChatId;
+  String? _selectedAvatarKind;
+  String? _selectedAvatarValue;
 
   @override
   Widget build(BuildContext context) {
     ref.watch(supportInboxRealtimeProvider);
+    final localRead = ref.watch(locallyReadSupportChatIdsProvider);
     ref.listen<AdminOpenSupportChat?>(adminOpenSupportChatProvider, (_, next) {
       if (next == null) return;
       setState(() {
         _selectedUserId = next.userId;
         _selectedPeerName = next.peerName;
         _selectedChatId = next.chatId;
+        _selectedAvatarKind = next.avatarKind;
+        _selectedAvatarValue = next.avatarValue;
       });
       // Сбрасываем запрос, чтобы повторное открытие того же юзера сработало.
       ref.read(adminOpenSupportChatProvider.notifier).state = null;
@@ -787,11 +795,16 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
         userId: _selectedUserId!,
         peerName: _selectedPeerName,
         chatId: _selectedChatId,
+        avatarKind: _selectedAvatarKind,
+        avatarValue: _selectedAvatarValue,
         onBack: () {
+          ref.read(openSupportChatIdProvider.notifier).state = null;
           setState(() {
             _selectedUserId = null;
             _selectedPeerName = null;
             _selectedChatId = null;
+            _selectedAvatarKind = null;
+            _selectedAvatarValue = null;
           });
           ref.invalidate(supportChatsProvider);
         },
@@ -828,6 +841,8 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
           itemCount: chats.length,
           itemBuilder: (context, i) {
             final c = chats[i];
+            final unread =
+                localRead.contains(c.chatId) ? 0 : c.unreadCount;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: GradientCard(
@@ -839,12 +854,21 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                     borderRadius: BorderRadius.circular(AppRadius.card),
                     onTap: c.peerId.isEmpty
                         ? null
-                        : () => setState(() {
+                        : () {
+                            if (c.chatId.trim().isNotEmpty) {
+                              markSupportChatReadInCache(ref, c.chatId);
+                              ref.read(openSupportChatIdProvider.notifier).state =
+                                  c.chatId;
+                            }
+                            setState(() {
                               _selectedUserId = c.peerId;
                               _selectedPeerName = c.peerName;
                               _selectedChatId =
                                   c.chatId.trim().isEmpty ? null : c.chatId;
-                            }),
+                              _selectedAvatarKind = c.avatarKind;
+                              _selectedAvatarValue = c.avatarValue;
+                            });
+                          },
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
@@ -887,7 +911,7 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                               ],
                             ),
                           ),
-                          if (c.unreadCount > 0)
+                          if (unread > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 2),
@@ -896,7 +920,7 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                '${c.unreadCount}',
+                                '$unread',
                                 style: const TextStyle(
                                     color: Colors.white, fontSize: 11),
                               ),
@@ -921,10 +945,14 @@ class _SupportConversation extends ConsumerStatefulWidget {
     required this.onBack,
     this.peerName,
     this.chatId,
+    this.avatarKind,
+    this.avatarValue,
   });
   final String userId;
   final String? peerName;
   final String? chatId;
+  final String? avatarKind;
+  final String? avatarValue;
   final VoidCallback onBack;
 
   @override
@@ -959,6 +987,11 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
               );
         _loading = false;
       });
+      final chatId = _session?.chatId ?? '';
+      if (chatId.isNotEmpty) {
+        ref.read(openSupportChatIdProvider.notifier).state = chatId;
+        markSupportChatReadInCache(ref, chatId);
+      }
       ref.invalidate(supportChatsProvider);
     } catch (e) {
       if (!mounted) return;
@@ -1012,9 +1045,16 @@ class _SupportConversationState extends ConsumerState<_SupportConversation> {
     return ChatRoomScreen(
       chatID: _session!.chatId,
       peerName: title,
+      peerUser: ChatUserItem(
+        id: widget.userId,
+        displayName: title,
+        avatarKind: widget.avatarKind ?? 'letter',
+        avatarValue: widget.avatarValue,
+      ),
       actingAsUserId: _session!.supportUserId,
       hidePeerActions: true,
       onLeave: widget.onBack,
+      onMarkedRead: () => markSupportChatReadInCache(ref, _session!.chatId),
     );
   }
 }
