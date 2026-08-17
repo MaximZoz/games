@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- В админ-поддержке показывать пользователя и гасить бейдж после прочтения
 - Полный чат в админ-поддержке: пагинация, фото, ответы
 - Правильные иконки игр в карточке игрока (счёт head-to-head)
 - Убрать застрявшие иконки полёта после выхода из игры
@@ -15,6 +16,7 @@
 - Починить полёт стола в биту: карты не пропадают на кадр перед анимацией
 
 ## en
+- Admin support chat shows the user and clears the unread badge
 - Full support chat in admin: pagination, photos, replies
 - Correct game icons in the player info score chips
 - Clear leftover fly icons after leaving a game

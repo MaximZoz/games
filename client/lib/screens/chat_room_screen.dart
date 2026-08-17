@@ -62,7 +62,9 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
     this.gameReturnPath,
     this.inSplitView = false,
     this.actingAsUserId,
+    this.peerUser,
     this.onLeave,
+    this.onMarkedRead,
     this.hidePeerActions = false,
   });
 
@@ -76,8 +78,14 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
   /// Админ в поддержке: пузыри/редактирование от имени support-аккаунта.
   final String? actingAsUserId;
 
+  /// Явный собеседник (пользователь в админ-поддержке), не из личного inbox.
+  final ChatUserItem? peerUser;
+
   /// Встроенный режим (админка): назад без ухода на `/chats`.
   final VoidCallback? onLeave;
+
+  /// После markRead — сбросить бейдж inbox поддержки.
+  final VoidCallback? onMarkedRead;
 
   /// Скрыть блок/дружбу/очистку (диалог поддержки в админке).
   final bool hidePeerActions;
@@ -168,6 +176,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         authUserId: ref.read(authStateProvider).valueOrNull?.id,
       );
 
+  void _markReadLocally(String chatId) {
+    markChatReadInChatsCache(ref, chatId);
+    widget.onMarkedRead?.call();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -182,7 +195,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     // Сразу гасим бейдж таба при входе в чат (не ждём ответ markRead).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      markChatReadInChatsCache(ref, widget.chatID);
+      _markReadLocally(widget.chatID);
       unawaited(_maybeShowPasteSuggestion());
       _syncKeepSoftKeyboardRects();
     });
@@ -420,7 +433,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     final chatId = widget.chatID;
     // Локально сразу сбрасываем unread — список чатов без мигания.
-    markChatReadInChatsCache(ref, chatId);
+    _markReadLocally(chatId);
 
     if (widget.onLeave != null) {
       widget.onLeave!();
@@ -1268,7 +1281,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
             await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
             if (!mounted) return;
             // Сразу гасим бейдж таба, не дожидаясь reload списка.
-            markChatReadInChatsCache(ref, widget.chatID);
+            _markReadLocally(widget.chatID);
           } catch (_) {
             // Ошибку чтения не показываем пользователю в фоне.
           }
@@ -1389,7 +1402,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           try {
             await ref.read(chatsRepositoryProvider).markRead(widget.chatID);
             if (!mounted) return;
-            markChatReadInChatsCache(ref, widget.chatID);
+            _markReadLocally(widget.chatID);
           } catch (_) {}
         }());
       }
@@ -2478,13 +2491,21 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final chats = ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
     final presence = ref.watch(presenceMapProvider).valueOrNull ?? const {};
     ChatPreviewItem? currentChat;
-    ChatUserItem? peerUser;
+    ChatUserItem? listPeer;
     for (final item in chats) {
       if (item.chatID == widget.chatID) {
         currentChat = item;
-        peerUser = item.user;
+        listPeer = item.user;
         break;
       }
+    }
+    final peerUser = chatRoomPeerUser(
+      actingAsUserId: widget.actingAsUserId,
+      listPeer: listPeer,
+      overridePeer: widget.peerUser,
+    );
+    if ((widget.actingAsUserId ?? '').trim().isNotEmpty) {
+      currentChat = null;
     }
     final peerLang = (peerUser?.preferredLanguage ?? '').trim();
     if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
