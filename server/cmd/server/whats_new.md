@@ -3,12 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Офлайн Морской бой и починка FX/сортировки в офлайн Дураке
+- Убрать лишнюю проверку null в AppBar покера
+- WHAT_NEW: английский текст для профиля и чата в покере
+- Покер: профиль по тапу на игрока и иконка группового чата у крестика
 
 ## en
-- Durak: keep auto-bito pause so opponent defend card is visible
-- Durak: cards land in the slot immediately, no snap from center
-- Durak: smoother animations without jank
-- CI: pass BUILD_ID (git sha) to Fly deploy
-- Durak: win/draw outcome once after take or beat
+- Poker: tap player for profile; group chat icon next to close
 

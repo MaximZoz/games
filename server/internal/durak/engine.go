@@ -46,15 +46,102 @@ const TakeRevealDelay = 1 * time.Second
 // OpeningDealGrace — сколько ждать стартовую раздачу на клиенте, прежде чем
 // запускать таймер хода (6 карт × игроки × ~280мс + козырь + запас).
 func OpeningDealGrace(players int) time.Duration {
+	return OpeningDealGraceExtra(players, 0)
+}
+
+// OpeningDealGraceExtra — [OpeningDealGrace] плюс добор, пока не появится козырь.
+func OpeningDealGraceExtra(players, extraCards int) time.Duration {
 	if players < 2 {
 		players = 2
 	}
 	if players > 4 {
 		players = 4
 	}
+	if extraCards < 0 {
+		extraCards = 0
+	}
+	if extraCards > 24 {
+		extraCards = 24
+	}
 	return 1500*time.Millisecond +
 		time.Duration(6*players)*280*time.Millisecond +
-		800*time.Millisecond
+		800*time.Millisecond +
+		1600*time.Millisecond + // показ младшего козыря (кто ходит первым)
+		time.Duration(extraCards)*220*time.Millisecond
+}
+
+// OpeningDealGraceFor — пауза раздачи с учётом добора козыря в [s].
+func OpeningDealGraceFor(s *State) time.Duration {
+	if s == nil {
+		return OpeningDealGrace(2)
+	}
+	handSize := s.HandSize
+	if handSize <= 0 {
+		handSize = 6
+	}
+	extra := 0
+	for _, h := range s.Hands {
+		if len(h) > handSize {
+			extra += len(h) - handSize
+		}
+	}
+	return OpeningDealGraceExtra(len(s.PlayerIDs), extra)
+}
+
+// lowestTrumpOwner — у кого младший козырь; ok=false, если козыря ни у кого нет.
+func lowestTrumpOwner(hands [][]Card, trump Suit) (int, bool) {
+	starter := 0
+	best := 100
+	found := false
+	for p, h := range hands {
+		for _, c := range h {
+			if c.Suit == trump && c.Rank < best {
+				best = c.Rank
+				starter = p
+				found = true
+			}
+		}
+	}
+	return starter, found
+}
+
+// drawUntilTrump — если козыря нет, игроки тянут по одной с верха колоды
+// (открытый козырь в конце не трогаем), пока козырь не появится.
+func drawUntilTrump(hands [][]Card, deck []Card, trump Suit) ([][]Card, []Card, int) {
+	starter, found := lowestTrumpOwner(hands, trump)
+	for !found && len(deck) > 1 {
+		for p := range hands {
+			if len(deck) <= 1 {
+				break
+			}
+			card := deck[0]
+			deck = deck[1:]
+			hands[p] = append(hands[p], card)
+			starter, found = lowestTrumpOwner(hands, trump)
+			if found {
+				return hands, deck, starter
+			}
+		}
+	}
+	return hands, deck, starter
+}
+
+// LeadTrump — младший козырь текущего атакующего (первый ход).
+func (s *State) LeadTrump() *Card {
+	if s == nil || s.AttackerIndex < 0 || s.AttackerIndex >= len(s.Hands) {
+		return nil
+	}
+	var best *Card
+	for _, c := range s.Hands[s.AttackerIndex] {
+		if c.Suit != s.Trump {
+			continue
+		}
+		if best == nil || c.Rank < best.Rank {
+			cc := c
+			best = &cc
+		}
+	}
+	return best
 }
 
 // Status — статус партии.
@@ -391,20 +478,9 @@ func New(playerIDs []string, deckSize int, mode Mode, seed int64) (*State, error
 			deck = deck[1:]
 		}
 	}
+	hands, deck, starter := drawUntilTrump(hands, deck, trumpCard.Suit)
 	for _, h := range hands {
 		SortHand(h, trumpCard.Suit)
-	}
-
-	// Стартовый атакующий: у кого младший козырь.
-	starter := 0
-	best := 100
-	for p, h := range hands {
-		for _, c := range h {
-			if c.Suit == trumpCard.Suit && c.Rank < best {
-				best = c.Rank
-				starter = p
-			}
-		}
 	}
 
 	return &State{

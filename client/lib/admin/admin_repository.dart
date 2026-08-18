@@ -204,6 +204,27 @@ class SupportChatItem {
   }
 }
 
+/// Сессия диалога поддержки (chat_id + support user) для полного чата.
+class SupportChatSession {
+  final String chatId;
+  final String supportUserId;
+  final String peerId;
+
+  const SupportChatSession({
+    required this.chatId,
+    required this.supportUserId,
+    required this.peerId,
+  });
+
+  factory SupportChatSession.fromJson(Map<String, dynamic> json) {
+    return SupportChatSession(
+      chatId: json['chat_id'] as String? ?? json['id'] as String? ?? '',
+      supportUserId: json['support_user_id'] as String? ?? '',
+      peerId: json['peer_id'] as String? ?? '',
+    );
+  }
+}
+
 /// Сообщение поддержки (переиспользует формат чата).
 class SupportMessageItem {
   final String id;
@@ -414,6 +435,21 @@ class AdminRepository {
     return list
         .map((e) => SupportChatItem.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+  }
+
+  Future<SupportChatSession> ensureSupportChat(String userId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/admin/support/chats/$userId'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AdminRepository.ensureSupportChat',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return SupportChatSession.fromJson(body);
   }
 
   Future<List<SupportMessageItem>> listSupportMessages(

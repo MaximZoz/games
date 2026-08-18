@@ -157,6 +157,7 @@ class DurakGameView {
     this.lastWasTake = false,
     this.firstRound = false,
     this.tiedLeaders = 0,
+    this.leadTrump,
   });
 
   final String id;
@@ -205,6 +206,9 @@ class DurakGameView {
 
   /// Первый отбой партии — лимит 5 карт на столе.
   final bool firstRound;
+
+  /// Младший козырь атакующего (первый ход), пока стол пуст.
+  final DurakApiCard? leadTrump;
 
   /// Ничья лидеров: банк 1/2/3 мест делится поровну между ними.
   final int tiedLeaders;
@@ -287,6 +291,10 @@ class DurakGameView {
     if (phase == 'defend') return defenderIndex == myIndex;
     return attackerIndex == myIndex;
   }
+
+  /// Соперник-бот (офлайн или онлайн) — ничью предлагать некому.
+  bool get hasBotOpponent =>
+      playerIds.any((id) => id.startsWith('bot:'));
 
   /// Можно ли трогать веер: защита, атака или подкид (в т.ч. сосед при 3–4).
   bool get canAct {
@@ -390,6 +398,11 @@ class DurakGameView {
       drawOfferBy: (json['draw_offer_by'] ?? '').toString(),
       lastWasTake: json['last_was_take'] == true,
       firstRound: json['first_round'] == true,
+      leadTrump: json['lead_trump'] is Map
+          ? DurakApiCard.fromJson(
+              (json['lead_trump'] as Map).cast<String, dynamic>(),
+            )
+          : null,
     );
   }
 }

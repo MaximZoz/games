@@ -184,6 +184,18 @@
   "durakHintThrowIn": "카드를 추가하거나 방어를 기다리세요",
   "durakHintThrowInFirst": "카드를 추가하세요 (첫 방어 최대 5장)",
   "durakHintYouFinished": "탈락했습니다 — 종료를 기다립니다",
+  "durakFirstLeadYou": "당신이 먼저입니다",
+  "durakFirstLeadOpponent": "상대가 먼저입니다",
+  "durakFirstLeadBot": "봇이 먼저입니다",
+  "durakFirstLeadOf": "{name}이(가) 먼저입니다",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "가장 낮은 트럼프",
   "durakHintYouLost": "패배했습니다 — 당신이 바보입니다",
   "durakHintYourAttack": "당신 차례 — 공격하세요",
   "gamesDurak": "두라크",
@@ -224,6 +236,44 @@
   "rulesPokerIntro": "텍사스 홀덤. 각 플레이어는 홀 카드 2장, 테이블에 커뮤니티 카드 5장이 나옵니다.",
   "rulesPokerPlay": "베팅 라운드: 프리플롭, 플롭, 턴, 리버. 폴드, 콜, 벳, 레이즈를 할 수 있습니다.",
   "rulesPokerWin": "홀+커뮤니티로 만든 최강 5장 핸드, 또는 폴드 후 남은 한 명이 승리합니다.",
+  "pokerFold": "Fold",
+  "pokerCheck": "Check",
+  "pokerCall": "Call {amount}",
+  "pokerCallShort": "Call",
+  "pokerRaise": "Raise",
+  "pokerRaiseTo": "Raise to {amount}",
+  "pokerRaiseTitle": "Raise",
+  "pokerAllIn": "All-in",
+  "pokerAllInBadge": "All-in",
+  "pokerFolded": "Folded",
+  "pokerPot": "Pot: {amount}",
+  "pokerYourTurn": "Your turn",
+  "pokerToAct": "{name} to act",
+  "pokerWinner": "{name} wins",
+  "pokerYouWonHand": "You won the pot!",
+  "pokerWinners": "{names} win",
+  "@pokerWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHandWith": "You and {names} won the pot!",
+  "@pokerYouWonHandWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerListAnd": "and",
+  "pokerHandOver": "Hand over",
+  "pokerStreetPreflop": "Pre-flop",
+  "pokerStreetFlop": "Flop",
+  "pokerStreetTurn": "Turn",
+  "pokerStreetRiver": "River",
+  "pokerStreetShowdown": "Showdown",
   "gamesDurakDeck24": "24장",
   "gamesDurakDeck36": "36장",
   "gamesDurakDeck52": "52장",
@@ -261,6 +311,22 @@
       }
     }
   },
+  "pokerHandHighCard": "High card",
+  "pokerHandOnePair": "One pair",
+  "pokerHandTwoPair": "Two pair",
+  "pokerHandThreeOfAKind": "Three of a kind",
+  "pokerHandStraight": "Straight",
+  "pokerHandFlush": "Flush",
+  "pokerHandFullHouse": "Full house",
+  "pokerHandFourOfAKind": "Four of a kind",
+  "pokerHandStraightFlush": "Straight flush",
+  "pokerHandRoyalFlush": "Royal flush",
+  "pokerHandNumber": "Hand {n}",
+  "pokerBlinds": "Blinds {sb}/{bb}",
+  "pokerTableYouWon": "You won the table!",
+  "pokerNextHandSoon": "Next hand…",
+  "pokerShowCards": "Show cards",
+  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.",
   "gamesRules": "규칙",
   "gamesRulesTitle": "게임 규칙",
   "gamesCreate": "게임 만들기",

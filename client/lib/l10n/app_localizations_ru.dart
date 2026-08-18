@@ -153,6 +153,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get durakHintYouFinished => 'Вы вышли — ждём конца партии';
 
   @override
+  String get durakFirstLeadYou => 'Вы ходите';
+
+  @override
+  String get durakFirstLeadOpponent => 'Соперник ходит';
+
+  @override
+  String get durakFirstLeadBot => 'Бот ходит';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return 'Ходит $name';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Младший козырь';
+
+  @override
   String get shopPurchaseQueued => 'Покупка сохранена — применится в режиме онлайн';
 
   @override
@@ -596,6 +613,144 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rulesPokerWin => 'Побеждает лучшая комбинация из пяти карт (свои + общие) или тот, кто остался один после фолдов.';
+
+  @override
+  String get pokerFold => 'Фолд';
+
+  @override
+  String get pokerCheck => 'Чек';
+
+  @override
+  String pokerCall(int amount) {
+    return 'Колл $amount';
+  }
+
+  @override
+  String get pokerCallShort => 'Колл';
+
+  @override
+  String get pokerRaise => 'Рейз';
+
+  @override
+  String pokerRaiseTo(int amount) {
+    return 'Рейз до $amount';
+  }
+
+  @override
+  String get pokerRaiseTitle => 'Рейз';
+
+  @override
+  String get pokerAllIn => 'Ва-банк';
+
+  @override
+  String get pokerAllInBadge => 'Ва-банк';
+
+  @override
+  String get pokerFolded => 'Пас';
+
+  @override
+  String pokerPot(int amount) {
+    return 'Банк: $amount';
+  }
+
+  @override
+  String get pokerYourTurn => 'Ваш ход';
+
+  @override
+  String pokerToAct(String name) {
+    return 'Ходит $name';
+  }
+
+  @override
+  String pokerWinner(String name) {
+    return 'Выиграл $name';
+  }
+
+  @override
+  String get pokerYouWonHand => 'Вы забрали банк!';
+
+  @override
+  String pokerWinners(String names) {
+    return 'Выиграли $names';
+  }
+
+  @override
+  String pokerYouWonHandWith(String names) {
+    return 'Вы и $names забрали банк!';
+  }
+
+  @override
+  String get pokerListAnd => 'и';
+
+  @override
+  String get pokerHandOver => 'Раздача окончена';
+
+  @override
+  String get pokerStreetPreflop => 'Префлоп';
+
+  @override
+  String get pokerStreetFlop => 'Флоп';
+
+  @override
+  String get pokerStreetTurn => 'Тёрн';
+
+  @override
+  String get pokerStreetRiver => 'Ривер';
+
+  @override
+  String get pokerStreetShowdown => 'Вскрытие';
+
+  @override
+  String get pokerHandHighCard => 'Старшая карта';
+
+  @override
+  String get pokerHandOnePair => 'Пара';
+
+  @override
+  String get pokerHandTwoPair => 'Две пары';
+
+  @override
+  String get pokerHandThreeOfAKind => 'Тройка';
+
+  @override
+  String get pokerHandStraight => 'Стрит';
+
+  @override
+  String get pokerHandFlush => 'Флеш';
+
+  @override
+  String get pokerHandFullHouse => 'Фулл-хаус';
+
+  @override
+  String get pokerHandFourOfAKind => 'Каре';
+
+  @override
+  String get pokerHandStraightFlush => 'Стрит-флеш';
+
+  @override
+  String get pokerHandRoyalFlush => 'Роял-флеш';
+
+  @override
+  String pokerHandNumber(int n) {
+    return 'Раздача $n';
+  }
+
+  @override
+  String pokerBlinds(int sb, int bb) {
+    return 'Блайнды $sb/$bb';
+  }
+
+  @override
+  String get pokerTableYouWon => 'Вы выиграли стол!';
+
+  @override
+  String get pokerNextHandSoon => 'Следующая раздача…';
+
+  @override
+  String get pokerShowCards => 'Показать карты';
+
+  @override
+  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые два круга дилера; втроём — каждые 10 раздач, вдвоём — каждые шесть кругов. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.';
 
   @override
   String get gamesRules => 'Правила';

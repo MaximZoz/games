@@ -88,10 +88,10 @@ func (h *GamesHandler) serveDurak(w http.ResponseWriter, r *http.Request) {
 // ---- Lobby: CreateDurakLobby ----
 
 type createDurakLobbyBody struct {
-	Mode        string `json:"mode"`         // "invite" | "matchmake"
-	MaxPlayers  int    `json:"max_players"`  // 2..4
-	DeckSize    int    `json:"deck_size"`    // 24/36/52
-	GameMode    string `json:"game_mode"`    // "podkidnoi" | "perevodnoi"
+	Mode        string `json:"mode"`        // "invite" | "matchmake"
+	MaxPlayers  int    `json:"max_players"` // 2..4
+	DeckSize    int    `json:"deck_size"`   // 24/36/52
+	GameMode    string `json:"game_mode"`   // "podkidnoi" | "perevodnoi"
 	TurnTimeSec int    `json:"turn_time_sec"`
 	StakeBronze int    `json:"stake_bronze"`
 }
@@ -628,7 +628,7 @@ func (h *GamesHandler) startDurakGame(ctx context.Context, w http.ResponseWriter
 		fields = append(fields, "chat_id", lm)
 	}
 	// Таймер хода — только после стартовой раздачи на клиенте.
-	graceUntil := time.Now().UTC().Unix() + int64(durak.OpeningDealGrace(len(ids))/time.Second)
+	graceUntil := time.Now().UTC().Unix() + int64(durak.OpeningDealGraceFor(state)/time.Second)
 	fields = append(fields,
 		"deal_grace_until", strconv.FormatInt(graceUntil, 10),
 		"turn_deadline", "0",
@@ -940,7 +940,7 @@ func (h *GamesHandler) armDurakTurnAfterDeal(ctx context.Context, gameID string,
 func (h *GamesHandler) scheduleDurakDealGrace(gameID string) {
 	go func() {
 		// Верхняя оценка раздачи; точный arm — по deal_grace_until.
-		timer := time.NewTimer(durak.OpeningDealGrace(4) + 200*time.Millisecond)
+		timer := time.NewTimer(durak.OpeningDealGraceExtra(4, 12) + 200*time.Millisecond)
 		defer timer.Stop()
 		<-timer.C
 		ctx := context.Background()
@@ -1178,7 +1178,7 @@ func (h *GamesHandler) enrichDurakPlayersMeta(ctx context.Context, view map[stri
 type durakMoveBody struct {
 	Type      string          `json:"type"`
 	Card      json.RawMessage `json:"card,omitempty"`
-	Cards     json.RawMessage `json:"cards,omitempty"` // несколько карт атаки/подкида
+	Cards     json.RawMessage `json:"cards,omitempty"`      // несколько карт атаки/подкида
 	PairIndex *int            `json:"pair_index,omitempty"` // индекс пары для defend
 }
 
@@ -1403,6 +1403,10 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 			m["draw"] = "1"
 		}
 		h.onDurakGameFinished(ctx, gameID, m, state)
+	} else if state.Status == durak.StatusActive {
+		if actor := durakTurnActorIdx(state); actor >= 0 && actor < len(state.PlayerIDs) {
+			h.notifyYourTurnUser(gameID, state.PlayerIDs[actor], durakGameType)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -1762,22 +1766,33 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		}
 	}
 	return map[string]any{
-		"id":             gameID,
-		"game_type":      durakGameType,
-		"status":         status,
-		"draw":           draw,
-		"draw_offer_by":  strings.TrimSpace(m["draw_offer_by"]),
-		"forfeit":        m["forfeit"] == "1",
-		"timeout":        m["timeout"] == "1",
-		"lobby_id":       m["lobby_id"],
-		"chat_id":        m["chat_id"],
-		"mode":           string(s.Mode),
-		"deck_size":      s.DeckSize,
-		"player_ids":     s.PlayerIDs,
-		"hands":          hands,
-		"deck_count":     len(s.Deck),
-		"trump":          s.Trump.String(),
-		"trump_card":     s.TrumpCard,
+		"id":            gameID,
+		"game_type":     durakGameType,
+		"status":        status,
+		"draw":          draw,
+		"draw_offer_by": strings.TrimSpace(m["draw_offer_by"]),
+		"forfeit":       m["forfeit"] == "1",
+		"timeout":       m["timeout"] == "1",
+		"lobby_id":      m["lobby_id"],
+		"chat_id":       m["chat_id"],
+		"mode":          string(s.Mode),
+		"deck_size":     s.DeckSize,
+		"player_ids":    s.PlayerIDs,
+		"hands":         hands,
+		"deck_count":    len(s.Deck),
+		"trump":         s.Trump.String(),
+		"trump_card":    s.TrumpCard,
+		"lead_trump": func() any {
+			// Пока стол пуст в первом отбое — карта, которой открыли ход.
+			if s.Status != durak.StatusActive || s.RoundEnded ||
+				len(s.Table) > 0 || s.LastWasTake || len(s.BitoPile) > 0 {
+				return nil
+			}
+			if c := s.LeadTrump(); c != nil {
+				return *c
+			}
+			return nil
+		}(),
 		"table":          s.Table,
 		"bito_count":     len(s.BitoPile),
 		"attacker_index": s.AttackerIndex,
@@ -1786,24 +1801,24 @@ func durakViewFor(s *durak.State, viewer string, m map[string]string, gameID str
 		"last_was_take":  s.LastWasTake,
 		"first_round":    s.Status == durak.StatusActive && !s.RoundEnded && len(s.BitoPile) == 0 && !s.LastWasTake,
 		"my_index":       myIdx,
-		"legal_attack":    legalAttack,
-		"legal_defend":    legalDefend,
-		"legal_transfer":  legalTransfer,
-		"can_throw_in":    s.CanThrowIn(myIdx),
-		"thrower_index":   s.ThrowerIndex,
-		"turn_actor_idx":  durakTurnActorIdx(s),
+		"legal_attack":   legalAttack,
+		"legal_defend":   legalDefend,
+		"legal_transfer": legalTransfer,
+		"can_throw_in":   s.CanThrowIn(myIdx),
+		"thrower_index":  s.ThrowerIndex,
+		"turn_actor_idx": durakTurnActorIdx(s),
 		"loser_index": func() int {
 			if s.Status != durak.StatusOver {
 				return -1
 			}
 			return s.LoserIndex
 		}(),
-		"finished":        s.FinishedIndices,
-		"tied_leaders":    s.TiedLeaders,
-		"eliminated":      s.EliminatedIndices,
-		"turn_time_sec":   turnT,
-		"turn_deadline":   turnDeadline,
-		"stake_bronze":    func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
+		"finished":      s.FinishedIndices,
+		"tied_leaders":  s.TiedLeaders,
+		"eliminated":    s.EliminatedIndices,
+		"turn_time_sec": turnT,
+		"turn_deadline": turnDeadline,
+		"stake_bronze":  func() int { v, _ := strconv.Atoi(m["stake_bronze"]); return v }(),
 	}
 }
 

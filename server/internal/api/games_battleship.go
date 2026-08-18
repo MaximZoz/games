@@ -498,13 +498,8 @@ func (h *GamesHandler) startBattleshipGame(
 	gameKey := "game:" + gameID
 	lobbyKey := "lobby:" + lobbyID
 	now := time.Now().UTC()
+	// Расстановка всегда ровно battleshipSetupSec (1 мин), независимо от turn_time.
 	setupDeadline := now.Unix() + int64(battleshipSetupSec)
-	if turnTimeSec > 0 {
-		setupDeadline = now.Unix() + int64(turnTimeSec)
-		if turnTimeSec < 60 {
-			setupDeadline = now.Unix() + 60
-		}
-	}
 
 	p1Ready, p2Ready := "false", "false"
 	p1Ships, p2Ships := "[]", "[]"
@@ -608,10 +603,8 @@ func (h *GamesHandler) createBattleshipGameWithBot(
 	gameKey := "game:" + gameID
 	lobbyKey := "lobby:" + lobbyID
 	now := time.Now().UTC()
+	// Расстановка всегда ровно battleshipSetupSec (1 мин), независимо от turn_time.
 	setupDeadline := now.Unix() + int64(battleshipSetupSec)
-	if turnTimeSec > 0 {
-		setupDeadline = now.Unix() + int64(maxInt(turnTimeSec, 60))
-	}
 
 	p1, p2 := userID.String(), battleshipBotID
 	if rand.Intn(2) == 1 {
@@ -900,6 +893,7 @@ func (h *GamesHandler) beginBattleshipBattle(ctx context.Context, gameID string,
 	h.Rdb.HSet(ctx, key, fields...)
 	m["phase"] = battleshipPhaseBattle
 	m["turn"] = turn
+	h.notifyYourTurnUser(gameID, turn, battleshipGameType)
 }
 
 type battleshipShootBody struct {
@@ -1036,6 +1030,10 @@ func (h *GamesHandler) applyBattleshipShot(
 	}
 	h.Rdb.HSet(ctx, key, fields...)
 	h.broadcastBattleshipState(ctx, gameID, m)
+	// Пуш только когда ход перешёл другому (промах).
+	if !hit {
+		h.notifyYourTurnUser(gameID, m["turn"], battleshipGameType)
+	}
 	return nil
 }
 
@@ -1451,6 +1449,12 @@ func (h *GamesHandler) applyBattleshipTimeout(ctx context.Context, gameID string
 }
 
 func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, m map[string]string, finishReason string) {
+	// Останавливаем таймеры хода/расстановки — клиент сразу скрывает countdown.
+	key := "game:" + gameID
+	h.Rdb.HSet(ctx, key, "turn_deadline", "0", "setup_deadline", "0")
+	m["turn_deadline"] = "0"
+	m["setup_deadline"] = "0"
+
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	h.settleBattleshipCoins(ctx, m, stakeBronze)
 	for _, uid := range []string{m["p1_user_id"], m["p2_user_id"]} {
@@ -1591,15 +1595,33 @@ func (h *GamesHandler) battleshipViewFor(ctx context.Context, m map[string]strin
 		"draw_offer_by":          strings.TrimSpace(m["draw_offer_by"]),
 		"draw":                   m["draw"] == "1",
 	}
-	if dl := m["turn_deadline"]; dl != "" {
-		if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
-			out["turn_deadline"] = n
+	nowUnix := time.Now().UTC().Unix()
+	if status == battleshipStatusOver {
+		out["turn_deadline"] = 0
+		out["setup_deadline"] = 0
+		out["setup_seconds_left"] = 0
+	} else {
+		if dl := m["turn_deadline"]; dl != "" {
+			if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
+				out["turn_deadline"] = n
+			}
 		}
-	}
-	if dl := m["setup_deadline"]; dl != "" {
-		if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
-			out["setup_deadline"] = n
+		setupDL := int64(0)
+		if dl := m["setup_deadline"]; dl != "" {
+			if n, e := strconv.ParseInt(dl, 10, 64); e == nil {
+				setupDL = n
+				out["setup_deadline"] = n
+			}
 		}
+		// Относительный остаток — клиент строит локальный дедлайн без перекоса часов.
+		setupLeft := int(setupDL - nowUnix)
+		if setupLeft < 0 || m["phase"] != battleshipPhaseSetup {
+			setupLeft = 0
+		}
+		if setupLeft > battleshipSetupSec {
+			setupLeft = battleshipSetupSec
+		}
+		out["setup_seconds_left"] = setupLeft
 	}
 	if m["winner"] != "" {
 		out["winner"] = m["winner"]

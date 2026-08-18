@@ -184,6 +184,18 @@
   "durakHintThrowIn": "Læg kort eller vent på forsvaret",
   "durakHintThrowInFirst": "Læg kort (maks. 5 i første slag)",
   "durakHintYouFinished": "Du er ude — venter på slutningen",
+  "durakFirstLeadYou": "Du går først",
+  "durakFirstLeadOpponent": "Modstanderen går først",
+  "durakFirstLeadBot": "Botten går først",
+  "durakFirstLeadOf": "{name} går først",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "Laveste trumf",
   "durakHintYouLost": "Du tabte — du er narren",
   "durakHintYourAttack": "Din tur — angrib",
   "gamesDurak": "Durak",
@@ -224,6 +236,44 @@
   "rulesPokerIntro": "Texas Hold’em. Hver spiller får 2 hulkort; 5 fælleskort lægges på bordet.",
   "rulesPokerPlay": "Indsatserunder: preflop, flop, turn og river. Fold, call, bet eller raise.",
   "rulesPokerWin": "Den bedste femkorts-hånd (hul + fælles) vinder, eller den sidste spiller efter folds.",
+  "pokerFold": "Fold",
+  "pokerCheck": "Check",
+  "pokerCall": "Call {amount}",
+  "pokerCallShort": "Call",
+  "pokerRaise": "Raise",
+  "pokerRaiseTo": "Raise to {amount}",
+  "pokerRaiseTitle": "Raise",
+  "pokerAllIn": "All-in",
+  "pokerAllInBadge": "All-in",
+  "pokerFolded": "Folded",
+  "pokerPot": "Pot: {amount}",
+  "pokerYourTurn": "Your turn",
+  "pokerToAct": "{name} to act",
+  "pokerWinner": "{name} wins",
+  "pokerYouWonHand": "You won the pot!",
+  "pokerWinners": "{names} win",
+  "@pokerWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHandWith": "You and {names} won the pot!",
+  "@pokerYouWonHandWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerListAnd": "and",
+  "pokerHandOver": "Hand over",
+  "pokerStreetPreflop": "Pre-flop",
+  "pokerStreetFlop": "Flop",
+  "pokerStreetTurn": "Turn",
+  "pokerStreetRiver": "River",
+  "pokerStreetShowdown": "Showdown",
   "gamesDurakDeck24": "24 kort",
   "gamesDurakDeck36": "36 kort",
   "gamesDurakDeck52": "52 kort",
@@ -261,6 +311,22 @@
       }
     }
   },
+  "pokerHandHighCard": "High card",
+  "pokerHandOnePair": "One pair",
+  "pokerHandTwoPair": "Two pair",
+  "pokerHandThreeOfAKind": "Three of a kind",
+  "pokerHandStraight": "Straight",
+  "pokerHandFlush": "Flush",
+  "pokerHandFullHouse": "Full house",
+  "pokerHandFourOfAKind": "Four of a kind",
+  "pokerHandStraightFlush": "Straight flush",
+  "pokerHandRoyalFlush": "Royal flush",
+  "pokerHandNumber": "Hand {n}",
+  "pokerBlinds": "Blinds {sb}/{bb}",
+  "pokerTableYouWon": "You won the table!",
+  "pokerNextHandSoon": "Next hand…",
+  "pokerShowCards": "Show cards",
+  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.",
   "gamesRules": "Regler",
   "gamesRulesTitle": "Spilleregler",
   "gamesCreate": "Opret spil",

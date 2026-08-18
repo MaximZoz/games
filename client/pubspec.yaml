@@ -41,9 +41,10 @@ flutter:
     - family: Syne
       fonts:
         - asset: assets/fonts/Syne-Variable.ttf
-  # Смайлики и флаги — локальный бандл (каталог/покупки — на бэкенде).
+  # Смайлики, флаги и масти карт — локальный бандл (не системный emoji-шрифт).
   assets:
     - assets/flags/
+    - assets/suits/
     - assets/emojis/lottie/
     - assets/emojis/static/
     - assets/emojis/unicode.json

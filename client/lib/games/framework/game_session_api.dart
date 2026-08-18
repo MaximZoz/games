@@ -3,6 +3,8 @@ import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
+import 'package:multigames_client/games/poker/poker_provider.dart';
+import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -20,6 +22,7 @@ class GameSessionApi {
   DurakRepository get _durak => _ref.read(durakRepositoryProvider);
   BattleshipRepository get _battleship =>
       _ref.read(battleshipRepositoryProvider);
+  PokerRepository get _poker => _ref.read(pokerRepositoryProvider);
 
   Future<void> leaveLobby(String lobbyId, {required String gameType}) async {
     final gt = gameRegistry.normalizeId(gameType);
@@ -29,6 +32,10 @@ class GameSessionApi {
     }
     if (gt == 'battleship') {
       await _battleship.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'poker') {
+      await _poker.leaveLobby(lobbyId);
       return;
     }
     await _ttt.leaveLobby(lobbyId);
@@ -44,6 +51,10 @@ class GameSessionApi {
     }
     if (gt == 'battleship') {
       await _battleship.forfeit(gameId);
+      return;
+    }
+    if (gt == 'poker') {
+      await _poker.forfeit(gameId);
       return;
     }
     await _ttt.forfeitGame(gameId);
@@ -79,6 +90,10 @@ class GameSessionApi {
     try {
       await _battleship.getGame(gameId);
       return 'battleship';
+    } catch (_) {}
+    try {
+      await _poker.getGame(gameId);
+      return 'poker';
     } catch (_) {}
     try {
       await _durak.getGame(gameId);

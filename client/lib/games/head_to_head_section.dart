@@ -5,7 +5,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 
 /// Секция счёта head-to-head в попапе профиля при клике на игрока.
 ///
@@ -199,18 +199,6 @@ class GameTypeScoreChip extends StatelessWidget {
   static const _loss = Color(0xFFC62828);
   static const _draw = Color(0xFFF9A825);
 
-  Widget _gameIconWidget() {
-    final sz = iconSize * 0.52;
-    switch (gameType) {
-      case 'tictactoe':
-        return Icon(Icons.grid_3x3_rounded, color: Colors.white, size: sz);
-      case 'durak':
-        return DurakGameIcon(size: sz, color: Colors.white);
-      default:
-        return Icon(Icons.sports_esports_rounded, color: Colors.white, size: sz);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -228,7 +216,11 @@ class GameTypeScoreChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           alignment: Alignment.center,
-          child: _gameIconWidget(),
+          child: GameTypeIcon(
+            gameType: gameType,
+            size: iconSize * 0.52,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 6),
         Row(

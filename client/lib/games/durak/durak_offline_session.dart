@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_bot.dart';
 import 'package:multigames_client/games/durak/durak_engine.dart';
+import 'package:multigames_client/games/durak/durak_hand_sort.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
 
@@ -27,13 +28,17 @@ class OfflineDurakSession extends ChangeNotifier {
 
   static const int me = 0;
   static const Duration botDelay = Duration(milliseconds: 650);
+  static const Duration botHoldRetry = Duration(milliseconds: 400);
   static const Duration bitoRevealDelay = Duration(milliseconds: 1000);
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
-  static Duration openingDealGrace(int players) {
+  static Duration openingDealGrace(int players, {int extraCards = 0}) {
     final p = players.clamp(2, 4);
-    return Duration(milliseconds: 1500 + 6 * p * 280 + 800);
+    final extra = extraCards.clamp(0, 24);
+    return Duration(
+      milliseconds: 1500 + 6 * p * 280 + 800 + 1600 + extra * 220,
+    );
   }
 
   late DurakGame _game;
@@ -45,6 +50,7 @@ class OfflineDurakSession extends ChangeNotifier {
   bool _disposed = false;
   bool _lastWasTake = false;
   bool _dealGraceDone = false;
+  bool _fxHold = false;
   String? _revealPhase; // bito_reveal | take_reveal
 
   DurakGame get engine => _game;
@@ -79,6 +85,7 @@ class OfflineDurakSession extends ChangeNotifier {
     _revealPhase = null;
     _lastWasTake = false;
     _dealGraceDone = false;
+    _fxHold = false;
     final n = playerCount.clamp(2, 4);
     _game = DurakGame.startNew(
       playerCount: n,
@@ -188,7 +195,15 @@ class OfflineDurakSession extends ChangeNotifier {
       lastWasTake: _lastWasTake,
       firstRound: g.firstRound,
       tiedLeaders: 0,
+      leadTrump: _leadTrumpCard(g),
     );
+  }
+
+  static DurakApiCard? _leadTrumpCard(DurakGame g) {
+    if (!g.firstRound || g.table.isNotEmpty || g.isOver) return null;
+    if (g.attackerIndex < 0 || g.attackerIndex >= g.hands.length) return null;
+    final card = lowestTrumpInHand(g.hands[g.attackerIndex], g.trump);
+    return card == null ? null : DurakApiCard.fromCard(card);
   }
 
   static String _suitLetter(Suit s) => switch (s) {
@@ -351,31 +366,91 @@ class OfflineDurakSession extends ChangeNotifier {
     return null;
   }
 
+  /// Экран крутит раздачу/биту/веер — боты ждут, как онлайн ждёт OpeningDealGrace.
+  void setFxHold(bool hold) {
+    if (_disposed) return;
+    if (_fxHold == hold) return;
+    _fxHold = hold;
+    if (!hold) _scheduleBot();
+  }
+
+  /// Дождаться конца паузы бито/взятия — стол уходит в отбой или в руку.
+  ///
+  /// По завершении [notifyListeners] уже с пустым столом. UI должен
+  /// заранее поставить hold, иначе кадр без карт и полёт из старых froms.
+  Future<DurakGameView> waitUntilRevealDone({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    if (_disposed || _revealPhase == null) return view;
+    final done = Completer<DurakGameView>();
+    void onChanged() {
+      if (_revealPhase == null && !done.isCompleted) {
+        done.complete(view);
+      }
+    }
+
+    addListener(onChanged);
+    try {
+      return await done.future.timeout(timeout, onTimeout: () => view);
+    } finally {
+      removeListener(onChanged);
+    }
+  }
+
+  /// Стартовая раздача на клиенте закончилась — можно пускать ботов.
+  void markDealReady() {
+    if (_disposed) return;
+    _dealGraceDone = true;
+    _scheduleBot();
+  }
+
+  @visibleForTesting
+  bool get debugFxHold => _fxHold;
+
+  @visibleForTesting
+  bool get debugDealGraceDone => _dealGraceDone;
+
+  @visibleForTesting
+  bool get debugBotTimerActive => _botTimer?.isActive == true;
+
+  /// «Бито»/«Готово» не двигают карту — их нельзя глушить застрявшим FX-hold.
+  bool _botMayActDespiteHold(int botIdx) {
+    if (_game.throwerIndex != botIdx) return false;
+    return _game.canAttackerSayBito || _game.canAttackerConfirmTake;
+  }
+
   void _scheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _game.isOver || _revealPhase != null) return;
     if (!_dealGraceDone) return;
     final botIdx = _actingBotIndex();
     if (botIdx == null) return;
-    _botTimer = Timer(botDelay, () {
+    final held = _fxHold && !_botMayActDespiteHold(botIdx);
+    _botTimer = Timer(held ? botHoldRetry : botDelay, () {
       if (_disposed || _revealPhase != null) return;
+      final liveIdx = _actingBotIndex();
+      if (liveIdx == null) return;
+      if (_fxHold && !_botMayActDespiteHold(liveIdx)) {
+        _scheduleBot();
+        return;
+      }
       DurakBot? bot;
       for (final b in _bots) {
-        if (b.index == botIdx) {
+        if (b.index == liveIdx) {
           bot = b;
           break;
         }
       }
       final acted = bot?.step(_game) ?? false;
       if (!acted) {
-        if (_game.canConfirmThrowAll && _game.throwerIndex == botIdx) {
-          _game.confirmThrowAll(playerIndex: botIdx);
+        if (_game.canConfirmThrowAll && _game.throwerIndex == liveIdx) {
+          _game.confirmThrowAll(playerIndex: liveIdx);
         } else if (_game.canAttackerSayBito &&
-            _game.throwerIndex == botIdx) {
-          _applyBito(botIdx);
+            _game.throwerIndex == liveIdx) {
+          _applyBito(liveIdx);
         } else if (_game.canAttackerConfirmTake &&
-            _game.throwerIndex == botIdx) {
-          _applyConfirmTake(botIdx);
+            _game.throwerIndex == liveIdx) {
+          _applyConfirmTake(liveIdx);
         }
       } else {
         // Bot may have called take/bito/confirm via engine — sync reveal.
@@ -422,7 +497,11 @@ class OfflineDurakSession extends ChangeNotifier {
       return;
     }
     if (_botTimer?.isActive == true) return;
-    _botTimer = Timer(openingDealGrace(playerCount), () {
+    var extra = 0;
+    for (final h in _game.hands) {
+      if (h.length > 6) extra += h.length - 6;
+    }
+    _botTimer = Timer(openingDealGrace(playerCount, extraCards: extra), () {
       if (_disposed) return;
       _dealGraceDone = true;
       _scheduleBot();

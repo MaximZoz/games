@@ -61,13 +61,19 @@ class GameInvite {
 
   bool get isBattleship => gameType == 'battleship';
 
+  bool get isPoker => gameType == 'poker';
+
   /// Подпись режима для карточки приглашения.
+  /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
   String get modeLabel {
     if (isDurak) {
       return durakModeLabel(durakMode);
     }
     if (isBattleship) {
       return '10×10';
+    }
+    if (isPoker) {
+      return '';
     }
     return variantLabel(variant);
   }
@@ -351,19 +357,25 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   int get epoch => _epoch;
 
   void _applyObservation(ObservationItem? obs) {
-    // Не затирать/не дефолтить durak→tictactoe.
+    // Не затирать durak/poker→tictactoe дефолтом.
     if (obs != null) {
       final prev = ref.read(observationGameProvider);
       final incoming = normalizeGameType(obs.gameType);
-      if (prev != null &&
-          prev.gameId == obs.gameId &&
-          normalizeGameType(prev.gameType) == 'durak' &&
-          incoming != 'durak') {
-        obs = ObservationItem(
-          gameId: obs.gameId,
-          lobbyId: obs.lobbyId ?? prev.lobbyId,
-          gameType: 'durak',
-        );
+      if (prev != null && prev.gameId == obs.gameId) {
+        final prevGt = normalizeGameType(prev.gameType);
+        if ((prevGt == 'durak' || prevGt == 'poker') && incoming != prevGt) {
+          obs = ObservationItem(
+            gameId: obs.gameId,
+            lobbyId: obs.lobbyId ?? prev.lobbyId,
+            gameType: prevGt,
+          );
+        } else if (incoming != obs.gameType) {
+          obs = ObservationItem(
+            gameId: obs.gameId,
+            lobbyId: obs.lobbyId,
+            gameType: incoming,
+          );
+        }
       } else if (incoming != obs.gameType) {
         obs = ObservationItem(
           gameId: obs.gameId,

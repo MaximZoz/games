@@ -153,6 +153,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get durakHintYouFinished => 'Vous êtes sorti — en attente de la fin';
 
   @override
+  String get durakFirstLeadYou => 'Vous jouez en premier';
+
+  @override
+  String get durakFirstLeadOpponent => 'L’adversaire joue en premier';
+
+  @override
+  String get durakFirstLeadBot => 'Le bot joue en premier';
+
+  @override
+  String durakFirstLeadOf(String name) {
+    return '$name joue en premier';
+  }
+
+  @override
+  String get durakFirstLeadReason => 'Plus petit atout';
+
+  @override
   String get shopPurchaseQueued => 'Achat enregistré — sera appliqué en mode en ligne';
 
   @override
@@ -596,6 +613,144 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesPokerWin => 'Gagne la meilleure main de cinq cartes (privées + communes), ou le dernier joueur après les folds.';
+
+  @override
+  String get pokerFold => 'Fold';
+
+  @override
+  String get pokerCheck => 'Check';
+
+  @override
+  String pokerCall(int amount) {
+    return 'Call $amount';
+  }
+
+  @override
+  String get pokerCallShort => 'Call';
+
+  @override
+  String get pokerRaise => 'Raise';
+
+  @override
+  String pokerRaiseTo(int amount) {
+    return 'Raise to $amount';
+  }
+
+  @override
+  String get pokerRaiseTitle => 'Raise';
+
+  @override
+  String get pokerAllIn => 'All-in';
+
+  @override
+  String get pokerAllInBadge => 'All-in';
+
+  @override
+  String get pokerFolded => 'Folded';
+
+  @override
+  String pokerPot(int amount) {
+    return 'Pot: $amount';
+  }
+
+  @override
+  String get pokerYourTurn => 'Your turn';
+
+  @override
+  String pokerToAct(String name) {
+    return '$name to act';
+  }
+
+  @override
+  String pokerWinner(String name) {
+    return '$name wins';
+  }
+
+  @override
+  String get pokerYouWonHand => 'You won the pot!';
+
+  @override
+  String pokerWinners(String names) {
+    return '$names win';
+  }
+
+  @override
+  String pokerYouWonHandWith(String names) {
+    return 'You and $names won the pot!';
+  }
+
+  @override
+  String get pokerListAnd => 'and';
+
+  @override
+  String get pokerHandOver => 'Hand over';
+
+  @override
+  String get pokerStreetPreflop => 'Pre-flop';
+
+  @override
+  String get pokerStreetFlop => 'Flop';
+
+  @override
+  String get pokerStreetTurn => 'Turn';
+
+  @override
+  String get pokerStreetRiver => 'River';
+
+  @override
+  String get pokerStreetShowdown => 'Showdown';
+
+  @override
+  String get pokerHandHighCard => 'High card';
+
+  @override
+  String get pokerHandOnePair => 'One pair';
+
+  @override
+  String get pokerHandTwoPair => 'Two pair';
+
+  @override
+  String get pokerHandThreeOfAKind => 'Three of a kind';
+
+  @override
+  String get pokerHandStraight => 'Straight';
+
+  @override
+  String get pokerHandFlush => 'Flush';
+
+  @override
+  String get pokerHandFullHouse => 'Full house';
+
+  @override
+  String get pokerHandFourOfAKind => 'Four of a kind';
+
+  @override
+  String get pokerHandStraightFlush => 'Straight flush';
+
+  @override
+  String get pokerHandRoyalFlush => 'Royal flush';
+
+  @override
+  String pokerHandNumber(int n) {
+    return 'Hand $n';
+  }
+
+  @override
+  String pokerBlinds(int sb, int bb) {
+    return 'Blinds $sb/$bb';
+  }
+
+  @override
+  String get pokerTableYouWon => 'You won the table!';
+
+  @override
+  String get pokerNextHandSoon => 'Next hand…';
+
+  @override
+  String get pokerShowCards => 'Show cards';
+
+  @override
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
 
   @override
   String get gamesRules => 'Règles';

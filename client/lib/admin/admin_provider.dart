@@ -113,18 +113,56 @@ final supportChatsProvider =
 
 /// Запрос открыть переписку поддержки с пользователем (из меню админки).
 class AdminOpenSupportChat {
-  const AdminOpenSupportChat({required this.userId, this.peerName});
+  const AdminOpenSupportChat({
+    required this.userId,
+    this.peerName,
+    this.chatId,
+    this.avatarKind,
+    this.avatarValue,
+  });
   final String userId;
   final String? peerName;
+  final String? chatId;
+  final String? avatarKind;
+  final String? avatarValue;
 }
 
 final adminOpenSupportChatProvider =
     StateProvider<AdminOpenSupportChat?>((ref) => null);
 
+/// Чаты поддержки, которые админ только что открыл/прочитал
+/// (серверный inbox ещё может отдавать старый unread).
+final locallyReadSupportChatIdsProvider = StateProvider<Set<String>>((ref) => {});
+
+/// Открытый сейчас диалог поддержки — новые WS не поднимают его бейдж.
+final openSupportChatIdProvider = StateProvider<String?>((ref) => null);
+
+/// Сумма непрочитанных с учётом локально прочитанных.
+int supportUnreadVisible(
+  List<SupportChatItem> items,
+  Set<String> locallyRead,
+) {
+  var sum = 0;
+  for (final c in items) {
+    if (locallyRead.contains(c.chatId)) continue;
+    sum += c.unreadCount;
+  }
+  return sum;
+}
+
+void markSupportChatReadInCache(WidgetRef ref, String chatId) {
+  final id = chatId.trim();
+  if (id.isEmpty) return;
+  final prev = ref.read(locallyReadSupportChatIdsProvider);
+  if (prev.contains(id)) return;
+  ref.read(locallyReadSupportChatIdsProvider.notifier).state = {...prev, id};
+}
+
 /// Сумма непрочитанных обращений в поддержку (для бейджа у админа).
 final supportUnreadTotalProvider = Provider<AsyncValue<int>>((ref) {
+  final local = ref.watch(locallyReadSupportChatIdsProvider);
   return ref.watch(supportChatsProvider).whenData(
-        (items) => items.fold<int>(0, (sum, c) => sum + c.unreadCount),
+        (items) => supportUnreadVisible(items, local),
       );
 });
 
@@ -134,9 +172,17 @@ final supportInboxRealtimeProvider = Provider<void>((ref) {
   ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
       (_, next) {
     next.whenData((event) {
-      if (event['type'] == 'support_message') {
-        ref.invalidate(supportChatsProvider);
+      if (event['type'] != 'support_message') return;
+      final chatId = event['chat_id']?.toString().trim() ?? '';
+      final open = ref.read(openSupportChatIdProvider);
+      if (chatId.isNotEmpty && chatId != open) {
+        final prev = ref.read(locallyReadSupportChatIdsProvider);
+        if (prev.contains(chatId)) {
+          ref.read(locallyReadSupportChatIdsProvider.notifier).state =
+              {...prev}..remove(chatId);
+        }
       }
+      ref.invalidate(supportChatsProvider);
     });
   });
 });

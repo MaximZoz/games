@@ -46,7 +46,7 @@ func IsRestrictedChatMessageAllowed(body string) bool {
 // isInviteLobbyGameType — типы игр, для которых в чате есть ссылка-приглашение.
 func isInviteLobbyGameType(gameType string) bool {
 	switch gameType {
-	case "tictactoe", "durak", "battleship":
+	case "tictactoe", "durak", "battleship", "poker":
 		return true
 	default:
 		return false
@@ -54,7 +54,7 @@ func isInviteLobbyGameType(gameType string) bool {
 }
 
 // InviteLobbyIDFromBody — id лобби, если тело целиком ссылка на «Свою игру»
-// (/games/{tictactoe|durak|battleship}/lobby/{id}…).
+// (/games/{tictactoe|durak|battleship|poker}/lobby/{id}…).
 func InviteLobbyIDFromBody(body string) (string, bool) {
 	text := strings.TrimSpace(body)
 	if text == "" {
@@ -940,14 +940,25 @@ func ensureChatMembership(
 	pool *pgxpool.Pool,
 	chatID, userID uuid.UUID,
 ) error {
-	ok, err := IsChatMember(ctx, pool, chatID, userID)
+	_, err := ActingChatUserID(ctx, pool, userID, chatID)
+	return err
+}
+
+// ChatIDOfMessage — chat_id сообщения (для edit/delete от имени поддержки).
+func ChatIDOfMessage(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	messageID uuid.UUID,
+) (uuid.UUID, error) {
+	var chatID uuid.UUID
+	err := pool.QueryRow(ctx, `SELECT chat_id FROM chat_messages WHERE id = $1`, messageID).Scan(&chatID)
+	if err == pgx.ErrNoRows {
+		return uuid.Nil, ErrChatMessageNotFound
+	}
 	if err != nil {
-		return err
+		return uuid.Nil, err
 	}
-	if !ok {
-		return ErrChatForbidden
-	}
-	return nil
+	return chatID, nil
 }
 
 func userExists(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (bool, error) {

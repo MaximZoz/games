@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 /// Глобальные ключи иконок номиналов в тулбаре — цель полёта монеты.
 final toolbarCoinKeysProvider = Provider<Map<CoinType, GlobalKey>>((ref) {
@@ -320,20 +321,20 @@ Future<void> _flyCoin({
 
   final completer = Completer<void>();
   late OverlayEntry entry;
-  entry = OverlayEntry(
-    builder: (ctx) => _FlyingCoinLayer(
+  entry = GameFlyOverlay.insert(
+    overlay,
+    (ctx) => _FlyingCoinLayer(
       from: from,
       to: to,
       coinType: coinType,
       size: size,
       onArrived: onArrived,
       onDone: () {
-        entry.remove();
+        GameFlyOverlay.remove(entry);
         if (!completer.isCompleted) completer.complete();
       },
     ),
   );
-  overlay.insert(entry);
   return completer.future;
 }
 
@@ -365,6 +366,7 @@ class _FlyingCoinLayerState extends State<_FlyingCoinLayer>
   late final Animation<double> _scale;
   late final Animation<double> _opacity;
   bool _arrivedNotified = false;
+  bool _finished = false;
 
   @override
   void initState() {
@@ -388,12 +390,19 @@ class _FlyingCoinLayerState extends State<_FlyingCoinLayer>
       _arrivedNotified = true;
       widget.onArrived?.call();
     });
-    _controller.forward().whenComplete(widget.onDone);
+    _controller.forward().whenComplete(_finish);
+  }
+
+  void _finish() {
+    if (_finished) return;
+    _finished = true;
+    widget.onDone();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _finish();
     super.dispose();
   }
 

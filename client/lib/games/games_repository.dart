@@ -114,8 +114,26 @@ class UserGameSettings {
     gameMode: 'podkidnoi',
   );
 
-  static UserGameSettings defaultsFor(String gameType) =>
-      gameType == 'durak' ? durakDefaults : defaults;
+  static const pokerDefaults = UserGameSettings(
+    gameType: 'poker',
+    turnTimeSec: 60,
+    variant: 'holdem',
+    stakeBronze: 2,
+    deckSize: 52,
+    maxPlayers: 2,
+    gameMode: 'holdem',
+  );
+
+  static UserGameSettings defaultsFor(String gameType) {
+    switch (gameType) {
+      case 'durak':
+        return durakDefaults;
+      case 'poker':
+        return pokerDefaults;
+      default:
+        return defaults;
+    }
+  }
 
   UserGameSettings copyWith({
     String? gameType,
@@ -171,6 +189,20 @@ class UserGameSettings {
         gameMode: gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi',
       );
     }
+    if (gameType == 'poker') {
+      return UserGameSettings(
+        gameType: 'poker',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: 'holdem',
+        gridSize: 3,
+        swapRule: false,
+        firstMoveRestriction: false,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: 52,
+        maxPlayers: maxP.clamp(1, 6),
+        gameMode: 'holdem',
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -199,6 +231,11 @@ class UserGameSettings {
       out['deck_size'] = deckSize;
       out['max_players'] = maxPlayers;
       out['game_mode'] = gameMode;
+    } else if (gameType == 'poker') {
+      out['variant'] = 'holdem';
+      out['grid_size'] = 3;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = 'holdem';
     } else {
       out['variant'] = parseVariant(variant);
       out['grid_size'] = gridSize;
@@ -494,6 +531,8 @@ class LobbyItem {
   bool get isDurak => gameType == 'durak';
 
   bool get isBattleship => gameType == 'battleship';
+
+  bool get isPoker => gameType == 'poker';
 
   LobbyItem({
     required this.id,

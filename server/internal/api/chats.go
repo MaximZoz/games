@@ -125,6 +125,11 @@ func currentChatUserIDFromContext(r *http.Request) (uuid.UUID, bool) {
 	return userID, ok
 }
 
+// resolveChatActor — JWT-участник или админ от имени поддержки.
+func (h *ChatsHandler) resolveChatActor(r *http.Request, jwtID, chatID uuid.UUID) (uuid.UUID, error) {
+	return store.ActingChatUserID(r.Context(), h.Pool, jwtID, chatID)
+}
+
 func chatMessageToItem(msg store.ChatMessage) ChatMessageItem {
 	var deliveredAt *string
 	if msg.DeliveredAt != nil {
@@ -398,13 +403,9 @@ func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	okMember, err := store.IsChatMember(r.Context(), h.Pool, chatID, userID)
+	actorID, err := h.resolveChatActor(r, userID, chatID)
 	if err != nil {
 		writeChatError(w, r, err)
-		return
-	}
-	if !okMember {
-		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
 	kind, err := store.ChatKind(r.Context(), h.Pool, chatID)
@@ -420,21 +421,24 @@ func (h *ChatsHandler) Capabilities(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		peerID := ids[0]
-		if peerID == userID {
+		if peerID == actorID {
 			peerID = ids[1]
 		}
-		peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
-		if err != nil {
-			WriteErr(w, r, http.StatusInternalServerError, "server error")
-			return
-		}
-		if peerSettings.MessagesFriendsOnly {
-			friends, err := store.AreFriends(r.Context(), h.Pool, userID, peerID)
+		if !store.UserIsSupport(r.Context(), h.Pool, actorID) &&
+			!store.UserIsSupport(r.Context(), h.Pool, peerID) {
+			peerSettings, err := store.GetUserSettings(r.Context(), h.Pool, peerID)
 			if err != nil {
 				WriteErr(w, r, http.StatusInternalServerError, "server error")
 				return
 			}
-			emojiOnly = !friends
+			if peerSettings.MessagesFriendsOnly {
+				friends, err := store.AreFriends(r.Context(), h.Pool, actorID, peerID)
+				if err != nil {
+					WriteErr(w, r, http.StatusInternalServerError, "server error")
+					return
+				}
+				emojiOnly = !friends
+			}
 		}
 	}
 
@@ -496,19 +500,25 @@ func (h *ChatsHandler) listMessages(w http.ResponseWriter, r *http.Request) {
 		before = &value
 	}
 
-	messages, err := store.ListChatMessages(r.Context(), h.Pool, chatID, userID, limit, before)
+	actorID, err := h.resolveChatActor(r, userID, chatID)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+
+	messages, err := store.ListChatMessages(r.Context(), h.Pool, chatID, actorID, limit, before)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
 	}
 
 	// Открытие/синхронизация чата = доставка входящих (как в Telegram).
-	if ids, deliverErr := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID); deliverErr == nil && len(ids) > 0 {
+	if ids, deliverErr := store.MarkChatDelivered(r.Context(), h.Pool, chatID, actorID); deliverErr == nil && len(ids) > 0 {
 		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatDelivered(
 				members,
 				chatID.String(),
-				userID.String(),
+				actorID.String(),
 				ids,
 			)
 		}
@@ -606,7 +616,13 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	msg, err := store.SendChatMessageOpts(r.Context(), h.Pool, chatID, userID, opts)
+	actorID, err := h.resolveChatActor(r, userID, chatID)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+
+	msg, err := store.SendChatMessageOpts(r.Context(), h.Pool, chatID, actorID, opts)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -618,7 +634,7 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		h.publishChatListChanged(members...)
 
 		for _, peerID := range members {
-			if peerID == userID {
+			if peerID == actorID {
 				continue
 			}
 			if h.Hub != nil && h.Hub.IsUserOnline(peerID) {
@@ -631,18 +647,6 @@ func (h *ChatsHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 					)
 					deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
 					item.DeliveredAt = &deliveredAt
-				}
-			}
-			// Сообщение в поддержку — уведомить онлайн-админов (inbox + badge).
-			if peer, err := store.GetUserByID(r.Context(), h.Pool, peerID); err == nil && peer != nil && peer.IsSupport {
-				if h.Hub != nil {
-					if admins, aerr := store.ListAdminIDs(r.Context(), h.Pool); aerr == nil && len(admins) > 0 {
-						h.Hub.PublishToUsers(admins, map[string]any{
-							"type":    "support_message",
-							"user_id": userID.String(),
-							"chat_id": chatID.String(),
-						})
-					}
 				}
 			}
 		}
@@ -675,7 +679,17 @@ func (h *ChatsHandler) EditMessage(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid message_id")
 		return
 	}
-	msg, err := store.EditChatMessage(r.Context(), h.Pool, messageID, userID, body.Body)
+	chatIDForActor, lookupErr := store.ChatIDOfMessage(r.Context(), h.Pool, messageID)
+	if lookupErr != nil {
+		writeChatError(w, r, lookupErr)
+		return
+	}
+	actorID, err := h.resolveChatActor(r, userID, chatIDForActor)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+	msg, err := store.EditChatMessage(r.Context(), h.Pool, messageID, actorID, body.Body)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -711,7 +725,17 @@ func (h *ChatsHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusBadRequest, "invalid message_id")
 		return
 	}
-	chatID, err := store.DeleteChatMessage(r.Context(), h.Pool, messageID, userID)
+	chatIDForActor, lookupErr := store.ChatIDOfMessage(r.Context(), h.Pool, messageID)
+	if lookupErr != nil {
+		writeChatError(w, r, lookupErr)
+		return
+	}
+	actorID, err := h.resolveChatActor(r, userID, chatIDForActor)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+	chatID, err := store.DeleteChatMessage(r.Context(), h.Pool, messageID, actorID)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -747,7 +771,17 @@ func (h *ChatsHandler) MessageImage(w http.ResponseWriter, r *http.Request) {
 		}
 		index = n
 	}
-	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, userID, index)
+	chatIDHint, lookupErr := store.ChatIDOfMessage(r.Context(), h.Pool, messageID)
+	if lookupErr != nil {
+		writeChatError(w, r, lookupErr)
+		return
+	}
+	actorID, err := h.resolveChatActor(r, userID, chatIDHint)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+	mime, data, _, err := store.GetChatMessageImage(r.Context(), h.Pool, messageID, actorID, index)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -781,7 +815,13 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedIDs, err := store.MarkChatRead(r.Context(), h.Pool, chatID, userID)
+	actorID, err := h.resolveChatActor(r, userID, chatID)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+
+	updatedIDs, err := store.MarkChatRead(r.Context(), h.Pool, chatID, actorID)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -790,13 +830,13 @@ func (h *ChatsHandler) Read(w http.ResponseWriter, r *http.Request) {
 	kind, _ := store.ChatKind(r.Context(), h.Pool, chatID)
 	if kind == store.ChatKindGroup {
 		// Per-user unread: обновляем список только у читателя.
-		h.publishChatListChanged(userID)
+		h.publishChatListChanged(actorID)
 	} else if len(updatedIDs) > 0 {
 		if members, pairErr := chatMemberIDs(r.Context(), h.Pool, chatID); pairErr == nil {
 			h.publishChatRead(
 				members,
 				chatID.String(),
-				userID.String(),
+				actorID.String(),
 				updatedIDs,
 			)
 			h.publishChatListChanged(members...)
@@ -831,7 +871,13 @@ func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedIDs, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, userID)
+	actorID, err := h.resolveChatActor(r, userID, chatID)
+	if err != nil {
+		writeChatError(w, r, err)
+		return
+	}
+
+	updatedIDs, err := store.MarkChatDelivered(r.Context(), h.Pool, chatID, actorID)
 	if err != nil {
 		writeChatError(w, r, err)
 		return
@@ -842,7 +888,7 @@ func (h *ChatsHandler) Delivered(w http.ResponseWriter, r *http.Request) {
 			h.publishChatDelivered(
 				members,
 				chatID.String(),
-				userID.String(),
+				actorID.String(),
 				updatedIDs,
 			)
 		}
@@ -988,11 +1034,13 @@ func (h *ChatsHandler) publishChatMessage(userIDs []uuid.UUID, item ChatMessageI
 	if h == nil || h.Hub == nil {
 		return
 	}
-	h.Hub.PublishToUsers(userIDs, map[string]any{
+	payload := map[string]any{
 		"type":    "chat_message",
 		"chat_id": item.ChatID,
 		"message": item,
-	})
+	}
+	h.Hub.PublishToUsers(userIDs, payload)
+	h.mirrorSupportChatToAdmins(userIDs, payload)
 	if h.Push == nil {
 		return
 	}
@@ -1047,22 +1095,63 @@ func (h *ChatsHandler) publishChatMessageUpdated(userIDs []uuid.UUID, item ChatM
 	if h == nil || h.Hub == nil {
 		return
 	}
-	h.Hub.PublishToUsers(userIDs, map[string]any{
+	payload := map[string]any{
 		"type":    "chat_message_updated",
 		"chat_id": item.ChatID,
 		"message": item,
-	})
+	}
+	h.Hub.PublishToUsers(userIDs, payload)
+	h.mirrorSupportChatToAdmins(userIDs, payload)
 }
 
 func (h *ChatsHandler) publishChatMessageDeleted(userIDs []uuid.UUID, chatID, messageID string) {
 	if h == nil || h.Hub == nil {
 		return
 	}
-	h.Hub.PublishToUsers(userIDs, map[string]any{
+	payload := map[string]any{
 		"type":       "chat_message_deleted",
 		"chat_id":    chatID,
 		"message_id": messageID,
-	})
+	}
+	h.Hub.PublishToUsers(userIDs, payload)
+	h.mirrorSupportChatToAdmins(userIDs, payload)
+}
+
+// mirrorSupportChatToAdmins дублирует событие чата всем админам,
+// чтобы комната поддержки в админке обновлялась как обычный диалог.
+func (h *ChatsHandler) mirrorSupportChatToAdmins(memberIDs []uuid.UUID, event map[string]any) {
+	if h == nil || h.Hub == nil || h.Pool == nil || len(memberIDs) == 0 {
+		return
+	}
+	ctx := context.Background()
+	su, err := store.GetSupportUser(ctx, h.Pool)
+	if err != nil || su == nil {
+		return
+	}
+	var peerID uuid.UUID
+	foundSupport := false
+	for _, id := range memberIDs {
+		if id == su.ID {
+			foundSupport = true
+		} else {
+			peerID = id
+		}
+	}
+	if !foundSupport {
+		return
+	}
+	admins, err := store.ListAdminIDs(ctx, h.Pool)
+	if err != nil || len(admins) == 0 {
+		return
+	}
+	h.Hub.PublishToUsers(admins, event)
+	if event["type"] == "chat_message" {
+		h.Hub.PublishToUsers(admins, map[string]any{
+			"type":    "support_message",
+			"user_id": peerID.String(),
+			"chat_id": event["chat_id"],
+		})
+	}
 }
 
 func (h *ChatsHandler) publishChatListChanged(userIDs ...uuid.UUID) {

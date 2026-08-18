@@ -460,6 +460,7 @@ func main() {
 		go gamesBroadcaster.Start(ctx)
 		go api.StartBotTimeoutTicker(ctx, gamesHandler)
 		go api.StartBattleshipBotTimeoutTicker(ctx, gamesHandler)
+		go api.StartPokerBotTimeoutTicker(ctx, gamesHandler)
 	}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{

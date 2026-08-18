@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/admin/admin_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
@@ -13,6 +14,8 @@ void clearUserScopedCaches(Ref ref) {
   ref.read(dailyRewardFromRealtimeProvider.notifier).state = null;
   ref.read(chatsListCacheProvider.notifier).state = null;
   ref.read(locallyReadChatIdsProvider.notifier).state = {};
+  ref.read(locallyReadSupportChatIdsProvider.notifier).state = {};
+  ref.read(openSupportChatIdProvider.notifier).state = null;
   ref.read(chatRemovedIdProvider.notifier).state = null;
   ref.read(gameInvitesProvider.notifier).clear();
   clearPresenceOverrides(ref);

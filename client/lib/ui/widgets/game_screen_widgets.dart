@@ -600,6 +600,9 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
   Timer? _timer;
   int _remaining = 0;
   bool _expiredFired = false;
+  /// Был ли остаток > 0 хотя бы раз. Без этого onExpired не зовём — иначе при
+  /// перекосе часов / устаревшем дедлайне срабатывает мгновенный автоход.
+  bool _sawPositive = false;
   AnimationController? _blink;
 
   @override
@@ -619,6 +622,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.turnDeadline != widget.turnDeadline) {
       _expiredFired = false;
+      _sawPositive = false;
       _timer?.cancel();
       _updateRemaining();
       _startTimer();
@@ -657,7 +661,12 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       _updateRemaining();
       _syncBlink();
       // Только свой ход: чужой/скрытый виджет не должен штрафовать соперника.
-      if (_remaining <= 0 && !_expiredFired && widget.isMyTurn) {
+      // И только если таймер реально тикал с positive remaining — иначе при
+      // дедлайне уже в прошлом (перекос часов) будет мгновенный автоход.
+      if (_remaining <= 0 &&
+          !_expiredFired &&
+          widget.isMyTurn &&
+          _sawPositive) {
         _expiredFired = true;
         widget.onExpired();
       }
@@ -667,6 +676,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
   void _updateRemaining() {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
     final r = widget.turnDeadline - now;
+    if (r > 0) _sawPositive = true;
     if (r != _remaining && mounted) {
       setState(() => _remaining = r.clamp(0, 999));
     } else if (r <= 0 && _remaining != 0 && mounted) {
@@ -1522,6 +1532,8 @@ class GameStatusWithReward extends StatelessWidget {
     required this.rewardBronze,
     required this.rewardKey,
     this.fontSize,
+    this.maxLines = 1,
+    this.wrap = false,
   });
 
   final String statusText;
@@ -1531,36 +1543,59 @@ class GameStatusWithReward extends StatelessWidget {
   final GlobalKey rewardKey;
   final double? fontSize;
 
+  /// Сколько строк статуса; в диалоге конца партии — 2+.
+  final int maxLines;
+
+  /// Если true — статус и награда могут переноситься столбцом на узкой ширине.
+  final bool wrap;
+
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
-          fontSize: fontSize,
+          fontSize: fontSize ?? 16,
+          height: 1.15,
         );
     if (!showReward) {
       return Text(
         statusText,
         textAlign: TextAlign.center,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
         style: style,
       );
     }
+    final text = Text(
+      statusText,
+      textAlign: TextAlign.center,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    final chip = GameRewardChip(
+      key: rewardKey,
+      rewardBronze: rewardBronze,
+    );
+    if (wrap) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          text,
+          const SizedBox(height: 8),
+          chip,
+        ],
+      );
+    }
+    // Без жёсткой высоты снаружи: иначе «−2» и монета обрезаются.
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Flexible(
-          child: Text(
-            statusText,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        const SizedBox(width: 8),
-        GameRewardChip(
-          key: rewardKey,
-          rewardBronze: rewardBronze,
-        ),
+        Flexible(child: text),
+        const SizedBox(width: 6),
+        chip,
       ],
     );
   }
@@ -1583,7 +1618,7 @@ class GameRewardChip extends StatelessWidget {
         ? '+${formatStakeAmount(abs)}'
         : '−${formatStakeAmount(abs)}';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
@@ -1593,19 +1628,23 @@ class GameRewardChip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
+              height: 1.0,
+              leadingDistribution: TextLeadingDistribution.even,
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
+          // Чуть меньше 20 — стабильно влезает в узкий статус-слот.
           CoinIcon(
             coinType: stakeCoinType(abs),
-            size: 20,
+            size: 18,
             showBorder: true,
           ),
         ],
@@ -1674,32 +1713,51 @@ class GameRematchSection extends StatelessWidget {
       );
     }
     if (rematchOffer != null) {
+      final btnPad = compact
+          ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
+          : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             context.l10n.gameRematchOffer,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: compact ? 13 : 14,
+              color: AppColors.textPrimary,
+              fontSize: compact ? 15 : 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: compact ? 8 : 12),
+          SizedBox(height: compact ? 12 : 14),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
-                onPressed: () => onDecline(rematchOffer.lobbyId),
-                child: Text(context.l10n.commonDecline),
-              ),
-              SizedBox(width: compact ? 8 : 12),
-              FilledButton(
-                onPressed: () => onAccept(rematchOffer.lobbyId),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onDecline(rematchOffer.lobbyId),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                      color: AppColors.textSecondary.withValues(alpha: 0.45),
+                    ),
+                    padding: btnPad,
+                    minimumSize: const Size(0, 44),
+                  ),
+                  child: Text(context.l10n.commonDecline),
                 ),
-                child: Text(context.l10n.commonAccept),
+              ),
+              SizedBox(width: compact ? 10 : 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => onAccept(rematchOffer.lobbyId),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                    foregroundColor: Colors.white,
+                    padding: btnPad,
+                    minimumSize: const Size(0, 44),
+                  ),
+                  child: Text(context.l10n.commonAccept),
+                ),
               ),
             ],
           ),
@@ -1761,12 +1819,12 @@ class GameRematchSection extends StatelessWidget {
 
   Widget _buildRematchButtons(BuildContext context) {
     final btnPadding = compact
-        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: compact ? 8 : 12,
-      runSpacing: compact ? 6 : 8,
+    // В одну колонку на всю ширину — всё читается в одном окне.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
           onPressed: isRematching ? null : onRematch,
@@ -1787,8 +1845,10 @@ class GameRematchSection extends StatelessWidget {
             backgroundColor: AppColors.accentStart,
             foregroundColor: Colors.white,
             padding: btnPadding,
+            minimumSize: const Size(0, 44),
           ),
         ),
+        SizedBox(height: compact ? 8 : 10),
         OutlinedButton.icon(
           onPressed: isFindingGame ? null : onFindGame,
           icon: isFindingGame
@@ -1803,8 +1863,10 @@ class GameRematchSection extends StatelessWidget {
               : context.l10n.gameOtherOpponent),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.accentStart,
+            backgroundColor: Colors.white,
             side: const BorderSide(color: AppColors.accentStart),
             padding: btnPadding,
+            minimumSize: const Size(0, 44),
           ),
         ),
       ],

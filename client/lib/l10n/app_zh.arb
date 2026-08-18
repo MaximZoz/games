@@ -184,6 +184,18 @@
   "durakHintThrowIn": "加牌或等待防守",
   "durakHintThrowInFirst": "加牌（首轮最多 5 张）",
   "durakHintYouFinished": "你已出局 — 等待结束",
+  "durakFirstLeadYou": "你先出",
+  "durakFirstLeadOpponent": "对手先出",
+  "durakFirstLeadBot": "机器人先出",
+  "durakFirstLeadOf": "{name}先出",
+  "@durakFirstLeadOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "durakFirstLeadReason": "最小王牌",
   "durakHintYouLost": "你输了 — 你是傻瓜",
   "durakHintYourAttack": "你的回合 — 进攻",
   "gamesDurak": "傻瓜牌",
@@ -224,6 +236,44 @@
   "rulesPokerIntro": "德州扑克。每人两张底牌；桌上发出五张公共牌。",
   "rulesPokerPlay": "下注轮次：翻牌前、翻牌、转牌、河牌。可弃牌、跟注、下注或加注。",
   "rulesPokerWin": "用底牌与公共牌组成的最强五张牌获胜；或其余人弃牌后仅剩者获胜。",
+  "pokerFold": "Fold",
+  "pokerCheck": "Check",
+  "pokerCall": "Call {amount}",
+  "pokerCallShort": "Call",
+  "pokerRaise": "Raise",
+  "pokerRaiseTo": "Raise to {amount}",
+  "pokerRaiseTitle": "Raise",
+  "pokerAllIn": "All-in",
+  "pokerAllInBadge": "All-in",
+  "pokerFolded": "Folded",
+  "pokerPot": "Pot: {amount}",
+  "pokerYourTurn": "Your turn",
+  "pokerToAct": "{name} to act",
+  "pokerWinner": "{name} wins",
+  "pokerYouWonHand": "You won the pot!",
+  "pokerWinners": "{names} win",
+  "@pokerWinners": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerYouWonHandWith": "You and {names} won the pot!",
+  "@pokerYouWonHandWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerListAnd": "and",
+  "pokerHandOver": "Hand over",
+  "pokerStreetPreflop": "Pre-flop",
+  "pokerStreetFlop": "Flop",
+  "pokerStreetTurn": "Turn",
+  "pokerStreetRiver": "River",
+  "pokerStreetShowdown": "Showdown",
   "gamesDurakDeck24": "24 张",
   "gamesDurakDeck36": "36 张",
   "gamesDurakDeck52": "52 张",
@@ -261,6 +311,22 @@
       }
     }
   },
+  "pokerHandHighCard": "High card",
+  "pokerHandOnePair": "One pair",
+  "pokerHandTwoPair": "Two pair",
+  "pokerHandThreeOfAKind": "Three of a kind",
+  "pokerHandStraight": "Straight",
+  "pokerHandFlush": "Flush",
+  "pokerHandFullHouse": "Full house",
+  "pokerHandFourOfAKind": "Four of a kind",
+  "pokerHandStraightFlush": "Straight flush",
+  "pokerHandRoyalFlush": "Royal flush",
+  "pokerHandNumber": "Hand {n}",
+  "pokerBlinds": "Blinds {sb}/{bb}",
+  "pokerTableYouWon": "You won the table!",
+  "pokerNextHandSoon": "Next hand…",
+  "pokerShowCards": "Show cards",
+  "rulesPokerTable": "The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.",
   "gamesRules": "规则",
   "gamesRulesTitle": "游戏规则",
   "gamesCreate": "创建对局",

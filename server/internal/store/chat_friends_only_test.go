@@ -58,7 +58,7 @@ func TestInviteLobbyIDFromBody(t *testing.T) {
 		{"/games/durak/lobby/dur-1?mode=invite", "dur-1", true},
 		{"https://example.com/games/battleship/lobby/bs-9?mode=invite", "bs-9", true},
 		{"not a link", "", false},
-		{"/games/poker/lobby/x?mode=invite", "", false},
+		{"/games/poker/lobby/x?mode=invite", "x", true},
 	}
 	for _, tc := range cases {
 		id, ok := InviteLobbyIDFromBody(tc.body)

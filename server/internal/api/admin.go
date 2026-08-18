@@ -629,7 +629,11 @@ func (h *AdminHandler) SupportChats(w http.ResponseWriter, r *http.Request) {
 			item["avatar_value"] = *c.Peer.AvatarValue
 		}
 		if c.LastMessage != nil {
-			item["last_message"] = c.LastMessage.Body
+			preview := strings.TrimSpace(c.LastMessage.Body)
+			if preview == "" && c.LastMessage.HasImage {
+				preview = "📷"
+			}
+			item["last_message"] = preview
 			item["last_message_at"] = c.LastMessage.CreatedAt.UTC().Format(time.RFC3339Nano)
 		}
 		items = append(items, item)
@@ -646,10 +650,10 @@ func (h *AdminHandler) SupportMessages(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "support user not found")
 		return
 	}
-	// peer ID из пути: /api/admin/support/chats/:userId/messages
-	path := strings.TrimPrefix(r.URL.Path, "/api/admin/support/chats/")
+	// /api/admin/support/chats/:userId[ /messages ]
+	path := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/admin/support/chats/"), "/")
 	parts := strings.Split(path, "/")
-	if len(parts) < 2 || parts[1] != "messages" {
+	if len(parts) == 0 || parts[0] == "" {
 		WriteErr(w, r, http.StatusNotFound, "not found")
 		return
 	}
@@ -663,9 +667,43 @@ func (h *AdminHandler) SupportMessages(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	if len(parts) == 1 {
+		if r.Method != http.MethodGet {
+			WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"chat_id":         chatID.String(),
+			"support_user_id": suID.String(),
+			"peer_id":         peerID.String(),
+		})
+		return
+	}
+	if parts[1] != "messages" {
+		WriteErr(w, r, http.StatusNotFound, "not found")
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
-		msgs, err := store.ListChatMessages(ctx, h.Pool, chatID, suID, 100, nil)
+		limit := 20
+		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+			n, convErr := strconv.Atoi(raw)
+			if convErr == nil && n > 0 {
+				limit = n
+				if limit > 200 {
+					limit = 200
+				}
+			}
+		}
+		var before *time.Time
+		if raw := strings.TrimSpace(r.URL.Query().Get("before")); raw != "" {
+			t, parseErr := time.Parse(time.RFC3339Nano, raw)
+			if parseErr == nil {
+				value := t.UTC()
+				before = &value
+			}
+		}
+		msgs, err := store.ListChatMessages(ctx, h.Pool, chatID, suID, limit, before)
 		if err != nil {
 			WriteErr(w, r, http.StatusInternalServerError, "server error")
 			return

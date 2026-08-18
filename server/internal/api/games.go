@@ -14,6 +14,7 @@ import (
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
+	"multigames/server/internal/poker"
 	"multigames/server/internal/store"
 
 	"github.com/google/uuid"
@@ -319,6 +320,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/durak/") {
 		h.serveDurak(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/poker/") {
+		h.servePoker(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -2892,7 +2897,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType {
+	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType || m["game_type"] == pokerGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3768,25 +3773,38 @@ func (h *GamesHandler) publishGameStarted(userIDs []uuid.UUID, gameID, lobbyID s
 	h.publishGameStartedTyped(userIDs, gameID, lobbyID, "tictactoe")
 }
 
-// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (если это человек).
+// notifyYourTurn шлёт Web Push игроку, чей сейчас ход (крестики: mark → user).
 // Показ на клиенте подавляется SW, если пользователь уже смотрит этот матч.
 func (h *GamesHandler) notifyYourTurn(gameID, nextTurn string, m map[string]string) {
+	nextID := markOwnerUserID(m, nextTurn)
+	gameType := strings.TrimSpace(m["game_type"])
+	if gameType == "" {
+		gameType = "tictactoe"
+	}
+	h.notifyYourTurnUser(gameID, nextID, gameType)
+}
+
+// notifyYourTurnUser — общий пуш «ваш ход» для любой игры (ttt/durak/poker/battleship).
+func (h *GamesHandler) notifyYourTurnUser(gameID, userID, gameType string) {
 	if h.Push == nil || strings.TrimSpace(gameID) == "" {
 		return
 	}
-	nextID := markOwnerUserID(m, nextTurn)
-	if nextID == "" || isBot(nextID) {
+	if userID == "" || isBot(userID) {
 		return
 	}
-	uid, err := uuid.Parse(nextID)
+	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return
+	}
+	gt := strings.TrimSpace(gameType)
+	if gt == "" {
+		gt = "tictactoe"
 	}
 	lang := i18n.LangRU
 	h.Push.NotifyUsers([]uuid.UUID{uid}, store.WebPushCategoryGames, PushPayload{
 		Title: i18n.Content(lang, "push.your_turn_title"),
 		Body:  i18n.Content(lang, "push.your_turn_body"),
-		URL:   "/games/tictactoe/game/" + gameID,
+		URL:   "/games/" + gt + "/game/" + gameID,
 		Tag:   "game_turn_" + gameID,
 		Kind:  "game_turn",
 	})
@@ -3845,8 +3863,8 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
-	// Durak: участие определяется по player_ids CSV.
-	if gm["game_type"] == durakGameType {
+	// Durak / Poker: участие определяется по player_ids CSV.
+	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType {
 		players := parsePlayerIDsCSV(gm["player_ids"])
 		for _, p := range players {
 			if p == userID.String() {
@@ -4246,7 +4264,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		gt = "tictactoe"
 	}
 	inGame := false
-	if gt == durakGameType {
+	if gt == durakGameType || gt == pokerGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4312,6 +4330,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyDurakTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == battleshipGameType {
 				h.applyBattleshipTimeout(ctx, gameID, m)
+			} else if m["game_type"] == pokerGameType {
+				h.applyPokerTurnTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4337,11 +4357,13 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 						h.promoteDurakFinishedPlayers(ctx, gameID, m, st)
 					} else {
+						actor := durakTurnActorIdx(st)
 						active = map[string]any{
-							"type":      "game",
-							"game_id":   gameID,
-							"lobby_id":  m["lobby_id"],
-							"game_type": durakGameType,
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  durakGameType,
+							"is_my_turn": idx >= 0 && actor == idx,
 						}
 					}
 				} else {
@@ -4363,6 +4385,46 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"lobby_id":   m["lobby_id"],
 						"is_my_turn": m["turn"] == userID.String(),
 						"game_type":  battleshipGameType,
+					}
+				}
+			} else if m["game_type"] == pokerGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				inGame := false
+				for _, p := range players {
+					if p == userID.String() {
+						inGame = true
+						break
+					}
+				}
+				if !inGame {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if st, serr := poker.Decode(m["state"]); serr == nil {
+					idx := pokerPlayerIndex(st, userID.String())
+					// Без фишек, стол идёт — observation, не active.
+					if idx >= 0 && st.IsEliminated(idx) && !st.TableOver {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+						h.promotePokerEliminatedPlayers(ctx, gameID, m, st)
+					} else {
+						myTurn := idx >= 0 &&
+							!st.TableOver &&
+							!st.HandOver &&
+							st.Status == poker.StatusActive &&
+							idx == st.ActingIndex &&
+							!st.IsEliminated(idx)
+						active = map[string]any{
+							"type":       "game",
+							"game_id":    gameID,
+							"lobby_id":   m["lobby_id"],
+							"game_type":  pokerGameType,
+							"is_my_turn": myTurn,
+						}
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": pokerGameType,
 					}
 				}
 			} else {
