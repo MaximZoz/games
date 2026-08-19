@@ -598,6 +598,26 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Spillere: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Spill mot en bot uten tidsbegrensning per trekk.';
+
+  @override
+  String get rulesUnoIntro => 'Klassisk Uno: alle får kort; spill etter farge eller tall.';
+
+  @override
+  String get rulesUnoPlay => 'Spesialkort: +2, snu, hopp over, jokere og +4. Kan du ikke spille, trekk fra bunken.';
+
+  @override
+  String get rulesUnoWin => 'Den som først blir kvitt alle kortene vinner. Si “Uno” når du har ett kort igjen.';
+
+  @override
   String get gamesInDevelopment => 'Under utvikling';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get profileUploadPhoto => 'Last opp bilde';
 
   @override
-  String get profileChangePhoto => 'Bytt bilde';
+  String get profileChangePhoto => 'Bytt avatar';
 
   @override
   String get shopTitle => 'Butikk';
@@ -1800,6 +1820,36 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Forbereder…';
+
+  @override
+  String get profileGalleryTitle => 'Bilder';
+
+  @override
+  String get profileGalleryAdd => 'Legg til bilde';
+
+  @override
+  String get profileMakePrimary => 'Gjør til primær';
+
+  @override
+  String get profilePhotoDelete => 'Slett bilde';
+
+  @override
+  String get profilePhotosLimit => 'Du kan laste opp opptil 3 bilder';
+
+  @override
+  String get profilePhotosEmpty => 'Ingen bilder ennå';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kunne ikke laste opp bildet';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kunne ikke slette bildet';
+
+  @override
+  String get profilePhotoTooLarge => 'Bildet er for stort';
+
+  @override
+  String get profileSetPrimaryFailed => 'Kunne ikke angi som primær';
 
   @override
   String timeSecondsShort(int seconds) {

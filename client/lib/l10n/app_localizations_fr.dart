@@ -598,6 +598,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Joueurs : $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Partie contre un bot, sans limite de temps par tour.';
+
+  @override
+  String get rulesUnoIntro => 'Uno classique : chacun reçoit des cartes ; jouez par couleur ou valeur.';
+
+  @override
+  String get rulesUnoPlay => 'Cartes spéciales : +2, sens inverse, passe, joker et +4. Si vous ne pouvez pas jouer, piochez.';
+
+  @override
+  String get rulesUnoWin => 'Le premier à se débarrasser de toutes ses cartes gagne. Dites « Uno » quand il vous en reste une.';
+
+  @override
   String get gamesInDevelopment => 'En développement';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileUploadPhoto => 'Importer une photo';
 
   @override
-  String get profileChangePhoto => 'Changer la photo';
+  String get profileChangePhoto => 'Changer l’avatar';
 
   @override
   String get shopTitle => 'Boutique';
@@ -1800,6 +1820,36 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Préparation…';
+
+  @override
+  String get profileGalleryTitle => 'Photos';
+
+  @override
+  String get profileGalleryAdd => 'Ajouter une photo';
+
+  @override
+  String get profileMakePrimary => 'Définir comme principale';
+
+  @override
+  String get profilePhotoDelete => 'Supprimer la photo';
+
+  @override
+  String get profilePhotosLimit => 'Vous pouvez ajouter jusqu’à 3 photos';
+
+  @override
+  String get profilePhotosEmpty => 'Pas encore de photos';
+
+  @override
+  String get profilePhotoUploadFailed => 'Impossible d’ajouter la photo';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Impossible de supprimer la photo';
+
+  @override
+  String get profilePhotoTooLarge => 'La photo est trop volumineuse';
+
+  @override
+  String get profileSetPrimaryFailed => 'Impossible de définir comme principale';
 
   @override
   String timeSecondsShort(int seconds) {

@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spieler: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spiel gegen einen Bot, ohne Zugzeitlimit.",
+  "rulesUnoIntro": "Klassisches Uno: Jeder erhält Karten; spiele nach Farbe oder Zahl.",
+  "rulesUnoPlay": "Sonderkarten: +2, Richtungswechsel, Aussetzen, Farbwahl und +4. Kannst du nicht legen, ziehe vom Stapel.",
+  "rulesUnoWin": "Es gewinnt, wer zuerst alle Karten ablegt. Sag „Uno“, wenn nur noch eine Karte übrig ist.",
   "gamesInDevelopment": "In Entwicklung",
   "rulesPokerPlayers": "Spieler: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Weiblich",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Foto hochladen",
-  "profileChangePhoto": "Foto ändern",
+  "profileChangePhoto": "Avatar ändern",
   "shopTitle": "Shop",
   "shopEmojis": "Emojis",
   "shopEmojisSubtitle": "Animierte Emojis für den Chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Foto zoomen und verschieben",
   "profileApply": "Übernehmen",
   "profilePreparing": "Vorbereitung…",
+  "profileGalleryTitle": "Fotos",
+  "profileGalleryAdd": "Foto hinzufügen",
+  "profileMakePrimary": "Als Hauptbild",
+  "profilePhotoDelete": "Foto löschen",
+  "profilePhotosLimit": "Maximal 3 Fotos",
+  "profilePhotosEmpty": "Noch keine Fotos",
+  "profilePhotoUploadFailed": "Foto konnte nicht hochgeladen werden",
+  "profilePhotoDeleteFailed": "Foto konnte nicht gelöscht werden",
+  "profilePhotoTooLarge": "Foto ist zu groß",
+  "profileSetPrimaryFailed": "Konnte nicht als Hauptbild gesetzt werden",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

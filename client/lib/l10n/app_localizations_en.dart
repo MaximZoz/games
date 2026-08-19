@@ -598,6 +598,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Players: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Play against a bot, no turn time limit.';
+
+  @override
+  String get rulesUnoIntro => 'Classic Uno: everyone is dealt cards; play by color or number.';
+
+  @override
+  String get rulesUnoPlay => 'Special cards: +2, reverse, skip, wild and wild +4. If you cannot play, draw from the deck.';
+
+  @override
+  String get rulesUnoWin => 'The first player to empty their hand wins. Say “Uno” when you have one card left.';
+
+  @override
   String get gamesInDevelopment => 'In development';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileUploadPhoto => 'Upload photo';
 
   @override
-  String get profileChangePhoto => 'Change photo';
+  String get profileChangePhoto => 'Change avatar';
 
   @override
   String get shopTitle => 'Shop';
@@ -1800,6 +1820,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Preparing…';
+
+  @override
+  String get profileGalleryTitle => 'Photos';
+
+  @override
+  String get profileGalleryAdd => 'Add photo';
+
+  @override
+  String get profileMakePrimary => 'Make primary';
+
+  @override
+  String get profilePhotoDelete => 'Delete photo';
+
+  @override
+  String get profilePhotosLimit => 'You can upload up to 3 photos';
+
+  @override
+  String get profilePhotosEmpty => 'No photos yet';
+
+  @override
+  String get profilePhotoUploadFailed => 'Could not upload photo';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Could not delete photo';
+
+  @override
+  String get profilePhotoTooLarge => 'Photo is too large';
+
+  @override
+  String get profileSetPrimaryFailed => 'Could not set as primary';
 
   @override
   String timeSecondsShort(int seconds) {

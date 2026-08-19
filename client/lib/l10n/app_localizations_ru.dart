@@ -598,6 +598,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Игроки: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Игра против бота, без лимита времени на ход.';
+
+  @override
+  String get rulesUnoIntro => 'Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.';
+
+  @override
+  String get rulesUnoPlay => 'Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.';
+
+  @override
+  String get rulesUnoWin => 'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.';
+
+  @override
   String get gamesInDevelopment => 'В разработке';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileUploadPhoto => 'Загрузить фото';
 
   @override
-  String get profileChangePhoto => 'Поменять фото';
+  String get profileChangePhoto => 'Поменять аватар';
 
   @override
   String get shopTitle => 'Магазин';
@@ -1800,6 +1820,36 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Подготовка…';
+
+  @override
+  String get profileGalleryTitle => 'Фото';
+
+  @override
+  String get profileGalleryAdd => 'Добавить фото';
+
+  @override
+  String get profileMakePrimary => 'Сделать основным';
+
+  @override
+  String get profilePhotoDelete => 'Удалить фото';
+
+  @override
+  String get profilePhotosLimit => 'Можно загрузить не больше 3 фото';
+
+  @override
+  String get profilePhotosEmpty => 'Пока нет фото';
+
+  @override
+  String get profilePhotoUploadFailed => 'Не удалось загрузить фото';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Не удалось удалить фото';
+
+  @override
+  String get profilePhotoTooLarge => 'Фото слишком большое';
+
+  @override
+  String get profileSetPrimaryFailed => 'Не удалось сделать основным';
 
   @override
   String timeSecondsShort(int seconds) {

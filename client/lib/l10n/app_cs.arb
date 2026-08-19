@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Hráči: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Hra proti botovi bez časového limitu na tah.",
+  "rulesUnoIntro": "Klasické Uno: každému se rozdají karty; hrajte barvou nebo hodnotou.",
+  "rulesUnoPlay": "Speciální karty: +2, otočení, přeskočení, žolík a +4. Nemůžete-li hrát, lízněte z balíčku.",
+  "rulesUnoWin": "Vyhrává ten, kdo se první zbaví všech karet. Řekněte „Uno“, když zbývá jedna.",
   "gamesInDevelopment": "Ve vývoji",
   "rulesPokerPlayers": "Hráči: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Žena",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Nahrát foto",
-  "profileChangePhoto": "Změnit foto",
+  "profileChangePhoto": "Změnit avatar",
   "shopTitle": "Obchod",
   "shopEmojis": "Emoji",
   "shopEmojisSubtitle": "Animované emoji do chatu",
@@ -914,6 +927,16 @@
   "profileCropHint": "Přibližte a posuňte fotku",
   "profileApply": "Použít",
   "profilePreparing": "Příprava…",
+  "profileGalleryTitle": "Fotky",
+  "profileGalleryAdd": "Přidat fotku",
+  "profileMakePrimary": "Nastavit jako hlavní",
+  "profilePhotoDelete": "Smazat fotku",
+  "profilePhotosLimit": "Můžete nahrát nejvýše 3 fotky",
+  "profilePhotosEmpty": "Zatím žádné fotky",
+  "profilePhotoUploadFailed": "Fotku se nepodařilo nahrát",
+  "profilePhotoDeleteFailed": "Fotku se nepodařilo smazat",
+  "profilePhotoTooLarge": "Fotka je příliš velká",
+  "profileSetPrimaryFailed": "Nepodařilo se nastavit jako hlavní",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

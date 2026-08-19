@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "扑克",
+  "gamesUno": "乌诺",
+  "rulesUnoPlayers": "玩家：{players}。",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "与机器人对战，无回合时限。",
+  "rulesUnoIntro": "经典乌诺：每人发牌；按颜色或点数出牌。",
+  "rulesUnoPlay": "特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。",
+  "rulesUnoWin": "先出完手牌者获胜。剩一张牌时记得说“乌诺”。",
   "gamesInDevelopment": "开发中",
   "rulesPokerPlayers": "玩家：{players}。",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "女",
   "profileAvatar": "头像",
   "profileUploadPhoto": "上传照片",
-  "profileChangePhoto": "更换照片",
+  "profileChangePhoto": "更换头像",
   "shopTitle": "商店",
   "shopEmojis": "表情",
   "shopEmojisSubtitle": "聊天用动态表情",
@@ -914,6 +927,16 @@
   "profileCropHint": "缩放并移动照片",
   "profileApply": "应用",
   "profilePreparing": "准备中…",
+  "profileGalleryTitle": "照片",
+  "profileGalleryAdd": "添加照片",
+  "profileMakePrimary": "设为头像",
+  "profilePhotoDelete": "删除照片",
+  "profilePhotosLimit": "最多可上传 3 张照片",
+  "profilePhotosEmpty": "暂无照片",
+  "profilePhotoUploadFailed": "无法上传照片",
+  "profilePhotoDeleteFailed": "无法删除照片",
+  "profilePhotoTooLarge": "照片太大",
+  "profileSetPrimaryFailed": "无法设为头像",
   "timeSecondsShort": "{seconds} 秒",
   "@timeSecondsShort": {
     "placeholders": {

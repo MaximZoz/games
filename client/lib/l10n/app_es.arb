@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Póker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Jugadores: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Partida contra un bot, sin límite de tiempo por turno.",
+  "rulesUnoIntro": "Uno clásico: a todos se les reparte; juega por color o número.",
+  "rulesUnoPlay": "Cartas especiales: +2, cambio de sentido, salto, comodín y +4. Si no puedes jugar, roba del mazo.",
+  "rulesUnoWin": "Gana quien se deshace primero de todas las cartas. Di “Uno” cuando te quede una.",
   "gamesInDevelopment": "En desarrollo",
   "rulesPokerPlayers": "Jugadores: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Mujer",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Subir foto",
-  "profileChangePhoto": "Cambiar foto",
+  "profileChangePhoto": "Cambiar avatar",
   "shopTitle": "Tienda",
   "shopEmojis": "Emojis",
   "shopEmojisSubtitle": "Emojis animados para el chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Amplía y mueve la foto",
   "profileApply": "Aplicar",
   "profilePreparing": "Preparando…",
+  "profileGalleryTitle": "Fotos",
+  "profileGalleryAdd": "Añadir foto",
+  "profileMakePrimary": "Hacer principal",
+  "profilePhotoDelete": "Eliminar foto",
+  "profilePhotosLimit": "Puedes subir hasta 3 fotos",
+  "profilePhotosEmpty": "Aún no hay fotos",
+  "profilePhotoUploadFailed": "No se pudo subir la foto",
+  "profilePhotoDeleteFailed": "No se pudo eliminar la foto",
+  "profilePhotoTooLarge": "La foto es demasiado grande",
+  "profileSetPrimaryFailed": "No se pudo establecer como principal",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

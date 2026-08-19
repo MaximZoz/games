@@ -598,6 +598,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesPoker => '扑克';
 
   @override
+  String get gamesUno => '乌诺';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return '玩家：$players。';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => '与机器人对战，无回合时限。';
+
+  @override
+  String get rulesUnoIntro => '经典乌诺：每人发牌；按颜色或点数出牌。';
+
+  @override
+  String get rulesUnoPlay => '特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。';
+
+  @override
+  String get rulesUnoWin => '先出完手牌者获胜。剩一张牌时记得说“乌诺”。';
+
+  @override
   String get gamesInDevelopment => '开发中';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileUploadPhoto => '上传照片';
 
   @override
-  String get profileChangePhoto => '更换照片';
+  String get profileChangePhoto => '更换头像';
 
   @override
   String get shopTitle => '商店';
@@ -1800,6 +1820,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profilePreparing => '准备中…';
+
+  @override
+  String get profileGalleryTitle => '照片';
+
+  @override
+  String get profileGalleryAdd => '添加照片';
+
+  @override
+  String get profileMakePrimary => '设为头像';
+
+  @override
+  String get profilePhotoDelete => '删除照片';
+
+  @override
+  String get profilePhotosLimit => '最多可上传 3 张照片';
+
+  @override
+  String get profilePhotosEmpty => '暂无照片';
+
+  @override
+  String get profilePhotoUploadFailed => '无法上传照片';
+
+  @override
+  String get profilePhotoDeleteFailed => '无法删除照片';
+
+  @override
+  String get profilePhotoTooLarge => '照片太大';
+
+  @override
+  String get profileSetPrimaryFailed => '无法设为头像';
 
   @override
   String timeSecondsShort(int seconds) {

@@ -598,6 +598,26 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Ойыншылар: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Ботқа қарсы ойын, жүріс уақыты шектелмейді.';
+
+  @override
+  String get rulesUnoIntro => 'Классикалық Уно: әркімге карта үлестіріледі; түс немесе мән бойынша жүріңіз.';
+
+  @override
+  String get rulesUnoPlay => 'Арнайы карталар: +2, бағыт ауыстыру, жүрісті өткізу, қара түс ауыстыру және +4. Жүре алмасаңыз — колодадан алыңыз.';
+
+  @override
+  String get rulesUnoWin => 'Барлық картасын бірінші тастаған жеңеді. Бір карта қалғанда «Уно» деп айтуды ұмытпаңыз.';
+
+  @override
   String get gamesInDevelopment => 'Әзірленуде';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get profileUploadPhoto => 'Фото жүктеу';
 
   @override
-  String get profileChangePhoto => 'Фотоны өзгерту';
+  String get profileChangePhoto => 'Аватарды өзгерту';
 
   @override
   String get shopTitle => 'Дүкен';
@@ -1800,6 +1820,36 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Дайындалуда…';
+
+  @override
+  String get profileGalleryTitle => 'Фото';
+
+  @override
+  String get profileGalleryAdd => 'Фото қосу';
+
+  @override
+  String get profileMakePrimary => 'Негізгі ету';
+
+  @override
+  String get profilePhotoDelete => 'Фотоны жою';
+
+  @override
+  String get profilePhotosLimit => 'Ең көбі 3 фото жүктеуге болады';
+
+  @override
+  String get profilePhotosEmpty => 'Әзірге фото жоқ';
+
+  @override
+  String get profilePhotoUploadFailed => 'Фото жүктелмеді';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Фото жойылмады';
+
+  @override
+  String get profilePhotoTooLarge => 'Фото тым үлкен';
+
+  @override
+  String get profileSetPrimaryFailed => 'Негізгі ету мүмкін болмады';
 
   @override
   String timeSecondsShort(int seconds) {

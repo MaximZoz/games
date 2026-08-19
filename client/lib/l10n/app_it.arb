@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Giocatori: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Partita contro un bot, senza limite di tempo per turno.",
+  "rulesUnoIntro": "Uno classico: a tutti vengono distribuite carte; gioca per colore o numero.",
+  "rulesUnoPlay": "Carte speciali: +2, cambio senso, salta, jolly e +4. Se non puoi giocare, pesca dal mazzo.",
+  "rulesUnoWin": "Vince chi scarica per primo tutte le carte. Di’ “Uno” quando ne resta una.",
   "gamesInDevelopment": "In sviluppo",
   "rulesPokerPlayers": "Giocatori: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Donna",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Carica foto",
-  "profileChangePhoto": "Cambia foto",
+  "profileChangePhoto": "Cambia avatar",
   "shopTitle": "Negozio",
   "shopEmojis": "Emoji",
   "shopEmojisSubtitle": "Emoji animate per la chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Ingrandisci e sposta la foto",
   "profileApply": "Applica",
   "profilePreparing": "Preparazione…",
+  "profileGalleryTitle": "Foto",
+  "profileGalleryAdd": "Aggiungi foto",
+  "profileMakePrimary": "Imposta come principale",
+  "profilePhotoDelete": "Elimina foto",
+  "profilePhotosLimit": "Puoi caricare fino a 3 foto",
+  "profilePhotosEmpty": "Nessuna foto",
+  "profilePhotoUploadFailed": "Impossibile caricare la foto",
+  "profilePhotoDeleteFailed": "Impossibile eliminare la foto",
+  "profilePhotoTooLarge": "La foto è troppo grande",
+  "profileSetPrimaryFailed": "Impossibile impostare come principale",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

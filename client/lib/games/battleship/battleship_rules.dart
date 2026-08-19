@@ -1,6 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatStakeAmount, formatTurnTime;
+    show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Время на расстановку флота (как на сервере `battleshipSetupSec`).
@@ -23,7 +23,7 @@ List<String> battleshipRuleLines({
       turnTimeSec == 0
           ? t.rulesNoTimeLimit
           : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) t.rulesStake(formatStakeAmount(stakeBronze)),
+      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
     ],
     t.rulesBattleshipIntro,
     if (!offlineBot) t.rulesBattleshipSetup,

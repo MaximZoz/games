@@ -598,6 +598,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Giocatori: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Partita contro un bot, senza limite di tempo per turno.';
+
+  @override
+  String get rulesUnoIntro => 'Uno classico: a tutti vengono distribuite carte; gioca per colore o numero.';
+
+  @override
+  String get rulesUnoPlay => 'Carte speciali: +2, cambio senso, salta, jolly e +4. Se non puoi giocare, pesca dal mazzo.';
+
+  @override
+  String get rulesUnoWin => 'Vince chi scarica per primo tutte le carte. Di’ “Uno” quando ne resta una.';
+
+  @override
   String get gamesInDevelopment => 'In sviluppo';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileUploadPhoto => 'Carica foto';
 
   @override
-  String get profileChangePhoto => 'Cambia foto';
+  String get profileChangePhoto => 'Cambia avatar';
 
   @override
   String get shopTitle => 'Negozio';
@@ -1800,6 +1820,36 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Preparazione…';
+
+  @override
+  String get profileGalleryTitle => 'Foto';
+
+  @override
+  String get profileGalleryAdd => 'Aggiungi foto';
+
+  @override
+  String get profileMakePrimary => 'Imposta come principale';
+
+  @override
+  String get profilePhotoDelete => 'Elimina foto';
+
+  @override
+  String get profilePhotosLimit => 'Puoi caricare fino a 3 foto';
+
+  @override
+  String get profilePhotosEmpty => 'Nessuna foto';
+
+  @override
+  String get profilePhotoUploadFailed => 'Impossibile caricare la foto';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Impossibile eliminare la foto';
+
+  @override
+  String get profilePhotoTooLarge => 'La foto è troppo grande';
+
+  @override
+  String get profileSetPrimaryFailed => 'Impossibile impostare come principale';
 
   @override
   String timeSecondsShort(int seconds) {

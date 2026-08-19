@@ -57,7 +57,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim();
+      // После обновления SW не оставляем старые баннеры (в т.ч. админ/поддержка).
+      await closeAllShownNotifications();
+    })(),
+  );
 });
 
 function resolveTargetUrl(raw) {

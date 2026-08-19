@@ -598,6 +598,26 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesPoker => 'Pôquer';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Jogadores: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Jogo contra um bot, sem limite de tempo por turno.';
+
+  @override
+  String get rulesUnoIntro => 'Uno clássico: todos recebem cartas; jogue por cor ou número.';
+
+  @override
+  String get rulesUnoPlay => 'Cartas especiais: +2, inverter, pular, curingas e +4. Se não puder jogar, compre do baralho.';
+
+  @override
+  String get rulesUnoWin => 'Vence quem descartar todas as cartas primeiro. Diga “Uno” quando restar uma.';
+
+  @override
   String get gamesInDevelopment => 'Em desenvolvimento';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileUploadPhoto => 'Enviar foto';
 
   @override
-  String get profileChangePhoto => 'Trocar foto';
+  String get profileChangePhoto => 'Trocar avatar';
 
   @override
   String get shopTitle => 'Loja';
@@ -1800,6 +1820,36 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profilePreparing => 'A preparar…';
+
+  @override
+  String get profileGalleryTitle => 'Fotos';
+
+  @override
+  String get profileGalleryAdd => 'Adicionar foto';
+
+  @override
+  String get profileMakePrimary => 'Tornar principal';
+
+  @override
+  String get profilePhotoDelete => 'Excluir foto';
+
+  @override
+  String get profilePhotosLimit => 'Você pode enviar até 3 fotos';
+
+  @override
+  String get profilePhotosEmpty => 'Ainda não há fotos';
+
+  @override
+  String get profilePhotoUploadFailed => 'Não foi possível enviar a foto';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Não foi possível excluir a foto';
+
+  @override
+  String get profilePhotoTooLarge => 'A foto é muito grande';
+
+  @override
+  String get profileSetPrimaryFailed => 'Não foi possível definir como principal';
 
   @override
   String timeSecondsShort(int seconds) {

@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Oyuncular: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Bota karşı oyun, tur süresi sınırı yok.",
+  "rulesUnoIntro": "Klasik Uno: herkese kart dağıtılır; renk veya sayıya göre oynayın.",
+  "rulesUnoPlay": "Özel kartlar: +2, yön değiştir, atla, joker ve +4. Oynayamazsanız desteden çekin.",
+  "rulesUnoWin": "Tüm kartlarını ilk atan kazanır. Bir kart kaldığında “Uno” deyin.",
   "gamesInDevelopment": "Geliştiriliyor",
   "rulesPokerPlayers": "Oyuncular: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Kadın",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Fotoğraf yükle",
-  "profileChangePhoto": "Fotoğrafı değiştir",
+  "profileChangePhoto": "Avatarı değiştir",
   "shopTitle": "Mağaza",
   "shopEmojis": "Emojiler",
   "shopEmojisSubtitle": "Sohbet için animasyonlu emojiler",
@@ -914,6 +927,16 @@
   "profileCropHint": "Fotoğrafı yakınlaştır ve taşı",
   "profileApply": "Uygula",
   "profilePreparing": "Hazırlanıyor…",
+  "profileGalleryTitle": "Fotoğraflar",
+  "profileGalleryAdd": "Fotoğraf ekle",
+  "profileMakePrimary": "Ana fotoğraf yap",
+  "profilePhotoDelete": "Fotoğrafı sil",
+  "profilePhotosLimit": "En fazla 3 fotoğraf yükleyebilirsiniz",
+  "profilePhotosEmpty": "Henüz fotoğraf yok",
+  "profilePhotoUploadFailed": "Fotoğraf yüklenemedi",
+  "profilePhotoDeleteFailed": "Fotoğraf silinemedi",
+  "profilePhotoTooLarge": "Fotoğraf çok büyük",
+  "profileSetPrimaryFailed": "Ana fotoğraf yapılamadı",
   "timeSecondsShort": "{seconds} sn",
   "@timeSecondsShort": {
     "placeholders": {

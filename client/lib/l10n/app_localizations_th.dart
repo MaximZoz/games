@@ -598,6 +598,26 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesPoker => 'โป๊กเกอร์';
 
   @override
+  String get gamesUno => 'อูโน่';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'ผู้เล่น: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'เล่นกับบอท ไม่จำกัดเวลาต่อตา';
+
+  @override
+  String get rulesUnoIntro => 'อูโน่คลาสสิก: แจกไพ่ให้ทุกคน เล่นตามสีหรือเลข';
+
+  @override
+  String get rulesUnoPlay => 'ไพ่พิเศษ: +2, กลับทาง, ข้าม, เปลี่ยนสี และ +4 ถ้าลงไม่ได้ให้จั่วจากสำรับ';
+
+  @override
+  String get rulesUnoWin => 'ผู้ที่ลงไพ่หมดก่อนเป็นผู้ชนะ เมื่อเหลือใบเดียวต้องพูดว่า “อูโน่”';
+
+  @override
   String get gamesInDevelopment => 'กำลังพัฒนา';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get profileUploadPhoto => 'อัปโหลดรูป';
 
   @override
-  String get profileChangePhoto => 'เปลี่ยนรูป';
+  String get profileChangePhoto => 'เปลี่ยนอวาตาร์';
 
   @override
   String get shopTitle => 'ร้านค้า';
@@ -1800,6 +1820,36 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get profilePreparing => 'กำลังเตรียม…';
+
+  @override
+  String get profileGalleryTitle => 'รูปภาพ';
+
+  @override
+  String get profileGalleryAdd => 'เพิ่มรูป';
+
+  @override
+  String get profileMakePrimary => 'ตั้งเป็นรูปหลัก';
+
+  @override
+  String get profilePhotoDelete => 'ลบรูป';
+
+  @override
+  String get profilePhotosLimit => 'อัปโหลดได้สูงสุด 3 รูป';
+
+  @override
+  String get profilePhotosEmpty => 'ยังไม่มีรูป';
+
+  @override
+  String get profilePhotoUploadFailed => 'อัปโหลดรูปไม่สำเร็จ';
+
+  @override
+  String get profilePhotoDeleteFailed => 'ลบรูปไม่สำเร็จ';
+
+  @override
+  String get profilePhotoTooLarge => 'รูปใหญ่เกินไป';
+
+  @override
+  String get profileSetPrimaryFailed => 'ตั้งเป็นรูปหลักไม่สำเร็จ';
 
   @override
   String timeSecondsShort(int seconds) {

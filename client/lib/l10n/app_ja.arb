@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "ポーカー",
+  "gamesUno": "ウノ",
+  "rulesUnoPlayers": "プレイヤー: {players}人。",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "ボットとの対戦。ターン制限時間なし。",
+  "rulesUnoIntro": "クラシックウノ：全員にカードが配られ、色または数字で出します。",
+  "rulesUnoPlay": "特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。",
+  "rulesUnoWin": "最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。",
   "gamesInDevelopment": "開発中",
   "rulesPokerPlayers": "人数: {players}。",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "女性",
   "profileAvatar": "アバター",
   "profileUploadPhoto": "写真をアップロード",
-  "profileChangePhoto": "写真を変更",
+  "profileChangePhoto": "アバターを変更",
   "shopTitle": "ショップ",
   "shopEmojis": "絵文字",
   "shopEmojisSubtitle": "チャット用のアニメ絵文字",
@@ -914,6 +927,16 @@
   "profileCropHint": "写真を拡大・移動",
   "profileApply": "適用",
   "profilePreparing": "準備中…",
+  "profileGalleryTitle": "写真",
+  "profileGalleryAdd": "写真を追加",
+  "profileMakePrimary": "メインにする",
+  "profilePhotoDelete": "写真を削除",
+  "profilePhotosLimit": "写真は3枚までです",
+  "profilePhotosEmpty": "写真はまだありません",
+  "profilePhotoUploadFailed": "写真をアップロードできませんでした",
+  "profilePhotoDeleteFailed": "写真を削除できませんでした",
+  "profilePhotoTooLarge": "写真が大きすぎます",
+  "profileSetPrimaryFailed": "メインに設定できませんでした",
   "timeSecondsShort": "{seconds} 秒",
   "@timeSecondsShort": {
     "placeholders": {

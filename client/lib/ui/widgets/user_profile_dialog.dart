@@ -7,7 +7,9 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/profile/profile_gallery_widgets.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -34,6 +36,7 @@ Future<void> showUserProfileDialog({
   String messageFrom = 'games',
   /// В комнате чата «написать» не нужно — уже в переписке.
   bool showMessageButton = true,
+  bool isSupport = false,
 }) async {
   final id = userId.trim();
   if (id.isEmpty || id.startsWith('bot:')) return;
@@ -125,11 +128,17 @@ Future<void> showUserProfileDialog({
                   }
                 }
 
-                final name = (friendUser?.displayName?.trim().isNotEmpty == true)
+                final rawName = (friendUser?.displayName?.trim().isNotEmpty ==
+                        true)
                     ? friendUser!.displayName!.trim()
                     : (displayName?.trim().isNotEmpty == true
                         ? displayName!.trim()
-                        : context.l10n.commonUser);
+                        : '');
+                final supportPeer =
+                    isSupport || isSupportDisplayName(rawName);
+                final name = supportPeer
+                    ? context.l10n.supportTitle
+                    : localizeDisplayName(rawName, context.l10n);
                 final resolvedAge = friendUser?.age ?? age;
                 final resolvedGender = friendUser?.gender ?? gender;
                 final resolvedAbout =
@@ -148,7 +157,8 @@ Future<void> showUserProfileDialog({
                     ref.watch(authStateProvider).valueOrNull?.id.trim() ?? '';
                 final isSelf = myId.isNotEmpty && myId == id;
                 // «В друзья» — если ещё не друг и нет исходящей заявки.
-                final showAddFriend = !isSelf && !isFriend && !hasOutgoing;
+                final showAddFriend =
+                    !supportPeer && !isSelf && !isFriend && !hasOutgoing;
                 // «Написать» — везде, кроме комнаты текущего чата.
                 final showMessage = showMessageButton && !isSelf;
                 final resolvedFrameCode =
@@ -164,14 +174,25 @@ Future<void> showUserProfileDialog({
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _ProfileAvatar(
-                            displayName: name,
+                          TappableProfileAvatar(
+                            userId: id,
+                            canManage: isSelf,
                             avatarKind:
                                 friendUser?.avatarKind ?? avatarKind,
                             avatarValue:
                                 friendUser?.avatarValue ?? avatarValue,
-                            frameCode: resolvedFrameCode,
-                            frameColor: resolvedFrameColor,
+                            letter: name.trim().isEmpty
+                                ? '?'
+                                : name.trim()[0].toUpperCase(),
+                            child: _ProfileAvatar(
+                              displayName: name,
+                              avatarKind:
+                                  friendUser?.avatarKind ?? avatarKind,
+                              avatarValue:
+                                  friendUser?.avatarValue ?? avatarValue,
+                              frameCode: resolvedFrameCode,
+                              frameColor: resolvedFrameColor,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(

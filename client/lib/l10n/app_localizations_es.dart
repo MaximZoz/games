@@ -598,6 +598,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesPoker => 'Póker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Jugadores: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Partida contra un bot, sin límite de tiempo por turno.';
+
+  @override
+  String get rulesUnoIntro => 'Uno clásico: a todos se les reparte; juega por color o número.';
+
+  @override
+  String get rulesUnoPlay => 'Cartas especiales: +2, cambio de sentido, salto, comodín y +4. Si no puedes jugar, roba del mazo.';
+
+  @override
+  String get rulesUnoWin => 'Gana quien se deshace primero de todas las cartas. Di “Uno” cuando te quede una.';
+
+  @override
   String get gamesInDevelopment => 'En desarrollo';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileUploadPhoto => 'Subir foto';
 
   @override
-  String get profileChangePhoto => 'Cambiar foto';
+  String get profileChangePhoto => 'Cambiar avatar';
 
   @override
   String get shopTitle => 'Tienda';
@@ -1800,6 +1820,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Preparando…';
+
+  @override
+  String get profileGalleryTitle => 'Fotos';
+
+  @override
+  String get profileGalleryAdd => 'Añadir foto';
+
+  @override
+  String get profileMakePrimary => 'Hacer principal';
+
+  @override
+  String get profilePhotoDelete => 'Eliminar foto';
+
+  @override
+  String get profilePhotosLimit => 'Puedes subir hasta 3 fotos';
+
+  @override
+  String get profilePhotosEmpty => 'Aún no hay fotos';
+
+  @override
+  String get profilePhotoUploadFailed => 'No se pudo subir la foto';
+
+  @override
+  String get profilePhotoDeleteFailed => 'No se pudo eliminar la foto';
+
+  @override
+  String get profilePhotoTooLarge => 'La foto es demasiado grande';
+
+  @override
+  String get profileSetPrimaryFailed => 'No se pudo establecer como principal';
 
   @override
   String timeSecondsShort(int seconds) {

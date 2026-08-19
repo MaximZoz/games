@@ -311,8 +311,83 @@ String formatTurnTime(int sec) {
 
 String formatGridSize(int size) => '${size}x$size';
 
-/// Маркер иконки монеты в [buildTictactoeRulesText] (рисуется как [CoinIcon]).
-const String kTictactoeRulesStakeIconMarker = '\uFFFC';
+/// Маркер слота иконки монеты в тексте правил (рисуется как [CoinIcon]).
+///
+/// Формат токена ставки: `{amount}{marker}{bronze}{marker}`.
+/// Новые игры: [rulesStakeLine] + [rulesTextLines] / [rulesLineWithStakeIcon].
+const String kRulesStakeIconMarker = '\uFFFC';
+
+/// Совместимое имя для тестов крестиков-ноликов.
+const String kTictactoeRulesStakeIconMarker = kRulesStakeIconMarker;
+
+/// Видимая сумма + скрытый bronze для типа монеты.
+String rulesStakeAmountToken(int stakeBronze) =>
+    '${formatStakeAmount(stakeBronze)}$kRulesStakeIconMarker$stakeBronze$kRulesStakeIconMarker';
+
+/// Локализованная строка «Ставка: N {иконка}. …».
+String rulesStakeLine(int stakeBronze, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  return t.rulesStake(rulesStakeAmountToken(stakeBronze));
+}
+
+/// Текст правил с иконкой монеты вместо [kRulesStakeIconMarker].
+///
+/// Поддерживает новый токен `{marker}{bronze}{marker}` и старый одиночный маркер
+/// (тогда тип монеты берётся из [fallbackStakeBronze]).
+Widget rulesLineWithStakeIcon(
+  String text, {
+  TextStyle? style,
+  TextAlign textAlign = TextAlign.start,
+  int? fallbackStakeBronze,
+}) {
+  final baseStyle = style ??
+      const TextStyle(
+        fontSize: 13,
+        height: 1.4,
+        color: AppColors.textSecondary,
+      );
+  const marker = kRulesStakeIconMarker;
+  if (!text.contains(marker)) {
+    return Text(text, style: baseStyle, textAlign: textAlign);
+  }
+  final spans = <InlineSpan>[];
+  var rest = text;
+  final encoded = RegExp('^(\\d+)$marker');
+  while (true) {
+    final idx = rest.indexOf(marker);
+    if (idx < 0) {
+      if (rest.isNotEmpty) spans.add(TextSpan(text: rest));
+      break;
+    }
+    if (idx > 0) {
+      spans.add(TextSpan(text: rest.substring(0, idx)));
+    }
+    rest = rest.substring(idx + marker.length);
+    var bronze = fallbackStakeBronze ?? 2;
+    final match = encoded.firstMatch(rest);
+    if (match != null) {
+      bronze = int.tryParse(match.group(1) ?? '') ?? bronze;
+      rest = rest.substring(match.end);
+    }
+    final coinSize = (baseStyle.fontSize ?? 13) + 1;
+    spans.add(
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 1, right: 1),
+          child: CoinIcon(
+            coinType: stakeCoinType(bronze),
+            size: coinSize,
+          ),
+        ),
+      ),
+    );
+  }
+  return Text.rich(
+    TextSpan(style: baseStyle, children: spans),
+    textAlign: textAlign,
+  );
+}
 
 /// Общий формат правил крестиков-ноликов (игра, лобби, приглашения).
 ///
@@ -345,11 +420,7 @@ String buildTictactoeRulesText({
   // 0 — офлайн / без ставок: строку про ставку не показываем.
   // Формат: «1￼» → «1» + иконка монеты (не «1 бр»).
   if (stakeBronze > 0) {
-    parts.add(
-      l10n.rulesStake(
-        '${formatStakeAmount(stakeBronze)}$kTictactoeRulesStakeIconMarker',
-      ),
-    );
+    parts.add(rulesStakeLine(stakeBronze, l10n));
   }
   if (swapRule) {
     parts.add(offlineBot ? l10n.rulesAlternateStarts : l10n.rulesSwap);
@@ -416,37 +487,11 @@ Widget buildTictactoeRulesTextWidget({
     includeTurnTime: includeTurnTime,
     offlineBot: offlineBot,
   );
-  final baseStyle = style ??
-      const TextStyle(
-        fontSize: 13,
-        height: 1.4,
-        color: AppColors.textSecondary,
-      );
-  const marker = kTictactoeRulesStakeIconMarker;
-  final idx = text.indexOf(marker);
-  if (idx < 0 || stakeBronze <= 0) {
-    return Text(text, style: baseStyle, textAlign: textAlign);
-  }
-  final coinSize = (baseStyle.fontSize ?? 13) + 1;
-  return Text.rich(
-    TextSpan(
-      style: baseStyle,
-      children: [
-        TextSpan(text: text.substring(0, idx)),
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 1, right: 1),
-            child: CoinIcon(
-              coinType: stakeCoinType(stakeBronze),
-              size: coinSize,
-            ),
-          ),
-        ),
-        TextSpan(text: text.substring(idx + marker.length)),
-      ],
-    ),
+  return rulesLineWithStakeIcon(
+    text,
+    style: style,
     textAlign: textAlign,
+    fallbackStakeBronze: stakeBronze,
   );
 }
 

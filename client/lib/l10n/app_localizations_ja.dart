@@ -598,6 +598,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesPoker => 'ポーカー';
 
   @override
+  String get gamesUno => 'ウノ';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'プレイヤー: $players人。';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'ボットとの対戦。ターン制限時間なし。';
+
+  @override
+  String get rulesUnoIntro => 'クラシックウノ：全員にカードが配られ、色または数字で出します。';
+
+  @override
+  String get rulesUnoPlay => '特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。';
+
+  @override
+  String get rulesUnoWin => '最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。';
+
+  @override
   String get gamesInDevelopment => '開発中';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileUploadPhoto => '写真をアップロード';
 
   @override
-  String get profileChangePhoto => '写真を変更';
+  String get profileChangePhoto => 'アバターを変更';
 
   @override
   String get shopTitle => 'ショップ';
@@ -1800,6 +1820,36 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profilePreparing => '準備中…';
+
+  @override
+  String get profileGalleryTitle => '写真';
+
+  @override
+  String get profileGalleryAdd => '写真を追加';
+
+  @override
+  String get profileMakePrimary => 'メインにする';
+
+  @override
+  String get profilePhotoDelete => '写真を削除';
+
+  @override
+  String get profilePhotosLimit => '写真は3枚までです';
+
+  @override
+  String get profilePhotosEmpty => '写真はまだありません';
+
+  @override
+  String get profilePhotoUploadFailed => '写真をアップロードできませんでした';
+
+  @override
+  String get profilePhotoDeleteFailed => '写真を削除できませんでした';
+
+  @override
+  String get profilePhotoTooLarge => '写真が大きすぎます';
+
+  @override
+  String get profileSetPrimaryFailed => 'メインに設定できませんでした';
 
   @override
   String timeSecondsShort(int seconds) {

@@ -3,10 +3,9 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Убрать лишнюю проверку null в AppBar покера
-- WHAT_NEW: английский текст для профиля и чата в покере
-- Покер: профиль по тапу на игрока и иконка группового чата у крестика
+- Галерея профиля: до 3 фото, просмотр на весь экран, «сделать основным»
+- Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Poker: tap player for profile; group chat icon next to close
-
+- Profile gallery: up to 3 photos, fullscreen view, set as primary avatar
+- Coin icon next to the stake in game rules

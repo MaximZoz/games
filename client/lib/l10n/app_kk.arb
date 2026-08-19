@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "Орналастырудан кейін бірінші болып кездейсоқ ойыншы жүреді. Қарсыластың ұяшықтарына атыңыз: тию қосымша жүріс береді, өткізу жүрісті ауыстырады. Өз жүрісіңізде қарсыластың өрісі, оның жүрісінде — сіздікі көрінеді.",
   "rulesBattleshipWin": "Қарсы флотты толығымен батырған бірінші ойыншы жеңеді.",
   "gamesPoker": "Покер",
+  "gamesUno": "Уно",
+  "rulesUnoPlayers": "Ойыншылар: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Ботқа қарсы ойын, жүріс уақыты шектелмейді.",
+  "rulesUnoIntro": "Классикалық Уно: әркімге карта үлестіріледі; түс немесе мән бойынша жүріңіз.",
+  "rulesUnoPlay": "Арнайы карталар: +2, бағыт ауыстыру, жүрісті өткізу, қара түс ауыстыру және +4. Жүре алмасаңыз — колодадан алыңыз.",
+  "rulesUnoWin": "Барлық картасын бірінші тастаған жеңеді. Бір карта қалғанда «Уно» деп айтуды ұмытпаңыз.",
   "gamesInDevelopment": "Әзірленуде",
   "rulesPokerPlayers": "Ойыншылар: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Әйел",
   "profileAvatar": "Аватар",
   "profileUploadPhoto": "Фото жүктеу",
-  "profileChangePhoto": "Фотоны өзгерту",
+  "profileChangePhoto": "Аватарды өзгерту",
   "shopTitle": "Дүкен",
   "shopEmojis": "Эмодзи",
   "shopEmojisSubtitle": "Чатқа арналған анимациялық эмодзи",
@@ -914,6 +927,16 @@
   "profileCropHint": "Фотоны масштабтаңыз және жылжытыңыз",
   "profileApply": "Қолдану",
   "profilePreparing": "Дайындалуда…",
+  "profileGalleryTitle": "Фото",
+  "profileGalleryAdd": "Фото қосу",
+  "profileMakePrimary": "Негізгі ету",
+  "profilePhotoDelete": "Фотоны жою",
+  "profilePhotosLimit": "Ең көбі 3 фото жүктеуге болады",
+  "profilePhotosEmpty": "Әзірге фото жоқ",
+  "profilePhotoUploadFailed": "Фото жүктелмеді",
+  "profilePhotoDeleteFailed": "Фото жойылмады",
+  "profilePhotoTooLarge": "Фото тым үлкен",
+  "profileSetPrimaryFailed": "Негізгі ету мүмкін болмады",
   "timeSecondsShort": "{seconds} с",
   "@timeSecondsShort": {
     "placeholders": {

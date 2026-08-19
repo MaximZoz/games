@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "פוקר",
+  "gamesUno": "אונו",
+  "rulesUnoPlayers": "שחקנים: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "משחק נגד בוט ללא מגבלת זמן לתור.",
+  "rulesUnoIntro": "אונו קלאסי: כולם מקבלים קלפים; משחקים לפי צבע או מספר.",
+  "rulesUnoPlay": "קלפים מיוחדים: +2, הפוך כיוון, דלג, שינוי צבע ו-+4. אם אי אפשר לשחק — מושכים מהחפיסה.",
+  "rulesUnoWin": "מנצח מי שמשליך ראשון את כל הקלפים. אמרו “Uno” כשנשאר קלף אחד.",
   "gamesInDevelopment": "בפיתוח",
   "rulesPokerPlayers": "שחקנים: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "נקבה",
   "profileAvatar": "אווטאר",
   "profileUploadPhoto": "העלאת תמונה",
-  "profileChangePhoto": "החלפת תמונה",
+  "profileChangePhoto": "החלפת אווטאר",
   "shopTitle": "חנות",
   "shopEmojis": "אימוג׳ים",
   "shopEmojisSubtitle": "אימוג׳ים מונפשים לצ׳אט",
@@ -914,6 +927,16 @@
   "profileCropHint": "התקרבו והזיזו את התמונה",
   "profileApply": "החלה",
   "profilePreparing": "מכין…",
+  "profileGalleryTitle": "תמונות",
+  "profileGalleryAdd": "הוספת תמונה",
+  "profileMakePrimary": "הגדר כראשית",
+  "profilePhotoDelete": "מחק תמונה",
+  "profilePhotosLimit": "אפשר להעלות עד 3 תמונות",
+  "profilePhotosEmpty": "עדיין אין תמונות",
+  "profilePhotoUploadFailed": "לא ניתן להעלות את התמונה",
+  "profilePhotoDeleteFailed": "לא ניתן למחוק את התמונה",
+  "profilePhotoTooLarge": "התמונה גדולה מדי",
+  "profileSetPrimaryFailed": "לא ניתן להגדיר כראשית",
   "timeSecondsShort": "{seconds} שנ׳",
   "@timeSecondsShort": {
     "placeholders": {

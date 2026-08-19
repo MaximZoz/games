@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "पोकर",
+  "gamesUno": "ऊनो",
+  "rulesUnoPlayers": "खिलाड़ी: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "बॉट के खिलाफ खेल, चाल की समय सीमा नहीं।",
+  "rulesUnoIntro": "क्लासिक ऊनो: सभी को पत्ते मिलते हैं; रंग या नंबर से खेलें।",
+  "rulesUnoPlay": "विशेष पत्ते: +2, दिशा बदलो, छोड़ो, जंगली और +4। नहीं खेल सकते तो डेक से लें।",
+  "rulesUnoWin": "जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।",
   "gamesInDevelopment": "विकास में",
   "rulesPokerPlayers": "खिलाड़ी: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "महिला",
   "profileAvatar": "अवतार",
   "profileUploadPhoto": "फ़ोटो अपलोड करें",
-  "profileChangePhoto": "फ़ोटो बदलें",
+  "profileChangePhoto": "अवतार बदलें",
   "shopTitle": "दुकान",
   "shopEmojis": "इमोजी",
   "shopEmojisSubtitle": "चैट के लिए एनिमेटेड इमोजी",
@@ -914,6 +927,16 @@
   "profileCropHint": "फ़ोटो ज़ूम करें और घुमाएँ",
   "profileApply": "लागू करें",
   "profilePreparing": "तैयारी…",
+  "profileGalleryTitle": "फ़ोटो",
+  "profileGalleryAdd": "फ़ोटो जोड़ें",
+  "profileMakePrimary": "मुख्य बनाएँ",
+  "profilePhotoDelete": "फ़ोटो हटाएँ",
+  "profilePhotosLimit": "अधिकतम 3 फ़ोटो अपलोड कर सकते हैं",
+  "profilePhotosEmpty": "अभी कोई फ़ोटो नहीं",
+  "profilePhotoUploadFailed": "फ़ोटो अपलोड नहीं हो सकी",
+  "profilePhotoDeleteFailed": "फ़ोटो हटाई नहीं जा सकी",
+  "profilePhotoTooLarge": "फ़ोटो बहुत बड़ी है",
+  "profileSetPrimaryFailed": "मुख्य नहीं बनाई जा सकी",
   "timeSecondsShort": "{seconds} से",
   "@timeSecondsShort": {
     "placeholders": {

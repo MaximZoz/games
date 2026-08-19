@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spelare: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spela mot en bot utan tidsgräns per drag.",
+  "rulesUnoIntro": "Klassisk Uno: alla får kort; spela efter färg eller nummer.",
+  "rulesUnoPlay": "Specialkort: +2, vänd, hoppa över, jokrar och +4. Kan du inte spela, dra från högen.",
+  "rulesUnoWin": "Den som först blir av med alla kort vinner. Säg “Uno” när du har ett kort kvar.",
   "gamesInDevelopment": "Under utveckling",
   "rulesPokerPlayers": "Spelare: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Kvinna",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Ladda upp foto",
-  "profileChangePhoto": "Byt foto",
+  "profileChangePhoto": "Byt avatar",
   "shopTitle": "Butik",
   "shopEmojis": "Emojis",
   "shopEmojisSubtitle": "Animerade emojis för chatt",
@@ -914,6 +927,16 @@
   "profileCropHint": "Zooma och flytta fotot",
   "profileApply": "Använd",
   "profilePreparing": "Förbereder…",
+  "profileGalleryTitle": "Foton",
+  "profileGalleryAdd": "Lägg till foto",
+  "profileMakePrimary": "Gör till primär",
+  "profilePhotoDelete": "Ta bort foto",
+  "profilePhotosLimit": "Du kan ladda upp högst 3 foton",
+  "profilePhotosEmpty": "Inga foton ännu",
+  "profilePhotoUploadFailed": "Kunde inte ladda upp fotot",
+  "profilePhotoDeleteFailed": "Kunde inte ta bort fotot",
+  "profilePhotoTooLarge": "Fotot är för stort",
+  "profileSetPrimaryFailed": "Kunde inte ange som primär",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

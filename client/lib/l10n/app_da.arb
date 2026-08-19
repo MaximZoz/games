@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spillere: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spil mod en bot uden tidsgrænse pr. tur.",
+  "rulesUnoIntro": "Klassisk Uno: Alle får kort; spil efter farve eller tal.",
+  "rulesUnoPlay": "Specialkort: +2, vend, spring over, farveskift og +4. Kan du ikke spille, træk fra bunken.",
+  "rulesUnoWin": "Den, der først kommer af med alle kort, vinder. Sig “Uno”, når du har ét kort tilbage.",
   "gamesInDevelopment": "Under udvikling",
   "rulesPokerPlayers": "Spillere: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Kvinde",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Upload foto",
-  "profileChangePhoto": "Skift foto",
+  "profileChangePhoto": "Skift avatar",
   "shopTitle": "Butik",
   "shopEmojis": "Emojis",
   "shopEmojisSubtitle": "Animerede emojis til chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Zoom og flyt fotoet",
   "profileApply": "Anvend",
   "profilePreparing": "Forbereder…",
+  "profileGalleryTitle": "Billeder",
+  "profileGalleryAdd": "Tilføj billede",
+  "profileMakePrimary": "Gør til primær",
+  "profilePhotoDelete": "Slet billede",
+  "profilePhotosLimit": "Du kan uploade op til 3 billeder",
+  "profilePhotosEmpty": "Ingen billeder endnu",
+  "profilePhotoUploadFailed": "Kunne ikke uploade billedet",
+  "profilePhotoDeleteFailed": "Kunne ikke slette billedet",
+  "profilePhotoTooLarge": "Billedet er for stort",
+  "profileSetPrimaryFailed": "Kunne ikke indstille som primær",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

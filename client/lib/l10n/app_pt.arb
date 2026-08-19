@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Pôquer",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Jogadores: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Jogo contra um bot, sem limite de tempo por turno.",
+  "rulesUnoIntro": "Uno clássico: todos recebem cartas; jogue por cor ou número.",
+  "rulesUnoPlay": "Cartas especiais: +2, inverter, pular, curingas e +4. Se não puder jogar, compre do baralho.",
+  "rulesUnoWin": "Vence quem descartar todas as cartas primeiro. Diga “Uno” quando restar uma.",
   "gamesInDevelopment": "Em desenvolvimento",
   "rulesPokerPlayers": "Jogadores: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Feminino",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Enviar foto",
-  "profileChangePhoto": "Trocar foto",
+  "profileChangePhoto": "Trocar avatar",
   "shopTitle": "Loja",
   "shopEmojis": "Emojis",
   "shopEmojisSubtitle": "Emojis animados para o chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Amplie e mova a foto",
   "profileApply": "Aplicar",
   "profilePreparing": "A preparar…",
+  "profileGalleryTitle": "Fotos",
+  "profileGalleryAdd": "Adicionar foto",
+  "profileMakePrimary": "Tornar principal",
+  "profilePhotoDelete": "Excluir foto",
+  "profilePhotosLimit": "Você pode enviar até 3 fotos",
+  "profilePhotosEmpty": "Ainda não há fotos",
+  "profilePhotoUploadFailed": "Não foi possível enviar a foto",
+  "profilePhotoDeleteFailed": "Não foi possível excluir a foto",
+  "profilePhotoTooLarge": "A foto é muito grande",
+  "profileSetPrimaryFailed": "Não foi possível definir como principal",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

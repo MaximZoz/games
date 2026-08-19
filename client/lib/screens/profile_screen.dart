@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +12,8 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
+import 'package:multigames_client/profile/profile_gallery_widgets.dart';
+import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -23,6 +23,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/latin_login_input_formatter.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/avatar_crop_dialog.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -58,55 +59,6 @@ Uint8List _decodeBase64Isolate(String s) => base64Decode(s);
 
 final Map<int, Uint8List> _base64AvatarCache = {};
 
-const int _avatarMaxSidePx = 96;
-const int _avatarStorageLimitBytes = 45 * 1024;
-
-Future<Uint8List?> _compactAvatarBytes(Uint8List source) async {
-  ui.Codec? probeCodec;
-  ui.Image? probeImage;
-  try {
-    probeCodec = await ui.instantiateImageCodec(source);
-    final probeFrame = await probeCodec.getNextFrame();
-    probeImage = probeFrame.image;
-
-    final width = probeImage.width;
-    final height = probeImage.height;
-    final longestSide = math.max(width, height);
-    final scale =
-        longestSide > _avatarMaxSidePx ? _avatarMaxSidePx / longestSide : 1.0;
-
-    final targetWidth = math.max(1, (width * scale).round());
-    final targetHeight = math.max(1, (height * scale).round());
-
-    final codec = await ui.instantiateImageCodec(
-      source,
-      targetWidth: targetWidth,
-      targetHeight: targetHeight,
-    );
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    codec.dispose();
-
-    if (bytes == null) return null;
-    return bytes.buffer.asUint8List();
-  } catch (_) {
-    return null;
-  } finally {
-    probeImage?.dispose();
-    probeCodec?.dispose();
-  }
-}
-
-Future<String?> _buildCompactAvatarValue(Uint8List source) async {
-  final compact = await _compactAvatarBytes(source);
-  final bytes = compact ?? source;
-  if (bytes.lengthInBytes > _avatarStorageLimitBytes) {
-    return null;
-  }
-  return 'base64,${base64Encode(bytes)}';
-}
 
 void _putAvatarCache(int key, Uint8List bytes) {
   _base64AvatarCache.remove(key);
@@ -771,37 +723,45 @@ class _ProfileView extends ConsumerWidget {
         ) !=
         null;
 
+    final avatar = hasFrame
+        ? FramedAvatar(
+            size: 80,
+            borderWidth: 4.5,
+            frameCode: caps?.frameCode,
+            frameColor: caps?.frameColor,
+            child: _buildAvatar(),
+          )
+        : Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.accentStart, AppColors.accentEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceCard,
+                shape: BoxShape.circle,
+              ),
+              child: _buildAvatar(),
+            ),
+          );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-            if (hasFrame)
-              FramedAvatar(
-                size: 80,
-                borderWidth: 4.5,
-                frameCode: caps?.frameCode,
-                frameColor: caps?.frameColor,
-                child: _buildAvatar(),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [AppColors.accentStart, AppColors.accentEnd],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceCard,
-                    shape: BoxShape.circle,
-                  ),
-                  child: _buildAvatar(),
-                ),
-              ),
+            TappableProfileAvatar(
+              userId: user.id,
+              canManage: true,
+              avatarKind: profileExtra.avatarKind.name,
+              avatarValue: profileExtra.avatarValue,
+              letter: _avatarLetter,
+              child: avatar,
+            ),
             SizedBox(height: gapAfterAvatar),
             Text(
               _displayTitle,
@@ -967,7 +927,7 @@ class _ProfileInfoChip extends StatelessWidget {
   }
 }
 
-class _ProfileEditForm extends StatefulWidget {
+class _ProfileEditForm extends ConsumerStatefulWidget {
   const _ProfileEditForm({
     super.key,
     required this.user,
@@ -988,7 +948,7 @@ class _ProfileEditForm extends StatefulWidget {
   final bool compact;
 
   @override
-  State<_ProfileEditForm> createState() => _ProfileEditFormState();
+  ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
 /// Только цифры, макс. 3 (возраст 1–111).
@@ -1003,9 +963,12 @@ final _aboutFormatters = [
   LengthLimitingTextInputFormatter(100),
 ];
 
-class _ProfileEditFormState extends State<_ProfileEditForm> {
+class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  bool _galleryDirty = false;
+  String? _initialGallerySignature;
+  String _gallerySignature = '';
   bool _aboutTypingActive = false;
   String? _ageError;
   String? _saveError;
@@ -1060,12 +1023,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     // Игнор смены selection (повторный тап) — только реальный текст.
     if (text == _lastAboutText) return;
     _lastAboutText = text;
-    if ((_ageError != null || _saveError != null) && mounted) {
-      setState(() {
-        _ageError = null;
-        _saveError = null;
-      });
-    }
+    _onFieldsChanged();
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -1129,7 +1087,28 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     if (_avatarKind != initial.avatarKind) return true;
     if ((_avatarValue ?? '') != (initial.avatarValue ?? '')) return true;
     if (_showStatsToOthers != initial.showStatsToOthers) return true;
+    if (_galleryDirty) return true;
+    if (_initialGallerySignature != null &&
+        _gallerySignature != _initialGallerySignature) {
+      return true;
+    }
     return false;
+  }
+
+  void _onGalleryMutated() {
+    if (_galleryDirty) return;
+    setState(() => _galleryDirty = true);
+  }
+
+  void _onGalleryPhotosChanged(List<ProfilePhotoMeta> photos) {
+    final next = profilePhotosSignature(photos);
+    if (_initialGallerySignature == null) {
+      _initialGallerySignature = next;
+      _gallerySignature = next;
+      return;
+    }
+    if (next == _gallerySignature) return;
+    setState(() => _gallerySignature = next);
   }
 
   @override
@@ -1231,9 +1210,9 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
         final picker = ImagePicker();
         final xFile = await picker.pickImage(
           source: ImageSource.gallery,
-          maxWidth: 256,
-          maxHeight: 256,
-          imageQuality: 70,
+          maxWidth: 1280,
+          maxHeight: 1280,
+          imageQuality: 88,
         );
         if (xFile == null || !mounted) return;
         rawBytes = await xFile.readAsBytes();
@@ -1243,7 +1222,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
       final editedBytes = await _openAvatarEditor(rawBytes);
       if (!mounted || editedBytes == null || editedBytes.isEmpty) return;
 
-      final compactAvatarValue = await _buildCompactAvatarValue(editedBytes);
+      final compactAvatarValue = await buildCompactAvatarValue(editedBytes);
       if (!mounted) return;
 
       setState(() {
@@ -1258,6 +1237,18 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           _avatarValue = compactAvatarValue;
         }
       });
+      if (compactAvatarValue != null) {
+        try {
+          final saved = await saveOriginalPhotoToGallery(
+            ref: ref,
+            userId: widget.user.id,
+            rawBytes: rawBytes,
+          );
+          if (saved && mounted) _onGalleryMutated();
+        } catch (_) {
+          // Круглый аватар уже выбран; оригинал в галерею — по возможности.
+        }
+      }
     } finally {
       if (mounted) {
         setState(() => _isAvatarProcessing = false);
@@ -1266,11 +1257,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
   }
 
   Future<Uint8List?> _openAvatarEditor(Uint8List sourceBytes) async {
-    return showDialog<Uint8List>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _AvatarCropDialog(sourceBytes: sourceBytes),
-    );
+    return showAvatarCropDialog(context: context, sourceBytes: sourceBytes);
   }
 
   Future<void> _submit() async {
@@ -1621,6 +1608,14 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: phoneLand ? 8 : 12),
+                ProfileGalleryEditSlots(
+                  userId: widget.user.id,
+                  enabled: !_isSaving,
+                  compact: true,
+                  onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
+                ),
+                SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1862,6 +1857,13 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                ProfileGalleryEditSlots(
+                  userId: widget.user.id,
+                  enabled: !_isSaving,
+                  onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
+                ),
+                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed:
                       (_isSaving || _isAvatarProcessing) ? null : _pickImage,
@@ -1911,177 +1913,6 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AvatarCropDialog extends StatefulWidget {
-  const _AvatarCropDialog({required this.sourceBytes});
-
-  final Uint8List sourceBytes;
-
-  @override
-  State<_AvatarCropDialog> createState() => _AvatarCropDialogState();
-}
-
-class _AvatarCropDialogState extends State<_AvatarCropDialog> {
-  static const double _viewportSize = 240;
-
-  final TransformationController _transformation = TransformationController();
-  final GlobalKey _captureKey = GlobalKey();
-
-  bool _ready = false;
-  bool _exporting = false;
-  double _baseWidth = _viewportSize;
-  double _baseHeight = _viewportSize;
-
-  @override
-  void initState() {
-    super.initState();
-    _prepare();
-  }
-
-  @override
-  void dispose() {
-    _transformation.dispose();
-    super.dispose();
-  }
-
-  Future<void> _prepare() async {
-    ui.Codec? codec;
-    ui.Image? image;
-    try {
-      codec = await ui.instantiateImageCodec(widget.sourceBytes);
-      final frame = await codec.getNextFrame();
-      image = frame.image;
-
-      final width = image.width.toDouble();
-      final height = image.height.toDouble();
-      final aspect = (height == 0) ? 1.0 : width / height;
-
-      double baseWidth;
-      double baseHeight;
-      if (aspect >= 1) {
-        baseHeight = _viewportSize;
-        baseWidth = _viewportSize * aspect;
-      } else {
-        baseWidth = _viewportSize;
-        baseHeight = _viewportSize / aspect;
-      }
-
-      _baseWidth = baseWidth;
-      _baseHeight = baseHeight;
-
-      final tx = (_viewportSize - _baseWidth) / 2;
-      final ty = (_viewportSize - _baseHeight) / 2;
-      _transformation.value = Matrix4.identity()..translate(tx, ty);
-
-      if (mounted) {
-        setState(() => _ready = true);
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _ready = true;
-          _baseWidth = _viewportSize;
-          _baseHeight = _viewportSize;
-          _transformation.value = Matrix4.identity();
-        });
-      }
-    } finally {
-      image?.dispose();
-      codec?.dispose();
-    }
-  }
-
-  Future<void> _applyCrop() async {
-    if (_exporting) return;
-    setState(() => _exporting = true);
-    ui.Image? renderedImage;
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-      final boundary = _captureKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) return;
-      renderedImage = await boundary.toImage(pixelRatio: 2);
-      final data =
-          await renderedImage.toByteData(format: ui.ImageByteFormat.png);
-      if (!mounted || data == null) return;
-      Navigator.of(context).pop(data.buffer.asUint8List());
-    } finally {
-      renderedImage?.dispose();
-      if (mounted) setState(() => _exporting = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.l10n.profileCropTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.profileCropHint,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(height: 12),
-          RepaintBoundary(
-            key: _captureKey,
-            child: ClipOval(
-              child: SizedBox(
-                width: _viewportSize,
-                height: _viewportSize,
-                child: ColoredBox(
-                  color: AppColors.surfaceCard,
-                  child: _ready
-                      ? InteractiveViewer(
-                          transformationController: _transformation,
-                          minScale: 1,
-                          maxScale: 4.5,
-                          boundaryMargin: const EdgeInsets.all(180),
-                          clipBehavior: Clip.none,
-                          constrained: false,
-                          child: SizedBox(
-                            width: _baseWidth,
-                            height: _baseHeight,
-                            child: Image.memory(
-                              widget.sourceBytes,
-                              fit: BoxFit.fill,
-                              filterQuality: FilterQuality.high,
-                            ),
-                          ),
-                        )
-                      : const Center(
-                          child: SizedBox(
-                            width: 26,
-                            height: 26,
-                            child: CircularProgressIndicator(strokeWidth: 2.4),
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _exporting ? null : () => Navigator.of(context).pop(),
-          child: Text(context.l10n.commonCancel),
-        ),
-        FilledButton.icon(
-          onPressed: (!_ready || _exporting) ? null : _applyCrop,
-          icon: _exporting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check_rounded),
-          label: Text(_exporting ? context.l10n.profilePreparing : context.l10n.profileApply),
         ),
       ],
     );

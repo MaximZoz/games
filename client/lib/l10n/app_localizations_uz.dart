@@ -598,6 +598,26 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Oʻyinchilar: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Botga qarshi o‘yin, yurish vaqti cheklanmagan.';
+
+  @override
+  String get rulesUnoIntro => 'Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.';
+
+  @override
+  String get rulesUnoPlay => 'Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.';
+
+  @override
+  String get rulesUnoWin => 'Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.';
+
+  @override
   String get gamesInDevelopment => 'Ishlanmoqda';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get profileUploadPhoto => 'Foto yuklash';
 
   @override
-  String get profileChangePhoto => 'Fotoni o‘zgartirish';
+  String get profileChangePhoto => 'Avatarni o‘zgartirish';
 
   @override
   String get shopTitle => 'Do‘kon';
@@ -1800,6 +1820,36 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Tayyorlanmoqda…';
+
+  @override
+  String get profileGalleryTitle => 'Foto';
+
+  @override
+  String get profileGalleryAdd => 'Foto qo‘shish';
+
+  @override
+  String get profileMakePrimary => 'Asosiy qilish';
+
+  @override
+  String get profilePhotoDelete => 'Fotoni o‘chirish';
+
+  @override
+  String get profilePhotosLimit => '3 tadan ortiq foto yuklab bo‘lmaydi';
+
+  @override
+  String get profilePhotosEmpty => 'Hozircha foto yo‘q';
+
+  @override
+  String get profilePhotoUploadFailed => 'Foto yuklanmadi';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Foto o‘chirilmadi';
+
+  @override
+  String get profilePhotoTooLarge => 'Foto juda katta';
+
+  @override
+  String get profileSetPrimaryFailed => 'Asosiy qilib bo‘lmadi';
 
   @override
   String timeSecondsShort(int seconds) {

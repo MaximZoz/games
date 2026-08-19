@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Pokeri",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Pelaajat: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Peli bottia vastaan ilman vuoron aikarajaa.",
+  "rulesUnoIntro": "Klassinen Uno: kaikille jaetaan kortteja; pelaa värin tai numeron mukaan.",
+  "rulesUnoPlay": "Erikoiskortit: +2, suunnanvaihto, ohitus, jokerit ja +4. Jos et voi pelata, nosta pakasta.",
+  "rulesUnoWin": "Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.",
   "gamesInDevelopment": "Kehityksessä",
   "rulesPokerPlayers": "Pelaajat: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Nainen",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Lataa kuva",
-  "profileChangePhoto": "Vaihda kuva",
+  "profileChangePhoto": "Vaihda avatar",
   "shopTitle": "Kauppa",
   "shopEmojis": "Emojit",
   "shopEmojisSubtitle": "Animoidut emojit keskusteluun",
@@ -914,6 +927,16 @@
   "profileCropHint": "Zoomaa ja siirrä kuvaa",
   "profileApply": "Käytä",
   "profilePreparing": "Valmistellaan…",
+  "profileGalleryTitle": "Kuvat",
+  "profileGalleryAdd": "Lisää kuva",
+  "profileMakePrimary": "Aseta pääkuvaksi",
+  "profilePhotoDelete": "Poista kuva",
+  "profilePhotosLimit": "Voit ladata enintään 3 kuvaa",
+  "profilePhotosEmpty": "Ei kuvia vielä",
+  "profilePhotoUploadFailed": "Kuvan lataus epäonnistui",
+  "profilePhotoDeleteFailed": "Kuvan poisto epäonnistui",
+  "profilePhotoTooLarge": "Kuva on liian suuri",
+  "profileSetPrimaryFailed": "Pääkuvaksi asettaminen epäonnistui",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

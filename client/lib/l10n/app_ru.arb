@@ -276,6 +276,19 @@
   "rulesBattleshipPlay": "После расстановки первым ходит случайный игрок. Стреляйте по клеткам соперника: попадание даёт ещё один ход, промах передаёт ход. На своём ходе видно поле соперника, на его ходе — ваше.",
   "rulesBattleshipWin": "Побеждает тот, кто первым потопит весь флот противника.",
   "gamesPoker": "Покер",
+  "gamesUno": "Уно",
+  "rulesUnoPlayers": "Игроки: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Игра против бота, без лимита времени на ход.",
+  "rulesUnoIntro": "Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.",
+  "rulesUnoPlay": "Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.",
+  "rulesUnoWin": "Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.",
   "gamesInDevelopment": "В разработке",
   "rulesPokerPlayers": "Игроки: {players}.",
   "@rulesPokerPlayers": {
@@ -570,7 +583,7 @@
   "profileGenderFemale": "Женский",
   "profileAvatar": "Аватар",
   "profileUploadPhoto": "Загрузить фото",
-  "profileChangePhoto": "Поменять фото",
+  "profileChangePhoto": "Поменять аватар",
   "shopTitle": "Магазин",
   "shopEmojis": "Смайлики",
   "shopEmojisSubtitle": "Анимированные эмодзи для чата",
@@ -1059,6 +1072,16 @@
   "profileCropHint": "Масштабируй и двигай фото",
   "profileApply": "Применить",
   "profilePreparing": "Подготовка…",
+  "profileGalleryTitle": "Фото",
+  "profileGalleryAdd": "Добавить фото",
+  "profileMakePrimary": "Сделать основным",
+  "profilePhotoDelete": "Удалить фото",
+  "profilePhotosLimit": "Можно загрузить не больше 3 фото",
+  "profilePhotosEmpty": "Пока нет фото",
+  "profilePhotoUploadFailed": "Не удалось загрузить фото",
+  "profilePhotoDeleteFailed": "Не удалось удалить фото",
+  "profilePhotoTooLarge": "Фото слишком большое",
+  "profileSetPrimaryFailed": "Не удалось сделать основным",
   "timeSecondsShort": "{seconds} с",
   "@timeSecondsShort": {
     "placeholders": {

@@ -153,6 +153,22 @@ Content-Type: application/json
 }
 ```
 
+Галерея дополнительных фото (до 3 слотов `0..2`, каждое до 256 КБ). Список виден любому авторизованному; загружать и удалять может только владелец.
+
+```
+GET /api/profile/photos?user_id=<uuid>
+GET /api/profile/photos/file?id=<photo_uuid>
+POST /api/profile/photos
+{
+  "slot": 0,
+  "image_base64": "...",
+  "image_mime": "image/jpeg"
+}
+DELETE /api/profile/photos?id=<photo_uuid>
+POST /api/profile/photos/delete
+{ "id": "<photo_uuid>" }
+```
+
 ### Вход через OAuth (Google / Apple / Yandex / VK)
 
 ```

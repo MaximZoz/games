@@ -516,6 +516,20 @@ func main() {
 	mux.Handle("/api/support-user", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(adminHandler.SupportUserInfo)))
 	mux.Handle("/api/me", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(authHandler.Me)))
 	mux.Handle("/api/profile", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(authHandler.UpdateProfile)))
+	mux.Handle("/api/profile/photos", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			authHandler.ListProfilePhotos(w, r)
+		case http.MethodPost:
+			authHandler.UploadProfilePhoto(w, r)
+		case http.MethodDelete:
+			authHandler.DeleteProfilePhoto(w, r)
+		default:
+			api.WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		}
+	})))
+	mux.Handle("/api/profile/photos/file", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(authHandler.GetProfilePhotoFile)))
+	mux.Handle("/api/profile/photos/delete", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(authHandler.DeleteProfilePhoto)))
 	mux.Handle("/api/friends", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(friendsHandler.List)))
 	mux.Handle("/api/friends/users-count", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(friendsHandler.UsersCount)))
 	mux.Handle("/api/friends/search", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(friendsHandler.Search)))

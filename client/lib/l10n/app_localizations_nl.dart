@@ -598,6 +598,26 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Spelers: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Spel tegen een bot, zonder tijdslimiet per beurt.';
+
+  @override
+  String get rulesUnoIntro => 'Klassieke Uno: iedereen krijgt kaarten; speel op kleur of getal.';
+
+  @override
+  String get rulesUnoPlay => 'Speciale kaarten: +2, omkeren, overslaan, wild en wild +4. Kun je niet spelen, trek van de stapel.';
+
+  @override
+  String get rulesUnoWin => 'Wie als eerste alle kaarten kwijt is, wint. Zeg “Uno” als je er één over hebt.';
+
+  @override
   String get gamesInDevelopment => 'In ontwikkeling';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get profileUploadPhoto => 'Foto uploaden';
 
   @override
-  String get profileChangePhoto => 'Foto wijzigen';
+  String get profileChangePhoto => 'Avatar wijzigen';
 
   @override
   String get shopTitle => 'Winkel';
@@ -1800,6 +1820,36 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Voorbereiden…';
+
+  @override
+  String get profileGalleryTitle => 'Foto’s';
+
+  @override
+  String get profileGalleryAdd => 'Foto toevoegen';
+
+  @override
+  String get profileMakePrimary => 'Als profielfoto';
+
+  @override
+  String get profilePhotoDelete => 'Foto verwijderen';
+
+  @override
+  String get profilePhotosLimit => 'Je kunt tot 3 foto’s uploaden';
+
+  @override
+  String get profilePhotosEmpty => 'Nog geen foto’s';
+
+  @override
+  String get profilePhotoUploadFailed => 'Foto uploaden mislukt';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Foto verwijderen mislukt';
+
+  @override
+  String get profilePhotoTooLarge => 'Foto is te groot';
+
+  @override
+  String get profileSetPrimaryFailed => 'Instellen als profielfoto mislukt';
 
   @override
   String timeSecondsShort(int seconds) {

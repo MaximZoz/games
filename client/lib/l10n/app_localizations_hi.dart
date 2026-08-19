@@ -598,6 +598,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesPoker => 'पोकर';
 
   @override
+  String get gamesUno => 'ऊनो';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'खिलाड़ी: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'बॉट के खिलाफ खेल, चाल की समय सीमा नहीं।';
+
+  @override
+  String get rulesUnoIntro => 'क्लासिक ऊनो: सभी को पत्ते मिलते हैं; रंग या नंबर से खेलें।';
+
+  @override
+  String get rulesUnoPlay => 'विशेष पत्ते: +2, दिशा बदलो, छोड़ो, जंगली और +4। नहीं खेल सकते तो डेक से लें।';
+
+  @override
+  String get rulesUnoWin => 'जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।';
+
+  @override
   String get gamesInDevelopment => 'विकास में';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileUploadPhoto => 'फ़ोटो अपलोड करें';
 
   @override
-  String get profileChangePhoto => 'फ़ोटो बदलें';
+  String get profileChangePhoto => 'अवतार बदलें';
 
   @override
   String get shopTitle => 'दुकान';
@@ -1800,6 +1820,36 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profilePreparing => 'तैयारी…';
+
+  @override
+  String get profileGalleryTitle => 'फ़ोटो';
+
+  @override
+  String get profileGalleryAdd => 'फ़ोटो जोड़ें';
+
+  @override
+  String get profileMakePrimary => 'मुख्य बनाएँ';
+
+  @override
+  String get profilePhotoDelete => 'फ़ोटो हटाएँ';
+
+  @override
+  String get profilePhotosLimit => 'अधिकतम 3 फ़ोटो अपलोड कर सकते हैं';
+
+  @override
+  String get profilePhotosEmpty => 'अभी कोई फ़ोटो नहीं';
+
+  @override
+  String get profilePhotoUploadFailed => 'फ़ोटो अपलोड नहीं हो सकी';
+
+  @override
+  String get profilePhotoDeleteFailed => 'फ़ोटो हटाई नहीं जा सकी';
+
+  @override
+  String get profilePhotoTooLarge => 'फ़ोटो बहुत बड़ी है';
+
+  @override
+  String get profileSetPrimaryFailed => 'मुख्य नहीं बनाई जा सकी';
 
   @override
   String timeSecondsShort(int seconds) {

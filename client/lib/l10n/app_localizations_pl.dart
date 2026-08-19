@@ -598,6 +598,26 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Gracze: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Gra przeciwko botowi, bez limitu czasu na ruch.';
+
+  @override
+  String get rulesUnoIntro => 'Klasyczne Uno: każdy dostaje karty; graj kolorem lub wartością.';
+
+  @override
+  String get rulesUnoPlay => 'Karty specjalne: +2, zmiana kierunku, pominięcie, zmiana koloru i +4. Jeśli nie możesz zagrać, dobierz z talii.';
+
+  @override
+  String get rulesUnoWin => 'Wygrywa ten, kto pierwszy zrzuci wszystkie karty. Powiedz „Uno”, gdy zostanie jedna.';
+
+  @override
   String get gamesInDevelopment => 'W trakcie tworzenia';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get profileUploadPhoto => 'Prześlij zdjęcie';
 
   @override
-  String get profileChangePhoto => 'Zmień zdjęcie';
+  String get profileChangePhoto => 'Zmień avatar';
 
   @override
   String get shopTitle => 'Sklep';
@@ -1800,6 +1820,36 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Przygotowanie…';
+
+  @override
+  String get profileGalleryTitle => 'Zdjęcia';
+
+  @override
+  String get profileGalleryAdd => 'Dodaj zdjęcie';
+
+  @override
+  String get profileMakePrimary => 'Ustaw jako główne';
+
+  @override
+  String get profilePhotoDelete => 'Usuń zdjęcie';
+
+  @override
+  String get profilePhotosLimit => 'Można dodać maksymalnie 3 zdjęcia';
+
+  @override
+  String get profilePhotosEmpty => 'Brak zdjęć';
+
+  @override
+  String get profilePhotoUploadFailed => 'Nie udało się dodać zdjęcia';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Nie udało się usunąć zdjęcia';
+
+  @override
+  String get profilePhotoTooLarge => 'Zdjęcie jest za duże';
+
+  @override
+  String get profileSetPrimaryFailed => 'Nie udało się ustawić jako główne';
 
   @override
   String timeSecondsShort(int seconds) {

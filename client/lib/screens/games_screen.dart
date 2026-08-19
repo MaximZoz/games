@@ -12,6 +12,7 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
+import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
@@ -23,6 +24,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -1109,6 +1111,8 @@ class _GamesPageContent extends ConsumerWidget {
             isOffline: isOffline,
             stakeOptionsList: stakeOptionsList,
           ),
+          const SizedBox(height: 16),
+          _UnoComingSoonCard(isOffline: isOffline),
         ],
       );
       if (!centerCards) return column;
@@ -2438,6 +2442,130 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
   }
 }
 
+/// Карточка «Уно» — превью настроек; игра пока в разработке.
+class _UnoComingSoonCard extends StatefulWidget {
+  const _UnoComingSoonCard({required this.isOffline});
+
+  final bool isOffline;
+
+  @override
+  State<_UnoComingSoonCard> createState() => _UnoComingSoonCardState();
+}
+
+class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
+  // Как у Дурака: 2–4 игрока и то же время хода.
+  int _players = 2;
+  int _turnTimeSec = 60;
+
+  void _cyclePlayers() {
+    setState(() => _players = _players == 4 ? 2 : _players + 1);
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.gamesRulesTitle,
+      content: rulesTextLines(unoRuleLines(
+        players: _players,
+        turnTimeSec: _turnTimeSec,
+        offlineBot: widget.isOffline,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final theme = Theme.of(context);
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: true,
+        icon: Icons.groups_rounded,
+        label: '$_players',
+        onTap: _cyclePlayers,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesUno,
+        icon: Icons.style_rounded,
+        iconChild: const UnoGameIcon(size: 26),
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(
+          vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+          horizontal: 16,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.accentStart.withValues(alpha: 0.12),
+              AppColors.accentEnd.withValues(alpha: 0.18),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.accentStart.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.construction_rounded,
+              size: 20,
+              color: AppColors.accentStart.withValues(alpha: 0.95),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.gamesInDevelopment,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.accentStart,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TictactoeGameCard extends StatelessWidget {
   const _TictactoeGameCard({
     required this.isCreating,
@@ -3226,6 +3354,9 @@ class _InviteGameIcon extends StatelessWidget {
       case 'poker':
         materialIcon = Icons.casino_rounded;
         child = Icon(materialIcon, color: Colors.white, size: 26);
+      case 'uno':
+        materialIcon = null;
+        child = const UnoGameIcon(size: 26);
       default:
         materialIcon = Icons.grid_3x3_rounded;
         child = Icon(materialIcon, color: Colors.white, size: 26);

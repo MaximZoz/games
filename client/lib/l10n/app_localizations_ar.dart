@@ -598,6 +598,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesPoker => 'بوكر';
 
   @override
+  String get gamesUno => 'أونو';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'اللاعبون: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'اللعب ضد روبوت بدون حد زمني للدور.';
+
+  @override
+  String get rulesUnoIntro => 'أونو الكلاسيكي: تُوزَّع البطاقات على الجميع؛ العب حسب اللون أو الرقم.';
+
+  @override
+  String get rulesUnoPlay => 'بطاقات خاصة: +2 وتغيير الاتجاه وتخطي وجوكر و+4. إن لم تستطع اللعب فاسحب من الرزمة.';
+
+  @override
+  String get rulesUnoWin => 'يفوز من يتخلّص من كل بطاقاته أولاً. قل «أونو» عندما تبقى بطاقة واحدة.';
+
+  @override
   String get gamesInDevelopment => 'قيد التطوير';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileUploadPhoto => 'رفع صورة';
 
   @override
-  String get profileChangePhoto => 'تغيير الصورة';
+  String get profileChangePhoto => 'تغيير الصورة الرمزية';
 
   @override
   String get shopTitle => 'المتجر';
@@ -1800,6 +1820,36 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profilePreparing => 'جاري التحضير…';
+
+  @override
+  String get profileGalleryTitle => 'الصور';
+
+  @override
+  String get profileGalleryAdd => 'إضافة صورة';
+
+  @override
+  String get profileMakePrimary => 'تعيين كصورة رئيسية';
+
+  @override
+  String get profilePhotoDelete => 'حذف الصورة';
+
+  @override
+  String get profilePhotosLimit => 'يمكنك رفع 3 صور كحد أقصى';
+
+  @override
+  String get profilePhotosEmpty => 'لا توجد صور بعد';
+
+  @override
+  String get profilePhotoUploadFailed => 'تعذر رفع الصورة';
+
+  @override
+  String get profilePhotoDeleteFailed => 'تعذر حذف الصورة';
+
+  @override
+  String get profilePhotoTooLarge => 'الصورة كبيرة جداً';
+
+  @override
+  String get profileSetPrimaryFailed => 'تعذر تعيينها كصورة رئيسية';
 
   @override
   String timeSecondsShort(int seconds) {

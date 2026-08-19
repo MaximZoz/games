@@ -598,6 +598,26 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesPoker => 'Πόκερ';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Παίκτες: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Παιχνίδι εναντίον bot χωρίς όριο χρόνου ανά γύρο.';
+
+  @override
+  String get rulesUnoIntro => 'Κλασικό Uno: μοιράζονται κάρτες σε όλους· παίξτε με χρώμα ή αριθμό.';
+
+  @override
+  String get rulesUnoPlay => 'Ειδικές κάρτες: +2, αντιστροφή, παράλειψη, αλλαγή χρώματος και +4. Αν δεν μπορείτε να παίξετε, τραβήξτε.';
+
+  @override
+  String get rulesUnoWin => 'Κερδίζει όποιος πετάξει πρώτος όλες τις κάρτες. Πείτε «Uno» όταν μείνει μία.';
+
+  @override
   String get gamesInDevelopment => 'Υπό ανάπτυξη';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get profileUploadPhoto => 'Μεταφόρτωση φωτογραφίας';
 
   @override
-  String get profileChangePhoto => 'Αλλαγή φωτογραφίας';
+  String get profileChangePhoto => 'Αλλαγή avatar';
 
   @override
   String get shopTitle => 'Κατάστημα';
@@ -1800,6 +1820,36 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Προετοιμασία…';
+
+  @override
+  String get profileGalleryTitle => 'Φωτογραφίες';
+
+  @override
+  String get profileGalleryAdd => 'Προσθήκη φωτογραφίας';
+
+  @override
+  String get profileMakePrimary => 'Ορισμός ως κύρια';
+
+  @override
+  String get profilePhotoDelete => 'Διαγραφή φωτογραφίας';
+
+  @override
+  String get profilePhotosLimit => 'Μπορείτε να ανεβάσετε έως 3 φωτογραφίες';
+
+  @override
+  String get profilePhotosEmpty => 'Δεν υπάρχουν φωτογραφίες';
+
+  @override
+  String get profilePhotoUploadFailed => 'Αποτυχία μεταφόρτωσης';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Αποτυχία διαγραφής';
+
+  @override
+  String get profilePhotoTooLarge => 'Η φωτογραφία είναι πολύ μεγάλη';
+
+  @override
+  String get profileSetPrimaryFailed => 'Αποτυχία ορισμού ως κύρια';
 
   @override
   String timeSecondsShort(int seconds) {

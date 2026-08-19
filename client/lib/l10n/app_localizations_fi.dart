@@ -598,6 +598,26 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesPoker => 'Pokeri';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Pelaajat: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Peli bottia vastaan ilman vuoron aikarajaa.';
+
+  @override
+  String get rulesUnoIntro => 'Klassinen Uno: kaikille jaetaan kortteja; pelaa värin tai numeron mukaan.';
+
+  @override
+  String get rulesUnoPlay => 'Erikoiskortit: +2, suunnanvaihto, ohitus, jokerit ja +4. Jos et voi pelata, nosta pakasta.';
+
+  @override
+  String get rulesUnoWin => 'Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.';
+
+  @override
   String get gamesInDevelopment => 'Kehityksessä';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get profileUploadPhoto => 'Lataa kuva';
 
   @override
-  String get profileChangePhoto => 'Vaihda kuva';
+  String get profileChangePhoto => 'Vaihda avatar';
 
   @override
   String get shopTitle => 'Kauppa';
@@ -1800,6 +1820,36 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Valmistellaan…';
+
+  @override
+  String get profileGalleryTitle => 'Kuvat';
+
+  @override
+  String get profileGalleryAdd => 'Lisää kuva';
+
+  @override
+  String get profileMakePrimary => 'Aseta pääkuvaksi';
+
+  @override
+  String get profilePhotoDelete => 'Poista kuva';
+
+  @override
+  String get profilePhotosLimit => 'Voit ladata enintään 3 kuvaa';
+
+  @override
+  String get profilePhotosEmpty => 'Ei kuvia vielä';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kuvan lataus epäonnistui';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kuvan poisto epäonnistui';
+
+  @override
+  String get profilePhotoTooLarge => 'Kuva on liian suuri';
+
+  @override
+  String get profileSetPrimaryFailed => 'Pääkuvaksi asettaminen epäonnistui';
 
   @override
   String timeSecondsShort(int seconds) {

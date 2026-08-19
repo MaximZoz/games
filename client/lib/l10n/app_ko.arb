@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "포커",
+  "gamesUno": "우노",
+  "rulesUnoPlayers": "플레이어: {players}명.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "봇과 대결, 턴 시간 제한 없음.",
+  "rulesUnoIntro": "클래식 우노: 모든 플레이어에게 카드가 나눠지며 색상 또는 숫자로 냅니다.",
+  "rulesUnoPlay": "특수 카드: +2, 리버스, 스킵, 와일드, 와일드+4. 낼 수 없으면 덱에서 뽑습니다.",
+  "rulesUnoWin": "손패를 먼저 모두 낸 사람이 이깁니다. 한 장 남으면 “우노”라고 말하세요.",
   "gamesInDevelopment": "개발 중",
   "rulesPokerPlayers": "인원: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "여성",
   "profileAvatar": "아바타",
   "profileUploadPhoto": "사진 업로드",
-  "profileChangePhoto": "사진 변경",
+  "profileChangePhoto": "아바타 변경",
   "shopTitle": "상점",
   "shopEmojis": "이모지",
   "shopEmojisSubtitle": "채팅용 애니메이션 이모지",
@@ -914,6 +927,16 @@
   "profileCropHint": "사진을 확대하고 이동하세요",
   "profileApply": "적용",
   "profilePreparing": "준비 중…",
+  "profileGalleryTitle": "사진",
+  "profileGalleryAdd": "사진 추가",
+  "profileMakePrimary": "대표 사진으로",
+  "profilePhotoDelete": "사진 삭제",
+  "profilePhotosLimit": "사진은 최대 3장까지 올릴 수 있습니다",
+  "profilePhotosEmpty": "아직 사진이 없습니다",
+  "profilePhotoUploadFailed": "사진을 올리지 못했습니다",
+  "profilePhotoDeleteFailed": "사진을 삭제하지 못했습니다",
+  "profilePhotoTooLarge": "사진이 너무 큽니다",
+  "profileSetPrimaryFailed": "대표 사진으로 설정하지 못했습니다",
   "timeSecondsShort": "{seconds}초",
   "@timeSecondsShort": {
     "placeholders": {

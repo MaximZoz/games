@@ -598,6 +598,26 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Гульцы: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Гульня супраць бота, без ліміту часу на ход.';
+
+  @override
+  String get rulesUnoIntro => 'Класічнае Уно: кожнаму раздаюць карты; хадзіце па колеры ці намінале.';
+
+  @override
+  String get rulesUnoPlay => 'Спецкарты: +2, змена кірунку, пропуск ходу, чорная змена колеру і +4. Не можаце пайсці — бярыце з калоды.';
+
+  @override
+  String get rulesUnoWin => 'Перамагае той, хто першым скінуў усе карты. Не забудзьце сказаць «Уно», калі застаецца адна карта.';
+
+  @override
   String get gamesInDevelopment => 'У распрацоўцы';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get profileUploadPhoto => 'Загрузіць фота';
 
   @override
-  String get profileChangePhoto => 'Змяніць фота';
+  String get profileChangePhoto => 'Змяніць аватар';
 
   @override
   String get shopTitle => 'Крама';
@@ -1800,6 +1820,36 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Падрыхтоўка…';
+
+  @override
+  String get profileGalleryTitle => 'Фота';
+
+  @override
+  String get profileGalleryAdd => 'Дадаць фота';
+
+  @override
+  String get profileMakePrimary => 'Зрабіць асноўным';
+
+  @override
+  String get profilePhotoDelete => 'Выдаліць фота';
+
+  @override
+  String get profilePhotosLimit => 'Можна загрузіць не больш за 3 фота';
+
+  @override
+  String get profilePhotosEmpty => 'Пакуль няма фота';
+
+  @override
+  String get profilePhotoUploadFailed => 'Не атрымалася загрузіць фота';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Не атрымалася выдаліць фота';
+
+  @override
+  String get profilePhotoTooLarge => 'Фота занадта вялікае';
+
+  @override
+  String get profileSetPrimaryFailed => 'Не атрымалася зрабіць асноўным';
 
   @override
   String timeSecondsShort(int seconds) {

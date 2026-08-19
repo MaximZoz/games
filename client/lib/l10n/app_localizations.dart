@@ -1283,6 +1283,42 @@ abstract class AppLocalizations {
   /// **'Покер'**
   String get gamesPoker;
 
+  /// No description provided for @gamesUno.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уно'**
+  String get gamesUno;
+
+  /// No description provided for @rulesUnoPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: {players}.'**
+  String rulesUnoPlayers(int players);
+
+  /// No description provided for @rulesUnoOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра против бота, без лимита времени на ход.'**
+  String get rulesUnoOfflineBot;
+
+  /// No description provided for @rulesUnoIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.'**
+  String get rulesUnoIntro;
+
+  /// No description provided for @rulesUnoPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.'**
+  String get rulesUnoPlay;
+
+  /// No description provided for @rulesUnoWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.'**
+  String get rulesUnoWin;
+
   /// No description provided for @gamesInDevelopment.
   ///
   /// In ru, this message translates to:
@@ -3466,6 +3502,66 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Подготовка…'**
   String get profilePreparing;
+
+  /// No description provided for @profileGalleryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото'**
+  String get profileGalleryTitle;
+
+  /// No description provided for @profileGalleryAdd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить фото'**
+  String get profileGalleryAdd;
+
+  /// No description provided for @profileMakePrimary.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать основным'**
+  String get profileMakePrimary;
+
+  /// No description provided for @profilePhotoDelete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить фото'**
+  String get profilePhotoDelete;
+
+  /// No description provided for @profilePhotosLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно загрузить не больше 3 фото'**
+  String get profilePhotosLimit;
+
+  /// No description provided for @profilePhotosEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет фото'**
+  String get profilePhotosEmpty;
+
+  /// No description provided for @profilePhotoUploadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить фото'**
+  String get profilePhotoUploadFailed;
+
+  /// No description provided for @profilePhotoDeleteFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить фото'**
+  String get profilePhotoDeleteFailed;
+
+  /// No description provided for @profilePhotoTooLarge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото слишком большое'**
+  String get profilePhotoTooLarge;
+
+  /// No description provided for @profileSetPrimaryFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сделать основным'**
+  String get profileSetPrimaryFailed;
 
   /// No description provided for @timeSecondsShort.
   ///

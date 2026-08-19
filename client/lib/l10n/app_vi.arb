@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Người chơi: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Chơi với bot, không giới hạn thời gian mỗi lượt.",
+  "rulesUnoIntro": "Uno cổ điển: mỗi người được chia bài; đánh theo màu hoặc số.",
+  "rulesUnoPlay": "Bài đặc biệt: +2, đổi chiều, bỏ lượt, đổi màu và +4. Không đánh được thì rút từ bộ bài.",
+  "rulesUnoWin": "Người đầu tiên hết bài thắng. Nhớ nói “Uno” khi còn một lá.",
   "gamesInDevelopment": "Đang phát triển",
   "rulesPokerPlayers": "Người chơi: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Nữ",
   "profileAvatar": "Ảnh đại diện",
   "profileUploadPhoto": "Tải ảnh lên",
-  "profileChangePhoto": "Đổi ảnh",
+  "profileChangePhoto": "Đổi ảnh đại diện",
   "shopTitle": "Cửa hàng",
   "shopEmojis": "Emoji",
   "shopEmojisSubtitle": "Emoji động cho trò chuyện",
@@ -914,6 +927,16 @@
   "profileCropHint": "Phóng to và di chuyển ảnh",
   "profileApply": "Áp dụng",
   "profilePreparing": "Đang chuẩn bị…",
+  "profileGalleryTitle": "Ảnh",
+  "profileGalleryAdd": "Thêm ảnh",
+  "profileMakePrimary": "Đặt làm ảnh chính",
+  "profilePhotoDelete": "Xóa ảnh",
+  "profilePhotosLimit": "Có thể tải lên tối đa 3 ảnh",
+  "profilePhotosEmpty": "Chưa có ảnh",
+  "profilePhotoUploadFailed": "Không tải được ảnh",
+  "profilePhotoDeleteFailed": "Không xóa được ảnh",
+  "profilePhotoTooLarge": "Ảnh quá lớn",
+  "profileSetPrimaryFailed": "Không đặt được làm ảnh chính",
   "timeSecondsShort": "{seconds} giây",
   "@timeSecondsShort": {
     "placeholders": {

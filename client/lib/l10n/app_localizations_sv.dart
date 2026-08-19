@@ -598,6 +598,26 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
+  String rulesUnoPlayers(int players) {
+    return 'Spelare: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Spela mot en bot utan tidsgräns per drag.';
+
+  @override
+  String get rulesUnoIntro => 'Klassisk Uno: alla får kort; spela efter färg eller nummer.';
+
+  @override
+  String get rulesUnoPlay => 'Specialkort: +2, vänd, hoppa över, jokrar och +4. Kan du inte spela, dra från högen.';
+
+  @override
+  String get rulesUnoWin => 'Den som först blir av med alla kort vinner. Säg “Uno” när du har ett kort kvar.';
+
+  @override
   String get gamesInDevelopment => 'Under utveckling';
 
   @override
@@ -1168,7 +1188,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get profileUploadPhoto => 'Ladda upp foto';
 
   @override
-  String get profileChangePhoto => 'Byt foto';
+  String get profileChangePhoto => 'Byt avatar';
 
   @override
   String get shopTitle => 'Butik';
@@ -1800,6 +1820,36 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get profilePreparing => 'Förbereder…';
+
+  @override
+  String get profileGalleryTitle => 'Foton';
+
+  @override
+  String get profileGalleryAdd => 'Lägg till foto';
+
+  @override
+  String get profileMakePrimary => 'Gör till primär';
+
+  @override
+  String get profilePhotoDelete => 'Ta bort foto';
+
+  @override
+  String get profilePhotosLimit => 'Du kan ladda upp högst 3 foton';
+
+  @override
+  String get profilePhotosEmpty => 'Inga foton ännu';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kunde inte ladda upp fotot';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kunde inte ta bort fotot';
+
+  @override
+  String get profilePhotoTooLarge => 'Fotot är för stort';
+
+  @override
+  String get profileSetPrimaryFailed => 'Kunde inte ange som primär';
 
   @override
   String timeSecondsShort(int seconds) {

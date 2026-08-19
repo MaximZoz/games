@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Oʻyinchilar: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Botga qarshi o‘yin, yurish vaqti cheklanmagan.",
+  "rulesUnoIntro": "Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.",
+  "rulesUnoPlay": "Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.",
+  "rulesUnoWin": "Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.",
   "gamesInDevelopment": "Ishlanmoqda",
   "rulesPokerPlayers": "O‘yinchilar: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Ayol",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Foto yuklash",
-  "profileChangePhoto": "Fotoni o‘zgartirish",
+  "profileChangePhoto": "Avatarni o‘zgartirish",
   "shopTitle": "Do‘kon",
   "shopEmojis": "Emoji",
   "shopEmojisSubtitle": "Chat uchun animatsiyali emoji",
@@ -914,6 +927,16 @@
   "profileCropHint": "Fotoni kattalashtiring va siljiting",
   "profileApply": "Qo‘llash",
   "profilePreparing": "Tayyorlanmoqda…",
+  "profileGalleryTitle": "Foto",
+  "profileGalleryAdd": "Foto qo‘shish",
+  "profileMakePrimary": "Asosiy qilish",
+  "profilePhotoDelete": "Fotoni o‘chirish",
+  "profilePhotosLimit": "3 tadan ortiq foto yuklab bo‘lmaydi",
+  "profilePhotosEmpty": "Hozircha foto yo‘q",
+  "profilePhotoUploadFailed": "Foto yuklanmadi",
+  "profilePhotoDeleteFailed": "Foto o‘chirilmadi",
+  "profilePhotoTooLarge": "Foto juda katta",
+  "profileSetPrimaryFailed": "Asosiy qilib bo‘lmadi",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

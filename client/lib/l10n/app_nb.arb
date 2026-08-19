@@ -224,6 +224,19 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spillere: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spill mot en bot uten tidsbegrensning per trekk.",
+  "rulesUnoIntro": "Klassisk Uno: alle får kort; spill etter farge eller tall.",
+  "rulesUnoPlay": "Spesialkort: +2, snu, hopp over, jokere og +4. Kan du ikke spille, trekk fra bunken.",
+  "rulesUnoWin": "Den som først blir kvitt alle kortene vinner. Si “Uno” når du har ett kort igjen.",
   "gamesInDevelopment": "Under utvikling",
   "rulesPokerPlayers": "Spillere: {players}.",
   "@rulesPokerPlayers": {
@@ -430,7 +443,7 @@
   "profileGenderFemale": "Kvinne",
   "profileAvatar": "Avatar",
   "profileUploadPhoto": "Last opp bilde",
-  "profileChangePhoto": "Bytt bilde",
+  "profileChangePhoto": "Bytt avatar",
   "shopTitle": "Butikk",
   "shopEmojis": "Emojier",
   "shopEmojisSubtitle": "Animerte emojier for chat",
@@ -914,6 +927,16 @@
   "profileCropHint": "Zoom og flytt bildet",
   "profileApply": "Bruk",
   "profilePreparing": "Forbereder…",
+  "profileGalleryTitle": "Bilder",
+  "profileGalleryAdd": "Legg til bilde",
+  "profileMakePrimary": "Gjør til primær",
+  "profilePhotoDelete": "Slett bilde",
+  "profilePhotosLimit": "Du kan laste opp opptil 3 bilder",
+  "profilePhotosEmpty": "Ingen bilder ennå",
+  "profilePhotoUploadFailed": "Kunne ikke laste opp bildet",
+  "profilePhotoDeleteFailed": "Kunne ikke slette bildet",
+  "profilePhotoTooLarge": "Bildet er for stort",
+  "profileSetPrimaryFailed": "Kunne ikke angi som primær",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {
