@@ -927,7 +927,7 @@ class _ProfileInfoChip extends StatelessWidget {
   }
 }
 
-class _ProfileEditForm extends StatefulWidget {
+class _ProfileEditForm extends ConsumerStatefulWidget {
   const _ProfileEditForm({
     super.key,
     required this.user,
@@ -948,7 +948,7 @@ class _ProfileEditForm extends StatefulWidget {
   final bool compact;
 
   @override
-  State<_ProfileEditForm> createState() => _ProfileEditFormState();
+  ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
 /// Только цифры, макс. 3 (возраст 1–111).
@@ -963,7 +963,7 @@ final _aboutFormatters = [
   LengthLimitingTextInputFormatter(100),
 ];
 
-class _ProfileEditFormState extends State<_ProfileEditForm> {
+class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
   bool _galleryDirty = false;
@@ -1237,6 +1237,18 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
           _avatarValue = compactAvatarValue;
         }
       });
+      if (compactAvatarValue != null) {
+        try {
+          final saved = await saveOriginalPhotoToGallery(
+            ref: ref,
+            userId: widget.user.id,
+            rawBytes: rawBytes,
+          );
+          if (saved && mounted) _onGalleryMutated();
+        } catch (_) {
+          // Круглый аватар уже выбран; оригинал в галерею — по возможности.
+        }
+      }
     } finally {
       if (mounted) {
         setState(() => _isAvatarProcessing = false);

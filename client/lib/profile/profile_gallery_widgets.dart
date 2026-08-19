@@ -68,9 +68,16 @@ class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage>
 
   @override
   Widget build(BuildContext context) {
-    final photos =
-        ref.watch(profilePhotosProvider(widget.userId)).valueOrNull ??
-            const <ProfilePhotoMeta>[];
+    final async = ref.watch(profilePhotosProvider(widget.userId));
+    if (async.isLoading && !async.hasValue) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+    final photos = async.valueOrNull ?? const <ProfilePhotoMeta>[];
     final me = ref.watch(authStateProvider).valueOrNull;
     final liveSelf = me != null && me.id == widget.userId;
     final avatarKind = liveSelf ? me.avatarKind : widget.avatarKind;
@@ -79,16 +86,10 @@ class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage>
       photos: photos,
       selectedIndex: _selectedIndex,
       canManage: widget.canManage,
-      mainPhoto: ProfileAvatarHeroImage(
+      fallbackPhoto: ProfileAvatarHeroImage(
         avatarKind: avatarKind,
         avatarValue: avatarValue,
         letter: widget.letter,
-      ),
-      avatarThumb: ProfileAvatarHeroImage(
-        avatarKind: avatarKind,
-        avatarValue: avatarValue,
-        letter: widget.letter,
-        fit: BoxFit.cover,
       ),
       imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) =>
           ProfilePhotoImage(photoId: photo.id, fit: fit),
@@ -134,6 +135,7 @@ class ProfileAvatarHeroImage extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           filterQuality: FilterQuality.high,
+          alignment: Alignment.center,
         );
       }
     }
@@ -163,19 +165,17 @@ class ProfilePhotoViewerBody extends StatefulWidget {
     required this.photos,
     required this.selectedIndex,
     required this.canManage,
-    required this.mainPhoto,
+    required this.fallbackPhoto,
     required this.imageBuilder,
     required this.onSelectIndex,
     required this.onClose,
-    this.avatarThumb,
     this.onMakePrimary,
   });
 
   final List<ProfilePhotoMeta> photos;
   final int selectedIndex;
   final bool canManage;
-  final Widget mainPhoto;
-  final Widget? avatarThumb;
+  final Widget fallbackPhoto;
   final Widget Function(ProfilePhotoMeta photo, {BoxFit fit}) imageBuilder;
   final ValueChanged<int> onSelectIndex;
   final VoidCallback onClose;
@@ -188,7 +188,9 @@ class ProfilePhotoViewerBody extends StatefulWidget {
 class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
   late final PageController _pageController;
 
-  int get _pageCount => 1 + widget.photos.length;
+  bool get _hasOriginals => widget.photos.isNotEmpty;
+
+  int get _pageCount => _hasOriginals ? widget.photos.length : 1;
 
   int get _safeIndex {
     if (_pageCount <= 1) return 0;
@@ -205,7 +207,10 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
   void didUpdateWidget(covariant ProfilePhotoViewerBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     final next = _safeIndex;
-    if (oldWidget.selectedIndex == widget.selectedIndex) return;
+    if (oldWidget.selectedIndex == widget.selectedIndex &&
+        oldWidget.photos.length == widget.photos.length) {
+      return;
+    }
     if (!_pageController.hasClients) return;
     if (_pageController.page?.round() == next) return;
     _pageController.animateToPage(
@@ -222,27 +227,22 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
   }
 
   ProfilePhotoMeta? get _selectedGalleryPhoto {
+    if (!_hasOriginals) return null;
     final index = _safeIndex;
-    if (index <= 0 || index > widget.photos.length) return null;
-    return widget.photos[index - 1];
+    if (index < 0 || index >= widget.photos.length) return null;
+    return widget.photos[index];
   }
 
   Widget _pageAt(int index) {
-    if (index <= 0) return widget.mainPhoto;
+    if (!_hasOriginals) return widget.fallbackPhoto;
     return widget.imageBuilder(
-      widget.photos[index - 1],
+      widget.photos[index],
       fit: BoxFit.contain,
     );
   }
 
   Widget _thumbAt(int index) {
-    if (index <= 0) {
-      return KeyedSubtree(
-        key: const ValueKey('profile-photo-thumb-avatar'),
-        child: widget.avatarThumb ?? widget.mainPhoto,
-      );
-    }
-    final photo = widget.photos[index - 1];
+    final photo = widget.photos[index];
     return KeyedSubtree(
       key: ValueKey('profile-photo-thumb-${photo.id}'),
       child: widget.imageBuilder(photo),
@@ -254,7 +254,6 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
     final selectedPhoto = _selectedGalleryPhoto;
     final topPad = MediaQuery.viewPaddingOf(context).top;
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
-    final showStrip = widget.photos.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -274,7 +273,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
                       maxScale: 5,
                       child: Center(
                         child: KeyedSubtree(
-                          key: i == 0
+                          key: i == _safeIndex
                               ? const ValueKey('profile-viewer-main')
                               : ValueKey('profile-viewer-page-$i'),
                           child: _pageAt(i),
@@ -319,7 +318,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
                 ),
               ),
             ),
-          if (showStrip)
+          if (_hasOriginals)
             ColoredBox(
               key: const ValueKey('profile-viewer-strip'),
               color: const Color(0xE6000000),
@@ -329,7 +328,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
                   height: 72,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _pageCount,
+                    itemCount: widget.photos.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
                       final selected = i == _safeIndex;
@@ -1073,6 +1072,27 @@ class _ProfilePhotoFullscreenViewerState
       ),
     );
   }
+}
+
+Future<bool> saveOriginalPhotoToGallery({
+  required WidgetRef ref,
+  required String userId,
+  required Uint8List rawBytes,
+}) async {
+  final picked = await compressRawChatImageAsync(rawBytes);
+  if (picked == null) return false;
+  final photos = ref.read(profilePhotosProvider(userId)).valueOrNull ??
+      const <ProfilePhotoMeta>[];
+  final slot = profilePhotoSlots(photos).indexWhere((e) => e == null);
+  if (slot < 0) return false;
+  await ref.read(profilePhotosRepositoryProvider).uploadPhoto(
+        slot: slot,
+        imageBase64: picked.base64,
+        imageMime: picked.mime,
+      );
+  ref.read(profilePhotoBytesCacheProvider.notifier).state = {};
+  ref.invalidate(profilePhotosProvider(userId));
+  return true;
 }
 
 Future<void> setProfilePhotoAsPrimary({

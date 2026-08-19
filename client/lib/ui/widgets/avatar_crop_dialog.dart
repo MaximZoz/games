@@ -187,41 +187,53 @@ class _AvatarCropDialogState extends State<AvatarCropDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            RepaintBoundary(
-              key: _captureKey,
-              child: ClipOval(
-                child: SizedBox(
-                  width: _viewportSize,
-                  height: _viewportSize,
-                  child: ColoredBox(
-                    color: AppColors.surfaceCard,
-                    child: _ready
-                        ? InteractiveViewer(
-                            transformationController: _transformation,
-                            minScale: 1,
-                            maxScale: 4.5,
-                            boundaryMargin: const EdgeInsets.all(180),
-                            clipBehavior: Clip.none,
-                            constrained: false,
-                            child: SizedBox(
-                              width: _baseWidth,
-                              height: _baseHeight,
-                              child: Image.memory(
-                                widget.sourceBytes,
-                                fit: BoxFit.fill,
-                                filterQuality: FilterQuality.high,
+            SizedBox(
+              width: _viewportSize,
+              height: _viewportSize,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  RepaintBoundary(
+                    key: _captureKey,
+                    child: ClipRect(
+                      child: ColoredBox(
+                        color: AppColors.surfaceCard,
+                        child: _ready
+                            ? InteractiveViewer(
+                                transformationController: _transformation,
+                                minScale: 1,
+                                maxScale: 4.5,
+                                boundaryMargin: const EdgeInsets.all(180),
+                                clipBehavior: Clip.none,
+                                constrained: false,
+                                child: SizedBox(
+                                  width: _baseWidth,
+                                  height: _baseHeight,
+                                  child: Image.memory(
+                                    widget.sourceBytes,
+                                    fit: BoxFit.fill,
+                                    filterQuality: FilterQuality.high,
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: SizedBox(
+                                  width: 26,
+                                  height: 26,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                  ),
+                                ),
                               ),
-                            ),
-                          )
-                        : const Center(
-                            child: SizedBox(
-                              width: 26,
-                              height: 26,
-                              child: CircularProgressIndicator(strokeWidth: 2.4),
-                            ),
-                          ),
+                      ),
+                    ),
                   ),
-                ),
+                  const IgnorePointer(
+                    child: CustomPaint(
+                      painter: _AvatarCircleMaskPainter(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -250,4 +262,31 @@ class _AvatarCropDialogState extends State<AvatarCropDialog> {
       ],
     );
   }
+}
+
+class _AvatarCircleMaskPainter extends CustomPainter {
+  const _AvatarCircleMaskPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final overlay = Path()
+      ..addRect(rect)
+      ..addOval(rect)
+      ..fillType = PathFillType.evenOdd;
+    canvas.drawPath(
+      overlay,
+      Paint()..color = const Color(0x99000000),
+    );
+    canvas.drawOval(
+      rect.deflate(1),
+      Paint()
+        ..color = Colors.white70
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
