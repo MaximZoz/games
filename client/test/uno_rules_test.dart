@@ -9,7 +9,7 @@ void main() {
   test('unoRuleLines includes players, turn time and win line', () {
     final lines = unoRuleLines(players: 3, turnTimeSec: 60);
     expect(lines.first, 'Игроки: 3.');
-    expect(lines, contains('1 мин'));
+    expect(lines.any((l) => l.contains('1 мин')), isTrue);
     expect(lines.any((l) => l.contains('Уно')), isTrue);
     expect(lines.last, contains('Побеждает'));
   });
