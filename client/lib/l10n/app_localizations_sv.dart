@@ -1822,6 +1822,36 @@ class AppLocalizationsSv extends AppLocalizations {
   String get profilePreparing => 'Förbereder…';
 
   @override
+  String get profileGalleryTitle => 'Foton';
+
+  @override
+  String get profileGalleryAdd => 'Lägg till foto';
+
+  @override
+  String get profileMakePrimary => 'Gör till primär';
+
+  @override
+  String get profilePhotoDelete => 'Ta bort foto';
+
+  @override
+  String get profilePhotosLimit => 'Du kan ladda upp högst 3 foton';
+
+  @override
+  String get profilePhotosEmpty => 'Inga foton ännu';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kunde inte ladda upp fotot';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kunde inte ta bort fotot';
+
+  @override
+  String get profilePhotoTooLarge => 'Fotot är för stort';
+
+  @override
+  String get profileSetPrimaryFailed => 'Kunde inte ange som primär';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

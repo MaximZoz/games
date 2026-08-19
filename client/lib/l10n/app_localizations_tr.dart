@@ -1822,6 +1822,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profilePreparing => 'Hazırlanıyor…';
 
   @override
+  String get profileGalleryTitle => 'Fotoğraflar';
+
+  @override
+  String get profileGalleryAdd => 'Fotoğraf ekle';
+
+  @override
+  String get profileMakePrimary => 'Ana fotoğraf yap';
+
+  @override
+  String get profilePhotoDelete => 'Fotoğrafı sil';
+
+  @override
+  String get profilePhotosLimit => 'En fazla 3 fotoğraf yükleyebilirsiniz';
+
+  @override
+  String get profilePhotosEmpty => 'Henüz fotoğraf yok';
+
+  @override
+  String get profilePhotoUploadFailed => 'Fotoğraf yüklenemedi';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Fotoğraf silinemedi';
+
+  @override
+  String get profilePhotoTooLarge => 'Fotoğraf çok büyük';
+
+  @override
+  String get profileSetPrimaryFailed => 'Ana fotoğraf yapılamadı';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds sn';
   }

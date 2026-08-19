@@ -927,6 +927,16 @@
   "profileCropHint": "كبّر وحرّك الصورة",
   "profileApply": "تطبيق",
   "profilePreparing": "جاري التحضير…",
+  "profileGalleryTitle": "الصور",
+  "profileGalleryAdd": "إضافة صورة",
+  "profileMakePrimary": "تعيين كصورة رئيسية",
+  "profilePhotoDelete": "حذف الصورة",
+  "profilePhotosLimit": "يمكنك رفع 3 صور كحد أقصى",
+  "profilePhotosEmpty": "لا توجد صور بعد",
+  "profilePhotoUploadFailed": "تعذر رفع الصورة",
+  "profilePhotoDeleteFailed": "تعذر حذف الصورة",
+  "profilePhotoTooLarge": "الصورة كبيرة جداً",
+  "profileSetPrimaryFailed": "تعذر تعيينها كصورة رئيسية",
   "timeSecondsShort": "{seconds} ث",
   "@timeSecondsShort": {
     "placeholders": {

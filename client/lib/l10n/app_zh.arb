@@ -927,6 +927,16 @@
   "profileCropHint": "缩放并移动照片",
   "profileApply": "应用",
   "profilePreparing": "准备中…",
+  "profileGalleryTitle": "照片",
+  "profileGalleryAdd": "添加照片",
+  "profileMakePrimary": "设为头像",
+  "profilePhotoDelete": "删除照片",
+  "profilePhotosLimit": "最多可上传 3 张照片",
+  "profilePhotosEmpty": "暂无照片",
+  "profilePhotoUploadFailed": "无法上传照片",
+  "profilePhotoDeleteFailed": "无法删除照片",
+  "profilePhotoTooLarge": "照片太大",
+  "profileSetPrimaryFailed": "无法设为头像",
   "timeSecondsShort": "{seconds} 秒",
   "@timeSecondsShort": {
     "placeholders": {

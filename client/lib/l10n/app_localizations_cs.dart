@@ -1822,6 +1822,36 @@ class AppLocalizationsCs extends AppLocalizations {
   String get profilePreparing => 'Příprava…';
 
   @override
+  String get profileGalleryTitle => 'Fotky';
+
+  @override
+  String get profileGalleryAdd => 'Přidat fotku';
+
+  @override
+  String get profileMakePrimary => 'Nastavit jako hlavní';
+
+  @override
+  String get profilePhotoDelete => 'Smazat fotku';
+
+  @override
+  String get profilePhotosLimit => 'Můžete nahrát nejvýše 3 fotky';
+
+  @override
+  String get profilePhotosEmpty => 'Zatím žádné fotky';
+
+  @override
+  String get profilePhotoUploadFailed => 'Fotku se nepodařilo nahrát';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Fotku se nepodařilo smazat';
+
+  @override
+  String get profilePhotoTooLarge => 'Fotka je příliš velká';
+
+  @override
+  String get profileSetPrimaryFailed => 'Nepodařilo se nastavit jako hlavní';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

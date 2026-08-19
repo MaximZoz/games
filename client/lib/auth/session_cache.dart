@@ -6,6 +6,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/profile/profile_photo_cache.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 
@@ -31,4 +32,5 @@ void clearUserScopedCaches(Ref ref) {
   ref.invalidate(userGameSettingsProvider);
   ref.invalidate(messagesFriendsOnlyProvider);
   ref.read(unreadGiftedCollectionsProvider.notifier).clear();
+  clearProfilePhotoCachesFromRef(ref);
 }

@@ -927,6 +927,16 @@
   "profileCropHint": "Phóng to và di chuyển ảnh",
   "profileApply": "Áp dụng",
   "profilePreparing": "Đang chuẩn bị…",
+  "profileGalleryTitle": "Ảnh",
+  "profileGalleryAdd": "Thêm ảnh",
+  "profileMakePrimary": "Đặt làm ảnh chính",
+  "profilePhotoDelete": "Xóa ảnh",
+  "profilePhotosLimit": "Có thể tải lên tối đa 3 ảnh",
+  "profilePhotosEmpty": "Chưa có ảnh",
+  "profilePhotoUploadFailed": "Không tải được ảnh",
+  "profilePhotoDeleteFailed": "Không xóa được ảnh",
+  "profilePhotoTooLarge": "Ảnh quá lớn",
+  "profileSetPrimaryFailed": "Không đặt được làm ảnh chính",
   "timeSecondsShort": "{seconds} giây",
   "@timeSecondsShort": {
     "placeholders": {

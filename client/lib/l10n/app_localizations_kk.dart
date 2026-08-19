@@ -1822,6 +1822,36 @@ class AppLocalizationsKk extends AppLocalizations {
   String get profilePreparing => 'Дайындалуда…';
 
   @override
+  String get profileGalleryTitle => 'Фото';
+
+  @override
+  String get profileGalleryAdd => 'Фото қосу';
+
+  @override
+  String get profileMakePrimary => 'Негізгі ету';
+
+  @override
+  String get profilePhotoDelete => 'Фотоны жою';
+
+  @override
+  String get profilePhotosLimit => 'Ең көбі 3 фото жүктеуге болады';
+
+  @override
+  String get profilePhotosEmpty => 'Әзірге фото жоқ';
+
+  @override
+  String get profilePhotoUploadFailed => 'Фото жүктелмеді';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Фото жойылмады';
+
+  @override
+  String get profilePhotoTooLarge => 'Фото тым үлкен';
+
+  @override
+  String get profileSetPrimaryFailed => 'Негізгі ету мүмкін болмады';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds с';
   }

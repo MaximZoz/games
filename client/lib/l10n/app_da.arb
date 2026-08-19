@@ -927,6 +927,16 @@
   "profileCropHint": "Zoom og flyt fotoet",
   "profileApply": "Anvend",
   "profilePreparing": "Forbereder…",
+  "profileGalleryTitle": "Billeder",
+  "profileGalleryAdd": "Tilføj billede",
+  "profileMakePrimary": "Gør til primær",
+  "profilePhotoDelete": "Slet billede",
+  "profilePhotosLimit": "Du kan uploade op til 3 billeder",
+  "profilePhotosEmpty": "Ingen billeder endnu",
+  "profilePhotoUploadFailed": "Kunne ikke uploade billedet",
+  "profilePhotoDeleteFailed": "Kunne ikke slette billedet",
+  "profilePhotoTooLarge": "Billedet er for stort",
+  "profileSetPrimaryFailed": "Kunne ikke indstille som primær",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

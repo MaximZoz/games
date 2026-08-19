@@ -979,6 +979,16 @@
   "profileCropHint": "Zoom and move the photo",
   "profileApply": "Apply",
   "profilePreparing": "Preparing…",
+  "profileGalleryTitle": "Photos",
+  "profileGalleryAdd": "Add photo",
+  "profileMakePrimary": "Make primary",
+  "profilePhotoDelete": "Delete photo",
+  "profilePhotosLimit": "You can upload up to 3 photos",
+  "profilePhotosEmpty": "No photos yet",
+  "profilePhotoUploadFailed": "Could not upload photo",
+  "profilePhotoDeleteFailed": "Could not delete photo",
+  "profilePhotoTooLarge": "Photo is too large",
+  "profileSetPrimaryFailed": "Could not set as primary",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

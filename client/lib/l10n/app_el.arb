@@ -927,6 +927,16 @@
   "profileCropHint": "Μεγεθύνετε και μετακινήστε τη φωτογραφία",
   "profileApply": "Εφαρμογή",
   "profilePreparing": "Προετοιμασία…",
+  "profileGalleryTitle": "Φωτογραφίες",
+  "profileGalleryAdd": "Προσθήκη φωτογραφίας",
+  "profileMakePrimary": "Ορισμός ως κύρια",
+  "profilePhotoDelete": "Διαγραφή φωτογραφίας",
+  "profilePhotosLimit": "Μπορείτε να ανεβάσετε έως 3 φωτογραφίες",
+  "profilePhotosEmpty": "Δεν υπάρχουν φωτογραφίες",
+  "profilePhotoUploadFailed": "Αποτυχία μεταφόρτωσης",
+  "profilePhotoDeleteFailed": "Αποτυχία διαγραφής",
+  "profilePhotoTooLarge": "Η φωτογραφία είναι πολύ μεγάλη",
+  "profileSetPrimaryFailed": "Αποτυχία ορισμού ως κύρια",
   "timeSecondsShort": "{seconds} δ",
   "@timeSecondsShort": {
     "placeholders": {

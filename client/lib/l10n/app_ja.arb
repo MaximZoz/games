@@ -927,6 +927,16 @@
   "profileCropHint": "写真を拡大・移動",
   "profileApply": "適用",
   "profilePreparing": "準備中…",
+  "profileGalleryTitle": "写真",
+  "profileGalleryAdd": "写真を追加",
+  "profileMakePrimary": "メインにする",
+  "profilePhotoDelete": "写真を削除",
+  "profilePhotosLimit": "写真は3枚までです",
+  "profilePhotosEmpty": "写真はまだありません",
+  "profilePhotoUploadFailed": "写真をアップロードできませんでした",
+  "profilePhotoDeleteFailed": "写真を削除できませんでした",
+  "profilePhotoTooLarge": "写真が大きすぎます",
+  "profileSetPrimaryFailed": "メインに設定できませんでした",
   "timeSecondsShort": "{seconds} 秒",
   "@timeSecondsShort": {
     "placeholders": {

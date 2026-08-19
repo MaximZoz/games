@@ -1822,6 +1822,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profilePreparing => 'جاري التحضير…';
 
   @override
+  String get profileGalleryTitle => 'الصور';
+
+  @override
+  String get profileGalleryAdd => 'إضافة صورة';
+
+  @override
+  String get profileMakePrimary => 'تعيين كصورة رئيسية';
+
+  @override
+  String get profilePhotoDelete => 'حذف الصورة';
+
+  @override
+  String get profilePhotosLimit => 'يمكنك رفع 3 صور كحد أقصى';
+
+  @override
+  String get profilePhotosEmpty => 'لا توجد صور بعد';
+
+  @override
+  String get profilePhotoUploadFailed => 'تعذر رفع الصورة';
+
+  @override
+  String get profilePhotoDeleteFailed => 'تعذر حذف الصورة';
+
+  @override
+  String get profilePhotoTooLarge => 'الصورة كبيرة جداً';
+
+  @override
+  String get profileSetPrimaryFailed => 'تعذر تعيينها كصورة رئيسية';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds ث';
   }

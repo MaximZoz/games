@@ -927,6 +927,16 @@
   "profileCropHint": "Zoomez et déplacez la photo",
   "profileApply": "Appliquer",
   "profilePreparing": "Préparation…",
+  "profileGalleryTitle": "Photos",
+  "profileGalleryAdd": "Ajouter une photo",
+  "profileMakePrimary": "Définir comme principale",
+  "profilePhotoDelete": "Supprimer la photo",
+  "profilePhotosLimit": "Vous pouvez ajouter jusqu’à 3 photos",
+  "profilePhotosEmpty": "Pas encore de photos",
+  "profilePhotoUploadFailed": "Impossible d’ajouter la photo",
+  "profilePhotoDeleteFailed": "Impossible de supprimer la photo",
+  "profilePhotoTooLarge": "La photo est trop volumineuse",
+  "profileSetPrimaryFailed": "Impossible de définir comme principale",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

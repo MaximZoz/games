@@ -927,6 +927,16 @@
   "profileCropHint": "Zoom en verplaats de foto",
   "profileApply": "Toepassen",
   "profilePreparing": "Voorbereiden…",
+  "profileGalleryTitle": "Foto’s",
+  "profileGalleryAdd": "Foto toevoegen",
+  "profileMakePrimary": "Als profielfoto",
+  "profilePhotoDelete": "Foto verwijderen",
+  "profilePhotosLimit": "Je kunt tot 3 foto’s uploaden",
+  "profilePhotosEmpty": "Nog geen foto’s",
+  "profilePhotoUploadFailed": "Foto uploaden mislukt",
+  "profilePhotoDeleteFailed": "Foto verwijderen mislukt",
+  "profilePhotoTooLarge": "Foto is te groot",
+  "profileSetPrimaryFailed": "Instellen als profielfoto mislukt",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

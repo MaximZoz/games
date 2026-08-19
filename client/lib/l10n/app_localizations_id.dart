@@ -1822,6 +1822,36 @@ class AppLocalizationsId extends AppLocalizations {
   String get profilePreparing => 'Menyiapkan…';
 
   @override
+  String get profileGalleryTitle => 'Foto';
+
+  @override
+  String get profileGalleryAdd => 'Tambah foto';
+
+  @override
+  String get profileMakePrimary => 'Jadikan utama';
+
+  @override
+  String get profilePhotoDelete => 'Hapus foto';
+
+  @override
+  String get profilePhotosLimit => 'Maksimal 3 foto';
+
+  @override
+  String get profilePhotosEmpty => 'Belum ada foto';
+
+  @override
+  String get profilePhotoUploadFailed => 'Gagal mengunggah foto';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Gagal menghapus foto';
+
+  @override
+  String get profilePhotoTooLarge => 'Foto terlalu besar';
+
+  @override
+  String get profileSetPrimaryFailed => 'Gagal menjadikan utama';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds d';
   }

@@ -927,6 +927,16 @@
   "profileCropHint": "Фотоны масштабтаңыз және жылжытыңыз",
   "profileApply": "Қолдану",
   "profilePreparing": "Дайындалуда…",
+  "profileGalleryTitle": "Фото",
+  "profileGalleryAdd": "Фото қосу",
+  "profileMakePrimary": "Негізгі ету",
+  "profilePhotoDelete": "Фотоны жою",
+  "profilePhotosLimit": "Ең көбі 3 фото жүктеуге болады",
+  "profilePhotosEmpty": "Әзірге фото жоқ",
+  "profilePhotoUploadFailed": "Фото жүктелмеді",
+  "profilePhotoDeleteFailed": "Фото жойылмады",
+  "profilePhotoTooLarge": "Фото тым үлкен",
+  "profileSetPrimaryFailed": "Негізгі ету мүмкін болмады",
   "timeSecondsShort": "{seconds} с",
   "@timeSecondsShort": {
     "placeholders": {

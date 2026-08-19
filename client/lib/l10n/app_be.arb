@@ -927,6 +927,16 @@
   "profileCropHint": "Маштабуйце і рухайце фота",
   "profileApply": "Ужыць",
   "profilePreparing": "Падрыхтоўка…",
+  "profileGalleryTitle": "Фота",
+  "profileGalleryAdd": "Дадаць фота",
+  "profileMakePrimary": "Зрабіць асноўным",
+  "profilePhotoDelete": "Выдаліць фота",
+  "profilePhotosLimit": "Можна загрузіць не больш за 3 фота",
+  "profilePhotosEmpty": "Пакуль няма фота",
+  "profilePhotoUploadFailed": "Не атрымалася загрузіць фота",
+  "profilePhotoDeleteFailed": "Не атрымалася выдаліць фота",
+  "profilePhotoTooLarge": "Фота занадта вялікае",
+  "profileSetPrimaryFailed": "Не атрымалася зрабіць асноўным",
   "timeSecondsShort": "{seconds} с",
   "@timeSecondsShort": {
     "placeholders": {

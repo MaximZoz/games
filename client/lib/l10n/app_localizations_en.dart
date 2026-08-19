@@ -1822,6 +1822,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilePreparing => 'Preparing…';
 
   @override
+  String get profileGalleryTitle => 'Photos';
+
+  @override
+  String get profileGalleryAdd => 'Add photo';
+
+  @override
+  String get profileMakePrimary => 'Make primary';
+
+  @override
+  String get profilePhotoDelete => 'Delete photo';
+
+  @override
+  String get profilePhotosLimit => 'You can upload up to 3 photos';
+
+  @override
+  String get profilePhotosEmpty => 'No photos yet';
+
+  @override
+  String get profilePhotoUploadFailed => 'Could not upload photo';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Could not delete photo';
+
+  @override
+  String get profilePhotoTooLarge => 'Photo is too large';
+
+  @override
+  String get profileSetPrimaryFailed => 'Could not set as primary';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

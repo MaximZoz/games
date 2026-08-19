@@ -1822,6 +1822,36 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profilePreparing => 'तैयारी…';
 
   @override
+  String get profileGalleryTitle => 'फ़ोटो';
+
+  @override
+  String get profileGalleryAdd => 'फ़ोटो जोड़ें';
+
+  @override
+  String get profileMakePrimary => 'मुख्य बनाएँ';
+
+  @override
+  String get profilePhotoDelete => 'फ़ोटो हटाएँ';
+
+  @override
+  String get profilePhotosLimit => 'अधिकतम 3 फ़ोटो अपलोड कर सकते हैं';
+
+  @override
+  String get profilePhotosEmpty => 'अभी कोई फ़ोटो नहीं';
+
+  @override
+  String get profilePhotoUploadFailed => 'फ़ोटो अपलोड नहीं हो सकी';
+
+  @override
+  String get profilePhotoDeleteFailed => 'फ़ोटो हटाई नहीं जा सकी';
+
+  @override
+  String get profilePhotoTooLarge => 'फ़ोटो बहुत बड़ी है';
+
+  @override
+  String get profileSetPrimaryFailed => 'मुख्य नहीं बनाई जा सकी';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds से';
   }

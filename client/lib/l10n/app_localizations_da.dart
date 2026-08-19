@@ -1822,6 +1822,36 @@ class AppLocalizationsDa extends AppLocalizations {
   String get profilePreparing => 'Forbereder…';
 
   @override
+  String get profileGalleryTitle => 'Billeder';
+
+  @override
+  String get profileGalleryAdd => 'Tilføj billede';
+
+  @override
+  String get profileMakePrimary => 'Gør til primær';
+
+  @override
+  String get profilePhotoDelete => 'Slet billede';
+
+  @override
+  String get profilePhotosLimit => 'Du kan uploade op til 3 billeder';
+
+  @override
+  String get profilePhotosEmpty => 'Ingen billeder endnu';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kunne ikke uploade billedet';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kunne ikke slette billedet';
+
+  @override
+  String get profilePhotoTooLarge => 'Billedet er for stort';
+
+  @override
+  String get profileSetPrimaryFailed => 'Kunne ikke indstille som primær';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

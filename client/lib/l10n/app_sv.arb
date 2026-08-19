@@ -927,6 +927,16 @@
   "profileCropHint": "Zooma och flytta fotot",
   "profileApply": "Använd",
   "profilePreparing": "Förbereder…",
+  "profileGalleryTitle": "Foton",
+  "profileGalleryAdd": "Lägg till foto",
+  "profileMakePrimary": "Gör till primär",
+  "profilePhotoDelete": "Ta bort foto",
+  "profilePhotosLimit": "Du kan ladda upp högst 3 foton",
+  "profilePhotosEmpty": "Inga foton ännu",
+  "profilePhotoUploadFailed": "Kunde inte ladda upp fotot",
+  "profilePhotoDeleteFailed": "Kunde inte ta bort fotot",
+  "profilePhotoTooLarge": "Fotot är för stort",
+  "profileSetPrimaryFailed": "Kunde inte ange som primär",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

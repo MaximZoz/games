@@ -127,9 +127,10 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 
 ### Бэкенд
 
-- Миграции `001..044`:
+- Миграции `001..055`:
   - `users`, `sessions`; `is_admin`; логин по `email` или `display_name`;
-    профильные поля (`age`, `gender`, `about`, `avatar_*`); баланс, ежедневная
+    профильные поля (`age`, `gender`, `about`, `avatar_*`); галерея профиля
+    (`user_profile_photos`, до 3 фото); баланс, ежедневная
     награда, серия входов, рефералы; `email_verified_at`;
   - `app_logs`; `friendships`, `friend_requests`;
   - чаты (`chats`, `chat_messages`, `chat_message_images`) и блокировки
@@ -152,6 +153,10 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
   - `GET /api/auth/oauth/{provider}/start` → callback → `/oauth/callback`
   - `GET /api/me`
   - `PUT /api/profile`
+  - `GET /api/profile/photos?user_id=` — список фото галереи (до 3)
+  - `GET /api/profile/photos/file?id=` — байты фото
+  - `POST /api/profile/photos` — загрузить/заменить фото слота
+  - `DELETE /api/profile/photos?id=` / `POST /api/profile/photos/delete` — удалить своё фото
 - Friends API:
   - `GET /api/friends`
   - `GET /api/friends/users-count`
@@ -210,7 +215,7 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 - Вход через OAuth (Google/Apple/Yandex/VK), если настроены провайдеры.
 - Подтверждение email и восстановление пароля по коду.
 - Guard маршрутов (в т.ч. `/admin`) и редирект на `/login` при невалидной сессии.
-- Профиль с редактированием и аватаром.
+- Профиль с редактированием, аватаром и галереей до 3 фото (просмотр на весь экран, «сделать основным»).
 - Адаптивный интерфейс: нижняя навигация на мобильных, `NavigationRail` на десктопе/landscape; на широких экранах магазин/инвентарь/монеты за вход — плитки по центру; учёт iOS PWA (чёлка, home indicator).
 - Локализация интерфейса (27+ языков).
 - Админка:
@@ -397,7 +402,7 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 
 - [x] Auth + refresh token flow
 - [x] Подтверждение email, сброс пароля, OAuth (Google/Apple/Yandex/VK)
-- [x] Профиль пользователя
+- [x] Профиль пользователя (аватар + галерея до 3 фото)
 - [x] Админка пользователей
 - [x] Система логирования frontend/backend в БД
 - [x] Модуль друзей (API + UI)

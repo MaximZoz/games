@@ -1822,6 +1822,36 @@ class AppLocalizationsFi extends AppLocalizations {
   String get profilePreparing => 'Valmistellaan…';
 
   @override
+  String get profileGalleryTitle => 'Kuvat';
+
+  @override
+  String get profileGalleryAdd => 'Lisää kuva';
+
+  @override
+  String get profileMakePrimary => 'Aseta pääkuvaksi';
+
+  @override
+  String get profilePhotoDelete => 'Poista kuva';
+
+  @override
+  String get profilePhotosLimit => 'Voit ladata enintään 3 kuvaa';
+
+  @override
+  String get profilePhotosEmpty => 'Ei kuvia vielä';
+
+  @override
+  String get profilePhotoUploadFailed => 'Kuvan lataus epäonnistui';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Kuvan poisto epäonnistui';
+
+  @override
+  String get profilePhotoTooLarge => 'Kuva on liian suuri';
+
+  @override
+  String get profileSetPrimaryFailed => 'Pääkuvaksi asettaminen epäonnistui';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

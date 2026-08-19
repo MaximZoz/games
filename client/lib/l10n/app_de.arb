@@ -927,6 +927,16 @@
   "profileCropHint": "Foto zoomen und verschieben",
   "profileApply": "Übernehmen",
   "profilePreparing": "Vorbereitung…",
+  "profileGalleryTitle": "Fotos",
+  "profileGalleryAdd": "Foto hinzufügen",
+  "profileMakePrimary": "Als Hauptbild",
+  "profilePhotoDelete": "Foto löschen",
+  "profilePhotosLimit": "Maximal 3 Fotos",
+  "profilePhotosEmpty": "Noch keine Fotos",
+  "profilePhotoUploadFailed": "Foto konnte nicht hochgeladen werden",
+  "profilePhotoDeleteFailed": "Foto konnte nicht gelöscht werden",
+  "profilePhotoTooLarge": "Foto ist zu groß",
+  "profileSetPrimaryFailed": "Konnte nicht als Hauptbild gesetzt werden",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

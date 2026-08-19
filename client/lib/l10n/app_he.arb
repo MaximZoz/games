@@ -927,6 +927,16 @@
   "profileCropHint": "התקרבו והזיזו את התמונה",
   "profileApply": "החלה",
   "profilePreparing": "מכין…",
+  "profileGalleryTitle": "תמונות",
+  "profileGalleryAdd": "הוספת תמונה",
+  "profileMakePrimary": "הגדר כראשית",
+  "profilePhotoDelete": "מחק תמונה",
+  "profilePhotosLimit": "אפשר להעלות עד 3 תמונות",
+  "profilePhotosEmpty": "עדיין אין תמונות",
+  "profilePhotoUploadFailed": "לא ניתן להעלות את התמונה",
+  "profilePhotoDeleteFailed": "לא ניתן למחוק את התמונה",
+  "profilePhotoTooLarge": "התמונה גדולה מדי",
+  "profileSetPrimaryFailed": "לא ניתן להגדיר כראשית",
   "timeSecondsShort": "{seconds} שנ׳",
   "@timeSecondsShort": {
     "placeholders": {

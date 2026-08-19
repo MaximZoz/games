@@ -1822,6 +1822,36 @@ class AppLocalizationsEl extends AppLocalizations {
   String get profilePreparing => 'Προετοιμασία…';
 
   @override
+  String get profileGalleryTitle => 'Φωτογραφίες';
+
+  @override
+  String get profileGalleryAdd => 'Προσθήκη φωτογραφίας';
+
+  @override
+  String get profileMakePrimary => 'Ορισμός ως κύρια';
+
+  @override
+  String get profilePhotoDelete => 'Διαγραφή φωτογραφίας';
+
+  @override
+  String get profilePhotosLimit => 'Μπορείτε να ανεβάσετε έως 3 φωτογραφίες';
+
+  @override
+  String get profilePhotosEmpty => 'Δεν υπάρχουν φωτογραφίες';
+
+  @override
+  String get profilePhotoUploadFailed => 'Αποτυχία μεταφόρτωσης';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Αποτυχία διαγραφής';
+
+  @override
+  String get profilePhotoTooLarge => 'Η φωτογραφία είναι πολύ μεγάλη';
+
+  @override
+  String get profileSetPrimaryFailed => 'Αποτυχία ορισμού ως κύρια';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds δ';
   }
