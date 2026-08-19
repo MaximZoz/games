@@ -1210,9 +1210,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         final picker = ImagePicker();
         final xFile = await picker.pickImage(
           source: ImageSource.gallery,
-          maxWidth: 256,
-          maxHeight: 256,
-          imageQuality: 70,
+          maxWidth: 1280,
+          maxHeight: 1280,
+          imageQuality: 88,
         );
         if (xFile == null || !mounted) return;
         rawBytes = await xFile.readAsBytes();
