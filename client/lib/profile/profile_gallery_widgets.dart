@@ -64,7 +64,7 @@ class ProfilePhotoViewerPage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage> {
-  int? _selectedIndex;
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -84,10 +84,15 @@ class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage>
         avatarValue: avatarValue,
         letter: widget.letter,
       ),
+      avatarThumb: ProfileAvatarHeroImage(
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        letter: widget.letter,
+        fit: BoxFit.cover,
+      ),
       imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) =>
           ProfilePhotoImage(photoId: photo.id, fit: fit),
-      onSelectMain: () => setState(() => _selectedIndex = null),
-      onSelectPhoto: (index) => setState(() => _selectedIndex = index),
+      onSelectIndex: (index) => setState(() => _selectedIndex = index),
       onMakePrimary: widget.canManage
           ? (photo) => setProfilePhotoAsPrimary(
                 context: context,
@@ -110,11 +115,13 @@ class ProfileAvatarHeroImage extends StatelessWidget {
     required this.avatarKind,
     this.avatarValue,
     required this.letter,
+    this.fit = BoxFit.contain,
   });
 
   final String avatarKind;
   final String? avatarValue;
   final String letter;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -123,21 +130,26 @@ class ProfileAvatarHeroImage extends StatelessWidget {
       if (img != null) {
         return Image(
           image: img,
-          fit: BoxFit.contain,
+          fit: fit,
+          width: double.infinity,
+          height: double.infinity,
           filterQuality: FilterQuality.high,
         );
       }
     }
-    return Center(
-      child: CircleAvatar(
-        radius: 80,
-        backgroundColor: AppColors.accentSoft,
-        child: Text(
-          letter.trim().isEmpty ? '?' : letter.trim()[0].toUpperCase(),
-          style: const TextStyle(
-            fontSize: 56,
-            fontWeight: FontWeight.w800,
-            color: AppColors.accentStart,
+    final glyph = letter.trim().isEmpty ? '?' : letter.trim()[0].toUpperCase();
+    return AspectRatio(
+      aspectRatio: 1,
+      child: ColoredBox(
+        color: AppColors.accentSoft,
+        child: Center(
+          child: Text(
+            glyph,
+            style: const TextStyle(
+              fontSize: 56,
+              fontWeight: FontWeight.w800,
+              color: AppColors.accentStart,
+            ),
           ),
         ),
       ),
@@ -145,7 +157,7 @@ class ProfileAvatarHeroImage extends StatelessWidget {
   }
 }
 
-class ProfilePhotoViewerBody extends StatelessWidget {
+class ProfilePhotoViewerBody extends StatefulWidget {
   const ProfilePhotoViewerBody({
     super.key,
     required this.photos,
@@ -153,30 +165,96 @@ class ProfilePhotoViewerBody extends StatelessWidget {
     required this.canManage,
     required this.mainPhoto,
     required this.imageBuilder,
-    required this.onSelectMain,
-    required this.onSelectPhoto,
+    required this.onSelectIndex,
     required this.onClose,
+    this.avatarThumb,
     this.onMakePrimary,
   });
 
   final List<ProfilePhotoMeta> photos;
-  final int? selectedIndex;
+  final int selectedIndex;
   final bool canManage;
   final Widget mainPhoto;
+  final Widget? avatarThumb;
   final Widget Function(ProfilePhotoMeta photo, {BoxFit fit}) imageBuilder;
-  final VoidCallback onSelectMain;
-  final ValueChanged<int> onSelectPhoto;
+  final ValueChanged<int> onSelectIndex;
   final VoidCallback onClose;
   final ValueChanged<ProfilePhotoMeta>? onMakePrimary;
 
   @override
+  State<ProfilePhotoViewerBody> createState() => _ProfilePhotoViewerBodyState();
+}
+
+class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
+  late final PageController _pageController;
+
+  int get _pageCount => 1 + widget.photos.length;
+
+  int get _safeIndex {
+    if (_pageCount <= 1) return 0;
+    return widget.selectedIndex.clamp(0, _pageCount - 1);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _safeIndex);
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfilePhotoViewerBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = _safeIndex;
+    if (oldWidget.selectedIndex == widget.selectedIndex) return;
+    if (!_pageController.hasClients) return;
+    if (_pageController.page?.round() == next) return;
+    _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  ProfilePhotoMeta? get _selectedGalleryPhoto {
+    final index = _safeIndex;
+    if (index <= 0 || index > widget.photos.length) return null;
+    return widget.photos[index - 1];
+  }
+
+  Widget _pageAt(int index) {
+    if (index <= 0) return widget.mainPhoto;
+    return widget.imageBuilder(
+      widget.photos[index - 1],
+      fit: BoxFit.contain,
+    );
+  }
+
+  Widget _thumbAt(int index) {
+    if (index <= 0) {
+      return KeyedSubtree(
+        key: const ValueKey('profile-photo-thumb-avatar'),
+        child: widget.avatarThumb ?? widget.mainPhoto,
+      );
+    }
+    final photo = widget.photos[index - 1];
+    return KeyedSubtree(
+      key: ValueKey('profile-photo-thumb-${photo.id}'),
+      child: widget.imageBuilder(photo),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final showingGallery = selectedIndex != null &&
-        selectedIndex! >= 0 &&
-        selectedIndex! < photos.length;
-    final selectedPhoto = showingGallery ? photos[selectedIndex!] : null;
+    final selectedPhoto = _selectedGalleryPhoto;
     final topPad = MediaQuery.viewPaddingOf(context).top;
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
+    final showStrip = widget.photos.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -186,26 +264,30 @@ class ProfilePhotoViewerBody extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                InteractiveViewer(
-                  minScale: 1,
-                  maxScale: 5,
-                  child: Center(
-                    child: KeyedSubtree(
-                      key: const ValueKey('profile-viewer-main'),
-                      child: showingGallery
-                          ? imageBuilder(
-                              selectedPhoto!,
-                              fit: BoxFit.contain,
-                            )
-                          : mainPhoto,
-                    ),
-                  ),
+                PageView.builder(
+                  controller: _pageController,
+                  itemCount: _pageCount,
+                  onPageChanged: widget.onSelectIndex,
+                  itemBuilder: (context, i) {
+                    return InteractiveViewer(
+                      minScale: 1,
+                      maxScale: 5,
+                      child: Center(
+                        child: KeyedSubtree(
+                          key: i == 0
+                              ? const ValueKey('profile-viewer-main')
+                              : ValueKey('profile-viewer-page-$i'),
+                          child: _pageAt(i),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Positioned(
                   top: topPad + 4,
                   right: 8,
                   child: IconButton(
-                    onPressed: onClose,
+                    onPressed: widget.onClose,
                     icon: const Icon(
                       Icons.close_rounded,
                       color: Colors.white,
@@ -216,14 +298,16 @@ class ProfilePhotoViewerBody extends StatelessWidget {
               ],
             ),
           ),
-          if (selectedPhoto != null && canManage && onMakePrimary != null)
+          if (selectedPhoto != null &&
+              widget.canManage &&
+              widget.onMakePrimary != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   key: ValueKey('profile-make-primary-${selectedPhoto.id}'),
-                  onPressed: () => onMakePrimary!(selectedPhoto),
+                  onPressed: () => widget.onMakePrimary!(selectedPhoto),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white70),
@@ -235,7 +319,7 @@ class ProfilePhotoViewerBody extends StatelessWidget {
                 ),
               ),
             ),
-          if (photos.isNotEmpty)
+          if (showStrip)
             ColoredBox(
               key: const ValueKey('profile-viewer-strip'),
               color: const Color(0xE6000000),
@@ -245,18 +329,12 @@ class ProfilePhotoViewerBody extends StatelessWidget {
                   height: 72,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: photos.length.clamp(0, maxProfilePhotos),
+                    itemCount: _pageCount,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
-                      final selected = i == selectedIndex;
+                      final selected = i == _safeIndex;
                       return GestureDetector(
-                        onTap: () {
-                          if (i == selectedIndex) {
-                            onSelectMain();
-                          } else {
-                            onSelectPhoto(i);
-                          }
-                        },
+                        onTap: () => widget.onSelectIndex(i),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 160),
                           width: 72,
@@ -269,10 +347,7 @@ class ProfilePhotoViewerBody extends StatelessWidget {
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: KeyedSubtree(
-                            key: ValueKey('profile-photo-thumb-${photos[i].id}'),
-                            child: imageBuilder(photos[i]),
-                          ),
+                          child: _thumbAt(i),
                         ),
                       );
                     },

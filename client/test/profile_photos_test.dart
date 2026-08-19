@@ -134,15 +134,14 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: ProfilePhotoViewerBody(
           photos: const [],
-          selectedIndex: null,
+          selectedIndex: 0,
           canManage: true,
           mainPhoto: const ColoredBox(
             key: ValueKey('hero'),
             color: Colors.purple,
           ),
           imageBuilder: _emptyImage,
-          onSelectMain: () {},
-          onSelectPhoto: _noop,
+          onSelectIndex: _noop,
           onClose: () {},
           onMakePrimary: (_) {},
         ),
@@ -167,13 +166,16 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: ProfilePhotoViewerBody(
           photos: const [photo],
-          selectedIndex: null,
+          selectedIndex: 0,
           canManage: true,
           mainPhoto: const ColoredBox(color: Colors.purple),
+          avatarThumb: const ColoredBox(
+            key: ValueKey('avatar-thumb'),
+            color: Colors.orange,
+          ),
           imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
               const ColoredBox(color: Colors.blue),
-          onSelectMain: () {},
-          onSelectPhoto: _noop,
+          onSelectIndex: _noop,
           onClose: () {},
           onMakePrimary: (_) {},
         ),
@@ -181,6 +183,7 @@ void main() {
     );
     expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-viewer-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-avatar')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-photo-thumb-p1')), findsOneWidget);
     expect(find.text('Сделать основным'), findsNothing);
 
@@ -191,13 +194,13 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: ProfilePhotoViewerBody(
           photos: const [photo],
-          selectedIndex: 0,
+          selectedIndex: 1,
           canManage: true,
           mainPhoto: const ColoredBox(color: Colors.purple),
+          avatarThumb: const ColoredBox(color: Colors.orange),
           imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
               const ColoredBox(color: Colors.blue),
-          onSelectMain: () {},
-          onSelectPhoto: _noop,
+          onSelectIndex: _noop,
           onClose: () {},
           onMakePrimary: (_) {},
         ),
@@ -214,19 +217,79 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: ProfilePhotoViewerBody(
           photos: const [photo],
-          selectedIndex: 0,
+          selectedIndex: 1,
           canManage: false,
           mainPhoto: const ColoredBox(color: Colors.purple),
+          avatarThumb: const ColoredBox(color: Colors.orange),
           imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
               const ColoredBox(color: Colors.blue),
-          onSelectMain: () {},
-          onSelectPhoto: _noop,
+          onSelectIndex: _noop,
           onClose: () {},
         ),
       ),
     );
     await tester.pump();
     expect(find.text('Сделать основным'), findsNothing);
+  });
+
+  testWidgets('аватар в просмотре — прямоугольное фото, не круг', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 300,
+            child: ProfileAvatarHeroImage(
+              avatarKind: 'color',
+              letter: 'A',
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(CircleAvatar), findsNothing);
+    expect(find.byType(AspectRatio), findsOneWidget);
+    expect(find.text('A'), findsOneWidget);
+  });
+
+  testWidgets('лента: тап по аватару возвращает на основное фото', (tester) async {
+    const photo = ProfilePhotoMeta(
+      id: 'p1',
+      userId: 'u1',
+      slot: 0,
+      imageMime: 'image/jpeg',
+    );
+    var index = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return ProfilePhotoViewerBody(
+              photos: const [photo],
+              selectedIndex: index,
+              canManage: true,
+              mainPhoto: const ColoredBox(color: Colors.purple),
+              avatarThumb: const ColoredBox(color: Colors.orange),
+              imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+                  const ColoredBox(color: Colors.blue),
+              onSelectIndex: (i) => setState(() => index = i),
+              onClose: () {},
+              onMakePrimary: (_) {},
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Сделать основным'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('profile-photo-thumb-avatar')));
+    await tester.pumpAndSettle();
+    expect(find.text('Сделать основным'), findsNothing);
+    expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
   });
 
   testWidgets('слоты сообщают форме о составе фото', (tester) async {
