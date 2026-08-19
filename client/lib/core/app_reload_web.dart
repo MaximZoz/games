@@ -10,6 +10,18 @@ Future<void> reloadApp() async {
         await web.window.navigator.serviceWorker.getRegistrations().toDart;
     for (final reg in regs.toDart) {
       try {
+        final notes = await reg.getNotifications().toDart;
+        for (final n in notes.toDart) {
+          try {
+            n.close();
+          } catch (_) {}
+        }
+      } catch (_) {}
+      try {
+        final worker = reg.active;
+        worker?.postMessage({'type': 'clear_all_notifications'}.jsify());
+      } catch (_) {}
+      try {
         await reg.unregister().toDart;
       } catch (_) {}
     }

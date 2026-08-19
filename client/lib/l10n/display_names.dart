@@ -5,6 +5,11 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 const kGenderMaleApi = 'Мужской';
 const kGenderFemaleApi = 'Женский';
 
+bool isSupportDisplayName(String? name) {
+  final n = (name ?? '').trim().toLowerCase();
+  return n == 'поддержка' || n == 'support';
+}
+
 /// Локализует служебные имена с сервера (бот / игрок по умолчанию).
 String localizeDisplayName(String? name, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
