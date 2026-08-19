@@ -598,6 +598,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'Ve vývoji';
 
   @override

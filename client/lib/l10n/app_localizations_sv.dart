@@ -598,6 +598,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'Under utveckling';
 
   @override

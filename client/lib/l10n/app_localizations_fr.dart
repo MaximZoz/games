@@ -598,6 +598,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'En développement';
 
   @override

@@ -598,6 +598,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesPoker => '포커';
 
   @override
+  String get gamesUno => '우노';
+
+  @override
   String get gamesInDevelopment => '개발 중';
 
   @override

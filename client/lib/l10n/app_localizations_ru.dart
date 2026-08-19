@@ -598,6 +598,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
   String get gamesInDevelopment => 'В разработке';
 
   @override

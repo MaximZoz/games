@@ -598,6 +598,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'In ontwikkeling';
 
   @override

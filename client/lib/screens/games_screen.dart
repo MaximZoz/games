@@ -1109,6 +1109,8 @@ class _GamesPageContent extends ConsumerWidget {
             isOffline: isOffline,
             stakeOptionsList: stakeOptionsList,
           ),
+          const SizedBox(height: 16),
+          const _UnoComingSoonCard(),
         ],
       );
       if (!centerCards) return column;
@@ -2433,6 +2435,81 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
         isFinding: _finding,
         isDesktop: isDesktop,
         isMedium: isMedium,
+      ),
+    );
+  }
+}
+
+/// Карточка «Уно» — превью; игра пока в разработке.
+class _UnoComingSoonCard extends StatelessWidget {
+  const _UnoComingSoonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+    final theme = Theme.of(context);
+
+    return GradientCard(
+      animate: false,
+      padding: EdgeInsets.symmetric(
+        horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
+        vertical: isMedium ? 16 : (isDesktop ? 22 : 20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GameCardHeader(
+            title: context.l10n.gamesUno,
+            icon: Icons.style_rounded,
+            isDesktop: isDesktop,
+            isMedium: isMedium,
+          ),
+          SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
+          Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(
+              vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
+              horizontal: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.accentStart.withValues(alpha: 0.12),
+                  AppColors.accentEnd.withValues(alpha: 0.18),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accentStart.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.construction_rounded,
+                  size: 20,
+                  color: AppColors.accentStart.withValues(alpha: 0.95),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.gamesInDevelopment,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.accentStart,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -598,6 +598,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesPoker => 'Pokeri';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'Kehityksessä';
 
   @override

@@ -598,6 +598,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
   String get gamesInDevelopment => 'В розробці';
 
   @override
