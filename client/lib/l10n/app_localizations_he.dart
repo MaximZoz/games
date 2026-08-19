@@ -1822,6 +1822,36 @@ class AppLocalizationsHe extends AppLocalizations {
   String get profilePreparing => 'מכין…';
 
   @override
+  String get profileGalleryTitle => 'תמונות';
+
+  @override
+  String get profileGalleryAdd => 'הוספת תמונה';
+
+  @override
+  String get profileMakePrimary => 'הגדר כראשית';
+
+  @override
+  String get profilePhotoDelete => 'מחק תמונה';
+
+  @override
+  String get profilePhotosLimit => 'אפשר להעלות עד 3 תמונות';
+
+  @override
+  String get profilePhotosEmpty => 'עדיין אין תמונות';
+
+  @override
+  String get profilePhotoUploadFailed => 'לא ניתן להעלות את התמונה';
+
+  @override
+  String get profilePhotoDeleteFailed => 'לא ניתן למחוק את התמונה';
+
+  @override
+  String get profilePhotoTooLarge => 'התמונה גדולה מדי';
+
+  @override
+  String get profileSetPrimaryFailed => 'לא ניתן להגדיר כראשית';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds שנ׳';
   }

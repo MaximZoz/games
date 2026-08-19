@@ -927,6 +927,16 @@
   "profileCropHint": "फ़ोटो ज़ूम करें और घुमाएँ",
   "profileApply": "लागू करें",
   "profilePreparing": "तैयारी…",
+  "profileGalleryTitle": "फ़ोटो",
+  "profileGalleryAdd": "फ़ोटो जोड़ें",
+  "profileMakePrimary": "मुख्य बनाएँ",
+  "profilePhotoDelete": "फ़ोटो हटाएँ",
+  "profilePhotosLimit": "अधिकतम 3 फ़ोटो अपलोड कर सकते हैं",
+  "profilePhotosEmpty": "अभी कोई फ़ोटो नहीं",
+  "profilePhotoUploadFailed": "फ़ोटो अपलोड नहीं हो सकी",
+  "profilePhotoDeleteFailed": "फ़ोटो हटाई नहीं जा सकी",
+  "profilePhotoTooLarge": "फ़ोटो बहुत बड़ी है",
+  "profileSetPrimaryFailed": "मुख्य नहीं बनाई जा सकी",
   "timeSecondsShort": "{seconds} से",
   "@timeSecondsShort": {
     "placeholders": {

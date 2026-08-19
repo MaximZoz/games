@@ -927,6 +927,16 @@
   "profileCropHint": "Přibližte a posuňte fotku",
   "profileApply": "Použít",
   "profilePreparing": "Příprava…",
+  "profileGalleryTitle": "Fotky",
+  "profileGalleryAdd": "Přidat fotku",
+  "profileMakePrimary": "Nastavit jako hlavní",
+  "profilePhotoDelete": "Smazat fotku",
+  "profilePhotosLimit": "Můžete nahrát nejvýše 3 fotky",
+  "profilePhotosEmpty": "Zatím žádné fotky",
+  "profilePhotoUploadFailed": "Fotku se nepodařilo nahrát",
+  "profilePhotoDeleteFailed": "Fotku se nepodařilo smazat",
+  "profilePhotoTooLarge": "Fotka je příliš velká",
+  "profileSetPrimaryFailed": "Nepodařilo se nastavit jako hlavní",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

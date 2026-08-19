@@ -1072,6 +1072,16 @@
   "profileCropHint": "Масштабируй и двигай фото",
   "profileApply": "Применить",
   "profilePreparing": "Подготовка…",
+  "profileGalleryTitle": "Фото",
+  "profileGalleryAdd": "Добавить фото",
+  "profileMakePrimary": "Сделать основным",
+  "profilePhotoDelete": "Удалить фото",
+  "profilePhotosLimit": "Можно загрузить не больше 3 фото",
+  "profilePhotosEmpty": "Пока нет фото",
+  "profilePhotoUploadFailed": "Не удалось загрузить фото",
+  "profilePhotoDeleteFailed": "Не удалось удалить фото",
+  "profilePhotoTooLarge": "Фото слишком большое",
+  "profileSetPrimaryFailed": "Не удалось сделать основным",
   "timeSecondsShort": "{seconds} с",
   "@timeSecondsShort": {
     "placeholders": {

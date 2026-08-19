@@ -927,6 +927,16 @@
   "profileCropHint": "Zoomaa ja siirrä kuvaa",
   "profileApply": "Käytä",
   "profilePreparing": "Valmistellaan…",
+  "profileGalleryTitle": "Kuvat",
+  "profileGalleryAdd": "Lisää kuva",
+  "profileMakePrimary": "Aseta pääkuvaksi",
+  "profilePhotoDelete": "Poista kuva",
+  "profilePhotosLimit": "Voit ladata enintään 3 kuvaa",
+  "profilePhotosEmpty": "Ei kuvia vielä",
+  "profilePhotoUploadFailed": "Kuvan lataus epäonnistui",
+  "profilePhotoDeleteFailed": "Kuvan poisto epäonnistui",
+  "profilePhotoTooLarge": "Kuva on liian suuri",
+  "profileSetPrimaryFailed": "Pääkuvaksi asettaminen epäonnistui",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

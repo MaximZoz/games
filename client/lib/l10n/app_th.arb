@@ -927,6 +927,16 @@
   "profileCropHint": "ซูมและเลื่อนรูป",
   "profileApply": "ใช้",
   "profilePreparing": "กำลังเตรียม…",
+  "profileGalleryTitle": "รูปภาพ",
+  "profileGalleryAdd": "เพิ่มรูป",
+  "profileMakePrimary": "ตั้งเป็นรูปหลัก",
+  "profilePhotoDelete": "ลบรูป",
+  "profilePhotosLimit": "อัปโหลดได้สูงสุด 3 รูป",
+  "profilePhotosEmpty": "ยังไม่มีรูป",
+  "profilePhotoUploadFailed": "อัปโหลดรูปไม่สำเร็จ",
+  "profilePhotoDeleteFailed": "ลบรูปไม่สำเร็จ",
+  "profilePhotoTooLarge": "รูปใหญ่เกินไป",
+  "profileSetPrimaryFailed": "ตั้งเป็นรูปหลักไม่สำเร็จ",
   "timeSecondsShort": "{seconds} วิ",
   "@timeSecondsShort": {
     "placeholders": {

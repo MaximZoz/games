@@ -1822,6 +1822,36 @@ class AppLocalizationsTh extends AppLocalizations {
   String get profilePreparing => 'กำลังเตรียม…';
 
   @override
+  String get profileGalleryTitle => 'รูปภาพ';
+
+  @override
+  String get profileGalleryAdd => 'เพิ่มรูป';
+
+  @override
+  String get profileMakePrimary => 'ตั้งเป็นรูปหลัก';
+
+  @override
+  String get profilePhotoDelete => 'ลบรูป';
+
+  @override
+  String get profilePhotosLimit => 'อัปโหลดได้สูงสุด 3 รูป';
+
+  @override
+  String get profilePhotosEmpty => 'ยังไม่มีรูป';
+
+  @override
+  String get profilePhotoUploadFailed => 'อัปโหลดรูปไม่สำเร็จ';
+
+  @override
+  String get profilePhotoDeleteFailed => 'ลบรูปไม่สำเร็จ';
+
+  @override
+  String get profilePhotoTooLarge => 'รูปใหญ่เกินไป';
+
+  @override
+  String get profileSetPrimaryFailed => 'ตั้งเป็นรูปหลักไม่สำเร็จ';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds วิ';
   }

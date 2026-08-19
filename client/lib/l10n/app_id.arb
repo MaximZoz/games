@@ -927,6 +927,16 @@
   "profileCropHint": "Perbesar dan geser foto",
   "profileApply": "Terapkan",
   "profilePreparing": "Menyiapkan…",
+  "profileGalleryTitle": "Foto",
+  "profileGalleryAdd": "Tambah foto",
+  "profileMakePrimary": "Jadikan utama",
+  "profilePhotoDelete": "Hapus foto",
+  "profilePhotosLimit": "Maksimal 3 foto",
+  "profilePhotosEmpty": "Belum ada foto",
+  "profilePhotoUploadFailed": "Gagal mengunggah foto",
+  "profilePhotoDeleteFailed": "Gagal menghapus foto",
+  "profilePhotoTooLarge": "Foto terlalu besar",
+  "profileSetPrimaryFailed": "Gagal menjadikan utama",
   "timeSecondsShort": "{seconds} d",
   "@timeSecondsShort": {
     "placeholders": {

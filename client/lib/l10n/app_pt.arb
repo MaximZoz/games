@@ -927,6 +927,16 @@
   "profileCropHint": "Amplie e mova a foto",
   "profileApply": "Aplicar",
   "profilePreparing": "A preparar…",
+  "profileGalleryTitle": "Fotos",
+  "profileGalleryAdd": "Adicionar foto",
+  "profileMakePrimary": "Tornar principal",
+  "profilePhotoDelete": "Excluir foto",
+  "profilePhotosLimit": "Você pode enviar até 3 fotos",
+  "profilePhotosEmpty": "Ainda não há fotos",
+  "profilePhotoUploadFailed": "Não foi possível enviar a foto",
+  "profilePhotoDeleteFailed": "Não foi possível excluir a foto",
+  "profilePhotoTooLarge": "A foto é muito grande",
+  "profileSetPrimaryFailed": "Não foi possível definir como principal",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

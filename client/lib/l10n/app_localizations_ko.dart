@@ -1822,6 +1822,36 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profilePreparing => '준비 중…';
 
   @override
+  String get profileGalleryTitle => '사진';
+
+  @override
+  String get profileGalleryAdd => '사진 추가';
+
+  @override
+  String get profileMakePrimary => '대표 사진으로';
+
+  @override
+  String get profilePhotoDelete => '사진 삭제';
+
+  @override
+  String get profilePhotosLimit => '사진은 최대 3장까지 올릴 수 있습니다';
+
+  @override
+  String get profilePhotosEmpty => '아직 사진이 없습니다';
+
+  @override
+  String get profilePhotoUploadFailed => '사진을 올리지 못했습니다';
+
+  @override
+  String get profilePhotoDeleteFailed => '사진을 삭제하지 못했습니다';
+
+  @override
+  String get profilePhotoTooLarge => '사진이 너무 큽니다';
+
+  @override
+  String get profileSetPrimaryFailed => '대표 사진으로 설정하지 못했습니다';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds초';
   }

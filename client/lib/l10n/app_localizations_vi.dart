@@ -1822,6 +1822,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profilePreparing => 'Đang chuẩn bị…';
 
   @override
+  String get profileGalleryTitle => 'Ảnh';
+
+  @override
+  String get profileGalleryAdd => 'Thêm ảnh';
+
+  @override
+  String get profileMakePrimary => 'Đặt làm ảnh chính';
+
+  @override
+  String get profilePhotoDelete => 'Xóa ảnh';
+
+  @override
+  String get profilePhotosLimit => 'Có thể tải lên tối đa 3 ảnh';
+
+  @override
+  String get profilePhotosEmpty => 'Chưa có ảnh';
+
+  @override
+  String get profilePhotoUploadFailed => 'Không tải được ảnh';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Không xóa được ảnh';
+
+  @override
+  String get profilePhotoTooLarge => 'Ảnh quá lớn';
+
+  @override
+  String get profileSetPrimaryFailed => 'Không đặt được làm ảnh chính';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds giây';
   }

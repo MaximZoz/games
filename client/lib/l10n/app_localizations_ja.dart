@@ -1822,6 +1822,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profilePreparing => '準備中…';
 
   @override
+  String get profileGalleryTitle => '写真';
+
+  @override
+  String get profileGalleryAdd => '写真を追加';
+
+  @override
+  String get profileMakePrimary => 'メインにする';
+
+  @override
+  String get profilePhotoDelete => '写真を削除';
+
+  @override
+  String get profilePhotosLimit => '写真は3枚までです';
+
+  @override
+  String get profilePhotosEmpty => '写真はまだありません';
+
+  @override
+  String get profilePhotoUploadFailed => '写真をアップロードできませんでした';
+
+  @override
+  String get profilePhotoDeleteFailed => '写真を削除できませんでした';
+
+  @override
+  String get profilePhotoTooLarge => '写真が大きすぎます';
+
+  @override
+  String get profileSetPrimaryFailed => 'メインに設定できませんでした';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds 秒';
   }

@@ -8,6 +8,7 @@ import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/profile/profile_gallery_widgets.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -164,14 +165,18 @@ Future<void> showUserProfileDialog({
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _ProfileAvatar(
-                            displayName: name,
-                            avatarKind:
-                                friendUser?.avatarKind ?? avatarKind,
-                            avatarValue:
-                                friendUser?.avatarValue ?? avatarValue,
-                            frameCode: resolvedFrameCode,
-                            frameColor: resolvedFrameColor,
+                          TappableProfileAvatar(
+                            userId: id,
+                            canManage: isSelf,
+                            child: _ProfileAvatar(
+                              displayName: name,
+                              avatarKind:
+                                  friendUser?.avatarKind ?? avatarKind,
+                              avatarValue:
+                                  friendUser?.avatarValue ?? avatarValue,
+                              frameCode: resolvedFrameCode,
+                              frameColor: resolvedFrameColor,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(

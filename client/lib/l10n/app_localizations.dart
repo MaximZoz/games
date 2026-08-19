@@ -3503,6 +3503,66 @@ abstract class AppLocalizations {
   /// **'Подготовка…'**
   String get profilePreparing;
 
+  /// No description provided for @profileGalleryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото'**
+  String get profileGalleryTitle;
+
+  /// No description provided for @profileGalleryAdd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить фото'**
+  String get profileGalleryAdd;
+
+  /// No description provided for @profileMakePrimary.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать основным'**
+  String get profileMakePrimary;
+
+  /// No description provided for @profilePhotoDelete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить фото'**
+  String get profilePhotoDelete;
+
+  /// No description provided for @profilePhotosLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно загрузить не больше 3 фото'**
+  String get profilePhotosLimit;
+
+  /// No description provided for @profilePhotosEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет фото'**
+  String get profilePhotosEmpty;
+
+  /// No description provided for @profilePhotoUploadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить фото'**
+  String get profilePhotoUploadFailed;
+
+  /// No description provided for @profilePhotoDeleteFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить фото'**
+  String get profilePhotoDeleteFailed;
+
+  /// No description provided for @profilePhotoTooLarge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото слишком большое'**
+  String get profilePhotoTooLarge;
+
+  /// No description provided for @profileSetPrimaryFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сделать основным'**
+  String get profileSetPrimaryFailed;
+
   /// No description provided for @timeSecondsShort.
   ///
   /// In ru, this message translates to:

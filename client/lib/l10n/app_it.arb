@@ -927,6 +927,16 @@
   "profileCropHint": "Ingrandisci e sposta la foto",
   "profileApply": "Applica",
   "profilePreparing": "Preparazione…",
+  "profileGalleryTitle": "Foto",
+  "profileGalleryAdd": "Aggiungi foto",
+  "profileMakePrimary": "Imposta come principale",
+  "profilePhotoDelete": "Elimina foto",
+  "profilePhotosLimit": "Puoi caricare fino a 3 foto",
+  "profilePhotosEmpty": "Nessuna foto",
+  "profilePhotoUploadFailed": "Impossibile caricare la foto",
+  "profilePhotoDeleteFailed": "Impossibile eliminare la foto",
+  "profilePhotoTooLarge": "La foto è troppo grande",
+  "profileSetPrimaryFailed": "Impossibile impostare come principale",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

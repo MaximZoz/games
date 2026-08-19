@@ -1822,6 +1822,36 @@ class AppLocalizationsUk extends AppLocalizations {
   String get profilePreparing => 'Підготовка…';
 
   @override
+  String get profileGalleryTitle => 'Фото';
+
+  @override
+  String get profileGalleryAdd => 'Додати фото';
+
+  @override
+  String get profileMakePrimary => 'Зробити основним';
+
+  @override
+  String get profilePhotoDelete => 'Видалити фото';
+
+  @override
+  String get profilePhotosLimit => 'Можна завантажити не більше 3 фото';
+
+  @override
+  String get profilePhotosEmpty => 'Поки немає фото';
+
+  @override
+  String get profilePhotoUploadFailed => 'Не вдалося завантажити фото';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Не вдалося видалити фото';
+
+  @override
+  String get profilePhotoTooLarge => 'Фото занадто велике';
+
+  @override
+  String get profileSetPrimaryFailed => 'Не вдалося зробити основним';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds с';
   }

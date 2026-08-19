@@ -927,6 +927,16 @@
   "profileCropHint": "Fotoğrafı yakınlaştır ve taşı",
   "profileApply": "Uygula",
   "profilePreparing": "Hazırlanıyor…",
+  "profileGalleryTitle": "Fotoğraflar",
+  "profileGalleryAdd": "Fotoğraf ekle",
+  "profileMakePrimary": "Ana fotoğraf yap",
+  "profilePhotoDelete": "Fotoğrafı sil",
+  "profilePhotosLimit": "En fazla 3 fotoğraf yükleyebilirsiniz",
+  "profilePhotosEmpty": "Henüz fotoğraf yok",
+  "profilePhotoUploadFailed": "Fotoğraf yüklenemedi",
+  "profilePhotoDeleteFailed": "Fotoğraf silinemedi",
+  "profilePhotoTooLarge": "Fotoğraf çok büyük",
+  "profileSetPrimaryFailed": "Ana fotoğraf yapılamadı",
   "timeSecondsShort": "{seconds} sn",
   "@timeSecondsShort": {
     "placeholders": {

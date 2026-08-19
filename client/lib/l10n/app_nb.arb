@@ -927,6 +927,16 @@
   "profileCropHint": "Zoom og flytt bildet",
   "profileApply": "Bruk",
   "profilePreparing": "Forbereder…",
+  "profileGalleryTitle": "Bilder",
+  "profileGalleryAdd": "Legg til bilde",
+  "profileMakePrimary": "Gjør til primær",
+  "profilePhotoDelete": "Slett bilde",
+  "profilePhotosLimit": "Du kan laste opp opptil 3 bilder",
+  "profilePhotosEmpty": "Ingen bilder ennå",
+  "profilePhotoUploadFailed": "Kunne ikke laste opp bildet",
+  "profilePhotoDeleteFailed": "Kunne ikke slette bildet",
+  "profilePhotoTooLarge": "Bildet er for stort",
+  "profileSetPrimaryFailed": "Kunne ikke angi som primær",
   "timeSecondsShort": "{seconds} s",
   "@timeSecondsShort": {
     "placeholders": {

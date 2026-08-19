@@ -1822,6 +1822,36 @@ class AppLocalizationsNl extends AppLocalizations {
   String get profilePreparing => 'Voorbereiden…';
 
   @override
+  String get profileGalleryTitle => 'Foto’s';
+
+  @override
+  String get profileGalleryAdd => 'Foto toevoegen';
+
+  @override
+  String get profileMakePrimary => 'Als profielfoto';
+
+  @override
+  String get profilePhotoDelete => 'Foto verwijderen';
+
+  @override
+  String get profilePhotosLimit => 'Je kunt tot 3 foto’s uploaden';
+
+  @override
+  String get profilePhotosEmpty => 'Nog geen foto’s';
+
+  @override
+  String get profilePhotoUploadFailed => 'Foto uploaden mislukt';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Foto verwijderen mislukt';
+
+  @override
+  String get profilePhotoTooLarge => 'Foto is te groot';
+
+  @override
+  String get profileSetPrimaryFailed => 'Instellen als profielfoto mislukt';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }

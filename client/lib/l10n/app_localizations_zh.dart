@@ -1822,6 +1822,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profilePreparing => '准备中…';
 
   @override
+  String get profileGalleryTitle => '照片';
+
+  @override
+  String get profileGalleryAdd => '添加照片';
+
+  @override
+  String get profileMakePrimary => '设为头像';
+
+  @override
+  String get profilePhotoDelete => '删除照片';
+
+  @override
+  String get profilePhotosLimit => '最多可上传 3 张照片';
+
+  @override
+  String get profilePhotosEmpty => '暂无照片';
+
+  @override
+  String get profilePhotoUploadFailed => '无法上传照片';
+
+  @override
+  String get profilePhotoDeleteFailed => '无法删除照片';
+
+  @override
+  String get profilePhotoTooLarge => '照片太大';
+
+  @override
+  String get profileSetPrimaryFailed => '无法设为头像';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds 秒';
   }

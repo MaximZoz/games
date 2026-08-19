@@ -1822,6 +1822,36 @@ class AppLocalizationsUz extends AppLocalizations {
   String get profilePreparing => 'Tayyorlanmoqda…';
 
   @override
+  String get profileGalleryTitle => 'Foto';
+
+  @override
+  String get profileGalleryAdd => 'Foto qo‘shish';
+
+  @override
+  String get profileMakePrimary => 'Asosiy qilish';
+
+  @override
+  String get profilePhotoDelete => 'Fotoni o‘chirish';
+
+  @override
+  String get profilePhotosLimit => '3 tadan ortiq foto yuklab bo‘lmaydi';
+
+  @override
+  String get profilePhotosEmpty => 'Hozircha foto yo‘q';
+
+  @override
+  String get profilePhotoUploadFailed => 'Foto yuklanmadi';
+
+  @override
+  String get profilePhotoDeleteFailed => 'Foto o‘chirilmadi';
+
+  @override
+  String get profilePhotoTooLarge => 'Foto juda katta';
+
+  @override
+  String get profileSetPrimaryFailed => 'Asosiy qilib bo‘lmadi';
+
+  @override
   String timeSecondsShort(int seconds) {
     return '$seconds s';
   }
