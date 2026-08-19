@@ -5,57 +5,82 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:image/image.dart' as img;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-const int avatarMaxSidePx = 96;
-const int avatarStorageLimitBytes = 45 * 1024;
+/// Сторона для хранения аватара: хватает на полноэкран телефона, не раздувает
+/// списки друзей/чатов (JPEG ~40–80 КБ вместо прежних 96px PNG).
+const int avatarMaxSidePx = 640;
+const int avatarStorageLimitBytes = 100 * 1024;
+const int avatarTargetBytes = 72 * 1024;
+
+/// JPEG-сжатие кропа: длинная сторона до [avatarMaxSidePx], лестница качества.
+Uint8List? compactAvatarBytesSync(Uint8List source) {
+  if (source.isEmpty) return null;
+  final decoded = img.decodeImage(source);
+  if (decoded == null || decoded.width <= 0 || decoded.height <= 0) {
+    return null;
+  }
+
+  img.Image working = decoded;
+  final longest = math.max(working.width, working.height);
+  if (longest > avatarMaxSidePx) {
+    final scale = avatarMaxSidePx / longest;
+    working = img.copyResize(
+      decoded,
+      width: math.max(1, (decoded.width * scale).round()),
+      height: math.max(1, (decoded.height * scale).round()),
+      interpolation: img.Interpolation.average,
+    );
+  }
+
+  Uint8List? best;
+  for (final quality in const [88, 80, 72, 64, 56, 48]) {
+    final encoded = Uint8List.fromList(
+      img.encodeJpg(working, quality: quality),
+    );
+    if (best == null || encoded.lengthInBytes < best.lengthInBytes) {
+      best = encoded;
+    }
+    if (encoded.lengthInBytes <= avatarTargetBytes) {
+      return encoded;
+    }
+    if (encoded.lengthInBytes <= avatarStorageLimitBytes && quality <= 80) {
+      return encoded;
+    }
+  }
+  if (best != null && best.lengthInBytes <= avatarStorageLimitBytes) {
+    return best;
+  }
+
+  for (final side in const [480, 360, 280]) {
+    final shrinkScale = side / math.max(working.width, working.height);
+    if (shrinkScale >= 1) continue;
+    working = img.copyResize(
+      working,
+      width: math.max(1, (working.width * shrinkScale).round()),
+      height: math.max(1, (working.height * shrinkScale).round()),
+      interpolation: img.Interpolation.average,
+    );
+    final tighter = Uint8List.fromList(img.encodeJpg(working, quality: 48));
+    if (tighter.lengthInBytes <= avatarStorageLimitBytes) {
+      return tighter;
+    }
+  }
+  return best;
+}
 
 Future<Uint8List?> compactAvatarBytes(Uint8List source) async {
-  ui.Codec? probeCodec;
-  ui.Image? probeImage;
-  try {
-    probeCodec = await ui.instantiateImageCodec(source);
-    final probeFrame = await probeCodec.getNextFrame();
-    probeImage = probeFrame.image;
-
-    final width = probeImage.width;
-    final height = probeImage.height;
-    final longestSide = math.max(width, height);
-    final scale =
-        longestSide > avatarMaxSidePx ? avatarMaxSidePx / longestSide : 1.0;
-
-    final targetWidth = math.max(1, (width * scale).round());
-    final targetHeight = math.max(1, (height * scale).round());
-
-    final codec = await ui.instantiateImageCodec(
-      source,
-      targetWidth: targetWidth,
-      targetHeight: targetHeight,
-    );
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    codec.dispose();
-
-    if (bytes == null) return null;
-    return bytes.buffer.asUint8List();
-  } catch (_) {
-    return null;
-  } finally {
-    probeImage?.dispose();
-    probeCodec?.dispose();
-  }
+  return compactAvatarBytesSync(source);
 }
 
 Future<String?> buildCompactAvatarValue(Uint8List source) async {
-  final compact = await compactAvatarBytes(source);
-  final bytes = compact ?? source;
-  if (bytes.lengthInBytes > avatarStorageLimitBytes) {
+  final compact = compactAvatarBytesSync(source);
+  if (compact == null || compact.lengthInBytes > avatarStorageLimitBytes) {
     return null;
   }
-  return 'base64,${base64Encode(bytes)}';
+  return 'base64,${base64Encode(compact)}';
 }
 
 Future<Uint8List?> showAvatarCropDialog({
@@ -158,7 +183,7 @@ class _AvatarCropDialogState extends State<AvatarCropDialog> {
       final boundary = _captureKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) return;
-      renderedImage = await boundary.toImage(pixelRatio: 2);
+      renderedImage = await boundary.toImage(pixelRatio: 3);
       final data =
           await renderedImage.toByteData(format: ui.ImageByteFormat.png);
       if (!mounted || data == null) return;

@@ -168,6 +168,8 @@ class ProfileAvatarHeroImage extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           filterQuality: FilterQuality.high,
+          isAntiAlias: true,
+          gaplessPlayback: true,
           alignment: Alignment.center,
         );
       }
