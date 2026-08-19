@@ -1188,7 +1188,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileUploadPhoto => '写真をアップロード';
 
   @override
-  String get profileChangePhoto => '写真を変更';
+  String get profileChangePhoto => 'アバターを変更';
 
   @override
   String get shopTitle => 'ショップ';

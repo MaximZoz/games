@@ -1188,7 +1188,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get profileUploadPhoto => 'Last opp bilde';
 
   @override
-  String get profileChangePhoto => 'Bytt bilde';
+  String get profileChangePhoto => 'Bytt avatar';
 
   @override
   String get shopTitle => 'Butikk';

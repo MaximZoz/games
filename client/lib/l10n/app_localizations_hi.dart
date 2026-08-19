@@ -1188,7 +1188,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileUploadPhoto => 'फ़ोटो अपलोड करें';
 
   @override
-  String get profileChangePhoto => 'फ़ोटो बदलें';
+  String get profileChangePhoto => 'अवतार बदलें';
 
   @override
   String get shopTitle => 'दुकान';

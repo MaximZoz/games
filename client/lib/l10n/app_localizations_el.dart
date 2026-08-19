@@ -1188,7 +1188,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get profileUploadPhoto => 'Μεταφόρτωση φωτογραφίας';
 
   @override
-  String get profileChangePhoto => 'Αλλαγή φωτογραφίας';
+  String get profileChangePhoto => 'Αλλαγή avatar';
 
   @override
   String get shopTitle => 'Κατάστημα';

@@ -1188,7 +1188,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileUploadPhoto => 'Subir foto';
 
   @override
-  String get profileChangePhoto => 'Cambiar foto';
+  String get profileChangePhoto => 'Cambiar avatar';
 
   @override
   String get shopTitle => 'Tienda';

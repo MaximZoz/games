@@ -126,7 +126,34 @@ void main() {
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
   });
 
-  testWidgets('кнопка «Сделать основным» только у владельца', (tester) async {
+  testWidgets('просмотр без галереи — только основное фото', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [],
+          selectedIndex: null,
+          canManage: true,
+          mainPhoto: const ColoredBox(
+            key: ValueKey('hero'),
+            color: Colors.purple,
+          ),
+          imageBuilder: _emptyImage,
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-viewer-strip')), findsNothing);
+    expect(find.text('Сделать основным'), findsNothing);
+  });
+
+  testWidgets('просмотр с фото — основное и лента галереи', (tester) async {
     const photo = ProfilePhotoMeta(
       id: 'p1',
       userId: 'u1',
@@ -138,18 +165,45 @@ void main() {
         locale: const Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: const [photo],
-            canManage: true,
-            imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
-                const ColoredBox(color: Colors.blue),
-            onOpenPhoto: (_) {},
-            onMakePrimary: (_) {},
-          ),
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: null,
+          canManage: true,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
         ),
       ),
     );
+    expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-viewer-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-p1')), findsOneWidget);
+    expect(find.text('Сделать основным'), findsNothing);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: 0,
+          canManage: true,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
     expect(find.text('Сделать основным'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-make-primary-p1')), findsOneWidget);
 
@@ -158,38 +212,21 @@ void main() {
         locale: const Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: const [photo],
-            canManage: false,
-            imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
-                const ColoredBox(color: Colors.blue),
-            onOpenPhoto: (_) {},
-          ),
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: 0,
+          canManage: false,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
         ),
       ),
     );
     await tester.pump();
     expect(find.text('Сделать основным'), findsNothing);
-  });
-
-  testWidgets('пустая галерея показывает заглушку', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: [],
-            canManage: false,
-            imageBuilder: _emptyImage,
-            onOpenPhoto: _noop,
-          ),
-        ),
-      ),
-    );
-    expect(find.text('Пока нет фото'), findsOneWidget);
   });
 
   testWidgets('слоты сообщают форме о составе фото', (tester) async {

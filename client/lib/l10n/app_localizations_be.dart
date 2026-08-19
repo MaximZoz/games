@@ -1188,7 +1188,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get profileUploadPhoto => 'Загрузіць фота';
 
   @override
-  String get profileChangePhoto => 'Змяніць фота';
+  String get profileChangePhoto => 'Змяніць аватар';
 
   @override
   String get shopTitle => 'Крама';

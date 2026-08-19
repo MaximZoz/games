@@ -1188,7 +1188,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get profileUploadPhoto => 'Lataa kuva';
 
   @override
-  String get profileChangePhoto => 'Vaihda kuva';
+  String get profileChangePhoto => 'Vaihda avatar';
 
   @override
   String get shopTitle => 'Kauppa';

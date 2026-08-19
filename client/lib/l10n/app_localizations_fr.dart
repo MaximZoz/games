@@ -1188,7 +1188,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileUploadPhoto => 'Importer une photo';
 
   @override
-  String get profileChangePhoto => 'Changer la photo';
+  String get profileChangePhoto => 'Changer l’avatar';
 
   @override
   String get shopTitle => 'Boutique';

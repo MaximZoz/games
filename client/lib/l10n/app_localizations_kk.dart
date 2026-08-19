@@ -1188,7 +1188,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get profileUploadPhoto => 'Фото жүктеу';
 
   @override
-  String get profileChangePhoto => 'Фотоны өзгерту';
+  String get profileChangePhoto => 'Аватарды өзгерту';
 
   @override
   String get shopTitle => 'Дүкен';

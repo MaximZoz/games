@@ -1188,7 +1188,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get profileUploadPhoto => 'Upload foto';
 
   @override
-  String get profileChangePhoto => 'Skift foto';
+  String get profileChangePhoto => 'Skift avatar';
 
   @override
   String get shopTitle => 'Butik';

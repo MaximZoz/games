@@ -757,6 +757,9 @@ class _ProfileView extends ConsumerWidget {
             TappableProfileAvatar(
               userId: user.id,
               canManage: true,
+              avatarKind: profileExtra.avatarKind.name,
+              avatarValue: profileExtra.avatarValue,
+              letter: _avatarLetter,
               child: avatar,
             ),
             SizedBox(height: gapAfterAvatar),
@@ -963,6 +966,7 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  bool _galleryDirty = false;
   String? _initialGallerySignature;
   String _gallerySignature = '';
   bool _aboutTypingActive = false;
@@ -1019,12 +1023,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     // Игнор смены selection (повторный тап) — только реальный текст.
     if (text == _lastAboutText) return;
     _lastAboutText = text;
-    if ((_ageError != null || _saveError != null) && mounted) {
-      setState(() {
-        _ageError = null;
-        _saveError = null;
-      });
-    }
+    _onFieldsChanged();
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -1088,11 +1087,17 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     if (_avatarKind != initial.avatarKind) return true;
     if ((_avatarValue ?? '') != (initial.avatarValue ?? '')) return true;
     if (_showStatsToOthers != initial.showStatsToOthers) return true;
+    if (_galleryDirty) return true;
     if (_initialGallerySignature != null &&
         _gallerySignature != _initialGallerySignature) {
       return true;
     }
     return false;
+  }
+
+  void _onGalleryMutated() {
+    if (_galleryDirty) return;
+    setState(() => _galleryDirty = true);
   }
 
   void _onGalleryPhotosChanged(List<ProfilePhotoMeta> photos) {
@@ -1596,6 +1601,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   enabled: !_isSaving,
                   compact: true,
                   onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
                 ),
                 SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
@@ -1843,6 +1849,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   userId: widget.user.id,
                   enabled: !_isSaving,
                   onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

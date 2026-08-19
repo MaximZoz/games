@@ -1188,7 +1188,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileUploadPhoto => 'Загрузить фото';
 
   @override
-  String get profileChangePhoto => 'Поменять фото';
+  String get profileChangePhoto => 'Поменять аватар';
 
   @override
   String get shopTitle => 'Магазин';

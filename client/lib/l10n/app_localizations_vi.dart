@@ -1188,7 +1188,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileUploadPhoto => 'Tải ảnh lên';
 
   @override
-  String get profileChangePhoto => 'Đổi ảnh';
+  String get profileChangePhoto => 'Đổi ảnh đại diện';
 
   @override
   String get shopTitle => 'Cửa hàng';

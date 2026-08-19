@@ -1188,7 +1188,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileUploadPhoto => 'Unggah foto';
 
   @override
-  String get profileChangePhoto => 'Ganti foto';
+  String get profileChangePhoto => 'Ganti avatar';
 
   @override
   String get shopTitle => 'Toko';

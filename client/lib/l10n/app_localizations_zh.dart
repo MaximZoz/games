@@ -1188,7 +1188,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileUploadPhoto => '上传照片';
 
   @override
-  String get profileChangePhoto => '更换照片';
+  String get profileChangePhoto => '更换头像';
 
   @override
   String get shopTitle => '商店';
