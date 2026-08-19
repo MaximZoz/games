@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Hráči: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Hra proti botovi bez časového limitu na tah.",
+  "rulesUnoIntro": "Klasické Uno: každému se rozdají karty; hrajte barvou nebo hodnotou.",
+  "rulesUnoPlay": "Speciální karty: +2, otočení, přeskočení, žolík a +4. Nemůžete-li hrát, lízněte z balíčku.",
+  "rulesUnoWin": "Vyhrává ten, kdo se první zbaví všech karet. Řekněte „Uno“, když zbývá jedna.",
   "gamesInDevelopment": "Ve vývoji",
   "rulesPokerPlayers": "Hráči: {players}.",
   "@rulesPokerPlayers": {

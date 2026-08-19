@@ -277,6 +277,18 @@
   "rulesBattleshipWin": "Побеждает тот, кто первым потопит весь флот противника.",
   "gamesPoker": "Покер",
   "gamesUno": "Уно",
+  "rulesUnoPlayers": "Игроки: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Игра против бота, без лимита времени на ход.",
+  "rulesUnoIntro": "Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.",
+  "rulesUnoPlay": "Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.",
+  "rulesUnoWin": "Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.",
   "gamesInDevelopment": "В разработке",
   "rulesPokerPlayers": "Игроки: {players}.",
   "@rulesPokerPlayers": {

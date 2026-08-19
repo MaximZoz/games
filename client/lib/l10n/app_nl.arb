@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spelers: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spel tegen een bot, zonder tijdslimiet per beurt.",
+  "rulesUnoIntro": "Klassieke Uno: iedereen krijgt kaarten; speel op kleur of getal.",
+  "rulesUnoPlay": "Speciale kaarten: +2, omkeren, overslaan, wild en wild +4. Kun je niet spelen, trek van de stapel.",
+  "rulesUnoWin": "Wie als eerste alle kaarten kwijt is, wint. Zeg “Uno” als je er één over hebt.",
   "gamesInDevelopment": "In ontwikkeling",
   "rulesPokerPlayers": "Spelers: {players}.",
   "@rulesPokerPlayers": {

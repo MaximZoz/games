@@ -601,6 +601,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesUno => '乌诺';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return '玩家：$players。';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => '与机器人对战，无回合时限。';
+
+  @override
+  String get rulesUnoIntro => '经典乌诺：每人发牌；按颜色或点数出牌。';
+
+  @override
+  String get rulesUnoPlay => '特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。';
+
+  @override
+  String get rulesUnoWin => '先出完手牌者获胜。剩一张牌时记得说“乌诺”。';
+
+  @override
   String get gamesInDevelopment => '开发中';
 
   @override

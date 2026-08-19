@@ -277,6 +277,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Players: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Play against a bot, no turn time limit.",
+  "rulesUnoIntro": "Classic Uno: everyone is dealt cards; play by color or number.",
+  "rulesUnoPlay": "Special cards: +2, reverse, skip, wild and wild +4. If you cannot play, draw from the deck.",
+  "rulesUnoWin": "The first player to empty their hand wins. Say “Uno” when you have one card left.",
   "gamesInDevelopment": "In development",
   "rulesPokerPlayers": "Players: {players}.",
   "@rulesPokerPlayers": {

@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Πόκερ",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Παίκτες: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Παιχνίδι εναντίον bot χωρίς όριο χρόνου ανά γύρο.",
+  "rulesUnoIntro": "Κλασικό Uno: μοιράζονται κάρτες σε όλους· παίξτε με χρώμα ή αριθμό.",
+  "rulesUnoPlay": "Ειδικές κάρτες: +2, αντιστροφή, παράλειψη, αλλαγή χρώματος και +4. Αν δεν μπορείτε να παίξετε, τραβήξτε.",
+  "rulesUnoWin": "Κερδίζει όποιος πετάξει πρώτος όλες τις κάρτες. Πείτε «Uno» όταν μείνει μία.",
   "gamesInDevelopment": "Υπό ανάπτυξη",
   "rulesPokerPlayers": "Παίκτες: {players}.",
   "@rulesPokerPlayers": {

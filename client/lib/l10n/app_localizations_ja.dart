@@ -601,6 +601,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesUno => 'ウノ';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'プレイヤー: $players人。';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'ボットとの対戦。ターン制限時間なし。';
+
+  @override
+  String get rulesUnoIntro => 'クラシックウノ：全員にカードが配られ、色または数字で出します。';
+
+  @override
+  String get rulesUnoPlay => '特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。';
+
+  @override
+  String get rulesUnoWin => '最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。';
+
+  @override
   String get gamesInDevelopment => '開発中';
 
   @override

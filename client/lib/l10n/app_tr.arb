@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Oyuncular: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Bota karşı oyun, tur süresi sınırı yok.",
+  "rulesUnoIntro": "Klasik Uno: herkese kart dağıtılır; renk veya sayıya göre oynayın.",
+  "rulesUnoPlay": "Özel kartlar: +2, yön değiştir, atla, joker ve +4. Oynayamazsanız desteden çekin.",
+  "rulesUnoWin": "Tüm kartlarını ilk atan kazanır. Bir kart kaldığında “Uno” deyin.",
   "gamesInDevelopment": "Geliştiriliyor",
   "rulesPokerPlayers": "Oyuncular: {players}.",
   "@rulesPokerPlayers": {

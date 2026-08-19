@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Pokeri",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Pelaajat: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Peli bottia vastaan ilman vuoron aikarajaa.",
+  "rulesUnoIntro": "Klassinen Uno: kaikille jaetaan kortteja; pelaa värin tai numeron mukaan.",
+  "rulesUnoPlay": "Erikoiskortit: +2, suunnanvaihto, ohitus, jokerit ja +4. Jos et voi pelata, nosta pakasta.",
+  "rulesUnoWin": "Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.",
   "gamesInDevelopment": "Kehityksessä",
   "rulesPokerPlayers": "Pelaajat: {players}.",
   "@rulesPokerPlayers": {

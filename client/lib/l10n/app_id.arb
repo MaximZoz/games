@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Pemain: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Main lawan bot, tanpa batas waktu giliran.",
+  "rulesUnoIntro": "Uno klasik: semua mendapat kartu; mainkan berdasarkan warna atau angka.",
+  "rulesUnoPlay": "Kartu khusus: +2, balik arah, lewati, liar dan +4. Jika tidak bisa main, ambil dari dek.",
+  "rulesUnoWin": "Pemain yang pertama menghabiskan semua kartu menang. Ucapkan “Uno” saat tersisa satu.",
   "gamesInDevelopment": "Dalam pengembangan",
   "rulesPokerPlayers": "Pemain: {players}.",
   "@rulesPokerPlayers": {

@@ -601,6 +601,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'Joueurs : $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Partie contre un bot, sans limite de temps par tour.';
+
+  @override
+  String get rulesUnoIntro => 'Uno classique : chacun reçoit des cartes ; jouez par couleur ou valeur.';
+
+  @override
+  String get rulesUnoPlay => 'Cartes spéciales : +2, sens inverse, passe, joker et +4. Si vous ne pouvez pas jouer, piochez.';
+
+  @override
+  String get rulesUnoWin => 'Le premier à se débarrasser de toutes ses cartes gagne. Dites « Uno » quand il vous en reste une.';
+
+  @override
   String get gamesInDevelopment => 'En développement';
 
   @override

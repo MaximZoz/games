@@ -601,6 +601,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesUno => 'ऊनो';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'खिलाड़ी: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'बॉट के खिलाफ खेल, चाल की समय सीमा नहीं।';
+
+  @override
+  String get rulesUnoIntro => 'क्लासिक ऊनो: सभी को पत्ते मिलते हैं; रंग या नंबर से खेलें।';
+
+  @override
+  String get rulesUnoPlay => 'विशेष पत्ते: +2, दिशा बदलो, छोड़ो, जंगली और +4। नहीं खेल सकते तो डेक से लें।';
+
+  @override
+  String get rulesUnoWin => 'जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।';
+
+  @override
   String get gamesInDevelopment => 'विकास में';
 
   @override

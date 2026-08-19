@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Добавить карточку Уно «В разработке» на экран игр
+- Уно: своя иконка, игроки/время как у Дурака и правила
 
 ## en
-- Uno game card on Games screen (In development)
+- Uno: unique icon, Durak-like player/time chips, and rules

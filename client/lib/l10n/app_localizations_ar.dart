@@ -601,6 +601,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesUno => 'أونو';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'اللاعبون: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'اللعب ضد روبوت بدون حد زمني للدور.';
+
+  @override
+  String get rulesUnoIntro => 'أونو الكلاسيكي: تُوزَّع البطاقات على الجميع؛ العب حسب اللون أو الرقم.';
+
+  @override
+  String get rulesUnoPlay => 'بطاقات خاصة: +2 وتغيير الاتجاه وتخطي وجوكر و+4. إن لم تستطع اللعب فاسحب من الرزمة.';
+
+  @override
+  String get rulesUnoWin => 'يفوز من يتخلّص من كل بطاقاته أولاً. قل «أونو» عندما تبقى بطاقة واحدة.';
+
+  @override
   String get gamesInDevelopment => 'قيد التطوير';
 
   @override

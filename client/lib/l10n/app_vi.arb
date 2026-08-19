@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Người chơi: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Chơi với bot, không giới hạn thời gian mỗi lượt.",
+  "rulesUnoIntro": "Uno cổ điển: mỗi người được chia bài; đánh theo màu hoặc số.",
+  "rulesUnoPlay": "Bài đặc biệt: +2, đổi chiều, bỏ lượt, đổi màu và +4. Không đánh được thì rút từ bộ bài.",
+  "rulesUnoWin": "Người đầu tiên hết bài thắng. Nhớ nói “Uno” khi còn một lá.",
   "gamesInDevelopment": "Đang phát triển",
   "rulesPokerPlayers": "Người chơi: {players}.",
   "@rulesPokerPlayers": {

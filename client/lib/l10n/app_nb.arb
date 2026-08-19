@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Spillere: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Spill mot en bot uten tidsbegrensning per trekk.",
+  "rulesUnoIntro": "Klassisk Uno: alle får kort; spill etter farge eller tall.",
+  "rulesUnoPlay": "Spesialkort: +2, snu, hopp over, jokere og +4. Kan du ikke spille, trekk fra bunken.",
+  "rulesUnoWin": "Den som først blir kvitt alle kortene vinner. Si “Uno” når du har ett kort igjen.",
   "gamesInDevelopment": "Under utvikling",
   "rulesPokerPlayers": "Spillere: {players}.",
   "@rulesPokerPlayers": {

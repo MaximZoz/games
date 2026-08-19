@@ -601,6 +601,23 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'Oʻyinchilar: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Botga qarshi o‘yin, yurish vaqti cheklanmagan.';
+
+  @override
+  String get rulesUnoIntro => 'Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.';
+
+  @override
+  String get rulesUnoPlay => 'Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.';
+
+  @override
+  String get rulesUnoWin => 'Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.';
+
+  @override
   String get gamesInDevelopment => 'Ishlanmoqda';
 
   @override

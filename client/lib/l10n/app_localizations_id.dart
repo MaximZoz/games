@@ -601,6 +601,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'Pemain: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Main lawan bot, tanpa batas waktu giliran.';
+
+  @override
+  String get rulesUnoIntro => 'Uno klasik: semua mendapat kartu; mainkan berdasarkan warna atau angka.';
+
+  @override
+  String get rulesUnoPlay => 'Kartu khusus: +2, balik arah, lewati, liar dan +4. Jika tidak bisa main, ambil dari dek.';
+
+  @override
+  String get rulesUnoWin => 'Pemain yang pertama menghabiskan semua kartu menang. Ucapkan “Uno” saat tersisa satu.';
+
+  @override
   String get gamesInDevelopment => 'Dalam pengembangan';
 
   @override

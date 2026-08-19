@@ -601,6 +601,23 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesUno => 'Уно';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'Гульцы: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Гульня супраць бота, без ліміту часу на ход.';
+
+  @override
+  String get rulesUnoIntro => 'Класічнае Уно: кожнаму раздаюць карты; хадзіце па колеры ці намінале.';
+
+  @override
+  String get rulesUnoPlay => 'Спецкарты: +2, змена кірунку, пропуск ходу, чорная змена колеру і +4. Не можаце пайсці — бярыце з калоды.';
+
+  @override
+  String get rulesUnoWin => 'Перамагае той, хто першым скінуў усе карты. Не забудзьце сказаць «Уно», калі застаецца адна карта.';
+
+  @override
   String get gamesInDevelopment => 'У распрацоўцы';
 
   @override
