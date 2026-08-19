@@ -1,6 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime;
+    show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Подпись режима игры «Дурак».
@@ -56,7 +56,7 @@ List<String> durakRuleLines({
       turnTimeSec == 0
           ? t.rulesNoTimeLimit
           : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) t.rulesStake('$stakeBronze'),
+      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
     ],
     t.rulesDurakAttack,
     t.rulesDurakBeat,

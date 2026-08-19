@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/games/games_repository.dart'
+    show rulesLineWithStakeIcon;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -368,8 +370,7 @@ Future<void> showGameRulesDialog({
   );
 }
 
-/// Простой widget-конструктор списка строк-правил с одинаковым отступом,
-/// стилизованный под остальные секции приложения.
+/// Список строк правил. Ставка из [rulesStakeLine] рисует иконку монеты.
 Widget rulesTextLines(List<String> lines) {
   const style = TextStyle(
     fontSize: 13,
@@ -381,7 +382,7 @@ Widget rulesTextLines(List<String> lines) {
     mainAxisSize: MainAxisSize.min,
     children: [
       for (var i = 0; i < lines.length; i++) ...[
-        Text(lines[i], style: style),
+        rulesLineWithStakeIcon(lines[i], style: style),
         if (i != lines.length - 1) const SizedBox(height: 10),
       ],
     ],

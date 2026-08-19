@@ -1,6 +1,6 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime;
+    show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил покера — единый источник для карточки игры, приглашения
@@ -19,7 +19,7 @@ List<String> pokerRuleLines({
       turnTimeSec == 0
           ? t.rulesNoTimeLimit
           : t.rulesTurnTime(formatTurnTime(turnTimeSec)),
-      if (stakeBronze > 0) t.rulesStake('$stakeBronze'),
+      if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
     ],
     t.rulesPokerIntro,
     t.rulesPokerPlay,

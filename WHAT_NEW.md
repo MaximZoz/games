@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Уно: своя иконка, игроки/время как у Дурака и правила
+- Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Uno: unique icon, Durak-like player/time chips, and rules
+- Coin icon next to the stake in game rules
