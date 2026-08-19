@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
@@ -164,7 +165,21 @@ void main() {
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
   });
 
-  testWidgets('просмотр без галереи — только запасное фото', (tester) async {
+  test('isSupportDisplayName ловит служебный аккаунт', () {
+    expect(isSupportDisplayName('Поддержка'), isTrue);
+    expect(isSupportDisplayName('Support'), isTrue);
+    expect(isSupportDisplayName('player1'), isFalse);
+  });
+
+  test('isProfileFileAvatar только для загруженного файла', () {
+    expect(isProfileFileAvatar('file', 'base64,abc'), isTrue);
+    expect(isProfileFileAvatar('letter', 'A'), isFalse);
+    expect(isProfileFileAvatar('preset', '3'), isFalse);
+    expect(isProfileFileAvatar('file', ''), isFalse);
+    expect(isProfileFileAvatar('file', null), isFalse);
+  });
+
+  testWidgets('просмотр только аватара-фото — без ленты и без кнопки кропа', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
@@ -173,15 +188,13 @@ void main() {
         home: ProfilePhotoViewerBody(
           photos: const [],
           selectedIndex: 0,
-          canManage: true,
-          fallbackPhoto: const ColoredBox(
+          avatarPhoto: const ColoredBox(
             key: ValueKey('hero'),
             color: Colors.purple,
           ),
           imageBuilder: _emptyImage,
           onSelectIndex: _noop,
           onClose: () {},
-          onMakePrimary: (_) {},
         ),
       ),
     );
@@ -191,7 +204,7 @@ void main() {
     expect(find.text('Сделать основным'), findsNothing);
   });
 
-  testWidgets('просмотр с фото — оригинал, без круглого аватара в ленте', (tester) async {
+  testWidgets('просмотр: аватар-фото первым в ленте, без кнопки кропа', (tester) async {
     const photo = ProfilePhotoMeta(
       id: 'p1',
       userId: 'u1',
@@ -206,10 +219,13 @@ void main() {
         home: ProfilePhotoViewerBody(
           photos: const [photo],
           selectedIndex: 0,
-          canManage: true,
-          fallbackPhoto: const ColoredBox(
+          avatarPhoto: const ColoredBox(
             key: ValueKey('hero'),
             color: Colors.purple,
+          ),
+          avatarThumb: const ColoredBox(
+            key: ValueKey('hero-thumb'),
+            color: Colors.orange,
           ),
           imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
               const ColoredBox(
@@ -218,61 +234,18 @@ void main() {
               ),
           onSelectIndex: _noop,
           onClose: () {},
-          onMakePrimary: (_) {},
         ),
       ),
     );
     expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-viewer-strip')), findsOneWidget);
-    expect(find.byKey(const ValueKey('profile-photo-thumb-avatar')), findsNothing);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-avatar')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-photo-thumb-p1')), findsOneWidget);
-    expect(find.byKey(const ValueKey('hero')), findsNothing);
     expect(find.byType(CircleAvatar), findsNothing);
-    expect(find.text('Сделать основным'), findsOneWidget);
-    expect(find.byKey(const ValueKey('profile-make-primary-p1')), findsOneWidget);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ProfilePhotoViewerBody(
-          photos: const [photo],
-          selectedIndex: 0,
-          canManage: false,
-          fallbackPhoto: const ColoredBox(color: Colors.purple),
-          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
-              const ColoredBox(color: Colors.blue),
-          onSelectIndex: _noop,
-          onClose: () {},
-        ),
-      ),
-    );
-    await tester.pump();
     expect(find.text('Сделать основным'), findsNothing);
   });
 
-  testWidgets('аватар-заглушка в просмотре — прямоугольное фото, не круг', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 300,
-            height: 300,
-            child: ProfileAvatarHeroImage(
-              avatarKind: 'color',
-              letter: 'A',
-            ),
-          ),
-        ),
-      ),
-    );
-    expect(find.byType(CircleAvatar), findsNothing);
-    expect(find.byType(AspectRatio), findsOneWidget);
-    expect(find.text('A'), findsOneWidget);
-  });
-
-  testWidgets('лента: тап по первому фото возвращает на оригинал аватара', (tester) async {
+  testWidgets('смайл/буква не попадают в ленту — только фото галереи', (tester) async {
     const first = ProfilePhotoMeta(
       id: 'p1',
       userId: 'u1',
@@ -285,6 +258,36 @@ void main() {
       slot: 1,
       imageMime: 'image/jpeg',
     );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [first, second],
+          selectedIndex: 0,
+          imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) => ColoredBox(
+            key: ValueKey('original-${photo.id}'),
+            color: Colors.blue,
+          ),
+          onSelectIndex: _noop,
+          onClose: () {},
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('profile-photo-thumb-avatar')), findsNothing);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-p1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-p2')), findsOneWidget);
+    expect(find.text('Сделать основным'), findsNothing);
+  });
+
+  testWidgets('лента: тап по аватару возвращает на его фото', (tester) async {
+    const first = ProfilePhotoMeta(
+      id: 'p1',
+      userId: 'u1',
+      slot: 0,
+      imageMime: 'image/jpeg',
+    );
     var index = 1;
     await tester.pumpWidget(
       MaterialApp(
@@ -294,33 +297,34 @@ void main() {
         home: StatefulBuilder(
           builder: (context, setState) {
             return ProfilePhotoViewerBody(
-              photos: const [first, second],
+              photos: const [first],
               selectedIndex: index,
-              canManage: true,
-              fallbackPhoto: const ColoredBox(
+              avatarPhoto: const ColoredBox(
                 key: ValueKey('hero'),
+                color: Colors.purple,
+              ),
+              avatarThumb: const ColoredBox(
+                key: ValueKey('hero-thumb'),
                 color: Colors.purple,
               ),
               imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) => ColoredBox(
                 key: ValueKey('original-${photo.id}'),
-                color: photo.id == 'p1' ? Colors.blue : Colors.green,
+                color: Colors.blue,
               ),
               onSelectIndex: (i) => setState(() => index = i),
               onClose: () {},
-              onMakePrimary: (_) {},
             );
           },
         ),
       ),
     );
     await tester.pump();
-    expect(find.byKey(const ValueKey('profile-make-primary-p2')), findsOneWidget);
-    expect(find.byKey(const ValueKey('hero')), findsNothing);
+    expect(find.text('Сделать основным'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('profile-photo-thumb-p1')));
+    await tester.tap(find.byKey(const ValueKey('profile-photo-thumb-avatar')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('profile-make-primary-p1')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
+    expect(find.byKey(const ValueKey('hero')), findsOneWidget);
     expect(find.byType(CircleAvatar), findsNothing);
   });
 

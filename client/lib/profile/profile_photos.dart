@@ -11,6 +11,13 @@ import 'package:multigames_client/core/locale_provider.dart';
 
 const int maxProfilePhotos = 3;
 
+/// Настоящее загруженное фото аватара, не буква и не быстрый смайл.
+bool isProfileFileAvatar(String kind, String? value) {
+  final k = kind.trim().toLowerCase();
+  if (k != 'file') return false;
+  return value != null && value.trim().isNotEmpty;
+}
+
 class ProfilePhotoMeta {
   const ProfilePhotoMeta({
     required this.id,

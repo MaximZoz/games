@@ -1996,6 +1996,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       ref: ref,
       userId: user.id,
       displayName: _peerTitle(user),
+      isSupport: user.isSupport || isSupportDisplayName(user.displayName),
       avatarKind: user.avatarKind,
       avatarValue: user.avatarValue,
       frameCode: user.frameCode,

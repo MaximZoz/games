@@ -21,8 +21,13 @@ Future<void> showProfilePhotosGallery({
   required String avatarKind,
   String? avatarValue,
   required String letter,
+  int photoCount = 0,
 }) {
   if (userId.trim().isEmpty) return Future<void>.value();
+  final hasFileAvatar = isProfileFileAvatar(avatarKind, avatarValue);
+  if (!hasFileAvatar && photoCount <= 0) {
+    return Future<void>.value();
+  }
   return Navigator.of(context, rootNavigator: true).push<void>(
     PageRouteBuilder<void>(
       opaque: true,
@@ -82,25 +87,53 @@ class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage>
     final liveSelf = me != null && me.id == widget.userId;
     final avatarKind = liveSelf ? me.avatarKind : widget.avatarKind;
     final avatarValue = liveSelf ? me.avatarValue : widget.avatarValue;
+    final showAvatar = isProfileFileAvatar(avatarKind, avatarValue);
+    if (!showAvatar && photos.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Positioned(
+              top: MediaQuery.viewPaddingOf(context).top + 4,
+              right: 8,
+              child: IconButton(
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return ProfilePhotoViewerBody(
       photos: photos,
       selectedIndex: _selectedIndex,
-      canManage: widget.canManage,
-      fallbackPhoto: ProfileAvatarHeroImage(
-        avatarKind: avatarKind,
-        avatarValue: avatarValue,
-        letter: widget.letter,
-      ),
+      avatarPhoto: showAvatar
+          ? ProfileAvatarHeroImage(
+              avatarKind: avatarKind,
+              avatarValue: avatarValue,
+              letter: widget.letter,
+            )
+          : null,
+      avatarThumb: showAvatar
+          ? ProfileAvatarHeroImage(
+              avatarKind: avatarKind,
+              avatarValue: avatarValue,
+              letter: widget.letter,
+              fit: BoxFit.cover,
+            )
+          : null,
       imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) =>
           ProfilePhotoImage(photoId: photo.id, fit: fit),
       onSelectIndex: (index) => setState(() => _selectedIndex = index),
-      onMakePrimary: widget.canManage
-          ? (photo) => setProfilePhotoAsPrimary(
-                context: context,
-                ref: ref,
-                photo: photo,
-              )
-          : null,
       onClose: () {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
@@ -164,22 +197,20 @@ class ProfilePhotoViewerBody extends StatefulWidget {
     super.key,
     required this.photos,
     required this.selectedIndex,
-    required this.canManage,
-    required this.fallbackPhoto,
     required this.imageBuilder,
     required this.onSelectIndex,
     required this.onClose,
-    this.onMakePrimary,
+    this.avatarPhoto,
+    this.avatarThumb,
   });
 
   final List<ProfilePhotoMeta> photos;
   final int selectedIndex;
-  final bool canManage;
-  final Widget fallbackPhoto;
+  final Widget? avatarPhoto;
+  final Widget? avatarThumb;
   final Widget Function(ProfilePhotoMeta photo, {BoxFit fit}) imageBuilder;
   final ValueChanged<int> onSelectIndex;
   final VoidCallback onClose;
-  final ValueChanged<ProfilePhotoMeta>? onMakePrimary;
 
   @override
   State<ProfilePhotoViewerBody> createState() => _ProfilePhotoViewerBodyState();
@@ -188,9 +219,9 @@ class ProfilePhotoViewerBody extends StatefulWidget {
 class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
   late final PageController _pageController;
 
-  bool get _hasOriginals => widget.photos.isNotEmpty;
+  bool get _showAvatar => widget.avatarPhoto != null;
 
-  int get _pageCount => _hasOriginals ? widget.photos.length : 1;
+  int get _pageCount => widget.photos.length + (_showAvatar ? 1 : 0);
 
   int get _safeIndex {
     if (_pageCount <= 1) return 0;
@@ -208,7 +239,8 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
     super.didUpdateWidget(oldWidget);
     final next = _safeIndex;
     if (oldWidget.selectedIndex == widget.selectedIndex &&
-        oldWidget.photos.length == widget.photos.length) {
+        oldWidget.photos.length == widget.photos.length &&
+        (oldWidget.avatarPhoto != null) == _showAvatar) {
       return;
     }
     if (!_pageController.hasClients) return;
@@ -226,23 +258,23 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
     super.dispose();
   }
 
-  ProfilePhotoMeta? get _selectedGalleryPhoto {
-    if (!_hasOriginals) return null;
-    final index = _safeIndex;
-    if (index < 0 || index >= widget.photos.length) return null;
-    return widget.photos[index];
-  }
-
   Widget _pageAt(int index) {
-    if (!_hasOriginals) return widget.fallbackPhoto;
+    if (_showAvatar && index <= 0) return widget.avatarPhoto!;
+    final photoIndex = _showAvatar ? index - 1 : index;
     return widget.imageBuilder(
-      widget.photos[index],
+      widget.photos[photoIndex],
       fit: BoxFit.contain,
     );
   }
 
   Widget _thumbAt(int index) {
-    final photo = widget.photos[index];
+    if (_showAvatar && index <= 0) {
+      return KeyedSubtree(
+        key: const ValueKey('profile-photo-thumb-avatar'),
+        child: widget.avatarThumb ?? widget.avatarPhoto!,
+      );
+    }
+    final photo = widget.photos[_showAvatar ? index - 1 : index];
     return KeyedSubtree(
       key: ValueKey('profile-photo-thumb-${photo.id}'),
       child: widget.imageBuilder(photo),
@@ -251,9 +283,9 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedPhoto = _selectedGalleryPhoto;
     final topPad = MediaQuery.viewPaddingOf(context).top;
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
+    final showStrip = _pageCount > 1;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -297,28 +329,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
               ],
             ),
           ),
-          if (selectedPhoto != null &&
-              widget.canManage &&
-              widget.onMakePrimary != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  key: ValueKey('profile-make-primary-${selectedPhoto.id}'),
-                  onPressed: () => widget.onMakePrimary!(selectedPhoto),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white70),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  child: Text(context.l10n.profileMakePrimary),
-                ),
-              ),
-            ),
-          if (_hasOriginals)
+          if (showStrip)
             ColoredBox(
               key: const ValueKey('profile-viewer-strip'),
               color: const Color(0xE6000000),
@@ -328,7 +339,7 @@ class _ProfilePhotoViewerBodyState extends State<ProfilePhotoViewerBody> {
                   height: 72,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: widget.photos.length,
+                    itemCount: _pageCount,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
                       final selected = i == _safeIndex;
@@ -1166,17 +1177,21 @@ class TappableProfileAvatar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final count =
         ref.watch(profilePhotosProvider(userId)).valueOrNull?.length ?? 0;
+    final openable = isProfileFileAvatar(avatarKind, avatarValue) || count > 0;
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
+      cursor: openable ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
-        onTap: () => showProfilePhotosGallery(
-          context: context,
-          userId: userId,
-          canManage: canManage,
-          avatarKind: avatarKind,
-          avatarValue: avatarValue,
-          letter: letter,
-        ),
+        onTap: openable
+            ? () => showProfilePhotosGallery(
+                  context: context,
+                  userId: userId,
+                  canManage: canManage,
+                  avatarKind: avatarKind,
+                  avatarValue: avatarValue,
+                  letter: letter,
+                  photoCount: count,
+                )
+            : null,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
