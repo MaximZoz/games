@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "ポーカー",
   "gamesUno": "ウノ",
+  "rulesUnoPlayers": "プレイヤー: {players}人。",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "ボットとの対戦。ターン制限時間なし。",
+  "rulesUnoIntro": "クラシックウノ：全員にカードが配られ、色または数字で出します。",
+  "rulesUnoPlay": "特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。",
+  "rulesUnoWin": "最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。",
   "gamesInDevelopment": "開発中",
   "rulesPokerPlayers": "人数: {players}。",
   "@rulesPokerPlayers": {

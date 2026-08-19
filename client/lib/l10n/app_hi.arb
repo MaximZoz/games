@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "पोकर",
   "gamesUno": "ऊनो",
+  "rulesUnoPlayers": "खिलाड़ी: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "बॉट के खिलाफ खेल, चाल की समय सीमा नहीं।",
+  "rulesUnoIntro": "क्लासिक ऊनो: सभी को पत्ते मिलते हैं; रंग या नंबर से खेलें।",
+  "rulesUnoPlay": "विशेष पत्ते: +2, दिशा बदलो, छोड़ो, जंगली और +4। नहीं खेल सकते तो डेक से लें।",
+  "rulesUnoWin": "जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।",
   "gamesInDevelopment": "विकास में",
   "rulesPokerPlayers": "खिलाड़ी: {players}.",
   "@rulesPokerPlayers": {

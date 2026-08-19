@@ -601,6 +601,23 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesUno => 'אונו';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'שחקנים: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'משחק נגד בוט ללא מגבלת זמן לתור.';
+
+  @override
+  String get rulesUnoIntro => 'אונו קלאסי: כולם מקבלים קלפים; משחקים לפי צבע או מספר.';
+
+  @override
+  String get rulesUnoPlay => 'קלפים מיוחדים: +2, הפוך כיוון, דלג, שינוי צבע ו-+4. אם אי אפשר לשחק — מושכים מהחפיסה.';
+
+  @override
+  String get rulesUnoWin => 'מנצח מי שמשליך ראשון את כל הקלפים. אמרו “Uno” כשנשאר קלף אחד.';
+
+  @override
   String get gamesInDevelopment => 'בפיתוח';
 
   @override

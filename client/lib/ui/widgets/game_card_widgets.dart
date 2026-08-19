@@ -13,6 +13,7 @@ class GameCardHeader extends StatelessWidget {
     required this.title,
     required this.icon,
     this.flipIcon = false,
+    this.iconChild,
     this.stakeBronze,
     this.stakeLabel,
     this.stakeCoinType = CoinType.bronze,
@@ -29,6 +30,9 @@ class GameCardHeader extends StatelessWidget {
   /// Зеркалить иконку по X (Дурак — веер карт).
   final bool flipIcon;
 
+  /// Кастомная иконка (например Уно); если задана — вместо [icon]/[flipIcon].
+  final Widget? iconChild;
+
   /// Отображаемая ставка (например, `1`, `10`). null → блок ставки скрыт.
   final int? stakeBronze;
 
@@ -44,6 +48,10 @@ class GameCardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final Widget leading = iconChild ??
+        (flipIcon
+            ? DurakGameIcon(size: 26, color: Colors.white)
+            : Icon(icon, color: Colors.white, size: 26));
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -59,9 +67,7 @@ class GameCardHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           alignment: Alignment.center,
-          child: flipIcon
-              ? DurakGameIcon(size: 26, color: Colors.white)
-              : Icon(icon, color: Colors.white, size: 26),
+          child: leading,
         ),
         SizedBox(width: isDesktop ? 20 : 12),
         Expanded(

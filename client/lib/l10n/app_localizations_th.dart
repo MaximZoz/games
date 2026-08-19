@@ -601,6 +601,23 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesUno => 'อูโน่';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'ผู้เล่น: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'เล่นกับบอท ไม่จำกัดเวลาต่อตา';
+
+  @override
+  String get rulesUnoIntro => 'อูโน่คลาสสิก: แจกไพ่ให้ทุกคน เล่นตามสีหรือเลข';
+
+  @override
+  String get rulesUnoPlay => 'ไพ่พิเศษ: +2, กลับทาง, ข้าม, เปลี่ยนสี และ +4 ถ้าลงไม่ได้ให้จั่วจากสำรับ';
+
+  @override
+  String get rulesUnoWin => 'ผู้ที่ลงไพ่หมดก่อนเป็นผู้ชนะ เมื่อเหลือใบเดียวต้องพูดว่า “อูโน่”';
+
+  @override
   String get gamesInDevelopment => 'กำลังพัฒนา';
 
   @override

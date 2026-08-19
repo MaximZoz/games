@@ -1289,6 +1289,36 @@ abstract class AppLocalizations {
   /// **'Уно'**
   String get gamesUno;
 
+  /// No description provided for @rulesUnoPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: {players}.'**
+  String rulesUnoPlayers(int players);
+
+  /// No description provided for @rulesUnoOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра против бота, без лимита времени на ход.'**
+  String get rulesUnoOfflineBot;
+
+  /// No description provided for @rulesUnoIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.'**
+  String get rulesUnoIntro;
+
+  /// No description provided for @rulesUnoPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.'**
+  String get rulesUnoPlay;
+
+  /// No description provided for @rulesUnoWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.'**
+  String get rulesUnoWin;
+
   /// No description provided for @gamesInDevelopment.
   ///
   /// In ru, this message translates to:

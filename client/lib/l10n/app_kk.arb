@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "Қарсы флотты толығымен батырған бірінші ойыншы жеңеді.",
   "gamesPoker": "Покер",
   "gamesUno": "Уно",
+  "rulesUnoPlayers": "Ойыншылар: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Ботқа қарсы ойын, жүріс уақыты шектелмейді.",
+  "rulesUnoIntro": "Классикалық Уно: әркімге карта үлестіріледі; түс немесе мән бойынша жүріңіз.",
+  "rulesUnoPlay": "Арнайы карталар: +2, бағыт ауыстыру, жүрісті өткізу, қара түс ауыстыру және +4. Жүре алмасаңыз — колодадан алыңыз.",
+  "rulesUnoWin": "Барлық картасын бірінші тастаған жеңеді. Бір карта қалғанда «Уно» деп айтуды ұмытпаңыз.",
   "gamesInDevelopment": "Әзірленуде",
   "rulesPokerPlayers": "Ойыншылар: {players}.",
   "@rulesPokerPlayers": {

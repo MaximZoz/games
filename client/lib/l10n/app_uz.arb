@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Oʻyinchilar: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Botga qarshi o‘yin, yurish vaqti cheklanmagan.",
+  "rulesUnoIntro": "Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.",
+  "rulesUnoPlay": "Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.",
+  "rulesUnoWin": "Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.",
   "gamesInDevelopment": "Ishlanmoqda",
   "rulesPokerPlayers": "O‘yinchilar: {players}.",
   "@rulesPokerPlayers": {

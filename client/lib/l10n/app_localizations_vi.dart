@@ -601,6 +601,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String rulesUnoPlayers(int players) {
+    return 'Người chơi: $players.';
+  }
+
+  @override
+  String get rulesUnoOfflineBot => 'Chơi với bot, không giới hạn thời gian mỗi lượt.';
+
+  @override
+  String get rulesUnoIntro => 'Uno cổ điển: mỗi người được chia bài; đánh theo màu hoặc số.';
+
+  @override
+  String get rulesUnoPlay => 'Bài đặc biệt: +2, đổi chiều, bỏ lượt, đổi màu và +4. Không đánh được thì rút từ bộ bài.';
+
+  @override
+  String get rulesUnoWin => 'Người đầu tiên hết bài thắng. Nhớ nói “Uno” khi còn một lá.';
+
+  @override
   String get gamesInDevelopment => 'Đang phát triển';
 
   @override

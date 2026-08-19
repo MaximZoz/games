@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Póker",
   "gamesUno": "Uno",
+  "rulesUnoPlayers": "Jugadores: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "Partida contra un bot, sin límite de tiempo por turno.",
+  "rulesUnoIntro": "Uno clásico: a todos se les reparte; juega por color o número.",
+  "rulesUnoPlay": "Cartas especiales: +2, cambio de sentido, salto, comodín y +4. Si no puedes jugar, roba del mazo.",
+  "rulesUnoWin": "Gana quien se deshace primero de todas las cartas. Di “Uno” cuando te quede una.",
   "gamesInDevelopment": "En desarrollo",
   "rulesPokerPlayers": "Jugadores: {players}.",
   "@rulesPokerPlayers": {

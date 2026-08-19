@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "扑克",
   "gamesUno": "乌诺",
+  "rulesUnoPlayers": "玩家：{players}。",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "与机器人对战，无回合时限。",
+  "rulesUnoIntro": "经典乌诺：每人发牌；按颜色或点数出牌。",
+  "rulesUnoPlay": "特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。",
+  "rulesUnoWin": "先出完手牌者获胜。剩一张牌时记得说“乌诺”。",
   "gamesInDevelopment": "开发中",
   "rulesPokerPlayers": "玩家：{players}。",
   "@rulesPokerPlayers": {

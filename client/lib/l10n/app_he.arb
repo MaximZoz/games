@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "פוקר",
   "gamesUno": "אונו",
+  "rulesUnoPlayers": "שחקנים: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "משחק נגד בוט ללא מגבלת זמן לתור.",
+  "rulesUnoIntro": "אונו קלאסי: כולם מקבלים קלפים; משחקים לפי צבע או מספר.",
+  "rulesUnoPlay": "קלפים מיוחדים: +2, הפוך כיוון, דלג, שינוי צבע ו-+4. אם אי אפשר לשחק — מושכים מהחפיסה.",
+  "rulesUnoWin": "מנצח מי שמשליך ראשון את כל הקלפים. אמרו “Uno” כשנשאר קלף אחד.",
   "gamesInDevelopment": "בפיתוח",
   "rulesPokerPlayers": "שחקנים: {players}.",
   "@rulesPokerPlayers": {

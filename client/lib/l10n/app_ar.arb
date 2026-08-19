@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "بوكر",
   "gamesUno": "أونو",
+  "rulesUnoPlayers": "اللاعبون: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "اللعب ضد روبوت بدون حد زمني للدور.",
+  "rulesUnoIntro": "أونو الكلاسيكي: تُوزَّع البطاقات على الجميع؛ العب حسب اللون أو الرقم.",
+  "rulesUnoPlay": "بطاقات خاصة: +2 وتغيير الاتجاه وتخطي وجوكر و+4. إن لم تستطع اللعب فاسحب من الرزمة.",
+  "rulesUnoWin": "يفوز من يتخلّص من كل بطاقاته أولاً. قل «أونو» عندما تبقى بطاقة واحدة.",
   "gamesInDevelopment": "قيد التطوير",
   "rulesPokerPlayers": "اللاعبون: {players}.",
   "@rulesPokerPlayers": {

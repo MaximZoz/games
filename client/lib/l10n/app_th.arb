@@ -225,6 +225,18 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "โป๊กเกอร์",
   "gamesUno": "อูโน่",
+  "rulesUnoPlayers": "ผู้เล่น: {players}.",
+  "@rulesUnoPlayers": {
+    "placeholders": {
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesUnoOfflineBot": "เล่นกับบอท ไม่จำกัดเวลาต่อตา",
+  "rulesUnoIntro": "อูโน่คลาสสิก: แจกไพ่ให้ทุกคน เล่นตามสีหรือเลข",
+  "rulesUnoPlay": "ไพ่พิเศษ: +2, กลับทาง, ข้าม, เปลี่ยนสี และ +4 ถ้าลงไม่ได้ให้จั่วจากสำรับ",
+  "rulesUnoWin": "ผู้ที่ลงไพ่หมดก่อนเป็นผู้ชนะ เมื่อเหลือใบเดียวต้องพูดว่า “อูโน่”",
   "gamesInDevelopment": "กำลังพัฒนา",
   "rulesPokerPlayers": "ผู้เล่น: {players}.",
   "@rulesPokerPlayers": {
