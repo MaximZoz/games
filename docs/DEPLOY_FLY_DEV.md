@@ -166,6 +166,7 @@ fly tokens create org -x 2160h -n github-actions
 После настройки:
 - любой push/merge в `develop` → деплой на https://multigameszozu-dev.fly.dev
 - любой push/merge в `main` → деплой на https://multigameszozu.fly.dev
+- workflow `CI` (analyze/test) на push/PR не запускается; только ручной Run workflow
 
 Ручной запуск: Actions → **Deploy Fly** → Run workflow → выбрать `dev` или `prod`.
 

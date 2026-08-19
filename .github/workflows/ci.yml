@@ -1,10 +1,10 @@
 name: CI
 
+# Автопрогон на push/PR отключён — минуты Actions уходят на деплой.
+# Локально: ./launcher/test.sh (или команды из README).
+# Вручную: Actions → CI → Run workflow.
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   flutter:
