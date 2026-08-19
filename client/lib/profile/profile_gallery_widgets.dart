@@ -32,7 +32,7 @@ Future<void> showProfilePhotosGallery({
           child: Material(
             color: AppColors.surfaceCard,
             borderRadius: BorderRadius.circular(20),
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -56,11 +56,9 @@ Future<void> showProfilePhotosGallery({
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Flexible(
-                    child: ProfilePhotosGalleryPanel(
-                      userId: userId,
-                      canManage: canManage,
-                    ),
+                  ProfilePhotosGalleryPanel(
+                    userId: userId,
+                    canManage: canManage,
                   ),
                 ],
               ),
@@ -152,71 +150,69 @@ class ProfilePhotosGalleryBody extends StatelessWidget {
     }
     final narrow = MediaQuery.sizeOf(context).width < 380;
     final cardW = narrow ? 96.0 : 118.0;
-    return SingleChildScrollView(
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 10,
-        runSpacing: 12,
-        children: [
-          for (var i = 0; i < photos.length; i++)
-            SizedBox(
-              width: cardW,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Material(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(14),
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      key: ValueKey('profile-photo-thumb-${photos[i].id}'),
-                      onTap: () => onOpenPhoto(i),
-                      child: SizedBox(
-                        width: cardW,
-                        height: cardW,
-                        child: imageBuilder(photos[i]),
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 12,
+      children: [
+        for (var i = 0; i < photos.length; i++)
+          SizedBox(
+            width: cardW,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: AppColors.accentSoft,
+                  borderRadius: BorderRadius.circular(14),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: ValueKey('profile-photo-thumb-${photos[i].id}'),
+                    onTap: () => onOpenPhoto(i),
+                    child: SizedBox(
+                      width: cardW,
+                      height: cardW,
+                      child: imageBuilder(photos[i]),
+                    ),
+                  ),
+                ),
+                if (canManage && onMakePrimary != null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      key: ValueKey('profile-make-primary-${photos[i].id}'),
+                      onPressed: () => onMakePrimary!(photos[i]),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accentStart,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 8,
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide(
+                          color: AppColors.accentStart.withValues(alpha: 0.55),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      child: Text(
+                        context.l10n.profileMakePrimary,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ),
-                  if (canManage && onMakePrimary != null) ...[
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        key: ValueKey('profile-make-primary-${photos[i].id}'),
-                        onPressed: () => onMakePrimary!(photos[i]),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.accentStart,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 8,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide(
-                            color: AppColors.accentStart.withValues(alpha: 0.55),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n.profileMakePrimary,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
