@@ -4,6 +4,9 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил «Уно» для карточки на экране игр.
+///
+/// Когда появится ставка — добавить `rulesStakeLine(stakeBronze, t)`:
+/// иконка монеты рисуется сама через [rulesTextLines].
 List<String> unoRuleLines({
   required int players,
   required int turnTimeSec,
