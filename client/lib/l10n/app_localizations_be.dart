@@ -598,6 +598,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesPoker => 'Покер';
 
   @override
+  String get gamesUno => 'Уно';
+
+  @override
   String get gamesInDevelopment => 'У распрацоўцы';
 
   @override

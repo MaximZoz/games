@@ -1283,6 +1283,12 @@ abstract class AppLocalizations {
   /// **'Покер'**
   String get gamesPoker;
 
+  /// No description provided for @gamesUno.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уно'**
+  String get gamesUno;
+
   /// No description provided for @gamesInDevelopment.
   ///
   /// In ru, this message translates to:

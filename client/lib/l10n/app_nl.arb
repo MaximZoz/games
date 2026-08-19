@@ -224,6 +224,7 @@
   "rulesBattleshipPlay": "After setup, a random player shoots first. Fire at the opponent’s cells: a hit grants another shot, a miss passes the turn. On your turn you see the opponent’s board; on theirs you see yours.",
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
+  "gamesUno": "Uno",
   "gamesInDevelopment": "In ontwikkeling",
   "rulesPokerPlayers": "Spelers: {players}.",
   "@rulesPokerPlayers": {

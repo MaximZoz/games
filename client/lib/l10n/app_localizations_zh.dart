@@ -598,6 +598,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesPoker => '扑克';
 
   @override
+  String get gamesUno => '乌诺';
+
+  @override
   String get gamesInDevelopment => '开发中';
 
   @override

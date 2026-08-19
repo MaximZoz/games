@@ -598,6 +598,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesPoker => 'Poker';
 
   @override
+  String get gamesUno => 'Uno';
+
+  @override
   String get gamesInDevelopment => 'Đang phát triển';
 
   @override
