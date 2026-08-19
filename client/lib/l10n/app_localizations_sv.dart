@@ -1188,7 +1188,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get profileUploadPhoto => 'Ladda upp foto';
 
   @override
-  String get profileChangePhoto => 'Byt foto';
+  String get profileChangePhoto => 'Byt avatar';
 
   @override
   String get shopTitle => 'Butik';

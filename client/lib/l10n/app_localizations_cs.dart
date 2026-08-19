@@ -1188,7 +1188,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get profileUploadPhoto => 'Nahrát foto';
 
   @override
-  String get profileChangePhoto => 'Změnit foto';
+  String get profileChangePhoto => 'Změnit avatar';
 
   @override
   String get shopTitle => 'Obchod';

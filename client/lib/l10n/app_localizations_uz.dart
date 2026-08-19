@@ -1188,7 +1188,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get profileUploadPhoto => 'Foto yuklash';
 
   @override
-  String get profileChangePhoto => 'Fotoni o‘zgartirish';
+  String get profileChangePhoto => 'Avatarni o‘zgartirish';
 
   @override
   String get shopTitle => 'Do‘kon';

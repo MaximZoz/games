@@ -1188,7 +1188,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileUploadPhoto => '사진 업로드';
 
   @override
-  String get profileChangePhoto => '사진 변경';
+  String get profileChangePhoto => '아바타 변경';
 
   @override
   String get shopTitle => '상점';

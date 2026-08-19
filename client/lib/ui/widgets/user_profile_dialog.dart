@@ -168,6 +168,13 @@ Future<void> showUserProfileDialog({
                           TappableProfileAvatar(
                             userId: id,
                             canManage: isSelf,
+                            avatarKind:
+                                friendUser?.avatarKind ?? avatarKind,
+                            avatarValue:
+                                friendUser?.avatarValue ?? avatarValue,
+                            letter: name.trim().isEmpty
+                                ? '?'
+                                : name.trim()[0].toUpperCase(),
                             child: _ProfileAvatar(
                               displayName: name,
                               avatarKind:

@@ -1188,7 +1188,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get profileUploadPhoto => 'Prześlij zdjęcie';
 
   @override
-  String get profileChangePhoto => 'Zmień zdjęcie';
+  String get profileChangePhoto => 'Zmień avatar';
 
   @override
   String get shopTitle => 'Sklep';

@@ -13,6 +13,7 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
+import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -756,6 +757,9 @@ class _ProfileView extends ConsumerWidget {
             TappableProfileAvatar(
               userId: user.id,
               canManage: true,
+              avatarKind: profileExtra.avatarKind.name,
+              avatarValue: profileExtra.avatarValue,
+              letter: _avatarLetter,
               child: avatar,
             ),
             SizedBox(height: gapAfterAvatar),
@@ -962,6 +966,9 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  bool _galleryDirty = false;
+  String? _initialGallerySignature;
+  String _gallerySignature = '';
   bool _aboutTypingActive = false;
   String? _ageError;
   String? _saveError;
@@ -1016,12 +1023,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     // Игнор смены selection (повторный тап) — только реальный текст.
     if (text == _lastAboutText) return;
     _lastAboutText = text;
-    if ((_ageError != null || _saveError != null) && mounted) {
-      setState(() {
-        _ageError = null;
-        _saveError = null;
-      });
-    }
+    _onFieldsChanged();
   }
 
   ProfileExtra get _effectiveInitialExtra =>
@@ -1085,7 +1087,28 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     if (_avatarKind != initial.avatarKind) return true;
     if ((_avatarValue ?? '') != (initial.avatarValue ?? '')) return true;
     if (_showStatsToOthers != initial.showStatsToOthers) return true;
+    if (_galleryDirty) return true;
+    if (_initialGallerySignature != null &&
+        _gallerySignature != _initialGallerySignature) {
+      return true;
+    }
     return false;
+  }
+
+  void _onGalleryMutated() {
+    if (_galleryDirty) return;
+    setState(() => _galleryDirty = true);
+  }
+
+  void _onGalleryPhotosChanged(List<ProfilePhotoMeta> photos) {
+    final next = profilePhotosSignature(photos);
+    if (_initialGallerySignature == null) {
+      _initialGallerySignature = next;
+      _gallerySignature = next;
+      return;
+    }
+    if (next == _gallerySignature) return;
+    setState(() => _gallerySignature = next);
   }
 
   @override
@@ -1577,6 +1600,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   userId: widget.user.id,
                   enabled: !_isSaving,
                   compact: true,
+                  onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
                 ),
                 SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
@@ -1823,6 +1848,8 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 ProfileGalleryEditSlots(
                   userId: widget.user.id,
                   enabled: !_isSaving,
+                  onPhotosChanged: _onGalleryPhotosChanged,
+                  onMutated: _onGalleryMutated,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

@@ -1188,7 +1188,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileUploadPhoto => 'Fotoğraf yükle';
 
   @override
-  String get profileChangePhoto => 'Fotoğrafı değiştir';
+  String get profileChangePhoto => 'Avatarı değiştir';
 
   @override
   String get shopTitle => 'Mağaza';

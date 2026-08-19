@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
@@ -32,6 +33,32 @@ void main() {
     expect(slots[0], isNull);
     expect(slots[1]?.id, 'a');
     expect(slots[2], isNull);
+  });
+
+  test('profilePhotosSignature меняется после добавления фото', () {
+    const empty = <ProfilePhotoMeta>[];
+    const one = [
+      ProfilePhotoMeta(
+        id: 'p1',
+        userId: 'u',
+        slot: 0,
+        imageMime: 'image/jpeg',
+      ),
+    ];
+    expect(profilePhotosSignature(empty), '');
+    expect(profilePhotosSignature(one), '0:p1');
+    expect(profilePhotosSignature(empty), isNot(profilePhotosSignature(one)));
+    expect(
+      profilePhotosSignature(one),
+      profilePhotosSignature([
+        const ProfilePhotoMeta(
+          id: 'p1',
+          userId: 'u',
+          slot: 0,
+          imageMime: 'image/jpeg',
+        ),
+      ]),
+    );
   });
 
   test('profilePhotoSlots игнорирует слот вне диапазона', () {
@@ -99,7 +126,34 @@ void main() {
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
   });
 
-  testWidgets('кнопка «Сделать основным» только у владельца', (tester) async {
+  testWidgets('просмотр без галереи — только основное фото', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [],
+          selectedIndex: null,
+          canManage: true,
+          mainPhoto: const ColoredBox(
+            key: ValueKey('hero'),
+            color: Colors.purple,
+          ),
+          imageBuilder: _emptyImage,
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-viewer-strip')), findsNothing);
+    expect(find.text('Сделать основным'), findsNothing);
+  });
+
+  testWidgets('просмотр с фото — основное и лента галереи', (tester) async {
     const photo = ProfilePhotoMeta(
       id: 'p1',
       userId: 'u1',
@@ -111,18 +165,45 @@ void main() {
         locale: const Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: const [photo],
-            canManage: true,
-            imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
-                const ColoredBox(color: Colors.blue),
-            onOpenPhoto: (_) {},
-            onMakePrimary: (_) {},
-          ),
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: null,
+          canManage: true,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
         ),
       ),
     );
+    expect(find.byKey(const ValueKey('profile-viewer-main')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-viewer-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-photo-thumb-p1')), findsOneWidget);
+    expect(find.text('Сделать основным'), findsNothing);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: 0,
+          canManage: true,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
+          onMakePrimary: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
     expect(find.text('Сделать основным'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-make-primary-p1')), findsOneWidget);
 
@@ -131,14 +212,16 @@ void main() {
         locale: const Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: const [photo],
-            canManage: false,
-            imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
-                const ColoredBox(color: Colors.blue),
-            onOpenPhoto: (_) {},
-          ),
+        home: ProfilePhotoViewerBody(
+          photos: const [photo],
+          selectedIndex: 0,
+          canManage: false,
+          mainPhoto: const ColoredBox(color: Colors.purple),
+          imageBuilder: (_, {BoxFit fit = BoxFit.cover}) =>
+              const ColoredBox(color: Colors.blue),
+          onSelectMain: () {},
+          onSelectPhoto: _noop,
+          onClose: () {},
         ),
       ),
     );
@@ -146,23 +229,31 @@ void main() {
     expect(find.text('Сделать основным'), findsNothing);
   });
 
-  testWidgets('пустая галерея показывает заглушку', (tester) async {
+  testWidgets('слоты сообщают форме о составе фото', (tester) async {
+    final seen = <String>[];
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
-          body: ProfilePhotosGalleryBody(
-            photos: [],
-            canManage: false,
-            imageBuilder: _emptyImage,
-            onOpenPhoto: _noop,
+      ProviderScope(
+        overrides: [
+          profilePhotosProvider.overrideWith((ref, userId) async => const []),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ProfileGalleryEditSlots(
+              userId: 'u1',
+              onPhotosChanged: (photos) {
+                seen.add(profilePhotosSignature(photos));
+              },
+            ),
           ),
         ),
       ),
     );
-    expect(find.text('Пока нет фото'), findsOneWidget);
+    await tester.pump();
+    await tester.pump();
+    expect(seen, ['']);
   });
 }
 

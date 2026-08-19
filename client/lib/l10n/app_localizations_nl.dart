@@ -1188,7 +1188,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get profileUploadPhoto => 'Foto uploaden';
 
   @override
-  String get profileChangePhoto => 'Foto wijzigen';
+  String get profileChangePhoto => 'Avatar wijzigen';
 
   @override
   String get shopTitle => 'Winkel';

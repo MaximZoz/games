@@ -9,6 +9,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_photo_cache.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/avatar_crop_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -17,59 +18,272 @@ Future<void> showProfilePhotosGallery({
   required BuildContext context,
   required String userId,
   required bool canManage,
+  required String avatarKind,
+  String? avatarValue,
+  required String letter,
 }) {
   if (userId.trim().isEmpty) return Future<void>.value();
-  return showDialog<void>(
-    context: context,
-    useRootNavigator: true,
-    builder: (ctx) {
-      final maxH = MediaQuery.sizeOf(ctx).height * 0.85;
-      return Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        backgroundColor: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 440, maxHeight: maxH),
-          child: Material(
-            color: AppColors.surfaceCard,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          ctx.l10n.profileGalleryTitle,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: ProfilePhotosGalleryPanel(
-                      userId: userId,
-                      canManage: canManage,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  return Navigator.of(context, rootNavigator: true).push<void>(
+    PageRouteBuilder<void>(
+      opaque: true,
+      fullscreenDialog: true,
+      barrierColor: Colors.black,
+      pageBuilder: (_, __, ___) => ProfilePhotoViewerPage(
+        userId: userId,
+        canManage: canManage,
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        letter: letter,
+      ),
+      transitionsBuilder: (_, animation, __, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+    ),
+  );
+}
+
+class ProfilePhotoViewerPage extends ConsumerStatefulWidget {
+  const ProfilePhotoViewerPage({
+    super.key,
+    required this.userId,
+    required this.canManage,
+    required this.avatarKind,
+    this.avatarValue,
+    required this.letter,
+  });
+
+  final String userId;
+  final bool canManage;
+  final String avatarKind;
+  final String? avatarValue;
+  final String letter;
+
+  @override
+  ConsumerState<ProfilePhotoViewerPage> createState() =>
+      _ProfilePhotoViewerPageState();
+}
+
+class _ProfilePhotoViewerPageState extends ConsumerState<ProfilePhotoViewerPage> {
+  int? _selectedIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final photos =
+        ref.watch(profilePhotosProvider(widget.userId)).valueOrNull ??
+            const <ProfilePhotoMeta>[];
+    final me = ref.watch(authStateProvider).valueOrNull;
+    final liveSelf = me != null && me.id == widget.userId;
+    final avatarKind = liveSelf ? me.avatarKind : widget.avatarKind;
+    final avatarValue = liveSelf ? me.avatarValue : widget.avatarValue;
+    return ProfilePhotoViewerBody(
+      photos: photos,
+      selectedIndex: _selectedIndex,
+      canManage: widget.canManage,
+      mainPhoto: ProfileAvatarHeroImage(
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        letter: widget.letter,
+      ),
+      imageBuilder: (photo, {BoxFit fit = BoxFit.cover}) =>
+          ProfilePhotoImage(photoId: photo.id, fit: fit),
+      onSelectMain: () => setState(() => _selectedIndex = null),
+      onSelectPhoto: (index) => setState(() => _selectedIndex = index),
+      onMakePrimary: widget.canManage
+          ? (photo) => setProfilePhotoAsPrimary(
+                context: context,
+                ref: ref,
+                photo: photo,
+              )
+          : null,
+      onClose: () {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      },
+    );
+  }
+}
+
+class ProfileAvatarHeroImage extends StatelessWidget {
+  const ProfileAvatarHeroImage({
+    super.key,
+    required this.avatarKind,
+    this.avatarValue,
+    required this.letter,
+  });
+
+  final String avatarKind;
+  final String? avatarValue;
+  final String letter;
+
+  @override
+  Widget build(BuildContext context) {
+    if (avatarKind == 'file' || avatarKind == AvatarKind.file.name) {
+      final img = AvatarMemoryCache.fromAvatarValue(avatarValue);
+      if (img != null) {
+        return Image(
+          image: img,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+        );
+      }
+    }
+    return Center(
+      child: CircleAvatar(
+        radius: 80,
+        backgroundColor: AppColors.accentSoft,
+        child: Text(
+          letter.trim().isEmpty ? '?' : letter.trim()[0].toUpperCase(),
+          style: const TextStyle(
+            fontSize: 56,
+            fontWeight: FontWeight.w800,
+            color: AppColors.accentStart,
           ),
         ),
-      );
-    },
-  );
+      ),
+    );
+  }
+}
+
+class ProfilePhotoViewerBody extends StatelessWidget {
+  const ProfilePhotoViewerBody({
+    super.key,
+    required this.photos,
+    required this.selectedIndex,
+    required this.canManage,
+    required this.mainPhoto,
+    required this.imageBuilder,
+    required this.onSelectMain,
+    required this.onSelectPhoto,
+    required this.onClose,
+    this.onMakePrimary,
+  });
+
+  final List<ProfilePhotoMeta> photos;
+  final int? selectedIndex;
+  final bool canManage;
+  final Widget mainPhoto;
+  final Widget Function(ProfilePhotoMeta photo, {BoxFit fit}) imageBuilder;
+  final VoidCallback onSelectMain;
+  final ValueChanged<int> onSelectPhoto;
+  final VoidCallback onClose;
+  final ValueChanged<ProfilePhotoMeta>? onMakePrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    final showingGallery = selectedIndex != null &&
+        selectedIndex! >= 0 &&
+        selectedIndex! < photos.length;
+    final selectedPhoto = showingGallery ? photos[selectedIndex!] : null;
+    final topPad = MediaQuery.viewPaddingOf(context).top;
+    final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 5,
+                  child: Center(
+                    child: KeyedSubtree(
+                      key: const ValueKey('profile-viewer-main'),
+                      child: showingGallery
+                          ? imageBuilder(
+                              selectedPhoto!,
+                              fit: BoxFit.contain,
+                            )
+                          : mainPhoto,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: topPad + 4,
+                  right: 8,
+                  child: IconButton(
+                    onPressed: onClose,
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (selectedPhoto != null && canManage && onMakePrimary != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  key: ValueKey('profile-make-primary-${selectedPhoto.id}'),
+                  onPressed: () => onMakePrimary!(selectedPhoto),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white70),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: Text(context.l10n.profileMakePrimary),
+                ),
+              ),
+            ),
+          if (photos.isNotEmpty)
+            ColoredBox(
+              key: const ValueKey('profile-viewer-strip'),
+              color: const Color(0xE6000000),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + bottomPad),
+                child: SizedBox(
+                  height: 72,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: photos.length.clamp(0, maxProfilePhotos),
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final selected = i == selectedIndex;
+                      return GestureDetector(
+                        onTap: () {
+                          if (i == selectedIndex) {
+                            onSelectMain();
+                          } else {
+                            onSelectPhoto(i);
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 160),
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: selected ? Colors.white : Colors.white24,
+                              width: selected ? 2.4 : 1,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: KeyedSubtree(
+                            key: ValueKey('profile-photo-thumb-${photos[i].id}'),
+                            child: imageBuilder(photos[i]),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class ProfilePhotosGalleryPanel extends ConsumerWidget {
@@ -152,71 +366,69 @@ class ProfilePhotosGalleryBody extends StatelessWidget {
     }
     final narrow = MediaQuery.sizeOf(context).width < 380;
     final cardW = narrow ? 96.0 : 118.0;
-    return SingleChildScrollView(
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 10,
-        runSpacing: 12,
-        children: [
-          for (var i = 0; i < photos.length; i++)
-            SizedBox(
-              width: cardW,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Material(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(14),
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      key: ValueKey('profile-photo-thumb-${photos[i].id}'),
-                      onTap: () => onOpenPhoto(i),
-                      child: SizedBox(
-                        width: cardW,
-                        height: cardW,
-                        child: imageBuilder(photos[i]),
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 12,
+      children: [
+        for (var i = 0; i < photos.length; i++)
+          SizedBox(
+            width: cardW,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: AppColors.accentSoft,
+                  borderRadius: BorderRadius.circular(14),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: ValueKey('profile-photo-thumb-${photos[i].id}'),
+                    onTap: () => onOpenPhoto(i),
+                    child: SizedBox(
+                      width: cardW,
+                      height: cardW,
+                      child: imageBuilder(photos[i]),
+                    ),
+                  ),
+                ),
+                if (canManage && onMakePrimary != null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      key: ValueKey('profile-make-primary-${photos[i].id}'),
+                      onPressed: () => onMakePrimary!(photos[i]),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accentStart,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 8,
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide(
+                          color: AppColors.accentStart.withValues(alpha: 0.55),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      child: Text(
+                        context.l10n.profileMakePrimary,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ),
-                  if (canManage && onMakePrimary != null) ...[
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        key: ValueKey('profile-make-primary-${photos[i].id}'),
-                        onPressed: () => onMakePrimary!(photos[i]),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.accentStart,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 8,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide(
-                            color: AppColors.accentStart.withValues(alpha: 0.55),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n.profileMakePrimary,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
@@ -227,11 +439,15 @@ class ProfileGalleryEditSlots extends ConsumerStatefulWidget {
     required this.userId,
     this.enabled = true,
     this.compact = false,
+    this.onPhotosChanged,
+    this.onMutated,
   });
 
   final String userId;
   final bool enabled;
   final bool compact;
+  final ValueChanged<List<ProfilePhotoMeta>>? onPhotosChanged;
+  final VoidCallback? onMutated;
 
   @override
   ConsumerState<ProfileGalleryEditSlots> createState() =>
@@ -241,6 +457,18 @@ class ProfileGalleryEditSlots extends ConsumerStatefulWidget {
 class _ProfileGalleryEditSlotsState
     extends ConsumerState<ProfileGalleryEditSlots> {
   int? _busySlot;
+  String? _lastNotifiedSignature;
+
+  void _notifyPhotosIfNeeded(List<ProfilePhotoMeta> photos) {
+    if (widget.onPhotosChanged == null) return;
+    final signature = profilePhotosSignature(photos);
+    if (_lastNotifiedSignature == signature) return;
+    _lastNotifiedSignature = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onPhotosChanged!(photos);
+    });
+  }
 
   Future<void> _pickForSlot(int slot) async {
     if (!widget.enabled || _busySlot != null) return;
@@ -261,6 +489,7 @@ class _ProfileGalleryEditSlotsState
           );
       ref.read(profilePhotoBytesCacheProvider.notifier).state = {};
       ref.invalidate(profilePhotosProvider(widget.userId));
+      widget.onMutated?.call();
     } catch (e) {
       if (!mounted) return;
       _toast(formatUserError(e, fallback: context.l10n.profilePhotoUploadFailed));
@@ -294,6 +523,7 @@ class _ProfileGalleryEditSlotsState
       await ref.read(profilePhotosRepositoryProvider).deletePhoto(photo.id);
       removeProfilePhotoFromCache(ref, photo.id);
       ref.invalidate(profilePhotosProvider(widget.userId));
+      widget.onMutated?.call();
     } catch (e) {
       if (!mounted) return;
       _toast(formatUserError(e, fallback: context.l10n.profilePhotoDeleteFailed));
@@ -312,6 +542,9 @@ class _ProfileGalleryEditSlotsState
   Widget build(BuildContext context) {
     final async = ref.watch(profilePhotosProvider(widget.userId));
     final photos = async.valueOrNull ?? const <ProfilePhotoMeta>[];
+    if (async.hasValue) {
+      _notifyPhotosIfNeeded(photos);
+    }
     final slots = profilePhotoSlots(photos);
     final phoneLand = isPhoneLandscape(context);
     final size = widget.compact
@@ -821,11 +1054,17 @@ class TappableProfileAvatar extends ConsumerWidget {
     super.key,
     required this.userId,
     required this.canManage,
+    required this.avatarKind,
+    this.avatarValue,
+    required this.letter,
     required this.child,
   });
 
   final String userId;
   final bool canManage;
+  final String avatarKind;
+  final String? avatarValue;
+  final String letter;
   final Widget child;
 
   @override
@@ -839,6 +1078,9 @@ class TappableProfileAvatar extends ConsumerWidget {
           context: context,
           userId: userId,
           canManage: canManage,
+          avatarKind: avatarKind,
+          avatarValue: avatarValue,
+          letter: letter,
         ),
         child: Stack(
           clipBehavior: Clip.none,

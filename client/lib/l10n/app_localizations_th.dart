@@ -1188,7 +1188,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get profileUploadPhoto => 'อัปโหลดรูป';
 
   @override
-  String get profileChangePhoto => 'เปลี่ยนรูป';
+  String get profileChangePhoto => 'เปลี่ยนอวาตาร์';
 
   @override
   String get shopTitle => 'ร้านค้า';
