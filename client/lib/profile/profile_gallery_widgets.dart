@@ -223,11 +223,13 @@ class ProfileGalleryEditSlots extends ConsumerStatefulWidget {
     required this.userId,
     this.enabled = true,
     this.compact = false,
+    this.onPhotosChanged,
   });
 
   final String userId;
   final bool enabled;
   final bool compact;
+  final ValueChanged<List<ProfilePhotoMeta>>? onPhotosChanged;
 
   @override
   ConsumerState<ProfileGalleryEditSlots> createState() =>
@@ -237,6 +239,18 @@ class ProfileGalleryEditSlots extends ConsumerStatefulWidget {
 class _ProfileGalleryEditSlotsState
     extends ConsumerState<ProfileGalleryEditSlots> {
   int? _busySlot;
+  String? _lastNotifiedSignature;
+
+  void _notifyPhotosIfNeeded(List<ProfilePhotoMeta> photos) {
+    if (widget.onPhotosChanged == null) return;
+    final signature = profilePhotosSignature(photos);
+    if (_lastNotifiedSignature == signature) return;
+    _lastNotifiedSignature = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onPhotosChanged!(photos);
+    });
+  }
 
   Future<void> _pickForSlot(int slot) async {
     if (!widget.enabled || _busySlot != null) return;
@@ -308,6 +322,9 @@ class _ProfileGalleryEditSlotsState
   Widget build(BuildContext context) {
     final async = ref.watch(profilePhotosProvider(widget.userId));
     final photos = async.valueOrNull ?? const <ProfilePhotoMeta>[];
+    if (async.hasValue) {
+      _notifyPhotosIfNeeded(photos);
+    }
     final slots = profilePhotoSlots(photos);
     final phoneLand = isPhoneLandscape(context);
     final size = widget.compact

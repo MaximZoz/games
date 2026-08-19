@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
@@ -32,6 +33,32 @@ void main() {
     expect(slots[0], isNull);
     expect(slots[1]?.id, 'a');
     expect(slots[2], isNull);
+  });
+
+  test('profilePhotosSignature меняется после добавления фото', () {
+    const empty = <ProfilePhotoMeta>[];
+    const one = [
+      ProfilePhotoMeta(
+        id: 'p1',
+        userId: 'u',
+        slot: 0,
+        imageMime: 'image/jpeg',
+      ),
+    ];
+    expect(profilePhotosSignature(empty), '');
+    expect(profilePhotosSignature(one), '0:p1');
+    expect(profilePhotosSignature(empty), isNot(profilePhotosSignature(one)));
+    expect(
+      profilePhotosSignature(one),
+      profilePhotosSignature([
+        const ProfilePhotoMeta(
+          id: 'p1',
+          userId: 'u',
+          slot: 0,
+          imageMime: 'image/jpeg',
+        ),
+      ]),
+    );
   });
 
   test('profilePhotoSlots игнорирует слот вне диапазона', () {
@@ -163,6 +190,33 @@ void main() {
       ),
     );
     expect(find.text('Пока нет фото'), findsOneWidget);
+  });
+
+  testWidgets('слоты сообщают форме о составе фото', (tester) async {
+    final seen = <String>[];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          profilePhotosProvider.overrideWith((ref, userId) async => const []),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ProfileGalleryEditSlots(
+              userId: 'u1',
+              onPhotosChanged: (photos) {
+                seen.add(profilePhotosSignature(photos));
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(seen, ['']);
   });
 }
 

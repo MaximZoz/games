@@ -13,6 +13,7 @@ import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
+import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -962,6 +963,8 @@ final _aboutFormatters = [
 class _ProfileEditFormState extends State<_ProfileEditForm> {
   bool _isSaving = false;
   bool _isAvatarProcessing = false;
+  String? _initialGallerySignature;
+  String _gallerySignature = '';
   bool _aboutTypingActive = false;
   String? _ageError;
   String? _saveError;
@@ -1085,7 +1088,22 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
     if (_avatarKind != initial.avatarKind) return true;
     if ((_avatarValue ?? '') != (initial.avatarValue ?? '')) return true;
     if (_showStatsToOthers != initial.showStatsToOthers) return true;
+    if (_initialGallerySignature != null &&
+        _gallerySignature != _initialGallerySignature) {
+      return true;
+    }
     return false;
+  }
+
+  void _onGalleryPhotosChanged(List<ProfilePhotoMeta> photos) {
+    final next = profilePhotosSignature(photos);
+    if (_initialGallerySignature == null) {
+      _initialGallerySignature = next;
+      _gallerySignature = next;
+      return;
+    }
+    if (next == _gallerySignature) return;
+    setState(() => _gallerySignature = next);
   }
 
   @override
@@ -1577,6 +1595,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                   userId: widget.user.id,
                   enabled: !_isSaving,
                   compact: true,
+                  onPhotosChanged: _onGalleryPhotosChanged,
                 ),
                 SizedBox(height: phoneLand ? 8 : 12),
                 OutlinedButton.icon(
@@ -1823,6 +1842,7 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
                 ProfileGalleryEditSlots(
                   userId: widget.user.id,
                   enabled: !_isSaving,
+                  onPhotosChanged: _onGalleryPhotosChanged,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(

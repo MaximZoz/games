@@ -45,6 +45,17 @@ List<ProfilePhotoMeta?> profilePhotoSlots(Iterable<ProfilePhotoMeta> photos) {
   return out;
 }
 
+/// Стабильная подпись состава галереи — чтобы форма «Сохранить»
+/// видела добавление/замену/удаление фото.
+String profilePhotosSignature(Iterable<ProfilePhotoMeta> photos) {
+  final parts = photos
+      .where((p) => p.id.isNotEmpty)
+      .map((p) => '${p.slot}:${p.id}')
+      .toList()
+    ..sort();
+  return parts.join('|');
+}
+
 class ProfilePhotosRepository {
   ProfilePhotosRepository({required AuthRepository authRepository})
       : _auth = authRepository;
