@@ -333,6 +333,13 @@ func TestWildDrawFourChallenge(t *testing.T) {
 		if game.CurrentIndex != 1 {
 			t.Fatalf("challenger should retain turn, current=%d", game.CurrentIndex)
 		}
+		if game.LastEventType != "wd4_reveal" || game.LastEventCard == nil || game.LastEventCard.Color != ColorRed {
+			t.Fatalf("expected red proof card, event=%s card=%#v", game.LastEventType, game.LastEventCard)
+		}
+		view := game.View("p1")
+		if view.MyIndex != 1 || view.LastEventCard == nil || view.LastEventCard.Color != ColorRed {
+			t.Fatalf("view should expose proof card to challenger: my=%d card=%#v", view.MyIndex, view.LastEventCard)
+		}
 	})
 
 	t.Run("declined challenge draws four and skips", func(t *testing.T) {

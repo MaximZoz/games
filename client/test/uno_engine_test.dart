@@ -111,6 +111,8 @@ void main() {
     expect(engine.players[0].hand, hasLength(5));
     expect(engine.currentIndex, 1);
     expect(engine.status, UnoStatus.active);
+    expect(engine.lastEventType, 'wd4_reveal');
+    expect(engine.lastEventCard?.color, UnoColor.red);
   });
 
   test('round scoring uses card values and ends match at 100', () {

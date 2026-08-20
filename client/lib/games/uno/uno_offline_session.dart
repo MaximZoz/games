@@ -139,6 +139,12 @@ class OfflineUnoSession extends ChangeNotifier {
           game.status == UnoStatus.awaitingColor,
       canKeepOrPlayDrawn:
           game.currentIndex == me && game.status == UnoStatus.awaitingDrawnPlay,
+      eventSeq: game.eventSeq,
+      lastEventType: game.lastEventType,
+      lastEventActor: game.lastEventActor,
+      lastDrawUserId: game.lastDrawUserId,
+      lastDrawCount: game.lastDrawCount,
+      lastEventCard: game.lastEventCard,
     );
   }
 
