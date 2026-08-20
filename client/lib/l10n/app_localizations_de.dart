@@ -618,6 +618,106 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoWin => 'Es gewinnt, wer zuerst alle Karten ablegt. Sag „Uno“, wenn nur noch eine Karte übrig ist.';
 
   @override
+  String get rulesUnoCall => 'Sage „Uno“, wenn eine Karte übrig ist. Bei einer rechtzeitigen Anfechtung ziehst du 2 Karten.';
+
+  @override
+  String get rulesUnoScoring => 'Zahlen zählen ihren Wert, Aktionskarten 20 und schwarze Karten 50 Punkte. Wer zuerst 100 erreicht, gewinnt.';
+
+  @override
+  String get unoColorRed => 'Rot';
+
+  @override
+  String get unoColorYellow => 'Gelb';
+
+  @override
+  String get unoColorGreen => 'Grün';
+
+  @override
+  String get unoColorBlue => 'Blau';
+
+  @override
+  String get unoDraw => 'Ziehen';
+
+  @override
+  String get unoKeep => 'Behalten';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno anfechten';
+
+  @override
+  String get unoChallengeWd4 => '+4 anfechten';
+
+  @override
+  String get unoChooseColor => 'Farbe wählen';
+
+  @override
+  String get unoDrawPile => 'Ziehstapel';
+
+  @override
+  String get unoDiscardPile => 'Ablage';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Karten: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Punkte: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Runde $round · bis $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Du bist dran';
+
+  @override
+  String get unoWaitingTurn => 'Gegner ist dran';
+
+  @override
+  String get unoChooseColorHint => 'Wähle eine Farbe für die schwarze Karte';
+
+  @override
+  String get unoWd4Hint => 'Ziehe 4 Karten oder fechte Wild +4 an';
+
+  @override
+  String get unoDrawnHint => 'Spiele die gezogene Karte oder behalte sie';
+
+  @override
+  String get unoPlayHint => 'Spiele eine passende Farbe oder einen passenden Wert';
+
+  @override
+  String get unoDrawHint => 'Keine passende Karte — ziehe vom Stapel';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count Karten';
+  }
+
+  @override
+  String get unoYouWon => 'Du hast das Match gewonnen!';
+
+  @override
+  String get unoYouLost => 'Match beendet';
+
+  @override
+  String unoWinner(String name) {
+    return 'Gewinner: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Im Uhrzeigersinn';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Gegen den Uhrzeigersinn';
+
+  @override
   String get gamesInDevelopment => 'In Entwicklung';
 
   @override

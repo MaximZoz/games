@@ -618,6 +618,106 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoWin => '先出完手牌者获胜。剩一张牌时记得说“乌诺”。';
 
   @override
+  String get rulesUnoCall => '剩一张牌时喊“乌诺”。若对手先发起挑战，你需抽2张牌。';
+
+  @override
+  String get rulesUnoScoring => '数字牌按点数计分，功能牌20分，万能牌50分。先到100分者获胜。';
+
+  @override
+  String get unoColorRed => '红色';
+
+  @override
+  String get unoColorYellow => '黄色';
+
+  @override
+  String get unoColorGreen => '绿色';
+
+  @override
+  String get unoColorBlue => '蓝色';
+
+  @override
+  String get unoDraw => '抽牌';
+
+  @override
+  String get unoKeep => '保留';
+
+  @override
+  String get unoSayUno => '乌诺！';
+
+  @override
+  String get unoChallengeUno => '挑战乌诺';
+
+  @override
+  String get unoChallengeWd4 => '挑战+4';
+
+  @override
+  String get unoChooseColor => '选择颜色';
+
+  @override
+  String get unoDrawPile => '牌堆';
+
+  @override
+  String get unoDiscardPile => '弃牌堆';
+
+  @override
+  String unoCardsCount(int count) {
+    return '手牌：$count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '得分：$score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '第$round轮 · 目标$target';
+  }
+
+  @override
+  String get unoYourTurn => '你的回合';
+
+  @override
+  String get unoWaitingTurn => '对手回合';
+
+  @override
+  String get unoChooseColorHint => '为万能牌选择颜色';
+
+  @override
+  String get unoWd4Hint => '抽4张牌或挑战万能+4';
+
+  @override
+  String get unoDrawnHint => '打出抽到的牌或保留';
+
+  @override
+  String get unoPlayHint => '打出相同颜色或点数的牌';
+
+  @override
+  String get unoDrawHint => '没有可出的牌——从牌堆抽牌';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count张';
+  }
+
+  @override
+  String get unoYouWon => '你赢得了比赛！';
+
+  @override
+  String get unoYouLost => '比赛结束';
+
+  @override
+  String unoWinner(String name) {
+    return '获胜者：$name';
+  }
+
+  @override
+  String get unoDirectionClockwise => '顺时针';
+
+  @override
+  String get unoDirectionCounterclockwise => '逆时针';
+
+  @override
   String get gamesInDevelopment => '开发中';
 
   @override

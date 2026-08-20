@@ -618,6 +618,106 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoWin => 'מנצח מי שמשליך ראשון את כל הקלפים. אמרו “Uno” כשנשאר קלף אחד.';
 
   @override
+  String get rulesUnoCall => 'אמרו „אונו” כשנשאר קלף אחד. אם יריב מאתגר קודם, משכו 2 קלפים.';
+
+  @override
+  String get rulesUnoScoring => 'מספרים שווים לערכם, קלפי פעולה 20 וג׳וקרים 50 נקודות. הראשון ל־100 מנצח.';
+
+  @override
+  String get unoColorRed => 'אדום';
+
+  @override
+  String get unoColorYellow => 'צהוב';
+
+  @override
+  String get unoColorGreen => 'ירוק';
+
+  @override
+  String get unoColorBlue => 'כחול';
+
+  @override
+  String get unoDraw => 'משיכה';
+
+  @override
+  String get unoKeep => 'שמירה';
+
+  @override
+  String get unoSayUno => 'אונו!';
+
+  @override
+  String get unoChallengeUno => 'אתגר אונו';
+
+  @override
+  String get unoChallengeWd4 => 'אתגר +4';
+
+  @override
+  String get unoChooseColor => 'בחרו צבע';
+
+  @override
+  String get unoDrawPile => 'ערימת משיכה';
+
+  @override
+  String get unoDiscardPile => 'ערימת השלכה';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'קלפים: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'ניקוד: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'סיבוב $round · עד $target';
+  }
+
+  @override
+  String get unoYourTurn => 'התור שלך';
+
+  @override
+  String get unoWaitingTurn => 'תור היריב';
+
+  @override
+  String get unoChooseColorHint => 'בחרו צבע לקלף החופשי';
+
+  @override
+  String get unoWd4Hint => 'משכו 4 קלפים או אתגרו Wild +4';
+
+  @override
+  String get unoDrawnHint => 'שחקו בקלף שנמשך או שמרו אותו';
+
+  @override
+  String get unoPlayHint => 'שחקו צבע או ערך תואם';
+
+  @override
+  String get unoDrawHint => 'אין קלף מתאים — משכו מהערימה';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count קלפים';
+  }
+
+  @override
+  String get unoYouWon => 'ניצחת במשחק!';
+
+  @override
+  String get unoYouLost => 'המשחק הסתיים';
+
+  @override
+  String unoWinner(String name) {
+    return 'מנצח: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'עם כיוון השעון';
+
+  @override
+  String get unoDirectionCounterclockwise => 'נגד כיוון השעון';
+
+  @override
   String get gamesInDevelopment => 'בפיתוח';
 
   @override

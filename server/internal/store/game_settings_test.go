@@ -21,4 +21,9 @@ func TestDefaultUserGameSettings(t *testing.T) {
 	if b.GameType != GameTypeBattleship || b.TurnTimeSec != 60 || b.GridSize != 10 {
 		t.Fatalf("battleship defaults: %+v", b)
 	}
+	u := DefaultUserGameSettings(GameTypeUno)
+	if u.GameType != GameTypeUno || u.TurnTimeSec != 60 || u.MaxPlayers != 2 ||
+		u.GameMode != "classic" || u.Variant != "classic" {
+		t.Fatalf("uno defaults: %+v", u)
+	}
 }

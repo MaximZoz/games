@@ -8,8 +8,10 @@ import (
 
 func TestDefaultRegistry(t *testing.T) {
 	r := Default()
-	if !r.Has(store.GameTypeTicTacToe) || !r.Has(store.GameTypeDurak) || !r.Has(store.GameTypeBattleship) {
-		t.Fatalf("expected tictactoe+durak+battleship, got %v", r.IDs())
+	if !r.Has(store.GameTypeTicTacToe) || !r.Has(store.GameTypeDurak) ||
+		!r.Has(store.GameTypeBattleship) || !r.Has(store.GameTypePoker) ||
+		!r.Has(store.GameTypeUno) {
+		t.Fatalf("expected all built-in games, got %v", r.IDs())
 	}
 	ttt := r.MustGet(store.GameTypeTicTacToe)
 	if !ttt.SupportsDrawOffer(2) || ttt.SupportsDrawOffer(3) {
@@ -27,6 +29,20 @@ func TestDefaultRegistry(t *testing.T) {
 	}
 	if r.Normalize("battleship") != store.GameTypeBattleship {
 		t.Fatalf("normalize battleship")
+	}
+	uno := r.MustGet(store.GameTypeUno)
+	if !uno.SupportsOffline() {
+		t.Fatal("uno must support offline mode")
+	}
+	modes := uno.Modes()
+	if len(modes) != 1 || modes[0].ID != "classic" ||
+		modes[0].MinPlayers != 2 || modes[0].MaxPlayers != 4 {
+		t.Fatalf("uno modes: %+v", modes)
+	}
+	defaults := uno.DefaultSettings()
+	if defaults.MaxPlayers != 2 || defaults.TurnTimeSec != 60 ||
+		defaults.GameMode != "classic" || defaults.Variant != "classic" {
+		t.Fatalf("uno defaults: %+v", defaults)
 	}
 	if r.Normalize("unknown") != store.GameTypeTicTacToe {
 		t.Fatalf("normalize unknown")

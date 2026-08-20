@@ -11,5 +11,6 @@ export 'game_session_api.dart';
 export 'observation_card.dart';
 export 'durak_game.dart';
 export 'battleship_game.dart';
+export 'uno_game.dart';
 export 'poker_game.dart';
 export 'tictactoe_game.dart';

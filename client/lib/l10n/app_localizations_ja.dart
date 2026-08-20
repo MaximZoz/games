@@ -618,6 +618,106 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoWin => '最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。';
 
   @override
+  String get rulesUnoCall => '残り1枚で「ウノ」と宣言します。先に挑戦された場合は2枚引きます。';
+
+  @override
+  String get rulesUnoScoring => '数字は額面、アクションは20点、ワイルドは50点です。先に100点へ到達すると勝利です。';
+
+  @override
+  String get unoColorRed => '赤';
+
+  @override
+  String get unoColorYellow => '黄';
+
+  @override
+  String get unoColorGreen => '緑';
+
+  @override
+  String get unoColorBlue => '青';
+
+  @override
+  String get unoDraw => '引く';
+
+  @override
+  String get unoKeep => '保持';
+
+  @override
+  String get unoSayUno => 'ウノ！';
+
+  @override
+  String get unoChallengeUno => 'ウノを指摘';
+
+  @override
+  String get unoChallengeWd4 => '+4に挑戦';
+
+  @override
+  String get unoChooseColor => '色を選択';
+
+  @override
+  String get unoDrawPile => '山札';
+
+  @override
+  String get unoDiscardPile => '捨て札';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'カード：$count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '得点：$score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'ラウンド$round · $target点先取';
+  }
+
+  @override
+  String get unoYourTurn => 'あなたの番';
+
+  @override
+  String get unoWaitingTurn => '相手の番';
+
+  @override
+  String get unoChooseColorHint => 'ワイルドの色を選んでください';
+
+  @override
+  String get unoWd4Hint => '4枚引くかワイルド+4に挑戦します';
+
+  @override
+  String get unoDrawnHint => '引いたカードを出すか保持します';
+
+  @override
+  String get unoPlayHint => '同じ色または値のカードを出してください';
+
+  @override
+  String get unoDrawHint => '出せるカードがありません — 山札から引きます';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count枚';
+  }
+
+  @override
+  String get unoYouWon => '勝利しました！';
+
+  @override
+  String get unoYouLost => '試合終了';
+
+  @override
+  String unoWinner(String name) {
+    return '勝者：$name';
+  }
+
+  @override
+  String get unoDirectionClockwise => '時計回り';
+
+  @override
+  String get unoDirectionCounterclockwise => '反時計回り';
+
+  @override
   String get gamesInDevelopment => '開発中';
 
   @override

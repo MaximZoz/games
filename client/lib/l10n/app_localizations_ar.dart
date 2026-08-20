@@ -618,6 +618,106 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesUnoWin => 'يفوز من يتخلّص من كل بطاقاته أولاً. قل «أونو» عندما تبقى بطاقة واحدة.';
 
   @override
+  String get rulesUnoCall => 'قل «أونو» عند بقاء بطاقة واحدة. إذا تحداك الخصم أولًا فاسحب بطاقتين.';
+
+  @override
+  String get rulesUnoScoring => 'الأرقام بقيمتها، وبطاقات الحركة 20، والبطاقات السوداء 50 نقطة. يفوز أول من يصل إلى 100.';
+
+  @override
+  String get unoColorRed => 'أحمر';
+
+  @override
+  String get unoColorYellow => 'أصفر';
+
+  @override
+  String get unoColorGreen => 'أخضر';
+
+  @override
+  String get unoColorBlue => 'أزرق';
+
+  @override
+  String get unoDraw => 'اسحب';
+
+  @override
+  String get unoKeep => 'احتفظ';
+
+  @override
+  String get unoSayUno => 'أونو!';
+
+  @override
+  String get unoChallengeUno => 'تحدي أونو';
+
+  @override
+  String get unoChallengeWd4 => 'تحدي +4';
+
+  @override
+  String get unoChooseColor => 'اختر لونًا';
+
+  @override
+  String get unoDrawPile => 'كومة السحب';
+
+  @override
+  String get unoDiscardPile => 'كومة الرمي';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'البطاقات: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'النقاط: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'الجولة $round · حتى $target';
+  }
+
+  @override
+  String get unoYourTurn => 'دورك';
+
+  @override
+  String get unoWaitingTurn => 'دور الخصم';
+
+  @override
+  String get unoChooseColorHint => 'اختر لونًا للبطاقة السوداء';
+
+  @override
+  String get unoWd4Hint => 'اسحب 4 بطاقات أو تحدَّ Wild +4';
+
+  @override
+  String get unoDrawnHint => 'العب البطاقة المسحوبة أو احتفظ بها';
+
+  @override
+  String get unoPlayHint => 'العب لونًا أو قيمة مطابقة';
+
+  @override
+  String get unoDrawHint => 'لا توجد بطاقة مطابقة — اسحب من الكومة';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count بطاقات';
+  }
+
+  @override
+  String get unoYouWon => 'فزت بالمباراة!';
+
+  @override
+  String get unoYouLost => 'انتهت المباراة';
+
+  @override
+  String unoWinner(String name) {
+    return 'الفائز: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'مع عقارب الساعة';
+
+  @override
+  String get unoDirectionCounterclockwise => 'عكس عقارب الساعة';
+
+  @override
   String get gamesInDevelopment => 'قيد التطوير';
 
   @override

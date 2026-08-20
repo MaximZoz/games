@@ -618,6 +618,106 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoWin => 'Vyhrává ten, kdo se první zbaví všech karet. Řekněte „Uno“, když zbývá jedna.';
 
   @override
+  String get rulesUnoCall => 'Řekněte „Uno“, když zbývá jedna karta. Pokud soupeř vyzve dřív, lízněte 2 karty.';
+
+  @override
+  String get rulesUnoScoring => 'Čísla mají svou hodnotu, akční karty 20 a žolíky 50 bodů. Vyhrává první se 100 body.';
+
+  @override
+  String get unoColorRed => 'Červená';
+
+  @override
+  String get unoColorYellow => 'Žlutá';
+
+  @override
+  String get unoColorGreen => 'Zelená';
+
+  @override
+  String get unoColorBlue => 'Modrá';
+
+  @override
+  String get unoDraw => 'Líznout';
+
+  @override
+  String get unoKeep => 'Ponechat';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Vyzvat Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Vyzvat +4';
+
+  @override
+  String get unoChooseColor => 'Vyberte barvu';
+
+  @override
+  String get unoDrawPile => 'Balíček';
+
+  @override
+  String get unoDiscardPile => 'Odkládací hromádka';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Karty: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Skóre: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Kolo $round · do $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Váš tah';
+
+  @override
+  String get unoWaitingTurn => 'Tah soupeře';
+
+  @override
+  String get unoChooseColorHint => 'Vyberte barvu pro žolíka';
+
+  @override
+  String get unoWd4Hint => 'Lízněte 4 karty nebo vyzvěte Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Zahrajte líznutou kartu nebo si ji ponechte';
+
+  @override
+  String get unoPlayHint => 'Zahrajte shodnou barvu nebo hodnotu';
+
+  @override
+  String get unoDrawHint => 'Žádná shodná karta — lízněte si';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count karet';
+  }
+
+  @override
+  String get unoYouWon => 'Vyhráli jste zápas!';
+
+  @override
+  String get unoYouLost => 'Zápas skončil';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vítěz: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Po směru hodin';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Proti směru hodin';
+
+  @override
   String get gamesInDevelopment => 'Ve vývoji';
 
   @override

@@ -161,6 +161,8 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
       return l10n.gamesBattleship;
     case 'poker':
       return l10n.gamesPoker;
+    case 'uno':
+      return l10n.gamesUno;
     default:
       return gameType;
   }
@@ -209,7 +211,8 @@ class _EmptyStats extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               context.l10n.statsEmptyHint,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style:
+                  const TextStyle(color: AppColors.textSecondary, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -606,7 +609,8 @@ class _MiniScore extends StatelessWidget {
       children: [
         _scoreChip('${stat.won}', _StatColor.win, highlight == _Metric.won),
         const SizedBox(width: 6),
-        _scoreChip('${stat.drawn}', _StatColor.draw, highlight == _Metric.drawn),
+        _scoreChip(
+            '${stat.drawn}', _StatColor.draw, highlight == _Metric.drawn),
         const SizedBox(width: 6),
         _scoreChip('${stat.lost}', _StatColor.loss, highlight == _Metric.lost),
       ],

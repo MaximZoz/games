@@ -5,6 +5,8 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
+import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -23,6 +25,7 @@ class GameSessionApi {
   BattleshipRepository get _battleship =>
       _ref.read(battleshipRepositoryProvider);
   PokerRepository get _poker => _ref.read(pokerRepositoryProvider);
+  UnoRepository get _uno => _ref.read(unoRepositoryProvider);
 
   Future<void> leaveLobby(String lobbyId, {required String gameType}) async {
     final gt = gameRegistry.normalizeId(gameType);
@@ -36,6 +39,10 @@ class GameSessionApi {
     }
     if (gt == 'poker') {
       await _poker.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'uno') {
+      await _uno.leaveLobby(lobbyId);
       return;
     }
     await _ttt.leaveLobby(lobbyId);
@@ -55,6 +62,10 @@ class GameSessionApi {
     }
     if (gt == 'poker') {
       await _poker.forfeit(gameId);
+      return;
+    }
+    if (gt == 'uno') {
+      await _uno.forfeit(gameId);
       return;
     }
     await _ttt.forfeitGame(gameId);
@@ -94,6 +105,10 @@ class GameSessionApi {
     try {
       await _poker.getGame(gameId);
       return 'poker';
+    } catch (_) {}
+    try {
+      await _uno.getGame(gameId);
+      return 'uno';
     } catch (_) {}
     try {
       await _durak.getGame(gameId);

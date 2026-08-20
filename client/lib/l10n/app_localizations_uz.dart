@@ -618,6 +618,106 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoWin => 'Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.';
 
   @override
+  String get rulesUnoCall => 'Bitta karta qolganda «Uno» deng. Raqib avval e’tiroz qilsa, 2 karta oling.';
+
+  @override
+  String get rulesUnoScoring => 'Raqamlar o‘z qiymati, maxsus kartalar 20, qora kartalar 50 ball. Birinchi 100 ball olgan yutadi.';
+
+  @override
+  String get unoColorRed => 'Qizil';
+
+  @override
+  String get unoColorYellow => 'Sariq';
+
+  @override
+  String get unoColorGreen => 'Yashil';
+
+  @override
+  String get unoColorBlue => 'Ko‘k';
+
+  @override
+  String get unoDraw => 'Olish';
+
+  @override
+  String get unoKeep => 'Qoldirish';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno e’tirozi';
+
+  @override
+  String get unoChallengeWd4 => '+4 e’tirozi';
+
+  @override
+  String get unoChooseColor => 'Rang tanlang';
+
+  @override
+  String get unoDrawPile => 'Koloda';
+
+  @override
+  String get unoDiscardPile => 'Tashlanganlar';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kartalar: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Ball: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round-raund · $target gacha';
+  }
+
+  @override
+  String get unoYourTurn => 'Sizning yurishingiz';
+
+  @override
+  String get unoWaitingTurn => 'Raqib yurishi';
+
+  @override
+  String get unoChooseColorHint => 'Qora karta uchun rang tanlang';
+
+  @override
+  String get unoWd4Hint => '4 karta oling yoki Wild +4 ga e’tiroz qiling';
+
+  @override
+  String get unoDrawnHint => 'Olingan kartani o‘ynang yoki qoldiring';
+
+  @override
+  String get unoPlayHint => 'Mos rang yoki qiymatni o‘ynang';
+
+  @override
+  String get unoDrawHint => 'Mos karta yo‘q — kolodadan oling';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count karta';
+  }
+
+  @override
+  String get unoYouWon => 'Siz o‘yinni yutdingiz!';
+
+  @override
+  String get unoYouLost => 'O‘yin tugadi';
+
+  @override
+  String unoWinner(String name) {
+    return 'G‘olib: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Soat yo‘nalishida';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Soat yo‘nalishiga qarshi';
+
+  @override
   String get gamesInDevelopment => 'Ishlanmoqda';
 
   @override

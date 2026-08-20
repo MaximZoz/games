@@ -618,6 +618,106 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesUnoWin => '손패를 먼저 모두 낸 사람이 이깁니다. 한 장 남으면 “우노”라고 말하세요.';
 
   @override
+  String get rulesUnoCall => '한 장이 남으면 “우노”라고 외치세요. 상대가 먼저 도전하면 2장을 뽑습니다.';
+
+  @override
+  String get rulesUnoScoring => '숫자는 표시값, 액션은 20점, 와일드는 50점입니다. 먼저 100점에 도달하면 승리합니다.';
+
+  @override
+  String get unoColorRed => '빨강';
+
+  @override
+  String get unoColorYellow => '노랑';
+
+  @override
+  String get unoColorGreen => '초록';
+
+  @override
+  String get unoColorBlue => '파랑';
+
+  @override
+  String get unoDraw => '뽑기';
+
+  @override
+  String get unoKeep => '보관';
+
+  @override
+  String get unoSayUno => '우노!';
+
+  @override
+  String get unoChallengeUno => '우노 도전';
+
+  @override
+  String get unoChallengeWd4 => '+4 도전';
+
+  @override
+  String get unoChooseColor => '색상 선택';
+
+  @override
+  String get unoDrawPile => '뽑기 더미';
+
+  @override
+  String get unoDiscardPile => '버린 더미';
+
+  @override
+  String unoCardsCount(int count) {
+    return '카드: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '점수: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round라운드 · $target점 선취';
+  }
+
+  @override
+  String get unoYourTurn => '내 차례';
+
+  @override
+  String get unoWaitingTurn => '상대 차례';
+
+  @override
+  String get unoChooseColorHint => '와일드 카드의 색상을 선택하세요';
+
+  @override
+  String get unoWd4Hint => '4장을 뽑거나 와일드 +4에 도전하세요';
+
+  @override
+  String get unoDrawnHint => '뽑은 카드를 내거나 보관하세요';
+
+  @override
+  String get unoPlayHint => '같은 색상이나 값을 내세요';
+
+  @override
+  String get unoDrawHint => '낼 카드가 없습니다 — 더미에서 뽑으세요';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count장';
+  }
+
+  @override
+  String get unoYouWon => '매치에서 승리했습니다!';
+
+  @override
+  String get unoYouLost => '매치 종료';
+
+  @override
+  String unoWinner(String name) {
+    return '승자: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => '시계 방향';
+
+  @override
+  String get unoDirectionCounterclockwise => '반시계 방향';
+
+  @override
   String get gamesInDevelopment => '개발 중';
 
   @override

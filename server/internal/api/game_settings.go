@@ -42,7 +42,7 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["max_players"] = s.MaxPlayers
 		out["game_mode"] = s.GameMode
 	}
-	if s.GameType == store.GameTypePoker {
+	if s.GameType == store.GameTypePoker || s.GameType == store.GameTypeUno {
 		out["max_players"] = s.MaxPlayers
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
@@ -64,6 +64,8 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizeBattleshipSettings(body)
 	case store.GameTypePoker:
 		return normalizePokerSettings(body)
+	case store.GameTypeUno:
+		return normalizeUnoSettings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -183,6 +185,33 @@ func normalizePokerSettings(body gameSettingsBody) (store.UserGameSettings, stri
 	}, ""
 }
 
+func normalizeUnoSettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	maxPlayers := body.MaxPlayers
+	// 1 = мгновенная партия с ботом; 2–4 — обычное лобби.
+	if maxPlayers < 1 || maxPlayers > 4 {
+		maxPlayers = 2
+	}
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	return store.UserGameSettings{
+		GameType:             store.GameTypeUno,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             3,
+		Variant:              "classic",
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             108,
+		MaxPlayers:           maxPlayers,
+		GameMode:             "classic",
+	}, ""
+}
+
 // GameSettings — GET/PUT /api/games/settings (Postgres, без Redis).
 func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := currentUserIDFromGames(r); !ok {
@@ -232,6 +261,12 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		s.GameMode = "holdem"
 		s.Variant = "holdem"
+	} else if gameType == store.GameTypeUno {
+		if s.MaxPlayers < 1 || s.MaxPlayers > 4 {
+			s.MaxPlayers = 2
+		}
+		s.GameMode = "classic"
+		s.Variant = "classic"
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")

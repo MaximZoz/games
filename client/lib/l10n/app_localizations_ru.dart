@@ -618,6 +618,106 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rulesUnoWin => 'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.';
 
   @override
+  String get rulesUnoCall => 'Когда у вас остаётся одна карта, скажите «Уно». Если соперник успеет бросить вызов раньше, вы берёте 2 карты.';
+
+  @override
+  String get rulesUnoScoring => 'За карты соперников победитель раунда получает очки: цифры — по номиналу, спецкарты — 20, чёрные — 50. Матч идёт до 100 очков.';
+
+  @override
+  String get unoColorRed => 'Красный';
+
+  @override
+  String get unoColorYellow => 'Жёлтый';
+
+  @override
+  String get unoColorGreen => 'Зелёный';
+
+  @override
+  String get unoColorBlue => 'Синий';
+
+  @override
+  String get unoDraw => 'Взять';
+
+  @override
+  String get unoKeep => 'Оставить';
+
+  @override
+  String get unoSayUno => 'Уно!';
+
+  @override
+  String get unoChallengeUno => 'Поймать без Уно';
+
+  @override
+  String get unoChallengeWd4 => 'Оспорить +4';
+
+  @override
+  String get unoChooseColor => 'Выберите цвет';
+
+  @override
+  String get unoDrawPile => 'Колода';
+
+  @override
+  String get unoDiscardPile => 'Сброс';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Карт: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Очки: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Раунд $round · до $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Ваш ход';
+
+  @override
+  String get unoWaitingTurn => 'Ход соперника';
+
+  @override
+  String get unoChooseColorHint => 'Выберите цвет для чёрной карты';
+
+  @override
+  String get unoWd4Hint => 'Возьмите 4 карты или оспорьте Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Сыграйте взятую карту или оставьте её';
+
+  @override
+  String get unoPlayHint => 'Сыграйте карту по цвету или значению';
+
+  @override
+  String get unoDrawHint => 'Подходящей карты нет — возьмите из колоды';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count карт';
+  }
+
+  @override
+  String get unoYouWon => 'Вы выиграли матч!';
+
+  @override
+  String get unoYouLost => 'Матч окончен';
+
+  @override
+  String unoWinner(String name) {
+    return 'Победитель: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'По часовой стрелке';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Против часовой стрелки';
+
+  @override
   String get gamesInDevelopment => 'В разработке';
 
   @override

@@ -17,6 +17,7 @@ class GamesException implements Exception {
   GamesException(this.statusCode, this.message, {this.errorKey = ''});
   final int statusCode;
   final String message;
+
   /// Канонический ключ с сервера (`error` в JSON), без локали.
   final String errorKey;
 
@@ -124,12 +125,24 @@ class UserGameSettings {
     gameMode: 'holdem',
   );
 
+  static const unoDefaults = UserGameSettings(
+    gameType: 'uno',
+    turnTimeSec: 60,
+    variant: 'classic',
+    stakeBronze: 2,
+    deckSize: 108,
+    maxPlayers: 2,
+    gameMode: 'classic',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
         return durakDefaults;
       case 'poker':
         return pokerDefaults;
+      case 'uno':
+        return unoDefaults;
       default:
         return defaults;
     }
@@ -203,6 +216,18 @@ class UserGameSettings {
         gameMode: 'holdem',
       );
     }
+    if (gameType == 'uno') {
+      return UserGameSettings(
+        gameType: 'uno',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: 'classic',
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        deckSize: 108,
+        maxPlayers: maxP.clamp(2, 4),
+        gameMode: 'classic',
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -236,6 +261,12 @@ class UserGameSettings {
       out['grid_size'] = 3;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'holdem';
+    } else if (gameType == 'uno') {
+      out['variant'] = 'classic';
+      out['grid_size'] = 3;
+      out['deck_size'] = 108;
+      out['max_players'] = maxPlayers;
+      out['game_mode'] = 'classic';
     } else {
       out['variant'] = parseVariant(variant);
       out['grid_size'] = gridSize;
@@ -550,6 +581,7 @@ class LobbyItem {
   final String creatorName;
   final String? opponentId;
   final String status;
+
   /// `matchmake` — открытый поиск («Лобби»); `invite` — «Своя игра» / реванш.
   final String mode;
   final String? gameId;
@@ -578,6 +610,8 @@ class LobbyItem {
   bool get isBattleship => gameType == 'battleship';
 
   bool get isPoker => gameType == 'poker';
+
+  bool get isUno => gameType == 'uno';
 
   LobbyItem({
     required this.id,
@@ -1482,8 +1516,7 @@ class GamesRepository {
       final body = jsonDecode(response.body);
       if (body is Map) {
         errorKey = (body['error'] ?? body['code'] ?? '').toString().trim();
-        message =
-            (body['message'] ?? body['error'] ?? message).toString();
+        message = (body['message'] ?? body['error'] ?? message).toString();
       }
     } catch (_) {}
 
