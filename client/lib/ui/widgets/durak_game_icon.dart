@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
-/// Иконка «Дурак» — Material `style_rounded` (веер карт), зеркально по X.
+/// Иконка «Дурак» — официальный Material Symbol `playing_cards`.
 class DurakGameIcon extends StatelessWidget {
   const DurakGameIcon({
     super.key,
@@ -11,14 +12,15 @@ class DurakGameIcon extends StatelessWidget {
   final double size;
   final Color? color;
 
-  /// Исходная иконка веера карт (до отражения).
-  static const IconData iconData = Icons.style_rounded;
+  static const IconData iconData = Symbols.playing_cards_rounded;
 
   @override
   Widget build(BuildContext context) {
-    return Transform.flip(
-      flipX: true,
-      child: Icon(iconData, size: size, color: color),
+    return Icon(
+      iconData,
+      size: size,
+      color: color,
+      fill: 1,
     );
   }
 }

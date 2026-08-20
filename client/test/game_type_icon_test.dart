@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
+import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 
 void main() {
   group('GameTypeIcon.iconDataOf', () {
@@ -13,7 +14,7 @@ void main() {
         GameTypeIcon.iconDataOf('battleship'),
         Icons.directions_boat_filled_rounded,
       );
-      expect(GameTypeIcon.iconDataOf('poker'), Icons.casino_rounded);
+      expect(GameTypeIcon.iconDataOf('poker'), PokerGameIcon.iconData);
     });
 
     test('unknown type falls back to gamepad', () {
@@ -62,7 +63,8 @@ void main() {
     expect(find.byIcon(Icons.grid_3x3_rounded), findsOneWidget);
     expect(find.byType(DurakGameIcon), findsOneWidget);
     expect(find.byIcon(Icons.directions_boat_filled_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.casino_rounded), findsOneWidget);
+    expect(find.byType(PokerGameIcon), findsOneWidget);
+    expect(find.byIcon(Icons.casino_rounded), findsNothing);
     expect(find.byIcon(Icons.sports_esports_rounded), findsNothing);
     expect(find.byIcon(Icons.sailing_rounded), findsNothing);
     expect(find.byIcon(Icons.notifications_rounded), findsNothing);

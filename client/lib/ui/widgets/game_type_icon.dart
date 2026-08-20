@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 
 /// Иконка типа игры — те же, что на карточках «Игры».
 class GameTypeIcon extends StatelessWidget {
@@ -22,7 +23,7 @@ class GameTypeIcon extends StatelessWidget {
       case 'battleship':
         return Icons.directions_boat_filled_rounded;
       case 'poker':
-        return Icons.casino_rounded;
+        return PokerGameIcon.iconData;
       case 'tictactoe':
         return Icons.grid_3x3_rounded;
       default:
@@ -35,6 +36,8 @@ class GameTypeIcon extends StatelessWidget {
     switch (gameType.trim()) {
       case 'durak':
         return DurakGameIcon(size: size, color: color);
+      case 'poker':
+        return PokerGameIcon(size: size, color: color);
       default:
         return Icon(iconDataOf(gameType), size: size, color: color);
     }

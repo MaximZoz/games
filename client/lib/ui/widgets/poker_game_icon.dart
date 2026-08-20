@@ -1,0 +1,26 @@
+import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+/// Иконка «Покер» — официальный Material Symbol `poker_chip`.
+class PokerGameIcon extends StatelessWidget {
+  const PokerGameIcon({
+    super.key,
+    this.size = 24,
+    this.color,
+  });
+
+  final double size;
+  final Color? color;
+
+  static const IconData iconData = Symbols.poker_chip_rounded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      iconData,
+      size: size,
+      color: color,
+      fill: 1,
+    );
+  }
+}
