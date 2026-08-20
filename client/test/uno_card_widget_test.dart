@@ -18,6 +18,16 @@ void main() {
         kind: UnoCardKind.reverse,
       ),
       UnoCard(
+        id: 'green-skip',
+        color: UnoColor.green,
+        kind: UnoCardKind.skip,
+      ),
+      UnoCard(
+        id: 'yellow-draw2',
+        color: UnoColor.yellow,
+        kind: UnoCardKind.drawTwo,
+      ),
+      UnoCard(
         id: 'wild-four',
         color: UnoColor.wild,
         kind: UnoCardKind.wildDrawFour,
@@ -25,28 +35,23 @@ void main() {
     ];
     await tester.pumpWidget(
       MaterialApp(
-        home: const Scaffold(
-          body: Row(
+        home: Scaffold(
+          body: Wrap(
             children: [
-              UnoCardBackWidget(size: Size(60, 90)),
+              const UnoCardBackWidget(size: Size(60, 90)),
+              for (final card in cards)
+                UnoCardWidget(card: card, size: const Size(60, 90)),
             ],
           ),
-        ),
-        builder: (context, child) => Column(
-          children: [
-            Row(
-              children: [
-                for (final card in cards)
-                  UnoCardWidget(card: card, size: const Size(60, 90)),
-              ],
-            ),
-            Expanded(child: child!),
-          ],
         ),
       ),
     );
 
-    expect(find.byType(UnoCardWidget), findsNWidgets(4));
+    // back + 5 face cards
+    expect(find.byType(UnoCardWidget), findsNWidgets(6));
     expect(tester.takeException(), isNull);
+    // Skip/reverse раньше рисовались unicode ⊘/↻ — на Web часто «тофу».
+    expect(find.textContaining('⊘'), findsNothing);
+    expect(find.textContaining('↻'), findsNothing);
   });
 }
