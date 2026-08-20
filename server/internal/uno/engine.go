@@ -83,6 +83,14 @@ type Game struct {
 	Wild4WasLegal           bool  `json:"wild4WasLegal"`
 	Seed                    int64 `json:"seed"`
 	ShuffleCount            int   `json:"shuffleCount"`
+
+	EventSeq        int    `json:"eventSeq"`
+	LastEventType   string `json:"lastEventType,omitempty"`
+	LastEventActor  string `json:"lastEventActor,omitempty"`
+	LastDrawUserID  string `json:"lastDrawUserId,omitempty"`
+	LastDrawCount   int    `json:"lastDrawCount,omitempty"`
+	LastEventCard   *Card  `json:"lastEventCard,omitempty"`
+	Wild4ProofCard  *Card  `json:"wild4ProofCard,omitempty"`
 }
 
 // PlayerView hides opponents' cards while retaining their hand sizes.
@@ -118,6 +126,14 @@ type GameView struct {
 	CanChallengeWD4    bool `json:"canChallengeWd4"`
 	MustChooseColor    bool `json:"mustChooseColor"`
 	CanKeepOrPlayDrawn bool `json:"canKeepOrPlayDrawn"`
+	MyIndex            int  `json:"myIndex"`
+
+	EventSeq       int    `json:"eventSeq"`
+	LastEventType  string `json:"lastEventType,omitempty"`
+	LastEventActor string `json:"lastEventActor,omitempty"`
+	LastDrawUserID string `json:"lastDrawUserId,omitempty"`
+	LastDrawCount  int    `json:"lastDrawCount,omitempty"`
+	LastEventCard  *Card  `json:"lastEventCard,omitempty"`
 }
 
 // NewGame creates a deterministic match and deals its first round.
@@ -169,6 +185,9 @@ func (g *Game) Apply(action Action) error {
 	if g.Status == StatusOver {
 		return fmt.Errorf("uno: match is over")
 	}
+	g.LastDrawUserID = ""
+	g.LastDrawCount = 0
+	g.LastEventCard = nil
 
 	switch action.Type {
 	case ActionPlay:
@@ -207,6 +226,11 @@ func (g *Game) View(forUserID string) GameView {
 		TargetScore:     g.TargetScore,
 		WinnerUserIDs:   append([]string(nil), g.WinnerUserIDs...),
 		EliminatedOrder: append([]string(nil), g.EliminatedOrder...),
+		EventSeq:        g.EventSeq,
+		LastEventType:   g.LastEventType,
+		LastEventActor:  g.LastEventActor,
+		LastDrawUserID:  g.LastDrawUserID,
+		LastDrawCount:   g.LastDrawCount,
 	}
 	if len(g.DiscardPile) > 0 {
 		top := g.DiscardPile[len(g.DiscardPile)-1]
@@ -230,7 +254,12 @@ func (g *Game) View(forUserID string) GameView {
 		view.Players[i] = pv
 	}
 
+	if g.LastEventCard != nil {
+		card := *g.LastEventCard
+		view.LastEventCard = &card
+	}
 	viewerIndex := g.playerIndex(forUserID)
+	view.MyIndex = viewerIndex
 	view.CanChallengeUno = viewerIndex == g.CurrentIndex &&
 		g.UnoVulnerableIndex >= 0 &&
 		g.UnoVulnerableIndex != viewerIndex
@@ -261,6 +290,8 @@ func (g *Game) startRound() error {
 	g.Wild4WasLegal = false
 	g.ShuffleCount = 0
 	g.WinnerUserIDs = []string{}
+	g.Wild4ProofCard = nil
+	g.noteEvent("deal", "", 0, nil)
 
 	for i := range g.Players {
 		g.Players[i].Hand = []Card{}
@@ -349,10 +380,13 @@ func (g *Game) applyPlay(action Action) error {
 	}
 
 	wild4Legal := true
+	g.Wild4ProofCard = nil
 	if card.Kind == KindWildDrawFour {
 		for i, other := range g.Players[playerIndex].Hand {
 			if i != cardIndex && !other.isWild() && other.Color == g.CurrentColor {
 				wild4Legal = false
+				proof := other
+				g.Wild4ProofCard = &proof
 				break
 			}
 		}
@@ -365,6 +399,7 @@ func (g *Game) applyPlay(action Action) error {
 	g.DiscardPile = append(g.DiscardPile, card)
 	g.DrawnCardID = ""
 	g.LastPlayedBy = player.UserID
+	g.noteEvent("play", player.UserID, 1, nil)
 	g.PendingRoundWinnerIndex = -1
 	if len(player.Hand) == 1 {
 		g.UnoVulnerableIndex = playerIndex
@@ -436,10 +471,16 @@ func (g *Game) applyDraw() error {
 	if g.Status == StatusAwaitingWD4Challenge {
 		g.expireUnoWindow()
 		challenger := g.CurrentIndex
+		actor := ""
+		if challenger >= 0 && challenger < len(g.Players) {
+			actor = g.Players[challenger].UserID
+		}
+		g.noteEvent("draw", actor, g.PendingDraw, nil)
 		g.drawCards(challenger, g.PendingDraw)
 		g.PendingDraw = 0
 		g.Wild4PlayerIndex = -1
 		g.Wild4WasLegal = false
+		g.Wild4ProofCard = nil
 		g.CurrentIndex = g.nextActive(challenger)
 		g.Status = StatusActive
 		return g.finishPendingRound()
@@ -452,6 +493,8 @@ func (g *Game) applyDraw() error {
 	}
 
 	g.expireUnoWindow()
+	actor := g.Players[g.CurrentIndex].UserID
+	g.noteEvent("draw", actor, 1, nil)
 	card, ok := g.drawOne()
 	if !ok {
 		g.CurrentIndex = g.nextActive(g.CurrentIndex)
@@ -460,6 +503,8 @@ func (g *Game) applyDraw() error {
 	player := &g.Players[g.CurrentIndex]
 	player.Hand = append(player.Hand, card)
 	player.SaidUno = false
+	g.LastDrawUserID = actor
+	g.LastDrawCount = 1
 
 	top := g.DiscardPile[len(g.DiscardPile)-1]
 	if card.Matches(top, g.CurrentColor) {
@@ -524,9 +569,11 @@ func (g *Game) applyChallengeWD4() error {
 	}
 
 	if g.Wild4WasLegal {
+		g.noteEvent("draw", g.Players[challenger].UserID, 6, nil)
 		g.drawCards(challenger, 6)
 		g.CurrentIndex = g.nextActive(challenger)
 	} else {
+		g.noteEvent("wd4_reveal", g.Players[offender].UserID, 0, g.Wild4ProofCard)
 		g.drawCards(offender, 4)
 		g.CurrentIndex = challenger
 		g.PendingRoundWinnerIndex = -1
@@ -534,6 +581,7 @@ func (g *Game) applyChallengeWD4() error {
 	g.PendingDraw = 0
 	g.Wild4PlayerIndex = -1
 	g.Wild4WasLegal = false
+	g.Wild4ProofCard = nil
 	g.Status = StatusActive
 	return g.finishPendingRound()
 }
@@ -570,6 +618,7 @@ func (g *Game) applyForfeit(actorUserID string) error {
 		return fmt.Errorf("uno: no active player to forfeit")
 	}
 	g.expireUnoWindow()
+	g.noteEvent("forfeit", g.Players[index].UserID, 0, nil)
 	g.Players[index].Forfeited = true
 	g.Players[index].SaidUno = false
 	g.Players[index].Hand = []Card{}
@@ -634,16 +683,32 @@ func (g *Game) finishPendingRound() error {
 	return g.startRound()
 }
 
+func (g *Game) noteEvent(eventType, actor string, count int, card *Card) {
+	g.EventSeq++
+	g.LastEventType = eventType
+	g.LastEventActor = actor
+	if card != nil {
+		copyCard := *card
+		g.LastEventCard = &copyCard
+	}
+}
+
 func (g *Game) drawCards(playerIndex, count int) {
 	if playerIndex < 0 || playerIndex >= len(g.Players) {
 		return
 	}
+	drawn := 0
 	for i := 0; i < count; i++ {
 		card, ok := g.drawOne()
 		if !ok {
 			break
 		}
 		g.Players[playerIndex].Hand = append(g.Players[playerIndex].Hand, card)
+		drawn++
+	}
+	if drawn > 0 {
+		g.LastDrawUserID = g.Players[playerIndex].UserID
+		g.LastDrawCount = drawn
 	}
 	if len(g.Players[playerIndex].Hand) != 1 {
 		g.Players[playerIndex].SaidUno = false

@@ -678,7 +678,7 @@ func (h *GamesHandler) applyUnoUserAction(
 		moveActiveToObserving(ctx, h.Rdb, userID, gameID)
 	}
 	h.saveUnoState(ctx, gameID, m, state)
-	if action.Type == uno.ActionForfeit {
+	if action.Type == uno.ActionForfeit && state.IsOver() {
 		m["forfeit"] = "1"
 		h.Rdb.HSet(ctx, key, "forfeit", "1")
 	}
@@ -1143,12 +1143,13 @@ func (h *GamesHandler) unoViewFor(
 	payload["turn_time_sec"] = turnTimeSec
 	payload["turn_deadline"] = turnDeadline
 	payload["stake_bronze"] = stakeBronze
+	payload["my_index"] = viewerIndex
 	payload["is_my_turn"] = viewerIndex >= 0 &&
 		viewerIndex == state.CurrentIndex &&
 		!state.Players[viewerIndex].Forfeited &&
 		!state.IsOver()
 	payload["is_over"] = state.IsOver()
-	payload["is_forfeit"] = m["forfeit"] == "1"
+	payload["is_forfeit"] = m["forfeit"] == "1" && state.IsOver()
 	payload["is_timeout"] = m["timeout"] == "1"
 	return payload
 }

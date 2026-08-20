@@ -4,7 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_balance_settle.dart';
+import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -45,11 +49,26 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   final GlobalKey _rewardKey = GlobalKey();
 
   bool _busy = false;
+  bool _dealing = false;
   bool _dealAnimated = false;
   bool _colorDialogOpen = false;
   bool _bindingsInitialized = false;
+  bool _observeEntered = false;
+  bool _balanceGainPlayed = false;
+  bool _lossChipRevealed = false;
+  bool _isRematching = false;
+  bool _isAcceptingRematch = false;
+  bool _isFindingGame = false;
+  bool _rematchDeclined = false;
+  bool _iDeclinedRematch = false;
+  String? _rematchLobbyId;
   String? _lastTopId;
   String? _optimisticTopId;
+  String? _lastLocalActor;
+  String? _lastLocalDrawActor;
+  int _seenEventSeq = 0;
+  int _dealHeroShown = 0;
+  final Map<int, int> _dealOppShown = {};
 
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
 
@@ -96,19 +115,32 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final topId = game.topDiscard?.id;
     if (!_dealAnimated) {
       _lastTopId = topId;
+      _seenEventSeq = game.eventSeq;
       _dealAnimated = true;
+      _dealing = true;
+      _dealHeroShown = 0;
+      _dealOppShown.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_animateInitialDeal(game));
+      });
+    } else if (game.eventSeq > _seenEventSeq) {
+      _seenEventSeq = game.eventSeq;
+      _lastTopId = topId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_handleRemoteEvent(game));
       });
     } else if (topId != null &&
         _lastTopId != null &&
         topId != _lastTopId &&
-        topId != _optimisticTopId) {
+        topId != _optimisticTopId &&
+        game.lastEventActor.isNotEmpty &&
+        game.lastEventActor != game.me?.id &&
+        game.lastEventActor != _lastLocalActor) {
       final fromIndex =
-          game.players.indexWhere((player) => player.id == game.lastPlayedBy);
+          game.players.indexWhere((player) => player.id == game.lastEventActor);
       _lastTopId = topId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && fromIndex >= 0 && fromIndex != game.myIndex) {
+        if (mounted && fromIndex >= 0) {
           unawaited(_animateOpponentPlay(game, fromIndex));
         }
       });
@@ -116,10 +148,15 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _lastTopId = topId;
     }
 
-    if (game.mustChooseColor && !_colorDialogOpen) {
+    if (game.mustChooseColor && !_colorDialogOpen && game.isMyTurn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_choosePendingColor());
       });
+    }
+    if (game.iAmEliminated && !_observeEntered && !game.isOver && !_isOffline) {
+      _observeEntered = true;
+      enterGameObservation(ref, widget.gameId, gameType: 'uno');
+      _maybeSettleGame(game);
     }
     if (game.isOver && !_isOffline) {
       clearBlockingGamePin(ref, ifGameId: widget.gameId);
@@ -127,20 +164,58 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       if (active?.gameId == widget.gameId) {
         ref.read(activeGameProvider.notifier).clearLocal();
       }
+      _maybeSettleGame(game);
+    }
+  }
+
+  Future<void> _handleRemoteEvent(UnoGameView game) async {
+    final meId = game.me?.id;
+    if (game.lastEventType == 'play' &&
+        game.lastEventActor.isNotEmpty &&
+        game.lastEventActor != meId &&
+        game.lastEventActor != _lastLocalActor) {
+      final fromIndex =
+          game.players.indexWhere((player) => player.id == game.lastEventActor);
+      if (fromIndex >= 0) {
+        await _animateOpponentPlay(game, fromIndex);
+      }
+    }
+    if (game.lastEventType == 'wd4_reveal' && game.lastEventCard != null) {
+      await _animateWd4Reveal(game);
+    }
+    if (game.lastDrawCount > 0 &&
+        game.lastDrawUserId.isNotEmpty &&
+        game.lastDrawUserId != meId &&
+        game.lastDrawUserId != _lastLocalDrawActor) {
+      await _animateOpponentDraw(
+        game,
+        game.lastDrawUserId,
+        game.lastDrawCount,
+      );
     }
   }
 
   Future<void> _animateInitialDeal(UnoGameView game) async {
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
+    setState(() => _busy = true);
     final from = _rectOf(_drawPileKey);
-    if (from == null) return;
+    if (from == null) {
+      if (mounted) {
+        setState(() {
+          _dealing = false;
+          _busy = false;
+        });
+      }
+      return;
+    }
     final size = _flyCardSize(context);
     for (var round = 0; round < 7; round++) {
       for (var playerIndex = 0;
           playerIndex < game.players.length;
           playerIndex++) {
         if (!mounted) return;
+        if (game.players[playerIndex].forfeited) continue;
         final isMe = playerIndex == game.myIndex;
         final target = isMe
             ? _rectOf(_handKey)
@@ -162,14 +237,30 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           cardSize: size,
           from: from,
           to: target,
-          duration: const Duration(milliseconds: 260),
+          duration: const Duration(milliseconds: 220),
           faceDown: !isMe,
           beginScale: 0.85,
           endScale: 1,
           arcLift: 18,
         ));
-        await Future<void>.delayed(const Duration(milliseconds: 32));
+        if (mounted) {
+          setState(() {
+            if (isMe) {
+              _dealHeroShown++;
+            } else {
+              _dealOppShown[playerIndex] = (_dealOppShown[playerIndex] ?? 0) + 1;
+            }
+          });
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 48));
       }
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    if (mounted) {
+      setState(() {
+        _dealing = false;
+        _busy = false;
+      });
     }
   }
 
@@ -189,6 +280,83 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       faceDown: true,
       flipToFace: true,
       arcLift: 34,
+    );
+  }
+
+  Future<void> _animateOpponentDraw(
+    UnoGameView game,
+    String userId,
+    int count,
+  ) async {
+    final playerIndex = game.players.indexWhere((player) => player.id == userId);
+    if (playerIndex < 0 || playerIndex == game.myIndex) return;
+    final from = _rectOf(_drawPileKey);
+    final to = _rectOf(_opponentKeys.putIfAbsent(playerIndex, GlobalKey.new));
+    if (from == null || to == null || !mounted) return;
+    final size = _flyCardSize(context);
+    for (var i = 0; i < count; i++) {
+      if (!mounted) return;
+      await playUnoCardFlyAnimation(
+        context: context,
+        card: const UnoCard(
+          id: 'opp-draw',
+          color: UnoColor.wild,
+          kind: UnoCardKind.wild,
+        ),
+        cardSize: size,
+        from: from,
+        to: to,
+        duration: const Duration(milliseconds: 280),
+        faceDown: true,
+        beginScale: 0.9,
+        endScale: 0.72,
+        arcLift: 26,
+      );
+    }
+  }
+
+  Future<void> _animateWd4Reveal(UnoGameView game) async {
+    final card = game.lastEventCard;
+    if (card == null) return;
+    final actorIndex =
+        game.players.indexWhere((player) => player.id == game.lastEventActor);
+    final from = actorIndex >= 0
+        ? _rectOf(_opponentKeys.putIfAbsent(actorIndex, GlobalKey.new))
+        : _rectOf(_discardKey);
+    final to = _rectOf(_discardKey);
+    if (from == null || to == null || !mounted) return;
+    final mid = Rect.fromCenter(
+      center: Offset(
+        (from.center.dx + to.center.dx) / 2,
+        (from.center.dy + to.center.dy) / 2 - 36,
+      ),
+      width: to.width,
+      height: to.height,
+    );
+    await playUnoCardFlyAnimation(
+      context: context,
+      card: card,
+      cardSize: _flyCardSize(context),
+      from: from,
+      to: mid,
+      faceDown: true,
+      flipToFace: true,
+      keepAtEnd: true,
+      duration: const Duration(milliseconds: 420),
+      arcLift: 28,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 520));
+    if (!mounted) return;
+    await playUnoCardFlyAnimation(
+      context: context,
+      card: card,
+      cardSize: _flyCardSize(context),
+      from: mid,
+      to: from,
+      duration: const Duration(milliseconds: 280),
+      beginScale: 1,
+      endScale: 0.7,
+      arcLift: 16,
     );
   }
 
@@ -306,6 +474,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     }
     _optimisticTopId = card.id;
     _lastTopId = card.id;
+    _lastLocalActor = game.me?.id;
     await _move(
       UnoActionType.play,
       cardId: card.id,
@@ -316,6 +485,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Future<void> _draw(UnoGameView before) async {
     if (_busy) return;
+    _lastLocalDrawActor = before.me?.id;
     final from = _rectOf(_drawPileKey);
     await _move(UnoActionType.draw);
     if (!mounted || from == null) return;
@@ -415,20 +585,38 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Future<void> _onClose() async {
     final game = ref.read(unoGameProvider(widget.gameId)).valueOrNull;
+    final eliminated = game?.iAmEliminated == true;
     await handleGameScreenClose(
       context: context,
-      isActive: game != null && !game.isOver,
-      onLeaveFinished: () async => _goToGames(),
+      isActive: game != null && !game.isOver && !eliminated,
+      canLeaveFreely: eliminated,
+      onLeaveFinished: () async {
+        if (eliminated && game != null && !game.isOver && !_isOffline) {
+          enterGameObservation(ref, widget.gameId, gameType: 'uno');
+          _observeEntered = true;
+        }
+        _goToGames(keepObservation: eliminated && game != null && !game.isOver);
+      },
       onForfeitAndLeave: () async {
+        final multi = (game?.players.length ?? 0) > 2;
         try {
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
           await ref.read(unoRepositoryProvider).forfeit(widget.gameId);
         } catch (_) {}
-        if (mounted) _goToGames();
+        if (!mounted) return;
+        if (multi && !_isOffline) {
+          enterGameObservation(ref, widget.gameId, gameType: 'uno');
+          _observeEntered = true;
+        }
+        _goToGames(keepObservation: multi);
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
       },
     );
   }
 
-  void _goToGames() {
+  void _goToGames({bool keepObservation = false}) {
+    final rematchLobbyId = _rematchLobbyId;
+    _rematchLobbyId = null;
     if (!_isOffline) {
       clearBlockingGamePin(ref, ifGameId: widget.gameId);
       final active = ref.read(activeGameProvider).valueOrNull;
@@ -437,6 +625,262 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
     }
     context.go('/games');
+    if (!keepObservation && rematchLobbyId != null) {
+      unawaited(
+        ref
+            .read(unoRepositoryProvider)
+            .leaveLobby(rematchLobbyId)
+            .catchError((_) {}),
+      );
+    }
+  }
+
+  void _onTurnTimeExpired() {
+    if (_isOffline || !mounted) return;
+    ref.invalidate(unoGameProvider(widget.gameId));
+  }
+
+  bool _showTimer(UnoGameView game) =>
+      !game.isOver &&
+      !_busy &&
+      !_dealing &&
+      game.turnTimeSec > 0 &&
+      game.turnDeadline > 0 &&
+      !game.iAmEliminated;
+
+  Widget _buildMyTurnTimerChip(UnoGameView game) {
+    final chip = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceUnified.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: SizedBox(
+          width: 70,
+          height: 28,
+          child: Center(
+            child: GameTurnCountdown(
+              key: ValueKey('uno-turn-clock-${game.turnDeadline}'),
+              turnDeadline: game.turnDeadline,
+              turnTimeSec: game.turnTimeSec,
+              isMyTurn: game.isMyTurn,
+              onExpired: _onTurnTimeExpired,
+              labelBuilder: (seconds) => context.l10n.gameSecondsLeft(seconds),
+            ),
+          ),
+        ),
+      ),
+    );
+    return TurnTimerBorder(
+      key: ValueKey('uno-timer-border-${game.turnDeadline}'),
+      active: game.isMyTurn && game.turnTimeSec > 0 && game.turnDeadline > 0,
+      turnDeadline: game.turnDeadline,
+      turnTimeSec: game.turnTimeSec,
+      borderWidth: 2.5,
+      radius: 18,
+      onExpired: _onTurnTimeExpired,
+      child: chip,
+    );
+  }
+
+  void _maybeSettleGame(UnoGameView game) {
+    if (_isOffline || _balanceGainPlayed) return;
+    if (!game.isOver && !game.iAmEliminated) return;
+    if (isGameBalanceSettled(ref, widget.gameId)) {
+      _balanceGainPlayed = true;
+      return;
+    }
+    _balanceGainPlayed = true;
+    if (game.stakeBronze <= 0) {
+      markGameBalanceSettled(ref, widget.gameId);
+      unawaited(ref.read(authStateProvider.notifier).refresh());
+      return;
+    }
+    final humans = game.players.where((player) => !player.isBot).length;
+    final iWon = game.iWon;
+    final credit = iWon ? game.stakeBronze * humans : 0;
+    final display = iWon ? game.stakeBronze * (humans > 1 ? humans - 1 : 0) : 0;
+    final lost = !iWon && game.stakeBronze > 0 ? game.stakeBronze : 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(() async {
+        markGameBalanceSettled(ref, widget.gameId);
+        if (lost > 0 && credit <= 0) {
+          await playGameSettledLoss(
+            ref: ref,
+            context: context,
+            lostBronze: lost,
+          );
+          if (mounted) setState(() => _lossChipRevealed = true);
+          return;
+        }
+        await playGameSettledReward(
+          ref: ref,
+          context: context,
+          creditBronze: credit,
+          displayRewardBronze: display,
+          sourceKey: display > 0 ? _rewardKey : null,
+        );
+      }());
+    });
+  }
+
+  List<String> _peerIds(UnoGameView game) => [
+        for (final player in game.players)
+          if (player.id != game.me?.id && !player.isBot) player.id,
+      ];
+
+  Future<void> _rematch() async {
+    setState(() => _isRematching = true);
+    try {
+      if (_isOffline) {
+        _restartOffline();
+        if (mounted) setState(() => _isRematching = false);
+        return;
+      }
+      final lobbyId =
+          await ref.read(unoRepositoryProvider).rematch(widget.gameId);
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      if (lobbyId.isEmpty) {
+        setState(() => _isRematching = false);
+        return;
+      }
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'lobby',
+              lobbyId: lobbyId,
+              gameType: 'uno',
+            ),
+          );
+      setState(() {
+        _rematchLobbyId = lobbyId;
+        _rematchDeclined = false;
+        _iDeclinedRematch = false;
+        _isRematching = false;
+      });
+      context.go('/games/uno/lobby/$lobbyId?mode=invite');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isRematching = false);
+        context.go('/games');
+      }
+    }
+  }
+
+  Future<void> _acceptRematch(String lobbyId) async {
+    if (_isAcceptingRematch) return;
+    setState(() => _isAcceptingRematch = true);
+    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+    try {
+      final result = await ref.read(unoRepositoryProvider).joinLobby(lobbyId);
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      if (result.gameId != null && result.gameId!.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: result.gameId,
+                lobbyId: lobbyId,
+                gameType: 'uno',
+              ),
+            );
+        pinBlockingGame(ref, result.gameId, gameType: 'uno');
+        context.go('/games/uno/game/${result.gameId}');
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'uno',
+              ),
+            );
+        context.go('/games/uno/lobby/$lobbyId?mode=invite');
+      }
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isAcceptingRematch = false);
+    }
+  }
+
+  Future<void> _declineRematch(String lobbyId) async {
+    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    try {
+      await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
+    } catch (_) {}
+    if (mounted) setState(() => _iDeclinedRematch = true);
+  }
+
+  Future<void> _cancelRematchWait() async {
+    if (_rematchLobbyId == null) return;
+    final lobbyId = _rematchLobbyId!;
+    setState(() => _rematchLobbyId = null);
+    try {
+      await ref.read(unoRepositoryProvider).leaveLobby(lobbyId);
+    } catch (_) {}
+  }
+
+  Future<void> _findGame() async {
+    setState(() => _isFindingGame = true);
+    try {
+      final rematchId = _rematchLobbyId;
+      if (rematchId != null) {
+        setState(() => _rematchLobbyId = null);
+        unawaited(
+          ref.read(unoRepositoryProvider).leaveLobby(rematchId).catchError((_) {}),
+        );
+      }
+      final game = ref.read(unoGameProvider(widget.gameId)).valueOrNull;
+      final created = await ref.read(unoRepositoryProvider).createLobby(
+            mode: 'matchmake',
+            maxPlayers: game?.players.length ?? 2,
+            turnTimeSec: game?.turnTimeSec ?? 0,
+            stakeBronze: game?.stakeBronze ?? 2,
+            addBotsAfter30s: true,
+          );
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      if (created.gameId != null && created.gameId!.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: created.gameId,
+                lobbyId: created.lobbyId,
+                gameType: 'uno',
+              ),
+            );
+        pinBlockingGame(ref, created.gameId, gameType: 'uno');
+        context.go('/games/uno/game/${created.gameId}');
+        return;
+      }
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'lobby',
+              lobbyId: created.lobbyId,
+              gameType: 'uno',
+            ),
+          );
+      context.go('/games/uno/lobby/${created.lobbyId}?mode=matchmake');
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isFindingGame = false);
+    }
+  }
+
+  void _openGroupChat(UnoGameView game) {
+    final chatId = game.chatId?.trim() ?? '';
+    if (chatId.isEmpty) return;
+    context.push('/chats/$chatId');
   }
 
   void _restartOffline() {
@@ -444,8 +888,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (session == null) return;
     setState(() {
       _dealAnimated = false;
+      _dealing = false;
+      _dealHeroShown = 0;
+      _dealOppShown.clear();
       _lastTopId = null;
       _optimisticTopId = null;
+      _seenEventSeq = 0;
+      _lastLocalActor = null;
+      _lastLocalDrawActor = null;
     });
     session.restart();
   }
@@ -469,16 +919,42 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(unoGameProvider(widget.gameId));
     final game = gameAsync.valueOrNull;
+    final groupChatId = (game?.chatId ?? '').trim();
+    final showGroupChat =
+        !_isOffline && game != null && groupChatId.isNotEmpty && !game.isOver;
+    final groupUnread = !showGroupChat
+        ? 0
+        : ref.watch(chatsListProvider.select((async) {
+            final list = async.valueOrNull;
+            if (list == null) return 0;
+            for (final chat in list) {
+              if (chat.chatID == groupChatId) return chat.unreadCount;
+            }
+            return 0;
+          }));
     return SwipeBackScope(
       onBack: _onClose,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          leading: IconButton(
-            tooltip: context.l10n.commonBack,
-            onPressed: _onClose,
-            icon: const Icon(Icons.close_rounded),
+          leadingWidth: showGroupChat ? 96 : 48,
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: context.l10n.commonBack,
+                onPressed: _onClose,
+                icon: const Icon(Icons.close_rounded),
+              ),
+              if (game != null && showGroupChat)
+                GameIconWithBadge(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: context.l10n.chatGroupTooltip,
+                  badge: groupUnread,
+                  onPressed: () => _openGroupChat(game),
+                ),
+            ],
           ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
@@ -584,8 +1060,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       children: [
         GameStatusWithReward(
           statusText: status,
-          showReward: false,
-          rewardBronze: 0,
+          showReward: game.isOver &&
+              (game.iWon || _lossChipRevealed) &&
+              game.stakeBronze > 0,
+          rewardBronze: game.iWon
+              ? game.stakeBronze *
+                  math.max(0, game.players.where((p) => !p.isBot).length - 1)
+              : -game.stakeBronze,
           rewardKey: _rewardKey,
           maxLines: 2,
         ),
@@ -650,11 +1131,24 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       runSpacing: 7,
       children: [
         for (final entry in opponents)
-          _OpponentHand(
-            key: _opponentKeys.putIfAbsent(entry.key, GlobalKey.new),
-            player: entry.value,
-            name: _playerName(entry.value, entry.key),
-            active: !game.isOver && entry.key == game.currentIndex,
+          TurnTimerBorder(
+            active: _showTimer(game) &&
+                !game.isMyTurn &&
+                entry.key == game.currentIndex,
+            turnDeadline: game.turnDeadline,
+            turnTimeSec: game.turnTimeSec,
+            borderWidth: 2,
+            radius: 18,
+            onExpired: _onTurnTimeExpired,
+            child: _OpponentHand(
+              key: _opponentKeys.putIfAbsent(entry.key, GlobalKey.new),
+              player: entry.value,
+              name: _playerName(entry.value, entry.key),
+              active: !game.isOver && entry.key == game.currentIndex,
+              displayCount: _dealing
+                  ? (_dealOppShown[entry.key] ?? 0)
+                  : entry.value.handCount,
+            ),
           ),
       ],
     );
@@ -702,6 +1196,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (_showTimer(game) && game.isMyTurn) ...[
+                _buildMyTurnTimerChip(game),
+                SizedBox(width: narrow ? 10 : 16),
+              ],
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -819,7 +1317,22 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               icon: const Icon(Icons.refresh_rounded),
               label: Text(context.l10n.offlinePlayAgain),
             )
-          : const SizedBox.shrink();
+          : GameRematchSection(
+              rematchLobbyId: _rematchLobbyId,
+              rematchDeclined: _rematchDeclined,
+              iDeclinedRematch: _iDeclinedRematch,
+              isRematching: _isRematching,
+              isAcceptingRematch: _isAcceptingRematch,
+              isFindingGame: _isFindingGame,
+              peerIds: _peerIds(game),
+              invites: ref.watch(gameInvitesProvider),
+              onRematch: () => unawaited(_rematch()),
+              onAccept: (lobbyId) => unawaited(_acceptRematch(lobbyId)),
+              onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
+              onCancelWait: () => unawaited(_cancelRematchWait()),
+              onFindGame: () => unawaited(_findGame()),
+              compact: isNarrow(context),
+            );
     }
     final me = game.me;
     final challengeTarget = _unoChallengeTarget(game);
@@ -891,7 +1404,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Widget _buildHand(UnoGameView game) {
     final narrow = isNarrow(context);
     final cardSize = narrow ? const Size(58, 87) : const Size(72, 108);
-    final hand = game.myHand;
+    final hand = _dealing
+        ? game.myHand.take(_dealHeroShown).toList(growable: false)
+        : game.myHand;
     final spacing =
         hand.length > 10 ? (narrow ? 28.0 : 36.0) : (narrow ? 39.0 : 49.0);
     final width = hand.isEmpty
@@ -905,7 +1420,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              context.l10n.unoCardsCount(game.me?.handCount ?? 0),
+              context.l10n.unoCardsCount(
+                _dealing ? _dealHeroShown : (game.me?.handCount ?? 0),
+              ),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -979,11 +1496,13 @@ class _OpponentHand extends StatelessWidget {
     required this.player,
     required this.name,
     required this.active,
+    required this.displayCount,
   });
 
   final UnoPlayerView player;
   final String name;
   final bool active;
+  final int displayCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1037,7 +1556,7 @@ class _OpponentHand extends StatelessWidget {
                 ),
               ),
               Text(
-                context.l10n.unoCardsCount(player.handCount),
+                context.l10n.unoCardsCount(displayCount),
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 10,

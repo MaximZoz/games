@@ -109,6 +109,12 @@ class UnoGameView {
     this.stakeBronze = 0,
     this.isForfeit = false,
     this.isTimeout = false,
+    this.eventSeq = 0,
+    this.lastEventType = '',
+    this.lastEventActor = '',
+    this.lastDrawUserId = '',
+    this.lastDrawCount = 0,
+    this.lastEventCard,
   });
 
   final String id;
@@ -139,10 +145,19 @@ class UnoGameView {
   final int stakeBronze;
   final bool isForfeit;
   final bool isTimeout;
+  final int eventSeq;
+  final String lastEventType;
+  final String lastEventActor;
+  final String lastDrawUserId;
+  final int lastDrawCount;
+  final UnoCard? lastEventCard;
 
   bool get isOver => status == 'over';
-  bool get isMyTurn => !isOver && myIndex >= 0 && currentIndex == myIndex;
-  bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
+  bool get isMyTurn =>
+      !isOver && myIndex >= 0 && currentIndex == myIndex && !iAmEliminated;
+  bool get iAmEliminated => me?.forfeited == true;
+  bool get iWon =>
+      myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
   UnoPlayerView? get me =>
       myIndex >= 0 && myIndex < players.length ? players[myIndex] : null;
   List<UnoCard> get myHand => me?.hand ?? const [];
@@ -213,6 +228,23 @@ class UnoGameView {
           (_pick(json, 'stake_bronze', 'stakeBronze') as num?)?.toInt() ?? 0,
       isForfeit: _pick(json, 'is_forfeit', 'isForfeit') == true,
       isTimeout: _pick(json, 'is_timeout', 'isTimeout') == true,
+      eventSeq: (_pick(json, 'event_seq', 'eventSeq') as num?)?.toInt() ?? 0,
+      lastEventType:
+          (_pick(json, 'last_event_type', 'lastEventType') ?? '').toString(),
+      lastEventActor:
+          (_pick(json, 'last_event_actor', 'lastEventActor') ?? '').toString(),
+      lastDrawUserId:
+          (_pick(json, 'last_draw_user_id', 'lastDrawUserId') ?? '').toString(),
+      lastDrawCount:
+          (_pick(json, 'last_draw_count', 'lastDrawCount') as num?)?.toInt() ??
+              0,
+      lastEventCard: () {
+        final raw = _pick(json, 'last_event_card', 'lastEventCard');
+        if (raw is Map) {
+          return UnoCard.fromJson(raw.cast<String, dynamic>());
+        }
+        return null;
+      }(),
     );
   }
 }
@@ -506,6 +538,27 @@ class UnoRepository {
       body,
       'move',
     );
+  }
+
+  Future<String> rematch(String gameId) async {
+    if (OfflineUnoRegistry.instance.isOffline(gameId)) {
+      final session = OfflineUnoRegistry.instance.get(gameId);
+      if (session == null) throw GamesException(404, 'offline game not found');
+      session.restart();
+      return '';
+    }
+    final response = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/uno/rematch'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'game_id': gameId}),
+          operation: 'UnoRepository.rematch',
+        ));
+    if (response.statusCode != 200) _fail(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return (data['lobby_id'] ?? '').toString();
   }
 
   Future<void> forfeit(String gameId) async {

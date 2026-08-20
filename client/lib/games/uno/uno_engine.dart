@@ -90,6 +90,13 @@ class UnoEngine {
   int pendingRoundWinnerIndex = -1;
   bool wild4WasLegal = false;
   int shuffleCount = 0;
+  int eventSeq = 0;
+  String lastEventType = '';
+  String lastEventActor = '';
+  String lastDrawUserId = '';
+  int lastDrawCount = 0;
+  UnoCard? lastEventCard;
+  UnoCard? wild4ProofCard;
 
   bool get isOver => status == UnoStatus.over;
   UnoCard? get topDiscard => discardPile.isEmpty ? null : discardPile.last;
@@ -205,6 +212,9 @@ class UnoEngine {
 
   void apply(UnoAction action) {
     if (isOver) throw StateError('match is over');
+    lastDrawUserId = '';
+    lastDrawCount = 0;
+    lastEventCard = null;
     switch (action.type) {
       case UnoActionType.play:
         _applyPlay(action);
@@ -241,7 +251,9 @@ class UnoEngine {
     pendingRoundWinnerIndex = -1;
     wild4WasLegal = false;
     shuffleCount = 0;
+    wild4ProofCard = null;
     winnerUserIds.clear();
+    _noteEvent('deal', '', null);
     for (final player in players) {
       player
         ..hand.clear()
@@ -304,13 +316,17 @@ class UnoEngine {
     }
 
     var wild4Legal = true;
+    wild4ProofCard = null;
     if (card.kind == UnoCardKind.wildDrawFour) {
-      wild4Legal = !players[playerIndex].hand.asMap().entries.any(
-            (entry) =>
-                entry.key != cardIndex &&
-                !entry.value.isWild &&
-                entry.value.color == currentColor,
-          );
+      for (final entry in players[playerIndex].hand.asMap().entries) {
+        if (entry.key != cardIndex &&
+            !entry.value.isWild &&
+            entry.value.color == currentColor) {
+          wild4Legal = false;
+          wild4ProofCard = entry.value;
+          break;
+        }
+      }
     }
 
     _expireUnoWindow();
@@ -320,6 +336,7 @@ class UnoEngine {
     discardPile.add(card);
     drawnCardId = null;
     lastPlayedBy = player.userId;
+    _noteEvent('play', player.userId, null);
     pendingRoundWinnerIndex = -1;
     if (player.hand.length == 1) unoVulnerableIndex = playerIndex;
     if (player.hand.isEmpty) {
@@ -384,10 +401,13 @@ class UnoEngine {
     if (status == UnoStatus.awaitingWd4Challenge) {
       _expireUnoWindow();
       final challenger = currentIndex;
+      final actor = players[challenger].userId;
+      _noteEvent('draw', actor, null);
       _drawCards(challenger, pendingDraw);
       pendingDraw = 0;
       wild4PlayerIndex = -1;
       wild4WasLegal = false;
+      wild4ProofCard = null;
       currentIndex = _nextActive(challenger);
       status = UnoStatus.active;
       _finishPendingRound();
@@ -400,6 +420,8 @@ class UnoEngine {
       throw StateError('current player has a legal card');
     }
     _expireUnoWindow();
+    final actor = players[currentIndex].userId;
+    _noteEvent('draw', actor, null);
     final card = _drawOne();
     if (card == null) {
       currentIndex = _nextActive(currentIndex);
@@ -409,6 +431,8 @@ class UnoEngine {
     player
       ..hand.add(card)
       ..saidUno = false;
+    lastDrawUserId = actor;
+    lastDrawCount = 1;
     if (card.matches(topDiscard!, currentColor)) {
       drawnCardId = card.id;
       status = UnoStatus.awaitingDrawnPlay;
@@ -469,9 +493,11 @@ class UnoEngine {
       throw StateError('invalid Wild Draw Four player');
     }
     if (wild4WasLegal) {
+      _noteEvent('draw', players[challenger].userId, null);
       _drawCards(challenger, 6);
       currentIndex = _nextActive(challenger);
     } else {
+      _noteEvent('wd4_reveal', players[offender].userId, wild4ProofCard);
       _drawCards(offender, 4);
       currentIndex = challenger;
       pendingRoundWinnerIndex = -1;
@@ -479,6 +505,7 @@ class UnoEngine {
     pendingDraw = 0;
     wild4PlayerIndex = -1;
     wild4WasLegal = false;
+    wild4ProofCard = null;
     status = UnoStatus.active;
     _finishPendingRound();
   }
@@ -513,6 +540,7 @@ class UnoEngine {
       throw StateError('no active player to forfeit');
     }
     _expireUnoWindow();
+    _noteEvent('forfeit', players[index].userId, null);
     players[index]
       ..forfeited = true
       ..saidUno = false
@@ -568,12 +596,25 @@ class UnoEngine {
     _startRound();
   }
 
+  void _noteEvent(String type, String actor, UnoCard? card) {
+    eventSeq++;
+    lastEventType = type;
+    lastEventActor = actor;
+    lastEventCard = card;
+  }
+
   void _drawCards(int playerIndex, int count) {
     if (playerIndex < 0 || playerIndex >= players.length) return;
+    var drawn = 0;
     for (var i = 0; i < count; i++) {
       final card = _drawOne();
       if (card == null) break;
       players[playerIndex].hand.add(card);
+      drawn++;
+    }
+    if (drawn > 0) {
+      lastDrawUserId = players[playerIndex].userId;
+      lastDrawCount = drawn;
     }
     if (players[playerIndex].hand.length != 1) {
       players[playerIndex].saidUno = false;
