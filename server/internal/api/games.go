@@ -16,6 +16,7 @@ import (
 	"multigames/server/internal/i18n"
 	"multigames/server/internal/poker"
 	"multigames/server/internal/store"
+	"multigames/server/internal/uno"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -324,6 +325,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/poker/") {
 		h.servePoker(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/uno/") {
+		h.serveUno(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -1839,6 +1844,11 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		item.GridSize = 10
 		item.FirstMoveRestriction = m["first_move_restriction"] == "true"
 	}
+	if gameType == unoGameType {
+		item.Variant = "classic"
+		item.GridSize = 0
+		item.GameMode = "classic"
+	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
 	}
@@ -2022,6 +2032,9 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		inviteData["game_mode"] = gm
 	} else if gameType == battleshipGameType {
 		inviteData["first_move_restriction"] = firstMoveRestriction
+	} else if gameType == unoGameType {
+		inviteData["variant"] = "classic"
+		inviteData["game_mode"] = "classic"
 	} else {
 		inviteData["variant"] = string(variant)
 		inviteData["grid_size"] = cfg.GridSize
@@ -2801,6 +2814,9 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 				mode = "podkidnoi"
 			}
 			item["game_mode"] = mode
+		} else if gt == unoGameType {
+			item["variant"] = "classic"
+			item["game_mode"] = "classic"
 		} else {
 			item["variant"] = m["variant"]
 			gs, _ := strconv.Atoi(m["grid_size"])
@@ -2897,7 +2913,8 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	if m["status"] != gameStatusActive {
 		return false
 	}
-	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType || m["game_type"] == pokerGameType {
+	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
+		m["game_type"] == pokerGameType || m["game_type"] == unoGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3863,6 +3880,21 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		clearUserActiveGame(ctx, h.Rdb, userID)
 		return ""
 	}
+	if gm["game_type"] == unoGameType {
+		players := parsePlayerIDsCSV(gm["player_ids"])
+		if !stringSliceContains(players, userID.String()) {
+			clearUserActiveGame(ctx, h.Rdb, userID)
+			return ""
+		}
+		if state, err := uno.Decode(gm["state"]); err == nil {
+			index := unoPlayerIndex(state, userID.String())
+			if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+				moveActiveToObserving(ctx, h.Rdb, userID, gid)
+				return ""
+			}
+		}
+		return gid
+	}
 	// Durak / Poker: участие определяется по player_ids CSV.
 	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType {
 		players := parsePlayerIDsCSV(gm["player_ids"])
@@ -4264,7 +4296,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		gt = "tictactoe"
 	}
 	inGame := false
-	if gt == durakGameType || gt == pokerGameType {
+	if gt == durakGameType || gt == pokerGameType || gt == unoGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4332,6 +4364,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyBattleshipTimeout(ctx, gameID, m)
 			} else if m["game_type"] == pokerGameType {
 				h.applyPokerTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == unoGameType {
+				h.applyUnoTurnTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4425,6 +4459,34 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": pokerGameType,
+					}
+				}
+			} else if m["game_type"] == unoGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := uno.Decode(m["state"]); decodeErr == nil {
+					index := unoPlayerIndex(state, userID.String())
+					if index >= 0 && state.Players[index].Forfeited && !state.IsOver() {
+						moveActiveToObserving(ctx, h.Rdb, userID, gameID)
+					} else {
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  m["lobby_id"],
+							"game_type": unoGameType,
+							"is_my_turn": index >= 0 &&
+								index == state.CurrentIndex &&
+								!state.Players[index].Forfeited &&
+								!state.IsOver(),
+						}
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": unoGameType,
 					}
 				}
 			} else {

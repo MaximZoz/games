@@ -14,6 +14,7 @@ const (
 	GameTypeDurak      = "durak"
 	GameTypeBattleship = "battleship"
 	GameTypePoker      = "poker"
+	GameTypeUno        = "uno"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -64,6 +65,12 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.MaxPlayers = 2
 		s.GameMode = "holdem"
 		s.Variant = "holdem"
+	}
+	if gameType == GameTypeUno {
+		s.TurnTimeSec = 60
+		s.MaxPlayers = 2
+		s.GameMode = "classic"
+		s.Variant = "classic"
 	}
 	return s
 }
