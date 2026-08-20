@@ -104,5 +104,19 @@ void main() {
       ),
       isFalse,
     );
+    expect(
+      shouldAnimateRemoteUnoPlay(
+        lastEventType: 'play',
+        lastEventActor: 'opp',
+        viewerUserId: 'me',
+        myIndex: 0,
+        players: players,
+        topCardId: 'opp-card',
+        lastEventCardId: 'card-7',
+        localPlayCardId: 'card-7',
+        localPlayedIds: {'card-7'},
+      ),
+      isFalse,
+    );
   });
 }

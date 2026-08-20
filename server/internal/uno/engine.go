@@ -84,13 +84,13 @@ type Game struct {
 	Seed                    int64 `json:"seed"`
 	ShuffleCount            int   `json:"shuffleCount"`
 
-	EventSeq        int    `json:"eventSeq"`
-	LastEventType   string `json:"lastEventType,omitempty"`
-	LastEventActor  string `json:"lastEventActor,omitempty"`
-	LastDrawUserID  string `json:"lastDrawUserId,omitempty"`
-	LastDrawCount   int    `json:"lastDrawCount,omitempty"`
-	LastEventCard   *Card  `json:"lastEventCard,omitempty"`
-	Wild4ProofCard  *Card  `json:"wild4ProofCard,omitempty"`
+	EventSeq       int    `json:"eventSeq"`
+	LastEventType  string `json:"lastEventType,omitempty"`
+	LastEventActor string `json:"lastEventActor,omitempty"`
+	LastDrawUserID string `json:"lastDrawUserId,omitempty"`
+	LastDrawCount  int    `json:"lastDrawCount,omitempty"`
+	LastEventCard  *Card  `json:"lastEventCard,omitempty"`
+	Wild4ProofCard *Card  `json:"wild4ProofCard,omitempty"`
 }
 
 // PlayerView hides opponents' cards while retaining their hand sizes.
@@ -399,7 +399,8 @@ func (g *Game) applyPlay(action Action) error {
 	g.DiscardPile = append(g.DiscardPile, card)
 	g.DrawnCardID = ""
 	g.LastPlayedBy = player.UserID
-	g.noteEvent("play", player.UserID, 1, nil)
+	played := card
+	g.noteEvent("play", player.UserID, 1, &played)
 	g.PendingRoundWinnerIndex = -1
 	if len(player.Hand) == 1 {
 		g.UnoVulnerableIndex = playerIndex

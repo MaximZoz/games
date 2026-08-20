@@ -156,8 +156,7 @@ class UnoGameView {
   bool get isMyTurn =>
       !isOver && myIndex >= 0 && currentIndex == myIndex && !iAmEliminated;
   bool get iAmEliminated => me?.forfeited == true;
-  bool get iWon =>
-      myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
+  bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
   UnoPlayerView? get me =>
       myIndex >= 0 && myIndex < players.length ? players[myIndex] : null;
   List<UnoCard> get myHand => me?.hand ?? const [];
@@ -270,11 +269,19 @@ bool shouldAnimateRemoteUnoPlay({
   required List<UnoPlayerView> players,
   required String? topCardId,
   String? localPlayCardId,
+  String? lastEventCardId,
+  Set<String> localPlayedIds = const {},
 }) {
   if (lastEventType != 'play') return false;
+  final playedId = (lastEventCardId ?? '').trim().isNotEmpty
+      ? lastEventCardId!.trim()
+      : (topCardId ?? '').trim();
   if (localPlayCardId != null &&
       localPlayCardId.isNotEmpty &&
-      topCardId == localPlayCardId) {
+      (playedId == localPlayCardId || topCardId == localPlayCardId)) {
+    return false;
+  }
+  if (playedId.isNotEmpty && localPlayedIds.contains(playedId)) {
     return false;
   }
   final actor = lastEventActor.trim();
