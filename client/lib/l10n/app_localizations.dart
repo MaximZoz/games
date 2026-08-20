@@ -1304,31 +1304,43 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoIntro.
   ///
   /// In ru, this message translates to:
-  /// **'Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.'**
+  /// **'Каждому раздают по 7 карт. Ходите картой того же цвета или того же номинала (цифра или такой же спецэффект).'**
   String get rulesUnoIntro;
 
   /// No description provided for @rulesUnoPlay.
   ///
   /// In ru, this message translates to:
-  /// **'Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.'**
+  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 — следующий берёт 2 карты и пропускает ход; складывать +2 нельзя.'**
   String get rulesUnoPlay;
+
+  /// No description provided for @rulesUnoWild.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чёрная карта задаёт новый цвет. +4 кладут, только если нет карты текущего цвета. Соперник может оспорить: если +4 был законным — оспаривающий берёт 6, если нет — автор +4 берёт 4, а оспаривающий ходит.'**
+  String get rulesUnoWild;
+
+  /// No description provided for @rulesUnoDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если подходящей карты нет — возьмите одну из колоды. Если она подходит, можно сразу сходить ею или оставить и передать ход. Пока есть ход, брать нельзя.'**
+  String get rulesUnoDraw;
 
   /// No description provided for @rulesUnoWin.
   ///
   /// In ru, this message translates to:
-  /// **'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.'**
+  /// **'Матч выигрывает тот, кто первым наберёт 100 очков. Раунд выигрывает игрок, сбросивший все карты.'**
   String get rulesUnoWin;
 
   /// No description provided for @rulesUnoCall.
   ///
   /// In ru, this message translates to:
-  /// **'Когда у вас остаётся одна карта, скажите «Уно». Если соперник успеет бросить вызов раньше, вы берёте 2 карты.'**
+  /// **'Когда остаётся одна карта, нажмите «Уно!». Пока не сделан следующий ход, соперник может поймать вас без «Уно» — тогда вы берёте 2 карты.'**
   String get rulesUnoCall;
 
   /// No description provided for @rulesUnoScoring.
   ///
   /// In ru, this message translates to:
-  /// **'За карты соперников победитель раунда получает очки: цифры — по номиналу, спецкарты — 20, чёрные — 50. Матч идёт до 100 очков.'**
+  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Матч до 100 очков.'**
   String get rulesUnoScoring;
 
   /// No description provided for @unoColorRed.

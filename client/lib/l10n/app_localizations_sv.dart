@@ -609,19 +609,25 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spela mot en bot utan tidsgräns per drag.';
 
   @override
-  String get rulesUnoIntro => 'Klassisk Uno: alla får kort; spela efter färg eller nummer.';
+  String get rulesUnoIntro => 'Varje spelare får 7 kort. Spela ett kort i samma färg eller samma rang (siffra eller samma åtgärd).';
 
   @override
-  String get rulesUnoPlay => 'Specialkort: +2, vänd, hoppa över, jokrar och +4. Kan du inte spela, dra från högen.';
+  String get rulesUnoPlay => 'Hoppa över — nästa mister turen. Vänd med två spelare fungerar som hoppa över. +2 — nästa drar 2 och mister turen; +2 staplas inte.';
 
   @override
-  String get rulesUnoWin => 'Den som först blir av med alla kort vinner. Säg “Uno” när du har ett kort kvar.';
+  String get rulesUnoWild => 'Ett svart kort sätter en ny färg. Spela +4 bara om du saknar kort i aktuell färg. Motståndaren kan utmana: var +4 lagligt drar hen 6; annars drar +4-spelaren 4 och utmanaren spelar.';
 
   @override
-  String get rulesUnoCall => 'Säg ”Uno” när ett kort återstår. Om en motståndare utmanar först, dra 2 kort.';
+  String get rulesUnoDraw => 'Utan lagligt kort, dra ett från högen. Passar det kan du spela det direkt eller behålla det och passa. Du får inte dra medan du har ett lagligt drag.';
 
   @override
-  String get rulesUnoScoring => 'Siffror ger sitt värde, actionkort 20 och jokrar 50 poäng. Först till 100 vinner.';
+  String get rulesUnoWin => 'Matchen vinns av den som först når 100 poäng. En rond vinns genom att tömma handen.';
+
+  @override
+  String get rulesUnoCall => 'När ett kort återstår, tryck på ”Uno!”. Till nästa handling kan en motståndare ta dig utan Uno — då drar du 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Matchen går till 100 poäng.';
 
   @override
   String get unoColorRed => 'Röd';

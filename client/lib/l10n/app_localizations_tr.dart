@@ -609,19 +609,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Bota karşı oyun, tur süresi sınırı yok.';
 
   @override
-  String get rulesUnoIntro => 'Klasik Uno: herkese kart dağıtılır; renk veya sayıya göre oynayın.';
+  String get rulesUnoIntro => 'Herkese 7 kart dağıtılır. Aynı renk veya aynı değerde (sayı ya da aynı özel kart) bir kart oynayın.';
 
   @override
-  String get rulesUnoPlay => 'Özel kartlar: +2, yön değiştir, atla, joker ve +4. Oynayamazsanız desteden çekin.';
+  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 — sıradaki 2 kart çeker ve turunu kaybeder; +2 birikmez.';
 
   @override
-  String get rulesUnoWin => 'Tüm kartlarını ilk atan kazanır. Bir kart kaldığında “Uno” deyin.';
+  String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.';
 
   @override
-  String get rulesUnoCall => 'Bir kart kaldığında “Uno” deyin. Rakip önce itiraz ederse 2 kart çekin.';
+  String get rulesUnoDraw => 'Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.';
 
   @override
-  String get rulesUnoScoring => 'Sayılar kendi değeri, aksiyonlar 20, jokerler 50 puandır. 100 puana ilk ulaşan kazanır.';
+  String get rulesUnoWin => 'Maçı 100 puana ilk ulaşan kazanır. Turu elini bitiren kazanır.';
+
+  @override
+  String get rulesUnoCall => 'Bir kart kaldığında «Uno!»ya basın. Sonraki hamleden önce rakip sizi Unosuz yakalayabilir — o zaman 2 kart çekersiniz.';
+
+  @override
+  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. Maç 100 puana kadardır.';
 
   @override
   String get unoColorRed => 'Kırmızı';

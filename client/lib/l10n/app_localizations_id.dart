@@ -609,19 +609,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Main lawan bot, tanpa batas waktu giliran.';
 
   @override
-  String get rulesUnoIntro => 'Uno klasik: semua mendapat kartu; mainkan berdasarkan warna atau angka.';
+  String get rulesUnoIntro => 'Setiap pemain mendapat 7 kartu. Mainkan kartu warna sama atau peringkat sama (angka atau aksi yang sama).';
 
   @override
-  String get rulesUnoPlay => 'Kartu khusus: +2, balik arah, lewati, liar dan +4. Jika tidak bisa main, ambil dari dek.';
+  String get rulesUnoPlay => 'Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 — berikutnya mengambil 2 dan dilewati; +2 tidak menumpuk.';
 
   @override
-  String get rulesUnoWin => 'Pemain yang pertama menghabiskan semua kartu menang. Ucapkan “Uno” saat tersisa satu.';
+  String get rulesUnoWild => 'Kartu hitam menetapkan warna baru. Mainkan +4 hanya jika tidak ada kartu warna saat ini. Lawan bisa menantang: jika +4 sah ia mengambil 6; jika tidak, pemain +4 mengambil 4 dan penantang bermain.';
 
   @override
-  String get rulesUnoCall => 'Ucapkan “Uno” saat tersisa satu kartu. Jika lawan menantang lebih dulu, ambil 2 kartu.';
+  String get rulesUnoDraw => 'Tanpa kartu sah, ambil satu dari dek. Jika cocok, mainkan sekarang atau simpan dan lewat. Tidak boleh mengambil selama masih ada langkah sah.';
 
   @override
-  String get rulesUnoScoring => 'Angka bernilai sesuai kartu, aksi 20, dan kartu liar 50 poin. Yang pertama mencapai 100 menang.';
+  String get rulesUnoWin => 'Pertandingan dimenangkan yang pertama mencapai 100 poin. Ronde dimenangkan dengan menghabiskan kartu.';
+
+  @override
+  String get rulesUnoCall => 'Saat tersisa satu kartu, ketuk “Uno!”. Hingga aksi berikutnya lawan bisa menangkapmu tanpa Uno — maka kamu mengambil 2 kartu.';
+
+  @override
+  String get rulesUnoScoring => 'Yang pertama menghabiskan kartu memenangkan ronde dan mendapat poin dari kartu lawan: angka sesuai nilai, aksi 20, hitam 50. Pertandingan sampai 100 poin.';
 
   @override
   String get unoColorRed => 'Merah';

@@ -609,19 +609,25 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Peli bottia vastaan ilman vuoron aikarajaa.';
 
   @override
-  String get rulesUnoIntro => 'Klassinen Uno: kaikille jaetaan kortteja; pelaa värin tai numeron mukaan.';
+  String get rulesUnoIntro => 'Jokainen saa 7 korttia. Pelaa saman värin tai saman arvon kortti (numero tai sama toiminto).';
 
   @override
-  String get rulesUnoPlay => 'Erikoiskortit: +2, suunnanvaihto, ohitus, jokerit ja +4. Jos et voi pelata, nosta pakasta.';
+  String get rulesUnoPlay => 'Ohitus — seuraava menettää vuoron. Suunnanvaihto kahdella toimii ohituksena. +2 — seuraava nostaa 2 ja menettää vuoron; +2-kortteja ei pinota.';
 
   @override
-  String get rulesUnoWin => 'Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.';
+  String get rulesUnoWild => 'Musta kortti asettaa uuden värin. Pelaa +4 vain, jos sinulla ei ole nykyisen värin korttia. Vastustaja voi haastaa: jos +4 oli laillinen, hän nostaa 6; muuten +4:n pelaaja nostaa 4 ja haastaja pelaa.';
 
   @override
-  String get rulesUnoCall => 'Sano ”Uno”, kun yksi kortti on jäljellä. Jos vastustaja haastaa ensin, nosta 2 korttia.';
+  String get rulesUnoDraw => 'Ilman laillista korttia nosta yksi pakasta. Jos se sopii, voit pelata sen heti tai pitää ja luovuttaa vuoron. Et saa nostaa, jos sinulla on laillinen siirto.';
 
   @override
-  String get rulesUnoScoring => 'Numerot antavat arvonsa, toimintakortit 20 ja jokerit 50 pistettä. Ensimmäinen 100 pisteeseen voittaa.';
+  String get rulesUnoWin => 'Ottelun voittaa ensimmäisenä 100 pisteeseen yltävä. Erän voittaa se, joka tyhjentää kätensä.';
+
+  @override
+  String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina ”Uno!”. Seuraavaan toimeen asti vastustaja voi napata sinut ilman Unoa — silloin nostat 2 korttia.';
+
+  @override
+  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Ottelu käydään 100 pisteeseen.';
 
   @override
   String get unoColorRed => 'Punainen';

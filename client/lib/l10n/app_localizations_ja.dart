@@ -609,19 +609,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoOfflineBot => 'ボットとの対戦。ターン制限時間なし。';
 
   @override
-  String get rulesUnoIntro => 'クラシックウノ：全員にカードが配られ、色または数字で出します。';
+  String get rulesUnoIntro => '各プレイヤーに7枚配ります。同じ色、または同じランク（数字や同じアクション）のカードを出します。';
 
   @override
-  String get rulesUnoPlay => '特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。';
+  String get rulesUnoPlay => 'スキップ — 次の人は手番を失います。2人ではリバースはスキップと同じです。+2 — 次の人は2枚引き手番を飛ばされます。+2は重ねられません。';
 
   @override
-  String get rulesUnoWin => '最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。';
+  String get rulesUnoWild => '黒いカードは新しい色を決めます。+4は現在の色のカードがないときだけ出せます。次の人はチャレンジできます。+4が合法ならチャレンジ側が6枚、違法なら+4を出した人が4枚引き、チャレンジ側がプレイします。';
 
   @override
-  String get rulesUnoCall => '残り1枚で「ウノ」と宣言します。先に挑戦された場合は2枚引きます。';
+  String get rulesUnoDraw => '出せるカードがなければ山札から1枚引きます。出せるならすぐ出すか、手元に残してパスできます。出せる手があるうちは引けません。';
 
   @override
-  String get rulesUnoScoring => '数字は額面、アクションは20点、ワイルドは50点です。先に100点へ到達すると勝利です。';
+  String get rulesUnoWin => '試合は先に100点に達した人が勝ちます。ラウンドは手札をなくした人が勝ちます。';
+
+  @override
+  String get rulesUnoCall => '1枚残ったら「ウノ！」を押します。次の行動まで、相手はウノなしを指摘でき、その場合は2枚引きます。';
+
+  @override
+  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。試合は100点先取です。';
 
   @override
   String get unoColorRed => '赤';

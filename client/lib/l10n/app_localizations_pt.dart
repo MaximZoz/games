@@ -609,19 +609,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Jogo contra um bot, sem limite de tempo por turno.';
 
   @override
-  String get rulesUnoIntro => 'Uno clássico: todos recebem cartas; jogue por cor ou número.';
+  String get rulesUnoIntro => 'Cada um recebe 7 cartas. Jogue uma carta da mesma cor ou do mesmo valor (número ou mesma ação).';
 
   @override
-  String get rulesUnoPlay => 'Cartas especiais: +2, inverter, pular, curingas e +4. Se não puder jogar, compre do baralho.';
+  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 — o próximo compra 2 e perde a vez; +2 não acumulam.';
 
   @override
-  String get rulesUnoWin => 'Vence quem descartar todas as cartas primeiro. Diga “Uno” quando restar uma.';
+  String get rulesUnoWild => 'Uma carta preta define uma nova cor. Jogue +4 só se não tiver carta da cor atual. O adversário pode contestar: se o +4 era legal, compra 6; senão o autor do +4 compra 4 e o contestador joga.';
 
   @override
-  String get rulesUnoCall => 'Diga “Uno” quando restar uma carta. Se um adversário desafiar antes, compre 2 cartas.';
+  String get rulesUnoDraw => 'Sem carta válida, compre uma do baralho. Se servir, jogue-a agora ou fique com ela e passe. Não se compra enquanto houver jogada.';
 
   @override
-  String get rulesUnoScoring => 'Números valem o valor, ações 20 e curingas 50 pontos. O primeiro a 100 vence.';
+  String get rulesUnoWin => 'Ganha a partida quem chegar primeiro a 100 pontos. A rodada é de quem esvaziar a mão.';
+
+  @override
+  String get rulesUnoCall => 'Quando restar uma carta, toque em “Uno!”. Até a próxima ação, um adversário pode pegá-lo sem Uno — então você compra 2.';
+
+  @override
+  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. A partida vai a 100 pontos.';
 
   @override
   String get unoColorRed => 'Vermelho';

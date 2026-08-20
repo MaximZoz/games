@@ -609,19 +609,25 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Hra proti botovi bez časového limitu na tah.';
 
   @override
-  String get rulesUnoIntro => 'Klasické Uno: každému se rozdají karty; hrajte barvou nebo hodnotou.';
+  String get rulesUnoIntro => 'Každý dostane 7 karet. Hrajte kartu stejné barvy nebo stejné hodnoty (číslo nebo stejná akce).';
 
   @override
-  String get rulesUnoPlay => 'Speciální karty: +2, otočení, přeskočení, žolík a +4. Nemůžete-li hrát, lízněte z balíčku.';
+  String get rulesUnoPlay => 'Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 — další lízne 2 a ztrácí tah; +2 se nesčítají.';
 
   @override
-  String get rulesUnoWin => 'Vyhrává ten, kdo se první zbaví všech karet. Řekněte „Uno“, když zbývá jedna.';
+  String get rulesUnoWild => 'Černá karta určí novou barvu. +4 jen když nemáte kartu aktuální barvy. Soupeř může vyzvat: bylo-li +4 legální, lízne 6; jinak autor +4 lízne 4 a vyzývatel hraje.';
 
   @override
-  String get rulesUnoCall => 'Řekněte „Uno“, když zbývá jedna karta. Pokud soupeř vyzve dřív, lízněte 2 karty.';
+  String get rulesUnoDraw => 'Bez vhodné karty lízněte jednu z balíčku. Pokud sedí, můžete ji ihned zahrát, nebo si ji nechat a předat tah. Nelze lízat, dokud máte tah.';
 
   @override
-  String get rulesUnoScoring => 'Čísla mají svou hodnotu, akční karty 20 a žolíky 50 bodů. Vyhrává první se 100 body.';
+  String get rulesUnoWin => 'Zápas vyhraje ten, kdo první dosáhne 100 bodů. Kolo vyhraje hráč, který shodí všechny karty.';
+
+  @override
+  String get rulesUnoCall => 'Když zbývá jedna karta, stiskněte „Uno!“. Do další akce vás soupeř může chytit bez Uno — pak líznete 2 karty.';
+
+  @override
+  String get rulesUnoScoring => 'Kdo první shodí všechny karty, vyhraje kolo a získá body za soupeřovy karty: čísla podle hodnoty, akce 20, černé 50. Zápas do 100 bodů.';
 
   @override
   String get unoColorRed => 'Červená';

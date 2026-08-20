@@ -609,19 +609,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoOfflineBot => '与机器人对战，无回合时限。';
 
   @override
-  String get rulesUnoIntro => '经典乌诺：每人发牌；按颜色或点数出牌。';
+  String get rulesUnoIntro => '每人发 7 张牌。打出同色或同点数（数字或相同功能）的牌。';
 
   @override
-  String get rulesUnoPlay => '特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。';
+  String get rulesUnoPlay => '跳过——下家失去回合。两人时转向等同跳过。+2——下家摸 2 张并跳过；+2 不可叠加。';
 
   @override
-  String get rulesUnoWin => '先出完手牌者获胜。剩一张牌时记得说“乌诺”。';
+  String get rulesUnoWild => '黑色牌指定新颜色。仅当没有当前颜色的牌时才能打 +4。下家可质疑：若 +4 合法则质疑者摸 6 张；否则打 +4 者摸 4 张，由质疑者出牌。';
 
   @override
-  String get rulesUnoCall => '剩一张牌时喊“乌诺”。若对手先发起挑战，你需抽2张牌。';
+  String get rulesUnoDraw => '没有可出的牌时从牌堆摸 1 张。若可出，可立即打出或留下并结束回合。仍有合法出牌时不能摸牌。';
 
   @override
-  String get rulesUnoScoring => '数字牌按点数计分，功能牌20分，万能牌50分。先到100分者获胜。';
+  String get rulesUnoWin => '整场由先到 100 分者获胜。一局由出完手牌者获胜。';
+
+  @override
+  String get rulesUnoCall => '剩一张牌时点「乌诺！」。在下一动作前，对手可抓你没喊乌诺——你需摸 2 张。';
+
+  @override
+  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。先到 100 分赢得整场。';
 
   @override
   String get unoColorRed => '红色';

@@ -609,19 +609,25 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Gra przeciwko botowi, bez limitu czasu na ruch.';
 
   @override
-  String get rulesUnoIntro => 'Klasyczne Uno: każdy dostaje karty; graj kolorem lub wartością.';
+  String get rulesUnoIntro => 'Każdy dostaje 7 kart. Zagraj kartę tego samego koloru lub tej samej wartości (cyfra albo ta sama akcja).';
 
   @override
-  String get rulesUnoPlay => 'Karty specjalne: +2, zmiana kierunku, pominięcie, zmiana koloru i +4. Jeśli nie możesz zagrać, dobierz z talii.';
+  String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 — następny dobiera 2 i traci turę; +2 nie można składać.';
 
   @override
-  String get rulesUnoWin => 'Wygrywa ten, kto pierwszy zrzuci wszystkie karty. Powiedz „Uno”, gdy zostanie jedna.';
+  String get rulesUnoWild => 'Czarna karta ustala nowy kolor. +4 tylko gdy nie masz karty bieżącego koloru. Przeciwnik może zakwestionować: jeśli +4 było legalne, dobiera 6; jeśli nie — autor +4 dobiera 4, a kwestionujący gra.';
 
   @override
-  String get rulesUnoCall => 'Powiedz „Uno”, gdy zostanie jedna karta. Jeśli przeciwnik pierwszy rzuci wyzwanie, dobierz 2 karty.';
+  String get rulesUnoDraw => 'Bez pasującej karty dobierz jedną z talii. Jeśli pasuje, zagraj ją od razu albo zatrzymaj i oddaj turę. Nie dobierasz, gdy masz legalny ruch.';
 
   @override
-  String get rulesUnoScoring => 'Liczby dają wartość karty, akcje 20, a jokery 50 punktów. Wygrywa pierwszy do 100.';
+  String get rulesUnoWin => 'Mecz wygrywa ten, kto pierwszy zdobędzie 100 punktów. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
+
+  @override
+  String get rulesUnoCall => 'Gdy zostaje jedna karta, naciśnij „Uno!”. Do następnej akcji przeciwnik może złapać cię bez Uno — wtedy dobierasz 2 karty.';
+
+  @override
+  String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. Mecz do 100 punktów.';
 
   @override
   String get unoColorRed => 'Czerwony';

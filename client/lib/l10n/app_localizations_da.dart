@@ -609,19 +609,25 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spil mod en bot uden tidsgrænse pr. tur.';
 
   @override
-  String get rulesUnoIntro => 'Klassisk Uno: Alle får kort; spil efter farve eller tal.';
+  String get rulesUnoIntro => 'Hver spiller får 7 kort. Spil et kort i samme farve eller samme rang (tal eller samme handling).';
 
   @override
-  String get rulesUnoPlay => 'Specialkort: +2, vend, spring over, farveskift og +4. Kan du ikke spille, træk fra bunken.';
+  String get rulesUnoPlay => 'Spring over — den næste mister turen. Retningsskift med to spillere virker som spring over. +2 — den næste trækker 2 og mister turen; +2 stables ikke.';
 
   @override
-  String get rulesUnoWin => 'Den, der først kommer af med alle kort, vinder. Sig “Uno”, når du har ét kort tilbage.';
+  String get rulesUnoWild => 'Et sort kort sætter en ny farve. Spil +4 kun hvis du ikke har kort i den aktuelle farve. Modstanderen kan udfordre: var +4 lovligt, trækker hen 6; ellers trækker +4-spilleren 4, og udfordreren spiller.';
 
   @override
-  String get rulesUnoCall => 'Sig “Uno”, når ét kort er tilbage. Hvis en modstander udfordrer først, træk 2 kort.';
+  String get rulesUnoDraw => 'Uden lovligt kort, træk ét fra bunken. Matcher det, kan du spille det med det samme eller beholde det og passe. Du må ikke trække, mens du har et lovligt træk.';
 
   @override
-  String get rulesUnoScoring => 'Tal giver deres værdi, handlingskort 20 og jokere 50 point. Den første til 100 vinder.';
+  String get rulesUnoWin => 'Kampen vindes af den, der først når 100 point. En runde vindes ved at tømme hånden.';
+
+  @override
+  String get rulesUnoCall => 'Når ét kort er tilbage, tryk på “Uno!”. Indtil næste handling kan en modstander fange dig uden Uno — så trækker du 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Den, der først tømmer hånden, vinder runden og får point for modstandernes kort: tal efter værdi, handlinger 20, sorte 50. Kampen går til 100 point.';
 
   @override
   String get unoColorRed => 'Rød';
