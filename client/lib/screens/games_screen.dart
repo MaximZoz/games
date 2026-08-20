@@ -24,6 +24,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -1271,14 +1272,10 @@ class _LobbiesPageContent extends ConsumerWidget {
                                         : lobby.isDurak
                                             ? DurakGameIcon(
                                                 size: isDesktop ? 36 : 32,
-                                                color: AppColors.accentStart,
                                               )
                                             : lobby.isPoker
-                                                ? Icon(
-                                                    Icons.casino_rounded,
+                                                ? PokerGameIcon(
                                                     size: isDesktop ? 36 : 32,
-                                                    color:
-                                                        AppColors.accentStart,
                                                   )
                                                 : Icon(
                                                     Icons.grid_3x3_rounded,
@@ -1796,7 +1793,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       GameCardChip(
         selected: true,
         icon: DurakGameIcon.iconData,
-        flipIcon: true,
+        iconChild: DurakGameIcon(size: isDesktop ? 18 : 16),
         label: _deckLabel(_deckSize),
         onTap: busy ? null : _cycleDeck,
         isDesktop: isDesktop,
@@ -1810,7 +1807,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       header: GameCardHeader(
         title: context.l10n.gamesDurak,
         icon: DurakGameIcon.iconData,
-        flipIcon: true,
+        iconChild: const DurakGameIcon(size: 26),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -2404,7 +2401,8 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       isMedium: isMedium,
       header: GameCardHeader(
         title: context.l10n.gamesPoker,
-        icon: Icons.casino_rounded,
+        icon: PokerGameIcon.iconData,
+        iconChild: const PokerGameIcon(size: 26),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -3347,13 +3345,13 @@ class _InviteGameIcon extends StatelessWidget {
     switch (gameType) {
       case 'durak':
         materialIcon = null;
-        child = const DurakGameIcon(size: 26, color: Colors.white);
+        child = const DurakGameIcon(size: 26);
       case 'battleship':
         materialIcon = Icons.directions_boat_filled_rounded;
         child = Icon(materialIcon, color: Colors.white, size: 26);
       case 'poker':
-        materialIcon = Icons.casino_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
+        materialIcon = null;
+        child = const PokerGameIcon(size: 26);
       case 'uno':
         materialIcon = null;
         child = const UnoGameIcon(size: 26);
