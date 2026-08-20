@@ -858,10 +858,6 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
       child: widget.child,
     );
     final timed = widget.active && _hasTimer;
-    final paintAnything = widget.active || widget.showIdleBorder;
-    if (!paintAnything) {
-      return padded;
-    }
     final colors = timed
         ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: _fraction)
         : const [AppColors.accentStart, AppColors.accentEnd];
@@ -874,6 +870,7 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
           radius: widget.radius,
           paintTimer: timed,
           paintBase: widget.showIdleBorder || widget.active,
+          timerStrokeWidth: timed ? widget.borderWidth + 1.2 : widget.borderWidth,
           baseColors: const [
             AppColors.accentStart,
             AppColors.accentEnd,
@@ -893,6 +890,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
     required this.radius,
     this.paintTimer = true,
     this.paintBase = true,
+    this.timerStrokeWidth,
     this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
   });
 
@@ -902,6 +900,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
   final double radius;
   final bool paintTimer;
   final bool paintBase;
+  final double? timerStrokeWidth;
 
   /// Полная фиолетовая рамка — остаётся, когда таймер исчезает.
   final List<Color> baseColors;
@@ -938,7 +937,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
       final extract = metric.extractPath(0, len);
       final paint = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
+        ..strokeWidth = timerStrokeWidth ?? strokeWidth
         ..strokeCap = StrokeCap.round
         ..shader = LinearGradient(colors: colors).createShader(rect);
       canvas.drawPath(extract, paint);
@@ -952,6 +951,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
       old.paintTimer != paintTimer ||
       old.paintBase != paintBase ||
       old.colors != colors ||
+      old.timerStrokeWidth != timerStrokeWidth ||
       old.baseColors != baseColors;
 }
 

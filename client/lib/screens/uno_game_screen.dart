@@ -62,10 +62,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
-  String? _lastTopId;
   String? _optimisticTopId;
   String? _lastLocalActor;
   String? _lastLocalDrawActor;
+  String? _lastLocalPlayCardId;
   int _seenEventSeq = 0;
   int _dealHeroShown = 0;
   final Map<int, int> _dealOppShown = {};
@@ -114,7 +114,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   void _observeView(UnoGameView game) {
     final topId = game.topDiscard?.id;
     if (!_dealAnimated) {
-      _lastTopId = topId;
       _seenEventSeq = game.eventSeq;
       _dealAnimated = true;
       _dealing = true;
@@ -124,28 +123,15 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         if (mounted) unawaited(_animateInitialDeal(game));
       });
     } else if (game.eventSeq > _seenEventSeq) {
+      final skipOwnPlay = _busy ||
+          (_lastLocalPlayCardId != null &&
+              _lastLocalPlayCardId == topId);
       _seenEventSeq = game.eventSeq;
-      _lastTopId = topId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_handleRemoteEvent(game));
-      });
-    } else if (topId != null &&
-        _lastTopId != null &&
-        topId != _lastTopId &&
-        topId != _optimisticTopId &&
-        game.lastEventActor.isNotEmpty &&
-        game.lastEventActor != game.me?.id &&
-        game.lastEventActor != _lastLocalActor) {
-      final fromIndex =
-          game.players.indexWhere((player) => player.id == game.lastEventActor);
-      _lastTopId = topId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && fromIndex >= 0) {
-          unawaited(_animateOpponentPlay(game, fromIndex));
-        }
-      });
-    } else {
-      _lastTopId = topId;
+      if (!skipOwnPlay) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_handleRemoteEvent(game));
+        });
+      }
     }
 
     if (game.mustChooseColor && !_colorDialogOpen && game.isMyTurn) {
@@ -169,14 +155,21 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Future<void> _handleRemoteEvent(UnoGameView game) async {
-    final meId = game.me?.id;
-    if (game.lastEventType == 'play' &&
-        game.lastEventActor.isNotEmpty &&
-        game.lastEventActor != meId &&
-        game.lastEventActor != _lastLocalActor) {
+    final meId = game.viewerUserId ??
+        ref.read(authStateProvider).valueOrNull?.id ??
+        _lastLocalActor;
+    if (shouldAnimateRemoteUnoPlay(
+      lastEventType: game.lastEventType,
+      lastEventActor: game.lastEventActor,
+      viewerUserId: meId,
+      myIndex: game.myIndex,
+      players: game.players,
+      topCardId: game.topDiscard?.id,
+      localPlayCardId: _lastLocalPlayCardId ?? _optimisticTopId,
+    )) {
       final fromIndex =
           game.players.indexWhere((player) => player.id == game.lastEventActor);
-      if (fromIndex >= 0) {
+      if (fromIndex >= 0 && fromIndex != game.myIndex) {
         await _animateOpponentPlay(game, fromIndex);
       }
     }
@@ -453,6 +446,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
     if (_busy || !game.isMyTurn || !_canPlayCard(game, card)) return;
+    _lastLocalPlayCardId = card.id;
+    _optimisticTopId = card.id;
+    _lastLocalActor = game.viewerUserId;
     UnoColor? color;
     if (card.isWild) {
       color = await _showColorPicker();
@@ -472,15 +468,18 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         arcLift: 42,
       );
     }
-    _optimisticTopId = card.id;
-    _lastTopId = card.id;
-    _lastLocalActor = game.me?.id;
     await _move(
       UnoActionType.play,
       cardId: card.id,
       color: color,
     );
-    _optimisticTopId = null;
+    // Съедаем свой eventSeq, чтобы observe не запустил полёт «от соперника».
+    try {
+      final after = await ref.read(unoGameProvider(widget.gameId).future);
+      if (after.topDiscard?.id == card.id || after.eventSeq > _seenEventSeq) {
+        _seenEventSeq = after.eventSeq;
+      }
+    } catch (_) {}
   }
 
   Future<void> _draw(UnoGameView before) async {
@@ -642,8 +641,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   bool _showTimer(UnoGameView game) =>
       !game.isOver &&
-      !_busy &&
-      !_dealing &&
       game.turnTimeSec > 0 &&
       game.turnDeadline > 0 &&
       !game.iAmEliminated;
@@ -891,11 +888,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _dealing = false;
       _dealHeroShown = 0;
       _dealOppShown.clear();
-      _lastTopId = null;
       _optimisticTopId = null;
       _seenEventSeq = 0;
       _lastLocalActor = null;
       _lastLocalDrawActor = null;
+      _lastLocalPlayCardId = null;
     });
     session.restart();
   }
@@ -1045,6 +1042,12 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
           child: table,
         ),
+        if (_showTimer(game) && game.isMyTurn)
+          Positioned(
+            top: narrow ? 4 : 8,
+            right: narrow ? 8 : 16,
+            child: _buildMyTurnTimerChip(game),
+          ),
         if (game.isOver && game.iWon)
           const Positioned.fill(child: GameConfettiOverlay()),
       ],
@@ -1065,7 +1068,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               game.stakeBronze > 0,
           rewardBronze: game.iWon
               ? game.stakeBronze *
-                  math.max(0, game.players.where((p) => !p.isBot).length - 1)
+                  (game.players.where((p) => !p.isBot).length > 1
+                      ? game.players.where((p) => !p.isBot).length - 1
+                      : 0)
               : -game.stakeBronze,
           rewardKey: _rewardKey,
           maxLines: 2,
@@ -1132,13 +1137,15 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       children: [
         for (final entry in opponents)
           TurnTimerBorder(
-            active: _showTimer(game) &&
-                !game.isMyTurn &&
+            active: !game.isOver &&
+                !_dealing &&
+                game.turnTimeSec > 0 &&
                 entry.key == game.currentIndex,
             turnDeadline: game.turnDeadline,
             turnTimeSec: game.turnTimeSec,
-            borderWidth: 2,
-            radius: 18,
+            borderWidth: 2.5,
+            radius: 16,
+            showIdleBorder: true,
             onExpired: _onTurnTimeExpired,
             child: _OpponentHand(
               key: _opponentKeys.putIfAbsent(entry.key, GlobalKey.new),
@@ -1196,10 +1203,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (_showTimer(game) && game.isMyTurn) ...[
-                _buildMyTurnTimerChip(game),
-                SizedBox(width: narrow ? 10 : 16),
-              ],
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1508,8 +1511,7 @@ class _OpponentHand extends StatelessWidget {
   Widget build(BuildContext context) {
     final narrow = isNarrow(context);
     final size = narrow ? const Size(28, 42) : const Size(34, 51);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+    return Container(
       padding: EdgeInsets.symmetric(
         horizontal: narrow ? 8 : 11,
         vertical: narrow ? 5 : 7,
@@ -1517,10 +1519,6 @@ class _OpponentHand extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceCard.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: active ? AppColors.accentStart : Colors.white12,
-          width: active ? 2 : 1,
-        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1548,8 +1546,10 @@ class _OpponentHand extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: active
+                        ? AppColors.accentStart
+                        : AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),

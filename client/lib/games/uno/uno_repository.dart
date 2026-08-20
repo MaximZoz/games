@@ -162,6 +162,18 @@ class UnoGameView {
       myIndex >= 0 && myIndex < players.length ? players[myIndex] : null;
   List<UnoCard> get myHand => me?.hand ?? const [];
 
+  /// Id зрителя: `myIndex` или единственная открытая рука в payload.
+  String? get viewerUserId {
+    final mine = me?.id.trim() ?? '';
+    if (mine.isNotEmpty) return mine;
+    for (final player in players) {
+      if (player.hand.isNotEmpty && player.id.trim().isNotEmpty) {
+        return player.id;
+      }
+    }
+    return null;
+  }
+
   factory UnoGameView.fromJson(Map<String, dynamic> source) {
     final wrapped = source['game'];
     final json = wrapped is Map
@@ -247,6 +259,31 @@ class UnoGameView {
       }(),
     );
   }
+}
+
+/// Чужой ход в сброс — только если это не только что сыгранная нами карта.
+bool shouldAnimateRemoteUnoPlay({
+  required String lastEventType,
+  required String lastEventActor,
+  required String? viewerUserId,
+  required int myIndex,
+  required List<UnoPlayerView> players,
+  required String? topCardId,
+  String? localPlayCardId,
+}) {
+  if (lastEventType != 'play') return false;
+  if (localPlayCardId != null &&
+      localPlayCardId.isNotEmpty &&
+      topCardId == localPlayCardId) {
+    return false;
+  }
+  final actor = lastEventActor.trim();
+  if (actor.isEmpty) return false;
+  final viewer = viewerUserId?.trim() ?? '';
+  if (viewer.isNotEmpty && actor == viewer) return false;
+  final actorIndex = players.indexWhere((player) => player.id == actor);
+  if (actorIndex >= 0 && actorIndex == myIndex) return false;
+  return true;
 }
 
 class UnoLobbyView {

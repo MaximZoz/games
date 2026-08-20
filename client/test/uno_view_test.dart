@@ -46,4 +46,63 @@ void main() {
     expect(view.lastDrawCount, 4);
     expect(view.eventSeq, 9);
   });
+
+  test('shouldAnimateRemoteUnoPlay skips own just-played card', () {
+    const players = [
+      UnoPlayerView(
+        id: 'me',
+        seat: 0,
+        hand: [],
+        handCount: 5,
+        score: 0,
+        saidUno: false,
+        forfeited: false,
+      ),
+      UnoPlayerView(
+        id: 'opp',
+        seat: 1,
+        hand: [],
+        handCount: 6,
+        score: 0,
+        saidUno: false,
+        forfeited: false,
+      ),
+    ];
+    expect(
+      shouldAnimateRemoteUnoPlay(
+        lastEventType: 'play',
+        lastEventActor: 'me',
+        viewerUserId: 'me',
+        myIndex: 0,
+        players: players,
+        topCardId: 'card-7',
+        localPlayCardId: 'card-7',
+      ),
+      isFalse,
+    );
+    expect(
+      shouldAnimateRemoteUnoPlay(
+        lastEventType: 'play',
+        lastEventActor: 'opp',
+        viewerUserId: 'me',
+        myIndex: 0,
+        players: players,
+        topCardId: 'card-9',
+        localPlayCardId: 'card-7',
+      ),
+      isTrue,
+    );
+    expect(
+      shouldAnimateRemoteUnoPlay(
+        lastEventType: '',
+        lastEventActor: 'opp',
+        viewerUserId: 'me',
+        myIndex: 0,
+        players: players,
+        topCardId: 'card-7',
+        localPlayCardId: 'card-7',
+      ),
+      isFalse,
+    );
+  });
 }
