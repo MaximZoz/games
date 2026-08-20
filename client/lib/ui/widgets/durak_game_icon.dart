@@ -43,10 +43,10 @@ class _DurakGameIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.shortestSide;
-    final cardW = s * 0.42;
-    final cardH = s * 0.58;
+    final cardW = s * 0.44;
+    final cardH = s * 0.60;
     final radius = Radius.circular(s * 0.07);
-    final center = Offset(s / 2, s / 2 + s * 0.02);
+    final center = Offset(s / 2, s / 2 + s * 0.01);
 
     void drawCard({
       required double angleDeg,
@@ -70,7 +70,7 @@ class _DurakGameIconPainter extends CustomPainter {
           ..color = _edge.withValues(alpha: 0.88),
       );
       canvas.drawPath(
-        suit(Offset.zero, s * 0.22),
+        suit(Offset.zero, s * 0.26),
         Paint()..color = suitColor,
       );
       canvas.restore();
@@ -78,14 +78,14 @@ class _DurakGameIconPainter extends CustomPainter {
 
     // Нижняя — заход, верхняя кроет: суть дурака.
     drawCard(
-      angleDeg: -22,
-      shift: Offset(-s * 0.10, s * 0.04),
+      angleDeg: -26,
+      shift: Offset(-s * 0.13, s * 0.06),
       suitColor: _heart,
       suit: heartSuitPath,
     );
     drawCard(
-      angleDeg: 18,
-      shift: Offset(s * 0.11, -s * 0.02),
+      angleDeg: 20,
+      shift: Offset(s * 0.13, -s * 0.03),
       suitColor: _spade,
       suit: spadeSuitPath,
     );

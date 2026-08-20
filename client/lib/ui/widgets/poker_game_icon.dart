@@ -48,7 +48,7 @@ class _PokerGameIconPainter extends CustomPainter {
     final cardW = s * 0.36;
     final cardH = s * 0.50;
     final radius = Radius.circular(s * 0.065);
-    final cardsAt = Offset(s * 0.42, s * 0.42);
+    final cardsAt = Offset(s * 0.40, s * 0.40);
 
     void drawCard({
       required double angleDeg,
@@ -71,8 +71,22 @@ class _PokerGameIconPainter extends CustomPainter {
           ..strokeWidth = s * 0.04
           ..color = _edge.withValues(alpha: 0.88),
       );
+      final rank = TextPainter(
+        text: TextSpan(
+          text: 'A',
+          style: TextStyle(
+            color: suitColor,
+            fontSize: s * 0.16,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      rank.paint(canvas, Offset(-cardW * 0.38, -cardH * 0.42));
+      rank.dispose();
       canvas.drawPath(
-        suit(Offset(0, s * 0.02), s * 0.18),
+        suit(Offset(0, s * 0.04), s * 0.17),
         Paint()..color = suitColor,
       );
       canvas.restore();
