@@ -76,9 +76,9 @@ class UnoCardPainter extends CustomPainter {
   final bool highlighted;
 
   static const _red = Color(0xFFE53935);
-  static const _yellow = Color(0xFFFBC02D);
-  static const _green = Color(0xFF2EAD62);
-  static const _blue = Color(0xFF2583E8);
+  static const _yellow = Color(0xFFF9A825);
+  static const _green = Color(0xFF2E7D32);
+  static const _blue = Color(0xFF1565C0);
   static const _black = Color(0xFF181B22);
 
   Color get _faceColor => switch (card.color) {
@@ -88,6 +88,16 @@ class UnoCardPainter extends CustomPainter {
         UnoColor.blue => _blue,
         UnoColor.wild => _black,
       };
+
+  /// Контрастный цвет символа на белом овале / в углу на цветном фоне.
+  Color get _inkOnWhite => switch (card.color) {
+        UnoColor.yellow => const Color(0xFF5D4037),
+        UnoColor.wild => _black,
+        _ => _faceColor,
+      };
+
+  Color get _inkOnFace =>
+      card.color == UnoColor.yellow ? Colors.black87 : Colors.white;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -104,8 +114,8 @@ class UnoCardPainter extends CustomPainter {
     if (elevated) {
       canvas.drawShadow(
         Path()..addRRect(cardRRect),
-        Colors.black.withValues(alpha: 0.6),
-        scale * 0.08,
+        Colors.black.withValues(alpha: 0.45),
+        scale * 0.06,
         false,
       );
     }
@@ -117,10 +127,10 @@ class UnoCardPainter extends CustomPainter {
       cardRRect,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = highlighted ? scale * 0.07 : scale * 0.035
+        ..strokeWidth = highlighted ? scale * 0.07 : scale * 0.04
         ..color = highlighted
             ? const Color(0xFFFFE45C)
-            : Colors.white.withValues(alpha: 0.96),
+            : Colors.white.withValues(alpha: 0.98),
     );
 
     canvas.save();
@@ -160,14 +170,12 @@ class UnoCardPainter extends CustomPainter {
       ),
       Paint()..color = const Color(0xFFF5C329),
     );
-    _paintText(
+    _paintPlainText(
       canvas,
       'UNO',
       Offset.zero,
-      scale * 0.36,
+      scale * 0.34,
       color: const Color(0xFFCC202C),
-      strokeColor: Colors.white,
-      strokeWidth: scale * 0.025,
     );
     canvas.restore();
   }
@@ -180,64 +188,153 @@ class UnoCardPainter extends CustomPainter {
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset.zero,
-        width: size.width * 0.76,
-        height: size.height * 0.62,
+        width: size.width * 0.78,
+        height: size.height * 0.64,
       ),
-      Paint()..color = Colors.white.withValues(alpha: 0.92),
+      Paint()..color = Colors.white,
     );
     canvas.restore();
 
     if (card.isWild) {
       _paintWild(canvas, center, scale);
     } else {
-      _paintText(
-        canvas,
-        _symbol,
-        center,
-        scale * (_symbol.length > 1 ? 0.48 : 0.72),
-        color: _faceColor,
-        strokeColor: _faceColor == _yellow ? Colors.black54 : Colors.black38,
-        strokeWidth: scale * 0.018,
-      );
+      _paintCenterBadge(canvas, center, scale);
     }
 
-    final cornerColor =
-        card.color == UnoColor.yellow ? Colors.black87 : Colors.white;
-    _paintText(
-      canvas,
-      _symbol,
-      Offset(scale * 0.21, scale * 0.23),
-      scale * (_symbol.length > 1 ? 0.2 : 0.25),
-      color: cornerColor,
-    );
+    _paintCorner(canvas, Offset(scale * 0.22, scale * 0.24), scale);
     canvas.save();
     canvas.translate(size.width, size.height);
     canvas.rotate(math.pi);
-    _paintText(
-      canvas,
-      _symbol,
-      Offset(scale * 0.21, scale * 0.23),
-      scale * (_symbol.length > 1 ? 0.2 : 0.25),
-      color: cornerColor,
-    );
+    _paintCorner(canvas, Offset(scale * 0.22, scale * 0.24), scale);
     canvas.restore();
   }
 
-  String get _symbol => switch (card.kind) {
-        UnoCardKind.number => '${card.number}',
-        UnoCardKind.skip => '⊘',
-        UnoCardKind.reverse => '↻',
-        UnoCardKind.drawTwo => '+2',
-        UnoCardKind.wild => 'W',
-        UnoCardKind.wildDrawFour => '+4',
-      };
+  void _paintCenterBadge(Canvas canvas, Offset center, double scale) {
+    switch (card.kind) {
+      case UnoCardKind.number:
+        _paintPlainText(
+          canvas,
+          '${card.number}',
+          center,
+          scale * 0.78,
+          color: _inkOnWhite,
+        );
+      case UnoCardKind.drawTwo:
+        _paintPlainText(
+          canvas,
+          '+2',
+          center,
+          scale * 0.58,
+          color: _inkOnWhite,
+        );
+      case UnoCardKind.skip:
+        _paintSkipIcon(canvas, center, scale * 0.52, _inkOnWhite);
+      case UnoCardKind.reverse:
+        _paintReverseIcon(canvas, center, scale * 0.52, _inkOnWhite);
+      case UnoCardKind.wild:
+      case UnoCardKind.wildDrawFour:
+        break;
+    }
+  }
+
+  void _paintCorner(Canvas canvas, Offset at, double scale) {
+    switch (card.kind) {
+      case UnoCardKind.number:
+        _paintPlainText(
+          canvas,
+          '${card.number}',
+          at,
+          scale * 0.26,
+          color: _inkOnFace,
+        );
+      case UnoCardKind.drawTwo:
+        _paintPlainText(
+          canvas,
+          '+2',
+          at,
+          scale * 0.22,
+          color: _inkOnFace,
+        );
+      case UnoCardKind.skip:
+        _paintSkipIcon(canvas, at, scale * 0.22, _inkOnFace);
+      case UnoCardKind.reverse:
+        _paintReverseIcon(canvas, at, scale * 0.22, _inkOnFace);
+      case UnoCardKind.wild:
+        _paintPlainText(canvas, 'W', at, scale * 0.22, color: Colors.white);
+      case UnoCardKind.wildDrawFour:
+        _paintPlainText(canvas, '+4', at, scale * 0.2, color: Colors.white);
+    }
+  }
+
+  /// Skip — круг с диагональной чертой (без unicode ⊘).
+  void _paintSkipIcon(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size * 0.16
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, size * 0.42, paint);
+    canvas.drawLine(
+      Offset(center.dx - size * 0.28, center.dy + size * 0.28),
+      Offset(center.dx + size * 0.28, center.dy - size * 0.28),
+      paint,
+    );
+  }
+
+  /// Reverse — две дуги со стрелками (без unicode ↻).
+  void _paintReverseIcon(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Color color,
+  ) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size * 0.14
+      ..strokeCap = StrokeCap.round;
+    final r = size * 0.34;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: r),
+      -math.pi * 0.85,
+      math.pi * 0.95,
+      false,
+      paint,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: r),
+      math.pi * 0.15,
+      math.pi * 0.95,
+      false,
+      paint,
+    );
+    final tip = size * 0.18;
+    // Верхняя стрелка.
+    final a1 = Offset(center.dx + r * 0.15, center.dy - r);
+    canvas.drawPath(
+      Path()
+        ..moveTo(a1.dx - tip * 0.2, a1.dy + tip)
+        ..lineTo(a1.dx, a1.dy)
+        ..lineTo(a1.dx + tip, a1.dy + tip * 0.15),
+      paint,
+    );
+    // Нижняя стрелка.
+    final a2 = Offset(center.dx - r * 0.15, center.dy + r);
+    canvas.drawPath(
+      Path()
+        ..moveTo(a2.dx + tip * 0.2, a2.dy - tip)
+        ..lineTo(a2.dx, a2.dy)
+        ..lineTo(a2.dx - tip, a2.dy - tip * 0.15),
+      paint,
+    );
+  }
 
   void _paintWild(Canvas canvas, Offset center, double scale) {
     final colors = [_red, _yellow, _green, _blue];
     final rect = Rect.fromCenter(
       center: center,
-      width: scale * 0.58,
-      height: scale * 0.58,
+      width: scale * 0.62,
+      height: scale * 0.62,
     );
     for (var i = 0; i < 4; i++) {
       canvas.drawArc(
@@ -248,59 +345,52 @@ class UnoCardPainter extends CustomPainter {
         Paint()..color = colors[i],
       );
     }
+    canvas.drawCircle(
+      center,
+      scale * 0.31,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = scale * 0.035
+        ..color = Colors.white,
+    );
     if (card.kind == UnoCardKind.wildDrawFour) {
-      _paintText(
+      _paintPlainText(
         canvas,
         '+4',
         center,
-        scale * 0.42,
+        scale * 0.4,
         color: Colors.white,
-        strokeColor: Colors.black87,
-        strokeWidth: scale * 0.025,
       );
     }
   }
 
-  void _paintText(
+  /// Только заливка текста — без stroke (stroke давал «двойную» тень на Web).
+  void _paintPlainText(
     Canvas canvas,
     String value,
     Offset center,
     double fontSize, {
     required Color color,
-    Color? strokeColor,
-    double strokeWidth = 0,
   }) {
-    void paint(TextStyle style) {
-      final painter = TextPainter(
-        text: TextSpan(text: value, style: style),
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      )..layout();
-      painter.paint(
-        canvas,
-        Offset(center.dx - painter.width / 2, center.dy - painter.height / 2),
-      );
-      painter.dispose();
-    }
-
-    if (strokeColor != null && strokeWidth > 0) {
-      paint(TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w900,
-        height: 1,
-        foreground: Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..color = strokeColor,
-      ));
-    }
-    paint(TextStyle(
-      color: color,
-      fontSize: fontSize,
-      fontWeight: FontWeight.w900,
-      fontStyle: FontStyle.italic,
-      height: 1,
-    ));
+    final painter = TextPainter(
+      text: TextSpan(
+        text: value,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w900,
+          height: 1,
+          letterSpacing: value.length > 1 ? -fontSize * 0.04 : 0,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout();
+    painter.paint(
+      canvas,
+      Offset(center.dx - painter.width / 2, center.dy - painter.height / 2),
+    );
+    painter.dispose();
   }
 
   @override
