@@ -618,6 +618,106 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesUnoWin => 'जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।';
 
   @override
+  String get rulesUnoCall => 'एक पत्ता बचने पर “ऊनो” कहें। विरोधी पहले चुनौती दे तो 2 पत्ते उठाएँ।';
+
+  @override
+  String get rulesUnoScoring => 'नंबर का अपना मूल्य, एक्शन के 20 और वाइल्ड के 50 अंक हैं। पहले 100 अंक पाने वाला जीतता है।';
+
+  @override
+  String get unoColorRed => 'लाल';
+
+  @override
+  String get unoColorYellow => 'पीला';
+
+  @override
+  String get unoColorGreen => 'हरा';
+
+  @override
+  String get unoColorBlue => 'नीला';
+
+  @override
+  String get unoDraw => 'उठाएँ';
+
+  @override
+  String get unoKeep => 'रखें';
+
+  @override
+  String get unoSayUno => 'ऊनो!';
+
+  @override
+  String get unoChallengeUno => 'ऊनो चुनौती';
+
+  @override
+  String get unoChallengeWd4 => '+4 चुनौती';
+
+  @override
+  String get unoChooseColor => 'रंग चुनें';
+
+  @override
+  String get unoDrawPile => 'ड्रॉ ढेर';
+
+  @override
+  String get unoDiscardPile => 'डिस्कार्ड';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'पत्ते: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'अंक: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'राउंड $round · $target तक';
+  }
+
+  @override
+  String get unoYourTurn => 'आपकी बारी';
+
+  @override
+  String get unoWaitingTurn => 'विरोधी की बारी';
+
+  @override
+  String get unoChooseColorHint => 'वाइल्ड पत्ते के लिए रंग चुनें';
+
+  @override
+  String get unoWd4Hint => '4 पत्ते उठाएँ या Wild +4 को चुनौती दें';
+
+  @override
+  String get unoDrawnHint => 'उठाया पत्ता खेलें या रखें';
+
+  @override
+  String get unoPlayHint => 'मिलता रंग या मूल्य खेलें';
+
+  @override
+  String get unoDrawHint => 'कोई मिलता पत्ता नहीं — ढेर से उठाएँ';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count पत्ते';
+  }
+
+  @override
+  String get unoYouWon => 'आप मैच जीत गए!';
+
+  @override
+  String get unoYouLost => 'मैच समाप्त';
+
+  @override
+  String unoWinner(String name) {
+    return 'विजेता: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'घड़ी की दिशा';
+
+  @override
+  String get unoDirectionCounterclockwise => 'घड़ी की उलटी दिशा';
+
+  @override
   String get gamesInDevelopment => 'विकास में';
 
   @override

@@ -618,6 +618,106 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoWin => 'Wygrywa ten, kto pierwszy zrzuci wszystkie karty. Powiedz „Uno”, gdy zostanie jedna.';
 
   @override
+  String get rulesUnoCall => 'Powiedz „Uno”, gdy zostanie jedna karta. Jeśli przeciwnik pierwszy rzuci wyzwanie, dobierz 2 karty.';
+
+  @override
+  String get rulesUnoScoring => 'Liczby dają wartość karty, akcje 20, a jokery 50 punktów. Wygrywa pierwszy do 100.';
+
+  @override
+  String get unoColorRed => 'Czerwony';
+
+  @override
+  String get unoColorYellow => 'Żółty';
+
+  @override
+  String get unoColorGreen => 'Zielony';
+
+  @override
+  String get unoColorBlue => 'Niebieski';
+
+  @override
+  String get unoDraw => 'Dobierz';
+
+  @override
+  String get unoKeep => 'Zatrzymaj';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Rzuć wyzwanie Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Rzuć wyzwanie +4';
+
+  @override
+  String get unoChooseColor => 'Wybierz kolor';
+
+  @override
+  String get unoDrawPile => 'Stos dobierania';
+
+  @override
+  String get unoDiscardPile => 'Stos kart';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Karty: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Punkty: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Runda $round · do $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Twój ruch';
+
+  @override
+  String get unoWaitingTurn => 'Ruch przeciwnika';
+
+  @override
+  String get unoChooseColorHint => 'Wybierz kolor dla jokera';
+
+  @override
+  String get unoWd4Hint => 'Dobierz 4 karty albo podważ Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Zagraj dobraną kartę albo ją zatrzymaj';
+
+  @override
+  String get unoPlayHint => 'Zagraj pasujący kolor lub wartość';
+
+  @override
+  String get unoDrawHint => 'Brak pasującej karty — dobierz ze stosu';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kart';
+  }
+
+  @override
+  String get unoYouWon => 'Wygrywasz mecz!';
+
+  @override
+  String get unoYouLost => 'Mecz zakończony';
+
+  @override
+  String unoWinner(String name) {
+    return 'Zwycięzca: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Zgodnie z ruchem wskazówek';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Przeciwnie do ruchu wskazówek';
+
+  @override
   String get gamesInDevelopment => 'W trakcie tworzenia';
 
   @override

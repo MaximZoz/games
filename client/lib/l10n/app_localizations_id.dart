@@ -618,6 +618,106 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoWin => 'Pemain yang pertama menghabiskan semua kartu menang. Ucapkan “Uno” saat tersisa satu.';
 
   @override
+  String get rulesUnoCall => 'Ucapkan “Uno” saat tersisa satu kartu. Jika lawan menantang lebih dulu, ambil 2 kartu.';
+
+  @override
+  String get rulesUnoScoring => 'Angka bernilai sesuai kartu, aksi 20, dan kartu liar 50 poin. Yang pertama mencapai 100 menang.';
+
+  @override
+  String get unoColorRed => 'Merah';
+
+  @override
+  String get unoColorYellow => 'Kuning';
+
+  @override
+  String get unoColorGreen => 'Hijau';
+
+  @override
+  String get unoColorBlue => 'Biru';
+
+  @override
+  String get unoDraw => 'Ambil';
+
+  @override
+  String get unoKeep => 'Simpan';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Tantang Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Tantang +4';
+
+  @override
+  String get unoChooseColor => 'Pilih warna';
+
+  @override
+  String get unoDrawPile => 'Tumpukan ambil';
+
+  @override
+  String get unoDiscardPile => 'Buangan';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kartu: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Skor: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Ronde $round · hingga $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Giliran Anda';
+
+  @override
+  String get unoWaitingTurn => 'Giliran lawan';
+
+  @override
+  String get unoChooseColorHint => 'Pilih warna untuk kartu liar';
+
+  @override
+  String get unoWd4Hint => 'Ambil 4 kartu atau tantang Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Mainkan kartu yang diambil atau simpan';
+
+  @override
+  String get unoPlayHint => 'Mainkan warna atau nilai yang cocok';
+
+  @override
+  String get unoDrawHint => 'Tidak ada kartu cocok — ambil dari tumpukan';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kartu';
+  }
+
+  @override
+  String get unoYouWon => 'Anda memenangkan pertandingan!';
+
+  @override
+  String get unoYouLost => 'Pertandingan selesai';
+
+  @override
+  String unoWinner(String name) {
+    return 'Pemenang: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Searah jarum jam';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Berlawanan arah jarum jam';
+
+  @override
   String get gamesInDevelopment => 'Dalam pengembangan';
 
   @override

@@ -15,6 +15,7 @@
 - крестики-нолики (лобби, invite/matchmake, игра 3×3–8×8, ставки, бот);
 - дурак (лобби, онлайн и офлайн с ботами: те же полёты карт — раздача, добор из колоды, стол в биту/руку, веер; первый ход — младший козырь с анимацией и подписью; если козыря нет — добор по одной, пока не появится; против бота нет кнопки ничьей; крупные ранг и масть в углах карт, как в покере; полёты снимаются при уходе с экрана);
 - морской бой — серверный API (лобби, расстановка, выстрелы, бот, ставки);
+- UNO — серверное ядро и Flutter-клиент: карточка создания/поиска, онлайн-лобби, адаптивный стол, собственные `CustomPaint`-карты и анимации, офлайн-матч с ботами, выбор цвета, вызовы UNO и Wild Draw Four, раунды и счёт до 100;
 - статистика игрока (победы/ничьи/поражения, win-rate, время в игре, топ соперников, счёт head-to-head в попапе профиля с иконками всех игр);
 - магазин и инвентарь (эмоции, коллекции, рамки, подарки, доход коллекций);
 - достижения с наградами (рамки);
@@ -110,6 +111,7 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 │   │   ├── auth/              # JWT (HS256), bcrypt
 │   │   ├── i18n/              # локализация серверных сообщений
 │   │   ├── mailer/            # почта: Resend или SMTP (коды подтверждения)
+│   │   ├── uno/               # автономное игровое ядро UNO
 │   │   └── store/             # слой БД (stateless-функции, pgx)
 │   ├── migrations/            # миграции golang-migrate (001..045)
 │   └── go.mod
@@ -187,6 +189,13 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
   - `POST /api/games/battleship/rematch`
   - `GET /api/games/battleship/game/:id`
   - `POST /api/games/battleship/game/:id/place_ships|shoot|forfeit`
+- UNO API (Redis обязателен):
+  - `POST /api/games/uno/lobby` — invite/matchmake, `max_players=1` запускает игру с ботом
+  - `GET /api/games/uno/lobbies`, `GET /api/games/uno/active`
+  - `GET /api/games/uno/lobby/:id`, `POST .../invite|join|leave|decline|cancel-invite`
+  - `POST /api/games/uno/rematch`
+  - `GET /api/games/uno/game/:id`
+  - `POST /api/games/uno/game/:id/move|forfeit`
 - Shop & inventory API:
   - `GET /api/shop`, `POST /api/shop/buy`
   - `GET /api/inventory`, `GET /api/inventory/capabilities`
@@ -415,6 +424,7 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 - [x] Дурак (онлайн + офлайн: те же полёты — раздача, добор, бита, веер; первый ход — младший козырь; добор, если козыря нет; без ничьей против бота; читаемые углы карт)
 - [x] Морской бой — серверный API (engine + HTTP, бот, ставки) и клиент Flutter (лобби, расстановка, бой, реванш)
 - [x] Покер (Texas Hold'em) — онлайн/офлайн
+- [x] UNO — онлайн/офлайн с ботами, лобби, адаптивный стол, анимации и карты `CustomPaint`
 - [x] Магазин, инвентарь, коллекции, эмоции, подарки
 - [x] Достижения с наградами (рамки)
 - [x] Web Push-уведомления (PWA)
@@ -424,7 +434,6 @@ fly secrets set APP_LOG_ENABLED=false --app multigameszozu
 
 ### Ближайшие задачи
 
-- [ ] Уно — карточка на экране игр («В разработке»: своя иконка, игроки/время как у Дурака, правила), дальше — логика игры
 - [ ] Добавить интеграционные тесты с реальной БД для friends/admin/chats/games
 - [ ] Расширить покрытие Flutter widget-тестами ключевых экранов
 - [ ] Доп. режимы морского боя (если понадобятся); расширить набор игр

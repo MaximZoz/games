@@ -618,6 +618,106 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoWin => 'Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.';
 
   @override
+  String get rulesUnoCall => 'Sano ”Uno”, kun yksi kortti on jäljellä. Jos vastustaja haastaa ensin, nosta 2 korttia.';
+
+  @override
+  String get rulesUnoScoring => 'Numerot antavat arvonsa, toimintakortit 20 ja jokerit 50 pistettä. Ensimmäinen 100 pisteeseen voittaa.';
+
+  @override
+  String get unoColorRed => 'Punainen';
+
+  @override
+  String get unoColorYellow => 'Keltainen';
+
+  @override
+  String get unoColorGreen => 'Vihreä';
+
+  @override
+  String get unoColorBlue => 'Sininen';
+
+  @override
+  String get unoDraw => 'Nosta';
+
+  @override
+  String get unoKeep => 'Pidä';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Haasta Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Haasta +4';
+
+  @override
+  String get unoChooseColor => 'Valitse väri';
+
+  @override
+  String get unoDrawPile => 'Nostopakka';
+
+  @override
+  String get unoDiscardPile => 'Poistopakka';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kortteja: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Pisteet: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Kierros $round · tavoite $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Sinun vuorosi';
+
+  @override
+  String get unoWaitingTurn => 'Vastustajan vuoro';
+
+  @override
+  String get unoChooseColorHint => 'Valitse jokerille väri';
+
+  @override
+  String get unoWd4Hint => 'Nosta 4 korttia tai haasta Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Pelaa nostettu kortti tai pidä se';
+
+  @override
+  String get unoPlayHint => 'Pelaa sopiva väri tai arvo';
+
+  @override
+  String get unoDrawHint => 'Ei sopivaa korttia — nosta pakasta';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count korttia';
+  }
+
+  @override
+  String get unoYouWon => 'Voitit ottelun!';
+
+  @override
+  String get unoYouLost => 'Ottelu päättyi';
+
+  @override
+  String unoWinner(String name) {
+    return 'Voittaja: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Myötäpäivään';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Vastapäivään';
+
+  @override
   String get gamesInDevelopment => 'Kehityksessä';
 
   @override

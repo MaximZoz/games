@@ -618,6 +618,106 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesUnoWin => 'Κερδίζει όποιος πετάξει πρώτος όλες τις κάρτες. Πείτε «Uno» όταν μείνει μία.';
 
   @override
+  String get rulesUnoCall => 'Πείτε «Uno» όταν μένει μία κάρτα. Αν ο αντίπαλος προλάβει να σας προκαλέσει, τραβήξτε 2 κάρτες.';
+
+  @override
+  String get rulesUnoScoring => 'Οι αριθμοί δίνουν την αξία τους, οι κάρτες δράσης 20 και οι μπαλαντέρ 50 πόντους. Ο πρώτος στους 100 κερδίζει.';
+
+  @override
+  String get unoColorRed => 'Κόκκινο';
+
+  @override
+  String get unoColorYellow => 'Κίτρινο';
+
+  @override
+  String get unoColorGreen => 'Πράσινο';
+
+  @override
+  String get unoColorBlue => 'Μπλε';
+
+  @override
+  String get unoDraw => 'Τράβηγμα';
+
+  @override
+  String get unoKeep => 'Κράτημα';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Πρόκληση Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Πρόκληση +4';
+
+  @override
+  String get unoChooseColor => 'Επιλέξτε χρώμα';
+
+  @override
+  String get unoDrawPile => 'Τράπουλα';
+
+  @override
+  String get unoDiscardPile => 'Στοίβα';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Κάρτες: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Σκορ: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Γύρος $round · έως $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Η σειρά σας';
+
+  @override
+  String get unoWaitingTurn => 'Σειρά αντιπάλου';
+
+  @override
+  String get unoChooseColorHint => 'Επιλέξτε χρώμα για τον μπαλαντέρ';
+
+  @override
+  String get unoWd4Hint => 'Τραβήξτε 4 κάρτες ή προκαλέστε το Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Παίξτε την κάρτα ή κρατήστε την';
+
+  @override
+  String get unoPlayHint => 'Παίξτε ίδιο χρώμα ή αξία';
+
+  @override
+  String get unoDrawHint => 'Δεν υπάρχει κάρτα — τραβήξτε από την τράπουλα';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count κάρτες';
+  }
+
+  @override
+  String get unoYouWon => 'Κερδίσατε τον αγώνα!';
+
+  @override
+  String get unoYouLost => 'Ο αγώνας τελείωσε';
+
+  @override
+  String unoWinner(String name) {
+    return 'Νικητής: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Δεξιόστροφα';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Αριστερόστροφα';
+
+  @override
   String get gamesInDevelopment => 'Υπό ανάπτυξη';
 
   @override

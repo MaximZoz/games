@@ -289,6 +289,74 @@
   "rulesUnoIntro": "Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.",
   "rulesUnoPlay": "Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.",
   "rulesUnoWin": "Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.",
+  "rulesUnoCall": "Когда у вас остаётся одна карта, скажите «Уно». Если соперник успеет бросить вызов раньше, вы берёте 2 карты.",
+  "rulesUnoScoring": "За карты соперников победитель раунда получает очки: цифры — по номиналу, спецкарты — 20, чёрные — 50. Матч идёт до 100 очков.",
+  "unoColorRed": "Красный",
+  "unoColorYellow": "Жёлтый",
+  "unoColorGreen": "Зелёный",
+  "unoColorBlue": "Синий",
+  "unoDraw": "Взять",
+  "unoKeep": "Оставить",
+  "unoSayUno": "Уно!",
+  "unoChallengeUno": "Поймать без Уно",
+  "unoChallengeWd4": "Оспорить +4",
+  "unoChooseColor": "Выберите цвет",
+  "unoDrawPile": "Колода",
+  "unoDiscardPile": "Сброс",
+  "unoCardsCount": "Карт: {count}",
+  "@unoCardsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unoScore": "Очки: {score}",
+  "@unoScore": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "unoRoundProgress": "Раунд {round} · до {target}",
+  "@unoRoundProgress": {
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "unoYourTurn": "Ваш ход",
+  "unoWaitingTurn": "Ход соперника",
+  "unoChooseColorHint": "Выберите цвет для чёрной карты",
+  "unoWd4Hint": "Возьмите 4 карты или оспорьте Wild +4",
+  "unoDrawnHint": "Сыграйте взятую карту или оставьте её",
+  "unoPlayHint": "Сыграйте карту по цвету или значению",
+  "unoDrawHint": "Подходящей карты нет — возьмите из колоды",
+  "unoPendingDraw": "+{count} карт",
+  "@unoPendingDraw": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unoYouWon": "Вы выиграли матч!",
+  "unoYouLost": "Матч окончен",
+  "unoWinner": "Победитель: {name}",
+  "@unoWinner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unoDirectionClockwise": "По часовой стрелке",
+  "unoDirectionCounterclockwise": "Против часовой стрелки",
   "gamesInDevelopment": "В разработке",
   "rulesPokerPlayers": "Игроки: {players}.",
   "@rulesPokerPlayers": {

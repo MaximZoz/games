@@ -618,6 +618,106 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesUnoWin => 'Den som først blir kvitt alle kortene vinner. Si “Uno” når du har ett kort igjen.';
 
   @override
+  String get rulesUnoCall => 'Si «Uno» når ett kort gjenstår. Hvis en motspiller utfordrer først, trekk 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Tall gir pålydende, handlingskort 20 og jokere 50 poeng. Første til 100 vinner.';
+
+  @override
+  String get unoColorRed => 'Rød';
+
+  @override
+  String get unoColorYellow => 'Gul';
+
+  @override
+  String get unoColorGreen => 'Grønn';
+
+  @override
+  String get unoColorBlue => 'Blå';
+
+  @override
+  String get unoDraw => 'Trekk';
+
+  @override
+  String get unoKeep => 'Behold';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Utfordre Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Utfordre +4';
+
+  @override
+  String get unoChooseColor => 'Velg en farge';
+
+  @override
+  String get unoDrawPile => 'Trekkbunke';
+
+  @override
+  String get unoDiscardPile => 'Kastebunke';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kort: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Poeng: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Runde $round · til $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Din tur';
+
+  @override
+  String get unoWaitingTurn => 'Motspillerens tur';
+
+  @override
+  String get unoChooseColorHint => 'Velg en farge for jokeren';
+
+  @override
+  String get unoWd4Hint => 'Trekk 4 kort eller utfordre Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Spill det trukne kortet eller behold det';
+
+  @override
+  String get unoPlayHint => 'Spill en matchende farge eller verdi';
+
+  @override
+  String get unoDrawHint => 'Ingen matchende kort — trekk fra bunken';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kort';
+  }
+
+  @override
+  String get unoYouWon => 'Du vant kampen!';
+
+  @override
+  String get unoYouLost => 'Kampen er over';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vinner: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Med klokken';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Mot klokken';
+
+  @override
   String get gamesInDevelopment => 'Under utvikling';
 
   @override

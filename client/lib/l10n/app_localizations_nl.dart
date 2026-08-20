@@ -618,6 +618,106 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesUnoWin => 'Wie als eerste alle kaarten kwijt is, wint. Zeg “Uno” als je er één over hebt.';
 
   @override
+  String get rulesUnoCall => 'Zeg “Uno” als je één kaart over hebt. Daagt een tegenstander je eerst uit, trek dan 2 kaarten.';
+
+  @override
+  String get rulesUnoScoring => 'Getallen tellen hun waarde, actiekaarten 20 en jokers 50 punten. De eerste met 100 wint.';
+
+  @override
+  String get unoColorRed => 'Rood';
+
+  @override
+  String get unoColorYellow => 'Geel';
+
+  @override
+  String get unoColorGreen => 'Groen';
+
+  @override
+  String get unoColorBlue => 'Blauw';
+
+  @override
+  String get unoDraw => 'Trekken';
+
+  @override
+  String get unoKeep => 'Houden';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno uitdagen';
+
+  @override
+  String get unoChallengeWd4 => '+4 uitdagen';
+
+  @override
+  String get unoChooseColor => 'Kies een kleur';
+
+  @override
+  String get unoDrawPile => 'Trekstapel';
+
+  @override
+  String get unoDiscardPile => 'Aflegstapel';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kaarten: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Ronde $round · tot $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Jouw beurt';
+
+  @override
+  String get unoWaitingTurn => 'Beurt van tegenstander';
+
+  @override
+  String get unoChooseColorHint => 'Kies een kleur voor de joker';
+
+  @override
+  String get unoWd4Hint => 'Trek 4 kaarten of daag Wild +4 uit';
+
+  @override
+  String get unoDrawnHint => 'Speel de getrokken kaart of houd hem';
+
+  @override
+  String get unoPlayHint => 'Speel dezelfde kleur of waarde';
+
+  @override
+  String get unoDrawHint => 'Geen passende kaart — trek van de stapel';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kaarten';
+  }
+
+  @override
+  String get unoYouWon => 'Je hebt de wedstrijd gewonnen!';
+
+  @override
+  String get unoYouLost => 'Wedstrijd afgelopen';
+
+  @override
+  String unoWinner(String name) {
+    return 'Winnaar: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Met de klok mee';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Tegen de klok in';
+
+  @override
   String get gamesInDevelopment => 'In ontwikkeling';
 
   @override

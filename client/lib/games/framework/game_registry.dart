@@ -4,6 +4,7 @@ import 'package:multigames_client/games/framework/game_descriptor.dart';
 import 'package:multigames_client/games/framework/durak_game.dart';
 import 'package:multigames_client/games/framework/poker_game.dart';
 import 'package:multigames_client/games/framework/tictactoe_game.dart';
+import 'package:multigames_client/games/framework/uno_game.dart';
 
 /// Реестр игр клиента. Единственная точка «какие игры есть в приложении».
 ///
@@ -86,6 +87,7 @@ List<GameDescriptor> _builtinGames() => [
       TicTacToeGame(),
       DurakGame(),
       BattleshipGame(),
+      UnoGame(),
       PokerGame(),
     ];
 

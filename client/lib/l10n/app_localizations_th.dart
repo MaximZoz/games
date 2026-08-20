@@ -618,6 +618,106 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoWin => 'ผู้ที่ลงไพ่หมดก่อนเป็นผู้ชนะ เมื่อเหลือใบเดียวต้องพูดว่า “อูโน่”';
 
   @override
+  String get rulesUnoCall => 'พูด “อูโน่” เมื่อเหลือไพ่หนึ่งใบ หากคู่แข่งท้าก่อน ให้จั่ว 2 ใบ';
+
+  @override
+  String get rulesUnoScoring => 'ไพ่เลขได้แต้มตามหน้า ไพ่คำสั่ง 20 และไพ่เปลี่ยนสี 50 แต้ม ผู้ที่ถึง 100 ก่อนชนะ';
+
+  @override
+  String get unoColorRed => 'แดง';
+
+  @override
+  String get unoColorYellow => 'เหลือง';
+
+  @override
+  String get unoColorGreen => 'เขียว';
+
+  @override
+  String get unoColorBlue => 'น้ำเงิน';
+
+  @override
+  String get unoDraw => 'จั่ว';
+
+  @override
+  String get unoKeep => 'เก็บ';
+
+  @override
+  String get unoSayUno => 'อูโน่!';
+
+  @override
+  String get unoChallengeUno => 'ท้าอูโน่';
+
+  @override
+  String get unoChallengeWd4 => 'ท้า +4';
+
+  @override
+  String get unoChooseColor => 'เลือกสี';
+
+  @override
+  String get unoDrawPile => 'กองจั่ว';
+
+  @override
+  String get unoDiscardPile => 'กองทิ้ง';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'ไพ่: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'คะแนน: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'รอบ $round · ถึง $target';
+  }
+
+  @override
+  String get unoYourTurn => 'ตาของคุณ';
+
+  @override
+  String get unoWaitingTurn => 'ตาของคู่แข่ง';
+
+  @override
+  String get unoChooseColorHint => 'เลือกสีสำหรับไพ่เปลี่ยนสี';
+
+  @override
+  String get unoWd4Hint => 'จั่ว 4 ใบหรือท้า Wild +4';
+
+  @override
+  String get unoDrawnHint => 'ลงไพ่ที่จั่วหรือเก็บไว้';
+
+  @override
+  String get unoPlayHint => 'ลงไพ่สีหรือค่าเดียวกัน';
+
+  @override
+  String get unoDrawHint => 'ไม่มีไพ่ที่ลงได้ — จั่วจากกอง';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count ใบ';
+  }
+
+  @override
+  String get unoYouWon => 'คุณชนะเกม!';
+
+  @override
+  String get unoYouLost => 'เกมจบแล้ว';
+
+  @override
+  String unoWinner(String name) {
+    return 'ผู้ชนะ: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'ตามเข็มนาฬิกา';
+
+  @override
+  String get unoDirectionCounterclockwise => 'ทวนเข็มนาฬิกา';
+
+  @override
   String get gamesInDevelopment => 'กำลังพัฒนา';
 
   @override

@@ -618,6 +618,106 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesUnoWin => 'Барлық картасын бірінші тастаған жеңеді. Бір карта қалғанда «Уно» деп айтуды ұмытпаңыз.';
 
   @override
+  String get rulesUnoCall => 'Бір карта қалғанда «Уно» деңіз. Қарсылас бұрын дауласа, 2 карта алыңыз.';
+
+  @override
+  String get rulesUnoScoring => 'Сандар өз мәнін, арнайы карталар 20, қара карталар 50 ұпай береді. 100 ұпайға бірінші жеткен жеңеді.';
+
+  @override
+  String get unoColorRed => 'Қызыл';
+
+  @override
+  String get unoColorYellow => 'Сары';
+
+  @override
+  String get unoColorGreen => 'Жасыл';
+
+  @override
+  String get unoColorBlue => 'Көк';
+
+  @override
+  String get unoDraw => 'Алу';
+
+  @override
+  String get unoKeep => 'Қалдыру';
+
+  @override
+  String get unoSayUno => 'Уно!';
+
+  @override
+  String get unoChallengeUno => 'Уноны даулау';
+
+  @override
+  String get unoChallengeWd4 => '+4 даулау';
+
+  @override
+  String get unoChooseColor => 'Түсті таңдаңыз';
+
+  @override
+  String get unoDrawPile => 'Колода';
+
+  @override
+  String get unoDiscardPile => 'Тастау';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Карталар: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Ұпай: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round-раунд · $target дейін';
+  }
+
+  @override
+  String get unoYourTurn => 'Сіздің жүрісіңіз';
+
+  @override
+  String get unoWaitingTurn => 'Қарсыластың жүрісі';
+
+  @override
+  String get unoChooseColorHint => 'Қара карта үшін түс таңдаңыз';
+
+  @override
+  String get unoWd4Hint => '4 карта алыңыз немесе Wild +4-ті даулаңыз';
+
+  @override
+  String get unoDrawnHint => 'Алынған картаны ойнаңыз немесе қалдырыңыз';
+
+  @override
+  String get unoPlayHint => 'Сәйкес түс немесе мәнді ойнаңыз';
+
+  @override
+  String get unoDrawHint => 'Сәйкес карта жоқ — колодадан алыңыз';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count карта';
+  }
+
+  @override
+  String get unoYouWon => 'Сіз матчты жеңдіңіз!';
+
+  @override
+  String get unoYouLost => 'Матч аяқталды';
+
+  @override
+  String unoWinner(String name) {
+    return 'Жеңімпаз: $name';
+  }
+
+  @override
+  String get unoDirectionClockwise => 'Сағат тілімен';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Сағат тіліне қарсы';
+
+  @override
   String get gamesInDevelopment => 'Әзірленуде';
 
   @override
