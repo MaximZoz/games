@@ -210,7 +210,7 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PokerGameIcon(size: 22),
+              const PokerGameIcon(size: 22, color: AppColors.accentStart),
               const SizedBox(width: 8),
               Text(isMatchmake
                   ? context.l10n.gamesLobbyTab

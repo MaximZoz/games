@@ -1272,10 +1272,12 @@ class _LobbiesPageContent extends ConsumerWidget {
                                         : lobby.isDurak
                                             ? DurakGameIcon(
                                                 size: isDesktop ? 36 : 32,
+                                                color: AppColors.accentStart,
                                               )
                                             : lobby.isPoker
                                                 ? PokerGameIcon(
                                                     size: isDesktop ? 36 : 32,
+                                                    color: AppColors.accentStart,
                                                   )
                                                 : Icon(
                                                     Icons.grid_3x3_rounded,
@@ -1793,7 +1795,10 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       GameCardChip(
         selected: true,
         icon: DurakGameIcon.iconData,
-        iconChild: DurakGameIcon(size: isDesktop ? 18 : 16),
+        iconChild: DurakGameIcon(
+          size: isDesktop ? 18 : 16,
+          color: AppColors.accentStart,
+        ),
         label: _deckLabel(_deckSize),
         onTap: busy ? null : _cycleDeck,
         isDesktop: isDesktop,
@@ -1807,7 +1812,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       header: GameCardHeader(
         title: context.l10n.gamesDurak,
         icon: DurakGameIcon.iconData,
-        iconChild: const DurakGameIcon(size: 26),
+        iconChild: const DurakGameIcon(size: 26, color: Colors.white),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -2402,7 +2407,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       header: GameCardHeader(
         title: context.l10n.gamesPoker,
         icon: PokerGameIcon.iconData,
-        iconChild: const PokerGameIcon(size: 26),
+        iconChild: const PokerGameIcon(size: 26, color: Colors.white),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -3345,13 +3350,13 @@ class _InviteGameIcon extends StatelessWidget {
     switch (gameType) {
       case 'durak':
         materialIcon = null;
-        child = const DurakGameIcon(size: 26);
+        child = const DurakGameIcon(size: 26, color: Colors.white);
       case 'battleship':
         materialIcon = Icons.directions_boat_filled_rounded;
         child = Icon(materialIcon, color: Colors.white, size: 26);
       case 'poker':
         materialIcon = null;
-        child = const PokerGameIcon(size: 26);
+        child = const PokerGameIcon(size: 26, color: Colors.white);
       case 'uno':
         materialIcon = null;
         child = const UnoGameIcon(size: 26);

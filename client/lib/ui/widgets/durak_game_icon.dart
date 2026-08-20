@@ -1,9 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:multigames_client/ui/widgets/card_suit_paths.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
-/// Иконка «Дурак» — атака и покрывающая карта (не общий веер и не Уно).
+/// Иконка «Дурак» — официальный Material Symbol `playing_cards`.
 class DurakGameIcon extends StatelessWidget {
   const DurakGameIcon({
     super.key,
@@ -12,85 +10,17 @@ class DurakGameIcon extends StatelessWidget {
   });
 
   final double size;
-
-  /// Раньше тинтовали Material-иконку; цветные карты его не используют.
   final Color? color;
 
-  /// Fallback для мест, где нужен только [IconData].
-  static const IconData iconData = Icons.style_rounded;
+  static const IconData iconData = Symbols.playing_cards_rounded;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        key: ValueKey(color),
-        painter: const _DurakGameIconPainter(),
-      ),
+    return Icon(
+      iconData,
+      size: size,
+      color: color,
+      fill: 1,
     );
   }
-}
-
-class _DurakGameIconPainter extends CustomPainter {
-  const _DurakGameIconPainter();
-
-  static const _card = Color(0xFFFFF8F0);
-  static const _edge = Color(0xFF2C2C2C);
-  static const _heart = Color(0xFFD32F2F);
-  static const _spade = Color(0xFF1B1B1B);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = size.shortestSide;
-    final cardW = s * 0.44;
-    final cardH = s * 0.60;
-    final radius = Radius.circular(s * 0.07);
-    final center = Offset(s / 2, s / 2 + s * 0.01);
-
-    void drawCard({
-      required double angleDeg,
-      required Offset shift,
-      required Color suitColor,
-      required Path Function(Offset center, double size) suit,
-    }) {
-      canvas.save();
-      canvas.translate(center.dx + shift.dx, center.dy + shift.dy);
-      canvas.rotate(angleDeg * math.pi / 180);
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: cardW, height: cardH),
-        radius,
-      );
-      canvas.drawRRect(rect, Paint()..color = _card);
-      canvas.drawRRect(
-        rect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = s * 0.045
-          ..color = _edge.withValues(alpha: 0.88),
-      );
-      canvas.drawPath(
-        suit(Offset.zero, s * 0.26),
-        Paint()..color = suitColor,
-      );
-      canvas.restore();
-    }
-
-    // Нижняя — заход, верхняя кроет: суть дурака.
-    drawCard(
-      angleDeg: -26,
-      shift: Offset(-s * 0.13, s * 0.06),
-      suitColor: _heart,
-      suit: heartSuitPath,
-    );
-    drawCard(
-      angleDeg: 20,
-      shift: Offset(s * 0.13, -s * 0.03),
-      suitColor: _spade,
-      suit: spadeSuitPath,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -13,6 +13,7 @@ void main() {
       ),
     );
     expect(find.byType(DurakGameIcon), findsOneWidget);
+    expect(find.byIcon(DurakGameIcon.iconData), findsOneWidget);
     expect(find.byIcon(Icons.style_rounded), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -26,6 +27,7 @@ void main() {
       ),
     );
     expect(find.byType(PokerGameIcon), findsOneWidget);
+    expect(find.byIcon(PokerGameIcon.iconData), findsOneWidget);
     expect(find.byIcon(Icons.casino_rounded), findsNothing);
     expect(tester.takeException(), isNull);
   });

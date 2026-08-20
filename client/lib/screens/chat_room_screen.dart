@@ -4092,9 +4092,12 @@ class _ChatInviteCard extends ConsumerWidget {
                       ),
                       alignment: Alignment.center,
                       child: link.gameType == 'durak'
-                          ? const DurakGameIcon(size: 26)
+                          ? const DurakGameIcon(size: 26, color: Colors.white)
                           : link.gameType == 'poker'
-                              ? const PokerGameIcon(size: 26)
+                              ? const PokerGameIcon(
+                                  size: 26,
+                                  color: Colors.white,
+                                )
                               : Icon(
                                   link.gameType == 'battleship'
                                       ? Icons.directions_boat_filled_rounded
