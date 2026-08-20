@@ -609,19 +609,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Play against a bot, no turn time limit.';
 
   @override
-  String get rulesUnoIntro => 'Classic Uno: everyone is dealt cards; play by color or number.';
+  String get rulesUnoIntro => 'Each player is dealt 7 cards. Play a card of the same color or the same rank (number or matching action).';
 
   @override
-  String get rulesUnoPlay => 'Special cards: +2, reverse, skip, wild and wild +4. If you cannot play, draw from the deck.';
+  String get rulesUnoPlay => 'Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 — the next player draws 2 and is skipped; +2 cards do not stack.';
 
   @override
-  String get rulesUnoWin => 'The first player to empty their hand wins. Say “Uno” when you have one card left.';
+  String get rulesUnoWild => 'A black card sets a new color. Play +4 only if you have no card of the current color. The next player may challenge: if the +4 was legal they draw 6; if not, the +4 player draws 4 and the challenger plays.';
 
   @override
-  String get rulesUnoCall => 'When one card remains, say “Uno”. If an opponent challenges first, draw 2 cards.';
+  String get rulesUnoDraw => 'If you have no legal card, draw one from the deck. If it matches, you may play it now or keep it and pass. You cannot draw while you still have a legal play.';
 
   @override
-  String get rulesUnoScoring => 'The round winner scores opponents’ cards: numbers at face value, actions 20, wilds 50. The match ends at 100 points.';
+  String get rulesUnoWin => 'The match winner is the first to reach 100 points. A round is won by emptying your hand.';
+
+  @override
+  String get rulesUnoCall => 'When you have one card left, tap “Uno!”. Until the next action, an opponent can catch you without Uno — then you draw 2 cards.';
+
+  @override
+  String get rulesUnoScoring => 'The first to empty their hand wins the round and scores opponents’ cards: numbers at face value, actions 20, black cards 50. First to 100 points wins the match.';
 
   @override
   String get unoColorRed => 'Red';

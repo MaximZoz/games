@@ -609,19 +609,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Partita contro un bot, senza limite di tempo per turno.';
 
   @override
-  String get rulesUnoIntro => 'Uno classico: a tutti vengono distribuite carte; gioca per colore o numero.';
+  String get rulesUnoIntro => 'A ciascuno vanno 7 carte. Gioca una carta dello stesso colore o dello stesso valore (numero o stessa azione).';
 
   @override
-  String get rulesUnoPlay => 'Carte speciali: +2, cambio senso, salta, jolly e +4. Se non puoi giocare, pesca dal mazzo.';
+  String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 — il successivo pesca 2 e salta; i +2 non si sommano.';
 
   @override
-  String get rulesUnoWin => 'Vince chi scarica per primo tutte le carte. Di’ “Uno” quando ne resta una.';
+  String get rulesUnoWild => 'Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.';
 
   @override
-  String get rulesUnoCall => 'Di’ «Uno» quando resta una carta. Se un avversario ti sfida prima, pesca 2 carte.';
+  String get rulesUnoDraw => 'Senza carta valida pesca una dal mazzo. Se va bene, puoi giocarla subito o tenerla e passare. Non puoi pescare se hai ancora una giocata.';
 
   @override
-  String get rulesUnoScoring => 'I numeri valgono il loro valore, le azioni 20 e i jolly 50 punti. Vince chi arriva per primo a 100.';
+  String get rulesUnoWin => 'Vince il match chi arriva per primo a 100 punti. Il round lo vince chi svuota la mano.';
+
+  @override
+  String get rulesUnoCall => 'Quando resta una carta, tocca «Uno!». Fino all’azione successiva un avversario può beccarti senza Uno: allora peschi 2 carte.';
+
+  @override
+  String get rulesUnoScoring => 'Chi svuota per primo la mano vince il round e prende i punti delle mani avversarie: numeri a valore, azioni 20, nere 50. Il match va a 100 punti.';
 
   @override
   String get unoColorRed => 'Rosso';

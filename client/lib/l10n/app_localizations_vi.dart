@@ -609,19 +609,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Chơi với bot, không giới hạn thời gian mỗi lượt.';
 
   @override
-  String get rulesUnoIntro => 'Uno cổ điển: mỗi người được chia bài; đánh theo màu hoặc số.';
+  String get rulesUnoIntro => 'Mỗi người được chia 7 lá. Đánh lá cùng màu hoặc cùng hạng (số hoặc cùng loại bài đặc biệt).';
 
   @override
-  String get rulesUnoPlay => 'Bài đặc biệt: +2, đổi chiều, bỏ lượt, đổi màu và +4. Không đánh được thì rút từ bộ bài.';
+  String get rulesUnoPlay => 'Bỏ lượt — người kế mất lượt. Đổi chiều khi còn hai người như bỏ lượt. +2 — người kế rút 2 và mất lượt; không cộng dồn +2.';
 
   @override
-  String get rulesUnoWin => 'Người đầu tiên hết bài thắng. Nhớ nói “Uno” khi còn một lá.';
+  String get rulesUnoWild => 'Lá đen chọn màu mới. Chỉ đánh +4 khi không có lá màu hiện tại. Đối thủ có thể thách: nếu +4 hợp lệ họ rút 6; nếu không, người đánh +4 rút 4 và người thách được đánh.';
 
   @override
-  String get rulesUnoCall => 'Hô “Uno” khi còn một lá. Nếu đối thủ thách trước, hãy rút 2 lá.';
+  String get rulesUnoDraw => 'Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.';
 
   @override
-  String get rulesUnoScoring => 'Lá số tính theo giá trị, lá hành động 20 và lá đổi màu 50 điểm. Ai đạt 100 trước sẽ thắng.';
+  String get rulesUnoWin => 'Thắng trận là người đạt 100 điểm trước. Thắng vòng là người hết bài.';
+
+  @override
+  String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!». Trước hành động tiếp theo đối thủ có thể bắt bạn không Uno — khi đó bạn rút 2 lá.';
+
+  @override
+  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. Trận đến 100 điểm.';
 
   @override
   String get unoColorRed => 'Đỏ';

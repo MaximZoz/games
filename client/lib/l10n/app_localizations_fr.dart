@@ -609,19 +609,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Partie contre un bot, sans limite de temps par tour.';
 
   @override
-  String get rulesUnoIntro => 'Uno classique : chacun reçoit des cartes ; jouez par couleur ou valeur.';
+  String get rulesUnoIntro => 'Chacun reçoit 7 cartes. Jouez une carte de la même couleur ou du même rang (chiffre ou même action).';
 
   @override
-  String get rulesUnoPlay => 'Cartes spéciales : +2, sens inverse, passe, joker et +4. Si vous ne pouvez pas jouer, piochez.';
+  String get rulesUnoPlay => 'Passe — le suivant perd son tour. Inversion à deux agit comme Passe. +2 — le suivant pioche 2 et passe ; on ne cumule pas les +2.';
 
   @override
-  String get rulesUnoWin => 'Le premier à se débarrasser de toutes ses cartes gagne. Dites « Uno » quand il vous en reste une.';
+  String get rulesUnoWild => 'Une carte noire fixe une nouvelle couleur. Jouez +4 seulement si vous n’avez aucune carte de la couleur en cours. L’adversaire peut contester : si le +4 était légal, il pioche 6 ; sinon l’auteur du +4 pioche 4 et le contestataire joue.';
 
   @override
-  String get rulesUnoCall => 'Dites « Uno » quand il reste une carte. Si un adversaire vous défie avant, piochez 2 cartes.';
+  String get rulesUnoDraw => 'Sans carte jouable, piochez-en une. Si elle convient, jouez-la tout de suite ou gardez-la et passez. On ne pioche pas tant qu’un coup est possible.';
 
   @override
-  String get rulesUnoScoring => 'Les chiffres valent leur valeur, les actions 20 et les jokers 50 points. Le premier à 100 gagne.';
+  String get rulesUnoWin => 'Le match est gagné par le premier à 100 points. Une manche est gagnée en vidant sa main.';
+
+  @override
+  String get rulesUnoCall => 'Quand il reste une carte, appuyez sur « Uno ! ». Avant l’action suivante, un adversaire peut vous attraper sans Uno — vous piochez alors 2 cartes.';
+
+  @override
+  String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. Le match se joue en 100 points.';
 
   @override
   String get unoColorRed => 'Rouge';

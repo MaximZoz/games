@@ -609,19 +609,25 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spill mot en bot uten tidsbegrensning per trekk.';
 
   @override
-  String get rulesUnoIntro => 'Klassisk Uno: alle får kort; spill etter farge eller tall.';
+  String get rulesUnoIntro => 'Hver spiller får 7 kort. Spill et kort i samme farge eller samme rang (tall eller samme handling).';
 
   @override
-  String get rulesUnoPlay => 'Spesialkort: +2, snu, hopp over, jokere og +4. Kan du ikke spille, trekk fra bunken.';
+  String get rulesUnoPlay => 'Hopp over — neste mister turen. Retningsbytte med to spillere virker som hopp over. +2 — neste trekker 2 og mister turen; +2 stables ikke.';
 
   @override
-  String get rulesUnoWin => 'Den som først blir kvitt alle kortene vinner. Si “Uno” når du har ett kort igjen.';
+  String get rulesUnoWild => 'Et svart kort setter ny farge. Spill +4 bare hvis du ikke har kort i gjeldende farge. Motstanderen kan utfordre: var +4 lovlig, trekker hen 6; ellers trekker +4-spilleren 4 og utfordreren spiller.';
 
   @override
-  String get rulesUnoCall => 'Si «Uno» når ett kort gjenstår. Hvis en motspiller utfordrer først, trekk 2 kort.';
+  String get rulesUnoDraw => 'Uten lovlig kort, trekk ett fra bunken. Matcher det, kan du spille det med en gang eller beholde det og gi turen videre. Du kan ikke trekke mens du har et lovlig trekk.';
 
   @override
-  String get rulesUnoScoring => 'Tall gir pålydende, handlingskort 20 og jokere 50 poeng. Første til 100 vinner.';
+  String get rulesUnoWin => 'Kampen vinnes av den som først når 100 poeng. En runde vinnes ved å tømme hånden.';
+
+  @override
+  String get rulesUnoCall => 'Når ett kort gjenstår, trykk «Uno!». Før neste handling kan en motstander ta deg uten Uno — da trekker du 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Den som først tømmer hånden vinner runden og får poeng for motstandernes kort: tall etter verdi, handlinger 20, svarte 50. Kampen går til 100 poeng.';
 
   @override
   String get unoColorRed => 'Rød';

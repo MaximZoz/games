@@ -609,19 +609,25 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Botga qarshi o‘yin, yurish vaqti cheklanmagan.';
 
   @override
-  String get rulesUnoIntro => 'Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.';
+  String get rulesUnoIntro => 'Har kimga 7 ta karta tarqatiladi. Xuddi shu rang yoki xuddi shu qiymatdagi (raqam yoki bir xil maxsus) kartani yuring.';
 
   @override
-  String get rulesUnoPlay => 'Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.';
+  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 — keyingisi 2 karta oladi va yurishni o‘tkazadi; +2 ni yig‘ib bo‘lmaydi.';
 
   @override
-  String get rulesUnoWin => 'Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.';
+  String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.';
 
   @override
-  String get rulesUnoCall => 'Bitta karta qolganda «Uno» deng. Raqib avval e’tiroz qilsa, 2 karta oling.';
+  String get rulesUnoDraw => 'Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.';
 
   @override
-  String get rulesUnoScoring => 'Raqamlar o‘z qiymati, maxsus kartalar 20, qora kartalar 50 ball. Birinchi 100 ball olgan yutadi.';
+  String get rulesUnoWin => 'Matchni 100 ochkoga birinchi yetgan yutadi. Raundni barcha kartasini tashlagan yutadi.';
+
+  @override
+  String get rulesUnoCall => 'Bitta karta qolganda «Uno!» ni bosing. Keyingi yurishgacha raqib sizni Unosiz ushlashi mumkin — unda 2 karta olasiz.';
+
+  @override
+  String get rulesUnoScoring => 'Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Match 100 ochkogacha.';
 
   @override
   String get unoColorRed => 'Qizil';

@@ -609,19 +609,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spiel gegen einen Bot, ohne Zugzeitlimit.';
 
   @override
-  String get rulesUnoIntro => 'Klassisches Uno: Jeder erhält Karten; spiele nach Farbe oder Zahl.';
+  String get rulesUnoIntro => 'Jeder erhält 7 Karten. Spiele eine Karte derselben Farbe oder desselben Rangs (Zahl oder gleiche Aktion).';
 
   @override
-  String get rulesUnoPlay => 'Sonderkarten: +2, Richtungswechsel, Aussetzen, Farbwahl und +4. Kannst du nicht legen, ziehe vom Stapel.';
+  String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 — der Nächste zieht 2 und setzt aus; +2 stapeln nicht.';
 
   @override
-  String get rulesUnoWin => 'Es gewinnt, wer zuerst alle Karten ablegt. Sag „Uno“, wenn nur noch eine Karte übrig ist.';
+  String get rulesUnoWild => 'Eine schwarze Karte bestimmt eine neue Farbe. +4 nur, wenn du keine Karte der aktuellen Farbe hast. Der Nächste kann anfechten: war +4 legal, zieht er 6; sonst zieht der +4-Spieler 4 und der Anfechtende ist am Zug.';
 
   @override
-  String get rulesUnoCall => 'Sage „Uno“, wenn eine Karte übrig ist. Bei einer rechtzeitigen Anfechtung ziehst du 2 Karten.';
+  String get rulesUnoDraw => 'Ohne passende Karte ziehe eine vom Stapel. Passt sie, darfst du sie sofort spielen oder behalten und passen. Ziehen ist verboten, solange ein legaler Zug möglich ist.';
 
   @override
-  String get rulesUnoScoring => 'Zahlen zählen ihren Wert, Aktionskarten 20 und schwarze Karten 50 Punkte. Wer zuerst 100 erreicht, gewinnt.';
+  String get rulesUnoWin => 'Das Match gewinnt, wer zuerst 100 Punkte erreicht. Eine Runde gewinnt, wer alle Karten ablegt.';
+
+  @override
+  String get rulesUnoCall => 'Bei einer Karte tippe auf „Uno!“. Bis zur nächsten Aktion kann ein Gegner dich ohne Uno erwischen — dann ziehst du 2 Karten.';
+
+  @override
+  String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Das Match geht bis 100 Punkte.';
 
   @override
   String get unoColorRed => 'Rot';
