@@ -30,6 +30,25 @@ String localizeDisplayName(String? name, [AppLocalizations? l10n]) {
   }
 }
 
+/// Название игры по `game_type` (карточки приглашений, лобби, чат).
+String localizedGameTypeName(String gameType, [AppLocalizations? l10n]) {
+  final t = l10n ?? LocaleService.l10n;
+  switch (gameType.trim()) {
+    case 'durak':
+      return t.gamesDurak;
+    case 'battleship':
+      return t.gamesBattleship;
+    case 'poker':
+      return t.gamesPoker;
+    case 'uno':
+      return t.gamesUno;
+    case 'tictactoe':
+      return t.gamesTicTacToe;
+    default:
+      return t.gamesTicTacToe;
+  }
+}
+
 /// Локализует заголовки групповых чатов игр (в БД исторически на русском).
 String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
@@ -46,6 +65,9 @@ String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
     case 'Крестики-нолики':
     case 'Tic-tac-toe':
       return t.gamesTicTacToe;
+    case 'Уно':
+    case 'Uno':
+      return t.gamesUno;
     case 'На троих':
       return t.gamesVariantMulti3;
     case 'На четверых':
