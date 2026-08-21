@@ -612,7 +612,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoIntro => 'A ciascuno vanno 7 carte. Gioca una carta dello stesso colore o dello stesso valore (numero o stessa azione).';
 
   @override
-  String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 e +4 si possono impilare: la penalità si somma (due +2 fanno pescare 4). Chi non risponde pesca tutto il mucchio e salta.';
+  String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 si impila solo su +2 e +4 solo su +4: la penalità si somma (due +2 fanno pescare 4). Non si può mettere +2 su +4. Chi non risponde pesca tutto il mucchio e salta.';
 
   @override
   String get rulesUnoWild => 'Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.';

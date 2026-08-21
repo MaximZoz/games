@@ -159,3 +159,7 @@ func (c Card) isWild() bool {
 func (c Card) isDrawStack() bool {
 	return c.Kind == KindDrawTwo || c.Kind == KindWildDrawFour
 }
+
+func (c Card) stacksOn(top Card) bool {
+	return c.isDrawStack() && c.Kind == top.Kind
+}

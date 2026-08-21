@@ -612,7 +612,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoIntro => 'Herkese 7 kart dağıtılır. Aynı renk veya aynı değerde (sayı ya da aynı özel kart) bir kart oynayın.';
 
   @override
-  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 ve +4 üst üste oynanabilir: ceza toplanır (iki +2 sonraki 4 kart çeker). Cevap vermeyen tüm yığını çeker ve turunu kaybeder.';
+  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder.';
 
   @override
   String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.';

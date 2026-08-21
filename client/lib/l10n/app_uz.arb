@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Botga qarshi o‘yin, yurish vaqti cheklanmagan.",
   "rulesUnoIntro": "Har kimga 7 ta karta tarqatiladi. Xuddi shu rang yoki xuddi shu qiymatdagi (raqam yoki bir xil maxsus) kartani yuring.",
-  "rulesUnoPlay": "O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 va +4 ni ustma-ust qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.",
+  "rulesUnoPlay": "O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 ni faqat +2 ustiga, +4 ni faqat +4 ustiga qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). +2 ni +4 ustiga qo‘yib bo‘lmaydi. Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.",
   "rulesUnoWild": "Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.",
   "rulesUnoDraw": "Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.",
   "rulesUnoWin": "Ikki kishida 100, 3+ o‘yinchida 300. Raundni barcha kartasini tashlagan yutadi.",

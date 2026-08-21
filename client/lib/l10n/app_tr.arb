@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Bota karşı oyun, tur süresi sınırı yok.",
   "rulesUnoIntro": "Herkese 7 kart dağıtılır. Aynı renk veya aynı değerde (sayı ya da aynı özel kart) bir kart oynayın.",
-  "rulesUnoPlay": "Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 ve +4 üst üste oynanabilir: ceza toplanır (iki +2 sonraki 4 kart çeker). Cevap vermeyen tüm yığını çeker ve turunu kaybeder.",
+  "rulesUnoPlay": "Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder.",
   "rulesUnoWild": "Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.",
   "rulesUnoDraw": "Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.",
   "rulesUnoWin": "İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.",

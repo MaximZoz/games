@@ -612,7 +612,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesUnoIntro => 'Hver spiller får 7 kort. Spil et kort i samme farve eller samme rang (tal eller samme handling).';
 
   @override
-  String get rulesUnoPlay => 'Spring over — den næste mister turen. Retningsskift med to spillere virker som spring over. +2 og +4 kan stables: straffen lægges sammen (to +2 betyder, at næste trækker 4). Den, der ikke stabler, trækker hele bunken og mister turen.';
+  String get rulesUnoPlay => 'Spring over — den næste mister turen. Retningsskift med to spillere virker som spring over. +2 stables kun på +2 og +4 kun på +4: straffen lægges sammen (to +2 betyder, at næste trækker 4). +2 må ikke lægges på +4. Den, der ikke stabler, trækker hele bunken og mister turen.';
 
   @override
   String get rulesUnoWild => 'Et sort kort sætter en ny farve. Spil +4 kun hvis du ikke har kort i den aktuelle farve. Modstanderen kan udfordre: var +4 lovligt, trækker hen 6; ellers trækker +4-spilleren 4, og udfordreren spiller.';
