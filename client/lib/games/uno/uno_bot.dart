@@ -39,7 +39,19 @@ UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
     );
   }
   if (game.status == UnoStatus.awaitingWd4Challenge) {
-    return const UnoAction(UnoActionType.draw);
+    final stack = player.hand
+        .where((card) => game.canPlay(index, card))
+        .toList(growable: false);
+    if (stack.isEmpty) {
+      return const UnoAction(UnoActionType.draw);
+    }
+    stack.sort((a, b) => b.points.compareTo(a.points));
+    final card = stack.first;
+    return UnoAction(
+      UnoActionType.play,
+      cardId: card.id,
+      color: card.isWild ? chooseUnoBotColor(player) : null,
+    );
   }
   if (game.status == UnoStatus.awaitingDrawnPlay) {
     UnoCard? drawn;

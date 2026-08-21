@@ -158,8 +158,9 @@ func TestOpeningActionEffects(t *testing.T) {
 			}
 		case KindDrawTwo:
 			found[top.Kind] = true
-			if len(game.Players[1].Hand) != 9 || game.CurrentIndex != 2 {
-				t.Fatalf("opening Draw Two hand=%d current=%d, want 9 and 2", len(game.Players[1].Hand), game.CurrentIndex)
+			if len(game.Players[1].Hand) != 7 || game.CurrentIndex != 1 || game.PendingDraw != 2 {
+				t.Fatalf("opening Draw Two hand=%d current=%d pending=%d, want 7, 1 and 2",
+					len(game.Players[1].Hand), game.CurrentIndex, game.PendingDraw)
 			}
 		}
 	}
@@ -186,23 +187,62 @@ func TestReverseActsAsSkipWithTwoPlayers(t *testing.T) {
 	}
 }
 
-func TestDrawTwoDrawsAndSkips(t *testing.T) {
+func TestDrawTwoStacksUntilTaken(t *testing.T) {
+	game := controlledGame(t, 3)
+	first := testAction("draw-two-a", ColorRed, KindDrawTwo)
+	second := testAction("draw-two-b", ColorBlue, KindDrawTwo)
+	game.Players[0].Hand = []Card{first, testNumber("remain-0", ColorBlue, 1)}
+	game.Players[1].Hand = []Card{second, testNumber("remain-1", ColorYellow, 3)}
+	before := len(game.Players[2].Hand)
+
+	if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if game.PendingDraw != 2 || game.CurrentIndex != 1 || len(game.Players[1].Hand) != 2 {
+		t.Fatalf("after first +2: pending=%d current=%d hand=%d",
+			game.PendingDraw, game.CurrentIndex, len(game.Players[1].Hand))
+	}
+	if err := game.Apply(Action{Type: ActionPlay, CardID: second.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if game.PendingDraw != 4 || game.CurrentIndex != 2 {
+		t.Fatalf("after stacked +2: pending=%d current=%d", game.PendingDraw, game.CurrentIndex)
+	}
+	if err := game.Apply(Action{Type: ActionDraw}); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(game.Players[2].Hand); got != before+4 {
+		t.Fatalf("stacked victim hand = %d, want %d", got, before+4)
+	}
+	if game.PendingDraw != 0 || game.CurrentIndex != 0 || game.LastDrawCount != 4 {
+		t.Fatalf("after taking stack: pending=%d current=%d lastDraw=%d",
+			game.PendingDraw, game.CurrentIndex, game.LastDrawCount)
+	}
+}
+
+func TestWildDrawFourStacksOnDrawTwo(t *testing.T) {
 	game := controlledGame(t, 3)
 	drawTwo := testAction("draw-two", ColorRed, KindDrawTwo)
-	game.Players[0].Hand = []Card{drawTwo, testNumber("remain", ColorBlue, 1)}
-	before := len(game.Players[1].Hand)
+	wd4 := testAction("wd4-stack", ColorWild, KindWildDrawFour)
+	game.Players[0].Hand = []Card{drawTwo, testNumber("remain-0", ColorBlue, 1)}
+	game.Players[1].Hand = []Card{wd4, testNumber("remain-1", ColorYellow, 3)}
+	before := len(game.Players[2].Hand)
 
 	if err := game.Apply(Action{Type: ActionPlay, CardID: drawTwo.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(game.Players[1].Hand); got != before+2 {
-		t.Fatalf("target hand = %d, want %d", got, before+2)
+	if err := game.Apply(Action{Type: ActionPlay, CardID: wd4.ID, Color: string(ColorGreen)}); err != nil {
+		t.Fatal(err)
 	}
-	if game.CurrentIndex != 2 {
-		t.Fatalf("current index = %d, want 2", game.CurrentIndex)
+	if game.PendingDraw != 6 || game.Status != StatusAwaitingWD4Challenge || game.CurrentIndex != 2 {
+		t.Fatalf("stacked +4: pending=%d status=%s current=%d",
+			game.PendingDraw, game.Status, game.CurrentIndex)
 	}
-	if game.PendingDraw != 0 {
-		t.Fatalf("pending draw = %d, want 0 after automatic penalty", game.PendingDraw)
+	if err := game.Apply(Action{Type: ActionDraw}); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(game.Players[2].Hand); got != before+6 {
+		t.Fatalf("stacked +2/+4 victim hand = %d, want %d", got, before+6)
 	}
 }
 

@@ -366,14 +366,15 @@ func (g *Game) startRound() error {
 			g.CurrentIndex = g.nextActive(g.DealerIndex)
 		}
 	case KindDrawTwo:
-		g.drawCards(first, 2)
-		g.CurrentIndex = g.nextActive(first)
+		g.PendingDraw = 2
 	}
 	return nil
 }
 
 func (g *Game) applyPlay(action Action) error {
-	if g.Status != StatusActive && g.Status != StatusAwaitingDrawnPlay {
+	if g.Status != StatusActive &&
+		g.Status != StatusAwaitingDrawnPlay &&
+		g.Status != StatusAwaitingWD4Challenge {
 		return fmt.Errorf("uno: cannot play while status is %q", g.Status)
 	}
 	playerIndex := g.CurrentIndex
@@ -399,7 +400,11 @@ func (g *Game) applyPlay(action Action) error {
 		return fmt.Errorf("uno: discard pile is empty")
 	}
 	top := g.DiscardPile[len(g.DiscardPile)-1]
-	if !card.Matches(top, g.CurrentColor) {
+	if g.PendingDraw > 0 {
+		if !card.isDrawStack() {
+			return fmt.Errorf("uno: only +2 or +4 can stack on a pending draw")
+		}
+	} else if !card.Matches(top, g.CurrentColor) {
 		return fmt.Errorf("uno: card %q does not match", card.ID)
 	}
 	chosenColor := Color(action.Color)
@@ -460,11 +465,11 @@ func (g *Game) applyPlay(action Action) error {
 		g.Status = StatusActive
 	case KindDrawTwo:
 		g.CurrentColor = card.Color
-		target := g.nextActive(playerIndex)
-		g.PendingDraw = 2
-		g.drawCards(target, g.PendingDraw)
-		g.PendingDraw = 0
-		g.CurrentIndex = g.nextActive(target)
+		g.PendingDraw += 2
+		g.Wild4PlayerIndex = -1
+		g.Wild4WasLegal = false
+		g.Wild4ProofCard = nil
+		g.CurrentIndex = g.nextActive(playerIndex)
 		g.Status = StatusActive
 	case KindWild:
 		if action.Color == "" {
@@ -479,7 +484,7 @@ func (g *Game) applyPlay(action Action) error {
 	case KindWildDrawFour:
 		g.Wild4PlayerIndex = playerIndex
 		g.Wild4WasLegal = wild4Legal
-		g.PendingDraw = 4
+		g.PendingDraw += 4
 		if action.Color == "" {
 			g.ColorChooserIndex = playerIndex
 			g.Status = StatusAwaitingColor
@@ -497,7 +502,8 @@ func (g *Game) applyPlay(action Action) error {
 }
 
 func (g *Game) applyDraw() error {
-	if g.Status == StatusAwaitingWD4Challenge {
+	if g.Status == StatusAwaitingWD4Challenge ||
+		(g.Status == StatusActive && g.PendingDraw > 0) {
 		g.expireUnoWindow()
 		challenger := g.CurrentIndex
 		actor := ""
@@ -507,6 +513,7 @@ func (g *Game) applyDraw() error {
 		g.noteEvent("draw", actor, g.PendingDraw, nil)
 		g.drawCards(challenger, g.PendingDraw)
 		g.PendingDraw = 0
+		g.DrawnCardID = ""
 		g.Wild4PlayerIndex = -1
 		g.Wild4WasLegal = false
 		g.Wild4ProofCard = nil
@@ -581,6 +588,7 @@ func (g *Game) applyChallengeUno(actorUserID, targetUserID string) error {
 	if g.Players[target].SaidUno || len(g.Players[target].Hand) != 1 {
 		return fmt.Errorf("uno: player %q is not vulnerable to an UNO challenge", targetUserID)
 	}
+	g.noteEvent("draw", g.Players[target].UserID, 2, nil)
 	g.drawCards(target, 2)
 	g.UnoVulnerableIndex = -1
 	return nil
@@ -598,8 +606,12 @@ func (g *Game) applyChallengeWD4() error {
 	}
 
 	if g.Wild4WasLegal {
-		g.noteEvent("draw", g.Players[challenger].UserID, 6, nil)
-		g.drawCards(challenger, 6)
+		penalty := g.PendingDraw + 2
+		if penalty < 6 {
+			penalty = 6
+		}
+		g.noteEvent("draw", g.Players[challenger].UserID, penalty, nil)
+		g.drawCards(challenger, penalty)
 		g.CurrentIndex = g.nextActive(challenger)
 	} else {
 		g.noteEvent("wd4_reveal", g.Players[offender].UserID, 0, g.Wild4ProofCard)
@@ -628,7 +640,7 @@ func (g *Game) applyChooseColor(color Color) error {
 	}
 	g.CurrentColor = color
 	g.ColorChooserIndex = -1
-	if g.Wild4PlayerIndex == chooser && g.PendingDraw == 4 {
+	if g.Wild4PlayerIndex == chooser && g.PendingDraw > 0 {
 		g.CurrentIndex = g.nextActive(chooser)
 		g.Status = StatusAwaitingWD4Challenge
 		return nil
@@ -817,6 +829,14 @@ func (g *Game) playerIndex(userID string) int {
 
 func (g *Game) hasLegalPlay(playerIndex int) bool {
 	if playerIndex < 0 || playerIndex >= len(g.Players) || len(g.DiscardPile) == 0 {
+		return false
+	}
+	if g.PendingDraw > 0 {
+		for _, card := range g.Players[playerIndex].Hand {
+			if card.isDrawStack() {
+				return true
+			}
+		}
 		return false
 	}
 	top := g.DiscardPile[len(g.DiscardPile)-1]

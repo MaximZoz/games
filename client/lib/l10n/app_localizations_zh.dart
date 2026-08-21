@@ -612,7 +612,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoIntro => '每人发 7 张牌。打出同色或同点数（数字或相同功能）的牌。';
 
   @override
-  String get rulesUnoPlay => '跳过——下家失去回合。两人时转向等同跳过。+2——下家摸 2 张并跳过；+2 不可叠加。';
+  String get rulesUnoPlay => '跳过——下家失去回合。两人时转向等同跳过。+2 和 +4 可以叠加：罚牌累加（两张 +2 则下家摸 4）。不叠牌者摸走整叠并跳过。';
 
   @override
   String get rulesUnoWild => '黑色牌指定新颜色。仅当没有当前颜色的牌时才能打 +4。下家可质疑：若 +4 合法则质疑者摸 6 张；否则打 +4 者摸 4 张，由质疑者出牌。';

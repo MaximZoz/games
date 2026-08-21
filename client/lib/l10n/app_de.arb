@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Spiel gegen einen Bot, ohne Zugzeitlimit.",
   "rulesUnoIntro": "Jeder erhält 7 Karten. Spiele eine Karte derselben Farbe oder desselben Rangs (Zahl oder gleiche Aktion).",
-  "rulesUnoPlay": "Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 — der Nächste zieht 2 und setzt aus; +2 stapeln nicht.",
+  "rulesUnoPlay": "Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 und +4 dürfen gestapelt werden: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). Wer nicht stapelt, zieht den ganzen Stapel und setzt aus.",
   "rulesUnoWild": "Eine schwarze Karte bestimmt eine neue Farbe. +4 nur, wenn du keine Karte der aktuellen Farbe hast. Der Nächste kann anfechten: war +4 legal, zieht er 6; sonst zieht der +4-Spieler 4 und der Anfechtende ist am Zug.",
   "rulesUnoDraw": "Ohne passende Karte ziehe eine vom Stapel. Passt sie, darfst du sie sofort spielen oder behalten und passen. Ziehen ist verboten, solange ein legaler Zug möglich ist.",
   "rulesUnoWin": "Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 300. Eine Runde gewinnt, wer alle Karten ablegt.",

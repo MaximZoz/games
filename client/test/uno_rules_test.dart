@@ -67,7 +67,7 @@ void main() {
 
     expect(find.text('Правила игры'), findsOneWidget);
     expect(find.textContaining('7 карт'), findsWidgets);
-    expect(find.textContaining('складывать +2 нельзя'), findsOneWidget);
+    expect(find.textContaining('штраф суммируется'), findsOneWidget);
     expect(find.textContaining('оспорить'), findsOneWidget);
     expect(find.textContaining('одну из колоды'), findsOneWidget);
     expect(find.textContaining('до 100'), findsOneWidget);

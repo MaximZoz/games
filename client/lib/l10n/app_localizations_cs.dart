@@ -612,7 +612,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoIntro => 'Každý dostane 7 karet. Hrajte kartu stejné barvy nebo stejné hodnoty (číslo nebo stejná akce).';
 
   @override
-  String get rulesUnoPlay => 'Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 — další lízne 2 a ztrácí tah; +2 se nesčítají.';
+  String get rulesUnoPlay => 'Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 a +4 lze skládat: trest se sčítá (dvě +2 — další lízne 4). Kdo neodpoví, lízne celý balíček a ztrácí tah.';
 
   @override
   String get rulesUnoWild => 'Černá karta určí novou barvu. +4 jen když nemáte kartu aktuální barvy. Soupeř může vyzvat: bylo-li +4 legální, lízne 6; jinak autor +4 lízne 4 a vyzývatel hraje.';

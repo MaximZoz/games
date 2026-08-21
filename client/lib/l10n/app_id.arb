@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Main lawan bot, tanpa batas waktu giliran.",
   "rulesUnoIntro": "Setiap pemain mendapat 7 kartu. Mainkan kartu warna sama atau peringkat sama (angka atau aksi yang sama).",
-  "rulesUnoPlay": "Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 — berikutnya mengambil 2 dan dilewati; +2 tidak menumpuk.",
+  "rulesUnoPlay": "Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 dan +4 bisa ditumpuk: penalti dijumlahkan (dua +2 membuat berikutnya mengambil 4). Yang tidak menumpuk mengambil seluruh tumpukan dan dilewati.",
   "rulesUnoWild": "Kartu hitam menetapkan warna baru. Mainkan +4 hanya jika tidak ada kartu warna saat ini. Lawan bisa menantang: jika +4 sah ia mengambil 6; jika tidak, pemain +4 mengambil 4 dan penantang bermain.",
   "rulesUnoDraw": "Tanpa kartu sah, ambil satu dari dek. Jika cocok, mainkan sekarang atau simpan dan lewat. Tidak boleh mengambil selama masih ada langkah sah.",
   "rulesUnoWin": "1 lawan 1 sampai 100, 3+ pemain sampai 300. Ronde dimenangkan dengan menghabiskan kartu.",

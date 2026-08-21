@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Partita contro un bot, senza limite di tempo per turno.",
   "rulesUnoIntro": "A ciascuno vanno 7 carte. Gioca una carta dello stesso colore o dello stesso valore (numero o stessa azione).",
-  "rulesUnoPlay": "Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 — il successivo pesca 2 e salta; i +2 non si sommano.",
+  "rulesUnoPlay": "Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 e +4 si possono impilare: la penalità si somma (due +2 fanno pescare 4). Chi non risponde pesca tutto il mucchio e salta.",
   "rulesUnoWild": "Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.",
   "rulesUnoDraw": "Senza carta valida pesca una dal mazzo. Se va bene, puoi giocarla subito o tenerla e passare. Non puoi pescare se hai ancora una giocata.",
   "rulesUnoWin": "In due si va a 100, con 3+ giocatori a 300. Il round lo vince chi svuota la mano.",
