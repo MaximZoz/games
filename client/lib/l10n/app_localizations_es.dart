@@ -621,13 +621,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoDraw => 'Si no tienes carta válida, roba una del mazo. Si encaja, puedes jugarla ahora o quedártela y pasar. No puedes robar si aún tienes jugada.';
 
   @override
-  String get rulesUnoWin => 'Gana el partido quien llega primero a 100 puntos. La ronda la gana quien se queda sin cartas.';
+  String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 300. La ronda la gana quien se queda sin cartas.';
 
   @override
   String get rulesUnoCall => 'Cuando queda una carta, pulsa «¡Uno!». Hasta la siguiente acción, un rival puede pillarte sin Uno y entonces robas 2.';
 
   @override
-  String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. El partido va a 100 puntos.';
+  String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. En 1v1 hasta 100; con 3+ jugadores, hasta 300.';
 
   @override
   String get unoColorRed => 'Rojo';
@@ -716,6 +716,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String unoWinner(String name) {
     return 'Ganador: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name gana la ronda';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Siguiente';
+
+  @override
+  String get unoRoundScoresTitle => 'Puntos de la ronda';
 
   @override
   String get unoDirectionClockwise => 'Sentido horario';

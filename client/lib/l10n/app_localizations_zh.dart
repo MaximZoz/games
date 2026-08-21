@@ -621,13 +621,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoDraw => '没有可出的牌时从牌堆摸 1 张。若可出，可立即打出或留下并结束回合。仍有合法出牌时不能摸牌。';
 
   @override
-  String get rulesUnoWin => '整场由先到 100 分者获胜。一局由出完手牌者获胜。';
+  String get rulesUnoWin => '双人先到 100 分，三人及以上先到 300。一局由出完手牌者获胜。';
 
   @override
   String get rulesUnoCall => '剩一张牌时点「乌诺！」。在下一动作前，对手可抓你没喊乌诺——你需摸 2 张。';
 
   @override
-  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。先到 100 分赢得整场。';
+  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。双人先到 100，三人及以上先到 300。';
 
   @override
   String get unoColorRed => '红色';
@@ -716,6 +716,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String unoWinner(String name) {
     return '获胜者：$name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name 赢得本局';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '继续';
+
+  @override
+  String get unoRoundScoresTitle => '本局得分';
 
   @override
   String get unoDirectionClockwise => '顺时针';

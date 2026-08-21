@@ -8,6 +8,7 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException, LobbyPlayer;
 import 'package:multigames_client/games/uno/uno_card.dart';
+import 'package:multigames_client/games/uno/uno_engine.dart';
 import 'package:multigames_client/games/uno/uno_offline_session.dart';
 
 Object? _pick(Map<String, dynamic> json, String snake, [String? camel]) =>
@@ -99,6 +100,9 @@ class UnoGameView {
     required this.targetScore,
     required this.winnerUserIds,
     required this.eliminatedOrder,
+    this.lastRoundWinnerUserId = '',
+    this.lastRoundPoints = 0,
+    this.lastRoundNumber = 0,
     required this.canChallengeUno,
     required this.canChallengeWd4,
     required this.mustChooseColor,
@@ -136,6 +140,9 @@ class UnoGameView {
   final int targetScore;
   final List<String> winnerUserIds;
   final List<String> eliminatedOrder;
+  final String lastRoundWinnerUserId;
+  final int lastRoundPoints;
+  final int lastRoundNumber;
   final bool canChallengeUno;
   final bool canChallengeWd4;
   final bool mustChooseColor;
@@ -153,8 +160,14 @@ class UnoGameView {
   final UnoCard? lastEventCard;
 
   bool get isOver => status == 'over';
+  bool get isBetweenRounds => status == UnoStatus.betweenRounds;
+  bool get hasRoundResult => lastRoundWinnerUserId.isNotEmpty;
   bool get isMyTurn =>
-      !isOver && myIndex >= 0 && currentIndex == myIndex && !iAmEliminated;
+      !isOver &&
+      !isBetweenRounds &&
+      myIndex >= 0 &&
+      currentIndex == myIndex &&
+      !iAmEliminated;
   bool get iAmEliminated => me?.forfeited == true;
   bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
   UnoPlayerView? get me =>
@@ -223,6 +236,21 @@ class UnoGameView {
                   ?.map((id) => id.toString())
                   .toList() ??
               const [],
+      lastRoundWinnerUserId: (_pick(
+            json,
+            'last_round_winner_user_id',
+            'lastRoundWinnerUserId',
+          ) ??
+              '')
+          .toString(),
+      lastRoundPoints:
+          (_pick(json, 'last_round_points', 'lastRoundPoints') as num?)
+                  ?.toInt() ??
+              0,
+      lastRoundNumber:
+          (_pick(json, 'last_round_number', 'lastRoundNumber') as num?)
+                  ?.toInt() ??
+              0,
       canChallengeUno:
           _pick(json, 'can_challenge_uno', 'canChallengeUno') == true,
       canChallengeWd4:

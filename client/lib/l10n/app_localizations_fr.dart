@@ -621,13 +621,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoDraw => 'Sans carte jouable, piochez-en une. Si elle convient, jouez-la tout de suite ou gardez-la et passez. On ne pioche pas tant qu’un coup est possible.';
 
   @override
-  String get rulesUnoWin => 'Le match est gagné par le premier à 100 points. Une manche est gagnée en vidant sa main.';
+  String get rulesUnoWin => 'À deux, premier à 100 ; à 3+, premier à 300. Une manche est gagnée en vidant sa main.';
 
   @override
   String get rulesUnoCall => 'Quand il reste une carte, appuyez sur « Uno ! ». Avant l’action suivante, un adversaire peut vous attraper sans Uno — vous piochez alors 2 cartes.';
 
   @override
-  String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. Le match se joue en 100 points.';
+  String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. À deux, premier à 100 ; à 3+, premier à 300.';
 
   @override
   String get unoColorRed => 'Rouge';
@@ -716,6 +716,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String unoWinner(String name) {
     return 'Gagnant : $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name gagne la manche';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Suivant';
+
+  @override
+  String get unoRoundScoresTitle => 'Score de la manche';
 
   @override
   String get unoDirectionClockwise => 'Sens horaire';

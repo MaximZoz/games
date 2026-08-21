@@ -621,13 +621,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesUnoDraw => 'कोई वैध पत्ता न हो तो डेक से एक उठाएँ। मेल खाए तो तुरंत खेलें या रख कर बारी दें। वैध चाल रहते उठाना मना है।';
 
   @override
-  String get rulesUnoWin => 'मैच वही जीते जो पहले 100 अंक तक पहुँचे। राउंड हाथ खाली करने वाला जीते।';
+  String get rulesUnoWin => 'आमने-सामने 100 अंक, 3+ खिलाड़ियों में 300। राउंड हाथ खाली करने वाला जीते।';
 
   @override
   String get rulesUnoCall => 'एक पत्ता बचने पर «ऊनो!» दबाएँ। अगली क्रिया तक विरोधी बिना ऊनो पकड़ सकता है — तब आप 2 पत्ते उठाएँगे।';
 
   @override
-  String get rulesUnoScoring => 'जो पहले हाथ खाली करे वह राउंड जीते और विरोधियों के पत्तों के अंक पाए: अंक अपने मान, क्रिया 20, काले 50। मैच 100 अंक तक।';
+  String get rulesUnoScoring => 'जो पहले हाथ खाली करे वह राउंड जीते और विरोधियों के पत्तों के अंक पाए: अंक अपने मान, क्रिया 20, काले 50। आमने-सामने 100, 3+ खिलाड़ियों में 300।';
 
   @override
   String get unoColorRed => 'लाल';
@@ -716,6 +716,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String unoWinner(String name) {
     return 'विजेता: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name राउंड जीतते हैं';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'आगे';
+
+  @override
+  String get unoRoundScoresTitle => 'राउंड अंक';
 
   @override
   String get unoDirectionClockwise => 'घड़ी की दिशा';

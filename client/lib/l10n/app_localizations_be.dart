@@ -621,13 +621,13 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesUnoDraw => 'Калі няма падыходнай карты — вазьміце адну з калоды. Калі яна падыходзіць, можна адразу сысці ёй або пакінуць і перадаць ход. Пакуль ёсць ход, браць нельга.';
 
   @override
-  String get rulesUnoWin => 'Матч выйграе той, хто першым набярэ 100 ачкоў. Раунд выйграе гулец, які скінуў усе карты.';
+  String get rulesUnoWin => 'Удваіх матч да 100 ачкоў, пры трох і больш гульцах — да 300. Раунд выйграе гулец, які скінуў усе карты.';
 
   @override
   String get rulesUnoCall => 'Калі застаецца адна карта, націсніце «Уно!». Пакуль не зроблены наступны ход, супернік можа злавіць вас без «Уно» — тады вы бярэце 2 карты.';
 
   @override
-  String get rulesUnoScoring => 'Хто першым скінуў усе карты, выйграе раунд і атрымлівае ачкі за рукі супернікаў: лічбы — па намінале, спецкарты — 20, чорныя — 50. Матч да 100 ачкоў.';
+  String get rulesUnoScoring => 'Хто першым скінуў усе карты, выйграе раунд і атрымлівае ачкі за рукі супернікаў: лічбы — па намінале, спецкарты — 20, чорныя — 50. Удваіх матч да 100, пры трох і больш гульцах — да 300.';
 
   @override
   String get unoColorRed => 'Red';
@@ -716,6 +716,22 @@ class AppLocalizationsBe extends AppLocalizations {
   String unoWinner(String name) {
     return 'Winner: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name выйграе раунд';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Далей';
+
+  @override
+  String get unoRoundScoresTitle => 'Ачкі за раунд';
 
   @override
   String get unoDirectionClockwise => 'Clockwise';

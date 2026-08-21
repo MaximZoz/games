@@ -621,13 +621,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoDraw => 'Sem carta válida, compre uma do baralho. Se servir, jogue-a agora ou fique com ela e passe. Não se compra enquanto houver jogada.';
 
   @override
-  String get rulesUnoWin => 'Ganha a partida quem chegar primeiro a 100 pontos. A rodada é de quem esvaziar a mão.';
+  String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 300. A rodada é de quem esvaziar a mão.';
 
   @override
   String get rulesUnoCall => 'Quando restar uma carta, toque em “Uno!”. Até a próxima ação, um adversário pode pegá-lo sem Uno — então você compra 2.';
 
   @override
-  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. A partida vai a 100 pontos.';
+  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 300.';
 
   @override
   String get unoColorRed => 'Vermelho';
@@ -716,6 +716,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String unoWinner(String name) {
     return 'Vencedor: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vence a rodada';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Seguir';
+
+  @override
+  String get unoRoundScoresTitle => 'Pontos da rodada';
 
   @override
   String get unoDirectionClockwise => 'Sentido horário';

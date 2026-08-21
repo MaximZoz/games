@@ -621,13 +621,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoDraw => '出せるカードがなければ山札から1枚引きます。出せるならすぐ出すか、手元に残してパスできます。出せる手があるうちは引けません。';
 
   @override
-  String get rulesUnoWin => '試合は先に100点に達した人が勝ちます。ラウンドは手札をなくした人が勝ちます。';
+  String get rulesUnoWin => '2人は100点、3人以上は300点先取。ラウンドは手札をなくした人が勝ちます。';
 
   @override
   String get rulesUnoCall => '1枚残ったら「ウノ！」を押します。次の行動まで、相手はウノなしを指摘でき、その場合は2枚引きます。';
 
   @override
-  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。試合は100点先取です。';
+  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は300点先取。';
 
   @override
   String get unoColorRed => '赤';
@@ -716,6 +716,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String unoWinner(String name) {
     return '勝者：$name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$nameがラウンド勝利';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '次へ';
+
+  @override
+  String get unoRoundScoresTitle => 'ラウンド得点';
 
   @override
   String get unoDirectionClockwise => '時計回り';

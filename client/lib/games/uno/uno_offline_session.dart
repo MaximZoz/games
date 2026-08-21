@@ -23,6 +23,7 @@ class OfflineUnoSession extends ChangeNotifier {
 
   static const int me = 0;
   static const Duration botDelay = Duration(milliseconds: 650);
+  static const Duration roundPause = Duration(milliseconds: 2600);
 
   final String gameId;
   final String humanUserId;
@@ -130,6 +131,9 @@ class OfflineUnoSession extends ChangeNotifier {
       targetScore: game.targetScore,
       winnerUserIds: List.of(game.winnerUserIds),
       eliminatedOrder: List.of(game.eliminatedOrder),
+      lastRoundWinnerUserId: game.lastRoundWinnerUserId,
+      lastRoundPoints: game.lastRoundPoints,
+      lastRoundNumber: game.lastRoundNumber,
       canChallengeUno: game.currentIndex == me &&
           game.unoVulnerableIndex >= 0 &&
           game.unoVulnerableIndex != me,
@@ -172,55 +176,112 @@ class OfflineUnoSession extends ChangeNotifier {
 
   Future<void> forfeit() => applyMove(type: UnoActionType.forfeit);
 
+  bool _botShouldAct() {
+    if (_disposed || _engine.isOver) return false;
+    if (_engine.status == UnoStatus.betweenRounds) return false;
+    if (_engine.status == UnoStatus.awaitingColor) {
+      final chooser = _engine.colorChooserIndex;
+      return chooser >= 0 &&
+          chooser < _engine.players.length &&
+          _engine.players[chooser].userId.startsWith('bot:');
+    }
+    final index = _engine.currentIndex;
+    if (index < 0 || index >= _engine.players.length) return false;
+    return _engine.players[index].userId.startsWith('bot:');
+  }
+
   void _scheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _engine.isOver) return;
-    final index = _engine.currentIndex;
-    if (index < 0 || index >= _engine.players.length) return;
-    if (!_engine.players[index].userId.startsWith('bot:')) return;
+    if (_engine.status == UnoStatus.betweenRounds) {
+      _botTimer = Timer(roundPause, _advanceRound);
+      return;
+    }
+    if (!_botShouldAct()) return;
     _botTimer = Timer(botDelay, _runBotTurn);
   }
 
-  void _runBotTurn() {
-    if (_disposed || _engine.isOver) return;
-    final index = _engine.currentIndex;
-    if (index < 0 ||
-        index >= _engine.players.length ||
-        !_engine.players[index].userId.startsWith('bot:')) {
+  void _advanceRound() {
+    if (_disposed || _engine.status != UnoStatus.betweenRounds) return;
+    try {
+      _engine.apply(const UnoAction(UnoActionType.nextRound));
+    } on StateError {
       return;
     }
+    notifyListeners();
+    _scheduleBot();
+  }
+
+  void _runBotTurn() {
+    if (_disposed || _engine.isOver || !_botShouldAct()) return;
     try {
-      if (_engine.unoVulnerableIndex >= 0 &&
-          _engine.unoVulnerableIndex != index &&
-          _random.nextDouble() < 0.75) {
+      _applyBotAction();
+      final vulnerable = _engine.unoVulnerableIndex;
+      if (vulnerable >= 0 &&
+          vulnerable < _engine.players.length &&
+          _engine.players[vulnerable].userId.startsWith('bot:')) {
+        try {
+          _engine.apply(UnoAction(
+            UnoActionType.callUno,
+            actorUserId: _engine.players[vulnerable].userId,
+          ));
+        } on StateError {
+          // окно Уно уже закрыто
+        }
+      }
+    } on StateError {
+      _recoverBotTurn();
+    }
+    notifyListeners();
+    _scheduleBot();
+  }
+
+  void _applyBotAction() {
+    final index = _engine.currentIndex;
+    if (_engine.status == UnoStatus.active &&
+        _engine.unoVulnerableIndex >= 0 &&
+        _engine.unoVulnerableIndex != index &&
+        index >= 0 &&
+        index < _engine.players.length &&
+        _random.nextDouble() < 0.75) {
+      try {
         _engine.apply(UnoAction(
           UnoActionType.challengeUno,
           actorUserId: _engine.players[index].userId,
           targetUserId: _engine.players[_engine.unoVulnerableIndex].userId,
         ));
-      } else {
-        _engine.apply(pickUnoBotAction(_engine, random: _random));
+        return;
+      } on StateError {
+        // дальше обычный ход
       }
-      final vulnerable = _engine.unoVulnerableIndex;
-      if (vulnerable >= 0 &&
-          vulnerable < _engine.players.length &&
-          _engine.players[vulnerable].userId.startsWith('bot:')) {
-        _engine.apply(UnoAction(
-          UnoActionType.callUno,
-          actorUserId: _engine.players[vulnerable].userId,
-        ));
-      }
-    } on StateError {
-      try {
-        if (_engine.status == UnoStatus.awaitingDrawnPlay) {
-          _engine.apply(const UnoAction(UnoActionType.keep));
-        } else {
-          _engine.apply(const UnoAction(UnoActionType.draw));
-        }
-      } catch (_) {}
     }
-    notifyListeners();
-    _scheduleBot();
+    _engine.apply(pickUnoBotAction(_engine, random: _random));
+  }
+
+  void _recoverBotTurn() {
+    final chooser = _engine.colorChooserIndex;
+    final fallbacks = <UnoAction>[
+      if (_engine.status == UnoStatus.awaitingColor &&
+          chooser >= 0 &&
+          chooser < _engine.players.length)
+        UnoAction(
+          UnoActionType.chooseColor,
+          color: chooseUnoBotColor(_engine.players[chooser]),
+        ),
+      if (_engine.status == UnoStatus.awaitingDrawnPlay)
+        const UnoAction(UnoActionType.keep),
+      if (_engine.status == UnoStatus.awaitingWd4Challenge)
+        const UnoAction(UnoActionType.draw),
+      const UnoAction(UnoActionType.draw),
+    ];
+    for (final action in fallbacks) {
+      try {
+        _engine.apply(action);
+        return;
+      } on StateError {
+        continue;
+      }
+    }
   }
 
   @override

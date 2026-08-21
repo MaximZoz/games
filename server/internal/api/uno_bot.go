@@ -36,8 +36,10 @@ func (h *GamesHandler) scheduleUnoBotAct(gameID string) {
 				return
 			}
 			if err := unoApplyBotAction(state); err != nil {
-				botID := state.Players[state.CurrentIndex].UserID
-				_ = state.Apply(uno.Action{Type: uno.ActionForfeit, ActorUserID: botID})
+				if recoverErr := unoRecoverBotAction(state); recoverErr != nil {
+					botID := state.Players[state.CurrentIndex].UserID
+					_ = state.Apply(uno.Action{Type: uno.ActionForfeit, ActorUserID: botID})
+				}
 			}
 			h.saveUnoState(ctx, gameID, m, state)
 			h.broadcastUnoState(gameID, m)
@@ -47,6 +49,10 @@ func (h *GamesHandler) scheduleUnoBotAct(gameID string) {
 			}
 			h.Rdb.Del(ctx, lockKey)
 			if over {
+				return
+			}
+			if state.Status == uno.StatusBetweenRounds {
+				h.scheduleUnoNextRound(gameID)
 				return
 			}
 			if !unoCurrentPlayerIsBot(state) {
@@ -67,8 +73,14 @@ func unoApplyBotAction(state *uno.Game) error {
 		return fmt.Errorf("uno: current player is not a bot")
 	}
 	switch state.Status {
+	case uno.StatusBetweenRounds:
+		return state.Apply(uno.Action{Type: uno.ActionNextRound})
 	case uno.StatusAwaitingColor:
-		return state.Apply(uno.Action{Type: uno.ActionChooseColor, Color: unoBotColor(state, index)})
+		chooser := state.ColorChooserIndex
+		if chooser < 0 {
+			chooser = index
+		}
+		return state.Apply(uno.Action{Type: uno.ActionChooseColor, Color: unoBotColor(state, chooser)})
 	case uno.StatusAwaitingWD4Challenge:
 		return state.Apply(uno.Action{Type: uno.ActionDraw})
 	case uno.StatusAwaitingDrawnPlay:
@@ -88,11 +100,13 @@ func unoApplyBotAction(state *uno.Game) error {
 		}
 		if state.UnoVulnerableIndex >= 0 && state.UnoVulnerableIndex != index {
 			target := state.Players[state.UnoVulnerableIndex].UserID
-			return state.Apply(uno.Action{
+			if err := state.Apply(uno.Action{
 				Type:         uno.ActionChallengeUno,
 				ActorUserID:  player.UserID,
 				TargetUserID: target,
-			})
+			}); err == nil {
+				return nil
+			}
 		}
 		for _, card := range player.Hand {
 			candidate, err := cloneUnoGame(state)
@@ -185,6 +199,9 @@ func (h *GamesHandler) applyUnoTurnTimeout(
 	if err != nil || state.CurrentIndex < 0 || state.CurrentIndex >= len(state.Players) {
 		return
 	}
+	if state.Status == uno.StatusBetweenRounds {
+		return
+	}
 	timedOutIndex := state.CurrentIndex
 	timedOutID := state.Players[timedOutIndex].UserID
 	action := unoTimeoutAction(state)
@@ -213,8 +230,61 @@ func (h *GamesHandler) applyUnoTurnTimeout(
 	}
 }
 
+func unoRecoverBotAction(state *uno.Game) error {
+	if state == nil {
+		return fmt.Errorf("uno: nil game")
+	}
+	switch state.Status {
+	case uno.StatusBetweenRounds:
+		return state.Apply(uno.Action{Type: uno.ActionNextRound})
+	case uno.StatusAwaitingColor:
+		chooser := state.ColorChooserIndex
+		if chooser < 0 {
+			chooser = state.CurrentIndex
+		}
+		return state.Apply(uno.Action{Type: uno.ActionChooseColor, Color: unoBotColor(state, chooser)})
+	case uno.StatusAwaitingDrawnPlay:
+		return state.Apply(uno.Action{Type: uno.ActionKeep})
+	default:
+		return state.Apply(uno.Action{Type: uno.ActionDraw})
+	}
+}
+
+func (h *GamesHandler) scheduleUnoNextRound(gameID string) {
+	if h.Rdb == nil {
+		return
+	}
+	go func() {
+		time.Sleep(unoRoundPause)
+		ctx := context.Background()
+		lockKey := "uno_next_round_lock:" + gameID
+		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+		if !locked {
+			return
+		}
+		defer h.Rdb.Del(ctx, lockKey)
+		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+		if err != nil || len(m) == 0 || m["game_type"] != unoGameType ||
+			m["status"] != gameStatusActive {
+			return
+		}
+		state, err := uno.Decode(m["state"])
+		if err != nil || state.Status != uno.StatusBetweenRounds {
+			return
+		}
+		if err := state.Apply(uno.Action{Type: uno.ActionNextRound}); err != nil {
+			return
+		}
+		h.saveUnoState(ctx, gameID, m, state)
+		h.broadcastUnoState(gameID, m)
+		h.notifyUnoTurn(gameID, state)
+	}()
+}
+
 func unoTimeoutAction(state *uno.Game) uno.Action {
 	switch state.Status {
+	case uno.StatusBetweenRounds:
+		return uno.Action{Type: uno.ActionNextRound}
 	case uno.StatusAwaitingColor:
 		return uno.Action{
 			Type:  uno.ActionChooseColor,

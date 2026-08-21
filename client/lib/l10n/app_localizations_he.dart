@@ -621,13 +621,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoDraw => 'בלי קלף חוקי — שלפו אחד מהחפיסה. אם הוא מתאים אפשר לשחק אותו מיד או להשאיר ולהעביר תור. אסור לשלוף כשיש מהלך חוקי.';
 
   @override
-  String get rulesUnoWin => 'את המשחק זוכה מי שמגיע ראשון ל־100 נקודות. את הסיבוב זוכה מי שמרוקן את היד.';
+  String get rulesUnoWin => 'אחד על אחד עד 100, ב־3+ עד 300. את הסיבוב זוכה מי שמרוקן את היד.';
 
   @override
   String get rulesUnoCall => 'כשנשאר קלף אחד לחצו «אונו!». עד הפעולה הבאה היריב יכול לתפוס אתכם בלי אונו — ואז שולפים 2 קלפים.';
 
   @override
-  String get rulesUnoScoring => 'מי שמרקין ראשון את היד זוכה בסיבוב ומקבל נקודות על ידי היריבים: מספרים לפי ערך, פעולות 20, שחורים 50. המשחק עד 100 נקודות.';
+  String get rulesUnoScoring => 'מי שמרקין ראשון את היד זוכה בסיבוב ומקבל נקודות על ידי היריבים: מספרים לפי ערך, פעולות 20, שחורים 50. אחד על אחד עד 100, ב־3+ עד 300.';
 
   @override
   String get unoColorRed => 'אדום';
@@ -716,6 +716,22 @@ class AppLocalizationsHe extends AppLocalizations {
   String unoWinner(String name) {
     return 'מנצח: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name זוכה בסיבוב';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'המשך';
+
+  @override
+  String get unoRoundScoresTitle => 'ניקוד הסיבוב';
 
   @override
   String get unoDirectionClockwise => 'עם כיוון השעון';

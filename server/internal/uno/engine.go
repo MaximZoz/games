@@ -6,12 +6,22 @@ import (
 )
 
 const (
-	// DefaultTargetScore is the score needed to win a match.
+	// DefaultTargetScore is the 1v1 match limit.
 	DefaultTargetScore = 100
-	minPlayers         = 2
-	maxPlayers         = 10
-	cardsPerHand       = 7
+	// MultiplayerTargetScore is the match limit for 3+ players.
+	MultiplayerTargetScore = 300
+	minPlayers             = 2
+	maxPlayers             = 10
+	cardsPerHand           = 7
 )
+
+// TargetScoreForPlayerCount returns 100 for heads-up and 300 for 3+ players.
+func TargetScoreForPlayerCount(playerCount int) int {
+	if playerCount >= 3 {
+		return MultiplayerTargetScore
+	}
+	return DefaultTargetScore
+}
 
 // Status identifies the action currently expected by the engine.
 type Status string
@@ -21,6 +31,7 @@ const (
 	StatusAwaitingColor        Status = "awaiting_color"
 	StatusAwaitingWD4Challenge Status = "awaiting_wd4_challenge"
 	StatusAwaitingDrawnPlay    Status = "awaiting_drawn_play"
+	StatusBetweenRounds        Status = "between_rounds"
 	StatusOver                 Status = "over"
 )
 
@@ -34,6 +45,7 @@ const (
 	ActionChallengeWD4 = "challenge_wd4"
 	ActionChooseColor  = "choose_color"
 	ActionForfeit      = "forfeit"
+	ActionNextRound    = "next_round"
 )
 
 // Action is a state transition requested by a player.
@@ -60,21 +72,24 @@ type Player struct {
 
 // Game contains the complete, persistence-safe state of an UNO match.
 type Game struct {
-	Players          []Player `json:"players"`
-	DrawPile         []Card   `json:"drawPile"`
-	DiscardPile      []Card   `json:"discardPile"`
-	CurrentColor     Color    `json:"currentColor"`
-	Direction        int      `json:"direction"`
-	CurrentIndex     int      `json:"currentIndex"`
-	Status           Status   `json:"status"`
-	PendingDraw      int      `json:"pendingDraw"`
-	DrawnCardID      string   `json:"drawnCardId,omitempty"`
-	LastPlayedBy     string   `json:"lastPlayedBy,omitempty"`
-	Wild4PlayerIndex int      `json:"wild4PlayerIndex"`
-	RoundNumber      int      `json:"roundNumber"`
-	TargetScore      int      `json:"targetScore"`
-	WinnerUserIDs    []string `json:"winnerUserIds"`
-	EliminatedOrder  []string `json:"eliminatedOrder,omitempty"`
+	Players               []Player `json:"players"`
+	DrawPile              []Card   `json:"drawPile"`
+	DiscardPile           []Card   `json:"discardPile"`
+	CurrentColor          Color    `json:"currentColor"`
+	Direction             int      `json:"direction"`
+	CurrentIndex          int      `json:"currentIndex"`
+	Status                Status   `json:"status"`
+	PendingDraw           int      `json:"pendingDraw"`
+	DrawnCardID           string   `json:"drawnCardId,omitempty"`
+	LastPlayedBy          string   `json:"lastPlayedBy,omitempty"`
+	Wild4PlayerIndex      int      `json:"wild4PlayerIndex"`
+	RoundNumber           int      `json:"roundNumber"`
+	TargetScore           int      `json:"targetScore"`
+	WinnerUserIDs         []string `json:"winnerUserIds"`
+	EliminatedOrder       []string `json:"eliminatedOrder,omitempty"`
+	LastRoundWinnerUserID string   `json:"lastRoundWinnerUserId,omitempty"`
+	LastRoundPoints       int      `json:"lastRoundPoints,omitempty"`
+	LastRoundNumber       int      `json:"lastRoundNumber,omitempty"`
 
 	DealerIndex             int   `json:"dealerIndex"`
 	ColorChooserIndex       int   `json:"colorChooserIndex"`
@@ -106,21 +121,24 @@ type PlayerView struct {
 
 // GameView is the information safe to return to one player.
 type GameView struct {
-	Players         []PlayerView `json:"players"`
-	TopDiscard      *Card        `json:"topDiscard,omitempty"`
-	DrawCount       int          `json:"drawCount"`
-	CurrentColor    Color        `json:"currentColor"`
-	Direction       int          `json:"direction"`
-	CurrentIndex    int          `json:"currentIndex"`
-	CurrentUserID   string       `json:"currentUserId,omitempty"`
-	Status          Status       `json:"status"`
-	PendingDraw     int          `json:"pendingDraw"`
-	DrawnCardID     string       `json:"drawnCardId,omitempty"`
-	LastPlayedBy    string       `json:"lastPlayedBy,omitempty"`
-	RoundNumber     int          `json:"roundNumber"`
-	TargetScore     int          `json:"targetScore"`
-	WinnerUserIDs   []string     `json:"winnerUserIds"`
-	EliminatedOrder []string     `json:"eliminatedOrder,omitempty"`
+	Players               []PlayerView `json:"players"`
+	TopDiscard            *Card        `json:"topDiscard,omitempty"`
+	DrawCount             int          `json:"drawCount"`
+	CurrentColor          Color        `json:"currentColor"`
+	Direction             int          `json:"direction"`
+	CurrentIndex          int          `json:"currentIndex"`
+	CurrentUserID         string       `json:"currentUserId,omitempty"`
+	Status                Status       `json:"status"`
+	PendingDraw           int          `json:"pendingDraw"`
+	DrawnCardID           string       `json:"drawnCardId,omitempty"`
+	LastPlayedBy          string       `json:"lastPlayedBy,omitempty"`
+	RoundNumber           int          `json:"roundNumber"`
+	TargetScore           int          `json:"targetScore"`
+	WinnerUserIDs         []string     `json:"winnerUserIds"`
+	EliminatedOrder       []string     `json:"eliminatedOrder,omitempty"`
+	LastRoundWinnerUserID string       `json:"lastRoundWinnerUserId,omitempty"`
+	LastRoundPoints       int          `json:"lastRoundPoints,omitempty"`
+	LastRoundNumber       int          `json:"lastRoundNumber,omitempty"`
 
 	CanChallengeUno    bool `json:"canChallengeUno"`
 	CanChallengeWD4    bool `json:"canChallengeWd4"`
@@ -161,7 +179,7 @@ func NewGame(playerIDs []string, seed int64) (*Game, error) {
 		Status:                  StatusActive,
 		Wild4PlayerIndex:        -1,
 		RoundNumber:             1,
-		TargetScore:             DefaultTargetScore,
+		TargetScore:             TargetScoreForPlayerCount(len(playerIDs)),
 		WinnerUserIDs:           []string{},
 		EliminatedOrder:         []string{},
 		DealerIndex:             0,
@@ -185,6 +203,15 @@ func (g *Game) Apply(action Action) error {
 	if g.Status == StatusOver {
 		return fmt.Errorf("uno: match is over")
 	}
+	if action.Type == ActionNextRound {
+		return g.applyNextRound()
+	}
+	if action.Type == ActionForfeit {
+		return g.applyForfeit(action.ActorUserID)
+	}
+	if g.Status == StatusBetweenRounds {
+		return fmt.Errorf("uno: wait for the next round")
+	}
 	g.LastDrawUserID = ""
 	g.LastDrawCount = 0
 	g.LastEventCard = nil
@@ -204,8 +231,6 @@ func (g *Game) Apply(action Action) error {
 		return g.applyChallengeWD4()
 	case ActionChooseColor:
 		return g.applyChooseColor(Color(action.Color))
-	case ActionForfeit:
-		return g.applyForfeit(action.ActorUserID)
 	default:
 		return fmt.Errorf("uno: unknown action type %q", action.Type)
 	}
@@ -214,23 +239,26 @@ func (g *Game) Apply(action Action) error {
 // View returns a copy of public state with only forUserID's hand revealed.
 func (g *Game) View(forUserID string) GameView {
 	view := GameView{
-		Players:         make([]PlayerView, len(g.Players)),
-		DrawCount:       len(g.DrawPile),
-		CurrentColor:    g.CurrentColor,
-		Direction:       g.Direction,
-		CurrentIndex:    g.CurrentIndex,
-		Status:          g.Status,
-		PendingDraw:     g.PendingDraw,
-		LastPlayedBy:    g.LastPlayedBy,
-		RoundNumber:     g.RoundNumber,
-		TargetScore:     g.TargetScore,
-		WinnerUserIDs:   append([]string(nil), g.WinnerUserIDs...),
-		EliminatedOrder: append([]string(nil), g.EliminatedOrder...),
-		EventSeq:        g.EventSeq,
-		LastEventType:   g.LastEventType,
-		LastEventActor:  g.LastEventActor,
-		LastDrawUserID:  g.LastDrawUserID,
-		LastDrawCount:   g.LastDrawCount,
+		Players:               make([]PlayerView, len(g.Players)),
+		DrawCount:             len(g.DrawPile),
+		CurrentColor:          g.CurrentColor,
+		Direction:             g.Direction,
+		CurrentIndex:          g.CurrentIndex,
+		Status:                g.Status,
+		PendingDraw:           g.PendingDraw,
+		LastPlayedBy:          g.LastPlayedBy,
+		RoundNumber:           g.RoundNumber,
+		TargetScore:           g.TargetScore,
+		WinnerUserIDs:         append([]string(nil), g.WinnerUserIDs...),
+		EliminatedOrder:       append([]string(nil), g.EliminatedOrder...),
+		LastRoundWinnerUserID: g.LastRoundWinnerUserID,
+		LastRoundPoints:       g.LastRoundPoints,
+		LastRoundNumber:       g.LastRoundNumber,
+		EventSeq:              g.EventSeq,
+		LastEventType:         g.LastEventType,
+		LastEventActor:        g.LastEventActor,
+		LastDrawUserID:        g.LastDrawUserID,
+		LastDrawCount:         g.LastDrawCount,
 	}
 	if len(g.DiscardPile) > 0 {
 		top := g.DiscardPile[len(g.DiscardPile)-1]
@@ -671,6 +699,10 @@ func (g *Game) finishPendingRound() error {
 	g.DrawnCardID = ""
 	g.Wild4PlayerIndex = -1
 	g.ColorChooserIndex = -1
+	g.LastRoundWinnerUserID = g.Players[winner].UserID
+	g.LastRoundPoints = points
+	g.LastRoundNumber = g.RoundNumber
+	g.noteEvent("round_scored", g.Players[winner].UserID, points, nil)
 
 	if g.Players[winner].Score >= g.TargetScore {
 		g.Status = StatusOver
@@ -679,6 +711,15 @@ func (g *Game) finishPendingRound() error {
 		return nil
 	}
 
+	g.Status = StatusBetweenRounds
+	g.CurrentIndex = winner
+	return nil
+}
+
+func (g *Game) applyNextRound() error {
+	if g.Status != StatusBetweenRounds {
+		return fmt.Errorf("uno: next round is not pending")
+	}
 	g.RoundNumber++
 	g.DealerIndex = g.nextActiveClockwise(g.DealerIndex)
 	return g.startRound()

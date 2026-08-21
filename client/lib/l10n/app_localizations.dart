@@ -1328,7 +1328,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoWin.
   ///
   /// In ru, this message translates to:
-  /// **'Матч выигрывает тот, кто первым наберёт 100 очков. Раунд выигрывает игрок, сбросивший все карты.'**
+  /// **'Вдвоём матч до 100 очков, при трёх и более игроках — до 300. Раунд выигрывает игрок, сбросивший все карты.'**
   String get rulesUnoWin;
 
   /// No description provided for @rulesUnoCall.
@@ -1340,7 +1340,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoScoring.
   ///
   /// In ru, this message translates to:
-  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Матч до 100 очков.'**
+  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Вдвоём матч до 100, при трёх и более игроках — до 300.'**
   String get rulesUnoScoring;
 
   /// No description provided for @unoColorRed.
@@ -1498,6 +1498,30 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Победитель: {name}'**
   String unoWinner(String name);
+
+  /// No description provided for @unoRoundWonBy.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} выигрывает раунд'**
+  String unoRoundWonBy(String name);
+
+  /// No description provided for @unoRoundPointsAwarded.
+  ///
+  /// In ru, this message translates to:
+  /// **'+{points}'**
+  String unoRoundPointsAwarded(int points);
+
+  /// No description provided for @unoRoundContinue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Далее'**
+  String get unoRoundContinue;
+
+  /// No description provided for @unoRoundScoresTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очки за раунд'**
+  String get unoRoundScoresTitle;
 
   /// No description provided for @unoDirectionClockwise.
   ///

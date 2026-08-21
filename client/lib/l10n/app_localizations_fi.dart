@@ -621,13 +621,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoDraw => 'Ilman laillista korttia nosta yksi pakasta. Jos se sopii, voit pelata sen heti tai pitää ja luovuttaa vuoron. Et saa nostaa, jos sinulla on laillinen siirto.';
 
   @override
-  String get rulesUnoWin => 'Ottelun voittaa ensimmäisenä 100 pisteeseen yltävä. Erän voittaa se, joka tyhjentää kätensä.';
+  String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 300. Erän voittaa se, joka tyhjentää kätensä.';
 
   @override
   String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina ”Uno!”. Seuraavaan toimeen asti vastustaja voi napata sinut ilman Unoa — silloin nostat 2 korttia.';
 
   @override
-  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Ottelu käydään 100 pisteeseen.';
+  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Kaksin 100:een, 3+ pelaajalla 300:een.';
 
   @override
   String get unoColorRed => 'Punainen';
@@ -716,6 +716,22 @@ class AppLocalizationsFi extends AppLocalizations {
   String unoWinner(String name) {
     return 'Voittaja: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name voittaa erän';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Seuraava';
+
+  @override
+  String get unoRoundScoresTitle => 'Erän pisteet';
 
   @override
   String get unoDirectionClockwise => 'Myötäpäivään';
