@@ -336,7 +336,7 @@ class UnoEngine {
     discardPile.add(card);
     drawnCardId = null;
     lastPlayedBy = player.userId;
-    _noteEvent('play', player.userId, null);
+    _noteEvent('play', player.userId, card);
     pendingRoundWinnerIndex = -1;
     if (player.hand.length == 1) unoVulnerableIndex = playerIndex;
     if (player.hand.isEmpty) {
