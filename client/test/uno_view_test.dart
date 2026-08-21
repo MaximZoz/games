@@ -119,4 +119,39 @@ void main() {
       isFalse,
     );
   });
+
+  test('unoVisibleHand hides cards already flying to discard', () {
+    const hand = [
+      UnoCard(
+          id: 'a', color: UnoColor.red, kind: UnoCardKind.number, number: 1),
+      UnoCard(
+          id: 'b', color: UnoColor.blue, kind: UnoCardKind.number, number: 2),
+    ];
+    expect(unoVisibleHand(hand, const {}).map((c) => c.id), ['a', 'b']);
+    expect(unoVisibleHand(hand, {'a'}).map((c) => c.id), ['b']);
+  });
+
+  test('unoVisibleDiscard keeps old pile until override arrives', () {
+    const oldTop = UnoCard(
+      id: 'old',
+      color: UnoColor.green,
+      kind: UnoCardKind.number,
+      number: 5,
+    );
+    const flying = UnoCard(
+      id: 'new',
+      color: UnoColor.red,
+      kind: UnoCardKind.number,
+      number: 7,
+    );
+    expect(
+      unoVisibleDiscard(serverTop: flying, override: oldTop)?.id,
+      'old',
+    );
+    expect(
+      unoVisibleDiscard(serverTop: oldTop, override: flying)?.id,
+      'new',
+    );
+    expect(unoVisibleDiscard(serverTop: oldTop)?.id, 'old');
+  });
 }

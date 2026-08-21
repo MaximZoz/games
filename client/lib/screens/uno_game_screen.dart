@@ -67,6 +67,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   String? _lastLocalDrawActor;
   String? _lastLocalPlayCardId;
   final Set<String> _localPlayedIds = {};
+  final Set<String> _hiddenHandIds = {};
+  UnoCard? _discardOverride;
   int _seenEventSeq = 0;
   int _dealHeroShown = 0;
   final Map<int, int> _dealOppShown = {};
@@ -340,7 +342,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       width: to.width,
       height: to.height,
     );
-    await playUnoCardFlyAnimation(
+    final shown = await playUnoCardFlyAnimation(
       context: context,
       card: card,
       cardSize: _flyCardSize(context),
@@ -352,7 +354,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       duration: const Duration(milliseconds: 420),
       arcLift: 28,
     );
-    await Future<void>.delayed(const Duration(milliseconds: 520));
+    await Future<void>.delayed(const Duration(milliseconds: 1000));
+    shown.dismiss();
     if (!mounted) return;
     await playUnoCardFlyAnimation(
       context: context,
@@ -360,7 +363,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       cardSize: _flyCardSize(context),
       from: mid,
       to: from,
-      duration: const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 320),
       beginScale: 1,
       endScale: 0.7,
       arcLift: 16,
@@ -461,9 +464,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
     if (_busy || !game.isMyTurn || !_canPlayCard(game, card)) return;
     setState(() => _busy = true);
-    _lastLocalPlayCardId = card.id;
-    _optimisticTopId = card.id;
-    _localPlayedIds.add(card.id);
     _lastLocalActor = game.viewerUserId ?? game.me?.id;
     try {
       UnoColor? color;
@@ -473,8 +473,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
       final from = _rectOf(_cardKeys.putIfAbsent(card.id, GlobalKey.new));
       final to = _rectOf(_discardKey);
+      _lastLocalPlayCardId = card.id;
+      _optimisticTopId = card.id;
+      _localPlayedIds.add(card.id);
+      if (mounted) {
+        setState(() {
+          _hiddenHandIds.add(card.id);
+          _discardOverride = game.topDiscard;
+        });
+      }
       if (from != null && to != null && mounted) {
-        await playUnoCardFlyAnimation(
+        final ticket = await playUnoCardFlyAnimation(
           context: context,
           card: card,
           cardSize: _flyCardSize(context),
@@ -483,7 +492,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           beginAngle: 0.05,
           endAngle: -0.04,
           arcLift: 42,
+          keepAtEnd: true,
         );
+        if (mounted) {
+          setState(() => _discardOverride = card);
+        }
+        ticket.dismiss();
+      } else if (mounted) {
+        setState(() => _discardOverride = card);
       }
       await _move(
         UnoActionType.play,
@@ -496,6 +512,19 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         if (after.topDiscard?.id == card.id || after.eventSeq > _seenEventSeq) {
           _seenEventSeq = after.eventSeq;
         }
+        if (!mounted) return;
+        setState(() {
+          if (after.topDiscard?.id == card.id) {
+            _discardOverride = null;
+            _hiddenHandIds.remove(card.id);
+          } else if (after.myHand.any((item) => item.id == card.id)) {
+            _hiddenHandIds.remove(card.id);
+            _discardOverride = null;
+            _localPlayedIds.remove(card.id);
+            _lastLocalPlayCardId = null;
+            _optimisticTopId = null;
+          }
+        });
       } catch (_) {}
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -904,6 +933,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _dealHeroShown = 0;
       _dealOppShown.clear();
       _optimisticTopId = null;
+      _discardOverride = null;
+      _hiddenHandIds.clear();
       _seenEventSeq = 0;
       _lastLocalActor = null;
       _lastLocalDrawActor = null;
@@ -1193,6 +1224,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Widget _buildCenterTable(UnoGameView game) {
     final narrow = isNarrow(context);
     final cardSize = narrow ? const Size(62, 93) : const Size(78, 117);
+    final shownDiscard = unoVisibleDiscard(
+      serverTop: game.topDiscard,
+      override: _discardOverride,
+    );
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
@@ -1277,10 +1312,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                         ),
                       ],
                     ),
-                    child: game.topDiscard == null
+                    child: shownDiscard == null
                         ? SizedBox.fromSize(size: cardSize)
                         : UnoCardWidget(
-                            card: game.topDiscard!,
+                            card: shownDiscard,
                             size: cardSize,
                           ),
                   ),
@@ -1437,7 +1472,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final cardSize = narrow ? const Size(58, 87) : const Size(72, 108);
     final hand = _dealing
         ? game.myHand.take(_dealHeroShown).toList(growable: false)
-        : game.myHand;
+        : unoVisibleHand(game.myHand, _hiddenHandIds);
     final spacing =
         hand.length > 10 ? (narrow ? 28.0 : 36.0) : (narrow ? 39.0 : 49.0);
     final width = hand.isEmpty
@@ -1452,7 +1487,12 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           children: [
             Text(
               context.l10n.unoCardsCount(
-                _dealing ? _dealHeroShown : (game.me?.handCount ?? 0),
+                _dealing
+                    ? _dealHeroShown
+                    : unoVisibleHand(
+                        game.myHand,
+                        _hiddenHandIds,
+                      ).length,
               ),
               style: const TextStyle(
                 color: AppColors.textSecondary,
