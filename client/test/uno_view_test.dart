@@ -136,6 +136,10 @@ void main() {
     ];
     expect(unoVisibleHand(hand, const {}).map((c) => c.id), ['a', 'b']);
     expect(unoVisibleHand(hand, {'a'}).map((c) => c.id), ['b']);
+    expect(
+      unoVisibleHand(hand, {'a', 'b'}).map((c) => c.id),
+      isEmpty,
+    );
   });
 
   test('unoVisibleDiscard keeps old pile until override arrives', () {
