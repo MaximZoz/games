@@ -31,6 +31,24 @@ void main() {
     expect(GameFlyOverlay.debugActiveCount, 0);
   });
 
+  test('sameNamedRoute ignores refresh of the same page', () {
+    final first = PageRouteBuilder<void>(
+      settings: const RouteSettings(name: '/coins/login'),
+      pageBuilder: (_, __, ___) => const SizedBox(),
+    );
+    final second = PageRouteBuilder<void>(
+      settings: const RouteSettings(name: '/coins/login'),
+      pageBuilder: (_, __, ___) => const SizedBox(),
+    );
+    final other = PageRouteBuilder<void>(
+      settings: const RouteSettings(name: '/coins'),
+      pageBuilder: (_, __, ___) => const SizedBox(),
+    );
+    expect(sameNamedRoute(first, second), isTrue);
+    expect(sameNamedRoute(first, other), isFalse);
+    expect(sameNamedRoute(first, null), isFalse);
+  });
+
   testWidgets('remove is safe twice', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: Text('page'))),

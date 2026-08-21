@@ -10,8 +10,14 @@ import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 /// Глобальные ключи иконок номиналов в тулбаре — цель полёта монеты.
 final toolbarCoinKeysProvider = Provider<Map<CoinType, GlobalKey>>((ref) {
   return {
-    for (final type in CoinType.values) type: GlobalKey(debugLabel: 'toolbar_$type'),
+    for (final type in CoinType.values)
+      type: GlobalKey(debugLabel: 'toolbar_$type'),
   };
+});
+
+/// Полноэкранный overlay в [AppShell] — полёт виден и над тулбаром на мобильных.
+final appFlyOverlayKeyProvider = Provider<GlobalKey<OverlayState>>((ref) {
+  return GlobalKey<OverlayState>(debugLabel: 'app-fly-overlay');
 });
 
 class BalanceGainState {
@@ -32,7 +38,8 @@ class BalanceGainState {
     bool clearDisplay = false,
   }) {
     return BalanceGainState(
-      displayBronze: clearDisplay ? null : (displayBronze ?? this.displayBronze),
+      displayBronze:
+          clearDisplay ? null : (displayBronze ?? this.displayBronze),
       forceShow: forceShow ?? this.forceShow,
     );
   }
@@ -127,13 +134,13 @@ void lockBalanceDisplay({
   final delta = rewardBronze ?? (toBronze - fromBronze);
   final flyType = rewardCoinType(delta > 0 ? delta : 1);
   ref.read(balanceGainProvider.notifier).begin(
-        fromBronze: fromBronze,
-        forceShow: {
-          ...emergingDenominations(fromBronze, toBronze),
-          if (delta > 0 && denominationOf(flyType, fromBronze) == BigInt.zero)
-            flyType,
-        },
-      );
+    fromBronze: fromBronze,
+    forceShow: {
+      ...emergingDenominations(fromBronze, toBronze),
+      if (delta > 0 && denominationOf(flyType, fromBronze) == BigInt.zero)
+        flyType,
+    },
+  );
 }
 
 /// Анимация пополнения: полёт монеты из карточки в тулбар + счётчик баланса.
@@ -185,9 +192,7 @@ Future<void> playBalanceGain({
 
       // Дать тулбару вставить новую монету и измерить цель.
       await WidgetsBinding.instance.endOfFrame;
-      if (!context.mounted) return;
       await Future<void>.delayed(const Duration(milliseconds: 40));
-      if (!context.mounted) return;
 
       final coinKeys = ref.read(toolbarCoinKeysProvider);
       var targetRect = globalRectOfKey(coinKeys[flyType]);
@@ -200,17 +205,25 @@ Future<void> playBalanceGain({
       }
 
       final startRect = sourceRect ?? globalRectOfKey(sourceKey);
-      if (startRect != null && targetRect != null && context.mounted) {
-        // Сначала полёт; пересчёт — строго после прилёта (без колбэка в тикере).
+      final overlay = ref.read(appFlyOverlayKeyProvider).currentState ??
+          (context.mounted
+              ? Overlay.maybeOf(context, rootOverlay: true) ??
+                  Overlay.maybeOf(context)
+              : null);
+      if (startRect != null &&
+          targetRect != null &&
+          overlay != null &&
+          (context.mounted ? TickerMode.of(context) : true)) {
         await _flyCoin(
-          context: context,
+          overlay: overlay,
           from: _centerOf(startRect),
           to: _centerOf(targetRect),
           coinType: flyType,
           size: math.max(18, startRect.shortestSide.clamp(16, 28)),
         );
       }
-      if (!context.mounted) return;
+      // Счётчик тулбара не зависит от context экрана (на мобилке он может
+      // размонтироваться после обновления auth / refresh роутера).
       await _countBalance(controller: controller, from: from, to: to);
     } finally {
       // Снимаем лок — тулбар показывает актуальный auth-баланс.
@@ -275,15 +288,22 @@ Future<void> playBalanceLoss({
           if (startRect != null) break;
         }
       }
-      if (startRect != null && context.mounted) {
-        final fromPt = _centerOf(startRect);
-        await _flyCoin(
-          context: context,
-          from: fromPt,
-          to: Offset(fromPt.dx, fromPt.dy + 96),
-          coinType: flyType,
-          size: math.max(18, startRect.shortestSide.clamp(16, 28)),
-        );
+      if (startRect != null) {
+        final overlay = ref.read(appFlyOverlayKeyProvider).currentState ??
+            (context.mounted
+                ? Overlay.maybeOf(context, rootOverlay: true) ??
+                    Overlay.maybeOf(context)
+                : null);
+        if (overlay != null) {
+          final fromPt = _centerOf(startRect);
+          await _flyCoin(
+            overlay: overlay,
+            from: fromPt,
+            to: Offset(fromPt.dx, fromPt.dy + 96),
+            coinType: flyType,
+            size: math.max(18, startRect.shortestSide.clamp(16, 28)),
+          );
+        }
       }
     } finally {
       controller.end();
@@ -309,16 +329,13 @@ Future<void> _countBalance({
 }
 
 Future<void> _flyCoin({
-  required BuildContext context,
+  required OverlayState overlay,
   required Offset from,
   required Offset to,
   required CoinType coinType,
   required double size,
   VoidCallback? onArrived,
 }) async {
-  final overlay = Overlay.maybeOf(context, rootOverlay: true);
-  if (overlay == null) return;
-
   final completer = Completer<void>();
   late OverlayEntry entry;
   entry = GameFlyOverlay.insert(
@@ -335,7 +352,12 @@ Future<void> _flyCoin({
       },
     ),
   );
-  return completer.future;
+  return completer.future.timeout(
+    const Duration(milliseconds: 900),
+    onTimeout: () {
+      GameFlyOverlay.remove(entry);
+    },
+  );
 }
 
 class _FlyingCoinLayer extends StatefulWidget {

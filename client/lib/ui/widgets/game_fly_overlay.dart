@@ -43,11 +43,18 @@ class GameFlyOverlay {
   }
 }
 
-/// Снимает полёты при смене страницы (не диалоги на том же экране).
+bool sameNamedRoute(Route<dynamic>? a, Route<dynamic>? b) {
+  final left = a?.settings.name;
+  final right = b?.settings.name;
+  return left != null && right != null && left == right;
+}
+
+/// Снимает полёты при смене страницы (не диалоги и не refresh того же route).
 class GameFlyOverlayObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     if (route is PopupRoute) return;
+    if (sameNamedRoute(route, previousRoute)) return;
     GameFlyOverlay.dismissAll();
   }
 
@@ -58,11 +65,13 @@ class GameFlyOverlayObserver extends NavigatorObserver {
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (sameNamedRoute(newRoute, oldRoute)) return;
     GameFlyOverlay.dismissAll();
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (sameNamedRoute(route, previousRoute)) return;
     GameFlyOverlay.dismissAll();
   }
 }

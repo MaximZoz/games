@@ -22,9 +22,11 @@ class CoinsLoginScreen extends ConsumerStatefulWidget {
 
 class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
   bool _claimInFlight = false;
+
   /// Локальный статус после клейма — без спиннера на время invalidate.
   DailyRewardStatus? _optimisticStatus;
   final GlobalKey _claimSourceKey = GlobalKey();
+  final GlobalKey _claimButtonKey = GlobalKey();
 
   Future<void> _claim(DailyRewardStatus status) async {
     if (_claimInFlight || !status.available) return;
@@ -33,8 +35,8 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
     final previous = _optimisticStatus;
     final fromBalance =
         ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
-    final expectedReward = status.milestonesBronze[status.nextStreak] ??
-        status.nextRewardBronze;
+    final expectedReward =
+        status.milestonesBronze[status.nextStreak] ?? status.nextRewardBronze;
     // Мгновенно: кнопка → «Уже получено», карточки обновляют прогресс.
     setState(() {
       _optimisticStatus = DailyRewardStatus(
@@ -47,7 +49,8 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
     });
 
     try {
-      final expectedTo = fromBalance + (expectedReward > 0 ? expectedReward : 0);
+      final expectedTo =
+          fromBalance + (expectedReward > 0 ? expectedReward : 0);
       if (expectedReward > 0) {
         lockBalanceDisplay(
           ref: ref,
@@ -72,13 +75,18 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
         final reward =
             result.rewardBronze > 0 ? result.rewardBronze : expectedReward;
         if (reward > 0) {
+          await WidgetsBinding.instance.endOfFrame;
+          if (!mounted) return;
+          final sourceKey = globalRectOfKey(_claimSourceKey) != null
+              ? _claimSourceKey
+              : _claimButtonKey;
           await playBalanceGain(
             ref: ref,
             context: context,
             newBalanceBronze: result.balanceBronze,
             fromBronze: fromBalance,
             rewardBronze: reward,
-            sourceKey: _claimSourceKey,
+            sourceKey: sourceKey,
             skipApply: true,
           );
         } else {
@@ -137,6 +145,7 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                   ? _LoginRewardsBody(
                       status: status,
                       claimSourceKey: _claimSourceKey,
+                      claimButtonKey: _claimButtonKey,
                       onClaim: () => unawaited(_claim(status)),
                     )
                   : dailyRewardAsync.hasError
@@ -144,7 +153,8 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
                           padding: const EdgeInsets.all(16),
                           child: Text(
                             l10n.coinsLoadRewardsFailed,
-                            style: const TextStyle(color: AppColors.textSecondary),
+                            style:
+                                const TextStyle(color: AppColors.textSecondary),
                           ),
                         )
                       // Только первая загрузка; после клейма спиннера нет.
@@ -161,11 +171,13 @@ class _LoginRewardsBody extends StatelessWidget {
   const _LoginRewardsBody({
     required this.status,
     required this.claimSourceKey,
+    required this.claimButtonKey,
     required this.onClaim,
   });
 
   final DailyRewardStatus status;
   final GlobalKey claimSourceKey;
+  final GlobalKey claimButtonKey;
   final VoidCallback onClaim;
 
   static const _milestones = [1, 3, 7, 30];
@@ -189,6 +201,7 @@ class _LoginRewardsBody extends StatelessWidget {
         );
 
     final claimButton = SizedBox(
+      key: claimButtonKey,
       width: useTiles ? 320 : double.infinity,
       child: FilledButton.icon(
         onPressed: canClaim ? onClaim : null,
@@ -358,17 +371,15 @@ class _CompactMilestoneCard extends StatelessWidget {
               ),
             ],
           ),
-          if (compactTile)
-            const SizedBox(height: 16)
-          else
-            const Spacer(),
+          if (compactTile) const SizedBox(height: 16) else const Spacer(),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               minHeight: 6,
               backgroundColor: AppColors.accentSoft.withValues(alpha: 0.55),
-              color: completed ? const Color(0xFF34B7F1) : AppColors.accentStart,
+              color:
+                  completed ? const Color(0xFF34B7F1) : AppColors.accentStart,
             ),
           ),
           const SizedBox(height: 4),
