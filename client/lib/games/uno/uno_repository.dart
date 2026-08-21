@@ -293,6 +293,19 @@ bool shouldAnimateRemoteUnoPlay({
   return true;
 }
 
+/// Карты веера без тех, что уже улетели в сброс (оптимистично).
+List<UnoCard> unoVisibleHand(List<UnoCard> hand, Set<String> hiddenIds) {
+  if (hiddenIds.isEmpty) return hand;
+  return [
+    for (final card in hand)
+      if (!hiddenIds.contains(card.id)) card,
+  ];
+}
+
+/// Сброс во время своего полёта: старая карта, затем новая в момент прилёта.
+UnoCard? unoVisibleDiscard({UnoCard? serverTop, UnoCard? override}) =>
+    override ?? serverTop;
+
 class UnoLobbyView {
   const UnoLobbyView({
     required this.id,
