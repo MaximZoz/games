@@ -612,7 +612,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoIntro => 'Cada um recebe 7 cartas. Jogue uma carta da mesma cor ou do mesmo valor (número ou mesma ação).';
 
   @override
-  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 — o próximo compra 2 e perde a vez; +2 não acumulam.';
+  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 e +4 podem ser empilhados: a penalidade soma (dois +2 fazem o próximo comprar 4). Quem não empilhar compra o monte inteiro e perde a vez.';
 
   @override
   String get rulesUnoWild => 'Uma carta preta define uma nova cor. Jogue +4 só se não tiver carta da cor atual. O adversário pode contestar: se o +4 era legal, compra 6; senão o autor do +4 compra 4 e o contestador joga.';

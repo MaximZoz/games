@@ -612,7 +612,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoIntro => 'Chacun reçoit 7 cartes. Jouez une carte de la même couleur ou du même rang (chiffre ou même action).';
 
   @override
-  String get rulesUnoPlay => 'Passe — le suivant perd son tour. Inversion à deux agit comme Passe. +2 — le suivant pioche 2 et passe ; on ne cumule pas les +2.';
+  String get rulesUnoPlay => 'Passe — le suivant perd son tour. Inversion à deux agit comme Passe. +2 et +4 peuvent se superposer : la pénalité s’additionne (deux +2 font piocher 4). Celui qui ne répond pas pioche toute la pile et passe.';
 
   @override
   String get rulesUnoWild => 'Une carte noire fixe une nouvelle couleur. Jouez +4 seulement si vous n’avez aucune carte de la couleur en cours. L’adversaire peut contester : si le +4 était légal, il pioche 6 ; sinon l’auteur du +4 pioche 4 et le contestataire joue.';

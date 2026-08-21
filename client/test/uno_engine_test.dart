@@ -168,6 +168,52 @@ void main() {
     expect(engine.players[1].hand, hasLength(7));
   });
 
+  test('+2 and +4 stack until the next player draws', () {
+    final first = action('plus-two-a', UnoColor.red, UnoCardKind.drawTwo);
+    final second = action('plus-two-b', UnoColor.blue, UnoCardKind.drawTwo);
+    final wd4 = action('plus-four', UnoColor.wild, UnoCardKind.wildDrawFour);
+    final engine = UnoEngine.controlled(
+      players: [
+        UnoPlayer(userId: 'p0', seat: 0, hand: [first, number('r0', UnoColor.blue, 1)]),
+        UnoPlayer(userId: 'p1', seat: 1, hand: [second, number('r1', UnoColor.yellow, 3)]),
+        UnoPlayer(
+          userId: 'p2',
+          seat: 2,
+          hand: [wd4, number('r2', UnoColor.green, 8)],
+        ),
+      ],
+      drawPile: [
+        for (var i = 0; i < 20; i++) number('draw-$i', UnoColor.yellow, i % 10),
+      ],
+      topDiscard: number('top-red-5', UnoColor.red, 5),
+    );
+
+    engine.apply(UnoAction(UnoActionType.play, cardId: first.id));
+    expect(engine.pendingDraw, 2);
+    expect(engine.currentIndex, 1);
+    expect(engine.players[1].hand, hasLength(2));
+
+    engine.apply(UnoAction(UnoActionType.play, cardId: second.id));
+    expect(engine.pendingDraw, 4);
+    expect(engine.currentIndex, 2);
+
+    engine.apply(UnoAction(
+      UnoActionType.play,
+      cardId: wd4.id,
+      color: UnoColor.green,
+    ));
+    expect(engine.pendingDraw, 8);
+    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.currentIndex, 0);
+
+    final before = engine.players[0].hand.length;
+    engine.apply(const UnoAction(UnoActionType.draw));
+    expect(engine.players[0].hand, hasLength(before + 8));
+    expect(engine.pendingDraw, 0);
+    expect(engine.lastDrawCount, 8);
+    expect(engine.currentIndex, 1);
+  });
+
   test('bot draws on Wild Draw Four instead of stalling', () {
     final wildDrawFour = action(
       'wild-draw-four',

@@ -612,7 +612,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoIntro => 'Har kimga 7 ta karta tarqatiladi. Xuddi shu rang yoki xuddi shu qiymatdagi (raqam yoki bir xil maxsus) kartani yuring.';
 
   @override
-  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 — keyingisi 2 karta oladi va yurishni o‘tkazadi; +2 ni yig‘ib bo‘lmaydi.';
+  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 va +4 ni ustma-ust qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.';
 
   @override
   String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.';

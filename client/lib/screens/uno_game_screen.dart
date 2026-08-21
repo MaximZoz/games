@@ -163,13 +163,19 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       if (!skipOwnPlay) {
         if (game.lastDrawCount > 0 &&
             game.lastDrawUserId.isNotEmpty &&
-            game.lastDrawUserId != meId &&
             game.lastDrawUserId != _lastLocalDrawActor) {
-          final drawIndex = game.players
-              .indexWhere((player) => player.id == game.lastDrawUserId);
-          if (drawIndex >= 0 && drawIndex != game.myIndex) {
-            _pendingOppDraw[drawIndex] =
-                (_pendingOppDraw[drawIndex] ?? 0) + game.lastDrawCount;
+          if (meId != null && game.lastDrawUserId == meId) {
+            final hide = game.lastDrawCount >= game.myHand.length
+                ? game.myHand
+                : game.myHand.sublist(game.myHand.length - game.lastDrawCount);
+            _pendingDrawnIds.addAll(hide.map((card) => card.id));
+          } else if (game.lastDrawUserId != meId) {
+            final drawIndex = game.players
+                .indexWhere((player) => player.id == game.lastDrawUserId);
+            if (drawIndex >= 0 && drawIndex != game.myIndex) {
+              _pendingOppDraw[drawIndex] =
+                  (_pendingOppDraw[drawIndex] ?? 0) + game.lastDrawCount;
+            }
           }
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -224,13 +230,47 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     }
     if (game.lastDrawCount > 0 &&
         game.lastDrawUserId.isNotEmpty &&
-        game.lastDrawUserId != meId &&
         game.lastDrawUserId != _lastLocalDrawActor) {
-      await _animateOpponentDraw(
-        game,
-        game.lastDrawUserId,
-        game.lastDrawCount,
+      if (meId != null && game.lastDrawUserId == meId) {
+        final hide = game.lastDrawCount >= game.myHand.length
+            ? game.myHand
+            : game.myHand.sublist(game.myHand.length - game.lastDrawCount);
+        await _animateHeroDraw(hide);
+      } else {
+        await _animateOpponentDraw(
+          game,
+          game.lastDrawUserId,
+          game.lastDrawCount,
+        );
+      }
+    }
+  }
+
+  Future<void> _animateHeroDraw(List<UnoCard> cards) async {
+    if (cards.isEmpty) return;
+    final from = _rectOf(_drawPileKey);
+    final to = _rectOf(_handKey);
+    if (from == null || to == null || !mounted) {
+      if (mounted) {
+        setState(() => _pendingDrawnIds.removeAll(cards.map((card) => card.id)));
+      }
+      return;
+    }
+    for (final card in cards) {
+      if (!mounted) return;
+      await playUnoCardFlyAnimation(
+        context: context,
+        card: card,
+        cardSize: _flyCardSize(context),
+        from: from,
+        to: to,
+        faceDown: true,
+        flipToFace: true,
+        arcLift: 36,
       );
+      if (mounted) {
+        setState(() => _pendingDrawnIds.remove(card.id));
+      }
     }
   }
 
@@ -682,8 +722,22 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (game.status == UnoStatus.awaitingDrawnPlay) {
       return card.id == game.drawnCardId;
     }
+    if (game.pendingDraw > 0) {
+      return card.isDrawStack &&
+          (game.status == UnoStatus.active ||
+              game.status == UnoStatus.awaitingWd4Challenge);
+    }
     if (game.status != UnoStatus.active) return false;
     return card.matches(game.topDiscard!, game.currentColor);
+  }
+
+  bool _canTakeFromDeck(UnoGameView game) {
+    if (!game.isMyTurn) return false;
+    if (game.status == UnoStatus.awaitingWd4Challenge) {
+      return game.pendingDraw > 0;
+    }
+    if (game.status != UnoStatus.active) return false;
+    return game.pendingDraw > 0 || !_hasLegalCard(game);
   }
 
   bool _hasLegalCard(UnoGameView game) =>
@@ -1388,9 +1442,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 children: [
                   GestureDetector(
                     key: _drawPileKey,
-                    onTap: game.isMyTurn &&
-                            !_hasLegalCard(game) &&
-                            game.status == UnoStatus.active
+                    onTap: _canTakeFromDeck(game) && !_busy
                         ? () => _draw(game)
                         : null,
                     child: Stack(
@@ -1526,9 +1578,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     }
     final me = game.me;
     final challengeTarget = _unoChallengeTarget(game);
-    final canDraw = game.isMyTurn &&
-        game.status == UnoStatus.active &&
-        !_hasLegalCard(game);
+    final canDraw = _canTakeFromDeck(game) && !game.canChallengeWd4;
     final canCallUno =
         me != null && me.handCount == 1 && !me.saidUno && !me.forfeited;
     return SizedBox(

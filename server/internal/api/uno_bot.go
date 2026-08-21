@@ -82,6 +82,23 @@ func unoApplyBotAction(state *uno.Game) error {
 		}
 		return state.Apply(uno.Action{Type: uno.ActionChooseColor, Color: unoBotColor(state, chooser)})
 	case uno.StatusAwaitingWD4Challenge:
+		for _, card := range player.Hand {
+			candidate, err := cloneUnoGame(state)
+			if err != nil {
+				return err
+			}
+			action := uno.Action{
+				Type:   uno.ActionPlay,
+				CardID: card.ID,
+				Color:  unoBotColor(candidate, index),
+			}
+			if err := candidate.Apply(action); err != nil {
+				continue
+			}
+			unoBotCallIfNeeded(candidate, index)
+			*state = *candidate
+			return nil
+		}
 		return state.Apply(uno.Action{Type: uno.ActionDraw})
 	case uno.StatusAwaitingDrawnPlay:
 		action := uno.Action{

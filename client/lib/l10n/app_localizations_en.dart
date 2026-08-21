@@ -612,7 +612,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoIntro => 'Each player is dealt 7 cards. Play a card of the same color or the same rank (number or matching action).';
 
   @override
-  String get rulesUnoPlay => 'Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 — the next player draws 2 and is skipped; +2 cards do not stack.';
+  String get rulesUnoPlay => 'Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 and +4 can be stacked: the penalty adds up (two +2s make the next player draw 4). A player who does not stack draws the whole pile and is skipped.';
 
   @override
   String get rulesUnoWild => 'A black card sets a new color. Play +4 only if you have no card of the current color. The next player may challenge: if the +4 was legal they draw 6; if not, the +4 player draws 4 and the challenger plays.';

@@ -155,3 +155,7 @@ func (c Color) validChoice() bool {
 func (c Card) isWild() bool {
 	return c.Kind == KindWild || c.Kind == KindWildDrawFour
 }
+
+func (c Card) isDrawStack() bool {
+	return c.Kind == KindDrawTwo || c.Kind == KindWildDrawFour
+}

@@ -612,7 +612,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoIntro => 'Jokainen saa 7 korttia. Pelaa saman värin tai saman arvon kortti (numero tai sama toiminto).';
 
   @override
-  String get rulesUnoPlay => 'Ohitus — seuraava menettää vuoron. Suunnanvaihto kahdella toimii ohituksena. +2 — seuraava nostaa 2 ja menettää vuoron; +2-kortteja ei pinota.';
+  String get rulesUnoPlay => 'Ohitus — seuraava menettää vuoron. Suunnanvaihto kahdella toimii ohituksena. +2 ja +4 voi pinota: rangaistus kertyy (kaksi +2:ta, seuraava nostaa 4). Joka ei pinoa, nostaa koko pinon ja menettää vuoron.';
 
   @override
   String get rulesUnoWild => 'Musta kortti asettaa uuden värin. Pelaa +4 vain, jos sinulla ei ole nykyisen värin korttia. Vastustaja voi haastaa: jos +4 oli laillinen, hän nostaa 6; muuten +4:n pelaaja nostaa 4 ja haastaja pelaa.';

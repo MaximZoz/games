@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Spel tegen een bot, zonder tijdslimiet per beurt.",
   "rulesUnoIntro": "Iedereen krijgt 7 kaarten. Speel een kaart van dezelfde kleur of dezelfde rang (cijfer of dezelfde actie).",
-  "rulesUnoPlay": "Overslaan — de volgende mist een beurt. Omkeren met twee spelers werkt als Overslaan. +2 — de volgende trekt 2 en slaat over; +2 stapelen niet.",
+  "rulesUnoPlay": "Overslaan — de volgende mist een beurt. Omkeren met twee spelers werkt als Overslaan. +2 en +4 mogen gestapeld: de straf telt op (twee +2 betekent 4 trekken). Wie niet stapelt trekt de hele stapel en slaat over.",
   "rulesUnoWild": "Een zwarte kaart kiest een nieuwe kleur. Speel +4 alleen zonder kaart van de huidige kleur. De volgende mag challengen: was +4 legaal, trekt hij 6; zo niet, trekt de +4-speler 4 en de challenger speelt.",
   "rulesUnoDraw": "Zonder legale kaart trek je er één van de stapel. Past die, speel hem nu of houd hem en pas. Trekken mag niet zolang je kunt spelen.",
   "rulesUnoWin": "Met z’n tweeën tot 100, bij 3+ spelers tot 300. Een ronde wint wie de hand leegt.",

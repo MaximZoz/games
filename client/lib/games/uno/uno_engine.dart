@@ -190,6 +190,9 @@ class UnoEngine {
       actions
         ..add(UnoActionType.challengeWd4)
         ..add(UnoActionType.draw);
+      if (hasLegalPlay(playerIndex)) {
+        actions.add(UnoActionType.play);
+      }
       return actions;
     }
     if (status == UnoStatus.awaitingDrawnPlay && currentIndex == playerIndex) {
@@ -203,23 +206,26 @@ class UnoEngine {
     }
     if (hasLegalPlay(playerIndex)) {
       actions.add(UnoActionType.play);
-    } else {
+    }
+    if (pendingDraw > 0 || !hasLegalPlay(playerIndex)) {
       actions.add(UnoActionType.draw);
     }
     return actions;
   }
 
   bool canPlay(int playerIndex, UnoCard card) {
-    if (playerIndex < 0 ||
-        playerIndex >= players.length ||
-        topDiscard == null ||
-        !card.matches(topDiscard!, currentColor)) {
+    if (playerIndex < 0 || playerIndex >= players.length || topDiscard == null) {
       return false;
     }
     if (status == UnoStatus.awaitingDrawnPlay && card.id != drawnCardId) {
       return false;
     }
-    return true;
+    if (pendingDraw > 0) {
+      return card.isDrawStack &&
+          (status == UnoStatus.active ||
+              status == UnoStatus.awaitingWd4Challenge);
+    }
+    return card.matches(topDiscard!, currentColor);
   }
 
   bool hasLegalPlay(int playerIndex) {
@@ -309,15 +315,16 @@ class UnoEngine {
           currentIndex = _nextActive(dealerIndex);
         }
       case UnoCardKind.drawTwo:
-        _drawCards(first, 2);
-        currentIndex = _nextActive(first);
+        pendingDraw = 2;
       case UnoCardKind.number || UnoCardKind.wild || UnoCardKind.wildDrawFour:
         break;
     }
   }
 
   void _applyPlay(UnoAction action) {
-    if (status != UnoStatus.active && status != UnoStatus.awaitingDrawnPlay) {
+    if (status != UnoStatus.active &&
+        status != UnoStatus.awaitingDrawnPlay &&
+        status != UnoStatus.awaitingWd4Challenge) {
       throw StateError('cannot play while status is $status');
     }
     final playerIndex = currentIndex;
@@ -333,7 +340,14 @@ class UnoEngine {
     if (status == UnoStatus.awaitingDrawnPlay && card.id != drawnCardId) {
       throw StateError('only the drawn card may be played');
     }
-    if (topDiscard == null || !card.matches(topDiscard!, currentColor)) {
+    if (topDiscard == null) {
+      throw StateError('card does not match');
+    }
+    if (pendingDraw > 0) {
+      if (!card.isDrawStack) {
+        throw StateError('only +2 or +4 can stack on a pending draw');
+      }
+    } else if (!card.matches(topDiscard!, currentColor)) {
       throw StateError('card does not match');
     }
     final chosenColor = action.color;
@@ -390,11 +404,11 @@ class UnoEngine {
         status = UnoStatus.active;
       case UnoCardKind.drawTwo:
         currentColor = card.color;
-        final target = _nextActive(playerIndex);
-        pendingDraw = 2;
-        _drawCards(target, pendingDraw);
-        pendingDraw = 0;
-        currentIndex = _nextActive(target);
+        pendingDraw += 2;
+        wild4PlayerIndex = -1;
+        wild4WasLegal = false;
+        wild4ProofCard = null;
+        currentIndex = _nextActive(playerIndex);
         status = UnoStatus.active;
       case UnoCardKind.wild:
         if (chosenColor == null) {
@@ -409,7 +423,7 @@ class UnoEngine {
       case UnoCardKind.wildDrawFour:
         wild4PlayerIndex = playerIndex;
         wild4WasLegal = wild4Legal;
-        pendingDraw = 4;
+        pendingDraw += 4;
         if (chosenColor == null) {
           colorChooserIndex = playerIndex;
           status = UnoStatus.awaitingColor;
@@ -424,13 +438,15 @@ class UnoEngine {
   }
 
   void _applyDraw() {
-    if (status == UnoStatus.awaitingWd4Challenge) {
+    if (status == UnoStatus.awaitingWd4Challenge ||
+        (status == UnoStatus.active && pendingDraw > 0)) {
       _expireUnoWindow();
       final challenger = currentIndex;
       final actor = players[challenger].userId;
       _noteEvent('draw', actor, null);
       _drawCards(challenger, pendingDraw);
       pendingDraw = 0;
+      drawnCardId = null;
       wild4PlayerIndex = -1;
       wild4WasLegal = false;
       wild4ProofCard = null;
@@ -504,6 +520,7 @@ class UnoEngine {
     if (players[target].saidUno || players[target].hand.length != 1) {
       throw StateError('player is not vulnerable');
     }
+    _noteEvent('draw', players[target].userId, null);
     _drawCards(target, 2);
     unoVulnerableIndex = -1;
   }
@@ -519,8 +536,10 @@ class UnoEngine {
       throw StateError('invalid Wild Draw Four player');
     }
     if (wild4WasLegal) {
+      var penalty = pendingDraw + 2;
+      if (penalty < 6) penalty = 6;
       _noteEvent('draw', players[challenger].userId, null);
-      _drawCards(challenger, 6);
+      _drawCards(challenger, penalty);
       currentIndex = _nextActive(challenger);
     } else {
       _noteEvent('wd4_reveal', players[offender].userId, wild4ProofCard);
@@ -549,7 +568,7 @@ class UnoEngine {
     }
     currentColor = color;
     colorChooserIndex = -1;
-    if (wild4PlayerIndex == chooser && pendingDraw == 4) {
+    if (wild4PlayerIndex == chooser && pendingDraw > 0) {
       currentIndex = _nextActive(chooser);
       status = UnoStatus.awaitingWd4Challenge;
       return;
