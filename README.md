@@ -375,7 +375,7 @@ cp deploy.dev.env.example deploy.dev.env
 | `develop` | `https://multigameszozu-dev.fly.dev` |
 | `main` | `https://multigameszozu.fly.dev` |
 
-На push и PR гоняется только **Deploy Fly**. Workflow `CI` (analyze/test) сам не стартует — его можно запустить вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
+На push в `develop` гоняется только **Deploy Fly** (DEV). Workflow `CI` (analyze/test) стартует при влитии в `main` и вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
 
 Windows:
 

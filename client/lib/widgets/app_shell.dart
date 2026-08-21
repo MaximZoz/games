@@ -968,6 +968,13 @@ class AppShell extends ConsumerWidget {
             bottomNavigationBar: bottomNav,
           ),
         ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Overlay(
+              key: ref.watch(appFlyOverlayKeyProvider),
+            ),
+          ),
+        ),
         if (showUpdateBanner)
           Positioned(
             left: 12,
