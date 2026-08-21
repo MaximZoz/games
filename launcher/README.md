@@ -120,7 +120,8 @@ chmod +x launcher/setup_fly_dev.sh launcher/deploy_dev.sh
 ```
 
 Прод остаётся в `fly.toml` / `deploy.cursor.env`. DEV — `fly.dev.toml` / `deploy.dev.env`.  
-Автодеплой: push в `develop` → DEV, push в `main` → прод (см. `.github/workflows/deploy.yml`).  
+Автодеплой: push в `develop` → DEV, push в `main` → прод (см. `.github/workflows/deploy.yml`).
+CI (analyze/test): автоматически при влитии в `main` (`.github/workflows/ci.yml`).  
 Подробнее: [docs/DEPLOY_FLY_DEV.md](../docs/DEPLOY_FLY_DEV.md).
 
 ---

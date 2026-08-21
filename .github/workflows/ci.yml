@@ -1,9 +1,12 @@
 name: CI
 
-# Автопрогон на push/PR отключён — минуты Actions уходят на деплой.
+# Автопрогон: только после влития в main (push).
+# На PR и develop не стартует — минуты Actions уходят на деплой.
 # Локально: ./launcher/test.sh (или команды из README).
 # Вручную: Actions → CI → Run workflow.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
