@@ -723,7 +723,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return card.id == game.drawnCardId;
     }
     if (game.pendingDraw > 0) {
-      return card.isDrawStack &&
+      return card.stacksOn(game.topDiscard!) &&
           (game.status == UnoStatus.active ||
               game.status == UnoStatus.awaitingWd4Challenge);
     }
@@ -1105,8 +1105,15 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             }
             return 0;
           }));
+    // Нижняя зона (веер) исключена — полоса свайпа/крестика не перехватывает
+    // крайнюю левую карту, как в дураке.
+    final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
     return SwipeBackScope(
       onBack: _onClose,
+      opaqueEdge: false,
+      edgeWidth: 16,
+      triggerDistance: 44,
+      bottomInset: swipeBottomExclude,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -1340,25 +1347,31 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           TurnTimerBorder(
             active: !game.isOver &&
                 !_dealing &&
+                !entry.value.forfeited &&
                 game.turnTimeSec > 0 &&
                 entry.key == game.currentIndex,
             turnDeadline: game.turnDeadline,
             turnTimeSec: game.turnTimeSec,
             borderWidth: 2.5,
             radius: 16,
-            showIdleBorder: true,
+            showIdleBorder: !entry.value.forfeited,
             onExpired: _onTurnTimeExpired,
-            child: _OpponentHand(
+            child: UnoOpponentHand(
               key: _opponentKeys.putIfAbsent(entry.key, GlobalKey.new),
               player: entry.value,
               name: _playerName(entry.value, entry.key),
-              active: !game.isOver && entry.key == game.currentIndex,
-              displayCount: _dealing
-                  ? (_dealOppShown[entry.key] ?? 0)
-                  : math.max(
-                      0,
-                      entry.value.handCount - (_pendingOppDraw[entry.key] ?? 0),
-                    ),
+              active: !game.isOver &&
+                  !entry.value.forfeited &&
+                  entry.key == game.currentIndex,
+              displayCount: entry.value.forfeited
+                  ? 0
+                  : _dealing
+                      ? (_dealOppShown[entry.key] ?? 0)
+                      : math.max(
+                          0,
+                          entry.value.handCount -
+                              (_pendingOppDraw[entry.key] ?? 0),
+                        ),
               onProfileTap: entry.value.isBot
                   ? null
                   : () => unawaited(_openOpponentProfile(
@@ -1741,8 +1754,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 }
 
-class _OpponentHand extends StatelessWidget {
-  const _OpponentHand({
+class UnoOpponentHand extends StatelessWidget {
+  const UnoOpponentHand({
     super.key,
     required this.player,
     required this.name,
@@ -1761,89 +1774,102 @@ class _OpponentHand extends StatelessWidget {
   Widget build(BuildContext context) {
     final narrow = isNarrow(context);
     final size = narrow ? const Size(28, 42) : const Size(34, 51);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onProfileTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: narrow ? 8 : 11,
-            vertical: narrow ? 5 : 7,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceCard.withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GamePlayerAvatar(
-                displayName: name,
-                avatarKind: player.avatarKind,
-                avatarValue: player.avatarValue,
-                frameCode: player.frameCode,
-                frameColor: player.frameColor,
-                compact: true,
-              ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: size.width + 10,
-                height: size.height,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 8,
-                      child: UnoCardBackWidget(size: size, elevated: false),
-                    ),
-                    UnoCardBackWidget(size: size, elevated: false),
-                  ],
+    final left = player.forfeited;
+    return Opacity(
+      opacity: left ? 0.45 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onProfileTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: narrow ? 8 : 11,
+              vertical: narrow ? 5 : 7,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GamePlayerAvatar(
+                  displayName: name,
+                  avatarKind: player.avatarKind,
+                  avatarValue: player.avatarValue,
+                  frameCode: player.frameCode,
+                  frameColor: player.frameColor,
+                  compact: true,
                 ),
-              ),
-              const SizedBox(width: 6),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: narrow ? 84 : 120),
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: active
-                            ? AppColors.accentStart
-                            : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: size.width + 10,
+                  height: size.height,
+                  child: left
+                      ? null
+                      : Stack(
+                          children: [
+                            Positioned(
+                              left: 8,
+                              child:
+                                  UnoCardBackWidget(size: size, elevated: false),
+                            ),
+                            UnoCardBackWidget(size: size, elevated: false),
+                          ],
+                        ),
+                ),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: narrow ? 84 : 120),
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: left
+                              ? AppColors.textSecondary
+                              : active
+                                  ? AppColors.accentStart
+                                  : AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          decoration:
+                              left ? TextDecoration.lineThrough : null,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    context.l10n.unoCardsCount(displayCount),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
+                    Text(
+                      context.l10n.unoCardsCount(displayCount),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                  Text(
-                    context.l10n.unoScore(player.score),
-                    style: const TextStyle(
-                      color: AppColors.accentStart,
-                      fontSize: 10,
+                    Text(
+                      context.l10n.unoScore(player.score),
+                      style: TextStyle(
+                        color: left
+                            ? AppColors.textSecondary
+                            : AppColors.accentStart,
+                        fontSize: 10,
+                      ),
                     ),
+                  ],
+                ),
+                if (player.saidUno && !left) ...[
+                  const SizedBox(width: 5),
+                  const Icon(
+                    Icons.campaign_rounded,
+                    size: 18,
+                    color: Color(0xFFE53935),
                   ),
                 ],
-              ),
-              if (player.saidUno) ...[
-                const SizedBox(width: 5),
-                const Icon(
-                  Icons.campaign_rounded,
-                  size: 18,
-                  color: Color(0xFFE53935),
-                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -1936,6 +1962,12 @@ class _UnoRoundScoreOverlay extends StatelessWidget {
                               fontWeight: i == winnerIndex
                                   ? FontWeight.w800
                                   : FontWeight.w500,
+                              color: game.players[i].forfeited
+                                  ? AppColors.textSecondary
+                                  : null,
+                              decoration: game.players[i].forfeited
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                           ),
                         ),

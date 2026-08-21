@@ -401,8 +401,8 @@ func (g *Game) applyPlay(action Action) error {
 	}
 	top := g.DiscardPile[len(g.DiscardPile)-1]
 	if g.PendingDraw > 0 {
-		if !card.isDrawStack() {
-			return fmt.Errorf("uno: only +2 or +4 can stack on a pending draw")
+		if !card.stacksOn(top) {
+			return fmt.Errorf("uno: only the same +2 or +4 can stack")
 		}
 	} else if !card.Matches(top, g.CurrentColor) {
 		return fmt.Errorf("uno: card %q does not match", card.ID)
@@ -831,15 +831,15 @@ func (g *Game) hasLegalPlay(playerIndex int) bool {
 	if playerIndex < 0 || playerIndex >= len(g.Players) || len(g.DiscardPile) == 0 {
 		return false
 	}
+	top := g.DiscardPile[len(g.DiscardPile)-1]
 	if g.PendingDraw > 0 {
 		for _, card := range g.Players[playerIndex].Hand {
-			if card.isDrawStack() {
+			if card.stacksOn(top) {
 				return true
 			}
 		}
 		return false
 	}
-	top := g.DiscardPile[len(g.DiscardPile)-1]
 	hasCurrentColor := false
 	for _, card := range g.Players[playerIndex].Hand {
 		if !card.isWild() && card.Color == g.CurrentColor {

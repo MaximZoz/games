@@ -221,7 +221,7 @@ class UnoEngine {
       return false;
     }
     if (pendingDraw > 0) {
-      return card.isDrawStack &&
+      return card.stacksOn(topDiscard!) &&
           (status == UnoStatus.active ||
               status == UnoStatus.awaitingWd4Challenge);
     }
@@ -344,8 +344,8 @@ class UnoEngine {
       throw StateError('card does not match');
     }
     if (pendingDraw > 0) {
-      if (!card.isDrawStack) {
-        throw StateError('only +2 or +4 can stack on a pending draw');
+      if (!card.stacksOn(topDiscard!)) {
+        throw StateError('only the same +2 or +4 can stack');
       }
     } else if (!card.matches(topDiscard!, currentColor)) {
       throw StateError('card does not match');

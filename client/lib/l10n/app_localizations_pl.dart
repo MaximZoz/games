@@ -612,7 +612,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoIntro => 'Każdy dostaje 7 kart. Zagraj kartę tego samego koloru lub tej samej wartości (cyfra albo ta sama akcja).';
 
   @override
-  String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 i +4 można kłaść na siebie: kara się sumuje (dwa +2 — następny dobiera 4). Kto nie odpowie, dobiera cały stos i traci turę.';
+  String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 kładzie się tylko na +2, a +4 tylko na +4: kara się sumuje (dwa +2 — następny dobiera 4). +2 na +4 kłaść nie wolno. Kto nie odpowie, dobiera cały stos i traci turę.';
 
   @override
   String get rulesUnoWild => 'Czarna karta ustala nowy kolor. +4 tylko gdy nie masz karty bieżącego koloru. Przeciwnik może zakwestionować: jeśli +4 było legalne, dobiera 6; jeśli nie — autor +4 dobiera 4, a kwestionujący gra.';

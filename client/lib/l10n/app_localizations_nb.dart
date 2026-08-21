@@ -612,7 +612,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesUnoIntro => 'Hver spiller får 7 kort. Spill et kort i samme farge eller samme rang (tall eller samme handling).';
 
   @override
-  String get rulesUnoPlay => 'Hopp over — neste mister turen. Retningsbytte med to spillere virker som hopp over. +2 og +4 kan stables: straffen summeres (to +2 gjør at neste trekker 4). Den som ikke stabler trekker hele bunken og mister turen.';
+  String get rulesUnoPlay => 'Hopp over — neste mister turen. Retningsbytte med to spillere virker som hopp over. +2 stables bare på +2 og +4 bare på +4: straffen summeres (to +2 gjør at neste trekker 4). +2 kan ikke legges på +4. Den som ikke stabler trekker hele bunken og mister turen.';
 
   @override
   String get rulesUnoWild => 'Et svart kort setter ny farge. Spill +4 bare hvis du ikke har kort i gjeldende farge. Motstanderen kan utfordre: var +4 lovlig, trekker hen 6; ellers trekker +4-spilleren 4 og utfordreren spiller.';

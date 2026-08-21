@@ -612,7 +612,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesUnoIntro => 'Iedereen krijgt 7 kaarten. Speel een kaart van dezelfde kleur of dezelfde rang (cijfer of dezelfde actie).';
 
   @override
-  String get rulesUnoPlay => 'Overslaan — de volgende mist een beurt. Omkeren met twee spelers werkt als Overslaan. +2 en +4 mogen gestapeld: de straf telt op (twee +2 betekent 4 trekken). Wie niet stapelt trekt de hele stapel en slaat over.';
+  String get rulesUnoPlay => 'Overslaan — de volgende mist een beurt. Omkeren met twee spelers werkt als Overslaan. +2 stapelt alleen op +2 en +4 alleen op +4: de straf telt op (twee +2 betekent 4 trekken). +2 mag niet op +4. Wie niet stapelt trekt de hele stapel en slaat over.';
 
   @override
   String get rulesUnoWild => 'Een zwarte kaart kiest een nieuwe kleur. Speel +4 alleen zonder kaart van de huidige kleur. De volgende mag challengen: was +4 legaal, trekt hij 6; zo niet, trekt de +4-speler 4 en de challenger speelt.';

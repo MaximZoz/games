@@ -62,6 +62,8 @@ class UnoCard {
   bool get isDrawStack =>
       kind == UnoCardKind.drawTwo || kind == UnoCardKind.wildDrawFour;
 
+  bool stacksOn(UnoCard top) => isDrawStack && kind == top.kind;
+
   int get points => switch (kind) {
         UnoCardKind.number => number,
         UnoCardKind.skip || UnoCardKind.reverse || UnoCardKind.drawTwo => 20,
