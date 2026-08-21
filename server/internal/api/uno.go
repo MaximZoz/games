@@ -20,6 +20,7 @@ const (
 	unoBotID      = "bot:uno"
 	unoStatusOver = "over"
 	unoBotDelay   = 700 * time.Millisecond
+	unoRoundPause = 2500 * time.Millisecond
 )
 
 type createUnoLobbyBody struct {
@@ -585,7 +586,9 @@ func (h *GamesHandler) GetUnoGame(w http.ResponseWriter, r *http.Request, gameID
 		WriteErr(w, r, http.StatusInternalServerError, "bad state")
 		return
 	}
-	if m["status"] == gameStatusActive && unoCurrentPlayerIsBot(state) {
+	if m["status"] == gameStatusActive && state.Status == uno.StatusBetweenRounds {
+		h.scheduleUnoNextRound(gameID)
+	} else if m["status"] == gameStatusActive && unoCurrentPlayerIsBot(state) {
 		h.scheduleUnoBotAct(gameID)
 	}
 	writeJSON(w, http.StatusOK, h.unoViewFor(ctx, state, userID.String(), m, gameID))
@@ -701,9 +704,17 @@ func validateUnoActionActor(state *uno.Game, playerIndex int, action uno.Action)
 	}
 	switch action.Type {
 	case uno.ActionPlay, uno.ActionDraw, uno.ActionKeep,
-		uno.ActionChallengeWD4, uno.ActionChooseColor:
+		uno.ActionChallengeWD4:
 		if state.CurrentIndex != playerIndex {
 			return fmt.Errorf("not your turn")
+		}
+	case uno.ActionChooseColor:
+		if state.ColorChooserIndex != playerIndex && state.CurrentIndex != playerIndex {
+			return fmt.Errorf("not your turn")
+		}
+	case uno.ActionNextRound:
+		if state.Status != uno.StatusBetweenRounds {
+			return fmt.Errorf("next round is not pending")
 		}
 	case uno.ActionChallengeUno:
 		if state.CurrentIndex != playerIndex {
@@ -944,8 +955,14 @@ func (h *GamesHandler) broadcastUnoState(gameID string, m map[string]string) {
 }
 
 func (h *GamesHandler) notifyUnoTurn(gameID string, state *uno.Game) {
-	if state == nil || state.IsOver() ||
-		state.CurrentIndex < 0 || state.CurrentIndex >= len(state.Players) {
+	if state == nil || state.IsOver() {
+		return
+	}
+	if state.Status == uno.StatusBetweenRounds {
+		h.scheduleUnoNextRound(gameID)
+		return
+	}
+	if state.CurrentIndex < 0 || state.CurrentIndex >= len(state.Players) {
 		return
 	}
 	playerID := state.Players[state.CurrentIndex].UserID
@@ -1147,7 +1164,8 @@ func (h *GamesHandler) unoViewFor(
 	payload["is_my_turn"] = viewerIndex >= 0 &&
 		viewerIndex == state.CurrentIndex &&
 		!state.Players[viewerIndex].Forfeited &&
-		!state.IsOver()
+		!state.IsOver() &&
+		state.Status != uno.StatusBetweenRounds
 	payload["is_over"] = state.IsOver()
 	payload["is_forfeit"] = m["forfeit"] == "1" && state.IsOver()
 	payload["is_timeout"] = m["timeout"] == "1"
@@ -1167,10 +1185,16 @@ func unoPlayerIndex(state *uno.Game, userID string) int {
 }
 
 func unoCurrentPlayerIsBot(state *uno.Game) bool {
-	return state != nil &&
-		state.CurrentIndex >= 0 &&
-		state.CurrentIndex < len(state.Players) &&
-		isBot(state.Players[state.CurrentIndex].UserID)
+	if state == nil || state.IsOver() || state.Status == uno.StatusBetweenRounds {
+		return false
+	}
+	index := state.CurrentIndex
+	if state.Status == uno.StatusAwaitingColor {
+		index = state.ColorChooserIndex
+	}
+	return index >= 0 &&
+		index < len(state.Players) &&
+		isBot(state.Players[index].UserID)
 }
 
 func unoHumanUUIDs(playerIDs []string) []uuid.UUID {

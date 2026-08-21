@@ -71,6 +71,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   UnoCard? _discardOverride;
   int _seenEventSeq = 0;
   int _dealHeroShown = 0;
+  int _seenRoundNumber = 0;
+  int _seenLastRoundNumber = 0;
+  bool _roundOverlayDismissed = false;
   final Map<int, int> _dealOppShown = {};
 
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
@@ -115,6 +118,19 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       isNarrow(context) ? const Size(52, 78) : const Size(62, 93);
 
   void _observeView(UnoGameView game) {
+    if (_seenRoundNumber != 0 &&
+        game.roundNumber != _seenRoundNumber &&
+        game.status == UnoStatus.active) {
+      _dealAnimated = false;
+      _discardOverride = null;
+      _hiddenHandIds.clear();
+      _localPlayedIds.clear();
+    }
+    _seenRoundNumber = game.roundNumber;
+    if (game.lastRoundNumber != _seenLastRoundNumber) {
+      _seenLastRoundNumber = game.lastRoundNumber;
+      _roundOverlayDismissed = false;
+    }
     final topId = game.topDiscard?.id;
     if (!_dealAnimated) {
       _seenEventSeq = game.eventSeq;
@@ -221,7 +237,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       for (var playerIndex = 0;
           playerIndex < game.players.length;
           playerIndex++) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         if (game.players[playerIndex].forfeited) continue;
         final isMe = playerIndex == game.myIndex;
         final target = isMe
@@ -264,12 +282,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
     }
     await Future<void>.delayed(const Duration(milliseconds: 220));
-    if (mounted) {
-      setState(() {
-        _dealing = false;
-        _busy = false;
-      });
-    }
+    if (!mounted) return;
+    setState(() {
+      _dealing = false;
+      _busy = false;
+    });
   }
 
   Future<void> _animateOpponentPlay(UnoGameView game, int playerIndex) async {
@@ -940,6 +957,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _lastLocalDrawActor = null;
       _lastLocalPlayCardId = null;
     });
+    _seenRoundNumber = 0;
+    _seenLastRoundNumber = 0;
+    _roundOverlayDismissed = false;
     session.restart();
   }
 
@@ -1098,6 +1118,23 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
           child: table,
         ),
+        if (!_roundOverlayDismissed &&
+            (game.isBetweenRounds || (game.isOver && game.hasRoundResult)))
+          Positioned.fill(
+            child: _UnoRoundScoreOverlay(
+              game: game,
+              nameOf: (player, index) => _playerName(player, index),
+              onContinue: _busy
+                  ? null
+                  : () {
+                      if (game.isBetweenRounds) {
+                        unawaited(_move(UnoActionType.nextRound));
+                      } else {
+                        setState(() => _roundOverlayDismissed = true);
+                      }
+                    },
+            ),
+          ),
         if (game.isOver && game.iWon)
           const Positioned.fill(child: GameConfettiOverlay()),
       ],
@@ -1170,6 +1207,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   String _statusHint(UnoGameView game) {
+    if (game.isBetweenRounds) return context.l10n.unoRoundScoresTitle;
     if (game.mustChooseColor) return context.l10n.unoChooseColorHint;
     if (game.canChallengeWd4) return context.l10n.unoWd4Hint;
     if (game.canKeepOrPlayDrawn) return context.l10n.unoDrawnHint;
@@ -1370,6 +1408,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Widget _buildActions(UnoGameView game) {
+    if (game.isBetweenRounds) {
+      return FilledButton.icon(
+        onPressed: _busy ? null : () => _move(UnoActionType.nextRound),
+        icon: const Icon(Icons.skip_next_rounded),
+        label: Text(context.l10n.unoRoundContinue),
+      );
+    }
     if (game.isOver) {
       return _isOffline
           ? FilledButton.icon(
@@ -1647,6 +1692,124 @@ class _OpponentHand extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _UnoRoundScoreOverlay extends StatelessWidget {
+  const _UnoRoundScoreOverlay({
+    required this.game,
+    required this.nameOf,
+    this.onContinue,
+  });
+
+  final UnoGameView game;
+  final String Function(UnoPlayerView player, int index) nameOf;
+  final VoidCallback? onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final narrow = isNarrow(context);
+    final winnerIndex = game.players.indexWhere(
+      (player) => player.id == game.lastRoundWinnerUserId,
+    );
+    final winnerName = winnerIndex >= 0
+        ? nameOf(game.players[winnerIndex], winnerIndex)
+        : l10n.commonPlayer;
+    return Material(
+      color: Colors.black.withValues(alpha: 0.55),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: narrow ? 340 : 420,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          ),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.fromLTRB(
+              narrow ? 16 : 22,
+              narrow ? 16 : 22,
+              narrow ? 16 : 22,
+              narrow ? 14 : 18,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.unoRoundScoresTitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.unoRoundWonBy(winnerName),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.accentStart,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.unoRoundPointsAwarded(game.lastRoundPoints),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  for (var i = 0; i < game.players.length; i++) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            nameOf(game.players[i], i),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: i == winnerIndex
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.unoScore(game.players[i].score),
+                          style: TextStyle(
+                            color: i == winnerIndex
+                                ? AppColors.accentStart
+                                : AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (i != game.players.length - 1) const SizedBox(height: 6),
+                  ],
+                  if (onContinue != null) ...[
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: onContinue,
+                      child: Text(l10n.unoRoundContinue),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

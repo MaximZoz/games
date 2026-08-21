@@ -621,13 +621,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoDraw => 'Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.';
 
   @override
-  String get rulesUnoWin => 'Maçı 100 puana ilk ulaşan kazanır. Turu elini bitiren kazanır.';
+  String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.';
 
   @override
   String get rulesUnoCall => 'Bir kart kaldığında «Uno!»ya basın. Sonraki hamleden önce rakip sizi Unosuz yakalayabilir — o zaman 2 kart çekersiniz.';
 
   @override
-  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. Maç 100 puana kadardır.';
+  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 300.';
 
   @override
   String get unoColorRed => 'Kırmızı';
@@ -716,6 +716,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String unoWinner(String name) {
     return 'Kazanan: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name turu kazanır';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'İleri';
+
+  @override
+  String get unoRoundScoresTitle => 'Tur puanı';
 
   @override
   String get unoDirectionClockwise => 'Saat yönünde';

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/uno/uno_bot.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/games/uno/uno_engine.dart';
 
@@ -132,5 +133,62 @@ void main() {
     expect(engine.players[0].score, 100);
     expect(engine.status, UnoStatus.over);
     expect(engine.winnerUserIds, ['p0']);
+    expect(engine.lastRoundPoints, 25);
+    expect(engine.lastRoundWinnerUserId, 'p0');
+  });
+
+  test('heads-up target is 100 and 3+ players target is 300', () {
+    final two = UnoEngine.newGame(playerIds: ['a', 'b'], seed: 1);
+    final three = UnoEngine.newGame(playerIds: ['a', 'b', 'c'], seed: 1);
+    expect(two.targetScore, 100);
+    expect(three.targetScore, 300);
+  });
+
+  test('round below target pauses so scores stay visible', () {
+    final winning = number('winning', UnoColor.red, 9);
+    final engine = controlled(
+      firstHand: [winning],
+      secondHand: [number('five', UnoColor.yellow, 5)],
+    );
+
+    engine.apply(UnoAction(UnoActionType.play, cardId: winning.id));
+
+    expect(engine.status, UnoStatus.betweenRounds);
+    expect(engine.players[0].score, 5);
+    expect(engine.lastRoundPoints, 5);
+    expect(engine.lastRoundWinnerUserId, 'p0');
+    expect(engine.roundNumber, 1);
+
+    engine.apply(const UnoAction(UnoActionType.nextRound));
+
+    expect(engine.status, UnoStatus.active);
+    expect(engine.roundNumber, 2);
+    expect(engine.players[0].score, 5);
+    expect(engine.players[0].hand, hasLength(7));
+    expect(engine.players[1].hand, hasLength(7));
+  });
+
+  test('bot draws on Wild Draw Four instead of stalling', () {
+    final wildDrawFour = action(
+      'wild-draw-four',
+      UnoColor.wild,
+      UnoCardKind.wildDrawFour,
+    );
+    final engine = controlled(
+      firstHand: [wildDrawFour, number('remain', UnoColor.yellow, 2)],
+    );
+    engine.apply(UnoAction(
+      UnoActionType.play,
+      cardId: wildDrawFour.id,
+      color: UnoColor.blue,
+    ));
+    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.currentIndex, 1);
+
+    engine.apply(pickUnoBotAction(engine));
+
+    expect(engine.status, UnoStatus.active);
+    expect(engine.players[1].hand.length, greaterThanOrEqualTo(5));
+    expect(engine.currentIndex, 0);
   });
 }

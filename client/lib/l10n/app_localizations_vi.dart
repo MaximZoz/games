@@ -621,13 +621,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoDraw => 'Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.';
 
   @override
-  String get rulesUnoWin => 'Thắng trận là người đạt 100 điểm trước. Thắng vòng là người hết bài.';
+  String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 300. Thắng vòng là người hết bài.';
 
   @override
   String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!». Trước hành động tiếp theo đối thủ có thể bắt bạn không Uno — khi đó bạn rút 2 lá.';
 
   @override
-  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. Trận đến 100 điểm.';
+  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 300.';
 
   @override
   String get unoColorRed => 'Đỏ';
@@ -716,6 +716,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String unoWinner(String name) {
     return 'Người thắng: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name thắng vòng';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Tiếp';
+
+  @override
+  String get unoRoundScoresTitle => 'Điểm vòng';
 
   @override
   String get unoDirectionClockwise => 'Theo chiều kim đồng hồ';

@@ -621,13 +621,13 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesUnoDraw => 'Сәйкес карта жоқ болса — колодадан біреуін алыңыз. Сәйкес келсе, бірден жүруге немесе қалдырып жүрісті беруге болады. Жүріс бар кезде алуға болмайды.';
 
   @override
-  String get rulesUnoWin => 'Матчты 100 ұпайға бірінші жеткен ұтады. Раундты барлық картасын тастаған ұтады.';
+  String get rulesUnoWin => 'Екеуара 100, 3+ ойыншыда 300. Раундты барлық картасын тастаған ұтады.';
 
   @override
   String get rulesUnoCall => 'Бір карта қалғанда «Уно!» басыңыз. Келесі әрекетке дейін қарсылас сізді Уносыз ұстауы мүмкін — сонда 2 карта аласыз.';
 
   @override
-  String get rulesUnoScoring => 'Карталарын бірінші тастаған раундты ұтып, қарсыластар қолынан ұпай алады: сандар — номинал, арнайылар — 20, қаралар — 50. Матч 100 ұпайға дейін.';
+  String get rulesUnoScoring => 'Карталарын бірінші тастаған раундты ұтып, қарсыластар қолынан ұпай алады: сандар — номинал, арнайылар — 20, қаралар — 50. Екеуара 100, 3+ ойыншыда 300.';
 
   @override
   String get unoColorRed => 'Қызыл';
@@ -716,6 +716,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String unoWinner(String name) {
     return 'Жеңімпаз: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name раундты ұтады';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Келесі';
+
+  @override
+  String get unoRoundScoresTitle => 'Раунд ұпайы';
 
   @override
   String get unoDirectionClockwise => 'Сағат тілімен';

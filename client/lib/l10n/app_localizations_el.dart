@@ -621,13 +621,13 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesUnoDraw => 'Χωρίς νόμιμη κάρτα, τραβήξτε μία από την τράπουλα. Αν ταιριάζει, παίξτε την τώρα ή κρατήστε την και περάστε. Δεν τραβάτε όσο έχετε νόμιμη κίνηση.';
 
   @override
-  String get rulesUnoWin => 'Τον αγώνα κερδίζει όποιος φτάσει πρώτος τους 100 πόντους. Τον γύρο κερδίζει όποιος αδειάζει το χέρι.';
+  String get rulesUnoWin => 'Στους δύο ως 100, με 3+ ως 300. Τον γύρο κερδίζει όποιος αδειάζει το χέρι.';
 
   @override
   String get rulesUnoCall => 'Όταν μένει μία κάρτα, πατήστε «Uno!». Μέχρι την επόμενη ενέργεια ο αντίπαλος μπορεί να σας πιάσει χωρίς Uno — τότε τραβάτε 2 κάρτες.';
 
   @override
-  String get rulesUnoScoring => 'Όποιος αδειάσει πρώτος το χέρι κερδίζει τον γύρο και παίρνει πόντους από τα χέρια των αντιπάλων: αριθμοί στην αξία, ενέργειες 20, μαύρες 50. Ο αγώνας πάει στους 100 πόντους.';
+  String get rulesUnoScoring => 'Όποιος αδειάσει πρώτος το χέρι κερδίζει τον γύρο και παίρνει πόντους από τα χέρια των αντιπάλων: αριθμοί στην αξία, ενέργειες 20, μαύρες 50. Στους δύο ως 100, με 3+ ως 300.';
 
   @override
   String get unoColorRed => 'Κόκκινο';
@@ -716,6 +716,22 @@ class AppLocalizationsEl extends AppLocalizations {
   String unoWinner(String name) {
     return 'Νικητής: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return 'Ο/Η $name κερδίζει τον γύρο';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Επόμενο';
+
+  @override
+  String get unoRoundScoresTitle => 'Σκορ γύρου';
 
   @override
   String get unoDirectionClockwise => 'Δεξιόστροφα';

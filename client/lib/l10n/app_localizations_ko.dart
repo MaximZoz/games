@@ -621,13 +621,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesUnoDraw => '낼 카드가 없으면 덱에서 한 장 뽑습니다. 맞으면 바로 내거나 들고 턴을 넘길 수 있습니다. 낼 수 있는 카드가 있으면 뽑을 수 없습니다.';
 
   @override
-  String get rulesUnoWin => '경기는 먼저 100점에 도달한 사람이 이깁니다. 라운드는 손을 비운 사람이 이깁니다.';
+  String get rulesUnoWin => '1대1은 100점, 3인 이상은 300점. 라운드는 손을 비운 사람이 이깁니다.';
 
   @override
   String get rulesUnoCall => '한 장 남으면 «우노!»를 누르세요. 다음 행동 전에 상대가 우노 없이 잡으면 2장을 뽑습니다.';
 
   @override
-  String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 경기는 100점까지입니다.';
+  String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 1대1은 100점, 3인 이상은 300점.';
 
   @override
   String get unoColorRed => '빨강';
@@ -716,6 +716,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String unoWinner(String name) {
     return '승자: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name 님이 라운드 승리';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '다음';
+
+  @override
+  String get unoRoundScoresTitle => '라운드 점수';
 
   @override
   String get unoDirectionClockwise => '시계 방향';

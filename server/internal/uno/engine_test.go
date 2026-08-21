@@ -432,8 +432,17 @@ func TestRoundBelowTargetStartsNextRound(t *testing.T) {
 	if err := game.Apply(Action{Type: ActionPlay, CardID: winningCard.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if game.Players[0].Score != 5 || game.RoundNumber != 2 || game.Status == StatusOver {
+	if game.Players[0].Score != 5 || game.RoundNumber != 1 || game.Status != StatusBetweenRounds {
 		t.Fatalf("score=%d round=%d status=%s", game.Players[0].Score, game.RoundNumber, game.Status)
+	}
+	if game.LastRoundPoints != 5 || game.LastRoundWinnerUserID != "p0" {
+		t.Fatalf("last round winner=%s points=%d", game.LastRoundWinnerUserID, game.LastRoundPoints)
+	}
+	if err := game.Apply(Action{Type: ActionNextRound}); err != nil {
+		t.Fatal(err)
+	}
+	if game.Players[0].Score != 5 || game.RoundNumber != 2 || game.Status == StatusOver {
+		t.Fatalf("after next: score=%d round=%d status=%s", game.Players[0].Score, game.RoundNumber, game.Status)
 	}
 	if game.DealerIndex != 1 {
 		t.Fatalf("dealer index = %d, want clockwise rotation to 1", game.DealerIndex)
@@ -442,6 +451,23 @@ func TestRoundBelowTargetStartsNextRound(t *testing.T) {
 		if len(player.Hand) < 7 {
 			t.Fatalf("new round did not deal player %s", player.UserID)
 		}
+	}
+}
+
+func TestTargetScoreDependsOnPlayerCount(t *testing.T) {
+	two, err := NewGame([]string{"a", "b"}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	three, err := NewGame([]string{"a", "b", "c"}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if two.TargetScore != DefaultTargetScore {
+		t.Fatalf("1v1 target = %d, want %d", two.TargetScore, DefaultTargetScore)
+	}
+	if three.TargetScore != MultiplayerTargetScore {
+		t.Fatalf("3p target = %d, want %d", three.TargetScore, MultiplayerTargetScore)
 	}
 }
 

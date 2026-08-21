@@ -621,13 +621,13 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesUnoDraw => 'Uden lovligt kort, træk ét fra bunken. Matcher det, kan du spille det med det samme eller beholde det og passe. Du må ikke trække, mens du har et lovligt træk.';
 
   @override
-  String get rulesUnoWin => 'Kampen vindes af den, der først når 100 point. En runde vindes ved at tømme hånden.';
+  String get rulesUnoWin => 'To spillere til 100, 3+ til 300. En runde vindes ved at tømme hånden.';
 
   @override
   String get rulesUnoCall => 'Når ét kort er tilbage, tryk på “Uno!”. Indtil næste handling kan en modstander fange dig uden Uno — så trækker du 2 kort.';
 
   @override
-  String get rulesUnoScoring => 'Den, der først tømmer hånden, vinder runden og får point for modstandernes kort: tal efter værdi, handlinger 20, sorte 50. Kampen går til 100 point.';
+  String get rulesUnoScoring => 'Den, der først tømmer hånden, vinder runden og får point for modstandernes kort: tal efter værdi, handlinger 20, sorte 50. To spillere til 100, 3+ til 300.';
 
   @override
   String get unoColorRed => 'Rød';
@@ -716,6 +716,22 @@ class AppLocalizationsDa extends AppLocalizations {
   String unoWinner(String name) {
     return 'Vinder: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vinder runden';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Næste';
+
+  @override
+  String get unoRoundScoresTitle => 'Rundepoint';
 
   @override
   String get unoDirectionClockwise => 'Med uret';

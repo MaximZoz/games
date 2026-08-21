@@ -621,13 +621,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoDraw => 'ไม่มีไพ่ที่ลงได้ ให้จั่วหนึ่งใบจากกอง ถ้าเข้ากันได้ลงทันทีหรือเก็บแล้วส่งตา ห้ามจั่วถ้ายังมีไพ่ที่ลงได้';
 
   @override
-  String get rulesUnoWin => 'ชนะแมตช์คือผู้ถึง 100 แต้มก่อน ชนะรอบคือผู้ลงไพ่หมดมือ';
+  String get rulesUnoWin => 'เดี่ยวถึง 100 แต้ม ตั้งแต่ 3 คนถึง 300 ชนะรอบคือผู้ลงไพ่หมดมือ';
 
   @override
   String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ก่อนตาถัดไป คู่แข่งจับได้ถ้าไม่กดอูโน่ — แล้วคุณจั่ว 2 ใบ';
 
   @override
-  String get rulesUnoScoring => 'ใครลงหมดก่อนชนะรอบและได้แต้มจากมือคู่แข่ง: ตัวเลขตามหน้าไพ่ พิเศษ 20 ดำ 50 แมตช์ถึง 100 แต้ม';
+  String get rulesUnoScoring => 'ใครลงหมดก่อนชนะรอบและได้แต้มจากมือคู่แข่ง: ตัวเลขตามหน้าไพ่ พิเศษ 20 ดำ 50 เดี่ยวถึง 100 ตั้งแต่ 3 คนถึง 300';
 
   @override
   String get unoColorRed => 'แดง';
@@ -716,6 +716,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String unoWinner(String name) {
     return 'ผู้ชนะ: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name ชนะรอบ';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'ต่อไป';
+
+  @override
+  String get unoRoundScoresTitle => 'คะแนนรอบ';
 
   @override
   String get unoDirectionClockwise => 'ตามเข็มนาฬิกา';

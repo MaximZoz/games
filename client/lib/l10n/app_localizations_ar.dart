@@ -621,13 +621,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesUnoDraw => 'إن لم توجد بطاقة صالحة فاسحب واحدة من الرزمة. إن ناسبت يمكنك لعبها فورًا أو الاحتفاظ بها وتمرير الدور. لا تسحب طالما لديك حركة قانونية.';
 
   @override
-  String get rulesUnoWin => 'يفوز بالمباراة من يصل أولًا إلى 100 نقطة. وتُربَح الجولة بتفريغ اليد.';
+  String get rulesUnoWin => 'اثنان حتى 100 نقطة، و3+ حتى 300. وتُربَح الجولة بتفريغ اليد.';
 
   @override
   String get rulesUnoCall => 'عند بقاء بطاقة واحدة اضغط «أونو!». حتى الإجراء التالي يمكن للخصم أن يمسكك بلا أونو — فتسحب بطاقتين.';
 
   @override
-  String get rulesUnoScoring => 'من يفرّغ يده أولًا يفوز بالجولة ويحصل على نقاط بطاقات الخصوم: الأرقام بقيمتها، الإجراءات 20، السوداء 50. المباراة حتى 100 نقطة.';
+  String get rulesUnoScoring => 'من يفرّغ يده أولًا يفوز بالجولة ويحصل على نقاط بطاقات الخصوم: الأرقام بقيمتها، الإجراءات 20، السوداء 50. اثنان حتى 100، و3+ حتى 300.';
 
   @override
   String get unoColorRed => 'أحمر';
@@ -716,6 +716,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String unoWinner(String name) {
     return 'الفائز: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name يفوز بالجولة';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'التالي';
+
+  @override
+  String get unoRoundScoresTitle => 'نقاط الجولة';
 
   @override
   String get unoDirectionClockwise => 'مع عقارب الساعة';

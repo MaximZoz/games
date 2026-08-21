@@ -7,6 +7,7 @@ abstract final class UnoStatus {
   static const awaitingColor = 'awaiting_color';
   static const awaitingWd4Challenge = 'awaiting_wd4_challenge';
   static const awaitingDrawnPlay = 'awaiting_drawn_play';
+  static const betweenRounds = 'between_rounds';
   static const over = 'over';
 }
 
@@ -19,6 +20,7 @@ abstract final class UnoActionType {
   static const challengeWd4 = 'challenge_wd4';
   static const chooseColor = 'choose_color';
   static const forfeit = 'forfeit';
+  static const nextRound = 'next_round';
 }
 
 class UnoAction {
@@ -64,7 +66,11 @@ class UnoEngine {
   });
 
   static const int defaultTargetScore = 100;
+  static const int multiplayerTargetScore = 300;
   static const int cardsPerHand = 7;
+
+  static int targetScoreForPlayerCount(int playerCount) =>
+      playerCount >= 3 ? multiplayerTargetScore : defaultTargetScore;
 
   final List<UnoPlayer> players;
   final int seed;
@@ -88,6 +94,9 @@ class UnoEngine {
   int colorChooserIndex = -1;
   int unoVulnerableIndex = -1;
   int pendingRoundWinnerIndex = -1;
+  String lastRoundWinnerUserId = '';
+  int lastRoundPoints = 0;
+  int lastRoundNumber = 0;
   bool wild4WasLegal = false;
   int shuffleCount = 0;
   int eventSeq = 0;
@@ -104,7 +113,7 @@ class UnoEngine {
   factory UnoEngine.newGame({
     required List<String> playerIds,
     int? seed,
-    int targetScore = defaultTargetScore,
+    int? targetScore,
   }) {
     if (playerIds.length < 2 || playerIds.length > 10) {
       throw ArgumentError.value(playerIds.length, 'playerIds', 'need 2..10');
@@ -113,13 +122,16 @@ class UnoEngine {
         playerIds.toSet().length != playerIds.length) {
       throw ArgumentError.value(playerIds, 'playerIds', 'must be unique');
     }
+    final resolved = targetScore == null || targetScore <= 0
+        ? targetScoreForPlayerCount(playerIds.length)
+        : targetScore;
     final engine = UnoEngine._(
       players: [
         for (var i = 0; i < playerIds.length; i++)
           UnoPlayer(userId: playerIds[i], seat: i),
       ],
       seed: seed ?? DateTime.now().microsecondsSinceEpoch,
-      targetScore: targetScore <= 0 ? defaultTargetScore : targetScore,
+      targetScore: resolved,
     );
     engine._startRound();
     return engine;
@@ -153,6 +165,11 @@ class UnoEngine {
   List<String> legalActions(int playerIndex) {
     if (isOver || playerIndex < 0 || playerIndex >= players.length) {
       return const [];
+    }
+    if (status == UnoStatus.betweenRounds) {
+      return players[playerIndex].forfeited
+          ? const []
+          : const [UnoActionType.nextRound];
     }
     final actions = <String>[];
     if (unoVulnerableIndex >= 0 &&
@@ -212,6 +229,17 @@ class UnoEngine {
 
   void apply(UnoAction action) {
     if (isOver) throw StateError('match is over');
+    if (action.type == UnoActionType.nextRound) {
+      _applyNextRound();
+      return;
+    }
+    if (action.type == UnoActionType.forfeit) {
+      _applyForfeit(action.actorUserId);
+      return;
+    }
+    if (status == UnoStatus.betweenRounds) {
+      throw StateError('wait for the next round');
+    }
     lastDrawUserId = '';
     lastDrawCount = 0;
     lastEventCard = null;
@@ -230,8 +258,6 @@ class UnoEngine {
         _applyChallengeWd4();
       case UnoActionType.chooseColor:
         _applyChooseColor(action.color);
-      case UnoActionType.forfeit:
-        _applyForfeit(action.actorUserId);
       default:
         throw StateError('unknown UNO action ${action.type}');
     }
@@ -583,6 +609,10 @@ class UnoEngine {
     drawnCardId = null;
     wild4PlayerIndex = -1;
     colorChooserIndex = -1;
+    lastRoundWinnerUserId = players[winner].userId;
+    lastRoundPoints = points;
+    lastRoundNumber = roundNumber;
+    _noteEvent('round_scored', players[winner].userId, null);
     if (players[winner].score >= targetScore) {
       status = UnoStatus.over;
       currentIndex = winner;
@@ -590,6 +620,14 @@ class UnoEngine {
         ..clear()
         ..add(players[winner].userId);
       return;
+    }
+    status = UnoStatus.betweenRounds;
+    currentIndex = winner;
+  }
+
+  void _applyNextRound() {
+    if (status != UnoStatus.betweenRounds) {
+      throw StateError('next round is not pending');
     }
     roundNumber++;
     dealerIndex = _nextActiveClockwise(dealerIndex);

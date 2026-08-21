@@ -37,10 +37,17 @@ void main() {
       'last_draw_user_id': 'p0',
       'last_draw_count': 4,
       'event_seq': 9,
+      'last_round_winner_user_id': 'p0',
+      'last_round_points': 42,
+      'last_round_number': 3,
+      'status': 'between_rounds',
     });
 
     expect(view.myIndex, 1);
-    expect(view.isMyTurn, isTrue);
+    expect(view.isBetweenRounds, isTrue);
+    expect(view.isMyTurn, isFalse);
+    expect(view.lastRoundWinnerUserId, 'p0');
+    expect(view.lastRoundPoints, 42);
     expect(view.lastEventType, 'wd4_reveal');
     expect(view.lastEventCard?.color, UnoColor.red);
     expect(view.lastDrawCount, 4);

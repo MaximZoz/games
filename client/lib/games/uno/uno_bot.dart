@@ -17,7 +17,15 @@ UnoColor chooseUnoBotColor(UnoPlayer player) {
 }
 
 UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
-  final index = game.currentIndex;
+  if (game.status == UnoStatus.betweenRounds) {
+    return const UnoAction(UnoActionType.nextRound);
+  }
+  final chooser = game.colorChooserIndex;
+  final index = game.status == UnoStatus.awaitingColor &&
+          chooser >= 0 &&
+          chooser < game.players.length
+      ? chooser
+      : game.currentIndex;
   if (index < 0 || index >= game.players.length) {
     return const UnoAction(UnoActionType.draw);
   }
@@ -31,9 +39,7 @@ UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
     );
   }
   if (game.status == UnoStatus.awaitingWd4Challenge) {
-    return UnoAction(
-      rng.nextDouble() < 0.35 ? UnoActionType.challengeWd4 : UnoActionType.draw,
-    );
+    return const UnoAction(UnoActionType.draw);
   }
   if (game.status == UnoStatus.awaitingDrawnPlay) {
     UnoCard? drawn;

@@ -621,13 +621,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoDraw => 'Ohne passende Karte ziehe eine vom Stapel. Passt sie, darfst du sie sofort spielen oder behalten und passen. Ziehen ist verboten, solange ein legaler Zug möglich ist.';
 
   @override
-  String get rulesUnoWin => 'Das Match gewinnt, wer zuerst 100 Punkte erreicht. Eine Runde gewinnt, wer alle Karten ablegt.';
+  String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 300. Eine Runde gewinnt, wer alle Karten ablegt.';
 
   @override
   String get rulesUnoCall => 'Bei einer Karte tippe auf „Uno!“. Bis zur nächsten Aktion kann ein Gegner dich ohne Uno erwischen — dann ziehst du 2 Karten.';
 
   @override
-  String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Das Match geht bis 100 Punkte.';
+  String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Zu zweit bis 100, bei drei oder mehr Spielern bis 300.';
 
   @override
   String get unoColorRed => 'Rot';
@@ -716,6 +716,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String unoWinner(String name) {
     return 'Gewinner: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name gewinnt die Runde';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Weiter';
+
+  @override
+  String get unoRoundScoresTitle => 'Rundenpunkte';
 
   @override
   String get unoDirectionClockwise => 'Im Uhrzeigersinn';

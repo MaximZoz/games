@@ -621,13 +621,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoDraw => 'Bez pasującej karty dobierz jedną z talii. Jeśli pasuje, zagraj ją od razu albo zatrzymaj i oddaj turę. Nie dobierasz, gdy masz legalny ruch.';
 
   @override
-  String get rulesUnoWin => 'Mecz wygrywa ten, kto pierwszy zdobędzie 100 punktów. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
+  String get rulesUnoWin => 'We dwóch do 100 punktów, przy 3+ graczach do 300. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
 
   @override
   String get rulesUnoCall => 'Gdy zostaje jedna karta, naciśnij „Uno!”. Do następnej akcji przeciwnik może złapać cię bez Uno — wtedy dobierasz 2 karty.';
 
   @override
-  String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. Mecz do 100 punktów.';
+  String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. We dwóch do 100, przy 3+ graczach do 300.';
 
   @override
   String get unoColorRed => 'Czerwony';
@@ -716,6 +716,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String unoWinner(String name) {
     return 'Zwycięzca: $name';
   }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name wygrywa rundę';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Dalej';
+
+  @override
+  String get unoRoundScoresTitle => 'Punkty rundy';
 
   @override
   String get unoDirectionClockwise => 'Zgodnie z ruchem wskazówek';
