@@ -115,4 +115,41 @@ void main() {
     expect(taps, 1);
     expect(backs, 0);
   });
+
+  testWidgets('bottomInset оставляет нижний левый край кликабельным',
+      (tester) async {
+    var taps = 0;
+    var backs = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SwipeBackScope(
+          opaqueEdge: false,
+          edgeWidth: 16,
+          triggerDistance: 44,
+          topInset: 0,
+          bottomInset: 240,
+          onBack: () => backs++,
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomLeft,
+              child: SizedBox(
+                width: 56,
+                height: 80,
+                child: GestureDetector(
+                  onTap: () => taps++,
+                  child: const ColoredBox(color: Colors.blue),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tapAt(const Offset(10, 560));
+    await tester.pump();
+
+    expect(taps, 1);
+    expect(backs, 0);
+  });
 }
