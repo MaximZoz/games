@@ -206,10 +206,7 @@ func (h *GamesHandler) applyUnoTurnTimeout(
 	timedOutID := state.Players[timedOutIndex].UserID
 	action := unoTimeoutAction(state)
 	if err := state.Apply(action); err != nil {
-		action = uno.Action{Type: uno.ActionForfeit, ActorUserID: timedOutID}
-		if err := state.Apply(action); err != nil {
-			return
-		}
+		return
 	}
 	h.saveUnoState(ctx, gameID, fresh, state)
 	fresh["timeout"] = "1"
@@ -282,19 +279,12 @@ func (h *GamesHandler) scheduleUnoNextRound(gameID string) {
 }
 
 func unoTimeoutAction(state *uno.Game) uno.Action {
-	switch state.Status {
-	case uno.StatusBetweenRounds:
+	if state != nil && state.Status == uno.StatusBetweenRounds {
 		return uno.Action{Type: uno.ActionNextRound}
-	case uno.StatusAwaitingColor:
-		return uno.Action{
-			Type:  uno.ActionChooseColor,
-			Color: unoBotColor(state, state.CurrentIndex),
-		}
-	case uno.StatusAwaitingWD4Challenge:
-		return uno.Action{Type: uno.ActionDraw}
-	case uno.StatusAwaitingDrawnPlay:
-		return uno.Action{Type: uno.ActionKeep}
-	default:
-		return uno.Action{Type: uno.ActionDraw}
 	}
+	actor := ""
+	if state != nil && state.CurrentIndex >= 0 && state.CurrentIndex < len(state.Players) {
+		actor = state.Players[state.CurrentIndex].UserID
+	}
+	return uno.Action{Type: uno.ActionForfeit, ActorUserID: actor}
 }

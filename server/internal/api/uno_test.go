@@ -51,6 +51,33 @@ func TestUnoBotPlaysLegalCardAndCallsUno(t *testing.T) {
 	}
 }
 
+func TestUnoTimeoutActionForfeitsCurrentPlayer(t *testing.T) {
+	state := &uno.Game{
+		Players: []uno.Player{
+			{UserID: "p0", Seat: 0},
+			{UserID: "p1", Seat: 1},
+		},
+		CurrentIndex: 1,
+		Status:       uno.StatusActive,
+	}
+	action := unoTimeoutAction(state)
+	if action.Type != uno.ActionForfeit || action.ActorUserID != "p1" {
+		t.Fatalf("timeout action = %#v, want forfeit by p1", action)
+	}
+
+	state.Status = uno.StatusAwaitingWD4Challenge
+	action = unoTimeoutAction(state)
+	if action.Type != uno.ActionForfeit {
+		t.Fatalf("wd4 timeout must forfeit, got %s", action.Type)
+	}
+
+	state.Status = uno.StatusBetweenRounds
+	action = unoTimeoutAction(state)
+	if action.Type != uno.ActionNextRound {
+		t.Fatalf("between rounds timeout = %s, want next_round", action.Type)
+	}
+}
+
 func TestValidateUnoActionActor(t *testing.T) {
 	state, err := uno.NewGame([]string{"one", "two"}, 42)
 	if err != nil {
