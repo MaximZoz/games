@@ -4,7 +4,7 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил «Уно» — соответствуют движку (7 карт, без стека +2,
-/// оспаривание +4, добор одной, вдвоём до 100, при 3+ игроках до 300).
+/// оспаривание +4, добор одной, вдвоём до 100, при 3+ игроках до 200).
 List<String> unoRuleLines({
   required int players,
   required int turnTimeSec,

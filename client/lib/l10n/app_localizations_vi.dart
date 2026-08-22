@@ -621,13 +621,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoDraw => 'Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.';
 
   @override
-  String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 300. Thắng vòng là người hết bài.';
+  String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 200. Thắng vòng là người hết bài.';
 
   @override
   String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!» ngay. Đối thủ chỉ được bắt bạn quên Uno sau một giây — khi đó bạn rút 2 lá.';
 
   @override
-  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 300.';
+  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 200.';
 
   @override
   String get unoColorRed => 'Đỏ';

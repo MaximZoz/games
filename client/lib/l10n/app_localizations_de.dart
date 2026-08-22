@@ -621,13 +621,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoDraw => 'Ohne passende Karte ziehe eine vom Stapel. Passt sie, darfst du sie sofort spielen oder behalten und passen. Ziehen ist verboten, solange ein legaler Zug möglich ist.';
 
   @override
-  String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 300. Eine Runde gewinnt, wer alle Karten ablegt.';
+  String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 200. Eine Runde gewinnt, wer alle Karten ablegt.';
 
   @override
   String get rulesUnoCall => 'Wenn noch eine Karte übrig ist, tippen Sie sofort auf „Uno!“. Gegner können Sie erst nach einer Sekunde wegen vergessenem Uno erwischen — dann ziehen Sie 2 Karten.';
 
   @override
-  String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Zu zweit bis 100, bei drei oder mehr Spielern bis 300.';
+  String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Zu zweit bis 100, bei drei oder mehr Spielern bis 200.';
 
   @override
   String get unoColorRed => 'Rot';

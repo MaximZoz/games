@@ -621,13 +621,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoDraw => '没有可出的牌时从牌堆摸 1 张。若可出，可立即打出或留下并结束回合。仍有合法出牌时不能摸牌。';
 
   @override
-  String get rulesUnoWin => '双人先到 100 分，三人及以上先到 300。一局由出完手牌者获胜。';
+  String get rulesUnoWin => '双人先到 100 分，三人及以上先到 200。一局由出完手牌者获胜。';
 
   @override
   String get rulesUnoCall => '只剩一张牌时立刻点「Uno！」。对手要等一秒后才能因没喊 Uno 抓住你——那时你摸 2 张。';
 
   @override
-  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。双人先到 100，三人及以上先到 300。';
+  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。双人先到 100，三人及以上先到 200。';
 
   @override
   String get unoColorRed => '红色';

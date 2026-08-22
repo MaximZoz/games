@@ -621,13 +621,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesUnoDraw => '낼 카드가 없으면 덱에서 한 장 뽑습니다. 맞으면 바로 내거나 들고 턴을 넘길 수 있습니다. 낼 수 있는 카드가 있으면 뽑을 수 없습니다.';
 
   @override
-  String get rulesUnoWin => '1대1은 100점, 3인 이상은 300점. 라운드는 손을 비운 사람이 이깁니다.';
+  String get rulesUnoWin => '1대1은 100점, 3인 이상은 200점. 라운드는 손을 비운 사람이 이깁니다.';
 
   @override
   String get rulesUnoCall => '한 장 남으면 바로 «우노!»를 누르세요. 상대는 1초 후에만 우노를 잊었다고 잡을 수 있고, 그때 2장을 뽑습니다.';
 
   @override
-  String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 1대1은 100점, 3인 이상은 300점.';
+  String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 1대1은 100점, 3인 이상은 200점.';
 
   @override
   String get unoColorRed => '빨강';

@@ -621,13 +621,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoDraw => 'Bez pasującej karty dobierz jedną z talii. Jeśli pasuje, zagraj ją od razu albo zatrzymaj i oddaj turę. Nie dobierasz, gdy masz legalny ruch.';
 
   @override
-  String get rulesUnoWin => 'We dwóch do 100 punktów, przy 3+ graczach do 300. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
+  String get rulesUnoWin => 'We dwóch do 100 punktów, przy 3+ graczach do 200. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
 
   @override
   String get rulesUnoCall => 'Gdy zostaje jedna karta, od razu naciśnij „Uno!”. Przeciwnicy mogą złapać cię za zapomniane Uno dopiero po sekundzie — wtedy dobierasz 2 karty.';
 
   @override
-  String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. We dwóch do 100, przy 3+ graczach do 300.';
+  String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. We dwóch do 100, przy 3+ graczach do 200.';
 
   @override
   String get unoColorRed => 'Czerwony';

@@ -10,14 +10,14 @@ const (
 	// DefaultTargetScore is the 1v1 match limit.
 	DefaultTargetScore = 100
 	// MultiplayerTargetScore is the match limit for 3+ players.
-	MultiplayerTargetScore = 300
+	MultiplayerTargetScore = 200
 	minPlayers             = 2
 	maxPlayers             = 10
 	cardsPerHand           = 7
 	unoCallGraceMs         = 1000
 )
 
-// TargetScoreForPlayerCount returns 100 for heads-up and 300 for 3+ players.
+// TargetScoreForPlayerCount returns 100 for heads-up and 200 for 3+ players.
 func TargetScoreForPlayerCount(playerCount int) int {
 	if playerCount >= 3 {
 		return MultiplayerTargetScore

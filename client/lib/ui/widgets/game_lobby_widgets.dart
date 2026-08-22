@@ -10,7 +10,6 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
-import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
@@ -306,8 +305,6 @@ class LobbyMultiPlayersCard extends ConsumerWidget {
                                       color: AppColors.accentStart,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13,
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: AppColors.accentStart,
                                     ),
                                   ),
                                 ),
@@ -703,10 +700,6 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                                         style: const TextStyle(
                                           color: AppColors.textPrimary,
                                           fontWeight: FontWeight.w500,
-                                          decoration:
-                                              TextDecoration.underline,
-                                          decorationColor:
-                                              AppColors.textPrimary,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -734,44 +727,19 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    OutlinedButton(
+                    LobbyInviteActionButton(
+                      label: declined
+                          ? context.l10n.lobbyInviteSentShort
+                          : invited
+                              ? context.l10n.commonCancel
+                              : context.l10n.lobbyInvite,
+                      busy: working,
+                      enabled: !declined,
                       onPressed: working || declined
                           ? null
                           : invited
                               ? () => onCancel(id)
                               : () => onInvite(id),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accentStart,
-                        side: BorderSide(
-                          color: AppColors.accentStart.withValues(alpha: 0.6),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isWide(context) ? 12 : 10,
-                          vertical: 6,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      child: working
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accentStart,
-                              ),
-                            )
-                          : Text(
-                              declined
-                                  ? context.l10n.lobbyInviteSentShort
-                                  : invited
-                                      ? context.l10n.commonCancel
-                                      : context.l10n.lobbyInvite,
-                            ),
                     ),
                   ],
                 ),
@@ -902,6 +870,62 @@ class LobbyFriendPresenceAvatar extends StatelessWidget {
         style: const TextStyle(
           color: AppColors.accentStart,
           fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+/// Компактная кнопка «Пригласить» / «Отмена» в списке друзей лобби.
+class LobbyInviteActionButton extends StatelessWidget {
+  const LobbyInviteActionButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.busy = false,
+    this.enabled = true,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool busy;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = enabled && onPressed != null && !busy;
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: AppColors.accentStart.withValues(alpha: active ? 0.7 : 0.35),
+        ),
+      ),
+      child: InkWell(
+        onTap: active ? onPressed : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: busy
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accentStart,
+                  ),
+                )
+              : Text(
+                  label,
+                  style: TextStyle(
+                    color: AppColors.accentStart.withValues(
+                      alpha: enabled ? 1 : 0.45,
+                    ),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
         ),
       ),
     );

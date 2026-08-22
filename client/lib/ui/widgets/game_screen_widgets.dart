@@ -421,8 +421,6 @@ class GameOpponentCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       fontSize: compact ? 14 : 16,
                       color: AppColors.textPrimary,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppColors.textPrimary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

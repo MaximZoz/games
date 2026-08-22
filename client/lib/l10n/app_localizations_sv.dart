@@ -621,13 +621,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoDraw => 'Utan lagligt kort, dra ett från högen. Passar det kan du spela det direkt eller behålla det och passa. Du får inte dra medan du har ett lagligt drag.';
 
   @override
-  String get rulesUnoWin => 'Två spelare till 100, 3+ till 300. En rond vinns genom att tömma handen.';
+  String get rulesUnoWin => 'Två spelare till 100, 3+ till 200. En rond vinns genom att tömma handen.';
 
   @override
   String get rulesUnoCall => 'När ett kort återstår, tryck genast på ”Uno!”. Motståndare kan ta dig för glömt Uno först efter en sekund — då drar du 2 kort.';
 
   @override
-  String get rulesUnoScoring => 'Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Två spelare till 100, 3+ till 300.';
+  String get rulesUnoScoring => 'Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Två spelare till 100, 3+ till 200.';
 
   @override
   String get unoColorRed => 'Röd';

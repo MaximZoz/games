@@ -66,7 +66,7 @@ class UnoEngine {
   });
 
   static const int defaultTargetScore = 100;
-  static const int multiplayerTargetScore = 300;
+  static const int multiplayerTargetScore = 200;
   static const int cardsPerHand = 7;
   static const int unoCallGraceMs = 1000;
 

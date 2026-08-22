@@ -621,13 +621,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoDraw => 'Sans carte jouable, piochez-en une. Si elle convient, jouez-la tout de suite ou gardez-la et passez. On ne pioche pas tant qu’un coup est possible.';
 
   @override
-  String get rulesUnoWin => 'À deux, premier à 100 ; à 3+, premier à 300. Une manche est gagnée en vidant sa main.';
+  String get rulesUnoWin => 'À deux, premier à 100 ; à 3+, premier à 200. Une manche est gagnée en vidant sa main.';
 
   @override
   String get rulesUnoCall => 'Quand il vous reste une carte, touchez « Uno ! » tout de suite. Les autres ne peuvent vous prendre pour un Uno oublié qu’après une seconde — vous piochez alors 2 cartes.';
 
   @override
-  String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. À deux, premier à 100 ; à 3+, premier à 300.';
+  String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. À deux, premier à 100 ; à 3+, premier à 200.';
 
   @override
   String get unoColorRed => 'Rouge';

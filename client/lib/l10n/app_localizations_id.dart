@@ -621,13 +621,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoDraw => 'Tanpa kartu sah, ambil satu dari dek. Jika cocok, mainkan sekarang atau simpan dan lewat. Tidak boleh mengambil selama masih ada langkah sah.';
 
   @override
-  String get rulesUnoWin => '1 lawan 1 sampai 100, 3+ pemain sampai 300. Ronde dimenangkan dengan menghabiskan kartu.';
+  String get rulesUnoWin => '1 lawan 1 sampai 100, 3+ pemain sampai 200. Ronde dimenangkan dengan menghabiskan kartu.';
 
   @override
   String get rulesUnoCall => 'Saat tersisa satu kartu, ketuk “Uno!” segera. Lawan baru bisa menangkap Anda karena lupa Uno setelah satu detik — maka Anda mengambil 2 kartu.';
 
   @override
-  String get rulesUnoScoring => 'Yang pertama menghabiskan kartu memenangkan ronde dan mendapat poin dari kartu lawan: angka sesuai nilai, aksi 20, hitam 50. 1 lawan 1 sampai 100, 3+ pemain sampai 300.';
+  String get rulesUnoScoring => 'Yang pertama menghabiskan kartu memenangkan ronde dan mendapat poin dari kartu lawan: angka sesuai nilai, aksi 20, hitam 50. 1 lawan 1 sampai 100, 3+ pemain sampai 200.';
 
   @override
   String get unoColorRed => 'Merah';

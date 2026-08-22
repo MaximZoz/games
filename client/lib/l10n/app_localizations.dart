@@ -1328,7 +1328,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoWin.
   ///
   /// In ru, this message translates to:
-  /// **'Вдвоём матч до 100 очков, при трёх и более игроках — до 300. Раунд выигрывает игрок, сбросивший все карты.'**
+  /// **'Вдвоём матч до 100 очков, при трёх и более игроках — до 200. Раунд выигрывает игрок, сбросивший все карты.'**
   String get rulesUnoWin;
 
   /// No description provided for @rulesUnoCall.
@@ -1340,7 +1340,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoScoring.
   ///
   /// In ru, this message translates to:
-  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Вдвоём матч до 100, при трёх и более игроках — до 300.'**
+  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Вдвоём матч до 100, при трёх и более игроках — до 200.'**
   String get rulesUnoScoring;
 
   /// No description provided for @unoColorRed.
