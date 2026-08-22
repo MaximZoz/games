@@ -3217,7 +3217,7 @@ class _AnimatedGameCell extends StatelessWidget {
     // Пустые клетки без pulse — без TweenAnimationBuilder (критично для 8×8/10×10).
     if (symbol.isEmpty) return cell;
     return SfxOnInit(
-      id: SfxId.place,
+      id: symbol.toUpperCase() == 'O' ? SfxId.placeO : SfxId.placeX,
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: 1),
         duration: AppDurations.short,

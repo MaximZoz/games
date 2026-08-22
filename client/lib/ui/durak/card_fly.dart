@@ -45,6 +45,8 @@ Future<CardFlyTicket> playCardFlyAnimation({
   Curve curve = kDurakFlyCurve,
   bool faceDown = false,
   bool flipToFace = false,
+  SfxId? launchSfx,
+  SfxId? landSfx,
   double beginAngle = 0,
   double endAngle = 0,
   double beginScale = 1.0,
@@ -58,7 +60,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
-  Sfx.play(faceDown ? SfxId.cardDraw : SfxId.cardPlay);
+  Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);
@@ -120,6 +122,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   } catch (_) {
     // ignore dispose races
   }
+  Sfx.play(landSfx ?? (faceDown ? SfxId.cardFlip : SfxId.cardLand));
   if (!keepAtEnd) {
     GameFlyOverlay.remove(entry);
     anim.dispose();

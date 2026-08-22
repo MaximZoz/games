@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 enum AppSnackKind { info, success, error }
@@ -18,6 +19,11 @@ void showAppSnackBar(
 }) {
   final text = message.trim();
   if (text.isEmpty) return;
+  Sfx.play(switch (kind) {
+    AppSnackKind.success => SfxId.notifySuccess,
+    AppSnackKind.error => SfxId.notifyError,
+    AppSnackKind.info => SfxId.notifyInfo,
+  });
 
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;

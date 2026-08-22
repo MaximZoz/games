@@ -119,6 +119,7 @@ class MultiGamesApp extends ConsumerWidget {
     ref.watch(_pushNotificationNavProvider);
     final soundOn = ref.watch(soundEnabledProvider);
     Sfx.setEnabled(soundOn);
+    Sfx.instance.warmup(unlock: false);
     return MaterialApp.router(
       title: 'Zozu Games',
       debugShowCheckedModeBanner: false,
