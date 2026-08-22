@@ -885,6 +885,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerHandRoyalFlush => 'Роял-флеш';
 
   @override
+  String get pokerCombinationsTitle => 'Комбинации';
+
+  @override
   String pokerHandNumber(int n) {
     return 'Раздача $n';
   }

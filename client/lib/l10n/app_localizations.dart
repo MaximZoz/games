@@ -1793,6 +1793,12 @@ abstract class AppLocalizations {
   /// **'Роял-флеш'**
   String get pokerHandRoyalFlush;
 
+  /// No description provided for @pokerCombinationsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Комбинации'**
+  String get pokerCombinationsTitle;
+
   /// No description provided for @pokerHandNumber.
   ///
   /// In ru, this message translates to:

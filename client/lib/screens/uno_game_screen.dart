@@ -1433,17 +1433,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return const SizedBox.shrink();
     }
     final player = game.players[index];
-    return TurnTimerBorder(
-      active: !game.isOver &&
-          !_dealing &&
-          !player.forfeited &&
-          game.turnTimeSec > 0 &&
-          index == game.currentIndex,
+    return GameActorHighlight(
+      isActing: GameActorHighlight.isActingSeat(
+        isCurrentActor: index == game.currentIndex,
+        isOver: game.isOver,
+        eliminated: player.forfeited,
+        paused: _dealing,
+      ),
       turnDeadline: game.turnDeadline,
       turnTimeSec: game.turnTimeSec,
       borderWidth: 2.5,
       radius: 16,
-      showIdleBorder: !player.forfeited,
       onExpired: _onTurnTimeExpired,
       child: UnoOpponentHand(
         key: _opponentKeys.putIfAbsent(index, GlobalKey.new),
@@ -1811,7 +1811,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final width = hand.isEmpty
         ? cardSize.width
         : spacing * (hand.length - 1) + cardSize.width;
-    return Column(
+    final handColumn = Column(
       key: _handKey,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1890,6 +1890,21 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
         ),
       ],
+    );
+    final myTurn = GameActorHighlight.isActingSeat(
+      isCurrentActor: game.isMyTurn,
+      isOver: game.isOver,
+      eliminated: game.iAmEliminated,
+      paused: _dealing,
+    );
+    return GameActorHighlight(
+      isActing: myTurn,
+      turnDeadline: game.turnDeadline,
+      turnTimeSec: game.turnTimeSec,
+      borderWidth: 2.5,
+      radius: 16,
+      onExpired: _onTurnTimeExpired,
+      child: handColumn,
     );
   }
 }

@@ -885,6 +885,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get pokerHandRoyalFlush => 'Royal flush';
 
   @override
+  String get pokerCombinationsTitle => 'Комбинациялар';
+
+  @override
   String pokerHandNumber(int n) {
     return 'Hand $n';
   }
