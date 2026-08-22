@@ -13,6 +13,7 @@ import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
+import 'package:multigames_client/games/poker/poker_combo_sheet.dart';
 import 'package:multigames_client/games/poker/poker_offline_engine.dart'
     show PokerActionType, PokerStreet;
 import 'package:multigames_client/games/poker/poker_offline_session.dart';
@@ -408,33 +409,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   /// Локализованное название комбинации по каноническому имени ранга сервера.
-  String? _handRankLabel(String? rank) {
-    if (rank == null || rank.isEmpty) return null;
-    final l10n = context.l10n;
-    switch (rank) {
-      case 'HighCard':
-        return l10n.pokerHandHighCard;
-      case 'OnePair':
-        return l10n.pokerHandOnePair;
-      case 'TwoPair':
-        return l10n.pokerHandTwoPair;
-      case 'ThreeOfAKind':
-        return l10n.pokerHandThreeOfAKind;
-      case 'Straight':
-        return l10n.pokerHandStraight;
-      case 'Flush':
-        return l10n.pokerHandFlush;
-      case 'FullHouse':
-        return l10n.pokerHandFullHouse;
-      case 'FourOfAKind':
-        return l10n.pokerHandFourOfAKind;
-      case 'StraightFlush':
-        return l10n.pokerHandStraightFlush;
-      case 'RoyalFlush':
-        return l10n.pokerHandRoyalFlush;
-      default:
-        return null;
-    }
+  String? _handRankLabel(String? rank) =>
+      pokerHandRankLabel(context.l10n, rank);
+
+  void _openCombinationsSheet(String? currentRank) {
+    unawaited(
+      showPokerCombinationsSheet(
+        context: context,
+        currentRank: currentRank,
+      ),
+    );
   }
 
   // ---- moves --------------------------------------------------------------
@@ -994,7 +978,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         game.isMyTurn &&
         game.legalActions.isNotEmpty;
     final showCardsBtn = game.canShowCards && !isOver;
-    final hasCombo = _handRankLabel(game.myHandRank) != null;
+    final iWonHand = game.isHandOver &&
+        game.me != null &&
+        _winnerSeats(game).contains(game.me!.seat);
+    final hasCombo = _handRankLabel(game.myHandRank) != null && !iWonHand;
     // Hero выезжает вверх только когда есть кнопки; поле/борд не двигаются.
     final heroLift = showActions || showCardsBtn
         ? comboSlot + 6 + actionSlot + bottomPad
@@ -2413,7 +2400,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
               if (myWinCombo != null) ...[
                 const SizedBox(width: 6),
-                _comboLabel(myWinCombo, highlight: true),
+                _comboLabel(
+                  myWinCombo,
+                  highlight: true,
+                  onTap: () => _openCombinationsSheet(game.myHandRank),
+                ),
               ],
             ],
           ),
@@ -2481,10 +2472,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   /// (стол не прыгает при появлении/скрытии кнопок).
   Widget _buildBottomBar(PokerGameView game, bool narrow) {
     final comboLabel = _handRankLabel(game.myHandRank);
-    final comboAccent = _shouldHighlightCombo(game) ||
-        (game.isHandOver &&
-            game.me != null &&
-            _winnerSeats(game).contains(game.me!.seat));
+    final iWonHand = game.isHandOver &&
+        game.me != null &&
+        _winnerSeats(game).contains(game.me!.seat);
+    final comboAccent = _shouldHighlightCombo(game) || iWonHand;
+    // На вскрытии комбинация уже у неймплейта — не дублировать снизу.
+    final showBottomCombo = comboLabel != null && !iWonHand;
     final showActions = !game.isOver &&
         !game.isHandOver &&
         game.isMyTurn &&
@@ -2504,11 +2497,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         children: [
           SizedBox(
             height: comboSlot,
-            child: comboLabel != null
+            child: showBottomCombo
                 ? Center(
                     child: _comboLabel(
                       comboLabel,
                       highlight: comboAccent,
+                      onTap: () => _openCombinationsSheet(game.myHandRank),
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -2572,10 +2566,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     }
   }
 
-  Widget _comboLabel(String text, {required bool highlight}) {
-    return AnimatedContainer(
+  Widget _comboLabel(
+    String text, {
+    required bool highlight,
+    VoidCallback? onTap,
+  }) {
+    final chip = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+      padding: EdgeInsets.fromLTRB(14, 5, onTap == null ? 14 : 8, 5),
       decoration: BoxDecoration(
         color: highlight
             ? AppColors.accentStart.withValues(alpha: 0.9)
@@ -2586,14 +2584,36 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           width: 1,
         ),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.3,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 2),
+            const Icon(
+              Icons.expand_more_rounded,
+              size: 16,
+              color: Colors.white,
+            ),
+          ],
+        ],
+      ),
+    );
+    if (onTap == null) return chip;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: chip,
       ),
     );
   }

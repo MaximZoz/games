@@ -374,6 +374,7 @@
   "pokerHandFourOfAKind": "Four of a kind",
   "pokerHandStraightFlush": "Straight flush",
   "pokerHandRoyalFlush": "Royal flush",
+  "pokerCombinationsTitle": "Kombinationen",
   "pokerHandNumber": "Hand {n}",
   "pokerBlinds": "Blinds {sb}/{bb}",
   "pokerTableYouWon": "You won the table!",
