@@ -38,23 +38,42 @@ fly postgres attach multigames-db --app multigames
 
 (Если приложение называется иначе — укажи его: `--app <твоё-имя-приложения>`.)
 
-## 3. Redis (Upstash на Fly)
+## 3. Redis (Upstash на Fly) — обязательно для живых лобби
 
-Сервер ожидает переменную `REDIS_URL`. Варианты:
+Лобби, матчмейкинг и активные партии хранятся в **Redis**, не в Postgres.
 
-**Вариант A — Upstash Redis (рекомендуется)**
+Если `REDIS_URL` не задан (или указывает на `localhost`), в контейнере
+поднимается **локальный** `redis-server` без persistence. После каждого
+`fly deploy` контейнер пересоздаётся → **все активные лобби сбрасываются**.
 
-1. В [Fly Dashboard](https://fly.io/dashboard) открой своё приложение.
-2. **Resources** → **Upstash** → создать Redis (или перейди в [Upstash](https://upstash.com) и создай БД).
-3. Скопируй URL подключения (например `rediss://default:xxx@xxx.upstash.io:6379`) и задай секрет:
+### Рекомендуется: внешний Upstash Redis одной командой
+
+Из корня репозитория (нужен `FLY_API_TOKEN` в `deploy.cursor.env`):
 
 ```bash
-fly secrets set REDIS_URL="rediss://default:PASSWORD@HOST:6379" --app multigames
+./launcher/setup_fly_redis.sh deploy.cursor.env
+# Windows:
+# .\launcher\setup_fly_redis.ps1 deploy.cursor.env
 ```
 
-**Вариант B — Redis в отдельном Fly-приложении**
+Скрипт:
+1. создаёт Upstash Redis `multigameszozu-redis` в регионе app (по умолчанию `ams`);
+2. читает Private URL;
+3. ставит секрет `REDIS_URL` на `multigameszozu`.
 
-Можно поднять Redis-образ как отдельное приложение и использовать внутренний URL (через Flycast), но проще начать с Upstash.
+После этого локальный Redis в контейнере **не** стартует, лобби переживают деплой.
+
+### Вручную
+
+```bash
+fly redis create --name multigameszozu-redis --region ams --plan pay-as-you-go --no-replicas --enable-eviction
+fly redis status multigameszozu-redis   # скопируй Private URL
+fly secrets set REDIS_URL="redis://...@fly-multigameszozu-redis.upstash.io" --app multigameszozu
+```
+
+### Вариант B — Redis в отдельном Fly-приложении
+
+Можно поднять Redis-образ как отдельное приложение и использовать внутренний URL (через Flycast), но проще Upstash через скрипт выше.
 
 ## 4. Остальные секреты
 

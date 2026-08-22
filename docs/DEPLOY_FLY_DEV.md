@@ -24,7 +24,11 @@ cp deploy.dev.env.example deploy.dev.env
 - `FLY_API_TOKEN` — **в кавычках**, одной строкой  
   (`FLY_API_TOKEN="FlyV1 fm2_....="` — иначе bash ломается на пробеле)
 - `JWT_SECRET` / `ADMIN_INIT_SECRET` — **новые**, не копируй с прода (тоже лучше в кавычках)
-- при необходимости `REDIS_URL`, почту (`RESEND_API_KEY`, `MAIL_FROM`)
+- при необходимости почту (`RESEND_API_KEY`, `MAIL_FROM`)
+
+`REDIS_URL` вручную заполнять не обязательно — после создания app прогони
+`./launcher/setup_fly_redis.sh deploy.dev.env` (см. ниже). Без внешнего Redis
+после каждого деплоя DEV сбрасываются лобби/матчмейкинг.
 
 Токен:
 
@@ -54,6 +58,19 @@ PowerShell:
 2. создаёт Postgres `multigameszozu-dev-db`
 3. делает `postgres attach` → секрет `DATABASE_URL`
 4. ставит `JWT_SECRET`, `ADMIN_INIT_SECRET`, `PUBLIC_BASE_URL`, …
+
+### 2.1. Внешний Redis (чтобы лобби переживали деплой)
+
+```bash
+chmod +x launcher/setup_fly_redis.sh
+./launcher/setup_fly_redis.sh deploy.dev.env
+```
+
+```powershell
+.\launcher\setup_fly_redis.ps1 deploy.dev.env
+```
+
+Создаст Upstash Redis `multigameszozu-dev-redis` и пропишет `REDIS_URL` в секреты DEV.
 
 ---
 
