@@ -10,6 +10,8 @@
   "settingsTitle": "Налаштування",
   "settingsLanguage": "Мова",
   "settingsLanguageSystem": "Як у системі",
+  "settingsSoundTitle": "Звук",
+  "settingsSoundSubtitle": "Кліки, ходи та анімації в іграх",
   "settingsAddBotsTitle": "Додавати ботів через 30 с",
   "settingsAddBotsSubtitle": "У режимі пошуку гри: якщо суперника не знайдено за 30 секунд, гра починається з ботом (ставка скидається до 1 бронзи)",
   "settingsFriendsOnlyTitle": "Повідомлення лише від друзів",

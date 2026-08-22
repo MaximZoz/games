@@ -37,6 +37,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsLanguageSystem => 'Järjestelmän oletus';
 
   @override
+  String get settingsSoundTitle => 'Ääni';
+
+  @override
+  String get settingsSoundSubtitle => 'Napsautukset, siirrot ja pelianimaatiot';
+
+  @override
   String get settingsAddBotsTitle => 'Lisää botteja 30 s jälkeen';
 
   @override

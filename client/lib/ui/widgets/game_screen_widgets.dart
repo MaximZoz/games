@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/games_provider.dart' show GameInvite;
 import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
@@ -38,6 +39,7 @@ class _GameConfettiOverlayState extends State<GameConfettiOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..forward();
+    Sfx.play(SfxId.win);
 
     final r = math.Random();
     const colors = [

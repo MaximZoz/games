@@ -37,6 +37,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsLanguageSystem => 'ตามระบบ';
 
   @override
+  String get settingsSoundTitle => 'เสียง';
+
+  @override
+  String get settingsSoundSubtitle => 'คลิก ตาเล่น และแอนิเมชันในเกม';
+
+  @override
   String get settingsAddBotsTitle => 'เพิ่มบอทหลัง 30 วินาที';
 
   @override

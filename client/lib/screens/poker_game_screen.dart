@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
@@ -439,6 +440,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       unawaited(
         _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
       );
+    }
+    if (type == PokerActionType.fold) {
+      Sfx.play(SfxId.cardPlay);
+    } else if (type == PokerActionType.call ||
+        type == PokerActionType.raise ||
+        type == PokerActionType.allIn) {
+      Sfx.play(SfxId.chip);
     }
     setState(() => _busy = true);
     try {
@@ -1089,6 +1097,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return;
       }
       setState(() => _shownCommunity++);
+      Sfx.play(SfxId.cardDeal);
     }
     _dealing = false;
   }
@@ -1726,6 +1735,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
+    Sfx.play(SfxId.chip);
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     for (var i = 0; i < count; i++) {
@@ -2132,6 +2142,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     if (from == null || to == null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
+    Sfx.play(SfxId.cardPlay);
     const cardSize = Size(34, 48);
     for (var i = 0; i < 2; i++) {
       if (!mounted || _disposed) return;

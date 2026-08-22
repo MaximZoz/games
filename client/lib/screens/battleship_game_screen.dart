@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -230,6 +231,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _fxHit = hit;
       _fxShowMineBoard = onMyBoard;
     });
+    Sfx.play(SfxId.shoot);
+    Sfx.play(hit ? SfxId.hit : SfxId.miss);
     _hitPulse
       ..stop()
       ..forward(from: 0);
@@ -457,6 +460,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   void _onSetupCellTap(int cell) {
     if (_busy || _localShips.isEmpty) return;
+    Sfx.play(SfxId.place);
     // Тап по своему кораблю — выделить.
     for (var i = 0; i < _localShips.length; i++) {
       if (_localShips[i].contains(cell)) {

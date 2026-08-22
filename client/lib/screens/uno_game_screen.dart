@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
@@ -569,6 +570,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
     if (_busy || !game.isMyTurn) return;
     if (!_canPlayCard(game, card)) {
+      Sfx.play(SfxId.deny);
       if (mounted && game.stackOpen && game.topDiscard != null) {
         showAppSnackBar(
           context,
@@ -726,6 +728,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (manageBusy) {
       if (_busy) return;
       setState(() => _busy = true);
+    }
+    if (type == UnoActionType.callUno) {
+      Sfx.play(SfxId.unoCall);
+    } else if (type == UnoActionType.chooseColor) {
+      Sfx.play(SfxId.colorPick);
+    } else if (type == UnoActionType.challengeUno ||
+        type == UnoActionType.challengeWd4) {
+      Sfx.play(SfxId.cardSpecial);
     }
     try {
       await ref.read(unoRepositoryProvider).move(

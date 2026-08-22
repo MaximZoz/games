@@ -10,6 +10,8 @@
   "settingsTitle": "Asetukset",
   "settingsLanguage": "Kieli",
   "settingsLanguageSystem": "Järjestelmän oletus",
+  "settingsSoundTitle": "Ääni",
+  "settingsSoundSubtitle": "Napsautukset, siirrot ja pelianimaatiot",
   "settingsAddBotsTitle": "Lisää botteja 30 s jälkeen",
   "settingsAddBotsSubtitle": "Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)",
   "settingsFriendsOnlyTitle": "Viestit vain kavereilta",

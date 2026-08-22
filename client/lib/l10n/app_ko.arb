@@ -10,6 +10,8 @@
   "settingsTitle": "설정",
   "settingsLanguage": "언어",
   "settingsLanguageSystem": "시스템 기본값",
+  "settingsSoundTitle": "소리",
+  "settingsSoundSubtitle": "클릭, 수와 게임 애니메이션",
   "settingsAddBotsTitle": "30초 후 봇 추가",
   "settingsAddBotsSubtitle": "매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)",
   "settingsFriendsOnlyTitle": "친구 메시지만 받기",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
@@ -3215,14 +3216,17 @@ class _AnimatedGameCell extends StatelessWidget {
     );
     // Пустые клетки без pulse — без TweenAnimationBuilder (критично для 8×8/10×10).
     if (symbol.isEmpty) return cell;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: AppDurations.short,
-      curve: Curves.easeOutBack,
-      builder: (context, t, child) {
-        return Transform.scale(scale: t, child: child);
-      },
-      child: cell,
+    return SfxOnInit(
+      id: SfxId.place,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: AppDurations.short,
+        curve: Curves.easeOutBack,
+        builder: (context, t, child) {
+          return Transform.scale(scale: t, child: child);
+        },
+        child: cell,
+      ),
     );
   }
 }

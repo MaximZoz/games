@@ -37,6 +37,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsLanguageSystem => 'Προεπιλογή συστήματος';
 
   @override
+  String get settingsSoundTitle => 'Ήχος';
+
+  @override
+  String get settingsSoundSubtitle => 'Κλικ, κινήσεις και κινούμενα γραφικά';
+
+  @override
   String get settingsAddBotsTitle => 'Προσθήκη bot μετά από 30 δευτ.';
 
   @override

@@ -4,6 +4,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -57,6 +58,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
+  Sfx.play(faceDown ? SfxId.cardDraw : SfxId.cardPlay);
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);

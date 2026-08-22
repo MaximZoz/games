@@ -10,6 +10,8 @@
   "settingsTitle": "Ustawienia",
   "settingsLanguage": "Język",
   "settingsLanguageSystem": "Jak w systemie",
+  "settingsSoundTitle": "Dźwięk",
+  "settingsSoundSubtitle": "Kliknięcia, ruchy i animacje gier",
   "settingsAddBotsTitle": "Dodawaj boty po 30 s",
   "settingsAddBotsSubtitle": "W trybie wyszukiwania: jeśli nie znaleziono przeciwnika w 30 sekund, gra zaczyna się z botem (stawka wraca do 1 brązu)",
   "settingsFriendsOnlyTitle": "Wiadomości tylko od znajomych",

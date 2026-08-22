@@ -10,6 +10,8 @@
   "settingsTitle": "सेटिंग्स",
   "settingsLanguage": "भाषा",
   "settingsLanguageSystem": "सिस्टम डिफ़ॉल्ट",
+  "settingsSoundTitle": "ध्वनि",
+  "settingsSoundSubtitle": "क्लिक, चालें और गेम एनिमेशन",
   "settingsAddBotsTitle": "30 सेकंड बाद बॉट जोड़ें",
   "settingsAddBotsSubtitle": "मैचमेकिंग में: यदि 30 सेकंड में कोई प्रतिद्वंद्वी नहीं मिलता, तो गेम बॉट के साथ शुरू होता है (दाँव 1 ब्रॉन्ज़ पर रीसेट)",
   "settingsFriendsOnlyTitle": "केवल मित्रों के संदेश",

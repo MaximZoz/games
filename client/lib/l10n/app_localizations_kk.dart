@@ -37,6 +37,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsLanguageSystem => 'Жүйе бойынша';
 
   @override
+  String get settingsSoundTitle => 'Дыбыс';
+
+  @override
+  String get settingsSoundSubtitle => 'Басулар, жүрістер және ойын анимациялары';
+
+  @override
   String get settingsAddBotsTitle => '30 с кейін бот қосу';
 
   @override

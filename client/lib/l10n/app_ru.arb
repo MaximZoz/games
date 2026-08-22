@@ -10,6 +10,8 @@
   "settingsTitle": "Настройки",
   "settingsLanguage": "Язык",
   "settingsLanguageSystem": "Как в системе",
+  "settingsSoundTitle": "Звук",
+  "settingsSoundSubtitle": "Клики, ходы и анимации в играх",
   "settingsAddBotsTitle": "Добавлять ботов через 30 с",
   "settingsAddBotsSubtitle": "В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)",
   "settingsOfflineModeTitle": "Режим сети",

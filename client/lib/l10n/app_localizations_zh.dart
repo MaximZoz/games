@@ -37,6 +37,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLanguageSystem => '跟随系统';
 
   @override
+  String get settingsSoundTitle => '声音';
+
+  @override
+  String get settingsSoundSubtitle => '点击、出牌和游戏动画';
+
+  @override
   String get settingsAddBotsTitle => '30 秒后加入机器人';
 
   @override

@@ -37,6 +37,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsLanguageSystem => 'ברירת מחדל של המערכת';
 
   @override
+  String get settingsSoundTitle => 'צליל';
+
+  @override
+  String get settingsSoundSubtitle => 'לחיצות, מהלכים ואנימציות משחק';
+
+  @override
   String get settingsAddBotsTitle => 'הוספת בוטים אחרי 30 שנ׳';
 
   @override

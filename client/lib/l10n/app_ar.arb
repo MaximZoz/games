@@ -10,6 +10,8 @@
   "settingsTitle": "الإعدادات",
   "settingsLanguage": "اللغة",
   "settingsLanguageSystem": "افتراضي النظام",
+  "settingsSoundTitle": "الصوت",
+  "settingsSoundSubtitle": "النقرات والحركات ورسوم الألعاب",
   "settingsAddBotsTitle": "إضافة بوت بعد 30 ثانية",
   "settingsAddBotsSubtitle": "في البحث عن مباراة: إذا لم يُعثر على منافس خلال 30 ثانية، تبدأ اللعبة مع بوت (تُعاد قيمة الرهان إلى 1 برونز)",
   "settingsFriendsOnlyTitle": "رسائل من الأصدقاء فقط",

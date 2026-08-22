@@ -209,6 +209,18 @@ abstract class AppLocalizations {
   /// **'Как в системе'**
   String get settingsLanguageSystem;
 
+  /// No description provided for @settingsSoundTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Звук'**
+  String get settingsSoundTitle;
+
+  /// No description provided for @settingsSoundSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клики, ходы и анимации в играх'**
+  String get settingsSoundSubtitle;
+
   /// No description provided for @settingsAddBotsTitle.
   ///
   /// In ru, this message translates to:

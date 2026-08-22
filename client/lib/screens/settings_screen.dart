@@ -6,6 +6,7 @@ import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
@@ -109,6 +110,19 @@ class SettingsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    child: _SwitchRow(
+                      title: l10n.settingsSoundTitle,
+                      subtitle: l10n.settingsSoundSubtitle,
+                      value: ref.watch(soundEnabledProvider),
+                      onChanged: (v) async {
+                        await ref.read(soundEnabledProvider.notifier).set(v);
+                        Sfx.setEnabled(v);
+                        if (v) Sfx.play(SfxId.uiTap);
+                      },
                     ),
                   ),
                   const SizedBox(height: 12),
