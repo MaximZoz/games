@@ -73,8 +73,25 @@ echo "==> Redis name: $FLY_REDIS_NAME"
 echo "==> Region:     $FLY_REGION"
 echo "==> Plan:       $FLY_REDIS_PLAN"
 
+echo "Проверяю доступ Fly..."
+whoami_out="$("$FLY_BIN" auth whoami 2>&1 || true)"
+echo "$whoami_out"
+
 if ! "$FLY_BIN" status --app "$FLY_APP_NAME" >/dev/null 2>&1; then
-  echo "Приложение $FLY_APP_NAME не найдено. Сначала создай app (setup_fly_dev / fly launch)."
+  echo
+  echo "Приложение $FLY_APP_NAME не найдено или токен не имеет к нему доступа."
+  echo "Список app, которые видит этот FLY_API_TOKEN:"
+  "$FLY_BIN" apps list 2>&1 || true
+  echo
+  echo "Что сделать:"
+  echo "  1) Если DEV ещё не создавался:"
+  echo "       ./launcher/setup_fly_dev.sh deploy.dev.env"
+  echo "       ./launcher/setup_fly_redis.sh deploy.dev.env"
+  echo "  2) Если app есть, но токен узкий — сделай org/deploy token с доступом к app:"
+  echo "       fly tokens create deploy -a $FLY_APP_NAME -x 72h -n redis-setup"
+  echo "     и обнови FLY_API_TOKEN в deploy.dev.env (в кавычках)."
+  echo "  3) Проверка вручную:"
+  echo "       fly status --app $FLY_APP_NAME"
   exit 1
 fi
 

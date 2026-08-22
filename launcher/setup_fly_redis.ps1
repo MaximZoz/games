@@ -53,9 +53,16 @@ Write-Host "==> Redis name: $($env:FLY_REDIS_NAME)"
 Write-Host "==> Region:     $($env:FLY_REGION)"
 Write-Host "==> Plan:       $($env:FLY_REDIS_PLAN)"
 
-& $flyBin status --app $env:FLY_APP_NAME | Out-Null
+& $flyBin status --app $env:FLY_APP_NAME 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Приложение $($env:FLY_APP_NAME) не найдено."
+    Write-Host ""
+    Write-Host "Приложение $($env:FLY_APP_NAME) не найдено или токен не имеет к нему доступа."
+    Write-Host "Список app:"
+    & $flyBin apps list
+    Write-Host ""
+    Write-Host "1) ./launcher/setup_fly_dev.sh  если DEV ещё не создан"
+    Write-Host "2) Обнови FLY_API_TOKEN: fly tokens create deploy -a $($env:FLY_APP_NAME) -x 72h"
+    Write-Error "App $($env:FLY_APP_NAME) unavailable"
 }
 
 $redisExists = $true
