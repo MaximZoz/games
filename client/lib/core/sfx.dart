@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
+
+import 'sfx_html_stub.dart' if (dart.library.html) 'sfx_html_web.dart' as html_sfx;
 
 /// Короткие эффекты UI и игр. Выключенные / тестовые вызовы — no-op.
 enum SfxId {
@@ -34,35 +37,31 @@ abstract final class Sfx {
 class SfxController {
   SfxController({
     this.debounce = const Duration(milliseconds: 55),
-    this.createPlayers = true,
   });
 
   final Duration debounce;
-  final bool createPlayers;
 
-  static const _poolSize = 6;
   static const _assets = <SfxId, String>{
-    SfxId.uiTap: 'sfx/ui_tap.wav',
-    SfxId.cardPlay: 'sfx/card_play.wav',
-    SfxId.cardDraw: 'sfx/card_draw.wav',
-    SfxId.cardDeal: 'sfx/card_deal.wav',
-    SfxId.cardSpecial: 'sfx/card_special.wav',
-    SfxId.unoCall: 'sfx/uno_call.wav',
-    SfxId.colorPick: 'sfx/color_pick.wav',
-    SfxId.chip: 'sfx/chip.wav',
-    SfxId.place: 'sfx/place.wav',
-    SfxId.shoot: 'sfx/shoot.wav',
-    SfxId.hit: 'sfx/hit.wav',
-    SfxId.miss: 'sfx/miss.wav',
-    SfxId.win: 'sfx/win.wav',
-    SfxId.coins: 'sfx/coins.wav',
-    SfxId.deny: 'sfx/deny.wav',
+    SfxId.uiTap: 'assets/sfx/ui_tap.wav',
+    SfxId.cardPlay: 'assets/sfx/card_play.wav',
+    SfxId.cardDraw: 'assets/sfx/card_draw.wav',
+    SfxId.cardDeal: 'assets/sfx/card_deal.wav',
+    SfxId.cardSpecial: 'assets/sfx/card_special.wav',
+    SfxId.unoCall: 'assets/sfx/uno_call.wav',
+    SfxId.colorPick: 'assets/sfx/color_pick.wav',
+    SfxId.chip: 'assets/sfx/chip.wav',
+    SfxId.place: 'assets/sfx/place.wav',
+    SfxId.shoot: 'assets/sfx/shoot.wav',
+    SfxId.hit: 'assets/sfx/hit.wav',
+    SfxId.miss: 'assets/sfx/miss.wav',
+    SfxId.win: 'assets/sfx/win.wav',
+    SfxId.coins: 'assets/sfx/coins.wav',
+    SfxId.deny: 'assets/sfx/deny.wav',
   };
 
-  final List<AudioPlayer> _pool = [];
-  int _next = 0;
+  final Map<SfxId, String> _dataUris = {};
+  Completer<void>? _preloadDone;
   bool _enabled = true;
-  bool _warming = false;
   DateTime? _lastAt;
   SfxId? _lastId;
 
@@ -87,58 +86,49 @@ class SfxController {
 
   void setEnabled(bool enabled) {
     _enabled = enabled;
-    if (enabled) {
-      warmup();
-    } else {
-      for (final player in _pool) {
-        unawaited(player.stop());
-      }
-    }
+    if (enabled) warmup();
   }
 
-  void warmup() {
-    if (_warming || !_enabled || _inWidgetTest || !createPlayers) return;
-    _warming = true;
-    unawaited(_safeEnsurePool());
+  void warmup({bool unlock = true}) {
+    if (!_enabled || _inWidgetTest) return;
+    if (unlock) html_sfx.htmlSfxUnlock();
+    unawaited(_preload());
   }
 
   void play(SfxId id) {
-    if (!_enabled || _inWidgetTest || !createPlayers) return;
+    if (!_enabled || _inWidgetTest) return;
     final now = DateTime.now();
     if (!shouldPlay(id, now)) return;
-    final asset = _assets[id];
-    if (asset == null) return;
-    unawaited(_playAsset(asset));
+    final uri = _dataUris[id];
+    if (uri == null) {
+      unawaited(_preload().then((_) {
+        final ready = _dataUris[id];
+        if (ready != null && _enabled) {
+          html_sfx.htmlSfxPlay(ready);
+        }
+      }));
+      return;
+    }
+    html_sfx.htmlSfxPlay(uri);
   }
 
-  Future<void> _safeEnsurePool() async {
+  Future<void> _preload() async {
+    if (_dataUris.length == _assets.length) return;
+    final inflight = _preloadDone;
+    if (inflight != null) return inflight.future;
+    final done = Completer<void>();
+    _preloadDone = done;
     try {
-      await _ensurePool();
-    } catch (_) {}
-  }
-
-  Future<void> _playAsset(String asset) async {
-    try {
-      await _ensurePool();
-      if (_pool.isEmpty) return;
-      final player = _pool[_next % _pool.length];
-      _next++;
-      await player.stop();
-      await player.play(AssetSource(asset), volume: 0.72);
-    } catch (_) {}
-  }
-
-  Future<void> _ensurePool() async {
-    if (_pool.isNotEmpty) return;
-    for (var i = 0; i < _poolSize; i++) {
-      final player = AudioPlayer();
-      try {
-        await player.setPlayerMode(PlayerMode.lowLatency);
-      } catch (_) {}
-      try {
-        await player.setReleaseMode(ReleaseMode.stop);
-      } catch (_) {}
-      _pool.add(player);
+      for (final entry in _assets.entries) {
+        if (_dataUris.containsKey(entry.key)) continue;
+        final bytes = await rootBundle.load(entry.value);
+        _dataUris[entry.key] =
+            'data:audio/wav;base64,${base64Encode(bytes.buffer.asUint8List())}';
+      }
+      done.complete();
+    } catch (_) {
+      _preloadDone = null;
+      if (!done.isCompleted) done.complete();
     }
   }
 }
