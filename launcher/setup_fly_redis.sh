@@ -85,16 +85,13 @@ echo "==> Plan:       ${FLY_REDIS_PLAN:-<default>}"
 echo "Проверяю доступ Fly..."
 whoami_out="$("$FLY_BIN" auth whoami 2>&1 || true)"
 echo "$whoami_out"
-if ! printf '%s\n' "$whoami_out" | grep -Eqi '@|user|email|Macaroon|authenticated'; then
-  # whoami обычно печатает email; если явная ошибка auth — подсказка.
-  if printf '%s\n' "$whoami_out" | grep -qi 'must be authenticated\|no access token\|not authenticated'; then
-    echo
-    echo "Нет рабочей Fly-аутентификации."
-    echo "  unset FLY_API_TOKEN"
-    echo "  fly auth login"
-    echo "  # либо задай рабочий FLY_API_TOKEN и НЕ дай env-файлу его затереть"
-    exit 1
-  fi
+if printf '%s\n' "$whoami_out" | grep -qi 'must be authenticated\|no access token\|not authenticated\|Please login'; then
+  echo
+  echo "Нет рабочей Fly-аутентификации."
+  echo "  unset FLY_API_TOKEN"
+  echo "  fly auth login"
+  echo "  FLY_APP_NAME=$FLY_APP_NAME ./launcher/setup_fly_redis.sh"
+  exit 1
 fi
 
 if ! "$FLY_BIN" status --app "$FLY_APP_NAME" >/dev/null 2>&1; then
