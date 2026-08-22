@@ -612,7 +612,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoIntro => 'Jeder erhält 7 Karten. Spiele eine Karte derselben Farbe oder desselben Rangs (Zahl oder gleiche Aktion).';
 
   @override
-  String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 nur auf +2 und +4 nur auf +4: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). +2 darf nicht auf +4. Wer nicht stapelt, zieht den ganzen Stapel und setzt aus.';
+  String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 nur auf +2 und +4 nur auf +4: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). +2 darf nicht auf +4. Wer nicht stapelt, zieht den ganzen Stapel und setzt aus. Zwei gleiche nicht-schwarze Karten (z. B. zwei gelbe 8) werden zusammen abgelegt: eine spielen — die zweite fliegt automatisch mit.';
 
   @override
   String get rulesUnoWild => 'Eine schwarze Karte bestimmt eine neue Farbe. +4 nur, wenn du keine Karte der aktuellen Farbe hast. Der Nächste kann anfechten: war +4 legal, zieht er 6; sonst zieht der +4-Spieler 4 und der Anfechtende ist am Zug.';

@@ -612,7 +612,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoIntro => 'Cada uno recibe 7 cartas. Juega una carta del mismo color o del mismo valor (número o misma acción).';
 
   @override
-  String get rulesUnoPlay => 'Salto: el siguiente pierde el turno. El cambio de sentido con dos jugadores actúa como salto. +2 solo se apila sobre +2 y +4 solo sobre +4: la penalización se suma (dos +2 hacen robar 4). No se puede poner +2 sobre +4. Quien no apile roba todo el montón y pierde el turno.';
+  String get rulesUnoPlay => 'Salto: el siguiente pierde el turno. El cambio de sentido con dos jugadores actúa como salto. +2 solo se apila sobre +2 y +4 solo sobre +4: la penalización se suma (dos +2 hacen robar 4). No se puede poner +2 sobre +4. Quien no apile roba todo el montón y pierde el turno. Dos cartas iguales no negras (por ejemplo dos 8 amarillos) se descartan juntas: juega una y la gemela se lanza sola.';
 
   @override
   String get rulesUnoWild => 'Una carta negra elige un color nuevo. Juega +4 solo si no tienes carta del color actual. El rival puede impugnarlo: si el +4 era legal, roba 6; si no, el autor del +4 roba 4 y el impugnador juega.';

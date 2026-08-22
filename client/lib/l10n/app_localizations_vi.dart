@@ -612,7 +612,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoIntro => 'Mỗi người được chia 7 lá. Đánh lá cùng màu hoặc cùng hạng (số hoặc cùng loại bài đặc biệt).';
 
   @override
-  String get rulesUnoPlay => 'Bỏ lượt — người kế mất lượt. Đổi chiều khi còn hai người như bỏ lượt. +2 chỉ chồng lên +2, +4 chỉ chồng lên +4: phạt cộng dồn (hai lá +2 thì người kế rút 4). Không được chồng +2 lên +4. Ai không chồng sẽ rút cả chồng và mất lượt.';
+  String get rulesUnoPlay => 'Bỏ lượt — người kế mất lượt. Đổi chiều khi còn hai người như bỏ lượt. +2 chỉ chồng lên +2, +4 chỉ chồng lên +4: phạt cộng dồn (hai lá +2 thì người kế rút 4). Không được chồng +2 lên +4. Ai không chồng sẽ rút cả chồng và mất lượt.Hai lá giống nhau không phải đen (ví dụ hai quân 8 vàng) bỏ cùng lúc: đánh một lá, lá cặp đi tự động.';
 
   @override
   String get rulesUnoWild => 'Lá đen chọn màu mới. Chỉ đánh +4 khi không có lá màu hiện tại. Đối thủ có thể thách: nếu +4 hợp lệ họ rút 6; nếu không, người đánh +4 rút 4 và người thách được đánh.';

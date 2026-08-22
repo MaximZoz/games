@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Spill mot en bot uten tidsbegrensning per trekk.",
   "rulesUnoIntro": "Hver spiller får 7 kort. Spill et kort i samme farge eller samme rang (tall eller samme handling).",
-  "rulesUnoPlay": "Hopp over — neste mister turen. Retningsbytte med to spillere virker som hopp over. +2 stables bare på +2 og +4 bare på +4: straffen summeres (to +2 gjør at neste trekker 4). +2 kan ikke legges på +4. Den som ikke stabler trekker hele bunken og mister turen.",
+  "rulesUnoPlay": "Hopp over — neste mister turen. Retningsbytte med to spillere virker som hopp over. +2 stables bare på +2 og +4 bare på +4: straffen summeres (to +2 gjør at neste trekker 4). +2 kan ikke legges på +4. Den som ikke stabler trekker hele bunken og mister turen. To like ikke-svarte kort (f.eks. to gule 8) kastes sammen: spill ett, så følger tvillingen automatisk med.",
   "rulesUnoWild": "Et svart kort setter ny farge. Spill +4 bare hvis du ikke har kort i gjeldende farge. Motstanderen kan utfordre: var +4 lovlig, trekker hen 6; ellers trekker +4-spilleren 4 og utfordreren spiller.",
   "rulesUnoDraw": "Uten lovlig kort, trekk ett fra bunken. Matcher det, kan du spille det med en gang eller beholde det og gi turen videre. Du kan ikke trekke mens du har et lovlig trekk.",
   "rulesUnoWin": "To spillere til 100, 3+ til 300. En runde vinnes ved å tømme hånden.",

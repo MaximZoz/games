@@ -148,6 +148,7 @@ class OfflineUnoSession extends ChangeNotifier {
       lastDrawUserId: game.lastDrawUserId,
       lastDrawCount: game.lastDrawCount,
       lastEventCard: game.lastEventCard,
+      lastPlayedCards: List.of(game.lastPlayedCards),
     );
   }
 

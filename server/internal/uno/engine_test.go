@@ -463,6 +463,65 @@ func TestUnoCallAndChallengePenalty(t *testing.T) {
 	})
 }
 
+func TestUnoAutoPlaysIdenticalNonWildPair(t *testing.T) {
+	t.Run("two yellow eights leave together", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		first := testNumber("yellow-8-a", ColorYellow, 8)
+		second := testNumber("yellow-8-b", ColorYellow, 8)
+		game.Players[0].Hand = []Card{first, second, testNumber("keep", ColorBlue, 1)}
+		game.DiscardPile = []Card{testNumber("top-yellow-3", ColorYellow, 3)}
+		game.CurrentColor = ColorYellow
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID}); err != nil {
+			t.Fatal(err)
+		}
+		if len(game.Players[0].Hand) != 1 {
+			t.Fatalf("hand = %d, want 1 after pair dump", len(game.Players[0].Hand))
+		}
+		top := game.DiscardPile[len(game.DiscardPile)-1]
+		if top.ID != second.ID {
+			t.Fatalf("top = %s, want twin %s", top.ID, second.ID)
+		}
+		if game.CurrentIndex != 1 {
+			t.Fatalf("current = %d, want 1 after one number play", game.CurrentIndex)
+		}
+		if len(game.LastPlayedCards) != 2 {
+			t.Fatalf("played cards = %d, want 2", len(game.LastPlayedCards))
+		}
+	})
+
+	t.Run("two +2 add four to the stack", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		first := testAction("red-dt-a", ColorRed, KindDrawTwo)
+		second := testAction("red-dt-b", ColorRed, KindDrawTwo)
+		game.Players[0].Hand = []Card{first, second, testNumber("keep", ColorBlue, 1)}
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID}); err != nil {
+			t.Fatal(err)
+		}
+		if game.PendingDraw != 4 {
+			t.Fatalf("pending = %d, want 4", game.PendingDraw)
+		}
+		if len(game.Players[0].Hand) != 1 {
+			t.Fatalf("hand = %d, want 1", len(game.Players[0].Hand))
+		}
+	})
+
+	t.Run("wilds are not paired", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		first := testAction("wild-a", ColorWild, KindWild)
+		second := testAction("wild-b", ColorWild, KindWild)
+		game.Players[0].Hand = []Card{first, second, testNumber("keep", ColorBlue, 1)}
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID, Color: string(ColorGreen)}); err != nil {
+			t.Fatal(err)
+		}
+		if len(game.Players[0].Hand) != 2 {
+			t.Fatalf("hand = %d, want 2 (second wild stays)", len(game.Players[0].Hand))
+		}
+	})
+}
+
 func TestRoundScoringEndsMatchAtOneHundred(t *testing.T) {
 	game := controlledGame(t, 2)
 	winningCard := testNumber("winning", ColorRed, 9)

@@ -235,7 +235,7 @@
   },
   "rulesUnoOfflineBot": "Hra proti botovi bez časového limitu na tah.",
   "rulesUnoIntro": "Každý dostane 7 karet. Hrajte kartu stejné barvy nebo stejné hodnoty (číslo nebo stejná akce).",
-  "rulesUnoPlay": "Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 se klade jen na +2 a +4 jen na +4: trest se sčítá (dvě +2 — další lízne 4). +2 na +4 dát nelze. Kdo neodpoví, lízne celý balíček a ztrácí tah.",
+  "rulesUnoPlay": "Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 se klade jen na +2 a +4 jen na +4: trest se sčítá (dvě +2 — další lízne 4). +2 na +4 dát nelze. Kdo neodpoví, lízne celý balíček a ztrácí tah. Dvě stejné nečerné karty (např. dvě žluté 8) se odhodí spolu: zahrajte jednu a dvojče odletí samo.",
   "rulesUnoWild": "Černá karta určí novou barvu. +4 jen když nemáte kartu aktuální barvy. Soupeř může vyzvat: bylo-li +4 legální, lízne 6; jinak autor +4 lízne 4 a vyzývatel hraje.",
   "rulesUnoDraw": "Bez vhodné karty lízněte jednu z balíčku. Pokud sedí, můžete ji ihned zahrát, nebo si ji nechat a předat tah. Nelze lízat, dokud máte tah.",
   "rulesUnoWin": "Ve dvou do 100 bodů, při 3+ hráčích do 300. Kolo vyhraje hráč, který shodí všechny karty.",

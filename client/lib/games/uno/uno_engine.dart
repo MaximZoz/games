@@ -109,6 +109,7 @@ class UnoEngine {
   String lastDrawUserId = '';
   int lastDrawCount = 0;
   UnoCard? lastEventCard;
+  List<UnoCard> lastPlayedCards = [];
   UnoCard? wild4ProofCard;
 
   bool get isOver => status == UnoStatus.over;
@@ -270,6 +271,7 @@ class UnoEngine {
     lastDrawUserId = '';
     lastDrawCount = 0;
     lastEventCard = null;
+    lastPlayedCards = [];
     switch (action.type) {
       case UnoActionType.play:
         _applyPlay(action);
@@ -393,12 +395,17 @@ class UnoEngine {
 
     _expireUnoWindow();
     final player = players[playerIndex];
-    player.hand.removeAt(cardIndex);
+    final played = <UnoCard>[card];
+    final twin = findUnoTwin(player.hand, card);
+    if (twin != null) played.add(twin);
+    final removeIds = {for (final item in played) item.id};
+    player.hand.removeWhere((item) => removeIds.contains(item.id));
     player.saidUno = false;
-    discardPile.add(card);
+    discardPile.addAll(played);
     drawnCardId = null;
     lastPlayedBy = player.userId;
-    _noteEvent('play', player.userId, card);
+    lastPlayedCards = List.of(played);
+    _noteEvent('play', player.userId, played.last);
     pendingRoundWinnerIndex = -1;
     if (player.hand.length == 1) {
       unoVulnerableIndex = playerIndex;
@@ -429,7 +436,7 @@ class UnoEngine {
         status = UnoStatus.active;
       case UnoCardKind.drawTwo:
         currentColor = card.color;
-        pendingDraw += 2;
+        pendingDraw += 2 * played.length;
         wild4PlayerIndex = -1;
         wild4WasLegal = false;
         wild4ProofCard = null;

@@ -104,13 +104,14 @@ type Game struct {
 	Seed          int64 `json:"seed"`
 	ShuffleCount  int   `json:"shuffleCount"`
 
-	EventSeq       int    `json:"eventSeq"`
-	LastEventType  string `json:"lastEventType,omitempty"`
-	LastEventActor string `json:"lastEventActor,omitempty"`
-	LastDrawUserID string `json:"lastDrawUserId,omitempty"`
-	LastDrawCount  int    `json:"lastDrawCount,omitempty"`
-	LastEventCard  *Card  `json:"lastEventCard,omitempty"`
-	Wild4ProofCard *Card  `json:"wild4ProofCard,omitempty"`
+	EventSeq        int    `json:"eventSeq"`
+	LastEventType   string `json:"lastEventType,omitempty"`
+	LastEventActor  string `json:"lastEventActor,omitempty"`
+	LastDrawUserID  string `json:"lastDrawUserId,omitempty"`
+	LastDrawCount   int    `json:"lastDrawCount,omitempty"`
+	LastEventCard   *Card  `json:"lastEventCard,omitempty"`
+	LastPlayedCards []Card `json:"lastPlayedCards,omitempty"`
+	Wild4ProofCard  *Card  `json:"wild4ProofCard,omitempty"`
 }
 
 // PlayerView hides opponents' cards while retaining their hand sizes.
@@ -152,12 +153,13 @@ type GameView struct {
 	CanKeepOrPlayDrawn bool  `json:"canKeepOrPlayDrawn"`
 	MyIndex            int   `json:"myIndex"`
 
-	EventSeq       int    `json:"eventSeq"`
-	LastEventType  string `json:"lastEventType,omitempty"`
-	LastEventActor string `json:"lastEventActor,omitempty"`
-	LastDrawUserID string `json:"lastDrawUserId,omitempty"`
-	LastDrawCount  int    `json:"lastDrawCount,omitempty"`
-	LastEventCard  *Card  `json:"lastEventCard,omitempty"`
+	EventSeq        int    `json:"eventSeq"`
+	LastEventType   string `json:"lastEventType,omitempty"`
+	LastEventActor  string `json:"lastEventActor,omitempty"`
+	LastDrawUserID  string `json:"lastDrawUserId,omitempty"`
+	LastDrawCount   int    `json:"lastDrawCount,omitempty"`
+	LastEventCard   *Card  `json:"lastEventCard,omitempty"`
+	LastPlayedCards []Card `json:"lastPlayedCards,omitempty"`
 }
 
 // NewGame creates a deterministic match and deals its first round.
@@ -221,6 +223,7 @@ func (g *Game) Apply(action Action) error {
 	g.LastDrawUserID = ""
 	g.LastDrawCount = 0
 	g.LastEventCard = nil
+	g.LastPlayedCards = nil
 
 	switch action.Type {
 	case ActionPlay:
@@ -291,6 +294,9 @@ func (g *Game) View(forUserID string) GameView {
 	if g.LastEventCard != nil {
 		card := *g.LastEventCard
 		view.LastEventCard = &card
+	}
+	if len(g.LastPlayedCards) > 0 {
+		view.LastPlayedCards = append([]Card(nil), g.LastPlayedCards...)
 	}
 	viewerIndex := g.playerIndex(forUserID)
 	view.MyIndex = viewerIndex
@@ -434,13 +440,33 @@ func (g *Game) applyPlay(action Action) error {
 
 	g.expireUnoWindow()
 	player := &g.Players[playerIndex]
-	player.Hand = append(player.Hand[:cardIndex], player.Hand[cardIndex+1:]...)
+	played := []Card{card}
+	if !card.isWild() {
+		for i, other := range player.Hand {
+			if i != cardIndex && card.sameNonWildFace(other) {
+				played = append(played, other)
+				break
+			}
+		}
+	}
+	remove := map[string]struct{}{}
+	for _, item := range played {
+		remove[item.ID] = struct{}{}
+	}
+	kept := player.Hand[:0]
+	for _, item := range player.Hand {
+		if _, drop := remove[item.ID]; !drop {
+			kept = append(kept, item)
+		}
+	}
+	player.Hand = kept
 	player.SaidUno = false
-	g.DiscardPile = append(g.DiscardPile, card)
+	g.DiscardPile = append(g.DiscardPile, played...)
 	g.DrawnCardID = ""
 	g.LastPlayedBy = player.UserID
-	played := card
-	g.noteEvent("play", player.UserID, 1, &played)
+	g.LastPlayedCards = append([]Card(nil), played...)
+	topPlayed := played[len(played)-1]
+	g.noteEvent("play", player.UserID, len(played), &topPlayed)
 	g.PendingRoundWinnerIndex = -1
 	if len(player.Hand) == 1 {
 		g.markUnoVulnerable(playerIndex)
@@ -472,7 +498,7 @@ func (g *Game) applyPlay(action Action) error {
 		g.Status = StatusActive
 	case KindDrawTwo:
 		g.CurrentColor = card.Color
-		g.PendingDraw += 2
+		g.PendingDraw += 2 * len(played)
 		g.Wild4PlayerIndex = -1
 		g.Wild4WasLegal = false
 		g.Wild4ProofCard = nil

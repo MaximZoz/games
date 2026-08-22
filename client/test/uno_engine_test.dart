@@ -274,6 +274,32 @@ void main() {
     expect(engine.currentIndex, 0);
   });
 
+  test('identical non-wild pair is dumped together', () {
+    final first = number('yellow-8-a', UnoColor.yellow, 8);
+    final second = number('yellow-8-b', UnoColor.yellow, 8);
+    final engine = controlled(
+      firstHand: [first, second, number('keep', UnoColor.blue, 1)],
+    );
+    engine.discardPile = [number('top-yellow-3', UnoColor.yellow, 3)];
+    engine.currentColor = UnoColor.yellow;
+    engine.apply(UnoAction(UnoActionType.play, cardId: first.id));
+    expect(engine.players[0].hand, hasLength(1));
+    expect(engine.topDiscard?.id, second.id);
+    expect(engine.currentIndex, 1);
+    expect(engine.lastPlayedCards, hasLength(2));
+  });
+
+  test('identical +2 pair adds four to the stack', () {
+    final first = action('red-dt-a', UnoColor.red, UnoCardKind.drawTwo);
+    final second = action('red-dt-b', UnoColor.red, UnoCardKind.drawTwo);
+    final engine = controlled(
+      firstHand: [first, second, number('keep', UnoColor.blue, 1)],
+    );
+    engine.apply(UnoAction(UnoActionType.play, cardId: first.id));
+    expect(engine.pendingDraw, 4);
+    expect(engine.players[0].hand, hasLength(1));
+  });
+
   test('+2 is not playable on +4 while the penalty is open', () {
     final wd4 = action('wd4', UnoColor.wild, UnoCardKind.wildDrawFour);
     final plusTwo = action('plus-two', UnoColor.red, UnoCardKind.drawTwo);

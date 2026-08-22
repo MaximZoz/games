@@ -126,6 +126,7 @@ class UnoGameView {
     this.lastDrawUserId = '',
     this.lastDrawCount = 0,
     this.lastEventCard,
+    this.lastPlayedCards = const [],
   });
 
   final String id;
@@ -166,6 +167,7 @@ class UnoGameView {
   final String lastDrawUserId;
   final int lastDrawCount;
   final UnoCard? lastEventCard;
+  final List<UnoCard> lastPlayedCards;
 
   bool get isOver => status == 'over';
   bool get isBetweenRounds => status == UnoStatus.betweenRounds;
@@ -309,6 +311,10 @@ class UnoGameView {
         }
         return null;
       }(),
+      lastPlayedCards: _models(
+        _pick(json, 'last_played_cards', 'lastPlayedCards'),
+        UnoCard.fromJson,
+      ),
     );
   }
 }

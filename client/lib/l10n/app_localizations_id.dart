@@ -612,7 +612,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoIntro => 'Setiap pemain mendapat 7 kartu. Mainkan kartu warna sama atau peringkat sama (angka atau aksi yang sama).';
 
   @override
-  String get rulesUnoPlay => 'Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 hanya menumpuk di +2 dan +4 hanya di +4: penalti dijumlahkan (dua +2 membuat berikutnya mengambil 4). +2 tidak boleh di atas +4. Yang tidak menumpuk mengambil seluruh tumpukan dan dilewati.';
+  String get rulesUnoPlay => 'Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 hanya menumpuk di +2 dan +4 hanya di +4: penalti dijumlahkan (dua +2 membuat berikutnya mengambil 4). +2 tidak boleh di atas +4. Yang tidak menumpuk mengambil seluruh tumpukan dan dilewati. Dua kartu identik non-hitam (mis. dua 8 kuning) dibuang bersama: mainkan satu, kembarannya ikut otomatis.';
 
   @override
   String get rulesUnoWild => 'Kartu hitam menetapkan warna baru. Mainkan +4 hanya jika tidak ada kartu warna saat ini. Lawan bisa menantang: jika +4 sah ia mengambil 6; jika tidak, pemain +4 mengambil 4 dan penantang bermain.';

@@ -612,7 +612,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoIntro => 'Varje spelare får 7 kort. Spela ett kort i samma färg eller samma rang (siffra eller samma åtgärd).';
 
   @override
-  String get rulesUnoPlay => 'Hoppa över — nästa mister turen. Vänd med två spelare fungerar som hoppa över. +2 staplas bara på +2 och +4 bara på +4: straffet adderas (två +2 gör att nästa drar 4). +2 får inte läggas på +4. Den som inte staplar drar hela högen och mister turen.';
+  String get rulesUnoPlay => 'Hoppa över — nästa mister turen. Vänd med två spelare fungerar som hoppa över. +2 staplas bara på +2 och +4 bara på +4: straffet adderas (två +2 gör att nästa drar 4). +2 får inte läggas på +4. Den som inte staplar drar hela högen och mister turen. Två identiska icke-svarta kort (t.ex. två gula 8) slängs tillsammans: spela ett så följer tvillingen med automatiskt.';
 
   @override
   String get rulesUnoWild => 'Ett svart kort sätter en ny färg. Spela +4 bara om du saknar kort i aktuell färg. Motståndaren kan utmana: var +4 lagligt drar hen 6; annars drar +4-spelaren 4 och utmanaren spelar.';
