@@ -2020,7 +2020,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Zeit pro Zug: $time.';
+    return 'Zeit pro Zug: $time. Zeitüberschreitung bedeutet Niederlage.';
   }
 
   @override

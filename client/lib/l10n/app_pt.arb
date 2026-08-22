@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Sem limite de tempo por jogada.",
-  "rulesTurnTime": "Tempo por jogada: {time}.",
+  "rulesTurnTime": "Tempo por jogada: {time}. Acabar o tempo é derrota.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

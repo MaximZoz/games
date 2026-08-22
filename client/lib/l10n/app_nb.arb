@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Ingen tidsgrense per trekk.",
-  "rulesTurnTime": "Tid per trekk: {time}.",
+  "rulesTurnTime": "Tid per trekk: {time}. Tiden ute er tap.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

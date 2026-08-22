@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Bez limitu czasu na ruch.",
-  "rulesTurnTime": "Czas na ruch: {time}.",
+  "rulesTurnTime": "Czas na ruch: {time}. Koniec czasu oznacza przegraną.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

@@ -2020,7 +2020,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Time per turn: $time.';
+    return 'Time per turn: $time. Running out of time is a loss.';
   }
 
   @override

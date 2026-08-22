@@ -674,6 +674,30 @@ func TestStartNextHandRotatesDealer(t *testing.T) {
 	}
 }
 
+func TestActingTimeoutForfeitEndsHeadsUpNotJustFold(t *testing.T) {
+	g, err := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
+	if err != nil {
+		t.Fatal(err)
+	}
+	acting := g.ActingIndex
+	other := 1 - acting
+	startChips := g.Players[acting].Chips
+	if startChips <= 0 {
+		t.Fatalf("acting player should still have chips before timeout, got %d", startChips)
+	}
+	// Таймаут = сдача, не фолд: фишки обнуляются, стол вдвоём закрывается.
+	g.ForfeitPlayer(acting)
+	if g.Players[acting].Chips != 0 {
+		t.Fatalf("timeout must zero chips, got %d (fold would keep %d)", g.Players[acting].Chips, startChips)
+	}
+	if !g.TableOver || !g.HandOver {
+		t.Fatal("heads-up timeout must end the table, not only the hand")
+	}
+	if len(g.Winners) != 1 || g.Winners[0] != other {
+		t.Fatalf("winner should be seat %d, got %v", other, g.Winners)
+	}
+}
+
 func TestForfeitEliminatesAndMayEndTable(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
 	// p1 forfeits mid-hand: folds, chips zeroed, p0 wins uncontested -> table over.

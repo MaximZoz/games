@@ -2020,7 +2020,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return '每步时间：$time。';
+    return '每步时间：$time。超时即负。';
   }
 
   @override

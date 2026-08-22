@@ -1059,7 +1059,7 @@
     }
   },
   "rulesNoTimeLimit": "No time limit per turn.",
-  "rulesTurnTime": "Time per turn: {time}.",
+  "rulesTurnTime": "Time per turn: {time}. Running out of time is a loss.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

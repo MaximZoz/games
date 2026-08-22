@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Без обмеження часу на хід.",
-  "rulesTurnTime": "Час на хід: {time}.",
+  "rulesTurnTime": "Час на хід: {time}. Якщо час вийшов — поразка.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

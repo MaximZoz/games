@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Pas de limite de temps par coup.",
-  "rulesTurnTime": "Temps par coup : {time}.",
+  "rulesTurnTime": "Temps par coup : {time}. Le dépassement de temps est une défaite.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

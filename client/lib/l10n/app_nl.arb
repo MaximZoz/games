@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Geen tijdslimiet per beurt.",
-  "rulesTurnTime": "Tijd per beurt: {time}.",
+  "rulesTurnTime": "Tijd per beurt: {time}. Tijd overschrijden is verlies.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

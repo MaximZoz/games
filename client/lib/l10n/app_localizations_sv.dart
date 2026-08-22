@@ -2020,7 +2020,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tid per drag: $time.';
+    return 'Tid per drag: $time. Tidsgränsen innebär förlust.';
   }
 
   @override

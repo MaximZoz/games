@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Без абмежавання часу на ход.",
-  "rulesTurnTime": "Час на ход: {time}.",
+  "rulesTurnTime": "Час на ход: {time}. Калі час выйшаў — параза.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

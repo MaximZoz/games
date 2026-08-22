@@ -2020,7 +2020,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Жүріс уақыты: $time.';
+    return 'Жүріс уақыты: $time. Уақыт бітсе — жеңіліс.';
   }
 
   @override

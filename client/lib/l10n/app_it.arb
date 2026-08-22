@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Nessun limite di tempo per mossa.",
-  "rulesTurnTime": "Tempo per mossa: {time}.",
+  "rulesTurnTime": "Tempo per mossa: {time}. Lo scadere del tempo è una sconfitta.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

@@ -286,6 +286,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return l10n.gameYouWon;
       }
       if (place > 1) return l10n.gameYouPlaced(place);
+      if (game.isTimeout) return l10n.unoYouLostTimeout;
       if (game.stakeBronze > 0) return l10n.gameYouLost;
       if (game.winners.isNotEmpty) return _winnersStatus(game);
       return l10n.pokerHandOver;

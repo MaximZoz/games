@@ -2020,7 +2020,7 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Час на ход: $time.';
+    return 'Час на ход: $time. Калі час выйшаў — параза.';
   }
 
   @override

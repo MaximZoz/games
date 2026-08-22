@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "אין מגבלת זמן לכל מהלך.",
-  "rulesTurnTime": "זמן למהלך: {time}.",
+  "rulesTurnTime": "זמן למהלך: {time}. סיום הזמן הוא הפסד.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

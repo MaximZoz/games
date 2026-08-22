@@ -2020,7 +2020,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Thời gian mỗi lượt: $time.';
+    return 'Thời gian mỗi lượt: $time. Hết giờ là thua.';
   }
 
   @override

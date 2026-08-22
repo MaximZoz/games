@@ -2020,7 +2020,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tid per trekk: $time.';
+    return 'Tid per trekk: $time. Tiden ute er tap.';
   }
 
   @override

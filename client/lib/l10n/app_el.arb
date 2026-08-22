@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Χωρίς χρονικό όριο ανά κίνηση.",
-  "rulesTurnTime": "Χρόνος ανά κίνηση: {time}.",
+  "rulesTurnTime": "Χρόνος ανά κίνηση: {time}. Η λήξη του χρόνου είναι ήττα.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

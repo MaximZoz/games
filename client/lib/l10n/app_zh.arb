@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "每步不限时。",
-  "rulesTurnTime": "每步时间：{time}。",
+  "rulesTurnTime": "每步时间：{time}。超时即负。",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

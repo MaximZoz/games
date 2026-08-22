@@ -2020,7 +2020,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return '수당 시간: $time.';
+    return '수당 시간: $time. 시간 초과는 패배입니다.';
   }
 
   @override

@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Không giới hạn thời gian mỗi lượt.",
-  "rulesTurnTime": "Thời gian mỗi lượt: {time}.",
+  "rulesTurnTime": "Thời gian mỗi lượt: {time}. Hết giờ là thua.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

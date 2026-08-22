@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Ingen tidsgräns per drag.",
-  "rulesTurnTime": "Tid per drag: {time}.",
+  "rulesTurnTime": "Tid per drag: {time}. Tidsgränsen innebär förlust.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

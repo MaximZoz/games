@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "चाल पर समय सीमा नहीं।",
-  "rulesTurnTime": "चाल का समय: {time}.",
+  "rulesTurnTime": "चाल का समय: {time}. समय खत्म होना हार है।",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

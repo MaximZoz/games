@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Hamle başına süre sınırı yok.",
-  "rulesTurnTime": "Hamle süresi: {time}.",
+  "rulesTurnTime": "Hamle süresi: {time}. Süre dolarsa yenilirsiniz.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "ไม่จำกัดเวลาต่อตา",
-  "rulesTurnTime": "เวลาต่อตา: {time}",
+  "rulesTurnTime": "เวลาต่อตา: {time} หมดเวลาถือว่าแพ้",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

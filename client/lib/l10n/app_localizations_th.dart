@@ -2020,7 +2020,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'เวลาต่อตา: $time';
+    return 'เวลาต่อตา: $time หมดเวลาถือว่าแพ้';
   }
 
   @override

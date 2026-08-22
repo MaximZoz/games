@@ -2020,7 +2020,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Čas na tah: $time.';
+    return 'Čas na tah: $time. Vypršení času znamená prohru.';
   }
 
   @override

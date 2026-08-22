@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "一手の制限時間なし。",
-  "rulesTurnTime": "一手の時間：{time}。",
+  "rulesTurnTime": "一手の時間：{time}。時間切れは負けです。",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

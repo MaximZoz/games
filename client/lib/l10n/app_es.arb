@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Sin límite de tiempo por turno.",
-  "rulesTurnTime": "Tiempo por turno: {time}.",
+  "rulesTurnTime": "Tiempo por turno: {time}. Si se acaba el tiempo, pierdes.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

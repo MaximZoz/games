@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Ingen tidsgrænse pr. træk.",
-  "rulesTurnTime": "Tid pr. træk: {time}.",
+  "rulesTurnTime": "Tid pr. træk: {time}. Tiden ude er et nederlag.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

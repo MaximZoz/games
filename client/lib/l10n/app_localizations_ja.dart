@@ -2020,7 +2020,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return '一手の時間：$time。';
+    return '一手の時間：$time。時間切れは負けです。';
   }
 
   @override
