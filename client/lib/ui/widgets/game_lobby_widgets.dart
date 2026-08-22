@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/presence_provider.dart';
+import 'package:multigames_client/core/presence_sort.dart';
+import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show LobbyPlayer, formatStakeAmount, stakeCoinType; // stake — LobbyStakeChip
 import 'package:multigames_client/l10n/l10n.dart';
@@ -7,6 +11,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/utils/user_error.dart';
 
 const List<IconData> kLobbyPresetAvatarIcons = [
   Icons.face_rounded,
@@ -20,7 +25,7 @@ const List<IconData> kLobbyPresetAvatarIcons = [
   Icons.person_rounded,
 ];
 
-/// Общие виджеты лобби (крестики / дурак).
+/// Общие виджеты лобби (крестики / дурак / покер / морской бой / уно).
 /// См. также `games/shared_lobby.dart` — общая сессия и leave/creator.
 ///
 /// Чип «Ставки N 🥉» — общий для лобби всех игр (2 игрока).
@@ -163,7 +168,7 @@ class LobbyShareLinkCard extends StatelessWidget {
 /// чтобы карточка не растягивалась на весь экран при паре друзей.
 double estimateLobbyFriendsCardHeight(int friendCount) {
   if (friendCount <= 0) return 88;
-  return 24 + friendCount * 56.0;
+  return 24 + friendCount * 64.0;
 }
 
 /// Баннер «Поиск соперника…» — общий для matchmake-лобби всех игр.
@@ -543,6 +548,277 @@ class GameLobbyWaitingLayout extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Список друзей в лобби «Своя игра» — один вид для всех игр.
+///
+/// Сортирует по presence, показывает «Онлайн» / «был в сети» и зелёную точку.
+class LobbyFriendsInviteCard extends ConsumerWidget {
+  const LobbyFriendsInviteCard({
+    super.key,
+    required this.friendsAsync,
+    required this.excludeUserIds,
+    required this.invitedIds,
+    required this.invitingIds,
+    required this.cancellingIds,
+    required this.listStorageKey,
+    required this.expand,
+    required this.onInvite,
+    required this.onCancel,
+    this.declinedIds = const {},
+    this.onFriendTap,
+  });
+
+  final AsyncValue<FriendsSnapshot> friendsAsync;
+  final Set<String> excludeUserIds;
+  final Set<String> invitedIds;
+  final Set<String> invitingIds;
+  final Set<String> cancellingIds;
+  final Set<String> declinedIds;
+  final String listStorageKey;
+  final bool expand;
+  final ValueChanged<String> onInvite;
+  final ValueChanged<String> onCancel;
+  final ValueChanged<FriendItem>? onFriendTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GradientCard(
+      animate: false,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: friendsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
+        data: (snapshot) {
+          final presence =
+              ref.watch(presenceMapProvider).valueOrNull ?? const {};
+          final list = snapshot.friends
+              .where((friend) => !excludeUserIds.contains(friend.user.id))
+              .toList();
+          sortByPresenceOnlineFirst(list, (friend) => friend.user.id, presence);
+          if (list.isEmpty) {
+            final empty = Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                context.l10n.friendsEmpty,
+                style: const TextStyle(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            );
+            return expand ? Center(child: empty) : empty;
+          }
+          return ListView.builder(
+            key: PageStorageKey(listStorageKey),
+            padding: const EdgeInsets.only(bottom: 8),
+            shrinkWrap: !expand,
+            physics: expand
+                ? const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  )
+                : const NeverScrollableScrollPhysics(),
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final friend = list[index];
+              final id = friend.user.id;
+              final invited = invitedIds.contains(id);
+              final declined = declinedIds.contains(id);
+              final working =
+                  invitingIds.contains(id) || cancellingIds.contains(id);
+              final entry = presence[id];
+              final statusText = formatPresenceStatus(entry);
+              final name = (friend.user.displayName ?? '').trim();
+              final avatar = LobbyFriendPresenceAvatar(
+                user: friend.user,
+                isOnline: entry?.online == true,
+              );
+              return Padding(
+                key: ValueKey('lobby-invite-$id'),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    if (onFriendTap == null)
+                      avatar
+                    else
+                      Tooltip(
+                        message: context.l10n.userInfoTitle,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () => onFriendTap!(friend),
+                            behavior: HitTestBehavior.opaque,
+                            child: avatar,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name.isEmpty ? context.l10n.commonPlayer : name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (statusText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: working || declined
+                          ? null
+                          : invited
+                              ? () => onCancel(id)
+                              : () => onInvite(id),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accentStart,
+                        side: BorderSide(
+                          color: AppColors.accentStart.withValues(alpha: 0.6),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: working
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accentStart,
+                              ),
+                            )
+                          : Text(
+                              declined
+                                  ? context.l10n.lobbyInviteSentShort
+                                  : invited
+                                      ? context.l10n.commonCancel
+                                      : context.l10n.lobbyInvite,
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accentStart,
+          ),
+        ),
+        error: (error, _) => Center(
+          child: Text(
+            formatUserError(
+              error,
+              fallback: context.l10n.friendsLoadFailed,
+            ),
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Аватар друга в списке приглашений: буква / файл / пресет + точка онлайн.
+class LobbyFriendPresenceAvatar extends StatelessWidget {
+  const LobbyFriendPresenceAvatar({
+    super.key,
+    required this.user,
+    required this.isOnline,
+    this.radius = 20,
+  });
+
+  final FriendUserItem user;
+  final bool isOnline;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final displayName = user.displayName?.trim() ?? '';
+    final letter = displayName.isEmpty ? '?' : displayName[0].toUpperCase();
+    Widget avatar;
+    if (user.avatarKind == 'file' &&
+        user.avatarValue != null &&
+        user.avatarValue!.isNotEmpty) {
+      final img = AvatarMemoryCache.fromAvatarValue(user.avatarValue!);
+      avatar = img == null
+          ? _letterAvatar(letter)
+          : CircleAvatar(radius: radius, backgroundImage: img);
+    } else if (user.avatarKind == 'preset' && user.avatarValue != null) {
+      final idx = int.tryParse(user.avatarValue!);
+      avatar = idx != null &&
+              idx >= 0 &&
+              idx < kLobbyPresetAvatarIcons.length
+          ? CircleAvatar(
+              radius: radius,
+              backgroundColor: AppColors.accentSoft,
+              child: Icon(
+                kLobbyPresetAvatarIcons[idx],
+                color: AppColors.accentStart,
+                size: radius,
+              ),
+            )
+          : _letterAvatar(letter);
+    } else {
+      avatar = _letterAvatar(letter);
+    }
+    if (!isOnline) return avatar;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        avatar,
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.surfaceCard, width: 1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _letterAvatar(String letter) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppColors.accentSoft,
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: AppColors.accentStart,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

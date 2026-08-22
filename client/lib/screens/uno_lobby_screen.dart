@@ -254,8 +254,18 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
         copied: _linkCopied,
         onTap: _copyLink,
       ),
-      friendsCardBuilder: (expand) =>
-          _friendsCard(lobby, friendsAsync, expand: expand),
+      friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        friendsAsync: friendsAsync,
+        excludeUserIds: memberIds,
+        invitedIds: _invited,
+        invitingIds: _inviting,
+        cancellingIds: _cancelling,
+        listStorageKey: 'uno-lobby-friends',
+        expand: expand,
+        onInvite: _invite,
+        onCancel: _cancelInvite,
+        onFriendTap: (friend) => _showFriendProfile(friend.user),
+      ),
     );
   }
 
@@ -486,86 +496,22 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
     );
   }
 
-  Widget _friendsCard(
-    UnoLobbyView lobby,
-    AsyncValue<FriendsSnapshot> friendsAsync, {
-    required bool expand,
-  }) {
-    final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      child: friendsAsync.when(
-        skipLoadingOnReload: true,
-        skipLoadingOnRefresh: true,
-        data: (snapshot) {
-          final friends = snapshot.friends
-              .where((friend) => !memberIds.contains(friend.user.id))
-              .toList();
-          if (friends.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                context.l10n.friendsEmpty,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            );
-          }
-          return ListView.builder(
-            key: const PageStorageKey('uno-lobby-friends'),
-            shrinkWrap: !expand,
-            physics: expand
-                ? const AlwaysScrollableScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            itemCount: friends.length,
-            itemBuilder: (_, index) {
-              final user = friends[index].user;
-              final name = (user.displayName ?? '').trim();
-              final invited = _invited.contains(user.id);
-              final working =
-                  _inviting.contains(user.id) || _cancelling.contains(user.id);
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.accentSoft,
-                  child: Text(
-                    name.isEmpty ? '?' : name[0].toUpperCase(),
-                    style: const TextStyle(color: AppColors.accentStart),
-                  ),
-                ),
-                title: Text(
-                  name.isEmpty ? context.l10n.commonPlayer : name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: working
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : OutlinedButton(
-                        onPressed: invited
-                            ? () => _cancelInvite(user.id)
-                            : () => _invite(user.id),
-                        child: Text(
-                          invited
-                              ? context.l10n.commonCancel
-                              : context.l10n.lobbyInvite,
-                        ),
-                      ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        error: (error, _) => Text(
-          formatUserError(error),
-          style: const TextStyle(color: Colors.redAccent),
-        ),
+  void _showFriendProfile(FriendUserItem user) {
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: user.id,
+        displayName: user.displayName,
+        avatarKind: user.avatarKind,
+        avatarValue: user.avatarValue,
+        frameCode: user.frameCode,
+        frameColor: user.frameColor,
+        age: user.age,
+        gender: user.gender,
+        about: user.about,
+        messageFrom: 'games',
+        messageReturnPath: '/games/uno/lobby/${widget.lobbyId}?mode=invite',
       ),
     );
   }

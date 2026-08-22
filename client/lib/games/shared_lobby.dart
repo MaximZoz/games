@@ -5,8 +5,9 @@
 /// Приглашать может любой участник лобби.
 ///
 /// **UI-скелет ожидания:** [GameLobbyWaitingLayout] + [LobbyMultiPlayersCard]
-/// в `ui/widgets/game_lobby_widgets.dart` — чип ставки / карточка «Игроки N/M»
-/// со слотами аватаров и чатом, ссылка, друзья. Игры инжектят данные.
+/// + [LobbyFriendsInviteCard] в `ui/widgets/game_lobby_widgets.dart` —
+/// чип ставки / карточка «Игроки N/M» со слотами аватаров и чатом, ссылка,
+/// друзья с presence («Онлайн»). Игры инжектят данные.
 ///
 /// **Правила:** [showGameRulesDialog] + `stakeBronze` из лобби/карточки создания.
 ///
