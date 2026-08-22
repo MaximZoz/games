@@ -39,7 +39,7 @@ foreach ($varName in @("FLY_API_TOKEN", "FLY_APP_NAME")) {
 
 if ([string]::IsNullOrWhiteSpace($env:FLY_REGION)) { $env:FLY_REGION = "ams" }
 if ([string]::IsNullOrWhiteSpace($env:FLY_REDIS_NAME)) { $env:FLY_REDIS_NAME = "$($env:FLY_APP_NAME)-redis" }
-if ([string]::IsNullOrWhiteSpace($env:FLY_REDIS_PLAN)) { $env:FLY_REDIS_PLAN = "pay-as-you-go" }
+# FLY_REDIS_PLAN пустой = default plan у flyctl
 
 $flyBin = $null
 if (Get-Command fly -ErrorAction SilentlyContinue) { $flyBin = "fly" }
@@ -51,7 +51,8 @@ else { Write-Error "Не найден fly/flyctl" }
 Write-Host "==> App:        $($env:FLY_APP_NAME)"
 Write-Host "==> Redis name: $($env:FLY_REDIS_NAME)"
 Write-Host "==> Region:     $($env:FLY_REGION)"
-Write-Host "==> Plan:       $($env:FLY_REDIS_PLAN)"
+$planLabel = if ([string]::IsNullOrWhiteSpace($env:FLY_REDIS_PLAN)) { "<default>" } else { $env:FLY_REDIS_PLAN }
+Write-Host "==> Plan:       $planLabel"
 
 & $flyBin status --app $env:FLY_APP_NAME 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
@@ -75,10 +76,12 @@ if (-not $redisExists) {
         "redis", "create",
         "--name", $env:FLY_REDIS_NAME,
         "--region", $env:FLY_REGION,
-        "--plan", $env:FLY_REDIS_PLAN,
         "--no-replicas",
         "--enable-eviction"
     )
+    if (-not [string]::IsNullOrWhiteSpace($env:FLY_REDIS_PLAN)) {
+        $createArgs += @("--plan", $env:FLY_REDIS_PLAN)
+    }
     if (-not [string]::IsNullOrWhiteSpace($env:FLY_ORG)) {
         $createArgs += @("--org", $env:FLY_ORG)
     }

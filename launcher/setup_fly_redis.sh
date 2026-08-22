@@ -13,7 +13,8 @@
 # Опционально в env-файле:
 #   FLY_REDIS_NAME=multigameszozu-redis   # имя Upstash DB (по умолчанию <app>-redis)
 #   FLY_REGION=ams
-#   FLY_REDIS_PLAN=pay-as-you-go          # или free / и т.д. (fly redis plans)
+#   FLY_REDIS_PLAN=          # по умолчанию НЕ передаём --plan (Fly возьмёт default).
+#                            # Список: fly redis plans
 #   FLY_ORG=personal
 set -euo pipefail
 
@@ -52,7 +53,8 @@ done
 
 FLY_REGION="${FLY_REGION:-ams}"
 FLY_REDIS_NAME="${FLY_REDIS_NAME:-${FLY_APP_NAME}-redis}"
-FLY_REDIS_PLAN="${FLY_REDIS_PLAN:-pay-as-you-go}"
+# Пусто = не передавать --plan, flyctl сам выберет актуальный default.
+FLY_REDIS_PLAN="${FLY_REDIS_PLAN:-}"
 FLY_ORG="${FLY_ORG:-}"
 
 if command -v fly >/dev/null 2>&1; then
@@ -71,7 +73,7 @@ export FLY_API_TOKEN
 echo "==> App:        $FLY_APP_NAME"
 echo "==> Redis name: $FLY_REDIS_NAME"
 echo "==> Region:     $FLY_REGION"
-echo "==> Plan:       $FLY_REDIS_PLAN"
+echo "==> Plan:       ${FLY_REDIS_PLAN:-<default>}"
 
 echo "Проверяю доступ Fly..."
 whoami_out="$("$FLY_BIN" auth whoami 2>&1 || true)"
@@ -106,10 +108,12 @@ if [[ "$redis_exists" -eq 0 ]]; then
     redis create
     --name "$FLY_REDIS_NAME"
     --region "$FLY_REGION"
-    --plan "$FLY_REDIS_PLAN"
     --no-replicas
     --enable-eviction
   )
+  if [[ -n "$FLY_REDIS_PLAN" ]]; then
+    create_args+=(--plan "$FLY_REDIS_PLAN")
+  fi
   if [[ -n "$FLY_ORG" ]]; then
     create_args+=(--org "$FLY_ORG")
   fi
