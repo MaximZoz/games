@@ -746,6 +746,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Odota sekunti — he ehtivät vielä sanoa Unon.';
 
   @override
+  String get unoErrCallTooLate => 'Unoa ei voi enää sanoa. Seuraava pelaaja on jo pelannut.';
+
+  @override
   String get gamesInDevelopment => 'Kehityksessä';
 
   @override

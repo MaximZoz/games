@@ -746,6 +746,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get unoErrCatchTooEarly => 'รอหนึ่งวินาที — พวกเขายังพูดอุโนได้';
 
   @override
+  String get unoErrCallTooLate => 'พูดอุโนไม่ได้อีกแล้ว ผู้เล่นถัดไปเดินไปแล้ว';
+
+  @override
   String get gamesInDevelopment => 'กำลังพัฒนา';
 
   @override

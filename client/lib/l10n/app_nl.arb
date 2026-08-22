@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Tegen de klok in",
   "unoErrStackSameOnly": "Op +2 mag alleen +2, op +4 alleen +4. +2 op +4 is niet toegestaan.",
   "unoErrCatchTooEarly": "Wacht even — ze kunnen nog Uno zeggen.",
+  "unoErrCallTooLate": "U kunt geen Uno meer zeggen. De volgende speler heeft al gespeeld.",
   "gamesInDevelopment": "In ontwikkeling",
   "rulesPokerPlayers": "Spelers: {players}.",
   "@rulesPokerPlayers": {

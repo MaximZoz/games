@@ -746,6 +746,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Bir soniya kuting — ular hali «Uno» deyishlari mumkin.';
 
   @override
+  String get unoErrCallTooLate => 'Endi «Uno» deyib bo‘lmaydi. Keyingi o‘yinchi yurib bo‘ldi.';
+
+  @override
   String get gamesInDevelopment => 'Ishlanmoqda';
 
   @override

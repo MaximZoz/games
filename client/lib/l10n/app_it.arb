@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Senso antiorario",
   "unoErrStackSameOnly": "Puoi giocare +2 solo su +2 e +4 solo su +4. Non puoi mettere +2 su +4.",
   "unoErrCatchTooEarly": "Aspetta un secondo: possono ancora dire Uno.",
+  "unoErrCallTooLate": "Non puoi più dire Uno. Il giocatore successivo ha già giocato.",
   "gamesInDevelopment": "In sviluppo",
   "rulesPokerPlayers": "Giocatori: {players}.",
   "@rulesPokerPlayers": {

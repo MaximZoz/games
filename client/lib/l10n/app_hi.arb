@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "घड़ी की उलटी दिशा",
   "unoErrStackSameOnly": "+2 केवल +2 पर और +4 केवल +4 पर चलाया जा सकता है। +2 को +4 पर नहीं रखा जा सकता।",
   "unoErrCatchTooEarly": "एक सेकंड रुकें — वे अभी ऊनो कह सकते हैं।",
+  "unoErrCallTooLate": "अब उनो नहीं कहा जा सकता। अगला खिलाड़ी पहले ही चल चुका है।",
   "gamesInDevelopment": "विकास में",
   "rulesPokerPlayers": "खिलाड़ी: {players}.",
   "@rulesPokerPlayers": {

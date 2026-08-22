@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Vastapäivään",
   "unoErrStackSameOnly": "+2:n päälle saa vain +2, +4:n päälle vain +4. +2 ei käy +4:n päälle.",
   "unoErrCatchTooEarly": "Odota sekunti — he ehtivät vielä sanoa Unon.",
+  "unoErrCallTooLate": "Unoa ei voi enää sanoa. Seuraava pelaaja on jo pelannut.",
   "gamesInDevelopment": "Kehityksessä",
   "rulesPokerPlayers": "Pelaajat: {players}.",
   "@rulesPokerPlayers": {

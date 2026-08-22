@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Gegen den Uhrzeigersinn",
   "unoErrStackSameOnly": "Auf +2 darf nur +2, auf +4 nur +4 gelegt werden. +2 auf +4 ist nicht erlaubt.",
   "unoErrCatchTooEarly": "Einen Moment — sie können noch UNO sagen.",
+  "unoErrCallTooLate": "UNO sagen geht nicht mehr: der nächste Spieler hat bereits gezogen.",
   "gamesInDevelopment": "In Entwicklung",
   "rulesPokerPlayers": "Spieler: {players}.",
   "@rulesPokerPlayers": {

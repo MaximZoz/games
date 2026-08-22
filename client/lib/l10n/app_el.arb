@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Αριστερόστροφα",
   "unoErrStackSameOnly": "Στο +2 παίζετε μόνο +2, στο +4 μόνο +4. Δεν μπαίνει +2 πάνω σε +4.",
   "unoErrCatchTooEarly": "Περιμένετε ένα δευτερόλεπτο — μπορούν ακόμα να πουν Uno.",
+  "unoErrCallTooLate": "Δεν μπορείτε πια να πείτε Uno. Ο επόμενος παίκτης έπαιξε ήδη.",
   "gamesInDevelopment": "Υπό ανάπτυξη",
   "rulesPokerPlayers": "Παίκτες: {players}.",
   "@rulesPokerPlayers": {

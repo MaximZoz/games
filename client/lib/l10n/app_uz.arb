@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Soat yo‘nalishiga qarshi",
   "unoErrStackSameOnly": "+2 ustiga faqat +2, +4 ustiga faqat +4 qo‘yiladi. +2 ni +4 ustiga qo‘yib bo‘lmaydi.",
   "unoErrCatchTooEarly": "Bir soniya kuting — ular hali «Uno» deyishlari mumkin.",
+  "unoErrCallTooLate": "Endi «Uno» deyib bo‘lmaydi. Keyingi o‘yinchi yurib bo‘ldi.",
   "gamesInDevelopment": "Ishlanmoqda",
   "rulesPokerPlayers": "O‘yinchilar: {players}.",
   "@rulesPokerPlayers": {

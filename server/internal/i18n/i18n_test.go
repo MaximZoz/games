@@ -97,6 +97,12 @@ func TestT(t *testing.T) {
 	if got := T(LangRU, "uno: only the same +2 or +4 can stack"); got == ErrUnoStackSameOnly || got == "" {
 		t.Fatalf("ru uno stack left English: %q", got)
 	}
+	if got := T(LangEN, "you cannot call UNO now"); got != ErrUnoCallTooLate {
+		t.Fatalf("en uno late call: %q", got)
+	}
+	if got := T(LangRU, "you cannot call UNO now"); got == "you cannot call UNO now" || got == ErrUnoCallTooLate || got == "" {
+		t.Fatalf("ru uno late call left English: %q", got)
+	}
 }
 
 func TestCatalogComplete(t *testing.T) {

@@ -746,6 +746,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unoErrCatchTooEarly => 'एक सेकंड रुकें — वे अभी ऊनो कह सकते हैं।';
 
   @override
+  String get unoErrCallTooLate => 'अब उनो नहीं कहा जा सकता। अगला खिलाड़ी पहले ही चल चुका है।';
+
+  @override
   String get gamesInDevelopment => 'विकास में';
 
   @override

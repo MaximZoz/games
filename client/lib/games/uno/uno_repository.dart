@@ -110,6 +110,7 @@ class UnoGameView {
     this.lastRoundPoints = 0,
     this.lastRoundNumber = 0,
     required this.canChallengeUno,
+    this.canCallUno = false,
     this.unoVulnerableAtMs = 0,
     required this.canChallengeWd4,
     required this.mustChooseColor,
@@ -152,6 +153,7 @@ class UnoGameView {
   final int lastRoundPoints;
   final int lastRoundNumber;
   final bool canChallengeUno;
+  final bool canCallUno;
   final int unoVulnerableAtMs;
   final bool canChallengeWd4;
   final bool mustChooseColor;
@@ -185,13 +187,23 @@ class UnoGameView {
       status == UnoStatus.awaitingWd4Challenge ||
       canChallengeWd4;
 
-  /// «Поймать без Уно» доступно сразу после серверного флага или после 1 с форы.
+  /// «Поймать без Уно» — у любого игрока после 1 с форы, не только на своём ходе.
   bool get unoCatchReady {
-    if (!isMyTurn) return false;
+    if (iAmEliminated) return false;
     if (unoVulnerableAtMs > 0) {
-      return DateTime.now().millisecondsSinceEpoch >= unoVulnerableAtMs;
+      return DateTime.now().millisecondsSinceEpoch >= unoVulnerableAtMs &&
+          canChallengeUno;
     }
     return canChallengeUno;
+  }
+
+  /// «Уно!» только пока окно ещё открыто (следующий ход его закрывает).
+  bool get unoCallReady {
+    final mine = me;
+    if (mine == null || mine.forfeited || mine.saidUno || mine.handCount != 1) {
+      return false;
+    }
+    return canCallUno || unoVulnerableAtMs > 0;
   }
   bool get iAmEliminated => me?.forfeited == true;
   bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
@@ -277,6 +289,7 @@ class UnoGameView {
               0,
       canChallengeUno:
           _pick(json, 'can_challenge_uno', 'canChallengeUno') == true,
+      canCallUno: _pick(json, 'can_call_uno', 'canCallUno') == true,
       unoVulnerableAtMs: _asInt(
         _pick(json, 'uno_vulnerable_at_ms', 'unoVulnerableAtMs'),
       ),

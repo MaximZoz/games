@@ -746,6 +746,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unoErrCatchTooEarly => '1秒待ってください。まだUNOを宣言できます。';
 
   @override
+  String get unoErrCallTooLate => 'もうUNOは言えません。次のプレイヤーがすでに出しました。';
+
+  @override
   String get gamesInDevelopment => '開発中';
 
   @override

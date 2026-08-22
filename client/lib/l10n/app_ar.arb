@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "عكس عقارب الساعة",
   "unoErrStackSameOnly": "يمكنك لعب +2 على +2 فقط، أو +4 على +4. لا يمكن وضع +2 على +4.",
   "unoErrCatchTooEarly": "انتظر ثانية — ما زال بإمكانهم قول أونو.",
+  "unoErrCallTooLate": "لم يعد بإمكانك قول أونو. اللاعب التالي لعب بالفعل.",
   "gamesInDevelopment": "قيد التطوير",
   "rulesPokerPlayers": "اللاعبون: {players}.",
   "@rulesPokerPlayers": {

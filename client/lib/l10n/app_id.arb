@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Berlawanan arah jarum jam",
   "unoErrStackSameOnly": "Anda hanya boleh memainkan +2 di atas +2, atau +4 di atas +4. +2 tidak boleh di atas +4.",
   "unoErrCatchTooEarly": "Tunggu sebentar — mereka masih bisa bilang Uno.",
+  "unoErrCallTooLate": "Anda tidak bisa lagi bilang Uno. Pemain berikutnya sudah jalan.",
   "gamesInDevelopment": "Dalam pengembangan",
   "rulesPokerPlayers": "Pemain: {players}.",
   "@rulesPokerPlayers": {

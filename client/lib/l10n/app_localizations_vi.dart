@@ -746,6 +746,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Đợi một giây — họ vẫn có thể hô Uno.';
 
   @override
+  String get unoErrCallTooLate => 'Không thể hô Uno nữa. Người tiếp theo đã đánh.';
+
+  @override
   String get gamesInDevelopment => 'Đang phát triển';
 
   @override

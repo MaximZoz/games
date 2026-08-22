@@ -746,6 +746,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get unoErrCatchTooEarly => 'חכו שנייה — עדיין אפשר להגיד אונו.';
 
   @override
+  String get unoErrCallTooLate => 'אי אפשר כבר להגיד אונו. השחקן הבא כבר שיחק.';
+
+  @override
   String get gamesInDevelopment => 'בפיתוח';
 
   @override

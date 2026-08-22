@@ -340,6 +340,60 @@ void main() {
     expect(engine.unoVulnerableIndex, -1);
   });
 
+  test('any other player can catch UNO after the grace', () {
+    final played = number('red-play-3p', UnoColor.red, 7);
+    final engine = UnoEngine.controlled(
+      players: [
+        UnoPlayer(
+          userId: 'p0',
+          seat: 0,
+          hand: [played, number('last-3p', UnoColor.blue, 1)],
+        ),
+        UnoPlayer(
+          userId: 'p1',
+          seat: 1,
+          hand: [number('p1-keep', UnoColor.blue, 2)],
+        ),
+        UnoPlayer(
+          userId: 'p2',
+          seat: 2,
+          hand: [number('p2-keep', UnoColor.green, 3)],
+        ),
+      ],
+      drawPile: [
+        for (var i = 0; i < 20; i++) number('draw-3p-$i', UnoColor.yellow, i % 10),
+      ],
+      topDiscard: number('top-red-5-3p', UnoColor.red, 5),
+    );
+    engine.nowMs = 10000;
+    engine.apply(UnoAction(UnoActionType.play, cardId: played.id));
+    engine.nowMs = engine.unoVulnerableAtMs;
+    expect(engine.canCallUno(0), isTrue);
+    expect(engine.canChallengeUno(0), isFalse);
+    expect(engine.canChallengeUno(1), isTrue);
+    expect(engine.canChallengeUno(2), isTrue);
+    engine.apply(UnoAction(
+      UnoActionType.challengeUno,
+      actorUserId: 'p2',
+      targetUserId: 'p0',
+    ));
+    expect(engine.players[0].hand, hasLength(3));
+  });
+
+  test('UNO call window closes after the next player moves', () {
+    final played = number('red-play-late', UnoColor.red, 7);
+    final reply = number('red-reply', UnoColor.red, 3);
+    final engine = controlled(
+      firstHand: [played, number('last-late', UnoColor.blue, 1)],
+      secondHand: [reply, number('p1-keep-late', UnoColor.blue, 2)],
+    );
+    engine.apply(UnoAction(UnoActionType.play, cardId: played.id));
+    expect(engine.canCallUno(0), isTrue);
+    engine.apply(UnoAction(UnoActionType.play, cardId: reply.id));
+    expect(engine.canCallUno(0), isFalse);
+    expect(engine.canChallengeUno(1), isFalse);
+  });
+
   test('UNO catch succeeds after the one-second grace', () {
     final played = number('red-play', UnoColor.red, 7);
     final engine = controlled(

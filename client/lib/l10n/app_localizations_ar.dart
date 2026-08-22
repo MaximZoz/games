@@ -746,6 +746,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unoErrCatchTooEarly => 'انتظر ثانية — ما زال بإمكانهم قول أونو.';
 
   @override
+  String get unoErrCallTooLate => 'لم يعد بإمكانك قول أونو. اللاعب التالي لعب بالفعل.';
+
+  @override
   String get gamesInDevelopment => 'قيد التطوير';
 
   @override

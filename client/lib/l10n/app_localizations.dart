@@ -1547,6 +1547,12 @@ abstract class AppLocalizations {
   /// **'Подождите секунду — они ещё могут сказать «Уно».'**
   String get unoErrCatchTooEarly;
 
+  /// No description provided for @unoErrCallTooLate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказать «Уно» уже нельзя: следующий игрок уже сходил.'**
+  String get unoErrCallTooLate;
+
   /// No description provided for @gamesInDevelopment.
   ///
   /// In ru, this message translates to:

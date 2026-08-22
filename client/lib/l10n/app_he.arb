@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "נגד כיוון השעון",
   "unoErrStackSameOnly": "אפשר לשים +2 רק על +2 ו-+4 רק על +4. אי אפשר לשים +2 על +4.",
   "unoErrCatchTooEarly": "חכו שנייה — עדיין אפשר להגיד אונו.",
+  "unoErrCallTooLate": "אי אפשר כבר להגיד אונו. השחקן הבא כבר שיחק.",
   "gamesInDevelopment": "בפיתוח",
   "rulesPokerPlayers": "שחקנים: {players}.",
   "@rulesPokerPlayers": {

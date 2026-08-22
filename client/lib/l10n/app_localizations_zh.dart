@@ -746,6 +746,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unoErrCatchTooEarly => '等一秒——对方还可以喊 Uno。';
 
   @override
+  String get unoErrCallTooLate => '不能再喊 Uno 了。下一名玩家已经出牌。';
+
+  @override
   String get gamesInDevelopment => '开发中';
 
   @override

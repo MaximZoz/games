@@ -746,6 +746,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Пачакайце секунду — яны яшчэ могуць сказаць «Уно».';
 
   @override
+  String get unoErrCallTooLate => 'Сказаць «Уно» ўжо нельга: наступны гулец ужо зрабіў ход.';
+
+  @override
   String get gamesInDevelopment => 'У распрацоўцы';
 
   @override

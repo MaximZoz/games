@@ -19,6 +19,17 @@ void main() {
       expect(formatUserError(null, fallback: 'Кастом'), 'Кастом');
     });
 
+    test('raw UNO late-call error is localized', () {
+      expect(
+        formatUserError(GamesException(
+          400,
+          'you cannot call UNO now',
+          errorKey: 'you cannot call UNO now',
+        )),
+        contains('уже нельзя'),
+      );
+    });
+
     test('raw UNO stack error is localized', () {
       expect(
         formatUserError(GamesException(

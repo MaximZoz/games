@@ -746,6 +746,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Bir saniye bekleyin — hâlâ Uno diyebilirler.';
 
   @override
+  String get unoErrCallTooLate => 'Artık Uno diyemezsiniz. Sıradaki oyuncu zaten oynadı.';
+
+  @override
   String get gamesInDevelopment => 'Geliştiriliyor';
 
   @override

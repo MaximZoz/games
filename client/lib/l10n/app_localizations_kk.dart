@@ -746,6 +746,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Бір секунд күтіңіз — олар әлі «Uno» айта алады.';
 
   @override
+  String get unoErrCallTooLate => '«Uno» айтуға енді болмайды. Келесі ойыншы жүріп қойды.';
+
+  @override
   String get gamesInDevelopment => 'Әзірленуде';
 
   @override

@@ -746,6 +746,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unoErrCatchTooEarly => '잠시만요. 아직 우노를 외칠 수 있습니다.';
 
   @override
+  String get unoErrCallTooLate => '이제 우노를 외칠 수 없습니다. 다음 플레이어가 이미 냈습니다.';
+
+  @override
   String get gamesInDevelopment => '개발 중';
 
   @override

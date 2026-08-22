@@ -379,6 +379,7 @@
   "unoDirectionCounterclockwise": "Против часовой стрелки",
   "unoErrStackSameOnly": "На +2 можно ответить только +2, на +4 — только +4. +2 на +4 класть нельзя.",
   "unoErrCatchTooEarly": "Подождите секунду — они ещё могут сказать «Уно».",
+  "unoErrCallTooLate": "Сказать «Уно» уже нельзя: следующий игрок уже сходил.",
   "gamesInDevelopment": "В разработке",
   "rulesPokerPlayers": "Игроки: {players}.",
   "@rulesPokerPlayers": {

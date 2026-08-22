@@ -746,6 +746,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Einen Moment — sie können noch UNO sagen.';
 
   @override
+  String get unoErrCallTooLate => 'UNO sagen geht nicht mehr: der nächste Spieler hat bereits gezogen.';
+
+  @override
   String get gamesInDevelopment => 'In Entwicklung';
 
   @override

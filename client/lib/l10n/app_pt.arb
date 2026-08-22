@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Sentido anti-horário",
   "unoErrStackSameOnly": "Só pode jogar +2 em +2, ou +4 em +4. Não se pode empilhar +2 em +4.",
   "unoErrCatchTooEarly": "Espere um segundo — ainda podem dizer Uno.",
+  "unoErrCallTooLate": "Já não pode dizer Uno. O jogador seguinte já jogou.",
   "gamesInDevelopment": "Em desenvolvimento",
   "rulesPokerPlayers": "Jogadores: {players}.",
   "@rulesPokerPlayers": {

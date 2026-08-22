@@ -1634,11 +1634,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               compact: isNarrow(context),
             );
     }
-    final me = game.me;
     final challengeTarget = _unoChallengeTarget(game);
     final canDraw = _canTakeFromDeck(game) && !game.canChallengeWd4;
-    final canCallUno =
-        me != null && me.handCount == 1 && !me.saidUno && !me.forfeited;
+    final canCallUno = game.unoCallReady;
     return SizedBox(
       height: 48,
       child: Center(

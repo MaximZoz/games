@@ -275,6 +275,7 @@
   "unoDirectionCounterclockwise": "Mod uret",
   "unoErrStackSameOnly": "På +2 må kun +2 lægges, på +4 kun +4. +2 på +4 er ikke tilladt.",
   "unoErrCatchTooEarly": "Vent et sekund — de kan stadig sige Uno.",
+  "unoErrCallTooLate": "Du kan ikke længere sige Uno. Næste spiller har allerede trukket.",
   "gamesInDevelopment": "Under udvikling",
   "rulesPokerPlayers": "Spillere: {players}.",
   "@rulesPokerPlayers": {

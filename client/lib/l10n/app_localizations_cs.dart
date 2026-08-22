@@ -746,6 +746,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get unoErrCatchTooEarly => 'Počkejte vteřinu — ještě můžou říct Uno.';
 
   @override
+  String get unoErrCallTooLate => 'Uno už říct nelze. Další hráč už táhl.';
+
+  @override
   String get gamesInDevelopment => 'Ve vývoji';
 
   @override
