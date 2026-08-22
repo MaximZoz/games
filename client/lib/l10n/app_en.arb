@@ -318,6 +318,7 @@
   "unoPendingDraw": "+{count} cards",
   "unoYouWon": "You won the match!",
   "unoYouLost": "Match over",
+  "unoYouLostTimeout": "You lost on time",
   "unoWinner": "Winner: {name}",
   "unoRoundWonBy": "{name} wins the round",
   "unoRoundPointsAwarded": "+{points}",

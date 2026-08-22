@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} cartas",
   "unoYouWon": "Você venceu a partida!",
   "unoYouLost": "Partida encerrada",
+  "unoYouLostTimeout": "Perdeu por tempo",
   "unoWinner": "Vencedor: {name}",
   "unoRoundWonBy": "{name} vence a rodada",
   "unoRoundPointsAwarded": "+{points}",

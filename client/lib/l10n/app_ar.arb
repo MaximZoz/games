@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} بطاقات",
   "unoYouWon": "فزت بالمباراة!",
   "unoYouLost": "انتهت المباراة",
+  "unoYouLostTimeout": "لقد خسرت بسبب الوقت",
   "unoWinner": "الفائز: {name}",
   "unoRoundWonBy": "{name} يفوز بالجولة",
   "unoRoundPointsAwarded": "+{points}",

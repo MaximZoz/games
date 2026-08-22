@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} ใบ",
   "unoYouWon": "คุณชนะเกม!",
   "unoYouLost": "เกมจบแล้ว",
+  "unoYouLostTimeout": "คุณแพ้เพราะหมดเวลา",
   "unoWinner": "ผู้ชนะ: {name}",
   "unoRoundWonBy": "{name} ชนะรอบ",
   "unoRoundPointsAwarded": "+{points}",

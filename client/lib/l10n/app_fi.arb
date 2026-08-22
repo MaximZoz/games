@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} korttia",
   "unoYouWon": "Voitit ottelun!",
   "unoYouLost": "Ottelu päättyi",
+  "unoYouLostTimeout": "Hävisit ajan loppumiseen",
   "unoWinner": "Voittaja: {name}",
   "unoRoundWonBy": "{name} voittaa erän",
   "unoRoundPointsAwarded": "+{points}",

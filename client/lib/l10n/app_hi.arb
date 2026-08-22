@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} पत्ते",
   "unoYouWon": "आप मैच जीत गए!",
   "unoYouLost": "मैच समाप्त",
+  "unoYouLostTimeout": "आप समय खत्म होने पर हारे",
   "unoWinner": "विजेता: {name}",
   "unoRoundWonBy": "{name} राउंड जीतते हैं",
   "unoRoundPointsAwarded": "+{points}",

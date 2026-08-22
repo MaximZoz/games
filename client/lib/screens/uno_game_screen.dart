@@ -18,6 +18,7 @@ import 'package:multigames_client/games/uno/uno_offline_session.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
+import 'package:multigames_client/games/uno/uno_seats.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -56,7 +57,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool _bindingsInitialized = false;
   bool _observeEntered = false;
   bool _balanceGainPlayed = false;
-  bool _lossChipRevealed = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   bool _isFindingGame = false;
@@ -922,7 +922,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             context: context,
             lostBronze: lost,
           );
-          if (mounted) setState(() => _lossChipRevealed = true);
           return;
         }
         await playGameSettledReward(
@@ -1253,19 +1252,18 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildGame(UnoGameView game) {
     final narrow = isNarrow(context);
-    final opponents = [
-      for (var i = 0; i < game.players.length; i++)
-        if (i != game.myIndex) MapEntry(i, game.players[i]),
-    ];
+    final seats = unoOpponentSeatOrder(
+      myIndex: game.myIndex,
+      playerCount: game.players.length,
+      direction: game.direction,
+    );
     final table = Column(
       children: [
         _buildHeader(game),
-        SizedBox(height: narrow ? 6 : 12),
-        _buildOpponents(game, opponents),
-        SizedBox(height: narrow ? 8 : 18),
-        Expanded(child: _buildCenterTable(game)),
+        SizedBox(height: narrow ? 4 : 8),
+        Expanded(child: _buildTableWithSeats(game, seats)),
         _buildActions(game),
-        SizedBox(height: narrow ? 6 : 10),
+        SizedBox(height: narrow ? 6 : 8),
         _buildHand(game),
       ],
     );
@@ -1305,7 +1303,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildHeader(UnoGameView game) {
     final status = game.isOver
-        ? (game.iWon ? context.l10n.unoYouWon : context.l10n.unoYouLost)
+        ? (game.iWon
+            ? (game.isTimeout
+                ? context.l10n.gameYouWonOpponentTimeout
+                : context.l10n.unoYouWon)
+            : (game.iLostOnTimeout
+                ? context.l10n.unoYouLostTimeout
+                : context.l10n.unoYouLost))
         : _statusHint(game);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1314,9 +1318,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           height: 40,
           child: GameStatusWithReward(
             statusText: status,
-            showReward: game.isOver &&
-                (game.iWon || _lossChipRevealed) &&
-                game.stakeBronze > 0,
+            showReward: game.isOver && game.stakeBronze > 0,
             rewardBronze: game.iWon
                 ? game.stakeBronze *
                     (game.players.where((p) => !p.isBot).length > 1
@@ -1379,54 +1381,88 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         : context.l10n.unoDrawHint;
   }
 
-  Widget _buildOpponents(
-    UnoGameView game,
-    List<MapEntry<int, UnoPlayerView>> opponents,
-  ) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 10,
-      runSpacing: 7,
+  Widget _buildTableWithSeats(UnoGameView game, List<int> seats) {
+    if (seats.length <= 1) {
+      return Column(
+        children: [
+          if (seats.isNotEmpty) _opponentChip(game, seats.first),
+          SizedBox(height: isNarrow(context) ? 8 : 12),
+          Expanded(child: _buildCenterTable(game)),
+        ],
+      );
+    }
+    final left = seats.first;
+    final right = seats.last;
+    final top = seats.length >= 3 ? seats[1] : null;
+    final sideAlignY = top == null ? -0.08 : 0.12;
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        for (final entry in opponents)
-          TurnTimerBorder(
-            active: !game.isOver &&
-                !_dealing &&
-                !entry.value.forfeited &&
-                game.turnTimeSec > 0 &&
-                entry.key == game.currentIndex,
-            turnDeadline: game.turnDeadline,
-            turnTimeSec: game.turnTimeSec,
-            borderWidth: 2.5,
-            radius: 16,
-            showIdleBorder: !entry.value.forfeited,
-            onExpired: _onTurnTimeExpired,
-            child: UnoOpponentHand(
-              key: _opponentKeys.putIfAbsent(entry.key, GlobalKey.new),
-              player: entry.value,
-              name: _playerName(entry.value, entry.key),
-              active: !game.isOver &&
-                  !entry.value.forfeited &&
-                  entry.key == game.currentIndex,
-              displayCount: entry.value.forfeited
-                  ? 0
-                  : _dealing
-                      ? (_dealOppShown[entry.key] ?? 0)
-                      : math.max(
-                          0,
-                          entry.value.handCount -
-                              (_pendingOppDraw[entry.key] ?? 0),
-                        ),
-              onProfileTap: entry.value.isBot
-                  ? null
-                  : () => unawaited(_openOpponentProfile(
-                        game,
-                        entry.value,
-                        entry.key,
-                      )),
-            ),
+        if (top != null)
+          Align(
+            alignment: Alignment.topCenter,
+            child: _opponentChip(game, top),
           ),
+        Align(
+          alignment: Alignment(-1, sideAlignY),
+          child: _opponentChip(game, left, vertical: true),
+        ),
+        Align(
+          alignment: Alignment(1, sideAlignY),
+          child: _opponentChip(game, right, vertical: true),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            isNarrow(context) ? 78 : 108,
+            top != null ? 70 : 8,
+            isNarrow(context) ? 78 : 108,
+            4,
+          ),
+          child: _buildCenterTable(game),
+        ),
       ],
+    );
+  }
+
+  Widget _opponentChip(
+    UnoGameView game,
+    int index, {
+    bool vertical = false,
+  }) {
+    if (index < 0 || index >= game.players.length) {
+      return const SizedBox.shrink();
+    }
+    final player = game.players[index];
+    return TurnTimerBorder(
+      active: !game.isOver &&
+          !_dealing &&
+          !player.forfeited &&
+          game.turnTimeSec > 0 &&
+          index == game.currentIndex,
+      turnDeadline: game.turnDeadline,
+      turnTimeSec: game.turnTimeSec,
+      borderWidth: 2.5,
+      radius: 16,
+      showIdleBorder: !player.forfeited,
+      onExpired: _onTurnTimeExpired,
+      child: UnoOpponentHand(
+        key: _opponentKeys.putIfAbsent(index, GlobalKey.new),
+        player: player,
+        name: _playerName(player, index),
+        active: !game.isOver && !player.forfeited && index == game.currentIndex,
+        displayCount: player.forfeited
+            ? 0
+            : _dealing
+                ? (_dealOppShown[index] ?? 0)
+                : math.max(
+                    0,
+                    player.handCount - (_pendingOppDraw[index] ?? 0),
+                  ),
+        vertical: vertical,
+        onProfileTap: player.isBot
+            ? null
+            : () => unawaited(_openOpponentProfile(game, player, index)),
+      ),
     );
   }
 
@@ -1458,7 +1494,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildCenterTable(UnoGameView game) {
     final narrow = isNarrow(context);
-    final cardSize = narrow ? const Size(62, 93) : const Size(78, 117);
+    final cardSize = narrow ? const Size(62, 93) : const Size(68, 102);
     final shownDiscard = unoVisibleDiscard(
       serverTop: game.topDiscard,
       override: _discardOverride,
@@ -1602,43 +1638,98 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
   }
 
+  ButtonStyle _unoActionStyle({Color? background, Color? foreground}) {
+    final compact = isWide(context);
+    final padding = compact
+        ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+        : const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
+    final minimum = compact ? const Size(0, 36) : const Size(0, 40);
+    final density = compact ? VisualDensity.compact : VisualDensity.standard;
+    final tap = compact
+        ? MaterialTapTargetSize.shrinkWrap
+        : MaterialTapTargetSize.padded;
+    if (background != null) {
+      return FilledButton.styleFrom(
+        backgroundColor: background,
+        foregroundColor: foreground,
+        visualDensity: density,
+        tapTargetSize: tap,
+        padding: padding,
+        minimumSize: minimum,
+      );
+    }
+    return OutlinedButton.styleFrom(
+      foregroundColor: foreground ?? AppColors.accentStart,
+      visualDensity: density,
+      tapTargetSize: tap,
+      padding: padding,
+      minimumSize: minimum,
+    );
+  }
+
+  Widget _constrainActions(Widget child) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: isWide(context) ? 320 : 420),
+        child: child,
+      ),
+    );
+  }
+
   Widget _buildActions(UnoGameView game) {
     if (game.isBetweenRounds) {
-      return FilledButton.icon(
-        onPressed: _busy ? null : () => _move(UnoActionType.nextRound),
-        icon: const Icon(Icons.skip_next_rounded),
-        label: Text(context.l10n.unoRoundContinue),
+      return _constrainActions(
+        FilledButton.icon(
+          onPressed: _busy ? null : () => _move(UnoActionType.nextRound),
+          style: _unoActionStyle(
+            background: AppColors.accentStart,
+            foreground: Colors.white,
+          ),
+          icon: const Icon(Icons.skip_next_rounded),
+          label: Text(context.l10n.unoRoundContinue),
+        ),
       );
     }
     if (game.isOver) {
-      return _isOffline
-          ? FilledButton.icon(
-              onPressed: _restartOffline,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(context.l10n.offlinePlayAgain),
-            )
-          : GameRematchSection(
-              rematchLobbyId: _rematchLobbyId,
-              rematchDeclined: _rematchDeclined,
-              iDeclinedRematch: _iDeclinedRematch,
-              isRematching: _isRematching,
-              isAcceptingRematch: _isAcceptingRematch,
-              isFindingGame: _isFindingGame,
-              peerIds: _peerIds(game),
-              invites: ref.watch(gameInvitesProvider),
-              onRematch: () => unawaited(_rematch()),
-              onAccept: (lobbyId) => unawaited(_acceptRematch(lobbyId)),
-              onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
-              onCancelWait: () => unawaited(_cancelRematchWait()),
-              onFindGame: () => unawaited(_findGame()),
-              compact: isNarrow(context),
-            );
+      return _constrainActions(
+        _isOffline
+            ? FilledButton.icon(
+                onPressed: _restartOffline,
+                style: _unoActionStyle(
+                  background: AppColors.accentStart,
+                  foreground: Colors.white,
+                ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.l10n.offlinePlayAgain),
+              )
+            : GameRematchSection(
+                rematchLobbyId: _rematchLobbyId,
+                rematchDeclined: _rematchDeclined,
+                iDeclinedRematch: _iDeclinedRematch,
+                isRematching: _isRematching,
+                isAcceptingRematch: _isAcceptingRematch,
+                isFindingGame: _isFindingGame,
+                peerIds: _peerIds(game),
+                invites: ref.watch(gameInvitesProvider),
+                onRematch: () => unawaited(_rematch()),
+                onAccept: (lobbyId) => unawaited(_acceptRematch(lobbyId)),
+                onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
+                onCancelWait: () => unawaited(_cancelRematchWait()),
+                onFindGame: () => unawaited(_findGame()),
+                compact: true,
+              ),
+      );
     }
     final challengeTarget = _unoChallengeTarget(game);
     final canDraw = _canTakeFromDeck(game) && !game.canChallengeWd4;
     final canCallUno = game.unoCallReady;
+    final filled = _unoActionStyle(
+      background: AppColors.accentStart,
+      foreground: Colors.white,
+    );
+    final outlined = _unoActionStyle();
     return SizedBox(
-      height: 48,
+      height: isWide(context) ? 40 : 48,
       child: Center(
         child: Wrap(
           alignment: WrapAlignment.center,
@@ -1648,21 +1739,23 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             if (canDraw)
               FilledButton.icon(
                 onPressed: _busy ? null : () => _draw(game),
+                style: filled,
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
             if (game.canKeepOrPlayDrawn)
               OutlinedButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.keep),
+                style: outlined,
                 icon: const Icon(Icons.pan_tool_alt_rounded),
                 label: Text(context.l10n.unoKeep),
               ),
             if (canCallUno)
               FilledButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.callUno),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE53935),
-                  foregroundColor: Colors.white,
+                style: _unoActionStyle(
+                  background: const Color(0xFFE53935),
+                  foreground: Colors.white,
                 ),
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
@@ -1675,6 +1768,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                           UnoActionType.challengeUno,
                           targetUserId: challengeTarget,
                         ),
+                style: outlined,
                 icon: const Icon(Icons.notification_important_rounded),
                 label: Text(context.l10n.unoChallengeUno),
               ),
@@ -1682,11 +1776,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               OutlinedButton.icon(
                 onPressed:
                     _busy ? null : () => _move(UnoActionType.challengeWd4),
+                style: outlined,
                 icon: const Icon(Icons.gavel_rounded),
                 label: Text(context.l10n.unoChallengeWd4),
               ),
               FilledButton.icon(
                 onPressed: _busy ? null : () => _draw(game),
+                style: filled,
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
@@ -1694,6 +1790,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             if (game.mustChooseColor)
               FilledButton.icon(
                 onPressed: _busy ? null : _choosePendingColor,
+                style: filled,
                 icon: const Icon(Icons.palette_rounded),
                 label: Text(context.l10n.unoChooseColor),
               ),
@@ -1804,6 +1901,7 @@ class UnoOpponentHand extends StatelessWidget {
     required this.name,
     required this.active,
     required this.displayCount,
+    this.vertical = false,
     this.onProfileTap,
   });
 
@@ -1811,13 +1909,111 @@ class UnoOpponentHand extends StatelessWidget {
   final String name;
   final bool active;
   final int displayCount;
+  final bool vertical;
   final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
     final narrow = isNarrow(context);
-    final size = narrow ? const Size(28, 42) : const Size(34, 51);
+    final size = narrow ? const Size(28, 42) : const Size(32, 48);
     final left = player.forfeited;
+    final nameStyle = TextStyle(
+      color: left
+          ? AppColors.textSecondary
+          : active
+              ? AppColors.accentStart
+              : AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+      fontSize: 12,
+      decoration: left ? TextDecoration.lineThrough : null,
+    );
+    final avatar = GamePlayerAvatar(
+      displayName: name,
+      avatarKind: player.avatarKind,
+      avatarValue: player.avatarValue,
+      frameCode: player.frameCode,
+      frameColor: player.frameColor,
+      compact: true,
+    );
+    final backs = left
+        ? const SizedBox.shrink()
+        : SizedBox(
+            width: size.width + 10,
+            height: size.height,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 8,
+                  child: UnoCardBackWidget(size: size, elevated: false),
+                ),
+                UnoCardBackWidget(size: size, elevated: false),
+              ],
+            ),
+          );
+    final stats = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment:
+          vertical ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: vertical ? 72 : (narrow ? 84 : 110)),
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: vertical ? TextAlign.center : TextAlign.start,
+            style: nameStyle,
+          ),
+        ),
+        Text(
+          context.l10n.unoCardsCount(displayCount),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          context.l10n.unoScore(player.score),
+          style: TextStyle(
+            color: left ? AppColors.textSecondary : AppColors.accentStart,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+    final unoMark = player.saidUno && !left
+        ? const Icon(
+            Icons.campaign_rounded,
+            size: 16,
+            color: Color(0xFFE53935),
+          )
+        : const SizedBox.shrink();
+    final body = vertical
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              avatar,
+              const SizedBox(height: 4),
+              backs,
+              const SizedBox(height: 4),
+              stats,
+              if (player.saidUno && !left) unoMark,
+            ],
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              avatar,
+              const SizedBox(width: 6),
+              backs,
+              const SizedBox(width: 6),
+              stats,
+              if (player.saidUno && !left) ...[
+                const SizedBox(width: 5),
+                unoMark,
+              ],
+            ],
+          );
     return Opacity(
       opacity: left ? 0.45 : 1,
       child: Material(
@@ -1827,92 +2023,14 @@ class UnoOpponentHand extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: narrow ? 8 : 11,
-              vertical: narrow ? 5 : 7,
+              horizontal: vertical ? 8 : (narrow ? 8 : 10),
+              vertical: vertical ? 6 : (narrow ? 5 : 6),
             ),
             decoration: BoxDecoration(
               color: AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GamePlayerAvatar(
-                  displayName: name,
-                  avatarKind: player.avatarKind,
-                  avatarValue: player.avatarValue,
-                  frameCode: player.frameCode,
-                  frameColor: player.frameColor,
-                  compact: true,
-                ),
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: size.width + 10,
-                  height: size.height,
-                  child: left
-                      ? null
-                      : Stack(
-                          children: [
-                            Positioned(
-                              left: 8,
-                              child:
-                                  UnoCardBackWidget(size: size, elevated: false),
-                            ),
-                            UnoCardBackWidget(size: size, elevated: false),
-                          ],
-                        ),
-                ),
-                const SizedBox(width: 6),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: narrow ? 84 : 120),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: left
-                              ? AppColors.textSecondary
-                              : active
-                                  ? AppColors.accentStart
-                                  : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          decoration:
-                              left ? TextDecoration.lineThrough : null,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      context.l10n.unoCardsCount(displayCount),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 10,
-                      ),
-                    ),
-                    Text(
-                      context.l10n.unoScore(player.score),
-                      style: TextStyle(
-                        color: left
-                            ? AppColors.textSecondary
-                            : AppColors.accentStart,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                if (player.saidUno && !left) ...[
-                  const SizedBox(width: 5),
-                  const Icon(
-                    Icons.campaign_rounded,
-                    size: 18,
-                    color: Color(0xFFE53935),
-                  ),
-                ],
-              ],
-            ),
+            child: body,
           ),
         ),
       ),

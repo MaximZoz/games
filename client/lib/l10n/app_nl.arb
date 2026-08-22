@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kaarten",
   "unoYouWon": "Je hebt de wedstrijd gewonnen!",
   "unoYouLost": "Wedstrijd afgelopen",
+  "unoYouLostTimeout": "U hebt op tijd verloren",
   "unoWinner": "Winnaar: {name}",
   "unoRoundWonBy": "{name} wint de ronde",
   "unoRoundPointsAwarded": "+{points}",

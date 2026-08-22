@@ -713,6 +713,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unoYouLost => '試合終了';
 
   @override
+  String get unoYouLostTimeout => '時間切れで負けました';
+
+  @override
   String unoWinner(String name) {
     return '勝者：$name';
   }

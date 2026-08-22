@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} karta",
   "unoYouWon": "Siz o‘yinni yutdingiz!",
   "unoYouLost": "O‘yin tugadi",
+  "unoYouLostTimeout": "Vaqt tugagani uchun yutqazdingiz",
   "unoWinner": "G‘olib: {name}",
   "unoRoundWonBy": "{name} raundni yutadi",
   "unoRoundPointsAwarded": "+{points}",

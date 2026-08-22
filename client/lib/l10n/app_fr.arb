@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} cartes",
   "unoYouWon": "Vous avez gagné la partie !",
   "unoYouLost": "Partie terminée",
+  "unoYouLostTimeout": "Vous avez perdu au temps",
   "unoWinner": "Gagnant : {name}",
   "unoRoundWonBy": "{name} gagne la manche",
   "unoRoundPointsAwarded": "+{points}",

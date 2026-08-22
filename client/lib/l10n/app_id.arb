@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kartu",
   "unoYouWon": "Anda memenangkan pertandingan!",
   "unoYouLost": "Pertandingan selesai",
+  "unoYouLostTimeout": "Anda kalah karena waktu habis",
   "unoWinner": "Pemenang: {name}",
   "unoRoundWonBy": "{name} memenangkan ronde",
   "unoRoundPointsAwarded": "+{points}",

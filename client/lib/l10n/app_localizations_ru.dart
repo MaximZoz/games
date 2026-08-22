@@ -713,6 +713,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unoYouLost => 'Матч окончен';
 
   @override
+  String get unoYouLostTimeout => 'Вы проиграли по времени';
+
+  @override
   String unoWinner(String name) {
     return 'Победитель: $name';
   }

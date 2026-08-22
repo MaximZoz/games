@@ -713,6 +713,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get unoYouLost => 'O‘yin tugadi';
 
   @override
+  String get unoYouLostTimeout => 'Vaqt tugagani uchun yutqazdingiz';
+
+  @override
   String unoWinner(String name) {
     return 'G‘olib: $name';
   }

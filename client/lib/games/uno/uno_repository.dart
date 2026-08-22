@@ -207,6 +207,10 @@ class UnoGameView {
   }
   bool get iAmEliminated => me?.forfeited == true;
   bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
+
+  /// Проиграл этот матч по своему таймауту, а не из‑за чужого.
+  bool get iLostOnTimeout =>
+      isTimeout && isOver && !iWon && (iAmEliminated || winnerUserIds.isNotEmpty);
   UnoPlayerView? get me =>
       myIndex >= 0 && myIndex < players.length ? players[myIndex] : null;
   List<UnoCard> get myHand => me?.hand ?? const [];

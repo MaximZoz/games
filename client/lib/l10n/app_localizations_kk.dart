@@ -713,6 +713,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get unoYouLost => 'Матч аяқталды';
 
   @override
+  String get unoYouLostTimeout => 'Уақыт біткендіктен ұтылдыңыз';
+
+  @override
   String unoWinner(String name) {
     return 'Жеңімпаз: $name';
   }

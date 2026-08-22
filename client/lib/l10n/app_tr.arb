@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kart",
   "unoYouWon": "Maçı kazandınız!",
   "unoYouLost": "Maç bitti",
+  "unoYouLostTimeout": "Süre dolduğu için kaybettiniz",
   "unoWinner": "Kazanan: {name}",
   "unoRoundWonBy": "{name} turu kazanır",
   "unoRoundPointsAwarded": "+{points}",

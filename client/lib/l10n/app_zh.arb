@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count}张",
   "unoYouWon": "你赢得了比赛！",
   "unoYouLost": "比赛结束",
+  "unoYouLostTimeout": "你因超时而输了",
   "unoWinner": "获胜者：{name}",
   "unoRoundWonBy": "{name} 赢得本局",
   "unoRoundPointsAwarded": "+{points}",

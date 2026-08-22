@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} κάρτες",
   "unoYouWon": "Κερδίσατε τον αγώνα!",
   "unoYouLost": "Ο αγώνας τελείωσε",
+  "unoYouLostTimeout": "Χάσατε λόγω χρόνου",
   "unoWinner": "Νικητής: {name}",
   "unoRoundWonBy": "Ο/Η {name} κερδίζει τον γύρο",
   "unoRoundPointsAwarded": "+{points}",

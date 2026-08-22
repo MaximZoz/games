@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} קלפים",
   "unoYouWon": "ניצחת במשחק!",
   "unoYouLost": "המשחק הסתיים",
+  "unoYouLostTimeout": "הפסדת בגלל הזמן",
   "unoWinner": "מנצח: {name}",
   "unoRoundWonBy": "{name} זוכה בסיבוב",
   "unoRoundPointsAwarded": "+{points}",

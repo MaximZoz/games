@@ -713,6 +713,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unoYouLost => 'انتهت المباراة';
 
   @override
+  String get unoYouLostTimeout => 'لقد خسرت بسبب الوقت';
+
+  @override
   String unoWinner(String name) {
     return 'الفائز: $name';
   }

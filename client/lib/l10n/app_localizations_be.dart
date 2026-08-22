@@ -713,6 +713,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get unoYouLost => 'Match over';
 
   @override
+  String get unoYouLostTimeout => 'Вы прайгралі па часе';
+
+  @override
   String unoWinner(String name) {
     return 'Winner: $name';
   }

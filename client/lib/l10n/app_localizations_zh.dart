@@ -713,6 +713,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unoYouLost => '比赛结束';
 
   @override
+  String get unoYouLostTimeout => '你因超时而输了';
+
+  @override
   String unoWinner(String name) {
     return '获胜者：$name';
   }

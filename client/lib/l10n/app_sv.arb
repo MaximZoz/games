@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kort",
   "unoYouWon": "Du vann matchen!",
   "unoYouLost": "Matchen är slut",
+  "unoYouLostTimeout": "Du förlorade på tid",
   "unoWinner": "Vinnare: {name}",
   "unoRoundWonBy": "{name} vinner ronden",
   "unoRoundPointsAwarded": "+{points}",

@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count}枚",
   "unoYouWon": "勝利しました！",
   "unoYouLost": "試合終了",
+  "unoYouLostTimeout": "時間切れで負けました",
   "unoWinner": "勝者：{name}",
   "unoRoundWonBy": "{name}がラウンド勝利",
   "unoRoundPointsAwarded": "+{points}",

@@ -1493,6 +1493,12 @@ abstract class AppLocalizations {
   /// **'Матч окончен'**
   String get unoYouLost;
 
+  /// No description provided for @unoYouLostTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли по времени'**
+  String get unoYouLostTimeout;
+
   /// No description provided for @unoWinner.
   ///
   /// In ru, this message translates to:

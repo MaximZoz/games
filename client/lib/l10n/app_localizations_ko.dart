@@ -713,6 +713,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unoYouLost => '매치 종료';
 
   @override
+  String get unoYouLostTimeout => '시간 초과로 패배했습니다';
+
+  @override
   String unoWinner(String name) {
     return '승자: $name';
   }

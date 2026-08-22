@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count}장",
   "unoYouWon": "매치에서 승리했습니다!",
   "unoYouLost": "매치 종료",
+  "unoYouLostTimeout": "시간 초과로 패배했습니다",
   "unoWinner": "승자: {name}",
   "unoRoundWonBy": "{name} 님이 라운드 승리",
   "unoRoundPointsAwarded": "+{points}",

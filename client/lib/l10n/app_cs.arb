@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} karet",
   "unoYouWon": "Vyhráli jste zápas!",
   "unoYouLost": "Zápas skončil",
+  "unoYouLostTimeout": "Prohráli jste na čas",
   "unoWinner": "Vítěz: {name}",
   "unoRoundWonBy": "{name} vyhrává kolo",
   "unoRoundPointsAwarded": "+{points}",

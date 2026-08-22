@@ -713,6 +713,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get unoYouLost => 'Ottelu päättyi';
 
   @override
+  String get unoYouLostTimeout => 'Hävisit ajan loppumiseen';
+
+  @override
   String unoWinner(String name) {
     return 'Voittaja: $name';
   }

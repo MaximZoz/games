@@ -713,6 +713,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unoYouLost => 'Partida encerrada';
 
   @override
+  String get unoYouLostTimeout => 'Perdeu por tempo';
+
+  @override
   String unoWinner(String name) {
     return 'Vencedor: $name';
   }
