@@ -624,7 +624,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesUnoWin => 'À deux, premier à 100 ; à 3+, premier à 300. Une manche est gagnée en vidant sa main.';
 
   @override
-  String get rulesUnoCall => 'Quand il reste une carte, appuyez sur « Uno ! ». Avant l’action suivante, un adversaire peut vous attraper sans Uno — vous piochez alors 2 cartes.';
+  String get rulesUnoCall => 'Quand il vous reste une carte, touchez « Uno ! » tout de suite. Les autres ne peuvent vous prendre pour un Uno oublié qu’après une seconde — vous piochez alors 2 cartes.';
 
   @override
   String get rulesUnoScoring => 'Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. À deux, premier à 100 ; à 3+, premier à 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Sens antihoraire';
+
+  @override
+  String get unoErrStackSameOnly => 'Vous ne pouvez jouer +2 que sur +2, et +4 que sur +4. Un +2 ne se pose pas sur un +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Attendez une seconde — ils peuvent encore dire Uno.';
 
   @override
   String get gamesInDevelopment => 'En développement';

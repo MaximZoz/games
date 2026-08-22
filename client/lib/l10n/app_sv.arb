@@ -239,7 +239,7 @@
   "rulesUnoWild": "Ett svart kort sätter en ny färg. Spela +4 bara om du saknar kort i aktuell färg. Motståndaren kan utmana: var +4 lagligt drar hen 6; annars drar +4-spelaren 4 och utmanaren spelar.",
   "rulesUnoDraw": "Utan lagligt kort, dra ett från högen. Passar det kan du spela det direkt eller behålla det och passa. Du får inte dra medan du har ett lagligt drag.",
   "rulesUnoWin": "Två spelare till 100, 3+ till 300. En rond vinns genom att tömma handen.",
-  "rulesUnoCall": "När ett kort återstår, tryck på ”Uno!”. Till nästa handling kan en motståndare ta dig utan Uno — då drar du 2 kort.",
+  "rulesUnoCall": "När ett kort återstår, tryck genast på ”Uno!”. Motståndare kan ta dig för glömt Uno först efter en sekund — då drar du 2 kort.",
   "rulesUnoScoring": "Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Två spelare till 100, 3+ till 300.",
   "unoColorRed": "Röd",
   "unoColorYellow": "Gul",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Rondpoäng",
   "unoDirectionClockwise": "Medurs",
   "unoDirectionCounterclockwise": "Moturs",
+  "unoErrStackSameOnly": "På +2 får bara +2 läggas, på +4 bara +4. +2 på +4 är inte tillåtet.",
+  "unoErrCatchTooEarly": "Vänta en sekund — de kan fortfarande säga Uno.",
   "gamesInDevelopment": "Under utveckling",
   "rulesPokerPlayers": "Spelare: {players}.",
   "@rulesPokerPlayers": {

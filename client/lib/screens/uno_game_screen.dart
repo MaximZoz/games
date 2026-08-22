@@ -78,6 +78,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   int _seenLastRoundNumber = 0;
   bool _roundOverlayDismissed = false;
   final Map<int, int> _dealOppShown = {};
+  Timer? _unoCatchTimer;
 
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
 
@@ -107,8 +108,20 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   @override
   void dispose() {
+    _unoCatchTimer?.cancel();
     GameFlyOverlay.dismissAll();
     super.dispose();
+  }
+
+  void _armUnoCatchTimer(UnoGameView game) {
+    _unoCatchTimer?.cancel();
+    final at = game.unoVulnerableAtMs;
+    if (at <= 0) return;
+    final wait = at - DateTime.now().millisecondsSinceEpoch;
+    if (wait <= 0) return;
+    _unoCatchTimer = Timer(Duration(milliseconds: wait + 20), () {
+      if (mounted) setState(() {});
+    });
   }
 
   Rect? _rectOf(GlobalKey key) {
@@ -545,7 +558,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       };
 
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
-    if (_busy || !game.isMyTurn || !_canPlayCard(game, card)) return;
+    if (_busy || !game.isMyTurn) return;
+    if (!_canPlayCard(game, card)) {
+      if (mounted && game.stackOpen && game.topDiscard != null) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.unoErrStackSameOnly,
+          kind: AppSnackKind.error,
+        );
+      }
+      return;
+    }
     setState(() => _busy = true);
     _lastLocalActor = game.viewerUserId ?? game.me?.id;
     try {
@@ -722,10 +745,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (game.status == UnoStatus.awaitingDrawnPlay) {
       return card.id == game.drawnCardId;
     }
-    if (game.pendingDraw > 0) {
-      return card.stacksOn(game.topDiscard!) &&
-          (game.status == UnoStatus.active ||
-              game.status == UnoStatus.awaitingWd4Challenge);
+    if (game.stackOpen) {
+      return card.stacksOn(game.topDiscard!);
     }
     if (game.status != UnoStatus.active) return false;
     return card.matches(game.topDiscard!, game.currentColor);
@@ -1092,6 +1113,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(unoGameProvider(widget.gameId));
     final game = gameAsync.valueOrNull;
+    if (game != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _armUnoCatchTimer(game);
+      });
+    }
     final groupChatId = (game?.chatId ?? '').trim();
     final showGroupChat =
         !_isOffline && game != null && groupChatId.isNotEmpty && !game.isOver;
@@ -1624,7 +1650,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),
-            if (game.canChallengeUno && challengeTarget != null)
+            if (game.unoCatchReady && challengeTarget != null)
               OutlinedButton.icon(
                 onPressed: _busy
                     ? null

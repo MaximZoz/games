@@ -624,7 +624,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesUnoWin => 'Στους δύο ως 100, με 3+ ως 300. Τον γύρο κερδίζει όποιος αδειάζει το χέρι.';
 
   @override
-  String get rulesUnoCall => 'Όταν μένει μία κάρτα, πατήστε «Uno!». Μέχρι την επόμενη ενέργεια ο αντίπαλος μπορεί να σας πιάσει χωρίς Uno — τότε τραβάτε 2 κάρτες.';
+  String get rulesUnoCall => 'Όταν μένει μία κάρτα, πατήστε αμέσως «Uno!». Οι αντίπαλοι μπορούν να σας πιάσουν για ξεχασμένο Uno μόνο μετά από ένα δευτερόλεπτο — τότε τραβάτε 2 κάρτες.';
 
   @override
   String get rulesUnoScoring => 'Όποιος αδειάσει πρώτος το χέρι κερδίζει τον γύρο και παίρνει πόντους από τα χέρια των αντιπάλων: αριθμοί στην αξία, ενέργειες 20, μαύρες 50. Στους δύο ως 100, με 3+ ως 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Αριστερόστροφα';
+
+  @override
+  String get unoErrStackSameOnly => 'Στο +2 παίζετε μόνο +2, στο +4 μόνο +4. Δεν μπαίνει +2 πάνω σε +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Περιμένετε ένα δευτερόλεπτο — μπορούν ακόμα να πουν Uno.';
 
   @override
   String get gamesInDevelopment => 'Υπό ανάπτυξη';

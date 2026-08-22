@@ -624,7 +624,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesUnoWin => 'اثنان حتى 100 نقطة، و3+ حتى 300. وتُربَح الجولة بتفريغ اليد.';
 
   @override
-  String get rulesUnoCall => 'عند بقاء بطاقة واحدة اضغط «أونو!». حتى الإجراء التالي يمكن للخصم أن يمسكك بلا أونو — فتسحب بطاقتين.';
+  String get rulesUnoCall => 'عند بقاء ورقة واحدة اضغط «أونو!» فورًا. يمكن للآخرين الإمساك بك لنسيان أونو بعد ثانية واحدة فقط — حينها تسحب ورقتين.';
 
   @override
   String get rulesUnoScoring => 'من يفرّغ يده أولًا يفوز بالجولة ويحصل على نقاط بطاقات الخصوم: الأرقام بقيمتها، الإجراءات 20، السوداء 50. اثنان حتى 100، و3+ حتى 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'عكس عقارب الساعة';
+
+  @override
+  String get unoErrStackSameOnly => 'يمكنك لعب +2 على +2 فقط، أو +4 على +4. لا يمكن وضع +2 على +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'انتظر ثانية — ما زال بإمكانهم قول أونو.';
 
   @override
   String get gamesInDevelopment => 'قيد التطوير';

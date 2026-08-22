@@ -428,6 +428,10 @@ func TestUnoCallAndChallengePenalty(t *testing.T) {
 		if err := game.Apply(Action{Type: ActionPlay, CardID: played.ID}); err != nil {
 			t.Fatal(err)
 		}
+		if err := game.Apply(Action{Type: ActionChallengeUno, ActorUserID: "p1", TargetUserID: "p0"}); err == nil {
+			t.Fatal("UNO challenge should wait one second")
+		}
+		game.NowMs = game.UnoVulnerableAtMs
 		if err := game.Apply(Action{Type: ActionChallengeUno, ActorUserID: "p1", TargetUserID: "p0"}); err != nil {
 			t.Fatal(err)
 		}

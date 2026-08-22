@@ -624,7 +624,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesUnoWin => '1대1은 100점, 3인 이상은 300점. 라운드는 손을 비운 사람이 이깁니다.';
 
   @override
-  String get rulesUnoCall => '한 장 남으면 «우노!»를 누르세요. 다음 행동 전에 상대가 우노 없이 잡으면 2장을 뽑습니다.';
+  String get rulesUnoCall => '한 장 남으면 바로 «우노!»를 누르세요. 상대는 1초 후에만 우노를 잊었다고 잡을 수 있고, 그때 2장을 뽑습니다.';
 
   @override
   String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 1대1은 100점, 3인 이상은 300점.';
@@ -738,6 +738,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => '반시계 방향';
+
+  @override
+  String get unoErrStackSameOnly => '+2 위에는 +2만, +4 위에는 +4만 낼 수 있습니다. +2를 +4 위에 올릴 수 없습니다.';
+
+  @override
+  String get unoErrCatchTooEarly => '잠시만요. 아직 우노를 외칠 수 있습니다.';
 
   @override
   String get gamesInDevelopment => '개발 중';

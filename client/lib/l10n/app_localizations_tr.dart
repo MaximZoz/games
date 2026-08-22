@@ -624,7 +624,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.';
 
   @override
-  String get rulesUnoCall => 'Bir kart kaldığında «Uno!»ya basın. Sonraki hamleden önce rakip sizi Unosuz yakalayabilir — o zaman 2 kart çekersiniz.';
+  String get rulesUnoCall => 'Bir kart kaldığında hemen «Uno!»ya basın. Rakipler Unoyu unuttuğunuz için sizi ancak bir saniye sonra yakalayabilir — o zaman 2 kart çekersiniz.';
 
   @override
   String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Saat yönünün tersine';
+
+  @override
+  String get unoErrStackSameOnly => '+2 üzerine yalnızca +2, +4 üzerine yalnızca +4 konur. +2, +4 üzerine atılamaz.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Bir saniye bekleyin — hâlâ Uno diyebilirler.';
 
   @override
   String get gamesInDevelopment => 'Geliştiriliyor';

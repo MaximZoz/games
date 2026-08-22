@@ -3,6 +3,7 @@ package uno
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 const (
@@ -13,6 +14,7 @@ const (
 	minPlayers             = 2
 	maxPlayers             = 10
 	cardsPerHand           = 7
+	unoCallGraceMs         = 1000
 )
 
 // TargetScoreForPlayerCount returns 100 for heads-up and 300 for 3+ players.
@@ -94,10 +96,13 @@ type Game struct {
 	DealerIndex             int   `json:"dealerIndex"`
 	ColorChooserIndex       int   `json:"colorChooserIndex"`
 	UnoVulnerableIndex      int   `json:"unoVulnerableIndex"`
+	UnoVulnerableAtMs       int64 `json:"unoVulnerableAtMs,omitempty"`
 	PendingRoundWinnerIndex int   `json:"pendingRoundWinnerIndex"`
-	Wild4WasLegal           bool  `json:"wild4WasLegal"`
-	Seed                    int64 `json:"seed"`
-	ShuffleCount            int   `json:"shuffleCount"`
+	// NowMs overrides the clock in tests. Zero means time.Now.
+	NowMs         int64 `json:"-"`
+	Wild4WasLegal bool  `json:"wild4WasLegal"`
+	Seed          int64 `json:"seed"`
+	ShuffleCount  int   `json:"shuffleCount"`
 
 	EventSeq       int    `json:"eventSeq"`
 	LastEventType  string `json:"lastEventType,omitempty"`
@@ -140,11 +145,12 @@ type GameView struct {
 	LastRoundPoints       int          `json:"lastRoundPoints,omitempty"`
 	LastRoundNumber       int          `json:"lastRoundNumber,omitempty"`
 
-	CanChallengeUno    bool `json:"canChallengeUno"`
-	CanChallengeWD4    bool `json:"canChallengeWd4"`
-	MustChooseColor    bool `json:"mustChooseColor"`
-	CanKeepOrPlayDrawn bool `json:"canKeepOrPlayDrawn"`
-	MyIndex            int  `json:"myIndex"`
+	CanChallengeUno    bool  `json:"canChallengeUno"`
+	UnoVulnerableAtMs  int64 `json:"unoVulnerableAtMs,omitempty"`
+	CanChallengeWD4    bool  `json:"canChallengeWd4"`
+	MustChooseColor    bool  `json:"mustChooseColor"`
+	CanKeepOrPlayDrawn bool  `json:"canKeepOrPlayDrawn"`
+	MyIndex            int   `json:"myIndex"`
 
 	EventSeq       int    `json:"eventSeq"`
 	LastEventType  string `json:"lastEventType,omitempty"`
@@ -288,8 +294,9 @@ func (g *Game) View(forUserID string) GameView {
 	}
 	viewerIndex := g.playerIndex(forUserID)
 	view.MyIndex = viewerIndex
+	view.UnoVulnerableAtMs = g.UnoVulnerableAtMs
 	view.CanChallengeUno = viewerIndex == g.CurrentIndex &&
-		g.UnoVulnerableIndex >= 0 &&
+		g.unoChallengeReady() &&
 		g.UnoVulnerableIndex != viewerIndex
 	view.CanChallengeWD4 = viewerIndex == g.CurrentIndex &&
 		g.Status == StatusAwaitingWD4Challenge
@@ -313,7 +320,7 @@ func (g *Game) startRound() error {
 	g.LastPlayedBy = ""
 	g.Wild4PlayerIndex = -1
 	g.ColorChooserIndex = -1
-	g.UnoVulnerableIndex = -1
+	g.clearUnoWindow()
 	g.PendingRoundWinnerIndex = -1
 	g.Wild4WasLegal = false
 	g.ShuffleCount = 0
@@ -436,10 +443,10 @@ func (g *Game) applyPlay(action Action) error {
 	g.noteEvent("play", player.UserID, 1, &played)
 	g.PendingRoundWinnerIndex = -1
 	if len(player.Hand) == 1 {
-		g.UnoVulnerableIndex = playerIndex
+		g.markUnoVulnerable(playerIndex)
 	}
 	if len(player.Hand) == 0 {
-		g.UnoVulnerableIndex = -1
+		g.clearUnoWindow()
 		g.PendingRoundWinnerIndex = playerIndex
 	}
 
@@ -569,7 +576,7 @@ func (g *Game) applyCallUno() error {
 		return fmt.Errorf("uno: no player can call UNO")
 	}
 	g.Players[index].SaidUno = true
-	g.UnoVulnerableIndex = -1
+	g.clearUnoWindow()
 	return nil
 }
 
@@ -588,9 +595,12 @@ func (g *Game) applyChallengeUno(actorUserID, targetUserID string) error {
 	if g.Players[target].SaidUno || len(g.Players[target].Hand) != 1 {
 		return fmt.Errorf("uno: player %q is not vulnerable to an UNO challenge", targetUserID)
 	}
+	if !g.unoChallengeReady() {
+		return fmt.Errorf("%s", "Wait a second — they can still say Uno.")
+	}
 	g.noteEvent("draw", g.Players[target].UserID, 2, nil)
 	g.drawCards(target, 2)
-	g.UnoVulnerableIndex = -1
+	g.clearUnoWindow()
 	return nil
 }
 
@@ -706,7 +716,7 @@ func (g *Game) finishPendingRound() error {
 		}
 	}
 	g.Players[winner].Score += points
-	g.UnoVulnerableIndex = -1
+	g.clearUnoWindow()
 	g.PendingDraw = 0
 	g.DrawnCardID = ""
 	g.Wild4PlayerIndex = -1
@@ -859,9 +869,34 @@ func (g *Game) hasLegalPlay(playerIndex int) bool {
 }
 
 func (g *Game) expireUnoWindow() {
-	if g.UnoVulnerableIndex >= 0 {
-		g.UnoVulnerableIndex = -1
+	g.clearUnoWindow()
+}
+
+func (g *Game) clockMs() int64 {
+	if g != nil && g.NowMs > 0 {
+		return g.NowMs
 	}
+	return time.Now().UnixMilli()
+}
+
+func (g *Game) markUnoVulnerable(playerIndex int) {
+	g.UnoVulnerableIndex = playerIndex
+	g.UnoVulnerableAtMs = g.clockMs() + unoCallGraceMs
+}
+
+func (g *Game) clearUnoWindow() {
+	g.UnoVulnerableIndex = -1
+	g.UnoVulnerableAtMs = 0
+}
+
+func (g *Game) unoChallengeReady() bool {
+	if g.UnoVulnerableIndex < 0 {
+		return false
+	}
+	if g.UnoVulnerableAtMs <= 0 {
+		return true
+	}
+	return g.clockMs() >= g.UnoVulnerableAtMs
 }
 
 func (g *Game) roundSeed() int64 {

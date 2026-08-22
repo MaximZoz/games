@@ -624,7 +624,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoWin => 'Två spelare till 100, 3+ till 300. En rond vinns genom att tömma handen.';
 
   @override
-  String get rulesUnoCall => 'När ett kort återstår, tryck på ”Uno!”. Till nästa handling kan en motståndare ta dig utan Uno — då drar du 2 kort.';
+  String get rulesUnoCall => 'När ett kort återstår, tryck genast på ”Uno!”. Motståndare kan ta dig för glömt Uno först efter en sekund — då drar du 2 kort.';
 
   @override
   String get rulesUnoScoring => 'Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Två spelare till 100, 3+ till 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Moturs';
+
+  @override
+  String get unoErrStackSameOnly => 'På +2 får bara +2 läggas, på +4 bara +4. +2 på +4 är inte tillåtet.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Vänta en sekund — de kan fortfarande säga Uno.';
 
   @override
   String get gamesInDevelopment => 'Under utveckling';

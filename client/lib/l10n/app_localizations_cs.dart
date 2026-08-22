@@ -624,7 +624,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoWin => 'Ve dvou do 100 bodů, při 3+ hráčích do 300. Kolo vyhraje hráč, který shodí všechny karty.';
 
   @override
-  String get rulesUnoCall => 'Když zbývá jedna karta, stiskněte „Uno!“. Do další akce vás soupeř může chytit bez Uno — pak líznete 2 karty.';
+  String get rulesUnoCall => 'Když zbývá jedna karta, hned stiskněte „Uno!“. Soupeři vás mohou chytit za zapomenuté Uno až po jedné sekundě — pak líznete 2 karty.';
 
   @override
   String get rulesUnoScoring => 'Kdo první shodí všechny karty, vyhraje kolo a získá body za soupeřovy karty: čísla podle hodnoty, akce 20, černé 50. Ve dvou do 100, při 3+ hráčích do 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Proti směru hodin';
+
+  @override
+  String get unoErrStackSameOnly => 'Na +2 smíte dát jen +2, na +4 jen +4. +2 na +4 dát nelze.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Počkejte vteřinu — ještě můžou říct Uno.';
 
   @override
   String get gamesInDevelopment => 'Ve vývoji';

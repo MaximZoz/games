@@ -624,7 +624,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesUnoWin => 'Met z’n tweeën tot 100, bij 3+ spelers tot 300. Een ronde wint wie de hand leegt.';
 
   @override
-  String get rulesUnoCall => 'Bij één kaart tik je op “Uno!”. Tot de volgende actie kan een tegenstander je pakken zonder Uno — dan trek je 2 kaarten.';
+  String get rulesUnoCall => 'Bij één kaart tik je meteen op “Uno!”. Tegenstanders mogen je pas na één seconde pakken voor vergeten Uno — dan trek je 2 kaarten.';
 
   @override
   String get rulesUnoScoring => 'Wie als eerste leeg is wint de ronde en scoort de kaarten van tegenstanders: cijfers op waarde, acties 20, zwart 50. Met z’n tweeën tot 100, bij 3+ spelers tot 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Tegen de klok in';
+
+  @override
+  String get unoErrStackSameOnly => 'Op +2 mag alleen +2, op +4 alleen +4. +2 op +4 is niet toegestaan.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Wacht even — ze kunnen nog Uno zeggen.';
 
   @override
   String get gamesInDevelopment => 'In ontwikkeling';

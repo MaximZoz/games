@@ -624,7 +624,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 300. Thắng vòng là người hết bài.';
 
   @override
-  String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!». Trước hành động tiếp theo đối thủ có thể bắt bạn không Uno — khi đó bạn rút 2 lá.';
+  String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!» ngay. Đối thủ chỉ được bắt bạn quên Uno sau một giây — khi đó bạn rút 2 lá.';
 
   @override
   String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Ngược chiều kim đồng hồ';
+
+  @override
+  String get unoErrStackSameOnly => 'Chỉ được đánh +2 lên +2, hoặc +4 lên +4. Không được xếp +2 lên +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Đợi một giây — họ vẫn có thể hô Uno.';
 
   @override
   String get gamesInDevelopment => 'Đang phát triển';

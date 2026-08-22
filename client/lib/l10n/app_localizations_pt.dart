@@ -624,7 +624,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 300. A rodada é de quem esvaziar a mão.';
 
   @override
-  String get rulesUnoCall => 'Quando restar uma carta, toque em “Uno!”. Até a próxima ação, um adversário pode pegá-lo sem Uno — então você compra 2.';
+  String get rulesUnoCall => 'Quando restar uma carta, toque já em “Uno!”. Os outros só podem apanhá-lo por esquecer o Uno após um segundo — então compra 2.';
 
   @override
   String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Sentido anti-horário';
+
+  @override
+  String get unoErrStackSameOnly => 'Só pode jogar +2 em +2, ou +4 em +4. Não se pode empilhar +2 em +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Espere um segundo — ainda podem dizer Uno.';
 
   @override
   String get gamesInDevelopment => 'Em desenvolvimento';

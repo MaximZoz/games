@@ -624,7 +624,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoWin => 'เดี่ยวถึง 100 แต้ม ตั้งแต่ 3 คนถึง 300 ชนะรอบคือผู้ลงไพ่หมดมือ';
 
   @override
-  String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ก่อนตาถัดไป คู่แข่งจับได้ถ้าไม่กดอูโน่ — แล้วคุณจั่ว 2 ใบ';
+  String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ทันที คู่แข่งจับที่ลืมอุโนได้หลังหนึ่งวินาที — แล้วคุณจั่ว 2 ใบ';
 
   @override
   String get rulesUnoScoring => 'ใครลงหมดก่อนชนะรอบและได้แต้มจากมือคู่แข่ง: ตัวเลขตามหน้าไพ่ พิเศษ 20 ดำ 50 เดี่ยวถึง 100 ตั้งแต่ 3 คนถึง 300';
@@ -738,6 +738,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'ทวนเข็มนาฬิกา';
+
+  @override
+  String get unoErrStackSameOnly => 'เล่น +2 ทับ +2 หรือ +4 ทับ +4 เท่านั้น ห้ามวาง +2 ทับ +4';
+
+  @override
+  String get unoErrCatchTooEarly => 'รอหนึ่งวินาที — พวกเขายังพูดอุโนได้';
 
   @override
   String get gamesInDevelopment => 'กำลังพัฒนา';

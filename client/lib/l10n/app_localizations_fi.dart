@@ -624,7 +624,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 300. Erän voittaa se, joka tyhjentää kätensä.';
 
   @override
-  String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina ”Uno!”. Seuraavaan toimeen asti vastustaja voi napata sinut ilman Unoa — silloin nostat 2 korttia.';
+  String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina heti ”Uno!”. Vastustaja voi napata sinut Uno-unohduksesta vasta sekunnin kuluttua — silloin nostat 2 korttia.';
 
   @override
   String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Kaksin 100:een, 3+ pelaajalla 300:een.';
@@ -738,6 +738,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Vastapäivään';
+
+  @override
+  String get unoErrStackSameOnly => '+2:n päälle saa vain +2, +4:n päälle vain +4. +2 ei käy +4:n päälle.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Odota sekunti — he ehtivät vielä sanoa Unon.';
 
   @override
   String get gamesInDevelopment => 'Kehityksessä';

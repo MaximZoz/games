@@ -134,9 +134,8 @@ class OfflineUnoSession extends ChangeNotifier {
       lastRoundWinnerUserId: game.lastRoundWinnerUserId,
       lastRoundPoints: game.lastRoundPoints,
       lastRoundNumber: game.lastRoundNumber,
-      canChallengeUno: game.currentIndex == me &&
-          game.unoVulnerableIndex >= 0 &&
-          game.unoVulnerableIndex != me,
+      canChallengeUno: game.canChallengeUno(me),
+      unoVulnerableAtMs: game.unoVulnerableAtMs,
       canChallengeWd4: game.currentIndex == me &&
           game.status == UnoStatus.awaitingWd4Challenge,
       mustChooseColor: game.colorChooserIndex == me &&
@@ -239,10 +238,7 @@ class OfflineUnoSession extends ChangeNotifier {
   void _applyBotAction() {
     final index = _engine.currentIndex;
     if (_engine.status == UnoStatus.active &&
-        _engine.unoVulnerableIndex >= 0 &&
-        _engine.unoVulnerableIndex != index &&
-        index >= 0 &&
-        index < _engine.players.length &&
+        _engine.canChallengeUno(index) &&
         _random.nextDouble() < 0.75) {
       try {
         _engine.apply(UnoAction(

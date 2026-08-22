@@ -239,7 +239,7 @@
   "rulesUnoWild": "Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.",
   "rulesUnoDraw": "Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.",
   "rulesUnoWin": "Ikki kishida 100, 3+ o‘yinchida 300. Raundni barcha kartasini tashlagan yutadi.",
-  "rulesUnoCall": "Bitta karta qolganda «Uno!» ni bosing. Keyingi yurishgacha raqib sizni Unosiz ushlashi mumkin — unda 2 karta olasiz.",
+  "rulesUnoCall": "Bitta karta qolganda darhol «Uno!» ni bosing. Raqiblar Unosiz sizni faqat bir soniyadan keyin ushlashi mumkin — unda 2 karta olasiz.",
   "rulesUnoScoring": "Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Ikki kishida 100, 3+ o‘yinchida 300.",
   "unoColorRed": "Qizil",
   "unoColorYellow": "Sariq",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Raund ochkolari",
   "unoDirectionClockwise": "Soat yo‘nalishida",
   "unoDirectionCounterclockwise": "Soat yo‘nalishiga qarshi",
+  "unoErrStackSameOnly": "+2 ustiga faqat +2, +4 ustiga faqat +4 qo‘yiladi. +2 ni +4 ustiga qo‘yib bo‘lmaydi.",
+  "unoErrCatchTooEarly": "Bir soniya kuting — ular hali «Uno» deyishlari mumkin.",
   "gamesInDevelopment": "Ishlanmoqda",
   "rulesPokerPlayers": "O‘yinchilar: {players}.",
   "@rulesPokerPlayers": {

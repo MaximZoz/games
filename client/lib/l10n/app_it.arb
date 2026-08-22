@@ -239,7 +239,7 @@
   "rulesUnoWild": "Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.",
   "rulesUnoDraw": "Senza carta valida pesca una dal mazzo. Se va bene, puoi giocarla subito o tenerla e passare. Non puoi pescare se hai ancora una giocata.",
   "rulesUnoWin": "In due si va a 100, con 3+ giocatori a 300. Il round lo vince chi svuota la mano.",
-  "rulesUnoCall": "Quando resta una carta, tocca «Uno!». Fino all’azione successiva un avversario può beccarti senza Uno: allora peschi 2 carte.",
+  "rulesUnoCall": "Quando resta una carta, tocca subito «Uno!». Gli avversari possono beccarti per aver dimenticato Uno solo dopo un secondo: allora peschi 2 carte.",
   "rulesUnoScoring": "Chi svuota per primo la mano vince il round e prende i punti delle mani avversarie: numeri a valore, azioni 20, nere 50. In due si va a 100, con 3+ giocatori a 300.",
   "unoColorRed": "Rosso",
   "unoColorYellow": "Giallo",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Punteggio del round",
   "unoDirectionClockwise": "Senso orario",
   "unoDirectionCounterclockwise": "Senso antiorario",
+  "unoErrStackSameOnly": "Puoi giocare +2 solo su +2 e +4 solo su +4. Non puoi mettere +2 su +4.",
+  "unoErrCatchTooEarly": "Aspetta un secondo: possono ancora dire Uno.",
   "gamesInDevelopment": "In sviluppo",
   "rulesPokerPlayers": "Giocatori: {players}.",
   "@rulesPokerPlayers": {

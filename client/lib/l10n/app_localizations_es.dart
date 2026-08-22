@@ -624,7 +624,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 300. La ronda la gana quien se queda sin cartas.';
 
   @override
-  String get rulesUnoCall => 'Cuando queda una carta, pulsa «¡Uno!». Hasta la siguiente acción, un rival puede pillarte sin Uno y entonces robas 2.';
+  String get rulesUnoCall => 'Cuando te quede una carta, pulsa «¡Uno!» al momento. Los demás solo podrán pillarte por olvidar Uno tras un segundo: entonces robas 2 cartas.';
 
   @override
   String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. En 1v1 hasta 100; con 3+ jugadores, hasta 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Sentido antihorario';
+
+  @override
+  String get unoErrStackSameOnly => 'Solo puedes jugar +2 sobre +2, o +4 sobre +4. No se puede apilar +2 sobre +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Espera un segundo: todavía pueden decir Uno.';
 
   @override
   String get gamesInDevelopment => 'En desarrollo';

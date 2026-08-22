@@ -624,7 +624,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesUnoWin => 'आमने-सामने 100 अंक, 3+ खिलाड़ियों में 300। राउंड हाथ खाली करने वाला जीते।';
 
   @override
-  String get rulesUnoCall => 'एक पत्ता बचने पर «ऊनो!» दबाएँ। अगली क्रिया तक विरोधी बिना ऊनो पकड़ सकता है — तब आप 2 पत्ते उठाएँगे।';
+  String get rulesUnoCall => 'एक पत्ता बचने पर तुरंत «ऊनो!» दबाएँ। विरोधी ऊनो भूलने पर आपको एक सेकंड बाद ही पकड़ सकते हैं — तब आप 2 पत्ते उठाएँगे।';
 
   @override
   String get rulesUnoScoring => 'जो पहले हाथ खाली करे वह राउंड जीते और विरोधियों के पत्तों के अंक पाए: अंक अपने मान, क्रिया 20, काले 50। आमने-सामने 100, 3+ खिलाड़ियों में 300।';
@@ -738,6 +738,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'घड़ी की उलटी दिशा';
+
+  @override
+  String get unoErrStackSameOnly => '+2 केवल +2 पर और +4 केवल +4 पर चलाया जा सकता है। +2 को +4 पर नहीं रखा जा सकता।';
+
+  @override
+  String get unoErrCatchTooEarly => 'एक सेकंड रुकें — वे अभी ऊनो कह सकते हैं।';
 
   @override
   String get gamesInDevelopment => 'विकास में';

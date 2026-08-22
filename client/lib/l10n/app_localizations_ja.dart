@@ -624,7 +624,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoWin => '2人は100点、3人以上は300点先取。ラウンドは手札をなくした人が勝ちます。';
 
   @override
-  String get rulesUnoCall => '1枚残ったら「ウノ！」を押します。次の行動まで、相手はウノなしを指摘でき、その場合は2枚引きます。';
+  String get rulesUnoCall => '1枚残ったらすぐに「ウノ！」を押します。相手がウノ忘れを指摘できるのは1秒後からです。その場合は2枚引きます。';
 
   @override
   String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は300点先取。';
@@ -738,6 +738,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => '反時計回り';
+
+  @override
+  String get unoErrStackSameOnly => '+2の上には+2、+4の上には+4だけです。+2を+4の上には出せません。';
+
+  @override
+  String get unoErrCatchTooEarly => '1秒待ってください。まだUNOを宣言できます。';
 
   @override
   String get gamesInDevelopment => '開発中';

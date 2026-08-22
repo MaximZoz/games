@@ -239,7 +239,7 @@
   "rulesUnoWild": "Lá đen chọn màu mới. Chỉ đánh +4 khi không có lá màu hiện tại. Đối thủ có thể thách: nếu +4 hợp lệ họ rút 6; nếu không, người đánh +4 rút 4 và người thách được đánh.",
   "rulesUnoDraw": "Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.",
   "rulesUnoWin": "1v1 đến 100 điểm, từ 3 người đến 300. Thắng vòng là người hết bài.",
-  "rulesUnoCall": "Khi còn một lá, nhấn «Uno!». Trước hành động tiếp theo đối thủ có thể bắt bạn không Uno — khi đó bạn rút 2 lá.",
+  "rulesUnoCall": "Khi còn một lá, nhấn «Uno!» ngay. Đối thủ chỉ được bắt bạn quên Uno sau một giây — khi đó bạn rút 2 lá.",
   "rulesUnoScoring": "Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 300.",
   "unoColorRed": "Đỏ",
   "unoColorYellow": "Vàng",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Điểm vòng",
   "unoDirectionClockwise": "Theo chiều kim đồng hồ",
   "unoDirectionCounterclockwise": "Ngược chiều kim đồng hồ",
+  "unoErrStackSameOnly": "Chỉ được đánh +2 lên +2, hoặc +4 lên +4. Không được xếp +2 lên +4.",
+  "unoErrCatchTooEarly": "Đợi một giây — họ vẫn có thể hô Uno.",
   "gamesInDevelopment": "Đang phát triển",
   "rulesPokerPlayers": "Người chơi: {players}.",
   "@rulesPokerPlayers": {

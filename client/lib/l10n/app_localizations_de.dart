@@ -624,7 +624,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 300. Eine Runde gewinnt, wer alle Karten ablegt.';
 
   @override
-  String get rulesUnoCall => 'Bei einer Karte tippe auf „Uno!“. Bis zur nächsten Aktion kann ein Gegner dich ohne Uno erwischen — dann ziehst du 2 Karten.';
+  String get rulesUnoCall => 'Wenn noch eine Karte übrig ist, tippen Sie sofort auf „Uno!“. Gegner können Sie erst nach einer Sekunde wegen vergessenem Uno erwischen — dann ziehen Sie 2 Karten.';
 
   @override
   String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Zu zweit bis 100, bei drei oder mehr Spielern bis 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Gegen den Uhrzeigersinn';
+
+  @override
+  String get unoErrStackSameOnly => 'Auf +2 darf nur +2, auf +4 nur +4 gelegt werden. +2 auf +4 ist nicht erlaubt.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Einen Moment — sie können noch UNO sagen.';
 
   @override
   String get gamesInDevelopment => 'In Entwicklung';

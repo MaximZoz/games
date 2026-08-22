@@ -239,7 +239,7 @@
   "rulesUnoWild": "Une carte noire fixe une nouvelle couleur. Jouez +4 seulement si vous n’avez aucune carte de la couleur en cours. L’adversaire peut contester : si le +4 était légal, il pioche 6 ; sinon l’auteur du +4 pioche 4 et le contestataire joue.",
   "rulesUnoDraw": "Sans carte jouable, piochez-en une. Si elle convient, jouez-la tout de suite ou gardez-la et passez. On ne pioche pas tant qu’un coup est possible.",
   "rulesUnoWin": "À deux, premier à 100 ; à 3+, premier à 300. Une manche est gagnée en vidant sa main.",
-  "rulesUnoCall": "Quand il reste une carte, appuyez sur « Uno ! ». Avant l’action suivante, un adversaire peut vous attraper sans Uno — vous piochez alors 2 cartes.",
+  "rulesUnoCall": "Quand il vous reste une carte, touchez « Uno ! » tout de suite. Les autres ne peuvent vous prendre pour un Uno oublié qu’après une seconde — vous piochez alors 2 cartes.",
   "rulesUnoScoring": "Le premier à vider sa main gagne la manche et marque les cartes des adversaires : chiffres à la valeur, actions 20, noires 50. À deux, premier à 100 ; à 3+, premier à 300.",
   "unoColorRed": "Rouge",
   "unoColorYellow": "Jaune",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Score de la manche",
   "unoDirectionClockwise": "Sens horaire",
   "unoDirectionCounterclockwise": "Sens antihoraire",
+  "unoErrStackSameOnly": "Vous ne pouvez jouer +2 que sur +2, et +4 que sur +4. Un +2 ne se pose pas sur un +4.",
+  "unoErrCatchTooEarly": "Attendez une seconde — ils peuvent encore dire Uno.",
   "gamesInDevelopment": "En développement",
   "rulesPokerPlayers": "Joueurs : {players}.",
   "@rulesPokerPlayers": {

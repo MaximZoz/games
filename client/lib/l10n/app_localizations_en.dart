@@ -624,7 +624,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoWin => 'Heads-up is first to 100 points; with 3+ players, first to 300. A round is won by emptying your hand.';
 
   @override
-  String get rulesUnoCall => 'When you have one card left, tap “Uno!”. Until the next action, an opponent can catch you without Uno — then you draw 2 cards.';
+  String get rulesUnoCall => 'When you have one card left, tap “Uno!” immediately. Opponents can catch you for forgetting Uno only after one second — then you draw 2 cards.';
 
   @override
   String get rulesUnoScoring => 'The first to empty their hand wins the round and scores opponents’ cards: numbers at face value, actions 20, black cards 50. Heads-up is first to 100; with 3+ players, first to 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Counterclockwise';
+
+  @override
+  String get unoErrStackSameOnly => 'You can only play +2 on +2, or +4 on +4. A +2 cannot be stacked on +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Wait a second — they can still say Uno.';
 
   @override
   String get gamesInDevelopment => 'In development';

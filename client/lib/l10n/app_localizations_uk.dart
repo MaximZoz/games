@@ -624,7 +624,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rulesUnoWin => 'Удвох матч до 100 очок, за трьох і більше гравців — до 300. Раунд виграє гравець, який скинув усі карти.';
 
   @override
-  String get rulesUnoCall => 'Коли лишається одна карта, натисніть «Уно!». Поки не зроблено наступний хід, суперник може спіймати вас без «Уно» — тоді ви берете 2 карти.';
+  String get rulesUnoCall => 'Коли лишається одна карта, одразу натисніть «Уно!». Суперники можуть зловити вас без «Уно» лише за секунду — тоді ви берете 2 карти.';
 
   @override
   String get rulesUnoScoring => 'Хто першим скинув усі карти, виграє раунд і отримує очки за руки суперників: цифри — за номіналом, спецкарти — 20, чорні — 50. Удвох матч до 100, за трьох і більше гравців — до 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Проти годинникової стрілки';
+
+  @override
+  String get unoErrStackSameOnly => 'На +2 можна відповісти лише +2, на +4 — лише +4. +2 на +4 класти не можна.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Зачекайте секунду — вони ще можуть сказати «Уно».';
 
   @override
   String get gamesInDevelopment => 'В розробці';

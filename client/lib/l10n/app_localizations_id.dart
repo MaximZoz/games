@@ -624,7 +624,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoWin => '1 lawan 1 sampai 100, 3+ pemain sampai 300. Ronde dimenangkan dengan menghabiskan kartu.';
 
   @override
-  String get rulesUnoCall => 'Saat tersisa satu kartu, ketuk “Uno!”. Hingga aksi berikutnya lawan bisa menangkapmu tanpa Uno — maka kamu mengambil 2 kartu.';
+  String get rulesUnoCall => 'Saat tersisa satu kartu, ketuk “Uno!” segera. Lawan baru bisa menangkap Anda karena lupa Uno setelah satu detik — maka Anda mengambil 2 kartu.';
 
   @override
   String get rulesUnoScoring => 'Yang pertama menghabiskan kartu memenangkan ronde dan mendapat poin dari kartu lawan: angka sesuai nilai, aksi 20, hitam 50. 1 lawan 1 sampai 100, 3+ pemain sampai 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Berlawanan arah jarum jam';
+
+  @override
+  String get unoErrStackSameOnly => 'Anda hanya boleh memainkan +2 di atas +2, atau +4 di atas +4. +2 tidak boleh di atas +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Tunggu sebentar — mereka masih bisa bilang Uno.';
 
   @override
   String get gamesInDevelopment => 'Dalam pengembangan';

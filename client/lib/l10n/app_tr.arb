@@ -239,7 +239,7 @@
   "rulesUnoWild": "Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.",
   "rulesUnoDraw": "Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.",
   "rulesUnoWin": "İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.",
-  "rulesUnoCall": "Bir kart kaldığında «Uno!»ya basın. Sonraki hamleden önce rakip sizi Unosuz yakalayabilir — o zaman 2 kart çekersiniz.",
+  "rulesUnoCall": "Bir kart kaldığında hemen «Uno!»ya basın. Rakipler Unoyu unuttuğunuz için sizi ancak bir saniye sonra yakalayabilir — o zaman 2 kart çekersiniz.",
   "rulesUnoScoring": "Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 300.",
   "unoColorRed": "Kırmızı",
   "unoColorYellow": "Sarı",
@@ -273,6 +273,8 @@
   "unoRoundScoresTitle": "Tur puanı",
   "unoDirectionClockwise": "Saat yönünde",
   "unoDirectionCounterclockwise": "Saat yönünün tersine",
+  "unoErrStackSameOnly": "+2 üzerine yalnızca +2, +4 üzerine yalnızca +4 konur. +2, +4 üzerine atılamaz.",
+  "unoErrCatchTooEarly": "Bir saniye bekleyin — hâlâ Uno diyebilirler.",
   "gamesInDevelopment": "Geliştiriliyor",
   "rulesPokerPlayers": "Oyuncular: {players}.",
   "@rulesPokerPlayers": {
