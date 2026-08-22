@@ -338,6 +338,8 @@ void main() {
     engine.apply(const UnoAction(UnoActionType.callUno, actorUserId: 'p0'));
     expect(engine.players[0].saidUno, isTrue);
     expect(engine.unoVulnerableIndex, -1);
+    expect(engine.lastEventType, UnoActionType.callUno);
+    expect(engine.lastEventActor, 'p0');
   });
 
   test('any other player can catch UNO after the grace', () {

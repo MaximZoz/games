@@ -603,6 +603,7 @@ func (g *Game) applyCallUno() error {
 	}
 	g.Players[index].SaidUno = true
 	g.clearUnoWindow()
+	g.noteEvent(ActionCallUno, g.Players[index].UserID, 0, nil)
 	return nil
 }
 

@@ -211,4 +211,31 @@ void main() {
     expect(view.iLostOnTimeout, isTrue);
     expect(view.iWon, isFalse);
   });
+
+  test('shouldPlayUnoCallSfx plays once per new call_uno event', () {
+    expect(
+      shouldPlayUnoCallSfx(
+        eventSeq: 4,
+        heardSeq: 3,
+        lastEventType: 'call_uno',
+      ),
+      isTrue,
+    );
+    expect(
+      shouldPlayUnoCallSfx(
+        eventSeq: 4,
+        heardSeq: 4,
+        lastEventType: 'call_uno',
+      ),
+      isFalse,
+    );
+    expect(
+      shouldPlayUnoCallSfx(
+        eventSeq: 5,
+        heardSeq: 4,
+        lastEventType: 'play',
+      ),
+      isFalse,
+    );
+  });
 }
