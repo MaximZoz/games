@@ -1811,7 +1811,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final width = hand.isEmpty
         ? cardSize.width
         : spacing * (hand.length - 1) + cardSize.width;
-    final handColumn = Column(
+    return Column(
       key: _handKey,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1890,21 +1890,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
         ),
       ],
-    );
-    final myTurn = GameActorHighlight.isActingSeat(
-      isCurrentActor: game.isMyTurn,
-      isOver: game.isOver,
-      eliminated: game.iAmEliminated,
-      paused: _dealing,
-    );
-    return GameActorHighlight(
-      isActing: myTurn,
-      turnDeadline: game.turnDeadline,
-      turnTimeSec: game.turnTimeSec,
-      borderWidth: 2.5,
-      radius: 16,
-      onExpired: _onTurnTimeExpired,
-      child: handColumn,
     );
   }
 }
