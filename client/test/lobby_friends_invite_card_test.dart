@@ -159,8 +159,8 @@ void main() {
     );
     await tester.pump();
 
-    final button = tester.getSize(find.widgetWithText(OutlinedButton, 'Пригласить').first);
-    expect(button.width, lessThan(180));
+    final button = tester.getSize(find.byType(LobbyInviteActionButton).first);
+    expect(button.width, lessThan(150));
     expect(button.width, greaterThan(70));
   });
 }

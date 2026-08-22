@@ -621,13 +621,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoDraw => 'Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.';
 
   @override
-  String get rulesUnoWin => 'Ikki kishida 100, 3+ o‘yinchida 300. Raundni barcha kartasini tashlagan yutadi.';
+  String get rulesUnoWin => 'Ikki kishida 100, 3+ o‘yinchida 200. Raundni barcha kartasini tashlagan yutadi.';
 
   @override
   String get rulesUnoCall => 'Bitta karta qolganda darhol «Uno!» ni bosing. Raqiblar Unosiz sizni faqat bir soniyadan keyin ushlashi mumkin — unda 2 karta olasiz.';
 
   @override
-  String get rulesUnoScoring => 'Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Ikki kishida 100, 3+ o‘yinchida 300.';
+  String get rulesUnoScoring => 'Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Ikki kishida 100, 3+ o‘yinchida 200.';
 
   @override
   String get unoColorRed => 'Qizil';

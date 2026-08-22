@@ -16,8 +16,8 @@ void main() {
     expect(lines.any((l) => l.contains('Уно')), isTrue);
     expect(lines.any((l) => l.contains('7 карт')), isTrue);
     expect(lines.any((l) => l.contains('+4')), isTrue);
-    expect(lines.any((l) => l.contains('300')), isTrue);
-    expect(lines.last, contains('300'));
+    expect(lines.any((l) => l.contains('200')), isTrue);
+    expect(lines.last, contains('200'));
   });
 
   test('unoRuleLines offline bot hides turn time', () {
@@ -73,7 +73,7 @@ void main() {
     expect(find.textContaining('оспорить'), findsOneWidget);
     expect(find.textContaining('одну из колоды'), findsOneWidget);
     expect(find.textContaining('до 100'), findsOneWidget);
-    expect(find.textContaining('до 300'), findsOneWidget);
+    expect(find.textContaining('до 200'), findsOneWidget);
     expect(find.textContaining('Не забудьте сказать'), findsNothing);
   });
 }

@@ -621,13 +621,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesUnoDraw => 'Zonder legale kaart trek je er één van de stapel. Past die, speel hem nu of houd hem en pas. Trekken mag niet zolang je kunt spelen.';
 
   @override
-  String get rulesUnoWin => 'Met z’n tweeën tot 100, bij 3+ spelers tot 300. Een ronde wint wie de hand leegt.';
+  String get rulesUnoWin => 'Met z’n tweeën tot 100, bij 3+ spelers tot 200. Een ronde wint wie de hand leegt.';
 
   @override
   String get rulesUnoCall => 'Bij één kaart tik je meteen op “Uno!”. Tegenstanders mogen je pas na één seconde pakken voor vergeten Uno — dan trek je 2 kaarten.';
 
   @override
-  String get rulesUnoScoring => 'Wie als eerste leeg is wint de ronde en scoort de kaarten van tegenstanders: cijfers op waarde, acties 20, zwart 50. Met z’n tweeën tot 100, bij 3+ spelers tot 300.';
+  String get rulesUnoScoring => 'Wie als eerste leeg is wint de ronde en scoort de kaarten van tegenstanders: cijfers op waarde, acties 20, zwart 50. Met z’n tweeën tot 100, bij 3+ spelers tot 200.';
 
   @override
   String get unoColorRed => 'Rood';

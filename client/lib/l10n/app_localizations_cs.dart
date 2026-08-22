@@ -621,13 +621,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoDraw => 'Bez vhodné karty lízněte jednu z balíčku. Pokud sedí, můžete ji ihned zahrát, nebo si ji nechat a předat tah. Nelze lízat, dokud máte tah.';
 
   @override
-  String get rulesUnoWin => 'Ve dvou do 100 bodů, při 3+ hráčích do 300. Kolo vyhraje hráč, který shodí všechny karty.';
+  String get rulesUnoWin => 'Ve dvou do 100 bodů, při 3+ hráčích do 200. Kolo vyhraje hráč, který shodí všechny karty.';
 
   @override
   String get rulesUnoCall => 'Když zbývá jedna karta, hned stiskněte „Uno!“. Soupeři vás mohou chytit za zapomenuté Uno až po jedné sekundě — pak líznete 2 karty.';
 
   @override
-  String get rulesUnoScoring => 'Kdo první shodí všechny karty, vyhraje kolo a získá body za soupeřovy karty: čísla podle hodnoty, akce 20, černé 50. Ve dvou do 100, při 3+ hráčích do 300.';
+  String get rulesUnoScoring => 'Kdo první shodí všechny karty, vyhraje kolo a získá body za soupeřovy karty: čísla podle hodnoty, akce 20, černé 50. Ve dvou do 100, při 3+ hráčích do 200.';
 
   @override
   String get unoColorRed => 'Červená';

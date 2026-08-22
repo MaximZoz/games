@@ -621,13 +621,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoDraw => 'Si no tienes carta válida, roba una del mazo. Si encaja, puedes jugarla ahora o quedártela y pasar. No puedes robar si aún tienes jugada.';
 
   @override
-  String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 300. La ronda la gana quien se queda sin cartas.';
+  String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 200. La ronda la gana quien se queda sin cartas.';
 
   @override
   String get rulesUnoCall => 'Cuando te quede una carta, pulsa «¡Uno!» al momento. Los demás solo podrán pillarte por olvidar Uno tras un segundo: entonces robas 2 cartas.';
 
   @override
-  String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. En 1v1 hasta 100; con 3+ jugadores, hasta 300.';
+  String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. En 1v1 hasta 100; con 3+ jugadores, hasta 200.';
 
   @override
   String get unoColorRed => 'Rojo';

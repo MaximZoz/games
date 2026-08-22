@@ -621,13 +621,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoDraw => 'Senza carta valida pesca una dal mazzo. Se va bene, puoi giocarla subito o tenerla e passare. Non puoi pescare se hai ancora una giocata.';
 
   @override
-  String get rulesUnoWin => 'In due si va a 100, con 3+ giocatori a 300. Il round lo vince chi svuota la mano.';
+  String get rulesUnoWin => 'In due si va a 100, con 3+ giocatori a 200. Il round lo vince chi svuota la mano.';
 
   @override
   String get rulesUnoCall => 'Quando resta una carta, tocca subito «Uno!». Gli avversari possono beccarti per aver dimenticato Uno solo dopo un secondo: allora peschi 2 carte.';
 
   @override
-  String get rulesUnoScoring => 'Chi svuota per primo la mano vince il round e prende i punti delle mani avversarie: numeri a valore, azioni 20, nere 50. In due si va a 100, con 3+ giocatori a 300.';
+  String get rulesUnoScoring => 'Chi svuota per primo la mano vince il round e prende i punti delle mani avversarie: numeri a valore, azioni 20, nere 50. In due si va a 100, con 3+ giocatori a 200.';
 
   @override
   String get unoColorRed => 'Rosso';

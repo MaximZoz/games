@@ -137,11 +137,11 @@ void main() {
     expect(engine.lastRoundWinnerUserId, 'p0');
   });
 
-  test('heads-up target is 100 and 3+ players target is 300', () {
+  test('heads-up target is 100 and 3+ players target is 200', () {
     final two = UnoEngine.newGame(playerIds: ['a', 'b'], seed: 1);
     final three = UnoEngine.newGame(playerIds: ['a', 'b', 'c'], seed: 1);
     expect(two.targetScore, 100);
-    expect(three.targetScore, 300);
+    expect(three.targetScore, 200);
   });
 
   test('round below target pauses so scores stay visible', () {

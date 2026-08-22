@@ -621,13 +621,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoDraw => 'Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.';
 
   @override
-  String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.';
+  String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 200. Turu elini bitiren kazanır.';
 
   @override
   String get rulesUnoCall => 'Bir kart kaldığında hemen «Uno!»ya basın. Rakipler Unoyu unuttuğunuz için sizi ancak bir saniye sonra yakalayabilir — o zaman 2 kart çekersiniz.';
 
   @override
-  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 300.';
+  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 200.';
 
   @override
   String get unoColorRed => 'Kırmızı';

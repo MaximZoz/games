@@ -621,13 +621,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoDraw => 'Sem carta válida, compre uma do baralho. Se servir, jogue-a agora ou fique com ela e passe. Não se compra enquanto houver jogada.';
 
   @override
-  String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 300. A rodada é de quem esvaziar a mão.';
+  String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 200. A rodada é de quem esvaziar a mão.';
 
   @override
   String get rulesUnoCall => 'Quando restar uma carta, toque já em “Uno!”. Os outros só podem apanhá-lo por esquecer o Uno após um segundo — então compra 2.';
 
   @override
-  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 300.';
+  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 200.';
 
   @override
   String get unoColorRed => 'Vermelho';

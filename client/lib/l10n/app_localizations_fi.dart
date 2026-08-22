@@ -621,13 +621,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoDraw => 'Ilman laillista korttia nosta yksi pakasta. Jos se sopii, voit pelata sen heti tai pitää ja luovuttaa vuoron. Et saa nostaa, jos sinulla on laillinen siirto.';
 
   @override
-  String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 300. Erän voittaa se, joka tyhjentää kätensä.';
+  String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 200. Erän voittaa se, joka tyhjentää kätensä.';
 
   @override
   String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina heti ”Uno!”. Vastustaja voi napata sinut Uno-unohduksesta vasta sekunnin kuluttua — silloin nostat 2 korttia.';
 
   @override
-  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Kaksin 100:een, 3+ pelaajalla 300:een.';
+  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Kaksin 100:een, 3+ pelaajalla 200:een.';
 
   @override
   String get unoColorRed => 'Punainen';

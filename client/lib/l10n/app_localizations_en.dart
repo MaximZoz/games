@@ -621,13 +621,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoDraw => 'If you have no legal card, draw one from the deck. If it matches, you may play it now or keep it and pass. You cannot draw while you still have a legal play.';
 
   @override
-  String get rulesUnoWin => 'Heads-up is first to 100 points; with 3+ players, first to 300. A round is won by emptying your hand.';
+  String get rulesUnoWin => 'Heads-up is first to 100 points; with 3+ players, first to 200. A round is won by emptying your hand.';
 
   @override
   String get rulesUnoCall => 'When you have one card left, tap “Uno!” immediately. Opponents can catch you for forgetting Uno only after one second — then you draw 2 cards.';
 
   @override
-  String get rulesUnoScoring => 'The first to empty their hand wins the round and scores opponents’ cards: numbers at face value, actions 20, black cards 50. Heads-up is first to 100; with 3+ players, first to 300.';
+  String get rulesUnoScoring => 'The first to empty their hand wins the round and scores opponents’ cards: numbers at face value, actions 20, black cards 50. Heads-up is first to 100; with 3+ players, first to 200.';
 
   @override
   String get unoColorRed => 'Red';

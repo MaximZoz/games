@@ -621,13 +621,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoDraw => '出せるカードがなければ山札から1枚引きます。出せるならすぐ出すか、手元に残してパスできます。出せる手があるうちは引けません。';
 
   @override
-  String get rulesUnoWin => '2人は100点、3人以上は300点先取。ラウンドは手札をなくした人が勝ちます。';
+  String get rulesUnoWin => '2人は100点、3人以上は200点先取。ラウンドは手札をなくした人が勝ちます。';
 
   @override
   String get rulesUnoCall => '1枚残ったらすぐに「ウノ！」を押します。相手がウノ忘れを指摘できるのは1秒後からです。その場合は2枚引きます。';
 
   @override
-  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は300点先取。';
+  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は200点先取。';
 
   @override
   String get unoColorRed => '赤';
