@@ -28,10 +28,6 @@ class UnoCardFlyTicket {
   }
 }
 
-SfxId sfxForUnoCard(UnoCard card) {
-  return card.kind == UnoCardKind.number ? SfxId.cardPlay : SfxId.unoSpecial;
-}
-
 Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   required BuildContext context,
   required UnoCard card,
@@ -59,7 +55,7 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
   if (playSfx) {
     Sfx.play(
-      launchSfx ?? (faceDown ? SfxId.cardDraw : sfxForUnoCard(card)),
+      launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay),
     );
   }
 
