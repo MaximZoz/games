@@ -609,13 +609,147 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Play against a bot, no turn time limit.';
 
   @override
-  String get rulesUnoIntro => 'Classic Uno: everyone is dealt cards; play by color or number.';
+  String get rulesUnoIntro => 'Each player is dealt 7 cards. Play a card of the same color or the same rank (number or matching action).';
 
   @override
-  String get rulesUnoPlay => 'Special cards: +2, reverse, skip, wild and wild +4. If you cannot play, draw from the deck.';
+  String get rulesUnoPlay => 'Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 stacks only on +2, and +4 only on +4: the penalty adds up (two +2s make the next player draw 4). A +2 cannot be played on a +4. A player who does not stack draws the whole pile and is skipped. Two identical non-wild cards (for example two yellow 8s) are discarded together: play one and the twin is thrown automatically.';
 
   @override
-  String get rulesUnoWin => 'The first player to empty their hand wins. Say “Uno” when you have one card left.';
+  String get rulesUnoWild => 'A black card sets a new color. Play +4 only if you have no card of the current color. The next player may challenge: if the +4 was legal they draw 6; if not, the +4 player draws 4 and the challenger plays.';
+
+  @override
+  String get rulesUnoDraw => 'If you have no legal card, draw one from the deck. If it matches, you may play it now or keep it and pass. You cannot draw while you still have a legal play.';
+
+  @override
+  String get rulesUnoWin => 'Heads-up is first to 100 points; with 3+ players, first to 200. A round is won by emptying your hand.';
+
+  @override
+  String get rulesUnoCall => 'When you have one card left, tap “Uno!” immediately. Opponents can catch you for forgetting Uno only after one second — then you draw 2 cards.';
+
+  @override
+  String get rulesUnoScoring => 'The first to empty their hand wins the round and scores opponents’ cards: numbers at face value, actions 20, black cards 50. Heads-up is first to 100; with 3+ players, first to 200.';
+
+  @override
+  String get unoColorRed => 'Red';
+
+  @override
+  String get unoColorYellow => 'Yellow';
+
+  @override
+  String get unoColorGreen => 'Green';
+
+  @override
+  String get unoColorBlue => 'Blue';
+
+  @override
+  String get unoDraw => 'Draw';
+
+  @override
+  String get unoKeep => 'Keep';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Challenge Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Challenge +4';
+
+  @override
+  String get unoChooseColor => 'Choose a color';
+
+  @override
+  String get unoDrawPile => 'Draw pile';
+
+  @override
+  String get unoDiscardPile => 'Discard';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Cards: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Round $round · first to $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Your turn';
+
+  @override
+  String get unoWaitingTurn => 'Opponent’s turn';
+
+  @override
+  String get unoChooseColorHint => 'Choose a color for the wild card';
+
+  @override
+  String get unoWd4Hint => 'Draw 4 cards or challenge the Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Play the drawn card or keep it';
+
+  @override
+  String get unoPlayHint => 'Play a matching color or value';
+
+  @override
+  String get unoDrawHint => 'No matching card — draw from the deck';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count cards';
+  }
+
+  @override
+  String get unoYouWon => 'You won the match!';
+
+  @override
+  String get unoYouLost => 'Match over';
+
+  @override
+  String get unoYouLostTimeout => 'You lost on time';
+
+  @override
+  String unoWinner(String name) {
+    return 'Winner: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name wins the round';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Next';
+
+  @override
+  String get unoRoundScoresTitle => 'Round score';
+
+  @override
+  String get unoDirectionClockwise => 'Clockwise';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Counterclockwise';
+
+  @override
+  String get unoErrStackSameOnly => 'You can only play +2 on +2, or +4 on +4. A +2 cannot be stacked on +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Wait a second — they can still say Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'You can no longer say Uno. The next player has already moved.';
 
   @override
   String get gamesInDevelopment => 'In development';

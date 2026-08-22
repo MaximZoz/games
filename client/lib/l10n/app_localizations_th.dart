@@ -609,13 +609,147 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoOfflineBot => 'เล่นกับบอท ไม่จำกัดเวลาต่อตา';
 
   @override
-  String get rulesUnoIntro => 'อูโน่คลาสสิก: แจกไพ่ให้ทุกคน เล่นตามสีหรือเลข';
+  String get rulesUnoIntro => 'แจกคนละ 7 ใบ ลงไพ่สีเดียวกันหรือค่าเดียวกัน (ตัวเลขหรือไพ่พิเศษชนิดเดียวกัน)';
 
   @override
-  String get rulesUnoPlay => 'ไพ่พิเศษ: +2, กลับทาง, ข้าม, เปลี่ยนสี และ +4 ถ้าลงไม่ได้ให้จั่วจากสำรับ';
+  String get rulesUnoPlay => 'ข้าม — คนถัดไปเสียตา กลับทางเมื่อเล่นสองคนทำงานเหมือนข้าม +2 ซ้อนได้เฉพาะบน +2 และ +4 เฉพาะบน +4 โทษรวมกัน (สองใบ +2 คนถัดไปจั่ว 4) ห้ามวาง +2 บน +4 ใครไม่ซ้อนต้องจั่วทั้งกองและเสียตาไพ่ธรรมดาที่เหมือนกันสองใบ (เช่น 8 เหลืองสองใบ) ทิ้งพร้อมกัน เล่นใบหนึ่ง อีกใบออกอัตโนมัติ';
 
   @override
-  String get rulesUnoWin => 'ผู้ที่ลงไพ่หมดก่อนเป็นผู้ชนะ เมื่อเหลือใบเดียวต้องพูดว่า “อูโน่”';
+  String get rulesUnoWild => 'ไพ่ดำกำหนดสีใหม่ ลง +4 ได้เมื่อไม่มีไพ่สีปัจจุบัน คู่แข่งท้าได้: ถ้า +4 ถูกกติกา ผู้ท้าจั่ว 6 ถ้าไม่ถูก ผู้ลง +4 จั่ว 4 และผู้ท้าได้ลงไพ่';
+
+  @override
+  String get rulesUnoDraw => 'ไม่มีไพ่ที่ลงได้ ให้จั่วหนึ่งใบจากกอง ถ้าเข้ากันได้ลงทันทีหรือเก็บแล้วส่งตา ห้ามจั่วถ้ายังมีไพ่ที่ลงได้';
+
+  @override
+  String get rulesUnoWin => 'เดี่ยวถึง 100 แต้ม ตั้งแต่ 3 คนถึง 200 ชนะรอบคือผู้ลงไพ่หมดมือ';
+
+  @override
+  String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ทันที คู่แข่งจับที่ลืมอุโนได้หลังหนึ่งวินาที — แล้วคุณจั่ว 2 ใบ';
+
+  @override
+  String get rulesUnoScoring => 'ใครลงหมดก่อนชนะรอบและได้แต้มจากมือคู่แข่ง: ตัวเลขตามหน้าไพ่ พิเศษ 20 ดำ 50 เดี่ยวถึง 100 ตั้งแต่ 3 คนถึง 200';
+
+  @override
+  String get unoColorRed => 'แดง';
+
+  @override
+  String get unoColorYellow => 'เหลือง';
+
+  @override
+  String get unoColorGreen => 'เขียว';
+
+  @override
+  String get unoColorBlue => 'น้ำเงิน';
+
+  @override
+  String get unoDraw => 'จั่ว';
+
+  @override
+  String get unoKeep => 'เก็บ';
+
+  @override
+  String get unoSayUno => 'อูโน่!';
+
+  @override
+  String get unoChallengeUno => 'ท้าอูโน่';
+
+  @override
+  String get unoChallengeWd4 => 'ท้า +4';
+
+  @override
+  String get unoChooseColor => 'เลือกสี';
+
+  @override
+  String get unoDrawPile => 'กองจั่ว';
+
+  @override
+  String get unoDiscardPile => 'กองทิ้ง';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'ไพ่: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'คะแนน: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'รอบ $round · ถึง $target';
+  }
+
+  @override
+  String get unoYourTurn => 'ตาของคุณ';
+
+  @override
+  String get unoWaitingTurn => 'ตาของคู่แข่ง';
+
+  @override
+  String get unoChooseColorHint => 'เลือกสีสำหรับไพ่เปลี่ยนสี';
+
+  @override
+  String get unoWd4Hint => 'จั่ว 4 ใบหรือท้า Wild +4';
+
+  @override
+  String get unoDrawnHint => 'ลงไพ่ที่จั่วหรือเก็บไว้';
+
+  @override
+  String get unoPlayHint => 'ลงไพ่สีหรือค่าเดียวกัน';
+
+  @override
+  String get unoDrawHint => 'ไม่มีไพ่ที่ลงได้ — จั่วจากกอง';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count ใบ';
+  }
+
+  @override
+  String get unoYouWon => 'คุณชนะเกม!';
+
+  @override
+  String get unoYouLost => 'เกมจบแล้ว';
+
+  @override
+  String get unoYouLostTimeout => 'คุณแพ้เพราะหมดเวลา';
+
+  @override
+  String unoWinner(String name) {
+    return 'ผู้ชนะ: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name ชนะรอบ';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'ต่อไป';
+
+  @override
+  String get unoRoundScoresTitle => 'คะแนนรอบ';
+
+  @override
+  String get unoDirectionClockwise => 'ตามเข็มนาฬิกา';
+
+  @override
+  String get unoDirectionCounterclockwise => 'ทวนเข็มนาฬิกา';
+
+  @override
+  String get unoErrStackSameOnly => 'เล่น +2 ทับ +2 หรือ +4 ทับ +4 เท่านั้น ห้ามวาง +2 ทับ +4';
+
+  @override
+  String get unoErrCatchTooEarly => 'รอหนึ่งวินาที — พวกเขายังพูดอุโนได้';
+
+  @override
+  String get unoErrCallTooLate => 'พูดอุโนไม่ได้อีกแล้ว ผู้เล่นถัดไปเดินไปแล้ว';
 
   @override
   String get gamesInDevelopment => 'กำลังพัฒนา';

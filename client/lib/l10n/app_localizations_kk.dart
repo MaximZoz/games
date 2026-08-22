@@ -609,13 +609,147 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Ботқа қарсы ойын, жүріс уақыты шектелмейді.';
 
   @override
-  String get rulesUnoIntro => 'Классикалық Уно: әркімге карта үлестіріледі; түс немесе мән бойынша жүріңіз.';
+  String get rulesUnoIntro => 'Әркімге 7 карта үлестіріледі. Сол түсті немесе сол номиналды (сан не сол спецкарта) картамен жүріңіз.';
 
   @override
-  String get rulesUnoPlay => 'Арнайы карталар: +2, бағыт ауыстыру, жүрісті өткізу, қара түс ауыстыру және +4. Жүре алмасаңыз — колодадан алыңыз.';
+  String get rulesUnoPlay => 'Өткізу — келесі ойыншы жүрісін жоғалтады. Екеу болғанда бағыт ауыстыру өткізу сияқты. +2-ні тек +2-нің үстіне, +4-ті тек +4-тің үстіне қоюға болады: айыппұл қосылады (екі +2 — келесісі 4 алады). +2-ні +4-тің үстіне қоюға болмайды. Жауап бермеген бүкіл үйіндіні алып, жүрісін өткізеді.Бірдей екі жабайы емес карта (мысалы, екі сары 8) бірге тасталады: біреуін тастасаңыз, екіншісі өзі кетеді.';
 
   @override
-  String get rulesUnoWin => 'Барлық картасын бірінші тастаған жеңеді. Бір карта қалғанда «Уно» деп айтуды ұмытпаңыз.';
+  String get rulesUnoWild => 'Қара карта жаңа түс тағайындайды. +4-ті тек ағымдағы түс картасы жоқ кезде қояды. Қарсылас даулауы мүмкін: +4 заңды болса — даулаушы 6 алады; болмаса +4 авторы 4 алады, даулаушы жүреді.';
+
+  @override
+  String get rulesUnoDraw => 'Сәйкес карта жоқ болса — колодадан біреуін алыңыз. Сәйкес келсе, бірден жүруге немесе қалдырып жүрісті беруге болады. Жүріс бар кезде алуға болмайды.';
+
+  @override
+  String get rulesUnoWin => 'Екеуара 100, 3+ ойыншыда 200. Раундты барлық картасын тастаған ұтады.';
+
+  @override
+  String get rulesUnoCall => 'Бір карта қалғанда бірден «Уно!» басыңыз. Қарсыластар сізді Уносыз тек бір секундтан кейін ұстай алады — сонда 2 карта аласыз.';
+
+  @override
+  String get rulesUnoScoring => 'Карталарын бірінші тастаған раундты ұтып, қарсыластар қолынан ұпай алады: сандар — номинал, арнайылар — 20, қаралар — 50. Екеуара 100, 3+ ойыншыда 200.';
+
+  @override
+  String get unoColorRed => 'Қызыл';
+
+  @override
+  String get unoColorYellow => 'Сары';
+
+  @override
+  String get unoColorGreen => 'Жасыл';
+
+  @override
+  String get unoColorBlue => 'Көк';
+
+  @override
+  String get unoDraw => 'Алу';
+
+  @override
+  String get unoKeep => 'Қалдыру';
+
+  @override
+  String get unoSayUno => 'Уно!';
+
+  @override
+  String get unoChallengeUno => 'Уноны даулау';
+
+  @override
+  String get unoChallengeWd4 => '+4 даулау';
+
+  @override
+  String get unoChooseColor => 'Түсті таңдаңыз';
+
+  @override
+  String get unoDrawPile => 'Колода';
+
+  @override
+  String get unoDiscardPile => 'Тастау';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Карталар: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Ұпай: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round-раунд · $target дейін';
+  }
+
+  @override
+  String get unoYourTurn => 'Сіздің жүрісіңіз';
+
+  @override
+  String get unoWaitingTurn => 'Қарсыластың жүрісі';
+
+  @override
+  String get unoChooseColorHint => 'Қара карта үшін түс таңдаңыз';
+
+  @override
+  String get unoWd4Hint => '4 карта алыңыз немесе Wild +4-ті даулаңыз';
+
+  @override
+  String get unoDrawnHint => 'Алынған картаны ойнаңыз немесе қалдырыңыз';
+
+  @override
+  String get unoPlayHint => 'Сәйкес түс немесе мәнді ойнаңыз';
+
+  @override
+  String get unoDrawHint => 'Сәйкес карта жоқ — колодадан алыңыз';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count карта';
+  }
+
+  @override
+  String get unoYouWon => 'Сіз матчты жеңдіңіз!';
+
+  @override
+  String get unoYouLost => 'Матч аяқталды';
+
+  @override
+  String get unoYouLostTimeout => 'Уақыт біткендіктен ұтылдыңыз';
+
+  @override
+  String unoWinner(String name) {
+    return 'Жеңімпаз: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name раундты ұтады';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Келесі';
+
+  @override
+  String get unoRoundScoresTitle => 'Раунд ұпайы';
+
+  @override
+  String get unoDirectionClockwise => 'Сағат тілімен';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Сағат тіліне қарсы';
+
+  @override
+  String get unoErrStackSameOnly => '+2-ге тек +2, +4-ке тек +4 қоюға болады. +2-ні +4-тің үстіне қоюға болмайды.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Бір секунд күтіңіз — олар әлі «Uno» айта алады.';
+
+  @override
+  String get unoErrCallTooLate => '«Uno» айтуға енді болмайды. Келесі ойыншы жүріп қойды.';
 
   @override
   String get gamesInDevelopment => 'Әзірленуде';

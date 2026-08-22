@@ -7,15 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
-import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -299,11 +296,21 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                       ? _buildMultiLobbyCard(lobby)
                       : null,
                   shareLinkCard: _buildShareInviteLinkCard(context),
-                  friendsCardBuilder: (expand) => _buildFriendsCard(
-                    context,
-                    friendsAsync,
-                    expand: expand,
+                  friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+                    friendsAsync: friendsAsync,
                     excludeUserIds: lobbyMemberIds,
+                    invitedIds: _invitedFriendIds,
+                    invitingIds: _invitingFriendIds,
+                    cancellingIds: _cancellingFriendIds,
+                    declinedIds: _declinedFriendIds,
+                    listStorageKey: 'lobby-friends-invite',
+                    expand: expand,
+                    onInvite: (id) => _inviteFriend(context, id),
+                    onCancel: (id) =>
+                        unawaited(_cancelInviteFriend(context, id)),
+                    onFriendTap: (friend) => _showFriendInfo(context, friend),
+                    profileReturnPath:
+                        '/games/tictactoe/lobby/${widget.lobbyId}?mode=invite',
                   ),
                 );
               }
@@ -508,185 +515,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
     );
   }
 
-  /// Карточка друзей.
-  ///
-  /// [expand]=true — занимает родителя и скроллит список внутри.
-  /// [expand]=false — высота по контенту (мало друзей).
-  Widget _buildFriendsCard(
-    BuildContext context,
-    AsyncValue<FriendsSnapshot> friendsAsync, {
-    bool expand = true,
-    Set<String> excludeUserIds = const {},
-  }) {
-    return GradientCard(
-      // Без appear-анимации: иначе setState после «Пригласить» «переписывает» карточку.
-      animate: false,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: friendsAsync.when(
-        skipLoadingOnReload: true,
-        skipLoadingOnRefresh: true,
-        data: (snapshot) {
-          final presence =
-              ref.watch(presenceMapProvider).valueOrNull ?? const {};
-          final visibleFriends = snapshot.friends
-              .where((f) => !excludeUserIds.contains(f.user.id))
-              .toList();
-          sortByPresenceOnlineFirst(
-            visibleFriends,
-            (f) => f.user.id,
-            presence,
-          );
-          if (visibleFriends.isEmpty) {
-            final empty = Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                context.l10n.friendsEmpty,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            );
-            return expand ? Center(child: empty) : empty;
-          }
-          final list = ListView.builder(
-            key: const PageStorageKey('lobby-friends-invite'),
-            padding: const EdgeInsets.only(bottom: 8),
-            shrinkWrap: !expand,
-            physics: expand
-                ? const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics(),
-                  )
-                : const NeverScrollableScrollPhysics(),
-            itemCount: visibleFriends.length,
-            itemBuilder: (context, i) {
-              final f = visibleFriends[i];
-              final friendId = f.user.id;
-              final friendPresence = presence[friendId];
-              final statusText = formatPresenceStatus(friendPresence);
-              final isInvited = _invitedFriendIds.contains(friendId);
-              final isDeclined = _declinedFriendIds.contains(friendId);
-              final isInviting = _invitingFriendIds.contains(friendId);
-              final isCancelling = _cancellingFriendIds.contains(friendId);
-              return Padding(
-                key: ValueKey('lobby-invite-$friendId'),
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Tooltip(
-                      message: context.l10n.userInfoTitle,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => _showFriendInfo(context, f),
-                          behavior: HitTestBehavior.opaque,
-                          child: _buildFriendAvatar(
-                            f.user,
-                            20,
-                            isOnline: friendPresence?.online == true,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            f.user.displayName?.trim().isNotEmpty == true
-                                ? f.user.displayName!
-                                : context.l10n.commonUser,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (statusText.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                statusText,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: isInviting || isCancelling || isDeclined
-                          ? null
-                          : isInvited
-                              ? () => unawaited(
-                                    _cancelInviteFriend(context, friendId),
-                                  )
-                              : () => _inviteFriend(context, friendId),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accentStart,
-                        side: BorderSide(
-                          color: AppColors.accentStart.withValues(alpha: 0.6),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: (isInviting || isCancelling)
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accentStart,
-                              ),
-                            )
-                          : Text(
-                              isDeclined
-                                  ? context.l10n.lobbyInviteSentShort
-                                  : isInvited
-                                      ? context.l10n.commonCancel
-                                      : context.l10n.lobbyInvite,
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-          return list;
-        },
-        loading: () {
-          const spinner = Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accentStart,
-            ),
-          );
-          return expand ? spinner : const SizedBox(height: 72, child: spinner);
-        },
-        error: (e, _) => Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            '${context.l10n.friendsLoadFailed}. ${formatUserError(e, fallback: context.l10n.commonTryLater)}',
-            style: const TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Блок под «Поиск соперника»: только правила, высота по контенту.
   Widget _buildMatchmakeInfoCard(BuildContext context, LobbyItem lobby) {
     return GradientCard(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
@@ -1208,73 +1036,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
       }
       await refreshChatsList(ref, force: true).catchError((_) {});
     }());
-  }
-
-  Widget _buildFriendAvatar(
-    FriendUserItem user,
-    double radius, {
-    bool isOnline = false,
-  }) {
-    Widget avatar;
-    if (user.avatarKind == 'file' &&
-        user.avatarValue != null &&
-        user.avatarValue!.trim().isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(user.avatarValue!);
-      if (img != null) {
-        avatar = CircleAvatar(radius: radius, backgroundImage: img);
-      } else {
-        avatar = _friendLetterAvatar(user, radius);
-      }
-    } else if (user.avatarKind == 'preset' && user.avatarValue != null) {
-      final idx = int.tryParse(user.avatarValue!);
-      if (idx != null && idx >= 0 && idx < kLobbyPresetAvatarIcons.length) {
-        avatar = CircleAvatar(
-          radius: radius,
-          backgroundColor: AppColors.accentSoft,
-          child: Icon(kLobbyPresetAvatarIcons[idx], color: AppColors.accentStart),
-        );
-      } else {
-        avatar = _friendLetterAvatar(user, radius);
-      }
-    } else {
-      avatar = _friendLetterAvatar(user, radius);
-    }
-    if (!isOnline) return avatar;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        avatar,
-        Positioned(
-          right: -1,
-          bottom: -1,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.surfaceCard, width: 1),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _friendLetterAvatar(FriendUserItem user, double radius) {
-    final displayName = user.displayName?.trim() ?? '';
-    final letter = displayName.isEmpty ? '?' : displayName[0].toUpperCase();
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: AppColors.accentSoft,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: AppColors.accentStart,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 
   void _showFriendInfo(BuildContext context, FriendItem friend) {

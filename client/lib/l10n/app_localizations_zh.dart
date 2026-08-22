@@ -609,13 +609,147 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesUnoOfflineBot => '与机器人对战，无回合时限。';
 
   @override
-  String get rulesUnoIntro => '经典乌诺：每人发牌；按颜色或点数出牌。';
+  String get rulesUnoIntro => '每人发 7 张牌。打出同色或同点数（数字或相同功能）的牌。';
 
   @override
-  String get rulesUnoPlay => '特殊牌：+2、转向、跳过、变色和+4。无法出牌则从牌堆摸牌。';
+  String get rulesUnoPlay => '跳过——下家失去回合。两人时转向等同跳过。+2 只能叠在 +2 上，+4 只能叠在 +4 上：罚牌累加（两张 +2 则下家摸 4）。不能把 +2 叠在 +4 上。不叠牌者摸走整叠并跳过。两张相同的非万能牌（例如两张黄 8）会一起打出：打出一张，另一张自动跟上。';
 
   @override
-  String get rulesUnoWin => '先出完手牌者获胜。剩一张牌时记得说“乌诺”。';
+  String get rulesUnoWild => '黑色牌指定新颜色。仅当没有当前颜色的牌时才能打 +4。下家可质疑：若 +4 合法则质疑者摸 6 张；否则打 +4 者摸 4 张，由质疑者出牌。';
+
+  @override
+  String get rulesUnoDraw => '没有可出的牌时从牌堆摸 1 张。若可出，可立即打出或留下并结束回合。仍有合法出牌时不能摸牌。';
+
+  @override
+  String get rulesUnoWin => '双人先到 100 分，三人及以上先到 200。一局由出完手牌者获胜。';
+
+  @override
+  String get rulesUnoCall => '只剩一张牌时立刻点「Uno！」。对手要等一秒后才能因没喊 Uno 抓住你——那时你摸 2 张。';
+
+  @override
+  String get rulesUnoScoring => '先出完手牌者赢得本局，并计对手手牌分数：数字按点数，功能牌 20，黑色 50。双人先到 100，三人及以上先到 200。';
+
+  @override
+  String get unoColorRed => '红色';
+
+  @override
+  String get unoColorYellow => '黄色';
+
+  @override
+  String get unoColorGreen => '绿色';
+
+  @override
+  String get unoColorBlue => '蓝色';
+
+  @override
+  String get unoDraw => '抽牌';
+
+  @override
+  String get unoKeep => '保留';
+
+  @override
+  String get unoSayUno => '乌诺！';
+
+  @override
+  String get unoChallengeUno => '挑战乌诺';
+
+  @override
+  String get unoChallengeWd4 => '挑战+4';
+
+  @override
+  String get unoChooseColor => '选择颜色';
+
+  @override
+  String get unoDrawPile => '牌堆';
+
+  @override
+  String get unoDiscardPile => '弃牌堆';
+
+  @override
+  String unoCardsCount(int count) {
+    return '手牌：$count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '得分：$score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '第$round轮 · 目标$target';
+  }
+
+  @override
+  String get unoYourTurn => '你的回合';
+
+  @override
+  String get unoWaitingTurn => '对手回合';
+
+  @override
+  String get unoChooseColorHint => '为万能牌选择颜色';
+
+  @override
+  String get unoWd4Hint => '抽4张牌或挑战万能+4';
+
+  @override
+  String get unoDrawnHint => '打出抽到的牌或保留';
+
+  @override
+  String get unoPlayHint => '打出相同颜色或点数的牌';
+
+  @override
+  String get unoDrawHint => '没有可出的牌——从牌堆抽牌';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count张';
+  }
+
+  @override
+  String get unoYouWon => '你赢得了比赛！';
+
+  @override
+  String get unoYouLost => '比赛结束';
+
+  @override
+  String get unoYouLostTimeout => '你因超时而输了';
+
+  @override
+  String unoWinner(String name) {
+    return '获胜者：$name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name 赢得本局';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '继续';
+
+  @override
+  String get unoRoundScoresTitle => '本局得分';
+
+  @override
+  String get unoDirectionClockwise => '顺时针';
+
+  @override
+  String get unoDirectionCounterclockwise => '逆时针';
+
+  @override
+  String get unoErrStackSameOnly => '只能用 +2 叠 +2，用 +4 叠 +4。不能把 +2 叠在 +4 上。';
+
+  @override
+  String get unoErrCatchTooEarly => '等一秒——对方还可以喊 Uno。';
+
+  @override
+  String get unoErrCallTooLate => '不能再喊 Uno 了。下一名玩家已经出牌。';
 
   @override
   String get gamesInDevelopment => '开发中';

@@ -1304,20 +1304,260 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoIntro.
   ///
   /// In ru, this message translates to:
-  /// **'Классическое Уно: каждому раздают карты; ходите по цвету или номиналу.'**
+  /// **'Каждому раздают по 7 карт. Ходите картой того же цвета или того же номинала (цифра или такой же спецэффект).'**
   String get rulesUnoIntro;
 
   /// No description provided for @rulesUnoPlay.
   ///
   /// In ru, this message translates to:
-  /// **'Спецкарты: +2, смена направления, пропуск хода, чёрная смена цвета и +4. Не можете сходить — берите из колоды.'**
+  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 можно класть только на +2, +4 — только на +4: штраф суммируется (две +2 — следующий берёт 4). +2 на +4 класть нельзя. Кто не отвечает, берёт всю стопку и пропускает ход. Две одинаковые недикие карты (например, две жёлтые 8) сбрасываются вместе: достаточно кинуть одну — вторая уходит автоматически.'**
   String get rulesUnoPlay;
+
+  /// No description provided for @rulesUnoWild.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чёрная карта задаёт новый цвет. +4 кладут, только если нет карты текущего цвета. Соперник может оспорить: если +4 был законным — оспаривающий берёт 6, если нет — автор +4 берёт 4, а оспаривающий ходит.'**
+  String get rulesUnoWild;
+
+  /// No description provided for @rulesUnoDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если подходящей карты нет — возьмите одну из колоды. Если она подходит, можно сразу сходить ею или оставить и передать ход. Пока есть ход, брать нельзя.'**
+  String get rulesUnoDraw;
 
   /// No description provided for @rulesUnoWin.
   ///
   /// In ru, this message translates to:
-  /// **'Побеждает тот, кто первым сбросил все карты. Не забудьте сказать «Уно», когда остаётся одна карта.'**
+  /// **'Вдвоём матч до 100 очков, при трёх и более игроках — до 200. Раунд выигрывает игрок, сбросивший все карты.'**
   String get rulesUnoWin;
+
+  /// No description provided for @rulesUnoCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда остаётся одна карта, сразу нажмите «Уно!». Соперники могут поймать вас без «Уно» только через секунду — тогда вы берёте 2 карты.'**
+  String get rulesUnoCall;
+
+  /// No description provided for @rulesUnoScoring.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто первым сбросил все карты, выигрывает раунд и получает очки за руки соперников: цифры — по номиналу, спецкарты — 20, чёрные — 50. Вдвоём матч до 100, при трёх и более игроках — до 200.'**
+  String get rulesUnoScoring;
+
+  /// No description provided for @unoColorRed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Красный'**
+  String get unoColorRed;
+
+  /// No description provided for @unoColorYellow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Жёлтый'**
+  String get unoColorYellow;
+
+  /// No description provided for @unoColorGreen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Зелёный'**
+  String get unoColorGreen;
+
+  /// No description provided for @unoColorBlue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синий'**
+  String get unoColorBlue;
+
+  /// No description provided for @unoDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'Взять'**
+  String get unoDraw;
+
+  /// No description provided for @unoKeep.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить'**
+  String get unoKeep;
+
+  /// No description provided for @unoSayUno.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уно!'**
+  String get unoSayUno;
+
+  /// No description provided for @unoChallengeUno.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поймать без Уно'**
+  String get unoChallengeUno;
+
+  /// No description provided for @unoChallengeWd4.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оспорить +4'**
+  String get unoChallengeWd4;
+
+  /// No description provided for @unoChooseColor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите цвет'**
+  String get unoChooseColor;
+
+  /// No description provided for @unoDrawPile.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колода'**
+  String get unoDrawPile;
+
+  /// No description provided for @unoDiscardPile.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сброс'**
+  String get unoDiscardPile;
+
+  /// No description provided for @unoCardsCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карт: {count}'**
+  String unoCardsCount(int count);
+
+  /// No description provided for @unoScore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очки: {score}'**
+  String unoScore(int score);
+
+  /// No description provided for @unoRoundProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раунд {round} · до {target}'**
+  String unoRoundProgress(int round, int target);
+
+  /// No description provided for @unoYourTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш ход'**
+  String get unoYourTurn;
+
+  /// No description provided for @unoWaitingTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход соперника'**
+  String get unoWaitingTurn;
+
+  /// No description provided for @unoChooseColorHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите цвет для чёрной карты'**
+  String get unoChooseColorHint;
+
+  /// No description provided for @unoWd4Hint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возьмите 4 карты или оспорьте Wild +4'**
+  String get unoWd4Hint;
+
+  /// No description provided for @unoDrawnHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сыграйте взятую карту или оставьте её'**
+  String get unoDrawnHint;
+
+  /// No description provided for @unoPlayHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сыграйте карту по цвету или значению'**
+  String get unoPlayHint;
+
+  /// No description provided for @unoDrawHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подходящей карты нет — возьмите из колоды'**
+  String get unoDrawHint;
+
+  /// No description provided for @unoPendingDraw.
+  ///
+  /// In ru, this message translates to:
+  /// **'+{count} карт'**
+  String unoPendingDraw(int count);
+
+  /// No description provided for @unoYouWon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выиграли матч!'**
+  String get unoYouWon;
+
+  /// No description provided for @unoYouLost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Матч окончен'**
+  String get unoYouLost;
+
+  /// No description provided for @unoYouLostTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли по времени'**
+  String get unoYouLostTimeout;
+
+  /// No description provided for @unoWinner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Победитель: {name}'**
+  String unoWinner(String name);
+
+  /// No description provided for @unoRoundWonBy.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} выигрывает раунд'**
+  String unoRoundWonBy(String name);
+
+  /// No description provided for @unoRoundPointsAwarded.
+  ///
+  /// In ru, this message translates to:
+  /// **'+{points}'**
+  String unoRoundPointsAwarded(int points);
+
+  /// No description provided for @unoRoundContinue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Далее'**
+  String get unoRoundContinue;
+
+  /// No description provided for @unoRoundScoresTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очки за раунд'**
+  String get unoRoundScoresTitle;
+
+  /// No description provided for @unoDirectionClockwise.
+  ///
+  /// In ru, this message translates to:
+  /// **'По часовой стрелке'**
+  String get unoDirectionClockwise;
+
+  /// No description provided for @unoDirectionCounterclockwise.
+  ///
+  /// In ru, this message translates to:
+  /// **'Против часовой стрелки'**
+  String get unoDirectionCounterclockwise;
+
+  /// No description provided for @unoErrStackSameOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'На +2 можно ответить только +2, на +4 — только +4. +2 на +4 класть нельзя.'**
+  String get unoErrStackSameOnly;
+
+  /// No description provided for @unoErrCatchTooEarly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подождите секунду — они ещё могут сказать «Уно».'**
+  String get unoErrCatchTooEarly;
+
+  /// No description provided for @unoErrCallTooLate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказать «Уно» уже нельзя: следующий игрок уже сходил.'**
+  String get unoErrCallTooLate;
 
   /// No description provided for @gamesInDevelopment.
   ///
@@ -2402,7 +2642,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileChangePhoto.
   ///
   /// In ru, this message translates to:
-  /// **'Поменять фото'**
+  /// **'Поменять аватар'**
   String get profileChangePhoto;
 
   /// No description provided for @shopTitle.

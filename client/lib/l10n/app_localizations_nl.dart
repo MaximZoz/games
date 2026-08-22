@@ -609,13 +609,147 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spel tegen een bot, zonder tijdslimiet per beurt.';
 
   @override
-  String get rulesUnoIntro => 'Klassieke Uno: iedereen krijgt kaarten; speel op kleur of getal.';
+  String get rulesUnoIntro => 'Iedereen krijgt 7 kaarten. Speel een kaart van dezelfde kleur of dezelfde rang (cijfer of dezelfde actie).';
 
   @override
-  String get rulesUnoPlay => 'Speciale kaarten: +2, omkeren, overslaan, wild en wild +4. Kun je niet spelen, trek van de stapel.';
+  String get rulesUnoPlay => 'Overslaan — de volgende mist een beurt. Omkeren met twee spelers werkt als Overslaan. +2 stapelt alleen op +2 en +4 alleen op +4: de straf telt op (twee +2 betekent 4 trekken). +2 mag niet op +4. Wie niet stapelt trekt de hele stapel en slaat over. Twee dezelfde niet-zwarte kaarten (bijv. twee gele 8) gaan samen weg: speel er één en de tweeling gaat automatisch mee.';
 
   @override
-  String get rulesUnoWin => 'Wie als eerste alle kaarten kwijt is, wint. Zeg “Uno” als je er één over hebt.';
+  String get rulesUnoWild => 'Een zwarte kaart kiest een nieuwe kleur. Speel +4 alleen zonder kaart van de huidige kleur. De volgende mag challengen: was +4 legaal, trekt hij 6; zo niet, trekt de +4-speler 4 en de challenger speelt.';
+
+  @override
+  String get rulesUnoDraw => 'Zonder legale kaart trek je er één van de stapel. Past die, speel hem nu of houd hem en pas. Trekken mag niet zolang je kunt spelen.';
+
+  @override
+  String get rulesUnoWin => 'Met z’n tweeën tot 100, bij 3+ spelers tot 200. Een ronde wint wie de hand leegt.';
+
+  @override
+  String get rulesUnoCall => 'Bij één kaart tik je meteen op “Uno!”. Tegenstanders mogen je pas na één seconde pakken voor vergeten Uno — dan trek je 2 kaarten.';
+
+  @override
+  String get rulesUnoScoring => 'Wie als eerste leeg is wint de ronde en scoort de kaarten van tegenstanders: cijfers op waarde, acties 20, zwart 50. Met z’n tweeën tot 100, bij 3+ spelers tot 200.';
+
+  @override
+  String get unoColorRed => 'Rood';
+
+  @override
+  String get unoColorYellow => 'Geel';
+
+  @override
+  String get unoColorGreen => 'Groen';
+
+  @override
+  String get unoColorBlue => 'Blauw';
+
+  @override
+  String get unoDraw => 'Trekken';
+
+  @override
+  String get unoKeep => 'Houden';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno uitdagen';
+
+  @override
+  String get unoChallengeWd4 => '+4 uitdagen';
+
+  @override
+  String get unoChooseColor => 'Kies een kleur';
+
+  @override
+  String get unoDrawPile => 'Trekstapel';
+
+  @override
+  String get unoDiscardPile => 'Aflegstapel';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kaarten: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Ronde $round · tot $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Jouw beurt';
+
+  @override
+  String get unoWaitingTurn => 'Beurt van tegenstander';
+
+  @override
+  String get unoChooseColorHint => 'Kies een kleur voor de joker';
+
+  @override
+  String get unoWd4Hint => 'Trek 4 kaarten of daag Wild +4 uit';
+
+  @override
+  String get unoDrawnHint => 'Speel de getrokken kaart of houd hem';
+
+  @override
+  String get unoPlayHint => 'Speel dezelfde kleur of waarde';
+
+  @override
+  String get unoDrawHint => 'Geen passende kaart — trek van de stapel';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kaarten';
+  }
+
+  @override
+  String get unoYouWon => 'Je hebt de wedstrijd gewonnen!';
+
+  @override
+  String get unoYouLost => 'Wedstrijd afgelopen';
+
+  @override
+  String get unoYouLostTimeout => 'U hebt op tijd verloren';
+
+  @override
+  String unoWinner(String name) {
+    return 'Winnaar: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name wint de ronde';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Verder';
+
+  @override
+  String get unoRoundScoresTitle => 'Rondepunten';
+
+  @override
+  String get unoDirectionClockwise => 'Met de klok mee';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Tegen de klok in';
+
+  @override
+  String get unoErrStackSameOnly => 'Op +2 mag alleen +2, op +4 alleen +4. +2 op +4 is niet toegestaan.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Wacht even — ze kunnen nog Uno zeggen.';
+
+  @override
+  String get unoErrCallTooLate => 'U kunt geen Uno meer zeggen. De volgende speler heeft al gespeeld.';
 
   @override
   String get gamesInDevelopment => 'In ontwikkeling';

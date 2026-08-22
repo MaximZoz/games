@@ -609,13 +609,147 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Main lawan bot, tanpa batas waktu giliran.';
 
   @override
-  String get rulesUnoIntro => 'Uno klasik: semua mendapat kartu; mainkan berdasarkan warna atau angka.';
+  String get rulesUnoIntro => 'Setiap pemain mendapat 7 kartu. Mainkan kartu warna sama atau peringkat sama (angka atau aksi yang sama).';
 
   @override
-  String get rulesUnoPlay => 'Kartu khusus: +2, balik arah, lewati, liar dan +4. Jika tidak bisa main, ambil dari dek.';
+  String get rulesUnoPlay => 'Lewati — pemain berikutnya kehilangan giliran. Balik arah berdua berfungsi seperti Lewati. +2 hanya menumpuk di +2 dan +4 hanya di +4: penalti dijumlahkan (dua +2 membuat berikutnya mengambil 4). +2 tidak boleh di atas +4. Yang tidak menumpuk mengambil seluruh tumpukan dan dilewati. Dua kartu identik non-hitam (mis. dua 8 kuning) dibuang bersama: mainkan satu, kembarannya ikut otomatis.';
 
   @override
-  String get rulesUnoWin => 'Pemain yang pertama menghabiskan semua kartu menang. Ucapkan “Uno” saat tersisa satu.';
+  String get rulesUnoWild => 'Kartu hitam menetapkan warna baru. Mainkan +4 hanya jika tidak ada kartu warna saat ini. Lawan bisa menantang: jika +4 sah ia mengambil 6; jika tidak, pemain +4 mengambil 4 dan penantang bermain.';
+
+  @override
+  String get rulesUnoDraw => 'Tanpa kartu sah, ambil satu dari dek. Jika cocok, mainkan sekarang atau simpan dan lewat. Tidak boleh mengambil selama masih ada langkah sah.';
+
+  @override
+  String get rulesUnoWin => '1 lawan 1 sampai 100, 3+ pemain sampai 200. Ronde dimenangkan dengan menghabiskan kartu.';
+
+  @override
+  String get rulesUnoCall => 'Saat tersisa satu kartu, ketuk “Uno!” segera. Lawan baru bisa menangkap Anda karena lupa Uno setelah satu detik — maka Anda mengambil 2 kartu.';
+
+  @override
+  String get rulesUnoScoring => 'Yang pertama menghabiskan kartu memenangkan ronde dan mendapat poin dari kartu lawan: angka sesuai nilai, aksi 20, hitam 50. 1 lawan 1 sampai 100, 3+ pemain sampai 200.';
+
+  @override
+  String get unoColorRed => 'Merah';
+
+  @override
+  String get unoColorYellow => 'Kuning';
+
+  @override
+  String get unoColorGreen => 'Hijau';
+
+  @override
+  String get unoColorBlue => 'Biru';
+
+  @override
+  String get unoDraw => 'Ambil';
+
+  @override
+  String get unoKeep => 'Simpan';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Tantang Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Tantang +4';
+
+  @override
+  String get unoChooseColor => 'Pilih warna';
+
+  @override
+  String get unoDrawPile => 'Tumpukan ambil';
+
+  @override
+  String get unoDiscardPile => 'Buangan';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kartu: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Skor: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Ronde $round · hingga $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Giliran Anda';
+
+  @override
+  String get unoWaitingTurn => 'Giliran lawan';
+
+  @override
+  String get unoChooseColorHint => 'Pilih warna untuk kartu liar';
+
+  @override
+  String get unoWd4Hint => 'Ambil 4 kartu atau tantang Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Mainkan kartu yang diambil atau simpan';
+
+  @override
+  String get unoPlayHint => 'Mainkan warna atau nilai yang cocok';
+
+  @override
+  String get unoDrawHint => 'Tidak ada kartu cocok — ambil dari tumpukan';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kartu';
+  }
+
+  @override
+  String get unoYouWon => 'Anda memenangkan pertandingan!';
+
+  @override
+  String get unoYouLost => 'Pertandingan selesai';
+
+  @override
+  String get unoYouLostTimeout => 'Anda kalah karena waktu habis';
+
+  @override
+  String unoWinner(String name) {
+    return 'Pemenang: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name memenangkan ronde';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Lanjut';
+
+  @override
+  String get unoRoundScoresTitle => 'Skor ronde';
+
+  @override
+  String get unoDirectionClockwise => 'Searah jarum jam';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Berlawanan arah jarum jam';
+
+  @override
+  String get unoErrStackSameOnly => 'Anda hanya boleh memainkan +2 di atas +2, atau +4 di atas +4. +2 tidak boleh di atas +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Tunggu sebentar — mereka masih bisa bilang Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Anda tidak bisa lagi bilang Uno. Pemain berikutnya sudah jalan.';
 
   @override
   String get gamesInDevelopment => 'Dalam pengembangan';

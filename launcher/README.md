@@ -120,8 +120,25 @@ chmod +x launcher/setup_fly_dev.sh launcher/deploy_dev.sh
 ```
 
 Прод остаётся в `fly.toml` / `deploy.cursor.env`. DEV — `fly.dev.toml` / `deploy.dev.env`.  
-Автодеплой: push в `develop` → DEV, push в `main` → прод (см. `.github/workflows/deploy.yml`).  
+Автодеплой: push в `develop` → DEV, push в `main` → прод (см. `.github/workflows/deploy.yml`).
+CI (analyze/test): автоматически при влитии в `main` (`.github/workflows/ci.yml`).  
 Подробнее: [docs/DEPLOY_FLY_DEV.md](../docs/DEPLOY_FLY_DEV.md).
+
+**Внешний Redis (лобби переживают `fly deploy`):**
+
+```bash
+chmod +x launcher/setup_fly_redis.sh
+./launcher/setup_fly_redis.sh deploy.cursor.env   # прод
+./launcher/setup_fly_redis.sh deploy.dev.env      # DEV
+```
+
+```powershell
+.\launcher\setup_fly_redis.ps1 deploy.cursor.env
+.\launcher\setup_fly_redis.ps1 deploy.dev.env
+```
+
+Без этого Redis крутится внутри app-контейнера без persistence и после деплоя
+сбрасывает лобби/матчмейкинг/активные партии. См. [docs/DEPLOY_FLY.md](../docs/DEPLOY_FLY.md).
 
 ---
 
@@ -151,12 +168,14 @@ Windows
 ├── test.ps1    # Windows — тесты Go + Flutter
 ├── deploy_cursor.ps1 # Windows — деплой на Fly из deploy.cursor.env
 ├── deploy_develop.ps1 # Windows — деплой именно origin/develop
+├── setup_fly_redis.ps1 # Windows — Upstash Redis + REDIS_URL (лобби после deploy)
 
 macOS / Linux
 ├── start.sh    # macOS / Linux
 ├── test.sh     # macOS / Linux — тесты
 ├── deploy_cursor.sh # macOS / Linux — деплой на Fly из deploy.cursor.env
 ├── deploy_develop.sh # macOS / Linux — деплой именно origin/develop
+├── setup_fly_redis.sh # macOS / Linux — Upstash Redis + REDIS_URL
 └── README.md   # этот файл
 ```
 

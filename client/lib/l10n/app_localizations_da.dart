@@ -609,13 +609,147 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spil mod en bot uden tidsgrænse pr. tur.';
 
   @override
-  String get rulesUnoIntro => 'Klassisk Uno: Alle får kort; spil efter farve eller tal.';
+  String get rulesUnoIntro => 'Hver spiller får 7 kort. Spil et kort i samme farve eller samme rang (tal eller samme handling).';
 
   @override
-  String get rulesUnoPlay => 'Specialkort: +2, vend, spring over, farveskift og +4. Kan du ikke spille, træk fra bunken.';
+  String get rulesUnoPlay => 'Spring over — den næste mister turen. Retningsskift med to spillere virker som spring over. +2 stables kun på +2 og +4 kun på +4: straffen lægges sammen (to +2 betyder, at næste trækker 4). +2 må ikke lægges på +4. Den, der ikke stabler, trækker hele bunken og mister turen. To ens ikke-sorte kort (f.eks. to gule 8) kasseres sammen: spil ét, så følger tvillingen automatisk med.';
 
   @override
-  String get rulesUnoWin => 'Den, der først kommer af med alle kort, vinder. Sig “Uno”, når du har ét kort tilbage.';
+  String get rulesUnoWild => 'Et sort kort sætter en ny farve. Spil +4 kun hvis du ikke har kort i den aktuelle farve. Modstanderen kan udfordre: var +4 lovligt, trækker hen 6; ellers trækker +4-spilleren 4, og udfordreren spiller.';
+
+  @override
+  String get rulesUnoDraw => 'Uden lovligt kort, træk ét fra bunken. Matcher det, kan du spille det med det samme eller beholde det og passe. Du må ikke trække, mens du har et lovligt træk.';
+
+  @override
+  String get rulesUnoWin => 'To spillere til 100, 3+ til 200. En runde vindes ved at tømme hånden.';
+
+  @override
+  String get rulesUnoCall => 'Når ét kort er tilbage, tryk straks på “Uno!”. Modstandere kan først fange dig for glemt Uno efter ét sekund — så trækker du 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Den, der først tømmer hånden, vinder runden og får point for modstandernes kort: tal efter værdi, handlinger 20, sorte 50. To spillere til 100, 3+ til 200.';
+
+  @override
+  String get unoColorRed => 'Rød';
+
+  @override
+  String get unoColorYellow => 'Gul';
+
+  @override
+  String get unoColorGreen => 'Grøn';
+
+  @override
+  String get unoColorBlue => 'Blå';
+
+  @override
+  String get unoDraw => 'Træk';
+
+  @override
+  String get unoKeep => 'Behold';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Udfordr Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Udfordr +4';
+
+  @override
+  String get unoChooseColor => 'Vælg en farve';
+
+  @override
+  String get unoDrawPile => 'Trækbunke';
+
+  @override
+  String get unoDiscardPile => 'Aflægningsbunke';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kort: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Point: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Runde $round · til $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Din tur';
+
+  @override
+  String get unoWaitingTurn => 'Modstanderens tur';
+
+  @override
+  String get unoChooseColorHint => 'Vælg en farve til jokeren';
+
+  @override
+  String get unoWd4Hint => 'Træk 4 kort eller udfordr Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Spil det trukne kort eller behold det';
+
+  @override
+  String get unoPlayHint => 'Spil en matchende farve eller værdi';
+
+  @override
+  String get unoDrawHint => 'Intet matchende kort — træk fra bunken';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kort';
+  }
+
+  @override
+  String get unoYouWon => 'Du vandt kampen!';
+
+  @override
+  String get unoYouLost => 'Kampen er slut';
+
+  @override
+  String get unoYouLostTimeout => 'Du tabte på tid';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vinder: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vinder runden';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Næste';
+
+  @override
+  String get unoRoundScoresTitle => 'Rundepoint';
+
+  @override
+  String get unoDirectionClockwise => 'Med uret';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Mod uret';
+
+  @override
+  String get unoErrStackSameOnly => 'På +2 må kun +2 lægges, på +4 kun +4. +2 på +4 er ikke tilladt.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Vent et sekund — de kan stadig sige Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Du kan ikke længere sige Uno. Næste spiller har allerede trukket.';
 
   @override
   String get gamesInDevelopment => 'Under udvikling';

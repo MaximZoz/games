@@ -609,13 +609,147 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Peli bottia vastaan ilman vuoron aikarajaa.';
 
   @override
-  String get rulesUnoIntro => 'Klassinen Uno: kaikille jaetaan kortteja; pelaa värin tai numeron mukaan.';
+  String get rulesUnoIntro => 'Jokainen saa 7 korttia. Pelaa saman värin tai saman arvon kortti (numero tai sama toiminto).';
 
   @override
-  String get rulesUnoPlay => 'Erikoiskortit: +2, suunnanvaihto, ohitus, jokerit ja +4. Jos et voi pelata, nosta pakasta.';
+  String get rulesUnoPlay => 'Ohitus — seuraava menettää vuoron. Suunnanvaihto kahdella toimii ohituksena. +2 pinotaan vain +2:n päälle ja +4 vain +4:n päälle: rangaistus kertyy (kaksi +2:ta, seuraava nostaa 4). +2:ta ei saa laittaa +4:n päälle. Joka ei pinoa, nostaa koko pinon ja menettää vuoron. Kaksi samaa ei-mustaa korttia (esim. kaksi keltaista 8) hylätään yhdessä: pelaa yksi, kaksonen lähtee automaattisesti.';
 
   @override
-  String get rulesUnoWin => 'Voittaa se, joka ensimmäisenä pääsee eroon kaikista korteista. Sano “Uno”, kun jäljellä on yksi.';
+  String get rulesUnoWild => 'Musta kortti asettaa uuden värin. Pelaa +4 vain, jos sinulla ei ole nykyisen värin korttia. Vastustaja voi haastaa: jos +4 oli laillinen, hän nostaa 6; muuten +4:n pelaaja nostaa 4 ja haastaja pelaa.';
+
+  @override
+  String get rulesUnoDraw => 'Ilman laillista korttia nosta yksi pakasta. Jos se sopii, voit pelata sen heti tai pitää ja luovuttaa vuoron. Et saa nostaa, jos sinulla on laillinen siirto.';
+
+  @override
+  String get rulesUnoWin => 'Kaksin 100 pisteeseen, 3+ pelaajalla 200. Erän voittaa se, joka tyhjentää kätensä.';
+
+  @override
+  String get rulesUnoCall => 'Kun yksi kortti on jäljellä, paina heti ”Uno!”. Vastustaja voi napata sinut Uno-unohduksesta vasta sekunnin kuluttua — silloin nostat 2 korttia.';
+
+  @override
+  String get rulesUnoScoring => 'Joka ensimmäisenä tyhjentää kätensä, voittaa erän ja saa pisteet vastustajien korteista: numerot arvosta, toiminnot 20, mustat 50. Kaksin 100:een, 3+ pelaajalla 200:een.';
+
+  @override
+  String get unoColorRed => 'Punainen';
+
+  @override
+  String get unoColorYellow => 'Keltainen';
+
+  @override
+  String get unoColorGreen => 'Vihreä';
+
+  @override
+  String get unoColorBlue => 'Sininen';
+
+  @override
+  String get unoDraw => 'Nosta';
+
+  @override
+  String get unoKeep => 'Pidä';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Haasta Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Haasta +4';
+
+  @override
+  String get unoChooseColor => 'Valitse väri';
+
+  @override
+  String get unoDrawPile => 'Nostopakka';
+
+  @override
+  String get unoDiscardPile => 'Poistopakka';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kortteja: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Pisteet: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Kierros $round · tavoite $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Sinun vuorosi';
+
+  @override
+  String get unoWaitingTurn => 'Vastustajan vuoro';
+
+  @override
+  String get unoChooseColorHint => 'Valitse jokerille väri';
+
+  @override
+  String get unoWd4Hint => 'Nosta 4 korttia tai haasta Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Pelaa nostettu kortti tai pidä se';
+
+  @override
+  String get unoPlayHint => 'Pelaa sopiva väri tai arvo';
+
+  @override
+  String get unoDrawHint => 'Ei sopivaa korttia — nosta pakasta';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count korttia';
+  }
+
+  @override
+  String get unoYouWon => 'Voitit ottelun!';
+
+  @override
+  String get unoYouLost => 'Ottelu päättyi';
+
+  @override
+  String get unoYouLostTimeout => 'Hävisit ajan loppumiseen';
+
+  @override
+  String unoWinner(String name) {
+    return 'Voittaja: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name voittaa erän';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Seuraava';
+
+  @override
+  String get unoRoundScoresTitle => 'Erän pisteet';
+
+  @override
+  String get unoDirectionClockwise => 'Myötäpäivään';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Vastapäivään';
+
+  @override
+  String get unoErrStackSameOnly => '+2:n päälle saa vain +2, +4:n päälle vain +4. +2 ei käy +4:n päälle.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Odota sekunti — he ehtivät vielä sanoa Unon.';
+
+  @override
+  String get unoErrCallTooLate => 'Unoa ei voi enää sanoa. Seuraava pelaaja on jo pelannut.';
 
   @override
   String get gamesInDevelopment => 'Kehityksessä';

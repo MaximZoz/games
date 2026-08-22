@@ -91,16 +91,30 @@ func TestT(t *testing.T) {
 	if got := T(LangFR, "invalid user_id: abc"); got != "user_id invalide : abc" {
 		t.Fatalf("prefix fr: %q", got)
 	}
+	if got := T(LangEN, "uno: only the same +2 or +4 can stack"); got != ErrUnoStackSameOnly {
+		t.Fatalf("en uno stack: %q", got)
+	}
+	if got := T(LangRU, "uno: only the same +2 or +4 can stack"); got == ErrUnoStackSameOnly || got == "" {
+		t.Fatalf("ru uno stack left English: %q", got)
+	}
+	if got := T(LangEN, "you cannot call UNO now"); got != ErrUnoCallTooLate {
+		t.Fatalf("en uno late call: %q", got)
+	}
+	if got := T(LangRU, "you cannot call UNO now"); got == "you cannot call UNO now" || got == ErrUnoCallTooLate || got == "" {
+		t.Fatalf("ru uno late call left English: %q", got)
+	}
 }
 
 func TestCatalogComplete(t *testing.T) {
-	for key, byLang := range catalog {
-		for code := range supportedLangs {
-			if code == LangEN {
-				continue
-			}
-			if v := byLang[code]; v == "" {
-				t.Fatalf("missing translation key=%q lang=%q", key, code)
+	for _, cat := range []map[string]map[string]string{catalog, actionCatalog} {
+		for key, byLang := range cat {
+			for code := range supportedLangs {
+				if code == LangEN {
+					continue
+				}
+				if v := byLang[code]; v == "" {
+					t.Fatalf("missing translation key=%q lang=%q", key, code)
+				}
 			}
 		}
 	}

@@ -19,6 +19,28 @@ void main() {
       expect(formatUserError(null, fallback: 'Кастом'), 'Кастом');
     });
 
+    test('raw UNO late-call error is localized', () {
+      expect(
+        formatUserError(GamesException(
+          400,
+          'you cannot call UNO now',
+          errorKey: 'you cannot call UNO now',
+        )),
+        contains('уже нельзя'),
+      );
+    });
+
+    test('raw UNO stack error is localized', () {
+      expect(
+        formatUserError(GamesException(
+          400,
+          'uno: only the same +2 or +4 can stack',
+          errorKey: 'uno: only the same +2 or +4 can stack',
+        )),
+        contains('+2 на +4'),
+      );
+    });
+
     test('domain exceptions keep message', () {
       expect(formatUserError(GamesException(400, 'Не ваш ход')), 'Не ваш ход');
       expect(formatUserError(AuthException(401, 'Сессия')), 'Сессия');

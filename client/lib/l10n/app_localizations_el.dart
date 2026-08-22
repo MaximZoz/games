@@ -609,13 +609,147 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Παιχνίδι εναντίον bot χωρίς όριο χρόνου ανά γύρο.';
 
   @override
-  String get rulesUnoIntro => 'Κλασικό Uno: μοιράζονται κάρτες σε όλους· παίξτε με χρώμα ή αριθμό.';
+  String get rulesUnoIntro => 'Ο καθένας παίρνει 7 κάρτες. Παίξτε κάρτα ίδιου χρώματος ή ίδιας αξίας (αριθμός ή ίδια ενέργεια).';
 
   @override
-  String get rulesUnoPlay => 'Ειδικές κάρτες: +2, αντιστροφή, παράλειψη, αλλαγή χρώματος και +4. Αν δεν μπορείτε να παίξετε, τραβήξτε.';
+  String get rulesUnoPlay => 'Παράλειψη — ο επόμενος χάνει τη σειρά. Αντιστροφή με δύο παίκτες λειτουργεί ως παράλειψη. Το +2 στοιβάζεται μόνο σε +2 και το +4 μόνο σε +4: το πέναλτι προστίθεται (δύο +2 κάνουν τον επόμενο να τραβήξει 4). Δεν μπαίνει +2 σε +4. Όποιος δεν απαντήσει τραβά όλη τη στοίβα και χάνει τη σειρά. Δύο ίδια μη μαύρα φύλλα (π.χ. δύο κίτρινα 8) πετιούνται μαζί: παίξτε το ένα και το δίδυμο φεύγει αυτόματα.';
 
   @override
-  String get rulesUnoWin => 'Κερδίζει όποιος πετάξει πρώτος όλες τις κάρτες. Πείτε «Uno» όταν μείνει μία.';
+  String get rulesUnoWild => 'Η μαύρη κάρτα ορίζει νέο χρώμα. Παίξτε +4 μόνο αν δεν έχετε κάρτα του τρέχοντος χρώματος. Ο αντίπαλος μπορεί να αμφισβητήσει: αν το +4 ήταν νόμιμο τραβά 6· αλλιώς ο παίκτης του +4 τραβά 4 και ο αμφισβητίας παίζει.';
+
+  @override
+  String get rulesUnoDraw => 'Χωρίς νόμιμη κάρτα, τραβήξτε μία από την τράπουλα. Αν ταιριάζει, παίξτε την τώρα ή κρατήστε την και περάστε. Δεν τραβάτε όσο έχετε νόμιμη κίνηση.';
+
+  @override
+  String get rulesUnoWin => 'Στους δύο ως 100, με 3+ ως 200. Τον γύρο κερδίζει όποιος αδειάζει το χέρι.';
+
+  @override
+  String get rulesUnoCall => 'Όταν μένει μία κάρτα, πατήστε αμέσως «Uno!». Οι αντίπαλοι μπορούν να σας πιάσουν για ξεχασμένο Uno μόνο μετά από ένα δευτερόλεπτο — τότε τραβάτε 2 κάρτες.';
+
+  @override
+  String get rulesUnoScoring => 'Όποιος αδειάσει πρώτος το χέρι κερδίζει τον γύρο και παίρνει πόντους από τα χέρια των αντιπάλων: αριθμοί στην αξία, ενέργειες 20, μαύρες 50. Στους δύο ως 100, με 3+ ως 200.';
+
+  @override
+  String get unoColorRed => 'Κόκκινο';
+
+  @override
+  String get unoColorYellow => 'Κίτρινο';
+
+  @override
+  String get unoColorGreen => 'Πράσινο';
+
+  @override
+  String get unoColorBlue => 'Μπλε';
+
+  @override
+  String get unoDraw => 'Τράβηγμα';
+
+  @override
+  String get unoKeep => 'Κράτημα';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Πρόκληση Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Πρόκληση +4';
+
+  @override
+  String get unoChooseColor => 'Επιλέξτε χρώμα';
+
+  @override
+  String get unoDrawPile => 'Τράπουλα';
+
+  @override
+  String get unoDiscardPile => 'Στοίβα';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Κάρτες: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Σκορ: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Γύρος $round · έως $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Η σειρά σας';
+
+  @override
+  String get unoWaitingTurn => 'Σειρά αντιπάλου';
+
+  @override
+  String get unoChooseColorHint => 'Επιλέξτε χρώμα για τον μπαλαντέρ';
+
+  @override
+  String get unoWd4Hint => 'Τραβήξτε 4 κάρτες ή προκαλέστε το Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Παίξτε την κάρτα ή κρατήστε την';
+
+  @override
+  String get unoPlayHint => 'Παίξτε ίδιο χρώμα ή αξία';
+
+  @override
+  String get unoDrawHint => 'Δεν υπάρχει κάρτα — τραβήξτε από την τράπουλα';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count κάρτες';
+  }
+
+  @override
+  String get unoYouWon => 'Κερδίσατε τον αγώνα!';
+
+  @override
+  String get unoYouLost => 'Ο αγώνας τελείωσε';
+
+  @override
+  String get unoYouLostTimeout => 'Χάσατε λόγω χρόνου';
+
+  @override
+  String unoWinner(String name) {
+    return 'Νικητής: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return 'Ο/Η $name κερδίζει τον γύρο';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Επόμενο';
+
+  @override
+  String get unoRoundScoresTitle => 'Σκορ γύρου';
+
+  @override
+  String get unoDirectionClockwise => 'Δεξιόστροφα';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Αριστερόστροφα';
+
+  @override
+  String get unoErrStackSameOnly => 'Στο +2 παίζετε μόνο +2, στο +4 μόνο +4. Δεν μπαίνει +2 πάνω σε +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Περιμένετε ένα δευτερόλεπτο — μπορούν ακόμα να πουν Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Δεν μπορείτε πια να πείτε Uno. Ο επόμενος παίκτης έπαιξε ήδη.';
 
   @override
   String get gamesInDevelopment => 'Υπό ανάπτυξη';

@@ -62,6 +62,16 @@ UserGameSettings gameCardSettings({
         maxPlayers: maxPlayers,
         gameMode: 'holdem',
       );
+    case 'uno':
+      return UserGameSettings(
+        gameType: 'uno',
+        turnTimeSec: turnTimeSec,
+        variant: 'classic',
+        stakeBronze: stakeBronze,
+        deckSize: 108,
+        maxPlayers: maxPlayers,
+        gameMode: 'classic',
+      );
     case 'battleship':
       return UserGameSettings(
         gameType: 'battleship',

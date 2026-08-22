@@ -609,13 +609,147 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoOfflineBot => 'משחק נגד בוט ללא מגבלת זמן לתור.';
 
   @override
-  String get rulesUnoIntro => 'אונו קלאסי: כולם מקבלים קלפים; משחקים לפי צבע או מספר.';
+  String get rulesUnoIntro => 'כל שחקן מקבל 7 קלפים. שחקו קלף באותו צבע או באותו ערך (מספר או אותה פעולה).';
 
   @override
-  String get rulesUnoPlay => 'קלפים מיוחדים: +2, הפוך כיוון, דלג, שינוי צבע ו-+4. אם אי אפשר לשחק — מושכים מהחפיסה.';
+  String get rulesUnoPlay => 'דילוג — הבא מפסיד תור. היפוך כיוון בשניים פועל כדילוג. +2 רק על +2 ו-+4 רק על +4: הקנס מצטבר (שתי +2 — הבא שולף 4). אסור לשים +2 על +4. מי שלא מגיב שולף את כל הערימה ומדלג. שתי קלפים זהים שאינם שחורים (למשל שתי 8 צהובות) נזרקים יחד: משחקים אחד והתאום יוצא אוטומטית.';
 
   @override
-  String get rulesUnoWin => 'מנצח מי שמשליך ראשון את כל הקלפים. אמרו “Uno” כשנשאר קלף אחד.';
+  String get rulesUnoWild => 'קלף שחור קובע צבע חדש. משחקים +4 רק בלי קלף בצבע הנוכחי. היריב יכול לערער: אם ה-+4 היה חוקי הוא שולף 6; אחרת משחק ה-+4 שולף 4 והמערער משחק.';
+
+  @override
+  String get rulesUnoDraw => 'בלי קלף חוקי — שלפו אחד מהחפיסה. אם הוא מתאים אפשר לשחק אותו מיד או להשאיר ולהעביר תור. אסור לשלוף כשיש מהלך חוקי.';
+
+  @override
+  String get rulesUnoWin => 'אחד על אחד עד 100, ב־3+ עד 200. את הסיבוב זוכה מי שמרוקן את היד.';
+
+  @override
+  String get rulesUnoCall => 'כשנשאר קלף אחד לחצו מיד «אונו!». יריבים יכולים לתפוס אתכם על שכחת אונו רק אחרי שנייה — ואז שולפים 2 קלפים.';
+
+  @override
+  String get rulesUnoScoring => 'מי שמרקין ראשון את היד זוכה בסיבוב ומקבל נקודות על ידי היריבים: מספרים לפי ערך, פעולות 20, שחורים 50. אחד על אחד עד 100, ב־3+ עד 200.';
+
+  @override
+  String get unoColorRed => 'אדום';
+
+  @override
+  String get unoColorYellow => 'צהוב';
+
+  @override
+  String get unoColorGreen => 'ירוק';
+
+  @override
+  String get unoColorBlue => 'כחול';
+
+  @override
+  String get unoDraw => 'משיכה';
+
+  @override
+  String get unoKeep => 'שמירה';
+
+  @override
+  String get unoSayUno => 'אונו!';
+
+  @override
+  String get unoChallengeUno => 'אתגר אונו';
+
+  @override
+  String get unoChallengeWd4 => 'אתגר +4';
+
+  @override
+  String get unoChooseColor => 'בחרו צבע';
+
+  @override
+  String get unoDrawPile => 'ערימת משיכה';
+
+  @override
+  String get unoDiscardPile => 'ערימת השלכה';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'קלפים: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'ניקוד: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'סיבוב $round · עד $target';
+  }
+
+  @override
+  String get unoYourTurn => 'התור שלך';
+
+  @override
+  String get unoWaitingTurn => 'תור היריב';
+
+  @override
+  String get unoChooseColorHint => 'בחרו צבע לקלף החופשי';
+
+  @override
+  String get unoWd4Hint => 'משכו 4 קלפים או אתגרו Wild +4';
+
+  @override
+  String get unoDrawnHint => 'שחקו בקלף שנמשך או שמרו אותו';
+
+  @override
+  String get unoPlayHint => 'שחקו צבע או ערך תואם';
+
+  @override
+  String get unoDrawHint => 'אין קלף מתאים — משכו מהערימה';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count קלפים';
+  }
+
+  @override
+  String get unoYouWon => 'ניצחת במשחק!';
+
+  @override
+  String get unoYouLost => 'המשחק הסתיים';
+
+  @override
+  String get unoYouLostTimeout => 'הפסדת בגלל הזמן';
+
+  @override
+  String unoWinner(String name) {
+    return 'מנצח: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name זוכה בסיבוב';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'המשך';
+
+  @override
+  String get unoRoundScoresTitle => 'ניקוד הסיבוב';
+
+  @override
+  String get unoDirectionClockwise => 'עם כיוון השעון';
+
+  @override
+  String get unoDirectionCounterclockwise => 'נגד כיוון השעון';
+
+  @override
+  String get unoErrStackSameOnly => 'אפשר לשים +2 רק על +2 ו-+4 רק על +4. אי אפשר לשים +2 על +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'חכו שנייה — עדיין אפשר להגיד אונו.';
+
+  @override
+  String get unoErrCallTooLate => 'אי אפשר כבר להגיד אונו. השחקן הבא כבר שיחק.';
 
   @override
   String get gamesInDevelopment => 'בפיתוח';

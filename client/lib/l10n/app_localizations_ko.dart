@@ -609,13 +609,147 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesUnoOfflineBot => '봇과 대결, 턴 시간 제한 없음.';
 
   @override
-  String get rulesUnoIntro => '클래식 우노: 모든 플레이어에게 카드가 나눠지며 색상 또는 숫자로 냅니다.';
+  String get rulesUnoIntro => '각 플레이어에게 카드 7장을 나눠 줍니다. 같은 색 또는 같은 등급(숫자나 같은 특수) 카드를 냅니다.';
 
   @override
-  String get rulesUnoPlay => '특수 카드: +2, 리버스, 스킵, 와일드, 와일드+4. 낼 수 없으면 덱에서 뽑습니다.';
+  String get rulesUnoPlay => '스킵 — 다음 사람은 턴을 잃습니다. 2인일 때 리버스는 스킵과 같습니다. +2는 +2 위에만, +4는 +4 위에만 겹칩니다. 벌칙이 더해집니다(+2 두 장이면 다음 사람은 4장). +2를 +4 위에 올릴 수 없습니다. 겹치지 않으면 더미 전체를 뽑고 턴을 건너뜁니다.같은 색깔·숫자의 일반 카드 두 장(예: 노란 8 두 장)은 함께 버립니다. 한 장만 내면 짝이 자동으로 나갑니다.';
 
   @override
-  String get rulesUnoWin => '손패를 먼저 모두 낸 사람이 이깁니다. 한 장 남으면 “우노”라고 말하세요.';
+  String get rulesUnoWild => '검은 카드는 새 색을 정합니다. +4는 현재 색 카드가 없을 때만 냅니다. 상대가 도전할 수 있습니다. +4가 합법이면 도전자가 6장, 아니면 +4를 낸 사람이 4장을 뽑고 도전자가 냅니다.';
+
+  @override
+  String get rulesUnoDraw => '낼 카드가 없으면 덱에서 한 장 뽑습니다. 맞으면 바로 내거나 들고 턴을 넘길 수 있습니다. 낼 수 있는 카드가 있으면 뽑을 수 없습니다.';
+
+  @override
+  String get rulesUnoWin => '1대1은 100점, 3인 이상은 200점. 라운드는 손을 비운 사람이 이깁니다.';
+
+  @override
+  String get rulesUnoCall => '한 장 남으면 바로 «우노!»를 누르세요. 상대는 1초 후에만 우노를 잊었다고 잡을 수 있고, 그때 2장을 뽑습니다.';
+
+  @override
+  String get rulesUnoScoring => '먼저 손을 비운 사람이 라운드를 이기고 상대 손패 점수를 받습니다. 숫자는 액면, 특수 20, 검정 50. 1대1은 100점, 3인 이상은 200점.';
+
+  @override
+  String get unoColorRed => '빨강';
+
+  @override
+  String get unoColorYellow => '노랑';
+
+  @override
+  String get unoColorGreen => '초록';
+
+  @override
+  String get unoColorBlue => '파랑';
+
+  @override
+  String get unoDraw => '뽑기';
+
+  @override
+  String get unoKeep => '보관';
+
+  @override
+  String get unoSayUno => '우노!';
+
+  @override
+  String get unoChallengeUno => '우노 도전';
+
+  @override
+  String get unoChallengeWd4 => '+4 도전';
+
+  @override
+  String get unoChooseColor => '색상 선택';
+
+  @override
+  String get unoDrawPile => '뽑기 더미';
+
+  @override
+  String get unoDiscardPile => '버린 더미';
+
+  @override
+  String unoCardsCount(int count) {
+    return '카드: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '점수: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round라운드 · $target점 선취';
+  }
+
+  @override
+  String get unoYourTurn => '내 차례';
+
+  @override
+  String get unoWaitingTurn => '상대 차례';
+
+  @override
+  String get unoChooseColorHint => '와일드 카드의 색상을 선택하세요';
+
+  @override
+  String get unoWd4Hint => '4장을 뽑거나 와일드 +4에 도전하세요';
+
+  @override
+  String get unoDrawnHint => '뽑은 카드를 내거나 보관하세요';
+
+  @override
+  String get unoPlayHint => '같은 색상이나 값을 내세요';
+
+  @override
+  String get unoDrawHint => '낼 카드가 없습니다 — 더미에서 뽑으세요';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count장';
+  }
+
+  @override
+  String get unoYouWon => '매치에서 승리했습니다!';
+
+  @override
+  String get unoYouLost => '매치 종료';
+
+  @override
+  String get unoYouLostTimeout => '시간 초과로 패배했습니다';
+
+  @override
+  String unoWinner(String name) {
+    return '승자: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name 님이 라운드 승리';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '다음';
+
+  @override
+  String get unoRoundScoresTitle => '라운드 점수';
+
+  @override
+  String get unoDirectionClockwise => '시계 방향';
+
+  @override
+  String get unoDirectionCounterclockwise => '반시계 방향';
+
+  @override
+  String get unoErrStackSameOnly => '+2 위에는 +2만, +4 위에는 +4만 낼 수 있습니다. +2를 +4 위에 올릴 수 없습니다.';
+
+  @override
+  String get unoErrCatchTooEarly => '잠시만요. 아직 우노를 외칠 수 있습니다.';
+
+  @override
+  String get unoErrCallTooLate => '이제 우노를 외칠 수 없습니다. 다음 플레이어가 이미 냈습니다.';
 
   @override
   String get gamesInDevelopment => '개발 중';

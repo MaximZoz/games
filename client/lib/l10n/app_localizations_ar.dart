@@ -609,13 +609,147 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesUnoOfflineBot => 'اللعب ضد روبوت بدون حد زمني للدور.';
 
   @override
-  String get rulesUnoIntro => 'أونو الكلاسيكي: تُوزَّع البطاقات على الجميع؛ العب حسب اللون أو الرقم.';
+  String get rulesUnoIntro => 'يوزَّع على كل لاعب 7 بطاقات. العب بطاقة من نفس اللون أو نفس القيمة (رقم أو نفس الإجراء).';
 
   @override
-  String get rulesUnoPlay => 'بطاقات خاصة: +2 وتغيير الاتجاه وتخطي وجوكر و+4. إن لم تستطع اللعب فاسحب من الرزمة.';
+  String get rulesUnoPlay => 'التخطي — يفقد التالي دوره. عكس الاتجاه مع لاعبين يعمل كتخطي. تُكدَّس +2 على +2 فقط و+4 على +4 فقط: تتراكم العقوبة (بطاقتا +2 تجعل التالي يسحب 4). لا يجوز وضع +2 على +4. من لا يرد يسحب الكومة كلها ويفقد دوره. ورقتان متطابقتان غير سوداوين (مثل ثمانيتين صفراوين) تُرميان معًا: العب واحدة فتخرج التوأم تلقائيًا.';
 
   @override
-  String get rulesUnoWin => 'يفوز من يتخلّص من كل بطاقاته أولاً. قل «أونو» عندما تبقى بطاقة واحدة.';
+  String get rulesUnoWild => 'البطاقة السوداء تختار لونًا جديدًا. العب +4 فقط إن لم تكن لديك بطاقة باللون الحالي. يمكن للخصم الاعتراض: إن كان +4 قانونيًا يسحب 6؛ وإلا يسحب لاعب +4 أربعًا ويلعب المعترض.';
+
+  @override
+  String get rulesUnoDraw => 'إن لم توجد بطاقة صالحة فاسحب واحدة من الرزمة. إن ناسبت يمكنك لعبها فورًا أو الاحتفاظ بها وتمرير الدور. لا تسحب طالما لديك حركة قانونية.';
+
+  @override
+  String get rulesUnoWin => 'اثنان حتى 100 نقطة، و3+ حتى 200. وتُربَح الجولة بتفريغ اليد.';
+
+  @override
+  String get rulesUnoCall => 'عند بقاء ورقة واحدة اضغط «أونو!» فورًا. يمكن للآخرين الإمساك بك لنسيان أونو بعد ثانية واحدة فقط — حينها تسحب ورقتين.';
+
+  @override
+  String get rulesUnoScoring => 'من يفرّغ يده أولًا يفوز بالجولة ويحصل على نقاط بطاقات الخصوم: الأرقام بقيمتها، الإجراءات 20، السوداء 50. اثنان حتى 100، و3+ حتى 200.';
+
+  @override
+  String get unoColorRed => 'أحمر';
+
+  @override
+  String get unoColorYellow => 'أصفر';
+
+  @override
+  String get unoColorGreen => 'أخضر';
+
+  @override
+  String get unoColorBlue => 'أزرق';
+
+  @override
+  String get unoDraw => 'اسحب';
+
+  @override
+  String get unoKeep => 'احتفظ';
+
+  @override
+  String get unoSayUno => 'أونو!';
+
+  @override
+  String get unoChallengeUno => 'تحدي أونو';
+
+  @override
+  String get unoChallengeWd4 => 'تحدي +4';
+
+  @override
+  String get unoChooseColor => 'اختر لونًا';
+
+  @override
+  String get unoDrawPile => 'كومة السحب';
+
+  @override
+  String get unoDiscardPile => 'كومة الرمي';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'البطاقات: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'النقاط: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'الجولة $round · حتى $target';
+  }
+
+  @override
+  String get unoYourTurn => 'دورك';
+
+  @override
+  String get unoWaitingTurn => 'دور الخصم';
+
+  @override
+  String get unoChooseColorHint => 'اختر لونًا للبطاقة السوداء';
+
+  @override
+  String get unoWd4Hint => 'اسحب 4 بطاقات أو تحدَّ Wild +4';
+
+  @override
+  String get unoDrawnHint => 'العب البطاقة المسحوبة أو احتفظ بها';
+
+  @override
+  String get unoPlayHint => 'العب لونًا أو قيمة مطابقة';
+
+  @override
+  String get unoDrawHint => 'لا توجد بطاقة مطابقة — اسحب من الكومة';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count بطاقات';
+  }
+
+  @override
+  String get unoYouWon => 'فزت بالمباراة!';
+
+  @override
+  String get unoYouLost => 'انتهت المباراة';
+
+  @override
+  String get unoYouLostTimeout => 'لقد خسرت بسبب الوقت';
+
+  @override
+  String unoWinner(String name) {
+    return 'الفائز: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name يفوز بالجولة';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'التالي';
+
+  @override
+  String get unoRoundScoresTitle => 'نقاط الجولة';
+
+  @override
+  String get unoDirectionClockwise => 'مع عقارب الساعة';
+
+  @override
+  String get unoDirectionCounterclockwise => 'عكس عقارب الساعة';
+
+  @override
+  String get unoErrStackSameOnly => 'يمكنك لعب +2 على +2 فقط، أو +4 على +4. لا يمكن وضع +2 على +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'انتظر ثانية — ما زال بإمكانهم قول أونو.';
+
+  @override
+  String get unoErrCallTooLate => 'لم يعد بإمكانك قول أونو. اللاعب التالي لعب بالفعل.';
 
   @override
   String get gamesInDevelopment => 'قيد التطوير';

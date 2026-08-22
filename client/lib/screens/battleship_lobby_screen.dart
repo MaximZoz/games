@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multigames_client/core/presence_provider.dart';
-import 'package:multigames_client/core/presence_sort.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
@@ -18,7 +16,6 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
@@ -312,201 +309,20 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
         copied: _linkCopied,
         onTap: () => _copyLink(lobby.id),
       ),
-      friendsCardBuilder: (expand) =>
-          _buildFriendsCard(lobby, friendsAsync, expand: expand),
-    );
-  }
-
-  Widget _buildFriendsCard(
-    BattleshipLobbyView lobby,
-    AsyncValue<FriendsSnapshot> friendsAsync, {
-    bool expand = true,
-  }) {
-    return GradientCard(
-      animate: false,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: friendsAsync.when(
-        skipLoadingOnReload: true,
-        skipLoadingOnRefresh: true,
-        data: (snapshot) {
-          final presence =
-              ref.watch(presenceMapProvider).valueOrNull ?? const {};
-          final memberIds = <String>{...lobby.playerIds, lobby.creatorId};
-          final list = snapshot.friends
-              .where((f) => !memberIds.contains(f.user.id))
-              .toList();
-          sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
-          if (list.isEmpty) {
-            final empty = Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                context.l10n.friendsEmpty,
-                style: const TextStyle(color: AppColors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-            );
-            return expand ? Center(child: empty) : empty;
-          }
-          return ListView.builder(
-            key: const PageStorageKey('battleship-lobby-friends'),
-            padding: const EdgeInsets.only(bottom: 8),
-            shrinkWrap: !expand,
-            physics: expand
-                ? const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics(),
-                  )
-                : const NeverScrollableScrollPhysics(),
-            itemCount: list.length,
-            itemBuilder: (context, i) {
-              final f = list[i];
-              final id = f.user.id;
-              final invited = _invited.contains(id);
-              final declined = _declined.contains(id);
-              final cancelling = _cancelling.contains(id);
-              final inviting = _inviting.contains(id);
-              final p = presence[id];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    _avatarSmall(f.user, isOnline: p?.online == true),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            (f.user.displayName?.trim().isNotEmpty ?? false)
-                                ? f.user.displayName!
-                                : context.l10n.commonPlayer,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            formatPresenceStatus(p),
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: inviting || cancelling || declined
-                          ? null
-                          : invited
-                              ? () => unawaited(_cancelInvite(id))
-                              : () => unawaited(_invite(id)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accentStart,
-                        side: BorderSide(
-                          color: AppColors.accentStart.withValues(alpha: 0.6),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: (inviting || cancelling)
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accentStart,
-                              ),
-                            )
-                          : Text(
-                              declined
-                                  ? context.l10n.lobbyInviteSentShort
-                                  : invited
-                                      ? context.l10n.commonCancel
-                                      : context.l10n.lobbyInvite,
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accentStart,
-          ),
-        ),
-        error: (e, _) => Center(
-          child: Text(
-            formatUserError(e, fallback: context.l10n.friendsLoadFailed),
-            style: const TextStyle(color: Colors.red),
-          ),
-        ),
+      friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        friendsAsync: friendsAsync,
+        excludeUserIds: memberIds,
+        invitedIds: _invited,
+        invitingIds: _inviting,
+        cancellingIds: _cancelling,
+        declinedIds: _declined,
+        listStorageKey: 'battleship-lobby-friends',
+        expand: expand,
+        onInvite: (id) => unawaited(_invite(id)),
+        onCancel: (id) => unawaited(_cancelInvite(id)),
+        profileReturnPath:
+            '/games/battleship/lobby/${widget.lobbyId}?mode=invite',
       ),
-    );
-  }
-
-  Widget _avatarSmall(FriendUserItem u, {required bool isOnline}) {
-    Widget avatar;
-    final displayName = u.displayName?.trim() ?? '';
-    final letter = displayName.isEmpty ? '?' : displayName[0].toUpperCase();
-    if (u.avatarKind == 'file' &&
-        u.avatarValue != null &&
-        u.avatarValue!.isNotEmpty) {
-      final img = AvatarMemoryCache.fromAvatarValue(u.avatarValue!);
-      if (img != null) {
-        avatar = CircleAvatar(radius: 20, backgroundImage: img);
-      } else {
-        avatar = CircleAvatar(
-          radius: 20,
-          backgroundColor: AppColors.accentSoft,
-          child: Text(
-            letter,
-            style: const TextStyle(
-              color: AppColors.accentStart,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-      }
-    } else {
-      avatar = CircleAvatar(
-        radius: 20,
-        backgroundColor: AppColors.accentSoft,
-        child: Text(
-          letter,
-          style: const TextStyle(
-            color: AppColors.accentStart,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
-    if (!isOnline) return avatar;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        avatar,
-        Positioned(
-          right: -1,
-          bottom: -1,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.surfaceCard, width: 1),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -609,13 +609,147 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Bota karşı oyun, tur süresi sınırı yok.';
 
   @override
-  String get rulesUnoIntro => 'Klasik Uno: herkese kart dağıtılır; renk veya sayıya göre oynayın.';
+  String get rulesUnoIntro => 'Herkese 7 kart dağıtılır. Aynı renk veya aynı değerde (sayı ya da aynı özel kart) bir kart oynayın.';
 
   @override
-  String get rulesUnoPlay => 'Özel kartlar: +2, yön değiştir, atla, joker ve +4. Oynayamazsanız desteden çekin.';
+  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder. Aynı iki siyah olmayan kart (ör. iki sarı 8) birlikte atılır: birini oynayın, ikizi otomatik gider.';
 
   @override
-  String get rulesUnoWin => 'Tüm kartlarını ilk atan kazanır. Bir kart kaldığında “Uno” deyin.';
+  String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.';
+
+  @override
+  String get rulesUnoDraw => 'Uygun kart yoksa desteden bir kart çekin. Uyuyorsa hemen oynayabilir veya tutup sırayı geçebilirsiniz. Elde hamle varken çekilemez.';
+
+  @override
+  String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 200. Turu elini bitiren kazanır.';
+
+  @override
+  String get rulesUnoCall => 'Bir kart kaldığında hemen «Uno!»ya basın. Rakipler Unoyu unuttuğunuz için sizi ancak bir saniye sonra yakalayabilir — o zaman 2 kart çekersiniz.';
+
+  @override
+  String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 200.';
+
+  @override
+  String get unoColorRed => 'Kırmızı';
+
+  @override
+  String get unoColorYellow => 'Sarı';
+
+  @override
+  String get unoColorGreen => 'Yeşil';
+
+  @override
+  String get unoColorBlue => 'Mavi';
+
+  @override
+  String get unoDraw => 'Çek';
+
+  @override
+  String get unoKeep => 'Tut';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno itirazı';
+
+  @override
+  String get unoChallengeWd4 => '+4 itirazı';
+
+  @override
+  String get unoChooseColor => 'Renk seç';
+
+  @override
+  String get unoDrawPile => 'Çekme destesi';
+
+  @override
+  String get unoDiscardPile => 'Atılanlar';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kart: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Puan: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Tur $round · hedef $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Sıra sizde';
+
+  @override
+  String get unoWaitingTurn => 'Rakibin sırası';
+
+  @override
+  String get unoChooseColorHint => 'Joker için bir renk seçin';
+
+  @override
+  String get unoWd4Hint => '4 kart çekin veya Wild +4’e itiraz edin';
+
+  @override
+  String get unoDrawnHint => 'Çekilen kartı oynayın veya tutun';
+
+  @override
+  String get unoPlayHint => 'Eşleşen renk veya değeri oynayın';
+
+  @override
+  String get unoDrawHint => 'Eşleşen kart yok — desteden çekin';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kart';
+  }
+
+  @override
+  String get unoYouWon => 'Maçı kazandınız!';
+
+  @override
+  String get unoYouLost => 'Maç bitti';
+
+  @override
+  String get unoYouLostTimeout => 'Süre dolduğu için kaybettiniz';
+
+  @override
+  String unoWinner(String name) {
+    return 'Kazanan: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name turu kazanır';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'İleri';
+
+  @override
+  String get unoRoundScoresTitle => 'Tur puanı';
+
+  @override
+  String get unoDirectionClockwise => 'Saat yönünde';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Saat yönünün tersine';
+
+  @override
+  String get unoErrStackSameOnly => '+2 üzerine yalnızca +2, +4 üzerine yalnızca +4 konur. +2, +4 üzerine atılamaz.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Bir saniye bekleyin — hâlâ Uno diyebilirler.';
+
+  @override
+  String get unoErrCallTooLate => 'Artık Uno diyemezsiniz. Sıradaki oyuncu zaten oynadı.';
 
   @override
   String get gamesInDevelopment => 'Geliştiriliyor';

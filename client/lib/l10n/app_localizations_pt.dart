@@ -609,13 +609,147 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Jogo contra um bot, sem limite de tempo por turno.';
 
   @override
-  String get rulesUnoIntro => 'Uno clássico: todos recebem cartas; jogue por cor ou número.';
+  String get rulesUnoIntro => 'Cada um recebe 7 cartas. Jogue uma carta da mesma cor ou do mesmo valor (número ou mesma ação).';
 
   @override
-  String get rulesUnoPlay => 'Cartas especiais: +2, inverter, pular, curingas e +4. Se não puder jogar, compre do baralho.';
+  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 só empilha em +2 e +4 só em +4: a penalidade soma (dois +2 fazem o próximo comprar 4). Não se joga +2 em +4. Quem não empilhar compra o monte inteiro e perde a vez. Duas cartas iguais não pretas (por exemplo dois 8 amarelos) são descartadas juntas: jogue uma e a gémea sai automaticamente.';
 
   @override
-  String get rulesUnoWin => 'Vence quem descartar todas as cartas primeiro. Diga “Uno” quando restar uma.';
+  String get rulesUnoWild => 'Uma carta preta define uma nova cor. Jogue +4 só se não tiver carta da cor atual. O adversário pode contestar: se o +4 era legal, compra 6; senão o autor do +4 compra 4 e o contestador joga.';
+
+  @override
+  String get rulesUnoDraw => 'Sem carta válida, compre uma do baralho. Se servir, jogue-a agora ou fique com ela e passe. Não se compra enquanto houver jogada.';
+
+  @override
+  String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 200. A rodada é de quem esvaziar a mão.';
+
+  @override
+  String get rulesUnoCall => 'Quando restar uma carta, toque já em “Uno!”. Os outros só podem apanhá-lo por esquecer o Uno após um segundo — então compra 2.';
+
+  @override
+  String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 200.';
+
+  @override
+  String get unoColorRed => 'Vermelho';
+
+  @override
+  String get unoColorYellow => 'Amarelo';
+
+  @override
+  String get unoColorGreen => 'Verde';
+
+  @override
+  String get unoColorBlue => 'Azul';
+
+  @override
+  String get unoDraw => 'Comprar';
+
+  @override
+  String get unoKeep => 'Manter';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Desafiar Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Desafiar +4';
+
+  @override
+  String get unoChooseColor => 'Escolha uma cor';
+
+  @override
+  String get unoDrawPile => 'Monte';
+
+  @override
+  String get unoDiscardPile => 'Descarte';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Cartas: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Pontos: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Rodada $round · até $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Sua vez';
+
+  @override
+  String get unoWaitingTurn => 'Vez do adversário';
+
+  @override
+  String get unoChooseColorHint => 'Escolha uma cor para o curinga';
+
+  @override
+  String get unoWd4Hint => 'Compre 4 cartas ou desafie o Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Jogue a carta comprada ou mantenha-a';
+
+  @override
+  String get unoPlayHint => 'Jogue uma cor ou valor correspondente';
+
+  @override
+  String get unoDrawHint => 'Sem carta válida — compre do monte';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count cartas';
+  }
+
+  @override
+  String get unoYouWon => 'Você venceu a partida!';
+
+  @override
+  String get unoYouLost => 'Partida encerrada';
+
+  @override
+  String get unoYouLostTimeout => 'Perdeu por tempo';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vencedor: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vence a rodada';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Seguir';
+
+  @override
+  String get unoRoundScoresTitle => 'Pontos da rodada';
+
+  @override
+  String get unoDirectionClockwise => 'Sentido horário';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Sentido anti-horário';
+
+  @override
+  String get unoErrStackSameOnly => 'Só pode jogar +2 em +2, ou +4 em +4. Não se pode empilhar +2 em +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Espere um segundo — ainda podem dizer Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Já não pode dizer Uno. O jogador seguinte já jogou.';
 
   @override
   String get gamesInDevelopment => 'Em desenvolvimento';

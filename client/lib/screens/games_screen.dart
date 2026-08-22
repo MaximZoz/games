@@ -13,6 +13,7 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
+import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/game_stake.dart';
@@ -24,6 +25,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
@@ -31,7 +33,9 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
   const GamesScreen({super.key});
@@ -55,6 +59,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   _GamesTab _selectedTab = _GamesTab.games;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   String _selectedVariant = variantClassic;
+
   /// true — активна кнопка игроков (2/3/4); false — кнопка режима.
   bool _playersControlActive = false;
   int _selectedStakeBronze = 2; // free: 2, 10, 50; + bought silver/gold
@@ -226,10 +231,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         caps?.allowedStakeBronze ?? List<int>.from(freeStakeOptions);
     final balanceBronze =
         ref.watch(authStateProvider).valueOrNull?.balanceBronze ?? 0;
-    final affordable =
-        affordableStakeOptions(balanceBronze, unlockedStakes);
-    final availableStakes =
-        affordable.isNotEmpty ? affordable : unlockedStakes;
+    final affordable = affordableStakeOptions(balanceBronze, unlockedStakes);
+    final availableStakes = affordable.isNotEmpty ? affordable : unlockedStakes;
     if (!availableStakes.contains(_selectedStakeBronze) &&
         availableStakes.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -264,11 +267,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
             hasActiveLobby(activeSession))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final path = GoRouter.of(context)
-            .routerDelegate
-            .currentConfiguration
-            .uri
-            .path;
+        final path =
+            GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
         if (path != '/games') return;
         goToActiveSession(context, activeSession);
       });
@@ -375,8 +375,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
       await ref.read(authStateProvider.notifier).refresh();
     } catch (_) {}
     if (!mounted) return false;
-    final balance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
     if (canAffordStake(balanceBronze: balance, stakeBronze: stakeBronze)) {
       return true;
     }
@@ -487,9 +486,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     // Ветвление по game_type: используем правильный repository + роут.
     if (inv.gameType == 'durak') {
       try {
-        final res = await ref
-            .read(durakRepositoryProvider)
-            .joinLobby(lobbyId);
+        final res = await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
           ref.read(activeGameProvider.notifier).setLocal(
@@ -525,9 +522,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
     if (inv.gameType == 'battleship') {
       try {
-        final res = await ref
-            .read(battleshipRepositoryProvider)
-            .joinLobby(lobbyId);
+        final res =
+            await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
           ref.read(activeGameProvider.notifier).setLocal(
@@ -563,8 +559,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     }
     if (inv.gameType == 'poker') {
       try {
-        final res =
-            await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
+        final res = await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
         if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
           ref.read(activeGameProvider.notifier).setLocal(
@@ -590,6 +585,42 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
               );
           if (context.mounted) {
             context.go('/games/poker/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
+    if (inv.gameType == 'uno') {
+      try {
+        final res = await ref.read(unoRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'uno',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'uno');
+          if (context.mounted) {
+            context.go('/games/uno/game/${res.gameId}');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'uno',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/uno/lobby/$lobbyId?mode=invite');
           }
         }
       } catch (e) {
@@ -697,6 +728,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         l10n: context.l10n,
       ));
     }
+    if (inv.isUno) {
+      return rulesTextLines(unoRuleLines(
+        players: inv.maxPlayers,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -780,13 +819,16 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     );
   }
 
-  Future<void> _declineInvite(String lobbyId, {String gameType = 'tictactoe'}) async {
+  Future<void> _declineInvite(String lobbyId,
+      {String gameType = 'tictactoe'}) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
       if (gameType == 'durak') {
         await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'battleship') {
         await ref.read(battleshipRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'uno') {
+        await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -812,8 +854,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     if (gameType == 'durak') {
       try {
         ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
-        final res =
-            await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
+        final res = await ref.read(durakRepositoryProvider).joinLobby(lobbyId);
         if (!context.mounted) return;
         ref.invalidate(openLobbiesProvider);
         if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
@@ -897,6 +938,54 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         if (context.mounted) {
           showAppSnackBar(context,
               message: formatUserError(e), kind: AppSnackKind.error);
+        }
+      }
+      return;
+    }
+    if (gameType == 'uno') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res = await ref.read(unoRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'uno',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'uno');
+          context.go('/games/uno/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'uno',
+                ),
+              );
+          context.go('/games/uno/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (error) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(error)
+              ? finishCurrentGameMessage
+              : formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          showAppSnackBar(
+            context,
+            message: formatUserError(error),
+            kind: AppSnackKind.error,
+          );
         }
       }
       return;
@@ -987,6 +1076,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
           ));
         } else if (lobby.isPoker) {
           body = rulesTextLines(pokerRuleLines(
+            players: lobby.maxPlayers,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+          ));
+        } else if (lobby.isUno) {
+          body = rulesTextLines(unoRuleLines(
             players: lobby.maxPlayers,
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
@@ -1112,7 +1207,10 @@ class _GamesPageContent extends ConsumerWidget {
             stakeOptionsList: stakeOptionsList,
           ),
           const SizedBox(height: 16),
-          _UnoComingSoonCard(isOffline: isOffline),
+          _UnoGameCard(
+            isOffline: isOffline,
+            stakeOptionsList: stakeOptionsList,
+          ),
         ],
       );
       if (!centerCards) return column;
@@ -1244,268 +1342,221 @@ class _LobbiesPageContent extends ConsumerWidget {
         ],
         _invitesSection(context),
         lobbiesAsync.when(
-                    data: (lobbies) {
-                      // Пустое лобби — без заглушки («Лобби» / refresh).
-                      if (lobbies.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      final lobbyCards = lobbies
-                          .map(
-                            (lobby) => Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: isDesktop ? 8 : 6),
-                              child: GradientCard(
-                                animate: false,
-                                padding: EdgeInsets.all(isDesktop ? 20 : 16),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+          data: (lobbies) {
+            // Пустое лобби — без заглушки («Лобби» / refresh).
+            if (lobbies.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final lobbyCards = lobbies
+                .map(
+                  (lobby) => Padding(
+                    padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
+                    child: GradientCard(
+                      animate: false,
+                      padding: EdgeInsets.all(isDesktop ? 20 : 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          GameTypeIcon(
+                            gameType: lobby.gameType,
+                            size: isDesktop ? 36 : 32,
+                            color: AppColors.accentStart,
+                          ),
+                          SizedBox(width: isDesktop ? 16 : 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  localizedGameTypeName(
+                                    lobby.gameType,
+                                    context.l10n,
+                                  ),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                    fontSize: isDesktop ? 16 : 14,
+                                  ),
+                                ),
+                                Text(
+                                  lobby.creatorName.trim().isNotEmpty
+                                      ? lobby.creatorName
+                                      : context.l10n.commonPlayer,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textSecondary,
+                                    fontSize: isDesktop ? 13 : 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 4,
                                   children: [
-                                    lobby.isBattleship
-                                        ? Icon(
-                                            Icons
-                                                .directions_boat_filled_rounded,
-                                            size: isDesktop ? 36 : 32,
-                                            color: AppColors.accentStart,
-                                          )
-                                        : lobby.isDurak
-                                            ? DurakGameIcon(
-                                                size: isDesktop ? 36 : 32,
-                                                color: AppColors.accentStart,
-                                              )
-                                            : lobby.isPoker
-                                                ? Icon(
-                                                    Icons.casino_rounded,
-                                                    size: isDesktop ? 36 : 32,
-                                                    color:
-                                                        AppColors.accentStart,
-                                                  )
-                                                : Icon(
-                                                    Icons.grid_3x3_rounded,
-                                                    size: isDesktop ? 36 : 32,
-                                                    color:
-                                                        AppColors.accentStart,
-                                                  ),
-                                    SizedBox(width: isDesktop ? 16 : 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                    if (lobby.stakeBronze > 0)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            lobby.isBattleship
-                                                ? context.l10n.gamesBattleship
-                                                : lobby.isDurak
-                                                    ? context.l10n.gamesDurak
-                                                    : lobby.isPoker
-                                                        ? context.l10n.gamesPoker
-                                                        : context
-                                                            .l10n.gamesTicTacToe,
+                                            formatStakeAmount(
+                                                lobby.stakeBronze),
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textPrimary,
-                                              fontSize: isDesktop ? 16 : 14,
-                                            ),
-                                          ),
-                                          Text(
-                                            lobby.creatorName.trim().isNotEmpty
-                                                ? lobby.creatorName
-                                                : context.l10n.commonPlayer,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: isDesktop ? 14 : 13,
                                               color: AppColors.textSecondary,
-                                              fontSize: isDesktop ? 13 : 12,
                                             ),
                                           ),
-                                          const SizedBox(height: 2),
-                                          Wrap(
-                                            spacing: 12,
-                                            runSpacing: 4,
-                                            children: [
-                                              if (lobby.stakeBronze > 0)
-                                                Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Text(
-                                                      formatStakeAmount(
-                                                          lobby.stakeBronze),
-                                                      style: TextStyle(
-                                                        fontSize:
-                                                            isDesktop ? 14 : 13,
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    CoinIcon(
-                                                      coinType: stakeCoinType(
-                                                          lobby.stakeBronze),
-                                                      size: 14,
-                                                      showBorder: true,
-                                                    ),
-                                                  ],
-                                                ),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(
-                                                    Icons.timer_outlined,
-                                                    size: 14,
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    formatTurnTime(
-                                                        lobby.turnTimeSec),
-                                                    style: TextStyle(
-                                                      fontSize:
-                                                          isDesktop ? 14 : 13,
-                                                      color: AppColors
-                                                          .textSecondary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              if (!lobby.isPoker)
-                                                Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      lobby.isBattleship
-                                                          ? Icons.grid_on_rounded
-                                                          : lobby.isDurak
-                                                              ? Icons
-                                                                  .swap_horiz_rounded
-                                                              : Icons
-                                                                  .extension_rounded,
-                                                      size: 14,
-                                                      color: AppColors
-                                                          .textSecondary,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      lobby.isBattleship
-                                                          ? '10×10'
-                                                          : lobby.isDurak
-                                                              ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                              : variantShortLabel(
-                                                                  lobby.variant),
-                                                      style: TextStyle(
-                                                        fontSize: isDesktop
-                                                            ? 14
-                                                            : 13,
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(
-                                                    Icons
-                                                        .person_outline_rounded,
-                                                    size: 14,
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '${lobby.maxPlayers}',
-                                                    style: TextStyle(
-                                                      fontSize:
-                                                          isDesktop ? 14 : 13,
-                                                      color: AppColors
-                                                          .textSecondary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
+                                          const SizedBox(width: 4),
+                                          CoinIcon(
+                                            coinType: stakeCoinType(
+                                                lobby.stakeBronze),
+                                            size: 14,
+                                            showBorder: true,
                                           ),
                                         ],
                                       ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.timer_outlined,
+                                          size: 14,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          formatTurnTime(lobby.turnTimeSec),
+                                          style: TextStyle(
+                                            fontSize: isDesktop ? 14 : 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      onPressed: () =>
-                                          onShowLobbyRules(context, lobby),
-                                      icon: const Icon(
-                                          Icons.info_outline_rounded),
-                                      tooltip: context.l10n.gamesRulesTitle,
-                                    ),
-                                    IconButton.filled(
-                                      onPressed: () =>
-                                          onJoinLobby(context, lobby.id,
-                                              gameType: lobby.gameType),
-                                      icon: const Icon(Icons.login_rounded),
-                                      tooltip: context.l10n.gamesJoin,
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: AppColors.accentStart,
-                                        foregroundColor: Colors.white,
+                                    if (!lobby.isPoker)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            lobby.isBattleship
+                                                ? Icons.grid_on_rounded
+                                                : lobby.isDurak
+                                                    ? Icons.swap_horiz_rounded
+                                                    : Icons.extension_rounded,
+                                            size: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            lobby.isBattleship
+                                                ? '10×10'
+                                                : lobby.isDurak
+                                                    ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                    : variantShortLabel(
+                                                        lobby.variant),
+                                            style: TextStyle(
+                                              fontSize: isDesktop ? 14 : 13,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.person_outline_rounded,
+                                          size: 14,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${lobby.maxPlayers}',
+                                          style: TextStyle(
+                                            fontSize: isDesktop ? 14 : 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          )
-                          .toList();
-                      if (isDesktop) {
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                        final width = constraints.maxWidth;
-                        const minCardWidth = 360.0;
-                        const gap = 16.0;
-                        final crossAxisCount =
-                            (width / (minCardWidth + gap)).floor().clamp(1, 4);
-                        final itemWidth = (width - gap * (crossAxisCount - 1)) /
-                            crossAxisCount;
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: width),
-                            child: Wrap(
-                              spacing: gap,
-                              runSpacing: gap,
-                              alignment: WrapAlignment.start,
-                              children: [
-                                for (var i = 0; i < lobbyCards.length; i++)
-                                  SizedBox(
-                                    width: itemWidth,
-                                    child: lobbyCards[i],
-                                  ),
                               ],
                             ),
                           ),
-                        );
-                          },
-                        );
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: lobbyCards,
-                      );
-                    },
-                    loading: () => Padding(
-                      padding: EdgeInsets.all(isDesktop ? 32 : 24),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentStart,
-                        ),
+                          IconButton(
+                            onPressed: () => onShowLobbyRules(context, lobby),
+                            icon: const Icon(Icons.info_outline_rounded),
+                            tooltip: context.l10n.gamesRulesTitle,
+                          ),
+                          IconButton.filled(
+                            onPressed: () => onJoinLobby(context, lobby.id,
+                                gameType: lobby.gameType),
+                            icon: const Icon(Icons.login_rounded),
+                            tooltip: context.l10n.gamesJoin,
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.accentStart,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    error: (err, _) => Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        '${context.l10n.gamesLobbyLoadFailed} ${formatUserError(err, fallback: context.l10n.commonTryRefresh)}',
-                        style: const TextStyle(color: Colors.red),
+                  ),
+                )
+                .toList();
+            if (isDesktop) {
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+                  const minCardWidth = 360.0;
+                  const gap = 16.0;
+                  final crossAxisCount =
+                      (width / (minCardWidth + gap)).floor().clamp(1, 4);
+                  final itemWidth =
+                      (width - gap * (crossAxisCount - 1)) / crossAxisCount;
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: width),
+                      child: Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        alignment: WrapAlignment.start,
+                        children: [
+                          for (var i = 0; i < lobbyCards.length; i++)
+                            SizedBox(
+                              width: itemWidth,
+                              child: lobbyCards[i],
+                            ),
+                        ],
                       ),
                     ),
+                  );
+                },
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: lobbyCards,
+            );
+          },
+          loading: () => Padding(
+            padding: EdgeInsets.all(isDesktop ? 32 : 24),
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accentStart,
+              ),
+            ),
+          ),
+          error: (err, _) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              '${context.l10n.gamesLobbyLoadFailed} ${formatUserError(err, fallback: context.l10n.commonTryRefresh)}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
         ),
       ],
     );
@@ -1554,8 +1605,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
     setState(() {
       _players = saved.maxPlayers.clamp(2, 4);
       _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
-      _gameMode =
-          saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+      _gameMode = saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
       _turnTimeSec =
           turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
@@ -1580,8 +1630,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       await ref.read(authStateProvider.notifier).refresh();
     } catch (_) {}
     if (!mounted) return false;
-    final balance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
     if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
       return true;
     }
@@ -1665,8 +1714,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       // Сервер видит активную партию, а кэш мог отстать — увести в неё.
       if (isFinishCurrentGameError(e)) {
         try {
-          final active =
-              await ref.read(activeGameProvider.notifier).refresh();
+          final active = await ref.read(activeGameProvider.notifier).refresh();
           if (!mounted) return;
           if (active != null) goToActiveSession(context, active);
         } catch (_) {}
@@ -1735,16 +1783,15 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   @override
   Widget build(BuildContext context) {
     // Поздняя подгрузка настроек с сервера.
-    ref.listen<AsyncValue<UserGameSettings>>(
-        userGameSettingsProvider('durak'), (prev, next) {
+    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider('durak'),
+        (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
       setState(() {
         _players = saved.maxPlayers.clamp(2, 4);
         _deckSize = durakClampDeckForPlayers(_players, saved.deckSize);
-        _gameMode =
-            saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
+        _gameMode = saved.gameMode == 'perevodnoi' ? 'perevodnoi' : 'podkidnoi';
         _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
             ? saved.turnTimeSec
             : 60;
@@ -1796,7 +1843,10 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       GameCardChip(
         selected: true,
         icon: DurakGameIcon.iconData,
-        flipIcon: true,
+        iconChild: DurakGameIcon(
+          size: isDesktop ? 18 : 16,
+          color: AppColors.accentStart,
+        ),
         label: _deckLabel(_deckSize),
         onTap: busy ? null : _cycleDeck,
         isDesktop: isDesktop,
@@ -1810,7 +1860,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
       header: GameCardHeader(
         title: context.l10n.gamesDurak,
         icon: DurakGameIcon.iconData,
-        flipIcon: true,
+        iconChild: const DurakGameIcon(size: 26, color: Colors.white),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -1923,8 +1973,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
       await ref.read(authStateProvider.notifier).refresh();
     } catch (_) {}
     if (!mounted) return false;
-    final balance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
     if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
       return true;
     }
@@ -2003,8 +2052,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
       );
       if (isFinishCurrentGameError(e)) {
         try {
-          final active =
-              await ref.read(activeGameProvider.notifier).refresh();
+          final active = await ref.read(activeGameProvider.notifier).refresh();
           if (!mounted) return;
           if (active != null) goToActiveSession(context, active);
         } catch (_) {}
@@ -2204,8 +2252,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       await ref.read(authStateProvider.notifier).refresh();
     } catch (_) {}
     if (!mounted) return false;
-    final balance =
-        ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
     if (canAffordStake(balanceBronze: balance, stakeBronze: _stakeBronze)) {
       return true;
     }
@@ -2285,8 +2332,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       );
       if (isFinishCurrentGameError(e)) {
         try {
-          final active =
-              await ref.read(activeGameProvider.notifier).refresh();
+          final active = await ref.read(activeGameProvider.notifier).refresh();
           if (!mounted) return;
           if (active != null) goToActiveSession(context, active);
         } catch (_) {}
@@ -2350,8 +2396,8 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<UserGameSettings>>(
-        userGameSettingsProvider('poker'), (prev, next) {
+    ref.listen<AsyncValue<UserGameSettings>>(userGameSettingsProvider('poker'),
+        (prev, next) {
       final saved = next.valueOrNull;
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
@@ -2404,7 +2450,8 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       isMedium: isMedium,
       header: GameCardHeader(
         title: context.l10n.gamesPoker,
-        icon: Icons.casino_rounded,
+        icon: PokerGameIcon.iconData,
+        iconChild: const PokerGameIcon(size: 26, color: Colors.white),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
@@ -2442,23 +2489,63 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
   }
 }
 
-/// Карточка «Уно» — превью настроек; игра пока в разработке.
-class _UnoComingSoonCard extends StatefulWidget {
-  const _UnoComingSoonCard({required this.isOffline});
+/// Карточка UNO: 2–4 игрока, время хода, ставка и локальные боты.
+class _UnoGameCard extends ConsumerStatefulWidget {
+  const _UnoGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
 
   final bool isOffline;
+  final List<int> stakeOptionsList;
 
   @override
-  State<_UnoComingSoonCard> createState() => _UnoComingSoonCardState();
+  ConsumerState<_UnoGameCard> createState() => _UnoGameCardState();
 }
 
-class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
-  // Как у Дурака: 2–4 игрока и то же время хода.
+class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
   int _players = 2;
   int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('uno')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _players = saved.maxPlayers.clamp(2, 4);
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('uno').notifier).updateLocal(
+          gameCardSettings(
+            gameType: 'uno',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            maxPlayers: _players,
+          ),
+        );
+  }
 
   void _cyclePlayers() {
     setState(() => _players = _players == 4 ? 2 : _players + 1);
+    _persistSettings();
   }
 
   void _cycleTurnTime() {
@@ -2466,6 +2553,99 @@ class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
       const arr = [20, 60, 600, 0];
       _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
     });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final index = options.indexOf(_stakeBronze);
+    setState(() {
+      _stakeBronze = options[(index < 0 ? 0 : index + 1) % options.length];
+    });
+    _persistSettings();
+  }
+
+  Future<bool> _ensureStakeAffordable() async {
+    try {
+      await ref.read(authStateProvider.notifier).refresh();
+    } catch (_) {}
+    if (!mounted) return false;
+    final balance = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+    if (canAffordStake(
+      balanceBronze: balance,
+      stakeBronze: _stakeBronze,
+    )) {
+      return true;
+    }
+    showAppSnackBar(
+      context,
+      message: context.l10n.commonInsufficientCoins,
+      kind: AppSnackKind.error,
+    );
+    return false;
+  }
+
+  Future<void> _create(String mode) async {
+    if (await blockJoinIfBusyAsync(context, ref, redirectToActive: true)) {
+      return;
+    }
+    if (!mounted || !await _ensureStakeAffordable() || !mounted) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final result = await ref.read(unoRepositoryProvider).createLobby(
+            mode: mode,
+            maxPlayers: _players,
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+          );
+      if (!mounted) return;
+      final gameId = result.gameId?.trim() ?? '';
+      final lobbyId = result.lobbyId.trim();
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'uno',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'uno');
+        context.push('/games/uno/game/$gameId');
+      } else if (lobbyId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'uno',
+              ),
+            );
+        context.push('/games/uno/lobby/$lobbyId?mode=$mode');
+      } else {
+        throw GamesException(503, context.l10n.commonTryLater);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
   }
 
   void _showRules(BuildContext context) {
@@ -2475,6 +2655,7 @@ class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
       content: rulesTextLines(unoRuleLines(
         players: _players,
         turnTimeSec: _turnTimeSec,
+        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
         offlineBot: widget.isOffline,
         l10n: context.l10n,
       )),
@@ -2484,17 +2665,42 @@ class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+      userGameSettingsProvider('uno'),
+      (_, next) {
+        final saved = next.valueOrNull;
+        if (saved == null || _settingsHydrated) return;
+        _settingsHydrated = true;
+        setState(() {
+          _players = saved.maxPlayers.clamp(2, 4);
+          _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+              ? saved.turnTimeSec
+              : 60;
+          _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+        });
+      },
+    );
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-    final theme = Theme.of(context);
+    final busy = _creating || _finding;
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (available.isNotEmpty && !available.contains(_stakeBronze)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
 
     final chips = <Widget>[
       GameCardChip(
         selected: true,
         icon: Icons.groups_rounded,
         label: '$_players',
-        onTap: _cyclePlayers,
+        onTap: busy ? null : _cyclePlayers,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2503,7 +2709,7 @@ class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
           selected: true,
           icon: Icons.timer_outlined,
           label: formatTurnTime(_turnTimeSec),
-          onTap: _cycleTurnTime,
+          onTap: busy ? null : _cycleTurnTime,
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
@@ -2516,51 +2722,37 @@ class _UnoComingSoonCardState extends State<_UnoComingSoonCard> {
         title: context.l10n.gamesUno,
         icon: Icons.style_rounded,
         iconChild: const UnoGameIcon(size: 26),
-        onInfoTap: () => _showRules(context),
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: busy || widget.isOffline ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
       chips: chips,
-      actions: Container(
-        alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(
-          vertical: isMedium ? 12 : (isDesktop ? 14 : 12),
-          horizontal: 16,
-        ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.accentStart.withValues(alpha: 0.12),
-              AppColors.accentEnd.withValues(alpha: 0.18),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.accentStart.withValues(alpha: 0.35),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.construction_rounded,
-              size: 20,
-              color: AppColors.accentStart.withValues(alpha: 0.95),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              context.l10n.gamesInDevelopment,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppColors.accentStart,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: () => _create('invite'),
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: () => _create('matchmake'),
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: () {
+          context.push(
+            Uri(
+              path: '/games/uno/offline',
+              queryParameters: {'players': '$_players'},
+            ).toString(),
+          );
+        },
+        isCreating: _creating,
+        isFinding: _finding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     );
   }
@@ -2698,14 +2890,11 @@ class _TictactoeGameCard extends StatelessWidget {
     final busy = isCreating || isFinding;
     // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
     final playersSelected = playersControlActive;
-    final playersLabel = playersSelected
-        ? '${configForVariant(variant).maxPlayers}'
-        : '2';
+    final playersLabel =
+        playersSelected ? '${configForVariant(variant).maxPlayers}' : '2';
     // Кнопка режима: активна → Классика/Гомоку/Ультимейт; иначе тёмная «Классика».
     final modeSelected = !playersControlActive;
-    final modeVariant = modeSelected
-        ? parseVariant(variant)
-        : variantClassic;
+    final modeVariant = modeSelected ? parseVariant(variant) : variantClassic;
     final modeIcon = modeVariant == variantGomoku
         ? Icons.grid_on_rounded
         : modeVariant == variantUltimate
@@ -3128,8 +3317,6 @@ class _InviteCard extends ConsumerWidget {
     required this.onAcceptInvite,
   });
 
-
-
   final GameInvite inv;
   final void Function(BuildContext, GameInvite) onShowCreatorInfo;
   final void Function(BuildContext, GameInvite) onShowInviteRules;
@@ -3323,16 +3510,7 @@ class _InviteCard extends ConsumerWidget {
 }
 
 String _inviteGameTitle(BuildContext context, String gameType) {
-  switch (gameType) {
-    case 'durak':
-      return context.l10n.gamesDurak;
-    case 'battleship':
-      return context.l10n.gamesBattleship;
-    case 'poker':
-      return context.l10n.gamesPoker;
-    default:
-      return context.l10n.gamesTicTacToe;
-  }
+  return localizedGameTypeName(gameType, context.l10n);
 }
 
 class _InviteGameIcon extends StatelessWidget {
@@ -3342,25 +3520,6 @@ class _InviteGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final IconData? materialIcon;
-    final Widget child;
-    switch (gameType) {
-      case 'durak':
-        materialIcon = null;
-        child = const DurakGameIcon(size: 26, color: Colors.white);
-      case 'battleship':
-        materialIcon = Icons.directions_boat_filled_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
-      case 'poker':
-        materialIcon = Icons.casino_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
-      case 'uno':
-        materialIcon = null;
-        child = const UnoGameIcon(size: 26);
-      default:
-        materialIcon = Icons.grid_3x3_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
-    }
     return Container(
       width: 44,
       height: 44,
@@ -3373,8 +3532,11 @@ class _InviteGameIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: child,
+      child: GameTypeIcon(
+        gameType: gameType,
+        size: 26,
+        color: Colors.white,
+      ),
     );
   }
 }
-

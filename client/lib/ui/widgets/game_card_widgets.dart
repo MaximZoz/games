@@ -29,7 +29,7 @@ class GameCardHeader extends StatelessWidget {
   final String title;
   final IconData icon;
 
-  /// Зеркалить иконку по X (Дурак — веер карт).
+  /// Зеркалить Material-иконку по X, если нет [iconChild].
   final bool flipIcon;
 
   /// Кастомная иконка (например Уно); если задана — вместо [icon]/[flipIcon].
@@ -152,6 +152,7 @@ class GameCardChip extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.flipIcon = false,
+    this.iconChild,
     this.selected = true,
     this.compact = false,
     this.isDesktop = false,
@@ -161,8 +162,11 @@ class GameCardChip extends StatelessWidget {
   final String label;
   final IconData icon;
 
-  /// Зеркалить иконку по X (иконка Дурака / колоды).
+  /// Зеркалить Material-иконку по X, если нет [iconChild].
   final bool flipIcon;
+
+  /// Кастомная иконка; если задана — вместо [icon]/[flipIcon].
+  final Widget? iconChild;
   final VoidCallback? onTap;
   final bool selected;
   final bool compact;
@@ -202,9 +206,10 @@ class GameCardChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              flipIcon
-                  ? DurakGameIcon(size: iconSz, color: color)
-                  : Icon(icon, size: iconSz, color: color),
+              iconChild ??
+                  (flipIcon
+                      ? DurakGameIcon(size: iconSz, color: color)
+                      : Icon(icon, size: iconSz, color: color)),
               SizedBox(width: compact ? 4 : 6),
               Text(
                 label,

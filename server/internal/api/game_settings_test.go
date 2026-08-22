@@ -149,6 +149,36 @@ func TestNormalizePokerGameSettings(t *testing.T) {
 	}
 }
 
+func TestNormalizeUnoGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeUno,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		MaxPlayers:  4,
+		GameMode:    "unknown",
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeUno || s.MaxPlayers != 4 ||
+		s.GameMode != "classic" || s.Variant != "classic" ||
+		s.DeckSize != 108 || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeUno,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		MaxPlayers:  5,
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.MaxPlayers != 2 {
+		t.Fatalf("max_players=%d want 2 (clamp)", s2.MaxPlayers)
+	}
+}
+
 func TestGameSettingsToJSON(t *testing.T) {
 	m := gameSettingsToJSON(store.UserGameSettings{
 		GameType:             "tictactoe",

@@ -89,12 +89,19 @@ func RecordGameResult(ctx context.Context, pool *pgxpool.Pool, r GameResult) err
 	if finishReason == "" {
 		finishReason = "normal"
 	}
+	var xUserID, oUserID any
+	if r.XUserID != uuid.Nil {
+		xUserID = r.XUserID
+	}
+	if r.OUserID != uuid.Nil {
+		oUserID = r.OUserID
+	}
 	_, err := pool.Exec(ctx, `
 		INSERT INTO game_results
 			(game_id, game_type, x_user_id, o_user_id, winner_user_id,
 			 result, finish_reason, grid_size, stake_bronze, duration_sec, against_bot)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-	`, r.GameID, gameType, r.XUserID, r.OUserID, r.WinnerUserID,
+	`, r.GameID, gameType, xUserID, oUserID, r.WinnerUserID,
 		r.Result, finishReason, r.GridSize, r.StakeBronze, r.DurationSec, r.AgainstBot)
 	return err
 }

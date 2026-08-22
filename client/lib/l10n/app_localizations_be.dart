@@ -609,13 +609,147 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Гульня супраць бота, без ліміту часу на ход.';
 
   @override
-  String get rulesUnoIntro => 'Класічнае Уно: кожнаму раздаюць карты; хадзіце па колеры ці намінале.';
+  String get rulesUnoIntro => 'Кожнаму раздаюць па 7 карт. Хадзіце картай таго ж колеру або таго ж наміналу (лічба або такі ж спецэфект).';
 
   @override
-  String get rulesUnoPlay => 'Спецкарты: +2, змена кірунку, пропуск ходу, чорная змена колеру і +4. Не можаце пайсці — бярыце з калоды.';
+  String get rulesUnoPlay => 'Пропуск — наступны губляе ход. Змена кірунку ўдваіх працуе як пропуск. +2 можна класці толькі на +2, +4 — толькі на +4: штраф складаецца (дзве +2 — наступны бярэ 4). +2 на +4 класці нельга. Хто не адказвае, бярэ ўсю стопку і прапускае ход. Дзве аднолькавыя недзікія карты (напрыклад, дзве жоўтыя 8) скідваюцца разам: дастаткова кінуць адну — другая сыходзіць аўтаматычна.';
 
   @override
-  String get rulesUnoWin => 'Перамагае той, хто першым скінуў усе карты. Не забудзьце сказаць «Уно», калі застаецца адна карта.';
+  String get rulesUnoWild => 'Чорная карта задае новы колер. +4 кладуць толькі калі няма карты бягучага колеру. Супернік можа аспрэчыць: калі +4 быў законным — аспрэчвальнік бярэ 6, калі не — аўтар +4 бярэ 4, а аспрэчвальнік ходзіць.';
+
+  @override
+  String get rulesUnoDraw => 'Калі няма падыходнай карты — вазьміце адну з калоды. Калі яна падыходзіць, можна адразу сысці ёй або пакінуць і перадаць ход. Пакуль ёсць ход, браць нельга.';
+
+  @override
+  String get rulesUnoWin => 'Удваіх матч да 100 ачкоў, пры трох і больш гульцах — да 200. Раунд выйграе гулец, які скінуў усе карты.';
+
+  @override
+  String get rulesUnoCall => 'Калі застаецца адна карта, адразу націсніце «Уно!». Супернікі могуць злавіць вас без «Уно» толькі праз секунду — тады вы бярэце 2 карты.';
+
+  @override
+  String get rulesUnoScoring => 'Хто першым скінуў усе карты, выйграе раунд і атрымлівае ачкі за рукі супернікаў: лічбы — па намінале, спецкарты — 20, чорныя — 50. Удваіх матч да 100, пры трох і больш гульцах — да 200.';
+
+  @override
+  String get unoColorRed => 'Red';
+
+  @override
+  String get unoColorYellow => 'Yellow';
+
+  @override
+  String get unoColorGreen => 'Green';
+
+  @override
+  String get unoColorBlue => 'Blue';
+
+  @override
+  String get unoDraw => 'Draw';
+
+  @override
+  String get unoKeep => 'Keep';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Challenge Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Challenge +4';
+
+  @override
+  String get unoChooseColor => 'Choose a color';
+
+  @override
+  String get unoDrawPile => 'Draw pile';
+
+  @override
+  String get unoDiscardPile => 'Discard';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Cards: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Round $round · first to $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Your turn';
+
+  @override
+  String get unoWaitingTurn => 'Opponent’s turn';
+
+  @override
+  String get unoChooseColorHint => 'Choose a color for the wild card';
+
+  @override
+  String get unoWd4Hint => 'Draw 4 cards or challenge the Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Play the drawn card or keep it';
+
+  @override
+  String get unoPlayHint => 'Play a matching color or value';
+
+  @override
+  String get unoDrawHint => 'No matching card — draw from the deck';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count cards';
+  }
+
+  @override
+  String get unoYouWon => 'You won the match!';
+
+  @override
+  String get unoYouLost => 'Match over';
+
+  @override
+  String get unoYouLostTimeout => 'Вы прайгралі па часе';
+
+  @override
+  String unoWinner(String name) {
+    return 'Winner: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name выйграе раунд';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Далей';
+
+  @override
+  String get unoRoundScoresTitle => 'Ачкі за раунд';
+
+  @override
+  String get unoDirectionClockwise => 'Clockwise';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Counterclockwise';
+
+  @override
+  String get unoErrStackSameOnly => 'На +2 можна адказаць толькі +2, на +4 — толькі +4. +2 на +4 класці нельга.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Пачакайце секунду — яны яшчэ могуць сказаць «Уно».';
+
+  @override
+  String get unoErrCallTooLate => 'Сказаць «Уно» ўжо нельга: наступны гулец ужо зрабіў ход.';
 
   @override
   String get gamesInDevelopment => 'У распрацоўцы';

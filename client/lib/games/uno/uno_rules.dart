@@ -1,15 +1,14 @@
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show formatTurnTime;
+    show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
-/// Строки правил «Уно» для карточки на экране игр.
-///
-/// Когда появится ставка — добавить `rulesStakeLine(stakeBronze, t)`:
-/// иконка монеты рисуется сама через [rulesTextLines].
+/// Строки правил «Уно» — соответствуют движку (7 карт, без стека +2,
+/// оспаривание +4, добор одной, вдвоём до 100, при 3+ игроках до 200).
 List<String> unoRuleLines({
   required int players,
   required int turnTimeSec,
+  int stakeBronze = 0,
   bool offlineBot = false,
   AppLocalizations? l10n,
 }) {
@@ -25,6 +24,10 @@ List<String> unoRuleLines({
     ],
     t.rulesUnoIntro,
     t.rulesUnoPlay,
-    t.rulesUnoWin,
+    t.rulesUnoWild,
+    t.rulesUnoDraw,
+    t.rulesUnoCall,
+    t.rulesUnoScoring,
+    if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
   ];
 }

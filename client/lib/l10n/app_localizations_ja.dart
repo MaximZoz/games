@@ -609,13 +609,147 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoOfflineBot => 'ボットとの対戦。ターン制限時間なし。';
 
   @override
-  String get rulesUnoIntro => 'クラシックウノ：全員にカードが配られ、色または数字で出します。';
+  String get rulesUnoIntro => '各プレイヤーに7枚配ります。同じ色、または同じランク（数字や同じアクション）のカードを出します。';
 
   @override
-  String get rulesUnoPlay => '特殊カード：+2、リバース、スキップ、ワイルド、ワイルド+4。出せなければ山札から引きます。';
+  String get rulesUnoPlay => 'スキップ — 次の人は手番を失います。2人ではリバースはスキップと同じです。+2は+2の上だけ、+4は+4の上だけ重ねられ、罰が加算されます（+2が2枚なら次は4枚）。+2を+4の上には置けません。重ねない人は山札をすべて引き、手番を飛ばされます。同じ色・数字の非ワイルド2枚（例：黄色い8が2枚）は一緒に捨てます。1枚出せばもう1枚も自動で出ます。';
 
   @override
-  String get rulesUnoWin => '最初に手札をすべて出し切った人が勝ち。残り1枚のときは「ウノ」と言います。';
+  String get rulesUnoWild => '黒いカードは新しい色を決めます。+4は現在の色のカードがないときだけ出せます。次の人はチャレンジできます。+4が合法ならチャレンジ側が6枚、違法なら+4を出した人が4枚引き、チャレンジ側がプレイします。';
+
+  @override
+  String get rulesUnoDraw => '出せるカードがなければ山札から1枚引きます。出せるならすぐ出すか、手元に残してパスできます。出せる手があるうちは引けません。';
+
+  @override
+  String get rulesUnoWin => '2人は100点、3人以上は200点先取。ラウンドは手札をなくした人が勝ちます。';
+
+  @override
+  String get rulesUnoCall => '1枚残ったらすぐに「ウノ！」を押します。相手がウノ忘れを指摘できるのは1秒後からです。その場合は2枚引きます。';
+
+  @override
+  String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は200点先取。';
+
+  @override
+  String get unoColorRed => '赤';
+
+  @override
+  String get unoColorYellow => '黄';
+
+  @override
+  String get unoColorGreen => '緑';
+
+  @override
+  String get unoColorBlue => '青';
+
+  @override
+  String get unoDraw => '引く';
+
+  @override
+  String get unoKeep => '保持';
+
+  @override
+  String get unoSayUno => 'ウノ！';
+
+  @override
+  String get unoChallengeUno => 'ウノを指摘';
+
+  @override
+  String get unoChallengeWd4 => '+4に挑戦';
+
+  @override
+  String get unoChooseColor => '色を選択';
+
+  @override
+  String get unoDrawPile => '山札';
+
+  @override
+  String get unoDiscardPile => '捨て札';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'カード：$count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return '得点：$score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'ラウンド$round · $target点先取';
+  }
+
+  @override
+  String get unoYourTurn => 'あなたの番';
+
+  @override
+  String get unoWaitingTurn => '相手の番';
+
+  @override
+  String get unoChooseColorHint => 'ワイルドの色を選んでください';
+
+  @override
+  String get unoWd4Hint => '4枚引くかワイルド+4に挑戦します';
+
+  @override
+  String get unoDrawnHint => '引いたカードを出すか保持します';
+
+  @override
+  String get unoPlayHint => '同じ色または値のカードを出してください';
+
+  @override
+  String get unoDrawHint => '出せるカードがありません — 山札から引きます';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count枚';
+  }
+
+  @override
+  String get unoYouWon => '勝利しました！';
+
+  @override
+  String get unoYouLost => '試合終了';
+
+  @override
+  String get unoYouLostTimeout => '時間切れで負けました';
+
+  @override
+  String unoWinner(String name) {
+    return '勝者：$name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$nameがラウンド勝利';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => '次へ';
+
+  @override
+  String get unoRoundScoresTitle => 'ラウンド得点';
+
+  @override
+  String get unoDirectionClockwise => '時計回り';
+
+  @override
+  String get unoDirectionCounterclockwise => '反時計回り';
+
+  @override
+  String get unoErrStackSameOnly => '+2の上には+2、+4の上には+4だけです。+2を+4の上には出せません。';
+
+  @override
+  String get unoErrCatchTooEarly => '1秒待ってください。まだUNOを宣言できます。';
+
+  @override
+  String get unoErrCallTooLate => 'もうUNOは言えません。次のプレイヤーがすでに出しました。';
 
   @override
   String get gamesInDevelopment => '開発中';

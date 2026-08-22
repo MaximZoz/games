@@ -9,6 +9,7 @@ import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -158,8 +159,7 @@ class _ConfettiPainter extends CustomPainter {
     canvas.translate(x, y);
     canvas.rotate(rotation);
     canvas.drawRect(
-      Rect.fromCenter(
-          center: Offset.zero, width: p.size, height: p.size * 0.6),
+      Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6),
       paint,
     );
     canvas.restore();
@@ -408,14 +408,24 @@ class GameOpponentCard extends StatelessWidget {
           ),
           SizedBox(width: compact ? 10 : 14),
           Flexible(
-            child: Text(
-              displayName,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: compact ? 14 : 16,
-                color: AppColors.textPrimary,
+            child: Tooltip(
+              message: infoTooltip,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: onInfoTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: compact ? 14 : 16,
+                      color: AppColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (!isBot && onMessageTap != null)
@@ -600,6 +610,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
   Timer? _timer;
   int _remaining = 0;
   bool _expiredFired = false;
+
   /// Был ли остаток > 0 хотя бы раз. Без этого onExpired не зовём — иначе при
   /// перекосе часов / устаревшем дедлайне срабатывает мгновенный автоход.
   bool _sawPositive = false;
@@ -753,14 +764,16 @@ class TurnTimerStyle {
       final k = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
       return [
         Color.lerp(orange, green, k)!,
-        Color.lerp(orange.withValues(alpha: 0.75), green.withValues(alpha: 0.85), k)!,
+        Color.lerp(
+            orange.withValues(alpha: 0.75), green.withValues(alpha: 0.85), k)!,
       ];
     }
     if (t > 0.18) {
       final k = ((t - 0.18) / 0.27).clamp(0.0, 1.0);
       return [
         Color.lerp(red, orange, k)!,
-        Color.lerp(red.withValues(alpha: 0.8), orange.withValues(alpha: 0.75), k)!,
+        Color.lerp(
+            red.withValues(alpha: 0.8), orange.withValues(alpha: 0.75), k)!,
       ];
     }
     return [red, red.withValues(alpha: 0.7)];
@@ -770,7 +783,7 @@ class TurnTimerStyle {
 /// Мягкий бордер-прогресс вокруг [child]: линия по периметру укорачивается.
 ///
 /// Padding под обводку всегда одинаковый — смена [active] не двигает layout.
-class TurnTimerBorder extends StatefulWidget {
+class TurnTimerBorder extends StatelessWidget {
   const TurnTimerBorder({
     super.key,
     required this.child,
@@ -780,6 +793,7 @@ class TurnTimerBorder extends StatefulWidget {
     this.borderWidth = 2.5,
     this.radius = 22,
     this.onExpired,
+
     /// Рисовать фиолетовую рамку, когда ход не активен (1×1-карточка).
     /// В multi-сиденьях — false: место под обводку резервируется, линии нет.
     this.showIdleBorder = true,
@@ -795,10 +809,56 @@ class TurnTimerBorder extends StatefulWidget {
   final bool showIdleBorder;
 
   @override
-  State<TurnTimerBorder> createState() => _TurnTimerBorderState();
+  Widget build(BuildContext context) {
+    // Тикер живёт в overlay и не перестраивает [child] / не двигает layout.
+    return Stack(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(borderWidth),
+          child: child,
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: _TurnTimerRing(
+              active: active,
+              turnDeadline: turnDeadline,
+              turnTimeSec: turnTimeSec,
+              borderWidth: borderWidth,
+              radius: radius,
+              showIdleBorder: showIdleBorder,
+              onExpired: onExpired,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _TurnTimerBorderState extends State<TurnTimerBorder> {
+class _TurnTimerRing extends StatefulWidget {
+  const _TurnTimerRing({
+    required this.active,
+    required this.turnDeadline,
+    required this.turnTimeSec,
+    required this.borderWidth,
+    required this.radius,
+    required this.showIdleBorder,
+    this.onExpired,
+  });
+
+  final bool active;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final double borderWidth;
+  final double radius;
+  final bool showIdleBorder;
+  final VoidCallback? onExpired;
+
+  @override
+  State<_TurnTimerRing> createState() => _TurnTimerRingState();
+}
+
+class _TurnTimerRingState extends State<_TurnTimerRing> {
   Timer? _timer;
   double _fraction = 1;
   bool _expiredFired = false;
@@ -813,7 +873,7 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
   }
 
   @override
-  void didUpdateWidget(covariant TurnTimerBorder oldWidget) {
+  void didUpdateWidget(covariant _TurnTimerRing oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.turnDeadline != widget.turnDeadline ||
         oldWidget.active != widget.active) {
@@ -830,7 +890,6 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
 
   void _tick() {
     if (!widget.active) {
-      // Без setState — иначе мигает весь блок соперника при смене хода.
       if (_fraction != 1) _fraction = 1;
       return;
     }
@@ -852,34 +911,25 @@ class _TurnTimerBorderState extends State<TurnTimerBorder> {
 
   @override
   Widget build(BuildContext context) {
-    // Всегда одно дерево + тот же padding — смена active не двигает layout.
-    final padded = Padding(
-      padding: EdgeInsets.all(widget.borderWidth),
-      child: widget.child,
-    );
     final timed = widget.active && _hasTimer;
-    final paintAnything = widget.active || widget.showIdleBorder;
-    if (!paintAnything) {
-      return padded;
-    }
     final colors = timed
         ? TurnTimerStyle.colorsFor(hasTimer: true, fraction: _fraction)
         : const [AppColors.accentStart, AppColors.accentEnd];
     return RepaintBoundary(
       child: CustomPaint(
-        foregroundPainter: _ShrinkingBorderPainter(
+        painter: _ShrinkingBorderPainter(
           fraction: timed ? _fraction : 1.0,
           colors: colors,
           strokeWidth: widget.borderWidth,
           radius: widget.radius,
           paintTimer: timed,
           paintBase: widget.showIdleBorder || widget.active,
+          timerStrokeWidth: widget.borderWidth,
           baseColors: const [
             AppColors.accentStart,
             AppColors.accentEnd,
           ],
         ),
-        child: padded,
       ),
     );
   }
@@ -893,6 +943,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
     required this.radius,
     this.paintTimer = true,
     this.paintBase = true,
+    this.timerStrokeWidth,
     this.baseColors = const [AppColors.accentStart, AppColors.accentEnd],
   });
 
@@ -902,18 +953,20 @@ class _ShrinkingBorderPainter extends CustomPainter {
   final double radius;
   final bool paintTimer;
   final bool paintBase;
+  final double? timerStrokeWidth;
 
   /// Полная фиолетовая рамка — остаётся, когда таймер исчезает.
   final List<Color> baseColors;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final inset = strokeWidth / 2;
+    final paintW = math.max(strokeWidth, timerStrokeWidth ?? strokeWidth);
+    final inset = paintW / 2;
     final rect = Rect.fromLTWH(
       inset,
       inset,
-      size.width - strokeWidth,
-      size.height - strokeWidth,
+      size.width - paintW,
+      size.height - paintW,
     );
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
     final path = Path()..addRRect(rrect);
@@ -922,15 +975,15 @@ class _ShrinkingBorderPainter extends CustomPainter {
     if (paintBase) {
       final basePaint = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
+        ..strokeWidth = paintW
+        ..strokeCap = StrokeCap.square
         ..shader = LinearGradient(colors: baseColors).createShader(rect);
       canvas.drawRRect(rrect, basePaint);
     }
 
     if (!paintTimer) return;
 
-    // 2) Поверх — укорачивающийся таймер (зелёный→оранжевый→красный).
+    // 2) Поверх — тот же путь и толщина, чтобы полностью закрыть фиолетовую.
     final f = fraction.clamp(0.0, 1.0);
     if (f <= 0.001) return;
     for (final metric in path.computeMetrics()) {
@@ -938,8 +991,8 @@ class _ShrinkingBorderPainter extends CustomPainter {
       final extract = metric.extractPath(0, len);
       final paint = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
+        ..strokeWidth = paintW
+        ..strokeCap = StrokeCap.square
         ..shader = LinearGradient(colors: colors).createShader(rect);
       canvas.drawPath(extract, paint);
     }
@@ -952,6 +1005,7 @@ class _ShrinkingBorderPainter extends CustomPainter {
       old.paintTimer != paintTimer ||
       old.paintBase != paintBase ||
       old.colors != colors ||
+      old.timerStrokeWidth != timerStrokeWidth ||
       old.baseColors != baseColors;
 }
 
@@ -1487,16 +1541,14 @@ Future<bool> playGameSettledLoss({
     unawaited(ref.read(authStateProvider.notifier).refresh());
     return false;
   }
-  final before =
-      ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
+  final before = ref.read(authStateProvider).valueOrNull?.balanceBronze ?? 0;
   try {
     await ref.read(authStateProvider.notifier).refresh();
     if (!context.mounted) return false;
     final toBalance =
         ref.read(authStateProvider).valueOrNull?.balanceBronze ?? before;
     // Если refresh ещё списал ставку — крутим реальный дроп; иначе визуальный.
-    final fromBalance =
-        toBalance < before ? before : toBalance + lostBronze;
+    final fromBalance = toBalance < before ? before : toBalance + lostBronze;
     if (fromBalance <= toBalance) return false;
     lockBalanceDisplay(
       ref: ref,
@@ -1538,6 +1590,7 @@ class GameStatusWithReward extends StatelessWidget {
 
   final String statusText;
   final bool showReward;
+
   /// Положительный = выигрыш, отрицательный = проигрыш ставки.
   final int rewardBronze;
   final GlobalKey rewardKey;
@@ -1716,52 +1769,56 @@ class GameRematchSection extends StatelessWidget {
       final btnPad = compact
           ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
           : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.gameRematchOffer,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: compact ? 15 : 16,
-              fontWeight: FontWeight.w700,
+      return _capDesktopWidth(
+        context,
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.gameRematchOffer,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: compact ? 15 : 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          SizedBox(height: compact ? 12 : 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => onDecline(rematchOffer.lobbyId),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.45),
+            SizedBox(height: compact ? 12 : 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => onDecline(rematchOffer.lobbyId),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color:
+                            AppColors.textSecondary.withValues(alpha: 0.45),
+                      ),
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
                     ),
-                    padding: btnPad,
-                    minimumSize: const Size(0, 44),
+                    child: Text(context.l10n.commonDecline),
                   ),
-                  child: Text(context.l10n.commonDecline),
                 ),
-              ),
-              SizedBox(width: compact ? 10 : 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => onAccept(rematchOffer.lobbyId),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                    foregroundColor: Colors.white,
-                    padding: btnPad,
-                    minimumSize: const Size(0, 44),
+                SizedBox(width: compact ? 10 : 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => onAccept(rematchOffer.lobbyId),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      foregroundColor: Colors.white,
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
+                    ),
+                    child: Text(context.l10n.commonAccept),
                   ),
-                  child: Text(context.l10n.commonAccept),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       );
     }
     if (iDeclinedRematch) {
@@ -1821,55 +1878,67 @@ class GameRematchSection extends StatelessWidget {
     final btnPadding = compact
         ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    // В одну колонку на всю ширину — всё читается в одном окне.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FilledButton.icon(
-          onPressed: isRematching ? null : onRematch,
-          icon: isRematching
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
-          label: Text(isRematching
-              ? context.l10n.commonCreating
-              : context.l10n.gameRematch),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            foregroundColor: Colors.white,
-            padding: btnPadding,
-            minimumSize: const Size(0, 44),
+    return _capDesktopWidth(
+      context,
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            onPressed: isRematching ? null : onRematch,
+            icon: isRematching
+                ? SizedBox(
+                    width: compact ? 16 : 18,
+                    height: compact ? 16 : 18,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
+            label: Text(isRematching
+                ? context.l10n.commonCreating
+                : context.l10n.gameRematch),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+              padding: btnPadding,
+              minimumSize: const Size(0, 44),
+            ),
           ),
-        ),
-        SizedBox(height: compact ? 8 : 10),
-        OutlinedButton.icon(
-          onPressed: isFindingGame ? null : onFindGame,
-          icon: isFindingGame
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(Icons.search_rounded, size: compact ? 18 : 20),
-          label: Text(isFindingGame
-              ? context.l10n.commonSearching
-              : context.l10n.gameOtherOpponent),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            backgroundColor: Colors.white,
-            side: const BorderSide(color: AppColors.accentStart),
-            padding: btnPadding,
-            minimumSize: const Size(0, 44),
+          SizedBox(height: compact ? 8 : 10),
+          OutlinedButton.icon(
+            onPressed: isFindingGame ? null : onFindGame,
+            icon: isFindingGame
+                ? SizedBox(
+                    width: compact ? 16 : 18,
+                    height: compact ? 16 : 18,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.search_rounded, size: compact ? 18 : 20),
+            label: Text(isFindingGame
+                ? context.l10n.commonSearching
+                : context.l10n.gameOtherOpponent),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accentStart,
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.accentStart),
+              padding: btnPadding,
+              minimumSize: const Size(0, 44),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+Widget _capDesktopWidth(BuildContext context, Widget child) {
+  if (!isWide(context)) return child;
+  return Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: child,
+    ),
+  );
 }

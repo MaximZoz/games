@@ -609,13 +609,147 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Botga qarshi o‘yin, yurish vaqti cheklanmagan.';
 
   @override
-  String get rulesUnoIntro => 'Klassik Uno: har kimga kartalar tarqatiladi; rang yoki qiymat bo‘yicha yuring.';
+  String get rulesUnoIntro => 'Har kimga 7 ta karta tarqatiladi. Xuddi shu rang yoki xuddi shu qiymatdagi (raqam yoki bir xil maxsus) kartani yuring.';
 
   @override
-  String get rulesUnoPlay => 'Maxsus kartalar: +2, yo‘nalishni o‘zgartirish, yurishni o‘tkazish, qora rang almashtirish va +4. Yura olmasangiz — kolodadan oling.';
+  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 ni faqat +2 ustiga, +4 ni faqat +4 ustiga qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). +2 ni +4 ustiga qo‘yib bo‘lmaydi. Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.Bir xil ikkita yovvoyi bo‘lmagan karta (masalan, ikkita sariq 8) birga tashlanadi: bittasini tashlasangiz, jufti o‘zi ketadi.';
 
   @override
-  String get rulesUnoWin => 'Barcha kartalarini birinchi tashlagan g‘olib. Bitta karta qolganda «Uno» deb aytishni unutmang.';
+  String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.';
+
+  @override
+  String get rulesUnoDraw => 'Mos karta bo‘lmasa — kolodadan bittasini oling. Mos kelsa, darhol yurish yoki qoldirib navbatni o‘tkazish mumkin. Yurish bor ekan, olish mumkin emas.';
+
+  @override
+  String get rulesUnoWin => 'Ikki kishida 100, 3+ o‘yinchida 200. Raundni barcha kartasini tashlagan yutadi.';
+
+  @override
+  String get rulesUnoCall => 'Bitta karta qolganda darhol «Uno!» ni bosing. Raqiblar Unosiz sizni faqat bir soniyadan keyin ushlashi mumkin — unda 2 karta olasiz.';
+
+  @override
+  String get rulesUnoScoring => 'Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Ikki kishida 100, 3+ o‘yinchida 200.';
+
+  @override
+  String get unoColorRed => 'Qizil';
+
+  @override
+  String get unoColorYellow => 'Sariq';
+
+  @override
+  String get unoColorGreen => 'Yashil';
+
+  @override
+  String get unoColorBlue => 'Ko‘k';
+
+  @override
+  String get unoDraw => 'Olish';
+
+  @override
+  String get unoKeep => 'Qoldirish';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Uno e’tirozi';
+
+  @override
+  String get unoChallengeWd4 => '+4 e’tirozi';
+
+  @override
+  String get unoChooseColor => 'Rang tanlang';
+
+  @override
+  String get unoDrawPile => 'Koloda';
+
+  @override
+  String get unoDiscardPile => 'Tashlanganlar';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kartalar: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Ball: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return '$round-raund · $target gacha';
+  }
+
+  @override
+  String get unoYourTurn => 'Sizning yurishingiz';
+
+  @override
+  String get unoWaitingTurn => 'Raqib yurishi';
+
+  @override
+  String get unoChooseColorHint => 'Qora karta uchun rang tanlang';
+
+  @override
+  String get unoWd4Hint => '4 karta oling yoki Wild +4 ga e’tiroz qiling';
+
+  @override
+  String get unoDrawnHint => 'Olingan kartani o‘ynang yoki qoldiring';
+
+  @override
+  String get unoPlayHint => 'Mos rang yoki qiymatni o‘ynang';
+
+  @override
+  String get unoDrawHint => 'Mos karta yo‘q — kolodadan oling';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count karta';
+  }
+
+  @override
+  String get unoYouWon => 'Siz o‘yinni yutdingiz!';
+
+  @override
+  String get unoYouLost => 'O‘yin tugadi';
+
+  @override
+  String get unoYouLostTimeout => 'Vaqt tugagani uchun yutqazdingiz';
+
+  @override
+  String unoWinner(String name) {
+    return 'G‘olib: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name raundni yutadi';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Keyingi';
+
+  @override
+  String get unoRoundScoresTitle => 'Raund ochkolari';
+
+  @override
+  String get unoDirectionClockwise => 'Soat yo‘nalishida';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Soat yo‘nalishiga qarshi';
+
+  @override
+  String get unoErrStackSameOnly => '+2 ustiga faqat +2, +4 ustiga faqat +4 qo‘yiladi. +2 ni +4 ustiga qo‘yib bo‘lmaydi.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Bir soniya kuting — ular hali «Uno» deyishlari mumkin.';
+
+  @override
+  String get unoErrCallTooLate => 'Endi «Uno» deyib bo‘lmaydi. Keyingi o‘yinchi yurib bo‘ldi.';
 
   @override
   String get gamesInDevelopment => 'Ishlanmoqda';

@@ -609,13 +609,147 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Spela mot en bot utan tidsgräns per drag.';
 
   @override
-  String get rulesUnoIntro => 'Klassisk Uno: alla får kort; spela efter färg eller nummer.';
+  String get rulesUnoIntro => 'Varje spelare får 7 kort. Spela ett kort i samma färg eller samma rang (siffra eller samma åtgärd).';
 
   @override
-  String get rulesUnoPlay => 'Specialkort: +2, vänd, hoppa över, jokrar och +4. Kan du inte spela, dra från högen.';
+  String get rulesUnoPlay => 'Hoppa över — nästa mister turen. Vänd med två spelare fungerar som hoppa över. +2 staplas bara på +2 och +4 bara på +4: straffet adderas (två +2 gör att nästa drar 4). +2 får inte läggas på +4. Den som inte staplar drar hela högen och mister turen. Två identiska icke-svarta kort (t.ex. två gula 8) slängs tillsammans: spela ett så följer tvillingen med automatiskt.';
 
   @override
-  String get rulesUnoWin => 'Den som först blir av med alla kort vinner. Säg “Uno” när du har ett kort kvar.';
+  String get rulesUnoWild => 'Ett svart kort sätter en ny färg. Spela +4 bara om du saknar kort i aktuell färg. Motståndaren kan utmana: var +4 lagligt drar hen 6; annars drar +4-spelaren 4 och utmanaren spelar.';
+
+  @override
+  String get rulesUnoDraw => 'Utan lagligt kort, dra ett från högen. Passar det kan du spela det direkt eller behålla det och passa. Du får inte dra medan du har ett lagligt drag.';
+
+  @override
+  String get rulesUnoWin => 'Två spelare till 100, 3+ till 200. En rond vinns genom att tömma handen.';
+
+  @override
+  String get rulesUnoCall => 'När ett kort återstår, tryck genast på ”Uno!”. Motståndare kan ta dig för glömt Uno först efter en sekund — då drar du 2 kort.';
+
+  @override
+  String get rulesUnoScoring => 'Den som först töms på kort vinner ronden och får poäng för motståndarnas händer: siffror efter värde, action 20, svarta 50. Två spelare till 100, 3+ till 200.';
+
+  @override
+  String get unoColorRed => 'Röd';
+
+  @override
+  String get unoColorYellow => 'Gul';
+
+  @override
+  String get unoColorGreen => 'Grön';
+
+  @override
+  String get unoColorBlue => 'Blå';
+
+  @override
+  String get unoDraw => 'Dra';
+
+  @override
+  String get unoKeep => 'Behåll';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Utmana Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Utmana +4';
+
+  @override
+  String get unoChooseColor => 'Välj en färg';
+
+  @override
+  String get unoDrawPile => 'Draghög';
+
+  @override
+  String get unoDiscardPile => 'Kasthög';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Kort: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Poäng: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Runda $round · till $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Din tur';
+
+  @override
+  String get unoWaitingTurn => 'Motståndarens tur';
+
+  @override
+  String get unoChooseColorHint => 'Välj en färg för jokern';
+
+  @override
+  String get unoWd4Hint => 'Dra 4 kort eller utmana Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Spela det dragna kortet eller behåll det';
+
+  @override
+  String get unoPlayHint => 'Spela matchande färg eller värde';
+
+  @override
+  String get unoDrawHint => 'Inget matchande kort — dra från högen';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count kort';
+  }
+
+  @override
+  String get unoYouWon => 'Du vann matchen!';
+
+  @override
+  String get unoYouLost => 'Matchen är slut';
+
+  @override
+  String get unoYouLostTimeout => 'Du förlorade på tid';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vinnare: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vinner ronden';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Nästa';
+
+  @override
+  String get unoRoundScoresTitle => 'Rondpoäng';
+
+  @override
+  String get unoDirectionClockwise => 'Medurs';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Moturs';
+
+  @override
+  String get unoErrStackSameOnly => 'På +2 får bara +2 läggas, på +4 bara +4. +2 på +4 är inte tillåtet.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Vänta en sekund — de kan fortfarande säga Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Du kan inte längre säga Uno. Nästa spelare har redan spelat.';
 
   @override
   String get gamesInDevelopment => 'Under utveckling';

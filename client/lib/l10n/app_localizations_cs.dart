@@ -609,13 +609,147 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Hra proti botovi bez časového limitu na tah.';
 
   @override
-  String get rulesUnoIntro => 'Klasické Uno: každému se rozdají karty; hrajte barvou nebo hodnotou.';
+  String get rulesUnoIntro => 'Každý dostane 7 karet. Hrajte kartu stejné barvy nebo stejné hodnoty (číslo nebo stejná akce).';
 
   @override
-  String get rulesUnoPlay => 'Speciální karty: +2, otočení, přeskočení, žolík a +4. Nemůžete-li hrát, lízněte z balíčku.';
+  String get rulesUnoPlay => 'Přeskočení — další hráč ztrácí tah. Otočení ve dvou funguje jako přeskočení. +2 se klade jen na +2 a +4 jen na +4: trest se sčítá (dvě +2 — další lízne 4). +2 na +4 dát nelze. Kdo neodpoví, lízne celý balíček a ztrácí tah. Dvě stejné nečerné karty (např. dvě žluté 8) se odhodí spolu: zahrajte jednu a dvojče odletí samo.';
 
   @override
-  String get rulesUnoWin => 'Vyhrává ten, kdo se první zbaví všech karet. Řekněte „Uno“, když zbývá jedna.';
+  String get rulesUnoWild => 'Černá karta určí novou barvu. +4 jen když nemáte kartu aktuální barvy. Soupeř může vyzvat: bylo-li +4 legální, lízne 6; jinak autor +4 lízne 4 a vyzývatel hraje.';
+
+  @override
+  String get rulesUnoDraw => 'Bez vhodné karty lízněte jednu z balíčku. Pokud sedí, můžete ji ihned zahrát, nebo si ji nechat a předat tah. Nelze lízat, dokud máte tah.';
+
+  @override
+  String get rulesUnoWin => 'Ve dvou do 100 bodů, při 3+ hráčích do 200. Kolo vyhraje hráč, který shodí všechny karty.';
+
+  @override
+  String get rulesUnoCall => 'Když zbývá jedna karta, hned stiskněte „Uno!“. Soupeři vás mohou chytit za zapomenuté Uno až po jedné sekundě — pak líznete 2 karty.';
+
+  @override
+  String get rulesUnoScoring => 'Kdo první shodí všechny karty, vyhraje kolo a získá body za soupeřovy karty: čísla podle hodnoty, akce 20, černé 50. Ve dvou do 100, při 3+ hráčích do 200.';
+
+  @override
+  String get unoColorRed => 'Červená';
+
+  @override
+  String get unoColorYellow => 'Žlutá';
+
+  @override
+  String get unoColorGreen => 'Zelená';
+
+  @override
+  String get unoColorBlue => 'Modrá';
+
+  @override
+  String get unoDraw => 'Líznout';
+
+  @override
+  String get unoKeep => 'Ponechat';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Vyzvat Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Vyzvat +4';
+
+  @override
+  String get unoChooseColor => 'Vyberte barvu';
+
+  @override
+  String get unoDrawPile => 'Balíček';
+
+  @override
+  String get unoDiscardPile => 'Odkládací hromádka';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Karty: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Skóre: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Kolo $round · do $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Váš tah';
+
+  @override
+  String get unoWaitingTurn => 'Tah soupeře';
+
+  @override
+  String get unoChooseColorHint => 'Vyberte barvu pro žolíka';
+
+  @override
+  String get unoWd4Hint => 'Lízněte 4 karty nebo vyzvěte Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Zahrajte líznutou kartu nebo si ji ponechte';
+
+  @override
+  String get unoPlayHint => 'Zahrajte shodnou barvu nebo hodnotu';
+
+  @override
+  String get unoDrawHint => 'Žádná shodná karta — lízněte si';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count karet';
+  }
+
+  @override
+  String get unoYouWon => 'Vyhráli jste zápas!';
+
+  @override
+  String get unoYouLost => 'Zápas skončil';
+
+  @override
+  String get unoYouLostTimeout => 'Prohráli jste na čas';
+
+  @override
+  String unoWinner(String name) {
+    return 'Vítěz: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name vyhrává kolo';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Další';
+
+  @override
+  String get unoRoundScoresTitle => 'Skóre kola';
+
+  @override
+  String get unoDirectionClockwise => 'Po směru hodin';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Proti směru hodin';
+
+  @override
+  String get unoErrStackSameOnly => 'Na +2 smíte dát jen +2, na +4 jen +4. +2 na +4 dát nelze.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Počkejte vteřinu — ještě můžou říct Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Uno už říct nelze. Další hráč už táhl.';
 
   @override
   String get gamesInDevelopment => 'Ve vývoji';

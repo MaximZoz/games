@@ -609,13 +609,147 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesUnoOfflineBot => 'बॉट के खिलाफ खेल, चाल की समय सीमा नहीं।';
 
   @override
-  String get rulesUnoIntro => 'क्लासिक ऊनो: सभी को पत्ते मिलते हैं; रंग या नंबर से खेलें।';
+  String get rulesUnoIntro => 'हर खिलाड़ी को 7 पत्ते मिलते हैं। उसी रंग या उसी मान (अंक या वही क्रिया) का पत्ता खेलें।';
 
   @override
-  String get rulesUnoPlay => 'विशेष पत्ते: +2, दिशा बदलो, छोड़ो, जंगली और +4। नहीं खेल सकते तो डेक से लें।';
+  String get rulesUnoPlay => 'छोड़ो — अगला अपनी बारी खोता है। दो खिलाड़ियों में दिशा बदलना छोड़ने जैसा है। +2 केवल +2 पर और +4 केवल +4 पर रखा जा सकता है: जुर्माना जुड़ता है (दो +2 पर अगला 4 उठाता है)। +2 को +4 पर नहीं रखा जा सकता। जो जवाब नहीं देता, पूरी गड्डी उठाता है और बारी खोता है। दो एक जैसी गैर-काली पत्तियाँ (जैसे दो पीले 8) साथ फेंकी जाती हैं: एक चलाएँ तो जोड़ी अपने आप जाएगी।';
 
   @override
-  String get rulesUnoWin => 'जो पहले सभी पत्ते फेंक दे वह जीते। एक पत्ता बचने पर “ऊनो” कहें।';
+  String get rulesUnoWild => 'काला पत्ता नया रंग तय करता है। +4 तभी जब वर्तमान रंग का पत्ता न हो। विरोधी चुनौती दे सकता है: +4 वैध हो तो वह 6 उठाए; नहीं तो +4 वाला 4 उठाए और चुनौती देने वाला खेले।';
+
+  @override
+  String get rulesUnoDraw => 'कोई वैध पत्ता न हो तो डेक से एक उठाएँ। मेल खाए तो तुरंत खेलें या रख कर बारी दें। वैध चाल रहते उठाना मना है।';
+
+  @override
+  String get rulesUnoWin => 'आमने-सामने 100 अंक, 3+ खिलाड़ियों में 200। राउंड हाथ खाली करने वाला जीते।';
+
+  @override
+  String get rulesUnoCall => 'एक पत्ता बचने पर तुरंत «ऊनो!» दबाएँ। विरोधी ऊनो भूलने पर आपको एक सेकंड बाद ही पकड़ सकते हैं — तब आप 2 पत्ते उठाएँगे।';
+
+  @override
+  String get rulesUnoScoring => 'जो पहले हाथ खाली करे वह राउंड जीते और विरोधियों के पत्तों के अंक पाए: अंक अपने मान, क्रिया 20, काले 50। आमने-सामने 100, 3+ खिलाड़ियों में 200।';
+
+  @override
+  String get unoColorRed => 'लाल';
+
+  @override
+  String get unoColorYellow => 'पीला';
+
+  @override
+  String get unoColorGreen => 'हरा';
+
+  @override
+  String get unoColorBlue => 'नीला';
+
+  @override
+  String get unoDraw => 'उठाएँ';
+
+  @override
+  String get unoKeep => 'रखें';
+
+  @override
+  String get unoSayUno => 'ऊनो!';
+
+  @override
+  String get unoChallengeUno => 'ऊनो चुनौती';
+
+  @override
+  String get unoChallengeWd4 => '+4 चुनौती';
+
+  @override
+  String get unoChooseColor => 'रंग चुनें';
+
+  @override
+  String get unoDrawPile => 'ड्रॉ ढेर';
+
+  @override
+  String get unoDiscardPile => 'डिस्कार्ड';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'पत्ते: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'अंक: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'राउंड $round · $target तक';
+  }
+
+  @override
+  String get unoYourTurn => 'आपकी बारी';
+
+  @override
+  String get unoWaitingTurn => 'विरोधी की बारी';
+
+  @override
+  String get unoChooseColorHint => 'वाइल्ड पत्ते के लिए रंग चुनें';
+
+  @override
+  String get unoWd4Hint => '4 पत्ते उठाएँ या Wild +4 को चुनौती दें';
+
+  @override
+  String get unoDrawnHint => 'उठाया पत्ता खेलें या रखें';
+
+  @override
+  String get unoPlayHint => 'मिलता रंग या मूल्य खेलें';
+
+  @override
+  String get unoDrawHint => 'कोई मिलता पत्ता नहीं — ढेर से उठाएँ';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count पत्ते';
+  }
+
+  @override
+  String get unoYouWon => 'आप मैच जीत गए!';
+
+  @override
+  String get unoYouLost => 'मैच समाप्त';
+
+  @override
+  String get unoYouLostTimeout => 'आप समय खत्म होने पर हारे';
+
+  @override
+  String unoWinner(String name) {
+    return 'विजेता: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name राउंड जीतते हैं';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'आगे';
+
+  @override
+  String get unoRoundScoresTitle => 'राउंड अंक';
+
+  @override
+  String get unoDirectionClockwise => 'घड़ी की दिशा';
+
+  @override
+  String get unoDirectionCounterclockwise => 'घड़ी की उलटी दिशा';
+
+  @override
+  String get unoErrStackSameOnly => '+2 केवल +2 पर और +4 केवल +4 पर चलाया जा सकता है। +2 को +4 पर नहीं रखा जा सकता।';
+
+  @override
+  String get unoErrCatchTooEarly => 'एक सेकंड रुकें — वे अभी ऊनो कह सकते हैं।';
+
+  @override
+  String get unoErrCallTooLate => 'अब उनो नहीं कहा जा सकता। अगला खिलाड़ी पहले ही चल चुका है।';
 
   @override
   String get gamesInDevelopment => 'विकास में';

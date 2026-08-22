@@ -63,6 +63,8 @@ class GameInvite {
 
   bool get isPoker => gameType == 'poker';
 
+  bool get isUno => gameType == 'uno';
+
   /// Подпись режима для карточки приглашения.
   /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
   String get modeLabel {
@@ -73,6 +75,9 @@ class GameInvite {
       return '10×10';
     }
     if (isPoker) {
+      return '';
+    }
+    if (isUno) {
       return '';
     }
     return variantLabel(variant);
@@ -321,6 +326,7 @@ final gameStateProvider =
           if (alive) ref.invalidateSelf();
         });
       }
+
       session.addListener(onChanged);
       ref.onDispose(() {
         alive = false;
@@ -343,8 +349,7 @@ final gameStateInvalidateBlockedProvider =
     StateProvider.autoDispose.family<bool, String>((ref, gameId) => false);
 
 /// Наблюдение после выбывания (карточка в «Играх», не блокирует и не авто-роутит).
-final observationGameProvider =
-    StateProvider<ObservationItem?>((ref) => null);
+final observationGameProvider = StateProvider<ObservationItem?>((ref) => null);
 
 final activeGameProvider =
     AsyncNotifierProvider.autoDispose<ActiveGameNotifier, ActiveGameItem?>(
@@ -435,7 +440,8 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
   Future<ActiveGameItem?> refresh() async {
     final previous = state;
     final previousData = state.asData?.value;
-    state = const AsyncValue<ActiveGameItem?>.loading().copyWithPrevious(previous);
+    state =
+        const AsyncValue<ActiveGameItem?>.loading().copyWithPrevious(previous);
     try {
       final user = ref.read(authStateProvider).valueOrNull;
       if (user == null) {
@@ -443,7 +449,8 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         state = const AsyncValue.data(null);
         return null;
       }
-      final session = await ref.read(gamesRepositoryProvider).getActiveSession();
+      final session =
+          await ref.read(gamesRepositoryProvider).getActiveSession();
       _applyObservation(session.observation);
       state = AsyncValue.data(session.active);
       return session.active;
@@ -527,7 +534,8 @@ class UserGameSettingsNotifier
     if (user == null) return UserGameSettings.defaultsFor(gameType);
     final offline = ref.watch(isOfflineProvider);
     if (offline) {
-      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+      return await OfflineDiskCache.loadGameSettings(user.id,
+              gameType: gameType) ??
           UserGameSettings.defaultsFor(gameType);
     }
     try {
@@ -541,16 +549,16 @@ class UserGameSettingsNotifier
       );
       return settings;
     } catch (_) {
-      return await OfflineDiskCache.loadGameSettings(user.id, gameType: gameType) ??
+      return await OfflineDiskCache.loadGameSettings(user.id,
+              gameType: gameType) ??
           UserGameSettings.defaultsFor(gameType);
     }
   }
 
   /// Локально применяет настройки и с задержкой пишет в БД.
   void updateLocal(UserGameSettings next) {
-    final withType = next.gameType == _gameType
-        ? next
-        : next.copyWith(gameType: _gameType);
+    final withType =
+        next.gameType == _gameType ? next : next.copyWith(gameType: _gameType);
     state = AsyncData(withType);
     _pending = withType;
     _repo = ref.read(gamesRepositoryProvider);

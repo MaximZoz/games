@@ -609,13 +609,147 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesUnoOfflineBot => 'Chơi với bot, không giới hạn thời gian mỗi lượt.';
 
   @override
-  String get rulesUnoIntro => 'Uno cổ điển: mỗi người được chia bài; đánh theo màu hoặc số.';
+  String get rulesUnoIntro => 'Mỗi người được chia 7 lá. Đánh lá cùng màu hoặc cùng hạng (số hoặc cùng loại bài đặc biệt).';
 
   @override
-  String get rulesUnoPlay => 'Bài đặc biệt: +2, đổi chiều, bỏ lượt, đổi màu và +4. Không đánh được thì rút từ bộ bài.';
+  String get rulesUnoPlay => 'Bỏ lượt — người kế mất lượt. Đổi chiều khi còn hai người như bỏ lượt. +2 chỉ chồng lên +2, +4 chỉ chồng lên +4: phạt cộng dồn (hai lá +2 thì người kế rút 4). Không được chồng +2 lên +4. Ai không chồng sẽ rút cả chồng và mất lượt.Hai lá giống nhau không phải đen (ví dụ hai quân 8 vàng) bỏ cùng lúc: đánh một lá, lá cặp đi tự động.';
 
   @override
-  String get rulesUnoWin => 'Người đầu tiên hết bài thắng. Nhớ nói “Uno” khi còn một lá.';
+  String get rulesUnoWild => 'Lá đen chọn màu mới. Chỉ đánh +4 khi không có lá màu hiện tại. Đối thủ có thể thách: nếu +4 hợp lệ họ rút 6; nếu không, người đánh +4 rút 4 và người thách được đánh.';
+
+  @override
+  String get rulesUnoDraw => 'Không có lá hợp lệ thì rút một lá từ bộ. Nếu khớp, có thể đánh ngay hoặc giữ và bỏ lượt. Còn nước đi thì không được rút.';
+
+  @override
+  String get rulesUnoWin => '1v1 đến 100 điểm, từ 3 người đến 200. Thắng vòng là người hết bài.';
+
+  @override
+  String get rulesUnoCall => 'Khi còn một lá, nhấn «Uno!» ngay. Đối thủ chỉ được bắt bạn quên Uno sau một giây — khi đó bạn rút 2 lá.';
+
+  @override
+  String get rulesUnoScoring => 'Ai hết bài trước thắng vòng và nhận điểm từ bài đối thủ: số theo mệnh giá, bài hành động 20, đen 50. 1v1 đến 100, từ 3 người đến 200.';
+
+  @override
+  String get unoColorRed => 'Đỏ';
+
+  @override
+  String get unoColorYellow => 'Vàng';
+
+  @override
+  String get unoColorGreen => 'Xanh lá';
+
+  @override
+  String get unoColorBlue => 'Xanh dương';
+
+  @override
+  String get unoDraw => 'Rút';
+
+  @override
+  String get unoKeep => 'Giữ';
+
+  @override
+  String get unoSayUno => 'Uno!';
+
+  @override
+  String get unoChallengeUno => 'Thách Uno';
+
+  @override
+  String get unoChallengeWd4 => 'Thách +4';
+
+  @override
+  String get unoChooseColor => 'Chọn màu';
+
+  @override
+  String get unoDrawPile => 'Chồng rút';
+
+  @override
+  String get unoDiscardPile => 'Chồng bỏ';
+
+  @override
+  String unoCardsCount(int count) {
+    return 'Bài: $count';
+  }
+
+  @override
+  String unoScore(int score) {
+    return 'Điểm: $score';
+  }
+
+  @override
+  String unoRoundProgress(int round, int target) {
+    return 'Ván $round · đến $target';
+  }
+
+  @override
+  String get unoYourTurn => 'Lượt của bạn';
+
+  @override
+  String get unoWaitingTurn => 'Lượt đối thủ';
+
+  @override
+  String get unoChooseColorHint => 'Chọn màu cho lá đổi màu';
+
+  @override
+  String get unoWd4Hint => 'Rút 4 lá hoặc thách Wild +4';
+
+  @override
+  String get unoDrawnHint => 'Đánh lá vừa rút hoặc giữ lại';
+
+  @override
+  String get unoPlayHint => 'Đánh lá cùng màu hoặc giá trị';
+
+  @override
+  String get unoDrawHint => 'Không có lá phù hợp — rút từ chồng';
+
+  @override
+  String unoPendingDraw(int count) {
+    return '+$count lá';
+  }
+
+  @override
+  String get unoYouWon => 'Bạn đã thắng trận!';
+
+  @override
+  String get unoYouLost => 'Trận đấu kết thúc';
+
+  @override
+  String get unoYouLostTimeout => 'Bạn thua vì hết giờ';
+
+  @override
+  String unoWinner(String name) {
+    return 'Người thắng: $name';
+  }
+
+  @override
+  String unoRoundWonBy(String name) {
+    return '$name thắng vòng';
+  }
+
+  @override
+  String unoRoundPointsAwarded(int points) {
+    return '+$points';
+  }
+
+  @override
+  String get unoRoundContinue => 'Tiếp';
+
+  @override
+  String get unoRoundScoresTitle => 'Điểm vòng';
+
+  @override
+  String get unoDirectionClockwise => 'Theo chiều kim đồng hồ';
+
+  @override
+  String get unoDirectionCounterclockwise => 'Ngược chiều kim đồng hồ';
+
+  @override
+  String get unoErrStackSameOnly => 'Chỉ được đánh +2 lên +2, hoặc +4 lên +4. Không được xếp +2 lên +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Đợi một giây — họ vẫn có thể hô Uno.';
+
+  @override
+  String get unoErrCallTooLate => 'Không thể hô Uno nữa. Người tiếp theo đã đánh.';
 
   @override
   String get gamesInDevelopment => 'Đang phát triển';

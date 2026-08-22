@@ -10,6 +10,7 @@ import (
 // WriteErr пишет JSON-ошибку: {"error":"<канонический ключ>","message":"<локаль>"}.
 // Клиент может надёжно проверить error, не завися от перевода message.
 func WriteErr(w http.ResponseWriter, r *http.Request, status int, key string) {
+	key = i18n.Canonical(key)
 	msg := i18n.T(i18n.LangFromRequest(r), key)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
