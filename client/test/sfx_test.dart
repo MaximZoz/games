@@ -7,6 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('у каждого SfxId есть wav', () {
+    expect(SfxController.assetPaths.keys.toSet(), SfxId.values.toSet());
+  });
+
   test('одинаковый sfx не дублируется чаще debounce', () {
     final c = SfxController();
     final t0 = DateTime.utc(2026, 1, 1);

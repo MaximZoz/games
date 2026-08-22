@@ -223,6 +223,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     required int cell,
     required bool hit,
     required bool onMyBoard,
+    bool sunk = false,
   }) async {
     if (!mounted) return;
     _fxInProgress = true;
@@ -232,7 +233,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _fxShowMineBoard = onMyBoard;
     });
     Sfx.play(SfxId.shoot);
-    Sfx.play(hit ? SfxId.hit : SfxId.miss);
+    if (sunk) {
+      Sfx.play(SfxId.sink);
+    } else {
+      Sfx.play(hit ? SfxId.hit : SfxId.miss);
+    }
     _hitPulse
       ..stop()
       ..forward(from: 0);
@@ -260,6 +265,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       cell: game.lastShot,
       hit: game.lastShotHit,
       onMyBoard: true,
+      sunk: game.mySunkShips.any((ship) => ship.contains(game.lastShot)),
     ));
   }
 
@@ -460,7 +466,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   void _onSetupCellTap(int cell) {
     if (_busy || _localShips.isEmpty) return;
-    Sfx.play(SfxId.place);
+    Sfx.play(SfxId.placeShip);
     // Тап по своему кораблю — выделить.
     for (var i = 0; i < _localShips.length; i++) {
       if (_localShips[i].contains(cell)) {
@@ -507,6 +513,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     if (idx == null || idx >= _localShips.length) return;
     final rotated = rotateShip(_localShips[idx]);
     if (rotated == null) return;
+    Sfx.play(SfxId.cardFlip);
     final next = _localShips.map((s) => List<int>.from(s)).toList();
     next[idx] = rotated;
     setState(() => _localShips = next);
@@ -529,6 +536,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         cell: shotCell,
         hit: view.lastShotHit,
         onMyBoard: false,
+        sunk: view.opponentSunkShips.any((ship) => ship.contains(shotCell)),
       );
       if (!mounted) return;
       ref.invalidate(battleshipGameProvider(widget.gameId));

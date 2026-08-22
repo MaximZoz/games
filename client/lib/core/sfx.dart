@@ -10,20 +10,38 @@ import 'sfx_html_stub.dart' if (dart.library.html) 'sfx_html_web.dart' as html_s
 /// Короткие эффекты UI и игр. Выключенные / тестовые вызовы — no-op.
 enum SfxId {
   uiTap,
-  cardPlay,
+  notifyInfo,
+  notifySuccess,
+  notifyError,
+  deny,
+  cardRustle,
   cardDraw,
   cardDeal,
-  cardSpecial,
+  cardPlay,
+  cardLand,
+  cardFlip,
   unoCall,
+  unoSkip,
+  unoReverse,
+  unoDrawTwo,
+  unoWild,
+  unoDrawFour,
   colorPick,
+  unoChallenge,
   chip,
-  place,
+  chipStack,
+  fold,
+  check,
+  placeX,
+  placeO,
   shoot,
   hit,
   miss,
+  sink,
+  placeShip,
   win,
+  lose,
   coins,
-  deny,
 }
 
 abstract final class Sfx {
@@ -36,27 +54,46 @@ abstract final class Sfx {
 
 class SfxController {
   SfxController({
-    this.debounce = const Duration(milliseconds: 55),
+    this.debounce = const Duration(milliseconds: 50),
   });
 
   final Duration debounce;
 
-  static const _assets = <SfxId, String>{
+  @visibleForTesting
+  static const assetPaths = <SfxId, String>{
     SfxId.uiTap: 'assets/sfx/ui_tap.wav',
-    SfxId.cardPlay: 'assets/sfx/card_play.wav',
+    SfxId.notifyInfo: 'assets/sfx/notify_info.wav',
+    SfxId.notifySuccess: 'assets/sfx/notify_success.wav',
+    SfxId.notifyError: 'assets/sfx/notify_error.wav',
+    SfxId.deny: 'assets/sfx/deny.wav',
+    SfxId.cardRustle: 'assets/sfx/card_rustle.wav',
     SfxId.cardDraw: 'assets/sfx/card_draw.wav',
     SfxId.cardDeal: 'assets/sfx/card_deal.wav',
-    SfxId.cardSpecial: 'assets/sfx/card_special.wav',
+    SfxId.cardPlay: 'assets/sfx/card_play.wav',
+    SfxId.cardLand: 'assets/sfx/card_land.wav',
+    SfxId.cardFlip: 'assets/sfx/card_flip.wav',
     SfxId.unoCall: 'assets/sfx/uno_call.wav',
+    SfxId.unoSkip: 'assets/sfx/uno_skip.wav',
+    SfxId.unoReverse: 'assets/sfx/uno_reverse.wav',
+    SfxId.unoDrawTwo: 'assets/sfx/uno_draw_two.wav',
+    SfxId.unoWild: 'assets/sfx/uno_wild.wav',
+    SfxId.unoDrawFour: 'assets/sfx/uno_draw_four.wav',
     SfxId.colorPick: 'assets/sfx/color_pick.wav',
+    SfxId.unoChallenge: 'assets/sfx/uno_challenge.wav',
     SfxId.chip: 'assets/sfx/chip.wav',
-    SfxId.place: 'assets/sfx/place.wav',
+    SfxId.chipStack: 'assets/sfx/chip_stack.wav',
+    SfxId.fold: 'assets/sfx/fold.wav',
+    SfxId.check: 'assets/sfx/check.wav',
+    SfxId.placeX: 'assets/sfx/place_x.wav',
+    SfxId.placeO: 'assets/sfx/place_o.wav',
     SfxId.shoot: 'assets/sfx/shoot.wav',
     SfxId.hit: 'assets/sfx/hit.wav',
     SfxId.miss: 'assets/sfx/miss.wav',
+    SfxId.sink: 'assets/sfx/sink.wav',
+    SfxId.placeShip: 'assets/sfx/place_ship.wav',
     SfxId.win: 'assets/sfx/win.wav',
+    SfxId.lose: 'assets/sfx/lose.wav',
     SfxId.coins: 'assets/sfx/coins.wav',
-    SfxId.deny: 'assets/sfx/deny.wav',
   };
 
   final Map<SfxId, String> _dataUris = {};
@@ -113,13 +150,13 @@ class SfxController {
   }
 
   Future<void> _preload() async {
-    if (_dataUris.length == _assets.length) return;
+    if (_dataUris.length == assetPaths.length) return;
     final inflight = _preloadDone;
     if (inflight != null) return inflight.future;
     final done = Completer<void>();
     _preloadDone = done;
     try {
-      for (final entry in _assets.entries) {
+      for (final entry in assetPaths.entries) {
         if (_dataUris.containsKey(entry.key)) continue;
         final bytes = await rootBundle.load(entry.value);
         _dataUris[entry.key] =

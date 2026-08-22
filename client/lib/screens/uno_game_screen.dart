@@ -239,6 +239,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         await _animateOpponentPlay(game, fromIndex);
       }
     }
+    if (game.lastEventType == UnoActionType.callUno) {
+      Sfx.play(SfxId.unoCall);
+    }
     if (game.lastEventType == 'wd4_reveal' && game.lastEventCard != null) {
       await _animateWd4Reveal(game);
     }
@@ -337,6 +340,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           beginScale: 0.85,
           endScale: 1,
           arcLift: 18,
+          launchSfx: SfxId.cardRustle,
+          landSfx: isMe ? SfxId.cardFlip : SfxId.cardDeal,
         ));
         if (mounted) {
           setState(() {
@@ -735,7 +740,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       Sfx.play(SfxId.colorPick);
     } else if (type == UnoActionType.challengeUno ||
         type == UnoActionType.challengeWd4) {
-      Sfx.play(SfxId.cardSpecial);
+      Sfx.play(SfxId.unoChallenge);
     }
     try {
       await ref.read(unoRepositoryProvider).move(
