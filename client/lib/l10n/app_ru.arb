@@ -476,6 +476,7 @@
   "pokerHandFourOfAKind": "Каре",
   "pokerHandStraightFlush": "Стрит-флеш",
   "pokerHandRoyalFlush": "Роял-флеш",
+  "pokerCombinationsTitle": "Комбинации",
   "pokerHandNumber": "Раздача {n}",
   "@pokerHandNumber": {
     "placeholders": {

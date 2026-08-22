@@ -835,6 +835,57 @@ class TurnTimerBorder extends StatelessWidget {
   }
 }
 
+/// Кто сейчас ходит: рамка на актёре, с таймером или без.
+///
+/// Подключайте в новой игре вокруг аватара/неймплейта:
+/// `GameActorHighlight(isActing: seatIsCurrent && !over, ...)`.
+/// Без лимита времени остаётся акцентная обводка — как в дураке и покере.
+/// Idle-рамки нет, чтобы ход был виден только у текущего игрока.
+class GameActorHighlight extends StatelessWidget {
+  const GameActorHighlight({
+    super.key,
+    required this.child,
+    required this.isActing,
+    this.turnDeadline = 0,
+    this.turnTimeSec = 0,
+    this.borderWidth = 2.5,
+    this.radius = 16,
+    this.onExpired,
+  });
+
+  final Widget child;
+  final bool isActing;
+  final int turnDeadline;
+  final int turnTimeSec;
+  final double borderWidth;
+  final double radius;
+  final VoidCallback? onExpired;
+
+  /// Ход этого места: не окончена партия, игрок не выбыл, сейчас его очередь.
+  static bool isActingSeat({
+    required bool isCurrentActor,
+    required bool isOver,
+    bool eliminated = false,
+    bool paused = false,
+  }) {
+    return isCurrentActor && !isOver && !eliminated && !paused;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TurnTimerBorder(
+      active: isActing,
+      turnDeadline: turnDeadline,
+      turnTimeSec: turnTimeSec,
+      borderWidth: borderWidth,
+      radius: radius,
+      onExpired: onExpired,
+      showIdleBorder: false,
+      child: child,
+    );
+  }
+}
+
 class _TurnTimerRing extends StatefulWidget {
   const _TurnTimerRing({
     required this.active,

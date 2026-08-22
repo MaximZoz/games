@@ -1433,17 +1433,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return const SizedBox.shrink();
     }
     final player = game.players[index];
-    return TurnTimerBorder(
-      active: !game.isOver &&
-          !_dealing &&
-          !player.forfeited &&
-          game.turnTimeSec > 0 &&
-          index == game.currentIndex,
+    return GameActorHighlight(
+      isActing: GameActorHighlight.isActingSeat(
+        isCurrentActor: index == game.currentIndex,
+        isOver: game.isOver,
+        eliminated: player.forfeited,
+        paused: _dealing,
+      ),
       turnDeadline: game.turnDeadline,
       turnTimeSec: game.turnTimeSec,
       borderWidth: 2.5,
       radius: 16,
-      showIdleBorder: !player.forfeited,
       onExpired: _onTurnTimeExpired,
       child: UnoOpponentHand(
         key: _opponentKeys.putIfAbsent(index, GlobalKey.new),

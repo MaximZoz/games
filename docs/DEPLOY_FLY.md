@@ -66,10 +66,12 @@ fly postgres attach multigames-db --app multigames
 ### Вручную
 
 ```bash
-fly redis create --name multigameszozu-redis --region ams --plan pay-as-you-go --no-replicas --enable-eviction
+fly redis create --name multigameszozu-redis --region ams --no-replicas --enable-eviction
 fly redis status multigameszozu-redis   # скопируй Private URL
 fly secrets set REDIS_URL="redis://...@fly-multigameszozu-redis.upstash.io" --app multigameszozu
 ```
+
+Список планов: `fly redis plans` (строка `pay-as-you-go` как `--plan` может не приниматься — лучше без `--plan`).
 
 ### Вариант B — Redis в отдельном Fly-приложении
 
