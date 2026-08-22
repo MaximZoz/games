@@ -929,7 +929,21 @@ class PokerEngine {
   }
 }
 
-/// Простая стратегия бота: чек; иначе колл, если дёшево; иногда мин-рейз; иначе фолд.
+/// Есть ли у бота «сильная» карта: карманная пара, валет+, или уже пара+ по борду.
+bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
+  if (p.hole.length < 2) return false;
+  final first = p.hole[0];
+  final second = p.hole[1];
+  if (first.rank.value == second.rank.value) return true;
+  if (first.rank.value >= 11 || second.rank.value >= 11) return true;
+  if (g.community.length >= 3) {
+    final best = evaluateBestHand([...p.hole, ...g.community]);
+    if (best.rank.index >= PokerHandRank.onePair.index) return true;
+  }
+  return false;
+}
+
+/// Простая стратегия бота: чек; дешёвый колл; олл-ин — только с сильной картой.
 PokerAction pokerBotAction(PokerEngine g) {
   final idx = g.actingIndex;
   final legal = g.legalActions(idx);
@@ -938,6 +952,9 @@ PokerAction pokerBotAction(PokerEngine g) {
   var callAmount = g.currentBet - p.bet;
   if (callAmount < 0) callAmount = 0;
   final rng = Random();
+  final facingAllIn = callAmount >= p.chips ||
+      g.players.any((other) =>
+          other.seat != p.seat && !other.folded && other.allIn);
 
   if (has(PokerActionType.check)) {
     if (has(PokerActionType.raise) &&
@@ -950,7 +967,11 @@ PokerAction pokerBotAction(PokerEngine g) {
     }
     return const PokerAction(PokerActionType.check);
   }
-  if (has(PokerActionType.call) && callAmount <= p.chips ~/ 3) {
+  final cheapCall = callAmount > 0 &&
+      callAmount < p.chips &&
+      callAmount <= p.chips ~/ 3 &&
+      !facingAllIn;
+  if (has(PokerActionType.call) && cheapCall) {
     if (has(PokerActionType.raise) &&
         p.chips > g.bigBlind * 4 &&
         rng.nextInt(6) == 0) {
@@ -958,6 +979,17 @@ PokerAction pokerBotAction(PokerEngine g) {
       if (to <= p.bet + p.chips) {
         return PokerAction(PokerActionType.raise, amount: to);
       }
+    }
+    return const PokerAction(PokerActionType.call);
+  }
+  if ((has(PokerActionType.call) || has(PokerActionType.allIn)) &&
+      callAmount > 0 &&
+      pokerBotHasCallStrength(g, p)) {
+    if (has(PokerActionType.call) && callAmount < p.chips) {
+      return const PokerAction(PokerActionType.call);
+    }
+    if (has(PokerActionType.allIn)) {
+      return const PokerAction(PokerActionType.allIn);
     }
     return const PokerAction(PokerActionType.call);
   }
