@@ -37,6 +37,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsLanguageSystem => 'Як у системі';
 
   @override
+  String get settingsSoundTitle => 'Звук';
+
+  @override
+  String get settingsSoundSubtitle => 'Кліки, ходи та анімації в іграх';
+
+  @override
   String get settingsAddBotsTitle => 'Додавати ботів через 30 с';
 
   @override

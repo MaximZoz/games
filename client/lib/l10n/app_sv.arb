@@ -10,6 +10,8 @@
   "settingsTitle": "Inställningar",
   "settingsLanguage": "Språk",
   "settingsLanguageSystem": "Systemets standard",
+  "settingsSoundTitle": "Ljud",
+  "settingsSoundSubtitle": "Klick, drag och spelanimationer",
   "settingsAddBotsTitle": "Lägg till bottar efter 30 s",
   "settingsAddBotsSubtitle": "Vid matchning: om ingen motståndare hittas inom 30 sekunder startar spelet med en bot (insatsen återställs till 1 brons)",
   "settingsFriendsOnlyTitle": "Meddelanden endast från vänner",

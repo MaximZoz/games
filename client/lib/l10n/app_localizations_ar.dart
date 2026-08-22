@@ -37,6 +37,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsLanguageSystem => 'افتراضي النظام';
 
   @override
+  String get settingsSoundTitle => 'الصوت';
+
+  @override
+  String get settingsSoundSubtitle => 'النقرات والحركات ورسوم الألعاب';
+
+  @override
   String get settingsAddBotsTitle => 'إضافة بوت بعد 30 ثانية';
 
   @override

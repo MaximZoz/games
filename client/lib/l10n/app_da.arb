@@ -10,6 +10,8 @@
   "settingsTitle": "Indstillinger",
   "settingsLanguage": "Sprog",
   "settingsLanguageSystem": "Systemstandard",
+  "settingsSoundTitle": "Lyd",
+  "settingsSoundSubtitle": "Klik, træk og spilanimationer",
   "settingsAddBotsTitle": "Tilføj bots efter 30 s",
   "settingsAddBotsSubtitle": "Ved matchmaking: hvis der ikke findes en modstander inden for 30 sekunder, starter spillet med en bot (indsatsen nulstilles til 1 bronze)",
   "settingsFriendsOnlyTitle": "Beskeder kun fra venner",

@@ -37,6 +37,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
+  String get settingsSoundTitle => 'Lyd';
+
+  @override
+  String get settingsSoundSubtitle => 'Klikk, trekk og spillanimasjoner';
+
+  @override
   String get settingsAddBotsTitle => 'Legg til boter etter 30 s';
 
   @override

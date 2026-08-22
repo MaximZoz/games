@@ -10,6 +10,8 @@
   "settingsTitle": "Ayarlar",
   "settingsLanguage": "Dil",
   "settingsLanguageSystem": "Sistem varsayılanı",
+  "settingsSoundTitle": "Ses",
+  "settingsSoundSubtitle": "Tıklamalar, hamleler ve oyun animasyonları",
   "settingsAddBotsTitle": "30 sn sonra bot ekle",
   "settingsAddBotsSubtitle": "Eşleştirmede: 30 saniye içinde rakip bulunamazsa oyun botla başlar (bahis 1 bronza sıfırlanır)",
   "settingsFriendsOnlyTitle": "Yalnızca arkadaşlardan mesaj",

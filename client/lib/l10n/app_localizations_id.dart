@@ -37,6 +37,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsLanguageSystem => 'Default sistem';
 
   @override
+  String get settingsSoundTitle => 'Suara';
+
+  @override
+  String get settingsSoundSubtitle => 'Klik, langkah, dan animasi permainan';
+
+  @override
   String get settingsAddBotsTitle => 'Tambah bot setelah 30 dtk';
 
   @override

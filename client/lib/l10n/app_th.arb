@@ -10,6 +10,8 @@
   "settingsTitle": "การตั้งค่า",
   "settingsLanguage": "ภาษา",
   "settingsLanguageSystem": "ตามระบบ",
+  "settingsSoundTitle": "เสียง",
+  "settingsSoundSubtitle": "คลิก ตาเล่น และแอนิเมชันในเกม",
   "settingsAddBotsTitle": "เพิ่มบอทหลัง 30 วินาที",
   "settingsAddBotsSubtitle": "ในการจับคู่: หากไม่พบคู่แข่งใน 30 วินาที เกมจะเริ่มกับบอท (เงินเดิมพันรีเซ็ตเป็น 1 บรอนซ์)",
   "settingsFriendsOnlyTitle": "ข้อความจากเพื่อนเท่านั้น",

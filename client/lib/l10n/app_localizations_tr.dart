@@ -37,6 +37,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsLanguageSystem => 'Sistem varsayılanı';
 
   @override
+  String get settingsSoundTitle => 'Ses';
+
+  @override
+  String get settingsSoundSubtitle => 'Tıklamalar, hamleler ve oyun animasyonları';
+
+  @override
   String get settingsAddBotsTitle => '30 sn sonra bot ekle';
 
   @override

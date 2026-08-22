@@ -37,6 +37,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemets standard';
 
   @override
+  String get settingsSoundTitle => 'Ljud';
+
+  @override
+  String get settingsSoundSubtitle => 'Klick, drag och spelanimationer';
+
+  @override
   String get settingsAddBotsTitle => 'Lägg till bottar efter 30 s';
 
   @override

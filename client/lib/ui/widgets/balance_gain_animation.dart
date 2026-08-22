@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
@@ -183,6 +184,7 @@ Future<void> playBalanceGain({
 
     // Всегда держим тулбар на [from], пока не дорисуем счётчик —
     // даже если auth уже обновлён.
+    Sfx.play(SfxId.coins);
     controller.begin(fromBronze: from, forceShow: forceShow);
 
     try {

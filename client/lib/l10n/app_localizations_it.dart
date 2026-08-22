@@ -37,6 +37,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsLanguageSystem => 'Predefinita di sistema';
 
   @override
+  String get settingsSoundTitle => 'Suono';
+
+  @override
+  String get settingsSoundSubtitle => 'Click, mosse e animazioni di gioco';
+
+  @override
   String get settingsAddBotsTitle => 'Aggiungi bot dopo 30 s';
 
   @override

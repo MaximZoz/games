@@ -4,6 +4,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/ui/uno/uno_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -49,6 +50,11 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
+  Sfx.play(
+    faceDown
+        ? SfxId.cardDraw
+        : (card.kind == UnoCardKind.number ? SfxId.cardPlay : SfxId.cardSpecial),
+  );
 
   final controller = AnimationController(
     vsync: _UnoFlyTicker(),

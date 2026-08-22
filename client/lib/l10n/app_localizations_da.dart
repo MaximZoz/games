@@ -37,6 +37,12 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
+  String get settingsSoundTitle => 'Lyd';
+
+  @override
+  String get settingsSoundSubtitle => 'Klik, træk og spilanimationer';
+
+  @override
   String get settingsAddBotsTitle => 'Tilføj bots efter 30 s';
 
   @override

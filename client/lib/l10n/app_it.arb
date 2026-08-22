@@ -10,6 +10,8 @@
   "settingsTitle": "Impostazioni",
   "settingsLanguage": "Lingua",
   "settingsLanguageSystem": "Predefinita di sistema",
+  "settingsSoundTitle": "Suono",
+  "settingsSoundSubtitle": "Click, mosse e animazioni di gioco",
   "settingsAddBotsTitle": "Aggiungi bot dopo 30 s",
   "settingsAddBotsSubtitle": "In matchmaking: se non trovi un avversario in 30 secondi, la partita inizia con un bot (puntata riportata a 1 bronzo)",
   "settingsFriendsOnlyTitle": "Messaggi solo dagli amici",

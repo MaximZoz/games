@@ -37,6 +37,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsLanguageSystem => 'Podle systému';
 
   @override
+  String get settingsSoundTitle => 'Zvuk';
+
+  @override
+  String get settingsSoundSubtitle => 'Kliknutí, tahy a herní animace';
+
+  @override
   String get settingsAddBotsTitle => 'Přidávat boty po 30 s';
 
   @override

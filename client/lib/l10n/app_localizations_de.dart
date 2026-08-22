@@ -37,6 +37,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
+  String get settingsSoundTitle => 'Ton';
+
+  @override
+  String get settingsSoundSubtitle => 'Klicks, Züge und Spielanimationen';
+
+  @override
   String get settingsAddBotsTitle => 'Bots nach 30 s hinzufügen';
 
   @override

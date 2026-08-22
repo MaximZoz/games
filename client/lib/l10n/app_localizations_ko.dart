@@ -37,6 +37,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsLanguageSystem => '시스템 기본값';
 
   @override
+  String get settingsSoundTitle => '소리';
+
+  @override
+  String get settingsSoundSubtitle => '클릭, 수와 게임 애니메이션';
+
+  @override
   String get settingsAddBotsTitle => '30초 후 봇 추가';
 
   @override

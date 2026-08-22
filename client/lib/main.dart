@@ -10,6 +10,8 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/ios_viewport_sync.dart';
+import 'core/settings_provider.dart';
+import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
     as push_nav;
@@ -115,6 +117,8 @@ class MultiGamesApp extends ConsumerWidget {
     final locale = effectiveAppLocale(localeChoice);
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
+    final soundOn = ref.watch(soundEnabledProvider);
+    Sfx.setEnabled(soundOn);
     return MaterialApp.router(
       title: 'Zozu Games',
       debugShowCheckedModeBanner: false,
@@ -135,6 +139,7 @@ class MultiGamesApp extends ConsumerWidget {
           surface: AppColors.surfaceUnified,
         ),
         useMaterial3: true,
+        splashFactory: const SfxSplashFactory(InkRipple.splashFactory),
         scaffoldBackgroundColor: AppColors.surfaceUnified,
         // «Предметы», «Монеты за вход» и все AppBar-заголовки — по центру.
         appBarTheme: const AppBarTheme(
@@ -193,8 +198,11 @@ class MultiGamesApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return BootSplashHost(
-          child: child ?? const SizedBox.shrink(),
+        return Listener(
+          onPointerDown: (_) => Sfx.instance.warmup(),
+          child: BootSplashHost(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );
