@@ -319,6 +319,49 @@ void main() {
       expect(v.isOver, isFalse);
     });
 
+    test('bot calls all-in with a strong hole card', () {
+      final g = PokerEngine.newGame(
+        playerIds: const ['p0', 'p1'],
+        startingChips: 1000,
+        smallBlind: 5,
+        bigBlind: 10,
+        dealerIndex: 0,
+        rng: Random(1),
+      );
+      g.players[0].hole = [_c(14, Suit.spades), _c(11, Suit.hearts)];
+      g.players[1].allIn = true;
+      g.players[1].chips = 0;
+      g.currentBet = 1000;
+      g.players[0].bet = 5;
+      g.players[0].chips = 995;
+      g.actingIndex = 0;
+      expect(pokerBotHasCallStrength(g, g.players[0]), isTrue);
+      expect(
+        pokerBotAction(g).type,
+        anyOf(PokerActionType.call, PokerActionType.allIn),
+      );
+    });
+
+    test('bot folds all-in with junk hole cards', () {
+      final g = PokerEngine.newGame(
+        playerIds: const ['p0', 'p1'],
+        startingChips: 1000,
+        smallBlind: 5,
+        bigBlind: 10,
+        dealerIndex: 0,
+        rng: Random(1),
+      );
+      g.players[0].hole = [_c(7, Suit.spades), _c(2, Suit.hearts)];
+      g.players[1].allIn = true;
+      g.players[1].chips = 0;
+      g.currentBet = 1000;
+      g.players[0].bet = 5;
+      g.players[0].chips = 995;
+      g.actingIndex = 0;
+      expect(pokerBotHasCallStrength(g, g.players[0]), isFalse);
+      expect(pokerBotAction(g).type, PokerActionType.fold);
+    });
+
     test('registry recognizes offline ids', () {
       final session = OfflinePokerSession.create(
         humanUserId: 'me',

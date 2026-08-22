@@ -135,6 +135,7 @@ class OfflineUnoSession extends ChangeNotifier {
       lastRoundPoints: game.lastRoundPoints,
       lastRoundNumber: game.lastRoundNumber,
       canChallengeUno: game.canChallengeUno(me),
+      canCallUno: game.canCallUno(me),
       unoVulnerableAtMs: game.unoVulnerableAtMs,
       canChallengeWd4: game.currentIndex == me &&
           game.status == UnoStatus.awaitingWd4Challenge,
@@ -179,6 +180,7 @@ class OfflineUnoSession extends ChangeNotifier {
   bool _botShouldAct() {
     if (_disposed || _engine.isOver) return false;
     if (_engine.status == UnoStatus.betweenRounds) return false;
+    if (_firstBotWhoCanCatch() != null) return true;
     if (_engine.status == UnoStatus.awaitingColor) {
       final chooser = _engine.colorChooserIndex;
       return chooser >= 0 &&
@@ -188,6 +190,14 @@ class OfflineUnoSession extends ChangeNotifier {
     final index = _engine.currentIndex;
     if (index < 0 || index >= _engine.players.length) return false;
     return _engine.players[index].userId.startsWith('bot:');
+  }
+
+  int? _firstBotWhoCanCatch() {
+    for (var i = 0; i < _engine.players.length; i++) {
+      if (!_engine.players[i].userId.startsWith('bot:')) continue;
+      if (_engine.canChallengeUno(i)) return i;
+    }
+    return null;
   }
 
   void _scheduleBot() {
@@ -237,20 +247,24 @@ class OfflineUnoSession extends ChangeNotifier {
   }
 
   void _applyBotAction() {
-    final index = _engine.currentIndex;
-    if (_engine.status == UnoStatus.active &&
-        _engine.canChallengeUno(index) &&
-        _random.nextDouble() < 0.75) {
+    final catcher = _firstBotWhoCanCatch();
+    if (catcher != null && _random.nextDouble() < 0.75) {
       try {
         _engine.apply(UnoAction(
           UnoActionType.challengeUno,
-          actorUserId: _engine.players[index].userId,
+          actorUserId: _engine.players[catcher].userId,
           targetUserId: _engine.players[_engine.unoVulnerableIndex].userId,
         ));
         return;
       } on StateError {
-        // дальше обычный ход
+        // дальше обычный ход, если это ход бота
       }
+    }
+    final index = _engine.currentIndex;
+    if (index < 0 ||
+        index >= _engine.players.length ||
+        !_engine.players[index].userId.startsWith('bot:')) {
+      return;
     }
     _engine.apply(pickUnoBotAction(_engine, random: _random));
   }

@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count}张",
   "unoYouWon": "你赢得了比赛！",
   "unoYouLost": "比赛结束",
+  "unoYouLostTimeout": "你因超时而输了",
   "unoWinner": "获胜者：{name}",
   "unoRoundWonBy": "{name} 赢得本局",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "逆时针",
   "unoErrStackSameOnly": "只能用 +2 叠 +2，用 +4 叠 +4。不能把 +2 叠在 +4 上。",
   "unoErrCatchTooEarly": "等一秒——对方还可以喊 Uno。",
+  "unoErrCallTooLate": "不能再喊 Uno 了。下一名玩家已经出牌。",
   "gamesInDevelopment": "开发中",
   "rulesPokerPlayers": "玩家：{players}。",
   "@rulesPokerPlayers": {

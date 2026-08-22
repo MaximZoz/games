@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kort",
   "unoYouWon": "Du vant kampen!",
   "unoYouLost": "Kampen er over",
+  "unoYouLostTimeout": "Du tapte på tid",
   "unoWinner": "Vinner: {name}",
   "unoRoundWonBy": "{name} vinner runden",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Mot klokken",
   "unoErrStackSameOnly": "På +2 kan bare +2 legges, på +4 bare +4. +2 på +4 er ikke tillatt.",
   "unoErrCatchTooEarly": "Vent et sekund — de kan fortsatt si Uno.",
+  "unoErrCallTooLate": "Du kan ikke lenger si Uno. Neste spiller har allerede spilt.",
   "gamesInDevelopment": "Under utvikling",
   "rulesPokerPlayers": "Spillere: {players}.",
   "@rulesPokerPlayers": {

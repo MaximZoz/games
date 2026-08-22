@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} ใบ",
   "unoYouWon": "คุณชนะเกม!",
   "unoYouLost": "เกมจบแล้ว",
+  "unoYouLostTimeout": "คุณแพ้เพราะหมดเวลา",
   "unoWinner": "ผู้ชนะ: {name}",
   "unoRoundWonBy": "{name} ชนะรอบ",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "ทวนเข็มนาฬิกา",
   "unoErrStackSameOnly": "เล่น +2 ทับ +2 หรือ +4 ทับ +4 เท่านั้น ห้ามวาง +2 ทับ +4",
   "unoErrCatchTooEarly": "รอหนึ่งวินาที — พวกเขายังพูดอุโนได้",
+  "unoErrCallTooLate": "พูดอุโนไม่ได้อีกแล้ว ผู้เล่นถัดไปเดินไปแล้ว",
   "gamesInDevelopment": "กำลังพัฒนา",
   "rulesPokerPlayers": "ผู้เล่น: {players}.",
   "@rulesPokerPlayers": {

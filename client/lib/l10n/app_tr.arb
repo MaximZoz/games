@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kart",
   "unoYouWon": "Maçı kazandınız!",
   "unoYouLost": "Maç bitti",
+  "unoYouLostTimeout": "Süre dolduğu için kaybettiniz",
   "unoWinner": "Kazanan: {name}",
   "unoRoundWonBy": "{name} turu kazanır",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Saat yönünün tersine",
   "unoErrStackSameOnly": "+2 üzerine yalnızca +2, +4 üzerine yalnızca +4 konur. +2, +4 üzerine atılamaz.",
   "unoErrCatchTooEarly": "Bir saniye bekleyin — hâlâ Uno diyebilirler.",
+  "unoErrCallTooLate": "Artık Uno diyemezsiniz. Sıradaki oyuncu zaten oynadı.",
   "gamesInDevelopment": "Geliştiriliyor",
   "rulesPokerPlayers": "Oyuncular: {players}.",
   "@rulesPokerPlayers": {

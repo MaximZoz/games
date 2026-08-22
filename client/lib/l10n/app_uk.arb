@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} карт",
   "unoYouWon": "Ви виграли матч!",
   "unoYouLost": "Матч завершено",
+  "unoYouLostTimeout": "Ви програли за часом",
   "unoWinner": "Переможець: {name}",
   "unoRoundWonBy": "{name} виграє раунд",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Проти годинникової стрілки",
   "unoErrStackSameOnly": "На +2 можна відповісти лише +2, на +4 — лише +4. +2 на +4 класти не можна.",
   "unoErrCatchTooEarly": "Зачекайте секунду — вони ще можуть сказати «Уно».",
+  "unoErrCallTooLate": "Сказати «Уно» вже не можна: наступний гравець уже сходив.",
   "gamesInDevelopment": "В розробці",
   "rulesPokerPlayers": "Гравці: {players}.",
   "@rulesPokerPlayers": {

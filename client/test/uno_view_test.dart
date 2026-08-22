@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
+import 'package:multigames_client/games/uno/uno_seats.dart';
 
 void main() {
   test('UnoGameView reads my_index and WD4 proof card', () {
@@ -164,5 +165,50 @@ void main() {
       'new',
     );
     expect(unoVisibleDiscard(serverTop: oldTop)?.id, 'old');
+  });
+
+  test('opponent seats go clockwise from the hero', () {
+    expect(
+      unoOpponentSeatOrder(myIndex: 0, playerCount: 4, direction: 1),
+      [1, 2, 3],
+    );
+    expect(
+      unoOpponentSeatOrder(myIndex: 2, playerCount: 4, direction: 1),
+      [3, 0, 1],
+    );
+    expect(
+      unoOpponentSeatOrder(myIndex: 1, playerCount: 3, direction: -1),
+      [0, 2],
+    );
+  });
+
+  test('timeout loss is detected for the eliminated player', () {
+    final view = UnoGameView.fromJson({
+      'id': 'g-timeout',
+      'players': [
+        {
+          'user_id': 'me',
+          'seat': 0,
+          'hand': <Map<String, Object>>[],
+          'hand_count': 4,
+          'score': 0,
+          'forfeited': true,
+        },
+        {
+          'user_id': 'opp',
+          'seat': 1,
+          'hand': <Map<String, Object>>[],
+          'hand_count': 3,
+          'score': 0,
+        },
+      ],
+      'my_index': 0,
+      'status': 'over',
+      'winner_user_ids': ['opp'],
+      'is_timeout': true,
+      'stake_bronze': 2,
+    });
+    expect(view.iLostOnTimeout, isTrue);
+    expect(view.iWon, isFalse);
   });
 }

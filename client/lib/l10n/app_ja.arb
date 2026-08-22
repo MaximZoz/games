@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count}枚",
   "unoYouWon": "勝利しました！",
   "unoYouLost": "試合終了",
+  "unoYouLostTimeout": "時間切れで負けました",
   "unoWinner": "勝者：{name}",
   "unoRoundWonBy": "{name}がラウンド勝利",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "反時計回り",
   "unoErrStackSameOnly": "+2の上には+2、+4の上には+4だけです。+2を+4の上には出せません。",
   "unoErrCatchTooEarly": "1秒待ってください。まだUNOを宣言できます。",
+  "unoErrCallTooLate": "もうUNOは言えません。次のプレイヤーがすでに出しました。",
   "gamesInDevelopment": "開発中",
   "rulesPokerPlayers": "人数: {players}。",
   "@rulesPokerPlayers": {

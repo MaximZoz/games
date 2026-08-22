@@ -713,6 +713,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get unoYouLost => 'เกมจบแล้ว';
 
   @override
+  String get unoYouLostTimeout => 'คุณแพ้เพราะหมดเวลา';
+
+  @override
   String unoWinner(String name) {
     return 'ผู้ชนะ: $name';
   }
@@ -744,6 +747,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get unoErrCatchTooEarly => 'รอหนึ่งวินาที — พวกเขายังพูดอุโนได้';
+
+  @override
+  String get unoErrCallTooLate => 'พูดอุโนไม่ได้อีกแล้ว ผู้เล่นถัดไปเดินไปแล้ว';
 
   @override
   String get gamesInDevelopment => 'กำลังพัฒนา';

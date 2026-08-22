@@ -38,6 +38,9 @@ var rawErrorToKey = map[string]string{
 	"uno: current player has a legal card to play":            ErrUnoHaveLegalCard,
 	"uno: keep is only allowed after drawing a playable card": ErrUnoCannotKeep,
 	"uno: no player can call UNO":                             ErrUnoCallOnlyOneCard,
+	"you cannot call UNO now":                                 ErrUnoCallTooLate,
+	"not a player":                                            ErrCannotActNow,
+	"next round is not pending":                               ErrNextRoundNotReady,
 	"uno: challenger is not a player":                         ErrUnoCannotCatchUno,
 	"uno: player cannot challenge themselves":                 ErrUnoCannotCatchSelf,
 	"uno: no Wild Draw Four can be challenged":                ErrUnoNoPlus4Challenge,
@@ -117,6 +120,7 @@ const (
 	ErrUnoHaveLegalCard       = "You still have a card you can play. Take from the deck only if you have no legal card."
 	ErrUnoCannotKeep          = "You can keep a card only after drawing a playable one."
 	ErrUnoCallOnlyOneCard     = "You can say Uno only when you have one card left."
+	ErrUnoCallTooLate         = "You can no longer say Uno. The next player has already moved."
 	ErrUnoCannotCatchUno      = "This player cannot be caught for forgetting Uno."
 	ErrUnoCannotCatchSelf     = "You cannot catch yourself for forgetting Uno."
 	ErrUnoCatchTooEarly       = "Wait a second — they can still say Uno."

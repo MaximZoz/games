@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} lá",
   "unoYouWon": "Bạn đã thắng trận!",
   "unoYouLost": "Trận đấu kết thúc",
+  "unoYouLostTimeout": "Bạn thua vì hết giờ",
   "unoWinner": "Người thắng: {name}",
   "unoRoundWonBy": "{name} thắng vòng",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Ngược chiều kim đồng hồ",
   "unoErrStackSameOnly": "Chỉ được đánh +2 lên +2, hoặc +4 lên +4. Không được xếp +2 lên +4.",
   "unoErrCatchTooEarly": "Đợi một giây — họ vẫn có thể hô Uno.",
+  "unoErrCallTooLate": "Không thể hô Uno nữa. Người tiếp theo đã đánh.",
   "gamesInDevelopment": "Đang phát triển",
   "rulesPokerPlayers": "Người chơi: {players}.",
   "@rulesPokerPlayers": {

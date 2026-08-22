@@ -236,11 +236,10 @@ class UnoEngine {
       nowMs > 0 ? nowMs : DateTime.now().millisecondsSinceEpoch;
 
   bool canChallengeUno(int playerIndex) {
-    if (playerIndex < 0 ||
-        playerIndex >= players.length ||
-        currentIndex != playerIndex) {
+    if (playerIndex < 0 || playerIndex >= players.length) {
       return false;
     }
+    if (players[playerIndex].forfeited) return false;
     if (unoVulnerableIndex < 0 || unoVulnerableIndex == playerIndex) {
       return false;
     }
@@ -248,6 +247,15 @@ class UnoEngine {
       return false;
     }
     return true;
+  }
+
+  bool canCallUno(int playerIndex) {
+    if (playerIndex < 0 || playerIndex != unoVulnerableIndex) {
+      return false;
+    }
+    if (playerIndex >= players.length) return false;
+    final player = players[playerIndex];
+    return !player.forfeited && !player.saidUno && player.hand.length == 1;
   }
 
   bool hasLegalPlay(int playerIndex) {

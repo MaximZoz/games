@@ -421,7 +421,8 @@ func (h *GamesHandler) JoinUnoLobby(w http.ResponseWriter, r *http.Request, lobb
 		h.notifyPublicLobbiesChanged()
 	}
 	if maxPlayers > 2 {
-		if _, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, humans, unoGroupChatTitle(maxPlayers), unoGameType); err == nil {
+		if cid, err := store.EnsureGameGroupChat(ctx, h.Pool, lobbyID, humans, unoGroupChatTitle(maxPlayers), unoGameType); err == nil {
+			h.Rdb.HSet(ctx, key, "chat_id", cid.String())
 			h.broadcast(humans, map[string]any{"type": "chat_list_changed"})
 		}
 	}
@@ -717,8 +718,11 @@ func validateUnoActionActor(state *uno.Game, playerIndex int, action uno.Action)
 			return fmt.Errorf("next round is not pending")
 		}
 	case uno.ActionChallengeUno:
-		if state.CurrentIndex != playerIndex {
-			return fmt.Errorf("not your turn")
+		if state.Players[playerIndex].Forfeited {
+			return fmt.Errorf("not a player")
+		}
+		if state.UnoVulnerableIndex == playerIndex {
+			return fmt.Errorf("uno: player cannot challenge themselves")
 		}
 	case uno.ActionCallUno:
 		if state.UnoVulnerableIndex != playerIndex {

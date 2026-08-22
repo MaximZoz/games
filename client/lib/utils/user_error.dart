@@ -84,6 +84,12 @@ String? _friendlyGameMessage(
       blob.contains('подождите секунду')) {
     return l10n.unoErrCatchTooEarly;
   }
+  if (blob.contains('cannot call uno') ||
+      blob.contains('no longer say uno') ||
+      blob.contains('уже нельзя') ||
+      blob.contains('уже сходил')) {
+    return l10n.unoErrCallTooLate;
+  }
   if (blob.startsWith('uno:') ||
       blob.contains('\nuno:') ||
       blob.startsWith('poker:') ||

@@ -713,6 +713,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unoYouLost => 'Матч завершено';
 
   @override
+  String get unoYouLostTimeout => 'Ви програли за часом';
+
+  @override
   String unoWinner(String name) {
     return 'Переможець: $name';
   }
@@ -744,6 +747,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get unoErrCatchTooEarly => 'Зачекайте секунду — вони ще можуть сказати «Уно».';
+
+  @override
+  String get unoErrCallTooLate => 'Сказати «Уно» вже не можна: наступний гравець уже сходив.';
 
   @override
   String get gamesInDevelopment => 'В розробці';

@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} карта",
   "unoYouWon": "Сіз матчты жеңдіңіз!",
   "unoYouLost": "Матч аяқталды",
+  "unoYouLostTimeout": "Уақыт біткендіктен ұтылдыңыз",
   "unoWinner": "Жеңімпаз: {name}",
   "unoRoundWonBy": "{name} раундты ұтады",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Сағат тіліне қарсы",
   "unoErrStackSameOnly": "+2-ге тек +2, +4-ке тек +4 қоюға болады. +2-ні +4-тің үстіне қоюға болмайды.",
   "unoErrCatchTooEarly": "Бір секунд күтіңіз — олар әлі «Uno» айта алады.",
+  "unoErrCallTooLate": "«Uno» айтуға енді болмайды. Келесі ойыншы жүріп қойды.",
   "gamesInDevelopment": "Әзірленуде",
   "rulesPokerPlayers": "Ойыншылар: {players}.",
   "@rulesPokerPlayers": {

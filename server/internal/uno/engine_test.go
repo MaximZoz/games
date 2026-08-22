@@ -443,6 +443,60 @@ func TestUnoCallAndChallengePenalty(t *testing.T) {
 		}
 	})
 
+	t.Run("any other player can catch after the grace", func(t *testing.T) {
+		game := controlledGame(t, 3)
+		played := testNumber("red-play-3p", ColorRed, 7)
+		game.Players[0].Hand = []Card{played, testNumber("last-3p", ColorBlue, 1)}
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: played.ID}); err != nil {
+			t.Fatal(err)
+		}
+		game.NowMs = game.UnoVulnerableAtMs
+		self := game.View("p0")
+		next := game.View("p1")
+		other := game.View("p2")
+		if !self.CanCallUno {
+			t.Fatal("vulnerable player should still be able to say UNO")
+		}
+		if self.CanChallengeUno {
+			t.Fatal("vulnerable player cannot catch themselves")
+		}
+		if !next.CanChallengeUno || !other.CanChallengeUno {
+			t.Fatalf("every other player should catch: next=%v other=%v current=%d", next.CanChallengeUno, other.CanChallengeUno, game.CurrentIndex)
+		}
+		if next.CanCallUno || other.CanCallUno {
+			t.Fatal("only the one-card player can say UNO")
+		}
+		if err := game.Apply(Action{Type: ActionChallengeUno, ActorUserID: "p2", TargetUserID: "p0"}); err != nil {
+			t.Fatal(err)
+		}
+		if got := len(game.Players[0].Hand); got != 3 {
+			t.Fatalf("hand after catch by p2 = %d, want 3", got)
+		}
+	})
+
+	t.Run("UNO button closes after the next player moves", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		played := testNumber("red-play-late", ColorRed, 7)
+		reply := testNumber("red-reply", ColorRed, 3)
+		game.Players[0].Hand = []Card{played, testNumber("last-late", ColorBlue, 1)}
+		game.Players[1].Hand = []Card{reply, testNumber("p1-keep-late", ColorBlue, 2)}
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: played.ID}); err != nil {
+			t.Fatal(err)
+		}
+		if !game.View("p0").CanCallUno {
+			t.Fatal("UNO should be available before the next play")
+		}
+		if err := game.Apply(Action{Type: ActionPlay, CardID: reply.ID}); err != nil {
+			t.Fatal(err)
+		}
+		late := game.View("p0")
+		if late.CanCallUno || late.CanChallengeUno {
+			t.Fatalf("window should close after next play: call=%v catch=%v", late.CanCallUno, late.CanChallengeUno)
+		}
+	})
+
 	t.Run("successful call prevents challenge", func(t *testing.T) {
 		game := controlledGame(t, 2)
 		played := testNumber("red-play", ColorRed, 7)

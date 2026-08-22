@@ -147,6 +147,7 @@ type GameView struct {
 	LastRoundNumber       int          `json:"lastRoundNumber,omitempty"`
 
 	CanChallengeUno    bool  `json:"canChallengeUno"`
+	CanCallUno         bool  `json:"canCallUno"`
 	UnoVulnerableAtMs  int64 `json:"unoVulnerableAtMs,omitempty"`
 	CanChallengeWD4    bool  `json:"canChallengeWd4"`
 	MustChooseColor    bool  `json:"mustChooseColor"`
@@ -301,9 +302,8 @@ func (g *Game) View(forUserID string) GameView {
 	viewerIndex := g.playerIndex(forUserID)
 	view.MyIndex = viewerIndex
 	view.UnoVulnerableAtMs = g.UnoVulnerableAtMs
-	view.CanChallengeUno = viewerIndex == g.CurrentIndex &&
-		g.unoChallengeReady() &&
-		g.UnoVulnerableIndex != viewerIndex
+	view.CanChallengeUno = g.canViewerChallengeUno(viewerIndex)
+	view.CanCallUno = g.canViewerCallUno(viewerIndex)
 	view.CanChallengeWD4 = viewerIndex == g.CurrentIndex &&
 		g.Status == StatusAwaitingWD4Challenge
 	view.MustChooseColor = viewerIndex == g.ColorChooserIndex &&
@@ -923,6 +923,27 @@ func (g *Game) unoChallengeReady() bool {
 		return true
 	}
 	return g.clockMs() >= g.UnoVulnerableAtMs
+}
+
+func (g *Game) canViewerChallengeUno(viewerIndex int) bool {
+	if viewerIndex < 0 || viewerIndex >= len(g.Players) {
+		return false
+	}
+	if g.Players[viewerIndex].Forfeited {
+		return false
+	}
+	if g.UnoVulnerableIndex < 0 || g.UnoVulnerableIndex == viewerIndex {
+		return false
+	}
+	return g.unoChallengeReady()
+}
+
+func (g *Game) canViewerCallUno(viewerIndex int) bool {
+	if viewerIndex < 0 || viewerIndex != g.UnoVulnerableIndex || viewerIndex >= len(g.Players) {
+		return false
+	}
+	player := g.Players[viewerIndex]
+	return !player.Forfeited && !player.SaidUno && len(player.Hand) == 1
 }
 
 func (g *Game) roundSeed() int64 {

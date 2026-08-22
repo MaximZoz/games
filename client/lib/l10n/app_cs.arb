@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} karet",
   "unoYouWon": "Vyhráli jste zápas!",
   "unoYouLost": "Zápas skončil",
+  "unoYouLostTimeout": "Prohráli jste na čas",
   "unoWinner": "Vítěz: {name}",
   "unoRoundWonBy": "{name} vyhrává kolo",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Proti směru hodin",
   "unoErrStackSameOnly": "Na +2 smíte dát jen +2, na +4 jen +4. +2 na +4 dát nelze.",
   "unoErrCatchTooEarly": "Počkejte vteřinu — ještě můžou říct Uno.",
+  "unoErrCallTooLate": "Uno už říct nelze. Další hráč už táhl.",
   "gamesInDevelopment": "Ve vývoji",
   "rulesPokerPlayers": "Hráči: {players}.",
   "@rulesPokerPlayers": {

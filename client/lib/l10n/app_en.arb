@@ -318,6 +318,7 @@
   "unoPendingDraw": "+{count} cards",
   "unoYouWon": "You won the match!",
   "unoYouLost": "Match over",
+  "unoYouLostTimeout": "You lost on time",
   "unoWinner": "Winner: {name}",
   "unoRoundWonBy": "{name} wins the round",
   "unoRoundPointsAwarded": "+{points}",
@@ -327,6 +328,7 @@
   "unoDirectionCounterclockwise": "Counterclockwise",
   "unoErrStackSameOnly": "You can only play +2 on +2, or +4 on +4. A +2 cannot be stacked on +4.",
   "unoErrCatchTooEarly": "Wait a second — they can still say Uno.",
+  "unoErrCallTooLate": "You can no longer say Uno. The next player has already moved.",
   "gamesInDevelopment": "In development",
   "rulesPokerPlayers": "Players: {players}.",
   "@rulesPokerPlayers": {

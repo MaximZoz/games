@@ -1493,6 +1493,12 @@ abstract class AppLocalizations {
   /// **'Матч окончен'**
   String get unoYouLost;
 
+  /// No description provided for @unoYouLostTimeout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы проиграли по времени'**
+  String get unoYouLostTimeout;
+
   /// No description provided for @unoWinner.
   ///
   /// In ru, this message translates to:
@@ -1546,6 +1552,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Подождите секунду — они ещё могут сказать «Уно».'**
   String get unoErrCatchTooEarly;
+
+  /// No description provided for @unoErrCallTooLate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказать «Уно» уже нельзя: следующий игрок уже сходил.'**
+  String get unoErrCallTooLate;
 
   /// No description provided for @gamesInDevelopment.
   ///

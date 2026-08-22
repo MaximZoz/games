@@ -266,6 +266,7 @@
   "unoPendingDraw": "+{count} kart",
   "unoYouWon": "Wygrywasz mecz!",
   "unoYouLost": "Mecz zakończony",
+  "unoYouLostTimeout": "Przegrałeś przez czas",
   "unoWinner": "Zwycięzca: {name}",
   "unoRoundWonBy": "{name} wygrywa rundę",
   "unoRoundPointsAwarded": "+{points}",
@@ -275,6 +276,7 @@
   "unoDirectionCounterclockwise": "Przeciwnie do ruchu wskazówek",
   "unoErrStackSameOnly": "Na +2 można położyć tylko +2, na +4 tylko +4. +2 na +4 jest zabronione.",
   "unoErrCatchTooEarly": "Poczekaj sekundę — wciąż mogą powiedzieć „Uno”.",
+  "unoErrCallTooLate": "Nie można już powiedzieć „Uno”. Następny gracz już wykonał ruch.",
   "gamesInDevelopment": "W trakcie tworzenia",
   "rulesPokerPlayers": "Gracze: {players}.",
   "@rulesPokerPlayers": {

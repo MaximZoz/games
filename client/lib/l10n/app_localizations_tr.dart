@@ -713,6 +713,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unoYouLost => 'Maç bitti';
 
   @override
+  String get unoYouLostTimeout => 'Süre dolduğu için kaybettiniz';
+
+  @override
   String unoWinner(String name) {
     return 'Kazanan: $name';
   }
@@ -744,6 +747,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get unoErrCatchTooEarly => 'Bir saniye bekleyin — hâlâ Uno diyebilirler.';
+
+  @override
+  String get unoErrCallTooLate => 'Artık Uno diyemezsiniz. Sıradaki oyuncu zaten oynadı.';
 
   @override
   String get gamesInDevelopment => 'Geliştiriliyor';
