@@ -612,7 +612,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoIntro => 'כל שחקן מקבל 7 קלפים. שחקו קלף באותו צבע או באותו ערך (מספר או אותה פעולה).';
 
   @override
-  String get rulesUnoPlay => 'דילוג — הבא מפסיד תור. היפוך כיוון בשניים פועל כדילוג. +2 רק על +2 ו-+4 רק על +4: הקנס מצטבר (שתי +2 — הבא שולף 4). אסור לשים +2 על +4. מי שלא מגיב שולף את כל הערימה ומדלג.';
+  String get rulesUnoPlay => 'דילוג — הבא מפסיד תור. היפוך כיוון בשניים פועל כדילוג. +2 רק על +2 ו-+4 רק על +4: הקנס מצטבר (שתי +2 — הבא שולף 4). אסור לשים +2 על +4. מי שלא מגיב שולף את כל הערימה ומדלג. שתי קלפים זהים שאינם שחורים (למשל שתי 8 צהובות) נזרקים יחד: משחקים אחד והתאום יוצא אוטומטית.';
 
   @override
   String get rulesUnoWild => 'קלף שחור קובע צבע חדש. משחקים +4 רק בלי קלף בצבע הנוכחי. היריב יכול לערער: אם ה-+4 היה חוקי הוא שולף 6; אחרת משחק ה-+4 שולף 4 והמערער משחק.';
@@ -624,7 +624,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesUnoWin => 'אחד על אחד עד 100, ב־3+ עד 300. את הסיבוב זוכה מי שמרוקן את היד.';
 
   @override
-  String get rulesUnoCall => 'כשנשאר קלף אחד לחצו «אונו!». עד הפעולה הבאה היריב יכול לתפוס אתכם בלי אונו — ואז שולפים 2 קלפים.';
+  String get rulesUnoCall => 'כשנשאר קלף אחד לחצו מיד «אונו!». יריבים יכולים לתפוס אתכם על שכחת אונו רק אחרי שנייה — ואז שולפים 2 קלפים.';
 
   @override
   String get rulesUnoScoring => 'מי שמרקין ראשון את היד זוכה בסיבוב ומקבל נקודות על ידי היריבים: מספרים לפי ערך, פעולות 20, שחורים 50. אחד על אחד עד 100, ב־3+ עד 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'נגד כיוון השעון';
+
+  @override
+  String get unoErrStackSameOnly => 'אפשר לשים +2 רק על +2 ו-+4 רק על +4. אי אפשר לשים +2 על +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'חכו שנייה — עדיין אפשר להגיד אונו.';
 
   @override
   String get gamesInDevelopment => 'בפיתוח';

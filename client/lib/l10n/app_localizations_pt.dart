@@ -612,7 +612,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoIntro => 'Cada um recebe 7 cartas. Jogue uma carta da mesma cor ou do mesmo valor (número ou mesma ação).';
 
   @override
-  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 só empilha em +2 e +4 só em +4: a penalidade soma (dois +2 fazem o próximo comprar 4). Não se joga +2 em +4. Quem não empilhar compra o monte inteiro e perde a vez.';
+  String get rulesUnoPlay => 'Pular — o próximo perde a vez. Inverter com dois jogadores vale como Pular. +2 só empilha em +2 e +4 só em +4: a penalidade soma (dois +2 fazem o próximo comprar 4). Não se joga +2 em +4. Quem não empilhar compra o monte inteiro e perde a vez. Duas cartas iguais não pretas (por exemplo dois 8 amarelos) são descartadas juntas: jogue uma e a gémea sai automaticamente.';
 
   @override
   String get rulesUnoWild => 'Uma carta preta define uma nova cor. Jogue +4 só se não tiver carta da cor atual. O adversário pode contestar: se o +4 era legal, compra 6; senão o autor do +4 compra 4 e o contestador joga.';
@@ -624,7 +624,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesUnoWin => 'Em 1x1 até 100 pontos; com 3+ jogadores, até 300. A rodada é de quem esvaziar a mão.';
 
   @override
-  String get rulesUnoCall => 'Quando restar uma carta, toque em “Uno!”. Até a próxima ação, um adversário pode pegá-lo sem Uno — então você compra 2.';
+  String get rulesUnoCall => 'Quando restar uma carta, toque já em “Uno!”. Os outros só podem apanhá-lo por esquecer o Uno após um segundo — então compra 2.';
 
   @override
   String get rulesUnoScoring => 'Quem esvaziar a mão vence a rodada e soma as cartas dos rivais: números pelo valor, ações 20, pretas 50. Em 1x1 até 100; com 3+ jogadores, até 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Sentido anti-horário';
+
+  @override
+  String get unoErrStackSameOnly => 'Só pode jogar +2 em +2, ou +4 em +4. Não se pode empilhar +2 em +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Espere um segundo — ainda podem dizer Uno.';
 
   @override
   String get gamesInDevelopment => 'Em desenvolvimento';

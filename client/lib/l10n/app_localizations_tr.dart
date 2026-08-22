@@ -612,7 +612,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoIntro => 'Herkese 7 kart dağıtılır. Aynı renk veya aynı değerde (sayı ya da aynı özel kart) bir kart oynayın.';
 
   @override
-  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder.';
+  String get rulesUnoPlay => 'Atla — sıradaki turunu kaybeder. İki kişide yön değiştirme Atla gibi çalışır. +2 yalnızca +2 üzerine, +4 yalnızca +4 üzerine konur: ceza toplanır (iki +2 sonraki 4 kart çeker). +2, +4 üzerine oynanamaz. Cevap vermeyen tüm yığını çeker ve turunu kaybeder. Aynı iki siyah olmayan kart (ör. iki sarı 8) birlikte atılır: birini oynayın, ikizi otomatik gider.';
 
   @override
   String get rulesUnoWild => 'Siyah kart yeni renk seçer. +4 yalnızca elde mevcut renk yoksa oynanır. Rakip itiraz edebilir: +4 yasal ise 6 çeker; değilse +4 oynayan 4 çeker ve itiraz eden oynar.';
@@ -624,7 +624,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesUnoWin => 'İkişer 100, 3+ oyuncuda 300. Turu elini bitiren kazanır.';
 
   @override
-  String get rulesUnoCall => 'Bir kart kaldığında «Uno!»ya basın. Sonraki hamleden önce rakip sizi Unosuz yakalayabilir — o zaman 2 kart çekersiniz.';
+  String get rulesUnoCall => 'Bir kart kaldığında hemen «Uno!»ya basın. Rakipler Unoyu unuttuğunuz için sizi ancak bir saniye sonra yakalayabilir — o zaman 2 kart çekersiniz.';
 
   @override
   String get rulesUnoScoring => 'Kartlarını ilk bitiren turu kazanır ve rakiplerin ellerinden puan alır: sayılar nominal, özel kartlar 20, siyahlar 50. İkişer 100, 3+ oyuncuda 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Saat yönünün tersine';
+
+  @override
+  String get unoErrStackSameOnly => '+2 üzerine yalnızca +2, +4 üzerine yalnızca +4 konur. +2, +4 üzerine atılamaz.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Bir saniye bekleyin — hâlâ Uno diyebilirler.';
 
   @override
   String get gamesInDevelopment => 'Geliştiriliyor';

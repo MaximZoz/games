@@ -102,21 +102,22 @@ func Normalize(raw string) string {
 // T translates a canonical English API error key into lang.
 // For en, returns the key as-is (after resolving legacy Russian keys).
 func T(lang, key string) string {
-	key = strings.TrimSpace(key)
+	key = Canonical(key)
 	if key == "" {
 		return key
 	}
 	lang = Normalize(lang)
-
-	if en, ok := legacyRUToEN[key]; ok {
-		key = en
-	}
 
 	if lang == LangEN {
 		return key
 	}
 
 	if byLang, ok := catalog[key]; ok {
+		if v := byLang[lang]; v != "" {
+			return v
+		}
+	}
+	if byLang, ok := actionCatalog[key]; ok {
 		if v := byLang[lang]; v != "" {
 			return v
 		}

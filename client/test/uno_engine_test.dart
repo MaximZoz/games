@@ -273,4 +273,87 @@ void main() {
     expect(engine.players[1].hand.length, greaterThanOrEqualTo(5));
     expect(engine.currentIndex, 0);
   });
+
+  test('identical non-wild pair is dumped together', () {
+    final first = number('yellow-8-a', UnoColor.yellow, 8);
+    final second = number('yellow-8-b', UnoColor.yellow, 8);
+    final engine = controlled(
+      firstHand: [first, second, number('keep', UnoColor.blue, 1)],
+    );
+    engine.discardPile = [number('top-yellow-3', UnoColor.yellow, 3)];
+    engine.currentColor = UnoColor.yellow;
+    engine.apply(UnoAction(UnoActionType.play, cardId: first.id));
+    expect(engine.players[0].hand, hasLength(1));
+    expect(engine.topDiscard?.id, second.id);
+    expect(engine.currentIndex, 1);
+    expect(engine.lastPlayedCards, hasLength(2));
+  });
+
+  test('identical +2 pair adds four to the stack', () {
+    final first = action('red-dt-a', UnoColor.red, UnoCardKind.drawTwo);
+    final second = action('red-dt-b', UnoColor.red, UnoCardKind.drawTwo);
+    final engine = controlled(
+      firstHand: [first, second, number('keep', UnoColor.blue, 1)],
+    );
+    engine.apply(UnoAction(UnoActionType.play, cardId: first.id));
+    expect(engine.pendingDraw, 4);
+    expect(engine.players[0].hand, hasLength(1));
+  });
+
+  test('+2 is not playable on +4 while the penalty is open', () {
+    final wd4 = action('wd4', UnoColor.wild, UnoCardKind.wildDrawFour);
+    final plusTwo = action('plus-two', UnoColor.red, UnoCardKind.drawTwo);
+    final engine = controlled(
+      firstHand: [wd4, number('remain', UnoColor.yellow, 2)],
+      secondHand: [plusTwo, number('p1-keep', UnoColor.blue, 3)],
+    );
+    engine.apply(UnoAction(
+      UnoActionType.play,
+      cardId: wd4.id,
+      color: UnoColor.red,
+    ));
+    expect(engine.status, UnoStatus.awaitingWd4Challenge);
+    expect(engine.pendingDraw, 4);
+    expect(engine.canPlay(1, plusTwo), isFalse);
+  });
+
+  test('UNO catch waits one second but call is immediate', () {
+    final played = number('red-play', UnoColor.red, 7);
+    final engine = controlled(
+      firstHand: [played, number('last', UnoColor.blue, 1)],
+    );
+    engine.nowMs = 10000;
+    engine.apply(UnoAction(UnoActionType.play, cardId: played.id));
+    expect(engine.unoVulnerableIndex, 0);
+    expect(engine.canChallengeUno(1), isFalse);
+    expect(
+      () => engine.apply(UnoAction(
+        UnoActionType.challengeUno,
+        actorUserId: 'p1',
+        targetUserId: 'p0',
+      )),
+      throwsStateError,
+    );
+
+    engine.apply(const UnoAction(UnoActionType.callUno, actorUserId: 'p0'));
+    expect(engine.players[0].saidUno, isTrue);
+    expect(engine.unoVulnerableIndex, -1);
+  });
+
+  test('UNO catch succeeds after the one-second grace', () {
+    final played = number('red-play', UnoColor.red, 7);
+    final engine = controlled(
+      firstHand: [played, number('last', UnoColor.blue, 1)],
+    );
+    engine.nowMs = 10000;
+    engine.apply(UnoAction(UnoActionType.play, cardId: played.id));
+    engine.nowMs = engine.unoVulnerableAtMs;
+    expect(engine.canChallengeUno(1), isTrue);
+    engine.apply(UnoAction(
+      UnoActionType.challengeUno,
+      actorUserId: 'p1',
+      targetUserId: 'p0',
+    ));
+    expect(engine.players[0].hand, hasLength(3));
+  });
 }

@@ -1310,7 +1310,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoPlay.
   ///
   /// In ru, this message translates to:
-  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 можно класть только на +2, +4 — только на +4: штраф суммируется (две +2 — следующий берёт 4). +2 на +4 класть нельзя. Кто не отвечает, берёт всю стопку и пропускает ход.'**
+  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 можно класть только на +2, +4 — только на +4: штраф суммируется (две +2 — следующий берёт 4). +2 на +4 класть нельзя. Кто не отвечает, берёт всю стопку и пропускает ход. Две одинаковые недикие карты (например, две жёлтые 8) сбрасываются вместе: достаточно кинуть одну — вторая уходит автоматически.'**
   String get rulesUnoPlay;
 
   /// No description provided for @rulesUnoWild.
@@ -1334,7 +1334,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoCall.
   ///
   /// In ru, this message translates to:
-  /// **'Когда остаётся одна карта, нажмите «Уно!». Пока не сделан следующий ход, соперник может поймать вас без «Уно» — тогда вы берёте 2 карты.'**
+  /// **'Когда остаётся одна карта, сразу нажмите «Уно!». Соперники могут поймать вас без «Уно» только через секунду — тогда вы берёте 2 карты.'**
   String get rulesUnoCall;
 
   /// No description provided for @rulesUnoScoring.
@@ -1534,6 +1534,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Против часовой стрелки'**
   String get unoDirectionCounterclockwise;
+
+  /// No description provided for @unoErrStackSameOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'На +2 можно ответить только +2, на +4 — только +4. +2 на +4 класть нельзя.'**
+  String get unoErrStackSameOnly;
+
+  /// No description provided for @unoErrCatchTooEarly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подождите секунду — они ещё могут сказать «Уно».'**
+  String get unoErrCatchTooEarly;
 
   /// No description provided for @gamesInDevelopment.
   ///

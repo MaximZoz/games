@@ -612,7 +612,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoIntro => 'Har kimga 7 ta karta tarqatiladi. Xuddi shu rang yoki xuddi shu qiymatdagi (raqam yoki bir xil maxsus) kartani yuring.';
 
   @override
-  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 ni faqat +2 ustiga, +4 ni faqat +4 ustiga qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). +2 ni +4 ustiga qo‘yib bo‘lmaydi. Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.';
+  String get rulesUnoPlay => 'O‘tkazish — keyingi o‘yinchi yurishni yo‘qotadi. Ikki kishida yo‘nalishni o‘zgartirish o‘tkazishdek ishlaydi. +2 ni faqat +2 ustiga, +4 ni faqat +4 ustiga qo‘yish mumkin: jarima qo‘shiladi (ikkita +2 — keyingisi 4 ta oladi). +2 ni +4 ustiga qo‘yib bo‘lmaydi. Javob bermagan butun to‘plamni oladi va yurishni o‘tkazadi.Bir xil ikkita yovvoyi bo‘lmagan karta (masalan, ikkita sariq 8) birga tashlanadi: bittasini tashlasangiz, jufti o‘zi ketadi.';
 
   @override
   String get rulesUnoWild => 'Qora karta yangi rang belgilaydi. +4 ni faqat joriy rang kartasi bo‘lmasa tashlash mumkin. Raqib e’tiroz qilishi mumkin: +4 qonuniy bo‘lsa — e’tirozchi 6 oladi; aks holda +4 muallifi 4 oladi, e’tirozchi yuradi.';
@@ -624,7 +624,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesUnoWin => 'Ikki kishida 100, 3+ o‘yinchida 300. Raundni barcha kartasini tashlagan yutadi.';
 
   @override
-  String get rulesUnoCall => 'Bitta karta qolganda «Uno!» ni bosing. Keyingi yurishgacha raqib sizni Unosiz ushlashi mumkin — unda 2 karta olasiz.';
+  String get rulesUnoCall => 'Bitta karta qolganda darhol «Uno!» ni bosing. Raqiblar Unosiz sizni faqat bir soniyadan keyin ushlashi mumkin — unda 2 karta olasiz.';
 
   @override
   String get rulesUnoScoring => 'Kartalarini birinchi tashlagan raundni yutadi va raqiblar qo‘lidagi ochkolarni oladi: raqamlar — qiymati, maxsuslar — 20, qoralar — 50. Ikki kishida 100, 3+ o‘yinchida 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Soat yo‘nalishiga qarshi';
+
+  @override
+  String get unoErrStackSameOnly => '+2 ustiga faqat +2, +4 ustiga faqat +4 qo‘yiladi. +2 ni +4 ustiga qo‘yib bo‘lmaydi.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Bir soniya kuting — ular hali «Uno» deyishlari mumkin.';
 
   @override
   String get gamesInDevelopment => 'Ishlanmoqda';

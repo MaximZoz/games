@@ -612,7 +612,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoIntro => 'Każdy dostaje 7 kart. Zagraj kartę tego samego koloru lub tej samej wartości (cyfra albo ta sama akcja).';
 
   @override
-  String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 kładzie się tylko na +2, a +4 tylko na +4: kara się sumuje (dwa +2 — następny dobiera 4). +2 na +4 kłaść nie wolno. Kto nie odpowie, dobiera cały stos i traci turę.';
+  String get rulesUnoPlay => 'Pominięcie — następny traci turę. Zmiana kierunku we dwójkę działa jak pominięcie. +2 kładzie się tylko na +2, a +4 tylko na +4: kara się sumuje (dwa +2 — następny dobiera 4). +2 na +4 kłaść nie wolno. Kto nie odpowie, dobiera cały stos i traci turę. Dwie takie same niedzika karty (np. dwie żółte 8) zrzuca się razem: zagraj jedną — druga leci automatycznie.';
 
   @override
   String get rulesUnoWild => 'Czarna karta ustala nowy kolor. +4 tylko gdy nie masz karty bieżącego koloru. Przeciwnik może zakwestionować: jeśli +4 było legalne, dobiera 6; jeśli nie — autor +4 dobiera 4, a kwestionujący gra.';
@@ -624,7 +624,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesUnoWin => 'We dwóch do 100 punktów, przy 3+ graczach do 300. Rundę wygrywa gracz, który zrzuci wszystkie karty.';
 
   @override
-  String get rulesUnoCall => 'Gdy zostaje jedna karta, naciśnij „Uno!”. Do następnej akcji przeciwnik może złapać cię bez Uno — wtedy dobierasz 2 karty.';
+  String get rulesUnoCall => 'Gdy zostaje jedna karta, od razu naciśnij „Uno!”. Przeciwnicy mogą złapać cię za zapomniane Uno dopiero po sekundzie — wtedy dobierasz 2 karty.';
 
   @override
   String get rulesUnoScoring => 'Kto pierwszy zrzuci wszystkie karty, wygrywa rundę i dostaje punkty za ręce przeciwników: cyfry według wartości, akcje 20, czarne 50. We dwóch do 100, przy 3+ graczach do 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Przeciwnie do ruchu wskazówek';
+
+  @override
+  String get unoErrStackSameOnly => 'Na +2 można położyć tylko +2, na +4 tylko +4. +2 na +4 jest zabronione.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Poczekaj sekundę — wciąż mogą powiedzieć „Uno”.';
 
   @override
   String get gamesInDevelopment => 'W trakcie tworzenia';

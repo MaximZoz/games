@@ -14,6 +14,12 @@ import 'package:multigames_client/games/uno/uno_offline_session.dart';
 Object? _pick(Map<String, dynamic> json, String snake, [String? camel]) =>
     json[snake] ?? (camel == null ? null : json[camel]);
 
+int _asInt(Object? value, [int fallback = 0]) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? fallback;
+  return fallback;
+}
+
 List<T> _models<T>(
   Object? raw,
   T Function(Map<String, dynamic>) convert,
@@ -104,6 +110,7 @@ class UnoGameView {
     this.lastRoundPoints = 0,
     this.lastRoundNumber = 0,
     required this.canChallengeUno,
+    this.unoVulnerableAtMs = 0,
     required this.canChallengeWd4,
     required this.mustChooseColor,
     required this.canKeepOrPlayDrawn,
@@ -119,6 +126,7 @@ class UnoGameView {
     this.lastDrawUserId = '',
     this.lastDrawCount = 0,
     this.lastEventCard,
+    this.lastPlayedCards = const [],
   });
 
   final String id;
@@ -144,6 +152,7 @@ class UnoGameView {
   final int lastRoundPoints;
   final int lastRoundNumber;
   final bool canChallengeUno;
+  final int unoVulnerableAtMs;
   final bool canChallengeWd4;
   final bool mustChooseColor;
   final bool canKeepOrPlayDrawn;
@@ -158,6 +167,7 @@ class UnoGameView {
   final String lastDrawUserId;
   final int lastDrawCount;
   final UnoCard? lastEventCard;
+  final List<UnoCard> lastPlayedCards;
 
   bool get isOver => status == 'over';
   bool get isBetweenRounds => status == UnoStatus.betweenRounds;
@@ -168,6 +178,21 @@ class UnoGameView {
       myIndex >= 0 &&
       currentIndex == myIndex &&
       !iAmEliminated;
+
+  /// Стек штрафа открыт: нельзя ответить другой картой (+2 на +4 и наоборот).
+  bool get stackOpen =>
+      pendingDraw > 0 ||
+      status == UnoStatus.awaitingWd4Challenge ||
+      canChallengeWd4;
+
+  /// «Поймать без Уно» доступно сразу после серверного флага или после 1 с форы.
+  bool get unoCatchReady {
+    if (!isMyTurn) return false;
+    if (unoVulnerableAtMs > 0) {
+      return DateTime.now().millisecondsSinceEpoch >= unoVulnerableAtMs;
+    }
+    return canChallengeUno;
+  }
   bool get iAmEliminated => me?.forfeited == true;
   bool get iWon => myIndex >= 0 && winnerUserIds.contains(players[myIndex].id);
   UnoPlayerView? get me =>
@@ -219,8 +244,7 @@ class UnoGameView {
           (_pick(json, 'current_user_id', 'currentUserId') ?? '').toString(),
       myIndex: myIndex,
       status: (json['status'] ?? 'active').toString(),
-      pendingDraw:
-          (_pick(json, 'pending_draw', 'pendingDraw') as num?)?.toInt() ?? 0,
+      pendingDraw: _asInt(_pick(json, 'pending_draw', 'pendingDraw')),
       drawnCardId: _pick(json, 'drawn_card_id', 'drawnCardId')?.toString(),
       lastPlayedBy: _pick(json, 'last_played_by', 'lastPlayedBy')?.toString(),
       roundNumber:
@@ -253,6 +277,9 @@ class UnoGameView {
               0,
       canChallengeUno:
           _pick(json, 'can_challenge_uno', 'canChallengeUno') == true,
+      unoVulnerableAtMs: _asInt(
+        _pick(json, 'uno_vulnerable_at_ms', 'unoVulnerableAtMs'),
+      ),
       canChallengeWd4:
           _pick(json, 'can_challenge_wd4', 'canChallengeWd4') == true,
       mustChooseColor:
@@ -284,6 +311,10 @@ class UnoGameView {
         }
         return null;
       }(),
+      lastPlayedCards: _models(
+        _pick(json, 'last_played_cards', 'lastPlayedCards'),
+        UnoCard.fromJson,
+      ),
     );
   }
 }

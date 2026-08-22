@@ -612,7 +612,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoIntro => 'A ciascuno vanno 7 carte. Gioca una carta dello stesso colore o dello stesso valore (numero o stessa azione).';
 
   @override
-  String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 si impila solo su +2 e +4 solo su +4: la penalità si somma (due +2 fanno pescare 4). Non si può mettere +2 su +4. Chi non risponde pesca tutto il mucchio e salta.';
+  String get rulesUnoPlay => 'Salta — il successivo perde il turno. Inversione in due vale come Salta. +2 si impila solo su +2 e +4 solo su +4: la penalità si somma (due +2 fanno pescare 4). Non si può mettere +2 su +4. Chi non risponde pesca tutto il mucchio e salta. Due carte identiche non nere (ad es. due 8 gialli) si scartano insieme: giocane una e la gemella va via da sola.';
 
   @override
   String get rulesUnoWild => 'Una carta nera imposta un nuovo colore. Gioca +4 solo se non hai carte del colore corrente. L’avversario può contestare: se il +4 era legale pesca 6; altrimenti chi ha giocato +4 pesca 4 e il contestatore gioca.';
@@ -624,7 +624,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesUnoWin => 'In due si va a 100, con 3+ giocatori a 300. Il round lo vince chi svuota la mano.';
 
   @override
-  String get rulesUnoCall => 'Quando resta una carta, tocca «Uno!». Fino all’azione successiva un avversario può beccarti senza Uno: allora peschi 2 carte.';
+  String get rulesUnoCall => 'Quando resta una carta, tocca subito «Uno!». Gli avversari possono beccarti per aver dimenticato Uno solo dopo un secondo: allora peschi 2 carte.';
 
   @override
   String get rulesUnoScoring => 'Chi svuota per primo la mano vince il round e prende i punti delle mani avversarie: numeri a valore, azioni 20, nere 50. In due si va a 100, con 3+ giocatori a 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Senso antiorario';
+
+  @override
+  String get unoErrStackSameOnly => 'Puoi giocare +2 solo su +2 e +4 solo su +4. Non puoi mettere +2 su +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Aspetta un secondo: possono ancora dire Uno.';
 
   @override
   String get gamesInDevelopment => 'In sviluppo';

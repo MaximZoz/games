@@ -33,7 +33,9 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
   const GamesScreen({super.key});
@@ -1356,40 +1358,21 @@ class _LobbiesPageContent extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          lobby.isBattleship
-                              ? Icon(
-                                  Icons.directions_boat_filled_rounded,
-                                  size: isDesktop ? 36 : 32,
-                                  color: AppColors.accentStart,
-                                )
-                              : lobby.isDurak
-                                  ? DurakGameIcon(
-                                      size: isDesktop ? 36 : 32,
-                                      color: AppColors.accentStart,
-                                    )
-                                  : lobby.isPoker
-                                      ? PokerGameIcon(
-                                          size: isDesktop ? 36 : 32,
-                                          color: AppColors.accentStart,
-                                        )
-                                      : Icon(
-                                          Icons.grid_3x3_rounded,
-                                          size: isDesktop ? 36 : 32,
-                                          color: AppColors.accentStart,
-                                        ),
+                          GameTypeIcon(
+                            gameType: lobby.gameType,
+                            size: isDesktop ? 36 : 32,
+                            color: AppColors.accentStart,
+                          ),
                           SizedBox(width: isDesktop ? 16 : 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  lobby.isBattleship
-                                      ? context.l10n.gamesBattleship
-                                      : lobby.isDurak
-                                          ? context.l10n.gamesDurak
-                                          : lobby.isPoker
-                                              ? context.l10n.gamesPoker
-                                              : context.l10n.gamesTicTacToe,
+                                  localizedGameTypeName(
+                                    lobby.gameType,
+                                    context.l10n,
+                                  ),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textPrimary,
@@ -3527,16 +3510,7 @@ class _InviteCard extends ConsumerWidget {
 }
 
 String _inviteGameTitle(BuildContext context, String gameType) {
-  switch (gameType) {
-    case 'durak':
-      return context.l10n.gamesDurak;
-    case 'battleship':
-      return context.l10n.gamesBattleship;
-    case 'poker':
-      return context.l10n.gamesPoker;
-    default:
-      return context.l10n.gamesTicTacToe;
-  }
+  return localizedGameTypeName(gameType, context.l10n);
 }
 
 class _InviteGameIcon extends StatelessWidget {
@@ -3546,25 +3520,6 @@ class _InviteGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final IconData? materialIcon;
-    final Widget child;
-    switch (gameType) {
-      case 'durak':
-        materialIcon = null;
-        child = const DurakGameIcon(size: 26, color: Colors.white);
-      case 'battleship':
-        materialIcon = Icons.directions_boat_filled_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
-      case 'poker':
-        materialIcon = null;
-        child = const PokerGameIcon(size: 26, color: Colors.white);
-      case 'uno':
-        materialIcon = null;
-        child = const UnoGameIcon(size: 26);
-      default:
-        materialIcon = Icons.grid_3x3_rounded;
-        child = Icon(materialIcon, color: Colors.white, size: 26);
-    }
     return Container(
       width: 44,
       height: 44,
@@ -3577,7 +3532,11 @@ class _InviteGameIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
-      child: child,
+      child: GameTypeIcon(
+        gameType: gameType,
+        size: 26,
+        color: Colors.white,
+      ),
     );
   }
 }

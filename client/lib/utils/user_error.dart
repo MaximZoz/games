@@ -27,7 +27,8 @@ String formatUserError(Object? error, {String? fallback}) {
         _looksTemporarilyUnavailable(error.message)) {
       return l10n.commonTryLater;
     }
-    return error.message;
+    return _friendlyGameMessage(error.errorKey, error.message, l10n) ??
+        error.message;
   }
   if (error is AuthException) {
     if (error.statusCode == 502 ||
@@ -62,4 +63,32 @@ String formatUserError(Object? error, {String? fallback}) {
   }
 
   return fallback ?? l10n.commonGenericError;
+}
+
+String? _friendlyGameMessage(
+  String errorKey,
+  String message,
+  dynamic l10n,
+) {
+  final blob = '$errorKey\n$message'.toLowerCase();
+  if (blob.contains('only the same') ||
+      blob.contains('+2 cannot be stacked') ||
+      blob.contains('play +2 on +2') ||
+      blob.contains('только +2') ||
+      (blob.contains('uno:') && blob.contains('stack'))) {
+    return l10n.unoErrStackSameOnly;
+  }
+  if (blob.contains('they can still say uno') ||
+      blob.contains('wait a second') ||
+      blob.contains('ещё могут сказать') ||
+      blob.contains('подождите секунду')) {
+    return l10n.unoErrCatchTooEarly;
+  }
+  if (blob.startsWith('uno:') ||
+      blob.contains('\nuno:') ||
+      blob.startsWith('poker:') ||
+      blob.contains('\npoker:')) {
+    return l10n.commonGenericError;
+  }
+  return null;
 }

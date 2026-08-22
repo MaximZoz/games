@@ -612,7 +612,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoIntro => 'Jeder erhält 7 Karten. Spiele eine Karte derselben Farbe oder desselben Rangs (Zahl oder gleiche Aktion).';
 
   @override
-  String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 nur auf +2 und +4 nur auf +4: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). +2 darf nicht auf +4. Wer nicht stapelt, zieht den ganzen Stapel und setzt aus.';
+  String get rulesUnoPlay => 'Aussetzen — der Nächste verliert den Zug. Richtungswechsel zu zweit wirkt wie Aussetzen. +2 nur auf +2 und +4 nur auf +4: die Strafe addiert sich (zwei +2 bedeuten 4 ziehen). +2 darf nicht auf +4. Wer nicht stapelt, zieht den ganzen Stapel und setzt aus. Zwei gleiche nicht-schwarze Karten (z. B. zwei gelbe 8) werden zusammen abgelegt: eine spielen — die zweite fliegt automatisch mit.';
 
   @override
   String get rulesUnoWild => 'Eine schwarze Karte bestimmt eine neue Farbe. +4 nur, wenn du keine Karte der aktuellen Farbe hast. Der Nächste kann anfechten: war +4 legal, zieht er 6; sonst zieht der +4-Spieler 4 und der Anfechtende ist am Zug.';
@@ -624,7 +624,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesUnoWin => 'Zu zweit bis 100 Punkte, bei drei oder mehr Spielern bis 300. Eine Runde gewinnt, wer alle Karten ablegt.';
 
   @override
-  String get rulesUnoCall => 'Bei einer Karte tippe auf „Uno!“. Bis zur nächsten Aktion kann ein Gegner dich ohne Uno erwischen — dann ziehst du 2 Karten.';
+  String get rulesUnoCall => 'Wenn noch eine Karte übrig ist, tippen Sie sofort auf „Uno!“. Gegner können Sie erst nach einer Sekunde wegen vergessenem Uno erwischen — dann ziehen Sie 2 Karten.';
 
   @override
   String get rulesUnoScoring => 'Wer zuerst alle Karten ablegt, gewinnt die Runde und erhält Punkte für die Hände der Gegner: Zahlen nach Wert, Aktionen 20, Schwarze 50. Zu zweit bis 100, bei drei oder mehr Spielern bis 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Gegen den Uhrzeigersinn';
+
+  @override
+  String get unoErrStackSameOnly => 'Auf +2 darf nur +2, auf +4 nur +4 gelegt werden. +2 auf +4 ist nicht erlaubt.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Einen Moment — sie können noch UNO sagen.';
 
   @override
   String get gamesInDevelopment => 'In Entwicklung';

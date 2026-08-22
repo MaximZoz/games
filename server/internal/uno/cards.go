@@ -156,6 +156,14 @@ func (c Card) isWild() bool {
 	return c.Kind == KindWild || c.Kind == KindWildDrawFour
 }
 
+// sameNonWildFace is true for an exact pair (two yellow 8s, two red skips).
+func (c Card) sameNonWildFace(other Card) bool {
+	if c.isWild() || other.isWild() {
+		return false
+	}
+	return c.Color == other.Color && c.Kind == other.Kind && c.Number == other.Number
+}
+
 func (c Card) isDrawStack() bool {
 	return c.Kind == KindDrawTwo || c.Kind == KindWildDrawFour
 }

@@ -68,6 +68,7 @@ class UnoEngine {
   static const int defaultTargetScore = 100;
   static const int multiplayerTargetScore = 300;
   static const int cardsPerHand = 7;
+  static const int unoCallGraceMs = 1000;
 
   static int targetScoreForPlayerCount(int playerCount) =>
       playerCount >= 3 ? multiplayerTargetScore : defaultTargetScore;
@@ -93,6 +94,9 @@ class UnoEngine {
   int dealerIndex = 0;
   int colorChooserIndex = -1;
   int unoVulnerableIndex = -1;
+  int unoVulnerableAtMs = 0;
+  /// Test clock. When > 0, used instead of [DateTime.now].
+  int nowMs = 0;
   int pendingRoundWinnerIndex = -1;
   String lastRoundWinnerUserId = '';
   int lastRoundPoints = 0;
@@ -105,6 +109,7 @@ class UnoEngine {
   String lastDrawUserId = '';
   int lastDrawCount = 0;
   UnoCard? lastEventCard;
+  List<UnoCard> lastPlayedCards = [];
   UnoCard? wild4ProofCard;
 
   bool get isOver => status == UnoStatus.over;
@@ -172,9 +177,7 @@ class UnoEngine {
           : const [UnoActionType.nextRound];
     }
     final actions = <String>[];
-    if (unoVulnerableIndex >= 0 &&
-        unoVulnerableIndex != playerIndex &&
-        currentIndex == playerIndex) {
+    if (canChallengeUno(playerIndex)) {
       actions.add(UnoActionType.challengeUno);
     }
     if (unoVulnerableIndex == playerIndex &&
@@ -220,12 +223,31 @@ class UnoEngine {
     if (status == UnoStatus.awaitingDrawnPlay && card.id != drawnCardId) {
       return false;
     }
-    if (pendingDraw > 0) {
-      return card.stacksOn(topDiscard!) &&
-          (status == UnoStatus.active ||
-              status == UnoStatus.awaitingWd4Challenge);
+    if (_stackOpen) {
+      return card.stacksOn(topDiscard!);
     }
     return card.matches(topDiscard!, currentColor);
+  }
+
+  bool get _stackOpen =>
+      pendingDraw > 0 || status == UnoStatus.awaitingWd4Challenge;
+
+  int get clockMs =>
+      nowMs > 0 ? nowMs : DateTime.now().millisecondsSinceEpoch;
+
+  bool canChallengeUno(int playerIndex) {
+    if (playerIndex < 0 ||
+        playerIndex >= players.length ||
+        currentIndex != playerIndex) {
+      return false;
+    }
+    if (unoVulnerableIndex < 0 || unoVulnerableIndex == playerIndex) {
+      return false;
+    }
+    if (unoVulnerableAtMs > 0 && clockMs < unoVulnerableAtMs) {
+      return false;
+    }
+    return true;
   }
 
   bool hasLegalPlay(int playerIndex) {
@@ -249,6 +271,7 @@ class UnoEngine {
     lastDrawUserId = '';
     lastDrawCount = 0;
     lastEventCard = null;
+    lastPlayedCards = [];
     switch (action.type) {
       case UnoActionType.play:
         _applyPlay(action);
@@ -280,6 +303,7 @@ class UnoEngine {
     wild4PlayerIndex = -1;
     colorChooserIndex = -1;
     unoVulnerableIndex = -1;
+    unoVulnerableAtMs = 0;
     pendingRoundWinnerIndex = -1;
     wild4WasLegal = false;
     shuffleCount = 0;
@@ -371,16 +395,24 @@ class UnoEngine {
 
     _expireUnoWindow();
     final player = players[playerIndex];
-    player.hand.removeAt(cardIndex);
+    final played = <UnoCard>[card];
+    final twin = findUnoTwin(player.hand, card);
+    if (twin != null) played.add(twin);
+    final removeIds = {for (final item in played) item.id};
+    player.hand.removeWhere((item) => removeIds.contains(item.id));
     player.saidUno = false;
-    discardPile.add(card);
+    discardPile.addAll(played);
     drawnCardId = null;
     lastPlayedBy = player.userId;
-    _noteEvent('play', player.userId, card);
+    lastPlayedCards = List.of(played);
+    _noteEvent('play', player.userId, played.last);
     pendingRoundWinnerIndex = -1;
-    if (player.hand.length == 1) unoVulnerableIndex = playerIndex;
+    if (player.hand.length == 1) {
+      unoVulnerableIndex = playerIndex;
+      unoVulnerableAtMs = clockMs + unoCallGraceMs;
+    }
     if (player.hand.isEmpty) {
-      unoVulnerableIndex = -1;
+      _clearUnoWindow();
       pendingRoundWinnerIndex = playerIndex;
     }
 
@@ -404,7 +436,7 @@ class UnoEngine {
         status = UnoStatus.active;
       case UnoCardKind.drawTwo:
         currentColor = card.color;
-        pendingDraw += 2;
+        pendingDraw += 2 * played.length;
         wild4PlayerIndex = -1;
         wild4WasLegal = false;
         wild4ProofCard = null;
@@ -505,7 +537,7 @@ class UnoEngine {
       throw StateError('only the vulnerable player can call UNO');
     }
     players[index].saidUno = true;
-    unoVulnerableIndex = -1;
+    _clearUnoWindow();
   }
 
   void _applyChallengeUno(String? actorUserId, String? targetUserId) {
@@ -520,9 +552,12 @@ class UnoEngine {
     if (players[target].saidUno || players[target].hand.length != 1) {
       throw StateError('player is not vulnerable');
     }
+    if (unoVulnerableAtMs > 0 && clockMs < unoVulnerableAtMs) {
+      throw StateError('Wait a second — they can still say Uno.');
+    }
     _noteEvent('draw', players[target].userId, null);
     _drawCards(target, 2);
-    unoVulnerableIndex = -1;
+    _clearUnoWindow();
   }
 
   void _applyChallengeWd4() {
@@ -623,7 +658,7 @@ class UnoEngine {
         .expand((entry) => entry.value.hand)
         .fold<int>(0, (total, card) => total + card.points);
     players[winner].score += points;
-    unoVulnerableIndex = -1;
+    _clearUnoWindow();
     pendingDraw = 0;
     drawnCardId = null;
     wild4PlayerIndex = -1;
@@ -713,6 +748,11 @@ class UnoEngine {
   }
 
   void _expireUnoWindow() {
-    if (unoVulnerableIndex >= 0) unoVulnerableIndex = -1;
+    _clearUnoWindow();
+  }
+
+  void _clearUnoWindow() {
+    unoVulnerableIndex = -1;
+    unoVulnerableAtMs = 0;
   }
 }

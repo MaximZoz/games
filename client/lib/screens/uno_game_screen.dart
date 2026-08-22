@@ -78,6 +78,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   int _seenLastRoundNumber = 0;
   bool _roundOverlayDismissed = false;
   final Map<int, int> _dealOppShown = {};
+  Timer? _unoCatchTimer;
 
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
 
@@ -107,8 +108,20 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   @override
   void dispose() {
+    _unoCatchTimer?.cancel();
     GameFlyOverlay.dismissAll();
     super.dispose();
+  }
+
+  void _armUnoCatchTimer(UnoGameView game) {
+    _unoCatchTimer?.cancel();
+    final at = game.unoVulnerableAtMs;
+    if (at <= 0) return;
+    final wait = at - DateTime.now().millisecondsSinceEpoch;
+    if (wait <= 0) return;
+    _unoCatchTimer = Timer(Duration(milliseconds: wait + 20), () {
+      if (mounted) setState(() {});
+    });
   }
 
   Rect? _rectOf(GlobalKey key) {
@@ -346,22 +359,31 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Future<void> _animateOpponentPlay(UnoGameView game, int playerIndex) async {
-    final card = game.topDiscard;
+    final cards = game.lastPlayedCards.isNotEmpty
+        ? game.lastPlayedCards
+        : [
+            if (game.lastEventCard != null) game.lastEventCard!,
+            if (game.lastEventCard == null && game.topDiscard != null)
+              game.topDiscard!,
+          ];
     final from = _rectOf(
       _opponentKeys.putIfAbsent(playerIndex, GlobalKey.new),
     );
     final to = _rectOf(_discardKey);
-    if (card == null || from == null || to == null || !mounted) return;
-    await playUnoCardFlyAnimation(
-      context: context,
-      card: card,
-      cardSize: _flyCardSize(context),
-      from: from,
-      to: to,
-      faceDown: true,
-      flipToFace: true,
-      arcLift: 34,
-    );
+    if (cards.isEmpty || from == null || to == null || !mounted) return;
+    for (final card in cards) {
+      if (!mounted) return;
+      await playUnoCardFlyAnimation(
+        context: context,
+        card: card,
+        cardSize: _flyCardSize(context),
+        from: from,
+        to: to,
+        faceDown: true,
+        flipToFace: true,
+        arcLift: 34,
+      );
+    }
   }
 
   Future<void> _animateOpponentDraw(
@@ -545,7 +567,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       };
 
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
-    if (_busy || !game.isMyTurn || !_canPlayCard(game, card)) return;
+    if (_busy || !game.isMyTurn) return;
+    if (!_canPlayCard(game, card)) {
+      if (mounted && game.stackOpen && game.topDiscard != null) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.unoErrStackSameOnly,
+          kind: AppSnackKind.error,
+        );
+      }
+      return;
+    }
     setState(() => _busy = true);
     _lastLocalActor = game.viewerUserId ?? game.me?.id;
     try {
@@ -556,33 +588,41 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
       final from = _rectOf(_cardKeys.putIfAbsent(card.id, GlobalKey.new));
       final to = _rectOf(_discardKey);
-      _lastLocalPlayCardId = card.id;
-      _optimisticTopId = card.id;
-      _localPlayedIds.add(card.id);
+      final twin = findUnoTwin(game.myHand, card);
+      final thrown = [card, if (twin != null) twin];
+      _lastLocalPlayCardId = thrown.last.id;
+      _optimisticTopId = thrown.last.id;
+      _localPlayedIds.addAll(thrown.map((item) => item.id));
       if (mounted) {
         setState(() {
-          _hiddenHandIds.add(card.id);
+          _hiddenHandIds.addAll(thrown.map((item) => item.id));
           _discardOverride = game.topDiscard;
         });
       }
-      if (from != null && to != null && mounted) {
-        final ticket = await playUnoCardFlyAnimation(
-          context: context,
-          card: card,
-          cardSize: _flyCardSize(context),
-          from: from,
-          to: to,
-          beginAngle: 0.05,
-          endAngle: -0.04,
-          arcLift: 42,
-          keepAtEnd: true,
-        );
-        if (mounted) {
-          setState(() => _discardOverride = card);
+      for (var i = 0; i < thrown.length; i++) {
+        final flying = thrown[i];
+        final fromRect = i == 0
+            ? from
+            : _rectOf(_cardKeys.putIfAbsent(flying.id, GlobalKey.new)) ?? from;
+        if (fromRect != null && to != null && mounted) {
+          final ticket = await playUnoCardFlyAnimation(
+            context: context,
+            card: flying,
+            cardSize: _flyCardSize(context),
+            from: fromRect,
+            to: to,
+            beginAngle: 0.05,
+            endAngle: -0.04,
+            arcLift: 42,
+            keepAtEnd: true,
+          );
+          if (mounted) {
+            setState(() => _discardOverride = flying);
+          }
+          ticket.dismiss();
+        } else if (mounted) {
+          setState(() => _discardOverride = flying);
         }
-        ticket.dismiss();
-      } else if (mounted) {
-        setState(() => _discardOverride = card);
       }
       await _move(
         UnoActionType.play,
@@ -592,18 +632,20 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       );
       try {
         final after = await ref.read(unoGameProvider(widget.gameId).future);
-        if (after.topDiscard?.id == card.id || after.eventSeq > _seenEventSeq) {
+        final topId = thrown.last.id;
+        if (after.topDiscard?.id == topId || after.eventSeq > _seenEventSeq) {
           _seenEventSeq = after.eventSeq;
         }
         if (!mounted) return;
         setState(() {
-          if (after.topDiscard?.id == card.id) {
+          if (after.topDiscard?.id == topId ||
+              thrown.any((item) => after.topDiscard?.id == item.id)) {
             _discardOverride = null;
-            _hiddenHandIds.remove(card.id);
+            _hiddenHandIds.removeAll(thrown.map((item) => item.id));
           } else if (after.myHand.any((item) => item.id == card.id)) {
-            _hiddenHandIds.remove(card.id);
+            _hiddenHandIds.removeAll(thrown.map((item) => item.id));
             _discardOverride = null;
-            _localPlayedIds.remove(card.id);
+            _localPlayedIds.removeAll(thrown.map((item) => item.id));
             _lastLocalPlayCardId = null;
             _optimisticTopId = null;
           }
@@ -722,10 +764,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (game.status == UnoStatus.awaitingDrawnPlay) {
       return card.id == game.drawnCardId;
     }
-    if (game.pendingDraw > 0) {
-      return card.stacksOn(game.topDiscard!) &&
-          (game.status == UnoStatus.active ||
-              game.status == UnoStatus.awaitingWd4Challenge);
+    if (game.stackOpen) {
+      return card.stacksOn(game.topDiscard!);
     }
     if (game.status != UnoStatus.active) return false;
     return card.matches(game.topDiscard!, game.currentColor);
@@ -1092,6 +1132,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Widget build(BuildContext context) {
     final gameAsync = ref.watch(unoGameProvider(widget.gameId));
     final game = gameAsync.valueOrNull;
+    if (game != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _armUnoCatchTimer(game);
+      });
+    }
     final groupChatId = (game?.chatId ?? '').trim();
     final showGroupChat =
         !_isOffline && game != null && groupChatId.isNotEmpty && !game.isOver;
@@ -1624,7 +1669,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),
-            if (game.canChallengeUno && challengeTarget != null)
+            if (game.unoCatchReady && challengeTarget != null)
               OutlinedButton.icon(
                 onPressed: _busy
                     ? null

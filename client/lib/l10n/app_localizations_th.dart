@@ -612,7 +612,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoIntro => 'แจกคนละ 7 ใบ ลงไพ่สีเดียวกันหรือค่าเดียวกัน (ตัวเลขหรือไพ่พิเศษชนิดเดียวกัน)';
 
   @override
-  String get rulesUnoPlay => 'ข้าม — คนถัดไปเสียตา กลับทางเมื่อเล่นสองคนทำงานเหมือนข้าม +2 ซ้อนได้เฉพาะบน +2 และ +4 เฉพาะบน +4 โทษรวมกัน (สองใบ +2 คนถัดไปจั่ว 4) ห้ามวาง +2 บน +4 ใครไม่ซ้อนต้องจั่วทั้งกองและเสียตา';
+  String get rulesUnoPlay => 'ข้าม — คนถัดไปเสียตา กลับทางเมื่อเล่นสองคนทำงานเหมือนข้าม +2 ซ้อนได้เฉพาะบน +2 และ +4 เฉพาะบน +4 โทษรวมกัน (สองใบ +2 คนถัดไปจั่ว 4) ห้ามวาง +2 บน +4 ใครไม่ซ้อนต้องจั่วทั้งกองและเสียตาไพ่ธรรมดาที่เหมือนกันสองใบ (เช่น 8 เหลืองสองใบ) ทิ้งพร้อมกัน เล่นใบหนึ่ง อีกใบออกอัตโนมัติ';
 
   @override
   String get rulesUnoWild => 'ไพ่ดำกำหนดสีใหม่ ลง +4 ได้เมื่อไม่มีไพ่สีปัจจุบัน คู่แข่งท้าได้: ถ้า +4 ถูกกติกา ผู้ท้าจั่ว 6 ถ้าไม่ถูก ผู้ลง +4 จั่ว 4 และผู้ท้าได้ลงไพ่';
@@ -624,7 +624,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesUnoWin => 'เดี่ยวถึง 100 แต้ม ตั้งแต่ 3 คนถึง 300 ชนะรอบคือผู้ลงไพ่หมดมือ';
 
   @override
-  String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ก่อนตาถัดไป คู่แข่งจับได้ถ้าไม่กดอูโน่ — แล้วคุณจั่ว 2 ใบ';
+  String get rulesUnoCall => 'เหลือใบเดียวให้กด «อูโน่!» ทันที คู่แข่งจับที่ลืมอุโนได้หลังหนึ่งวินาที — แล้วคุณจั่ว 2 ใบ';
 
   @override
   String get rulesUnoScoring => 'ใครลงหมดก่อนชนะรอบและได้แต้มจากมือคู่แข่ง: ตัวเลขตามหน้าไพ่ พิเศษ 20 ดำ 50 เดี่ยวถึง 100 ตั้งแต่ 3 คนถึง 300';
@@ -738,6 +738,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'ทวนเข็มนาฬิกา';
+
+  @override
+  String get unoErrStackSameOnly => 'เล่น +2 ทับ +2 หรือ +4 ทับ +4 เท่านั้น ห้ามวาง +2 ทับ +4';
+
+  @override
+  String get unoErrCatchTooEarly => 'รอหนึ่งวินาที — พวกเขายังพูดอุโนได้';
 
   @override
   String get gamesInDevelopment => 'กำลังพัฒนา';

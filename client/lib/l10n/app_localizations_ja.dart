@@ -612,7 +612,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoIntro => '各プレイヤーに7枚配ります。同じ色、または同じランク（数字や同じアクション）のカードを出します。';
 
   @override
-  String get rulesUnoPlay => 'スキップ — 次の人は手番を失います。2人ではリバースはスキップと同じです。+2は+2の上だけ、+4は+4の上だけ重ねられ、罰が加算されます（+2が2枚なら次は4枚）。+2を+4の上には置けません。重ねない人は山札をすべて引き、手番を飛ばされます。';
+  String get rulesUnoPlay => 'スキップ — 次の人は手番を失います。2人ではリバースはスキップと同じです。+2は+2の上だけ、+4は+4の上だけ重ねられ、罰が加算されます（+2が2枚なら次は4枚）。+2を+4の上には置けません。重ねない人は山札をすべて引き、手番を飛ばされます。同じ色・数字の非ワイルド2枚（例：黄色い8が2枚）は一緒に捨てます。1枚出せばもう1枚も自動で出ます。';
 
   @override
   String get rulesUnoWild => '黒いカードは新しい色を決めます。+4は現在の色のカードがないときだけ出せます。次の人はチャレンジできます。+4が合法ならチャレンジ側が6枚、違法なら+4を出した人が4枚引き、チャレンジ側がプレイします。';
@@ -624,7 +624,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesUnoWin => '2人は100点、3人以上は300点先取。ラウンドは手札をなくした人が勝ちます。';
 
   @override
-  String get rulesUnoCall => '1枚残ったら「ウノ！」を押します。次の行動まで、相手はウノなしを指摘でき、その場合は2枚引きます。';
+  String get rulesUnoCall => '1枚残ったらすぐに「ウノ！」を押します。相手がウノ忘れを指摘できるのは1秒後からです。その場合は2枚引きます。';
 
   @override
   String get rulesUnoScoring => '先に手札をなくした人がラウンド勝ちし、相手の手札点を得ます。数字は額面、アクションは20、黒は50。2人は100点、3人以上は300点先取。';
@@ -738,6 +738,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => '反時計回り';
+
+  @override
+  String get unoErrStackSameOnly => '+2の上には+2、+4の上には+4だけです。+2を+4の上には出せません。';
+
+  @override
+  String get unoErrCatchTooEarly => '1秒待ってください。まだUNOを宣言できます。';
 
   @override
   String get gamesInDevelopment => '開発中';

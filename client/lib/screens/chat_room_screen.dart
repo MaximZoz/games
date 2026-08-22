@@ -31,8 +31,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/invite_link.dart';
-import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
-import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
@@ -4156,20 +4155,11 @@ class _ChatInviteCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       alignment: Alignment.center,
-                      child: link.gameType == 'durak'
-                          ? const DurakGameIcon(size: 26, color: Colors.white)
-                          : link.gameType == 'poker'
-                              ? const PokerGameIcon(
-                                  size: 26,
-                                  color: Colors.white,
-                                )
-                              : Icon(
-                                  link.gameType == 'battleship'
-                                      ? Icons.directions_boat_filled_rounded
-                                      : Icons.grid_3x3_rounded,
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
+                      child: GameTypeIcon(
+                        gameType: link.gameType,
+                        size: 26,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -4187,13 +4177,7 @@ class _ChatInviteCard extends ConsumerWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            link.gameType == 'durak'
-                                ? l10n.gamesDurak
-                                : link.gameType == 'battleship'
-                                    ? l10n.gamesBattleship
-                                    : link.gameType == 'poker'
-                                        ? l10n.gamesPoker
-                                        : l10n.gamesTicTacToe,
+                            localizedGameTypeName(link.gameType, l10n),
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 13,

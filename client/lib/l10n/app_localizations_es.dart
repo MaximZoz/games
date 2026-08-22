@@ -612,7 +612,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoIntro => 'Cada uno recibe 7 cartas. Juega una carta del mismo color o del mismo valor (número o misma acción).';
 
   @override
-  String get rulesUnoPlay => 'Salto: el siguiente pierde el turno. El cambio de sentido con dos jugadores actúa como salto. +2 solo se apila sobre +2 y +4 solo sobre +4: la penalización se suma (dos +2 hacen robar 4). No se puede poner +2 sobre +4. Quien no apile roba todo el montón y pierde el turno.';
+  String get rulesUnoPlay => 'Salto: el siguiente pierde el turno. El cambio de sentido con dos jugadores actúa como salto. +2 solo se apila sobre +2 y +4 solo sobre +4: la penalización se suma (dos +2 hacen robar 4). No se puede poner +2 sobre +4. Quien no apile roba todo el montón y pierde el turno. Dos cartas iguales no negras (por ejemplo dos 8 amarillos) se descartan juntas: juega una y la gemela se lanza sola.';
 
   @override
   String get rulesUnoWild => 'Una carta negra elige un color nuevo. Juega +4 solo si no tienes carta del color actual. El rival puede impugnarlo: si el +4 era legal, roba 6; si no, el autor del +4 roba 4 y el impugnador juega.';
@@ -624,7 +624,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesUnoWin => 'En 1v1 hasta 100 puntos; con 3+ jugadores, hasta 300. La ronda la gana quien se queda sin cartas.';
 
   @override
-  String get rulesUnoCall => 'Cuando queda una carta, pulsa «¡Uno!». Hasta la siguiente acción, un rival puede pillarte sin Uno y entonces robas 2.';
+  String get rulesUnoCall => 'Cuando te quede una carta, pulsa «¡Uno!» al momento. Los demás solo podrán pillarte por olvidar Uno tras un segundo: entonces robas 2 cartas.';
 
   @override
   String get rulesUnoScoring => 'Quien se queda sin cartas gana la ronda y suma las cartas rivales: números a valor facial, especiales 20, negras 50. En 1v1 hasta 100; con 3+ jugadores, hasta 300.';
@@ -738,6 +738,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unoDirectionCounterclockwise => 'Sentido antihorario';
+
+  @override
+  String get unoErrStackSameOnly => 'Solo puedes jugar +2 sobre +2, o +4 sobre +4. No se puede apilar +2 sobre +4.';
+
+  @override
+  String get unoErrCatchTooEarly => 'Espera un segundo: todavía pueden decir Uno.';
 
   @override
   String get gamesInDevelopment => 'En desarrollo';
