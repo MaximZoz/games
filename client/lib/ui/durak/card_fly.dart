@@ -122,7 +122,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   } catch (_) {
     // ignore dispose races
   }
-  Sfx.play(landSfx ?? (faceDown ? SfxId.cardFlip : SfxId.cardLand));
+  if (landSfx != null) Sfx.play(landSfx);
   if (!keepAtEnd) {
     GameFlyOverlay.remove(entry);
     anim.dispose();

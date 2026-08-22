@@ -232,7 +232,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _fxHit = hit;
       _fxShowMineBoard = onMyBoard;
     });
-    Sfx.play(SfxId.shoot);
     if (sunk) {
       Sfx.play(SfxId.sink);
     } else {
@@ -466,7 +465,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   void _onSetupCellTap(int cell) {
     if (_busy || _localShips.isEmpty) return;
-    Sfx.play(SfxId.placeShip);
+    Sfx.play(SfxId.place);
     // Тап по своему кораблю — выделить.
     for (var i = 0; i < _localShips.length; i++) {
       if (_localShips[i].contains(cell)) {
@@ -513,7 +512,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     if (idx == null || idx >= _localShips.length) return;
     final rotated = rotateShip(_localShips[idx]);
     if (rotated == null) return;
-    Sfx.play(SfxId.cardFlip);
     final next = _localShips.map((s) => List<int>.from(s)).toList();
     next[idx] = rotated;
     setState(() => _localShips = next);

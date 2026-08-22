@@ -140,7 +140,6 @@ class MultiGamesApp extends ConsumerWidget {
           surface: AppColors.surfaceUnified,
         ),
         useMaterial3: true,
-        splashFactory: const SfxSplashFactory(InkRipple.splashFactory),
         scaffoldBackgroundColor: AppColors.surfaceUnified,
         // «Предметы», «Монеты за вход» и все AppBar-заголовки — по центру.
         appBarTheme: const AppBarTheme(
