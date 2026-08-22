@@ -1732,7 +1732,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     int count = 3,
     Color color = const Color(0xFFE8C547),
   }) async {
-    if (!mounted || _disposed) return;
+    if (!mounted ||
+        _disposed ||
+        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
@@ -1763,7 +1767,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required int delayMs,
   }) {
     Future<void>.delayed(Duration(milliseconds: delayMs), () {
-      if (!mounted || _disposed) return;
+      if (!mounted ||
+          _disposed ||
+          !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+        return;
+      }
       late OverlayEntry entry;
       final controller = AnimationController(
         vsync: this,
@@ -1822,6 +1830,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           );
         },
+        host: context,
+        gameOnly: true,
       );
       controller.forward().whenComplete(() {
         GameFlyOverlay.remove(entry);
@@ -2137,7 +2147,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Future<void> _throwFoldCards(int seat) async {
-    if (!mounted || _disposed) return;
+    if (!mounted ||
+        _disposed ||
+        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final from = globalRectOf(_seatKey(seat));
     final to = globalRectOf(_tableChipsKey);
     if (from == null || to == null) return;
@@ -2169,7 +2183,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required double spin,
   }) {
     Future<void>.delayed(Duration(milliseconds: delayMs), () {
-      if (!mounted || _disposed) return;
+      if (!mounted ||
+          _disposed ||
+          !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+        return;
+      }
       late OverlayEntry entry;
       final controller = AnimationController(
         vsync: this,
@@ -2213,6 +2231,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           );
         },
+        host: context,
+        gameOnly: true,
       );
       controller.forward().whenComplete(() {
         GameFlyOverlay.remove(entry);

@@ -179,6 +179,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _liftGlobalCenter = globalCenter;
     _overlay?.markNeedsBuild();
     if (_overlay != null) return;
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     _overlay = GameFlyOverlay.insert(overlay, (ctx) {
@@ -216,6 +219,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
           ),
         );
       },
+      host: context,
+      gameOnly: true,
     );
   }
 
@@ -233,6 +238,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       height: widget.cardSize.height * beginScale,
     );
     _removeOverlay();
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     final completer = Completer<void>();
@@ -285,6 +293,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
           ),
         );
       },
+      host: context,
+      gameOnly: true,
     );
     await completer.future;
   }

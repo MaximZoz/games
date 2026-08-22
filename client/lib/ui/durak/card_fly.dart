@@ -55,8 +55,10 @@ Future<CardFlyTicket> playCardFlyAnimation({
   bool keepAtEnd = false,
   bool playSfx = true,
 }) async {
-  // Не играть поверх чатов/других вкладок shell.
-  if (!context.mounted || !TickerMode.of(context)) {
+  // Не играть поверх чатов/других вкладок shell (IndexedStack держит партию).
+  if (!context.mounted ||
+      !TickerMode.of(context) ||
+      !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return CardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
@@ -70,7 +72,9 @@ Future<CardFlyTicket> playCardFlyAnimation({
   final anim = CurvedAnimation(parent: controller, curve: curve);
 
   late final OverlayEntry entry;
-  entry = GameFlyOverlay.insert(overlay, (ctx) {
+  entry = GameFlyOverlay.insert(
+    overlay,
+    (ctx) {
       return IgnorePointer(
         child: AnimatedBuilder(
           animation: anim,
@@ -119,6 +123,8 @@ Future<CardFlyTicket> playCardFlyAnimation({
         ),
       );
     },
+    host: context,
+    gameOnly: true,
   );
   try {
     await controller.forward();

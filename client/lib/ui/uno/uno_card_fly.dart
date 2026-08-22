@@ -48,7 +48,9 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   SfxId? landSfx,
   bool playSfx = true,
 }) async {
-  if (!context.mounted || !TickerMode.of(context)) {
+  if (!context.mounted ||
+      !TickerMode.of(context) ||
+      !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return UnoCardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
@@ -105,7 +107,7 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
         },
       ),
     );
-  });
+  }, host: context, gameOnly: true);
 
   try {
     await controller.forward();
