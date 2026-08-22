@@ -442,13 +442,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       );
     }
     if (type == PokerActionType.fold) {
-      Sfx.play(SfxId.fold);
-    } else if (type == PokerActionType.check) {
-      Sfx.play(SfxId.check);
+      Sfx.play(SfxId.cardPlay);
     } else if (type == PokerActionType.call ||
         type == PokerActionType.raise ||
         type == PokerActionType.allIn) {
-      Sfx.play(SfxId.chipStack);
+      Sfx.play(SfxId.chip);
     }
     setState(() => _busy = true);
     try {
@@ -1099,8 +1097,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return;
       }
       setState(() => _shownCommunity++);
-      Sfx.play(SfxId.cardDeal);
-      Sfx.play(SfxId.cardFlip);
+      Sfx.play(SfxId.cardPlay);
     }
     _dealing = false;
   }
@@ -1738,7 +1735,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
-    Sfx.play(count > 1 ? SfxId.chipStack : SfxId.chip);
+    Sfx.play(SfxId.chip);
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     for (var i = 0; i < count; i++) {
@@ -2145,7 +2142,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     if (from == null || to == null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    Sfx.play(SfxId.fold);
+    Sfx.play(SfxId.cardPlay);
     const cardSize = Size(34, 48);
     for (var i = 0; i < 2; i++) {
       if (!mounted || _disposed) return;

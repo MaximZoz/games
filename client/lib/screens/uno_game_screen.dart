@@ -306,6 +306,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return;
     }
     final size = _flyCardSize(context);
+    Sfx.play(SfxId.cardDraw);
     for (var round = 0; round < 7; round++) {
       for (var playerIndex = 0;
           playerIndex < game.players.length;
@@ -340,8 +341,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           beginScale: 0.85,
           endScale: 1,
           arcLift: 18,
-          launchSfx: SfxId.cardRustle,
-          landSfx: isMe ? SfxId.cardFlip : SfxId.cardDeal,
+          playSfx: false,
         ));
         if (mounted) {
           setState(() {
@@ -736,11 +736,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     }
     if (type == UnoActionType.callUno) {
       Sfx.play(SfxId.unoCall);
-    } else if (type == UnoActionType.chooseColor) {
-      Sfx.play(SfxId.colorPick);
-    } else if (type == UnoActionType.challengeUno ||
+    } else if (type == UnoActionType.chooseColor ||
+        type == UnoActionType.challengeUno ||
         type == UnoActionType.challengeWd4) {
-      Sfx.play(SfxId.unoChallenge);
+      Sfx.play(SfxId.unoSpecial);
     }
     try {
       await ref.read(unoRepositoryProvider).move(

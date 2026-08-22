@@ -29,14 +29,7 @@ class UnoCardFlyTicket {
 }
 
 SfxId sfxForUnoCard(UnoCard card) {
-  return switch (card.kind) {
-    UnoCardKind.skip => SfxId.unoSkip,
-    UnoCardKind.reverse => SfxId.unoReverse,
-    UnoCardKind.drawTwo => SfxId.unoDrawTwo,
-    UnoCardKind.wild => SfxId.unoWild,
-    UnoCardKind.wildDrawFour => SfxId.unoDrawFour,
-    UnoCardKind.number => SfxId.cardPlay,
-  };
+  return card.kind == UnoCardKind.number ? SfxId.cardPlay : SfxId.unoSpecial;
 }
 
 Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
@@ -57,19 +50,18 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   bool keepAtEnd = false,
   SfxId? launchSfx,
   SfxId? landSfx,
+  bool playSfx = true,
 }) async {
   if (!context.mounted || !TickerMode.of(context)) {
     return UnoCardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
-  final launch = launchSfx ??
-      (faceDown ? SfxId.cardDraw : sfxForUnoCard(card));
-  final land = landSfx ??
-      (flipToFace
-          ? SfxId.cardFlip
-          : (faceDown ? null : SfxId.cardLand));
-  Sfx.play(launch);
+  if (playSfx) {
+    Sfx.play(
+      launchSfx ?? (faceDown ? SfxId.cardDraw : sfxForUnoCard(card)),
+    );
+  }
 
   final controller = AnimationController(
     vsync: _UnoFlyTicker(),
@@ -122,7 +114,7 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   try {
     await controller.forward();
   } catch (_) {}
-  if (land != null) Sfx.play(land);
+  if (landSfx != null) Sfx.play(landSfx);
   if (!keepAtEnd) {
     GameFlyOverlay.remove(entry);
     animation.dispose();

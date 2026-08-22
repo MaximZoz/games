@@ -1752,6 +1752,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   }
 
   Future<void> _makeMove(int cell) async {
+    Sfx.play(SfxId.place);
     setState(() => _isMakingMove = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);
@@ -3216,17 +3217,14 @@ class _AnimatedGameCell extends StatelessWidget {
     );
     // Пустые клетки без pulse — без TweenAnimationBuilder (критично для 8×8/10×10).
     if (symbol.isEmpty) return cell;
-    return SfxOnInit(
-      id: symbol.toUpperCase() == 'O' ? SfxId.placeO : SfxId.placeX,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: 1),
-        duration: AppDurations.short,
-        curve: Curves.easeOutBack,
-        builder: (context, t, child) {
-          return Transform.scale(scale: t, child: child);
-        },
-        child: cell,
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: AppDurations.short,
+      curve: Curves.easeOutBack,
+      builder: (context, t, child) {
+        return Transform.scale(scale: t, child: child);
+      },
+      child: cell,
     );
   }
 }
