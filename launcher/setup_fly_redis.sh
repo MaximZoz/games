@@ -8,7 +8,8 @@
 # Примеры:
 #   ./launcher/setup_fly_redis.sh deploy.dev.env
 #   ./launcher/setup_fly_redis.sh deploy.cursor.env
-#   FLY_APP_NAME=multigameszozu FLY_API_TOKEN=... ./launcher/setup_fly_redis.sh
+#   # прод без env-файла, если уже fly auth login:
+#   FLY_APP_NAME=multigameszozu ./launcher/setup_fly_redis.sh
 #
 # Опционально в env-файле:
 #   FLY_REDIS_NAME=multigameszozu-redis   # имя Upstash DB (по умолчанию <app>-redis)
@@ -16,10 +17,14 @@
 #   FLY_REDIS_PLAN=          # по умолчанию НЕ передаём --plan (Fly возьмёт default).
 #                            # Список: fly redis plans
 #   FLY_ORG=personal
+#   FLY_API_TOKEN=...        # необязателен, если уже выполнен fly auth login
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${1:-}"
+
+# Если токен уже в окружении — не даём env-файлу его затереть битым значением.
+PRESET_FLY_API_TOKEN="${FLY_API_TOKEN:-}"
 
 if [[ -n "$ENV_FILE" ]]; then
   if [[ ! -f "$ENV_FILE" ]]; then
@@ -41,15 +46,17 @@ if [[ -n "$ENV_FILE" ]]; then
   set +a
 fi
 
-required_vars=("FLY_API_TOKEN" "FLY_APP_NAME")
-for var_name in "${required_vars[@]}"; do
-  if [[ -z "${!var_name:-}" ]]; then
-    echo "Не задана обязательная переменная: $var_name"
-    echo "Передай env-файл или экспортируй переменные."
-    echo "Пример: ./launcher/setup_fly_redis.sh deploy.dev.env"
-    exit 1
-  fi
-done
+if [[ -n "$PRESET_FLY_API_TOKEN" ]]; then
+  FLY_API_TOKEN="$PRESET_FLY_API_TOKEN"
+  export FLY_API_TOKEN
+fi
+
+if [[ -z "${FLY_APP_NAME:-}" ]]; then
+  echo "Не задана обязательная переменная: FLY_APP_NAME"
+  echo "Пример: FLY_APP_NAME=multigameszozu ./launcher/setup_fly_redis.sh"
+  echo "   или: ./launcher/setup_fly_redis.sh deploy.cursor.env"
+  exit 1
+fi
 
 FLY_REGION="${FLY_REGION:-ams}"
 FLY_REDIS_NAME="${FLY_REDIS_NAME:-${FLY_APP_NAME}-redis}"
@@ -78,6 +85,17 @@ echo "==> Plan:       ${FLY_REDIS_PLAN:-<default>}"
 echo "Проверяю доступ Fly..."
 whoami_out="$("$FLY_BIN" auth whoami 2>&1 || true)"
 echo "$whoami_out"
+if ! printf '%s\n' "$whoami_out" | grep -Eqi '@|user|email|Macaroon|authenticated'; then
+  # whoami обычно печатает email; если явная ошибка auth — подсказка.
+  if printf '%s\n' "$whoami_out" | grep -qi 'must be authenticated\|no access token\|not authenticated'; then
+    echo
+    echo "Нет рабочей Fly-аутентификации."
+    echo "  unset FLY_API_TOKEN"
+    echo "  fly auth login"
+    echo "  # либо задай рабочий FLY_API_TOKEN и НЕ дай env-файлу его затереть"
+    exit 1
+  fi
+fi
 
 if ! "$FLY_BIN" status --app "$FLY_APP_NAME" >/dev/null 2>&1; then
   echo
@@ -104,6 +122,7 @@ fi
 
 if [[ "$redis_exists" -eq 0 ]]; then
   echo "Создаю Upstash Redis: $FLY_REDIS_NAME ..."
+  echo "(ProdPack → No автоматически; $200/mo addon не нужен)"
   create_args=(
     redis create
     --name "$FLY_REDIS_NAME"
@@ -117,7 +136,14 @@ if [[ "$redis_exists" -eq 0 ]]; then
   if [[ -n "$FLY_ORG" ]]; then
     create_args+=(--org "$FLY_ORG")
   fi
-  "$FLY_BIN" "${create_args[@]}"
+  # Интерактивный вопрос ProdPack: всегда отвечаем No.
+  if ! printf 'n\n' | "$FLY_BIN" "${create_args[@]}"; then
+    echo "fly redis create не удался. Попробуй вручную:"
+    echo "  unset FLY_API_TOKEN"
+    echo "  fly auth login"
+    echo "  printf 'n\\n' | fly redis create --name $FLY_REDIS_NAME --region $FLY_REGION --no-replicas --enable-eviction"
+    exit 1
+  fi
 else
   echo "Redis $FLY_REDIS_NAME уже есть — пропускаю create."
 fi
