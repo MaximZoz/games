@@ -309,6 +309,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
         expand: expand,
         onInvite: (id) => unawaited(_invite(id)),
         onCancel: (id) => unawaited(_cancelInvite(id)),
+        profileReturnPath: '/games/durak/lobby/${widget.lobbyId}?mode=invite',
       ),
     );
   }

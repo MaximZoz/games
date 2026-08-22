@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -8,9 +10,11 @@ import 'package:multigames_client/games/games_repository.dart'
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
 const List<IconData> kLobbyPresetAvatarIcons = [
@@ -212,8 +216,8 @@ class LobbySearchBanner extends StatelessWidget {
 /// Карточка «Игроки N/M» для своей игры на 3–4 — слоты с аватарами + чат.
 ///
 /// Общий вид крестиков и дурака: участники, пустые места, чат группы
-/// и «добавить в друзья».
-class LobbyMultiPlayersCard extends StatelessWidget {
+/// и «добавить в друзья». Тап по игроку открывает полную карточку профиля.
+class LobbyMultiPlayersCard extends ConsumerWidget {
   const LobbyMultiPlayersCard({
     super.key,
     required this.players,
@@ -226,6 +230,7 @@ class LobbyMultiPlayersCard extends StatelessWidget {
     this.onOpenChat,
     this.onAddFriend,
     this.onPlayerTap,
+    this.profileReturnPath,
   });
 
   final List<LobbyPlayer> players;
@@ -238,9 +243,10 @@ class LobbyMultiPlayersCard extends StatelessWidget {
   final VoidCallback? onOpenChat;
   final VoidCallback? onAddFriend;
   final ValueChanged<LobbyPlayer>? onPlayerTap;
+  final String? profileReturnPath;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final count = playersCount ?? players.length;
     final seats = maxPlayers.clamp(2, 6);
     return GradientCard(
@@ -272,9 +278,11 @@ class LobbyMultiPlayersCard extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
-                          onTap: onPlayerTap == null
-                              ? null
-                              : () => onPlayerTap!(player),
+                          onTap: () => _openPlayerProfile(
+                            context,
+                            ref,
+                            player,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 2,
@@ -338,6 +346,31 @@ class LobbyMultiPlayersCard extends StatelessWidget {
               color: AppColors.accentStart,
             ),
         ],
+      ),
+    );
+  }
+
+  void _openPlayerProfile(
+    BuildContext context,
+    WidgetRef ref,
+    LobbyPlayer player,
+  ) {
+    if (onPlayerTap != null) {
+      onPlayerTap!(player);
+      return;
+    }
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: player.id,
+        displayName: player.displayName,
+        avatarKind: player.avatarKind,
+        avatarValue: player.avatarValue,
+        frameCode: player.frameCode,
+        frameColor: player.frameColor,
+        messageFrom: 'games',
+        messageReturnPath: profileReturnPath,
       ),
     );
   }
@@ -571,6 +604,7 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
     required this.onCancel,
     this.declinedIds = const {},
     this.onFriendTap,
+    this.profileReturnPath,
   });
 
   final AsyncValue<FriendsSnapshot> friendsAsync;
@@ -584,6 +618,7 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
   final ValueChanged<String> onInvite;
   final ValueChanged<String> onCancel;
   final ValueChanged<FriendItem>? onFriendTap;
+  final String? profileReturnPath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -640,49 +675,65 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    if (onFriendTap == null)
-                      avatar
-                    else
-                      Tooltip(
+                    Expanded(
+                      child: Tooltip(
                         message: context.l10n.userInfoTitle,
                         child: MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => onFriendTap!(friend),
+                            onTap: () => _openFriendProfile(
+                              context,
+                              ref,
+                              friend,
+                            ),
                             behavior: HitTestBehavior.opaque,
-                            child: avatar,
+                            child: Row(
+                              children: [
+                                avatar,
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        name.isEmpty
+                                            ? context.l10n.commonPlayer
+                                            : name,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w500,
+                                          decoration:
+                                              TextDecoration.underline,
+                                          decorationColor:
+                                              AppColors.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (statusText.isNotEmpty)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            statusText,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 12,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name.isEmpty ? context.l10n.commonPlayer : name,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (statusText.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                statusText,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                        ],
-                      ),
                     ),
+                    const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: working || declined
                           ? null
@@ -695,17 +746,20 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                           color: AppColors.accentStart.withValues(alpha: 0.6),
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isWide(context) ? 12 : 10,
+                          vertical: 6,
                         ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
                       ),
                       child: working
                           ? const SizedBox(
-                              width: 18,
-                              height: 18,
+                              width: 16,
+                              height: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: AppColors.accentStart,
@@ -740,6 +794,35 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
             style: const TextStyle(color: Colors.red),
           ),
         ),
+      ),
+    );
+  }
+
+  void _openFriendProfile(
+    BuildContext context,
+    WidgetRef ref,
+    FriendItem friend,
+  ) {
+    if (onFriendTap != null) {
+      onFriendTap!(friend);
+      return;
+    }
+    final user = friend.user;
+    unawaited(
+      showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: user.id,
+        displayName: user.displayName,
+        avatarKind: user.avatarKind,
+        avatarValue: user.avatarValue,
+        frameCode: user.frameCode,
+        frameColor: user.frameColor,
+        age: user.age,
+        gender: user.gender,
+        about: user.about,
+        messageFrom: 'games',
+        messageReturnPath: profileReturnPath,
       ),
     );
   }

@@ -320,6 +320,8 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
         expand: expand,
         onInvite: (id) => unawaited(_invite(id)),
         onCancel: (id) => unawaited(_cancelInvite(id)),
+        profileReturnPath:
+            '/games/battleship/lobby/${widget.lobbyId}?mode=invite',
       ),
     );
   }

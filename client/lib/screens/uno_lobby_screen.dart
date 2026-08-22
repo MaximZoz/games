@@ -265,6 +265,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
         onInvite: _invite,
         onCancel: _cancelInvite,
         onFriendTap: (friend) => _showFriendProfile(friend.user),
+        profileReturnPath: '/games/uno/lobby/${widget.lobbyId}?mode=invite',
       ),
     );
   }

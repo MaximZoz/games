@@ -309,6 +309,8 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                     onCancel: (id) =>
                         unawaited(_cancelInviteFriend(context, id)),
                     onFriendTap: (friend) => _showFriendInfo(context, friend),
+                    profileReturnPath:
+                        '/games/tictactoe/lobby/${widget.lobbyId}?mode=invite',
                   ),
                 );
               }

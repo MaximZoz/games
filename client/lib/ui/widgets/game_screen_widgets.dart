@@ -9,6 +9,7 @@ import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -407,14 +408,26 @@ class GameOpponentCard extends StatelessWidget {
           ),
           SizedBox(width: compact ? 10 : 14),
           Flexible(
-            child: Text(
-              displayName,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: compact ? 14 : 16,
-                color: AppColors.textPrimary,
+            child: Tooltip(
+              message: infoTooltip,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: onInfoTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: compact ? 14 : 16,
+                      color: AppColors.textPrimary,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (!isBot && onMessageTap != null)
@@ -1758,52 +1771,56 @@ class GameRematchSection extends StatelessWidget {
       final btnPad = compact
           ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
           : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.gameRematchOffer,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: compact ? 15 : 16,
-              fontWeight: FontWeight.w700,
+      return _capDesktopWidth(
+        context,
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.gameRematchOffer,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: compact ? 15 : 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          SizedBox(height: compact ? 12 : 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => onDecline(rematchOffer.lobbyId),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: AppColors.textSecondary.withValues(alpha: 0.45),
+            SizedBox(height: compact ? 12 : 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => onDecline(rematchOffer.lobbyId),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color:
+                            AppColors.textSecondary.withValues(alpha: 0.45),
+                      ),
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
                     ),
-                    padding: btnPad,
-                    minimumSize: const Size(0, 44),
+                    child: Text(context.l10n.commonDecline),
                   ),
-                  child: Text(context.l10n.commonDecline),
                 ),
-              ),
-              SizedBox(width: compact ? 10 : 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => onAccept(rematchOffer.lobbyId),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                    foregroundColor: Colors.white,
-                    padding: btnPad,
-                    minimumSize: const Size(0, 44),
+                SizedBox(width: compact ? 10 : 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => onAccept(rematchOffer.lobbyId),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      foregroundColor: Colors.white,
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
+                    ),
+                    child: Text(context.l10n.commonAccept),
                   ),
-                  child: Text(context.l10n.commonAccept),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       );
     }
     if (iDeclinedRematch) {
@@ -1863,55 +1880,67 @@ class GameRematchSection extends StatelessWidget {
     final btnPadding = compact
         ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    // В одну колонку на всю ширину — всё читается в одном окне.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FilledButton.icon(
-          onPressed: isRematching ? null : onRematch,
-          icon: isRematching
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
-          label: Text(isRematching
-              ? context.l10n.commonCreating
-              : context.l10n.gameRematch),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            foregroundColor: Colors.white,
-            padding: btnPadding,
-            minimumSize: const Size(0, 44),
+    return _capDesktopWidth(
+      context,
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            onPressed: isRematching ? null : onRematch,
+            icon: isRematching
+                ? SizedBox(
+                    width: compact ? 16 : 18,
+                    height: compact ? 16 : 18,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
+            label: Text(isRematching
+                ? context.l10n.commonCreating
+                : context.l10n.gameRematch),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+              padding: btnPadding,
+              minimumSize: const Size(0, 44),
+            ),
           ),
-        ),
-        SizedBox(height: compact ? 8 : 10),
-        OutlinedButton.icon(
-          onPressed: isFindingGame ? null : onFindGame,
-          icon: isFindingGame
-              ? SizedBox(
-                  width: compact ? 16 : 18,
-                  height: compact ? 16 : 18,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(Icons.search_rounded, size: compact ? 18 : 20),
-          label: Text(isFindingGame
-              ? context.l10n.commonSearching
-              : context.l10n.gameOtherOpponent),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            backgroundColor: Colors.white,
-            side: const BorderSide(color: AppColors.accentStart),
-            padding: btnPadding,
-            minimumSize: const Size(0, 44),
+          SizedBox(height: compact ? 8 : 10),
+          OutlinedButton.icon(
+            onPressed: isFindingGame ? null : onFindGame,
+            icon: isFindingGame
+                ? SizedBox(
+                    width: compact ? 16 : 18,
+                    height: compact ? 16 : 18,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.search_rounded, size: compact ? 18 : 20),
+            label: Text(isFindingGame
+                ? context.l10n.commonSearching
+                : context.l10n.gameOtherOpponent),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accentStart,
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.accentStart),
+              padding: btnPadding,
+              minimumSize: const Size(0, 44),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+Widget _capDesktopWidth(BuildContext context, Widget child) {
+  if (!isWide(context)) return child;
+  return Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: child,
+    ),
+  );
 }

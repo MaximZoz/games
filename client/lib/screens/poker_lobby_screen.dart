@@ -294,6 +294,7 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
         expand: expand,
         onInvite: (id) => unawaited(_invite(id)),
         onCancel: (id) => unawaited(_cancelInvite(id)),
+        profileReturnPath: '/games/poker/lobby/${widget.lobbyId}?mode=invite',
       ),
     );
   }
