@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:multigames_client/core/sfx.dart';
 
 import '../app_theme.dart';
 
@@ -87,12 +86,7 @@ class _AppButtonState extends State<AppButton>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: widget.onPressed == null
-                  ? null
-                  : () {
-                      Sfx.play(SfxId.uiTap);
-                      widget.onPressed!();
-                    },
+              onTap: widget.onPressed,
               borderRadius: BorderRadius.circular(AppRadius.button - 2),
               child: Padding(
                 padding: padding,

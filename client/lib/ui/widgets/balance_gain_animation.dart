@@ -215,13 +215,16 @@ Future<void> playBalanceGain({
       if (startRect != null &&
           targetRect != null &&
           overlay != null &&
-          (context.mounted ? TickerMode.of(context) : true)) {
+          context.mounted &&
+          TickerMode.of(context) &&
+          GameFlyOverlay.shouldShowFlight(context: context)) {
         await _flyCoin(
           overlay: overlay,
           from: _centerOf(startRect),
           to: _centerOf(targetRect),
           coinType: flyType,
           size: math.max(18, startRect.shortestSide.clamp(16, 28)),
+          host: context,
         );
       }
       // Счётчик тулбара не зависит от context экрана (на мобилке он может
@@ -296,7 +299,8 @@ Future<void> playBalanceLoss({
                 ? Overlay.maybeOf(context, rootOverlay: true) ??
                     Overlay.maybeOf(context)
                 : null);
-        if (overlay != null) {
+        if (overlay != null &&
+            GameFlyOverlay.shouldShowFlight(context: context)) {
           final fromPt = _centerOf(startRect);
           await _flyCoin(
             overlay: overlay,
@@ -304,6 +308,7 @@ Future<void> playBalanceLoss({
             to: Offset(fromPt.dx, fromPt.dy + 96),
             coinType: flyType,
             size: math.max(18, startRect.shortestSide.clamp(16, 28)),
+            host: context,
           );
         }
       }
@@ -336,6 +341,7 @@ Future<void> _flyCoin({
   required Offset to,
   required CoinType coinType,
   required double size,
+  BuildContext? host,
   VoidCallback? onArrived,
 }) async {
   final completer = Completer<void>();
@@ -353,7 +359,11 @@ Future<void> _flyCoin({
         if (!completer.isCompleted) completer.complete();
       },
     ),
+    host: host,
   );
+  if (!entry.mounted) {
+    return;
+  }
   return completer.future.timeout(
     const Duration(milliseconds: 900),
     onTimeout: () {

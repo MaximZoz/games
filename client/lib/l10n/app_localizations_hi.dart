@@ -2020,7 +2020,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'चाल का समय: $time.';
+    return 'चाल का समय: $time. समय खत्म होना हार है।';
   }
 
   @override

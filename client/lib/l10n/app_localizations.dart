@@ -3860,7 +3860,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesTurnTime.
   ///
   /// In ru, this message translates to:
-  /// **'Время на ход: {time}.'**
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
   String rulesTurnTime(String time);
 
   /// No description provided for @rulesStake.

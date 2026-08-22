@@ -10,6 +10,7 @@ import 'sfx_html_stub.dart' if (dart.library.html) 'sfx_html_web.dart' as html_s
 /// плюс голосовое «Уно!».
 enum SfxId {
   uiTap,
+  notify,
   cardDraw,
   cardPlay,
   cardLand,
@@ -43,6 +44,7 @@ class SfxController {
   @visibleForTesting
   static const assetPaths = <SfxId, String>{
     SfxId.uiTap: 'assets/sfx/ui_tap.wav',
+    SfxId.notify: 'assets/sfx/notify.wav',
     SfxId.cardDraw: 'assets/sfx/card_draw.wav',
     SfxId.cardPlay: 'assets/sfx/card_play.wav',
     SfxId.cardLand: 'assets/sfx/card_land.wav',
@@ -129,5 +131,43 @@ class SfxController {
       _preloadDone = null;
       if (!done.isCompleted) done.complete();
     }
+  }
+}
+
+/// Ink-всплеск Material-кнопок и [InkWell] + короткий клик.
+class SfxSplashFactory extends InteractiveInkFeatureFactory {
+  const SfxSplashFactory(this.inner);
+
+  final InteractiveInkFeatureFactory inner;
+
+  @override
+  InteractiveInkFeature create({
+    required MaterialInkController controller,
+    required RenderBox referenceBox,
+    required Offset position,
+    required Color color,
+    required TextDirection textDirection,
+    bool containedInkWell = false,
+    RectCallback? rectCallback,
+    BorderRadius? borderRadius,
+    ShapeBorder? customBorder,
+    double? radius,
+    VoidCallback? onRemoved,
+  }) {
+    Sfx.instance.warmup();
+    Sfx.play(SfxId.uiTap);
+    return inner.create(
+      controller: controller,
+      referenceBox: referenceBox,
+      position: position,
+      color: color,
+      textDirection: textDirection,
+      containedInkWell: containedInkWell,
+      rectCallback: rectCallback,
+      borderRadius: borderRadius,
+      customBorder: customBorder,
+      radius: radius,
+      onRemoved: onRemoved,
+    );
   }
 }

@@ -2020,7 +2020,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Время на ход: $time.';
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
   }
 
   @override

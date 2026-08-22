@@ -53,21 +53,28 @@ Future<CardFlyTicket> playCardFlyAnimation({
   double endScale = 1.0,
   double arcLift = 0,
   bool keepAtEnd = false,
+  bool playSfx = true,
 }) async {
-  // Не играть поверх чатов/других вкладок shell.
-  if (!context.mounted || !TickerMode.of(context)) {
+  // Не играть поверх чатов/других вкладок shell (IndexedStack держит партию).
+  if (!context.mounted ||
+      !TickerMode.of(context) ||
+      !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return CardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
-  Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
+  if (playSfx) {
+    Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
+  }
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);
   final anim = CurvedAnimation(parent: controller, curve: curve);
 
   late final OverlayEntry entry;
-  entry = GameFlyOverlay.insert(overlay, (ctx) {
+  entry = GameFlyOverlay.insert(
+    overlay,
+    (ctx) {
       return IgnorePointer(
         child: AnimatedBuilder(
           animation: anim,
@@ -116,6 +123,8 @@ Future<CardFlyTicket> playCardFlyAnimation({
         ),
       );
     },
+    host: context,
+    gameOnly: true,
   );
   try {
     await controller.forward();
@@ -216,6 +225,7 @@ Future<void> playCardsFlyAnimation({
   bool keepAtEnd = false,
   void Function(List<CardFlyTicket> tickets)? onTickets,
   void Function(int index, PlayingCard card)? onCardLaunch,
+  bool playSfx = true,
 }) async {
   if (cards.isEmpty) return;
   final tickets = <CardFlyTicket>[];
@@ -247,6 +257,7 @@ Future<void> playCardsFlyAnimation({
         endScale: endScale,
         arcLift: arcLift,
         keepAtEnd: keepAtEnd,
+        playSfx: playSfx,
       );
       tickets.add(ticket);
     }

@@ -28,10 +28,6 @@ class UnoCardFlyTicket {
   }
 }
 
-SfxId sfxForUnoCard(UnoCard card) {
-  return card.kind == UnoCardKind.number ? SfxId.cardPlay : SfxId.unoSpecial;
-}
-
 Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   required BuildContext context,
   required UnoCard card,
@@ -52,14 +48,16 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   SfxId? landSfx,
   bool playSfx = true,
 }) async {
-  if (!context.mounted || !TickerMode.of(context)) {
+  if (!context.mounted ||
+      !TickerMode.of(context) ||
+      !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return UnoCardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
   if (playSfx) {
     Sfx.play(
-      launchSfx ?? (faceDown ? SfxId.cardDraw : sfxForUnoCard(card)),
+      launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay),
     );
   }
 
@@ -109,7 +107,7 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
         },
       ),
     );
-  });
+  }, host: context, gameOnly: true);
 
   try {
     await controller.forward();

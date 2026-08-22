@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Bez časového limitu na tah.",
-  "rulesTurnTime": "Čas na tah: {time}.",
+  "rulesTurnTime": "Čas na tah: {time}. Vypršení času znamená prohru.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

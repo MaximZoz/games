@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Жүріске уақыт шектеуі жоқ.",
-  "rulesTurnTime": "Жүріс уақыты: {time}.",
+  "rulesTurnTime": "Жүріс уақыты: {time}. Уақыт бітсе — жеңіліс.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

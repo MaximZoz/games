@@ -2020,7 +2020,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Czas na ruch: $time.';
+    return 'Czas na ruch: $time. Koniec czasu oznacza przegraną.';
   }
 
   @override

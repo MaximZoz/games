@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Kein Zeitlimit pro Zug.",
-  "rulesTurnTime": "Zeit pro Zug: {time}.",
+  "rulesTurnTime": "Zeit pro Zug: {time}. Zeitüberschreitung bedeutet Niederlage.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

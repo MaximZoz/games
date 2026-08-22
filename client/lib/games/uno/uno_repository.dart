@@ -336,6 +336,15 @@ class UnoGameView {
   }
 }
 
+/// Звук «Уно!» у всех за столом, один раз на новое событие.
+bool shouldPlayUnoCallSfx({
+  required int eventSeq,
+  required int heardSeq,
+  required String lastEventType,
+}) {
+  return eventSeq > heardSeq && lastEventType == UnoActionType.callUno;
+}
+
 /// Чужой ход в сброс — только если это не только что сыгранная нами карта.
 bool shouldAnimateRemoteUnoPlay({
   required String lastEventType,

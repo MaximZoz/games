@@ -2020,7 +2020,7 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tid pr. træk: $time.';
+    return 'Tid pr. træk: $time. Tiden ude er et nederlag.';
   }
 
   @override

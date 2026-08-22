@@ -3334,6 +3334,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         endAngle: 0,
         arcLift: iGo ? 16 : 28,
         keepAtEnd: true,
+        playSfx: iGo,
       );
       if (!mounted) {
         ticket.dismiss();
@@ -3504,6 +3505,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       endAngles: List<double>.filled(cards.length, 0.1),
       arcLift: 22,
       keepAtEnd: true,
+      playSfx: false,
       onCardLaunch: (_, card) {
         if (!mounted) return;
         setState(() => _leftTableCards.add(card));
@@ -3567,6 +3569,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         curve: kDurakFlyCurve,
         faceDown: true,
         flipToFace: false,
+        playSfx: false,
         beginScale: 1,
         endScale: endScale,
         beginAngle: 0.12,
@@ -3841,6 +3844,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         endAngles: [landAngle],
         arcLift: 28,
         keepAtEnd: true,
+        playSfx: false,
         onTickets: (t) => tickets = t,
       );
       // Сначала карта на столе под overlay, затем dismiss — без «пустого» кадра

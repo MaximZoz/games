@@ -1204,7 +1204,7 @@
     }
   },
   "rulesNoTimeLimit": "Без ограничения по времени на ход.",
-  "rulesTurnTime": "Время на ход: {time}.",
+  "rulesTurnTime": "Время на ход: {time}. Если время вышло — проигрыш.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

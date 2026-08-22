@@ -546,6 +546,7 @@ class UnoEngine {
     }
     players[index].saidUno = true;
     _clearUnoWindow();
+    _noteEvent(UnoActionType.callUno, players[index].userId, null);
   }
 
   void _applyChallengeUno(String? actorUserId, String? targetUserId) {

@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Yurish uchun vaqt cheklovi yo‘q.",
-  "rulesTurnTime": "Yurish vaqti: {time}.",
+  "rulesTurnTime": "Yurish vaqti: {time}. Vaqt tugasa — mag'lubiyat.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

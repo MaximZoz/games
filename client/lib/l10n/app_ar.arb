@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "لا يوجد حد زمني لكل نقلة.",
-  "rulesTurnTime": "وقت النقلة: {time}.",
+  "rulesTurnTime": "وقت النقلة: {time}. انتهاء الوقت يعني الخسارة.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

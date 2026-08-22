@@ -1,19 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Корневые [OverlayEntry] полётов (монеты, карты, фишки).
 ///
 /// Вставки идут в root overlay и переживают смену вкладки shell —
-/// без реестра иконка остаётся на другой странице.
+/// [IndexedStack] не выключает тикеры скрытой партии, поэтому без
+/// проверки видимого маршрута карты остаются в чатах.
 class GameFlyOverlay {
   GameFlyOverlay._();
 
   static final List<OverlayEntry> _entries = <OverlayEntry>[];
+  static String _visiblePath = '';
 
   static int get debugActiveCount => _entries.length;
 
-  static OverlayEntry insert(OverlayState overlay, WidgetBuilder builder) {
+  @visibleForTesting
+  static void debugReset() {
+    dismissAll();
+    _visiblePath = '';
+  }
+
+  static String get visiblePath => _visiblePath;
+
+  /// Партия (онлайн или офлайн), не список игр и не лобби.
+  static bool isGamePlayPath(String path) {
+    final parts =
+        path.split('?').first.split('/').where((part) => part.isNotEmpty);
+    final segs = parts.toList();
+    if (segs.length < 3 || segs[0] != 'games') return false;
+    if (segs[2] == 'offline') return true;
+    return segs.length >= 4 && segs[2] == 'game';
+  }
+
+  static bool pathsMatch(String visible, String here) {
+    if (visible.isEmpty || here.isEmpty) return false;
+    return visible == here;
+  }
+
+  /// Текущая вкладка/страница shell. Скрытая ветка IndexedStack не совпадёт.
+  static void syncVisiblePath(String path) {
+    final next = path.trim();
+    if (next == _visiblePath) return;
+    final leaveGame = isGamePlayPath(_visiblePath) && !isGamePlayPath(next);
+    _visiblePath = next;
+    if (leaveGame || !isGamePlayPath(next)) {
+      dismissAll();
+    }
+  }
+
+  static bool isVisibleShellRoute(BuildContext context) {
+    if (!context.mounted) return false;
+    try {
+      final here = GoRouterState.of(context).uri.path;
+      return pathsMatch(_visiblePath, here);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// [gameOnly] — карты/фишки партии. Иначе монеты тулбара на любой вкладке,
+  /// но только с видимого экрана.
+  static bool shouldShowFlight({
+    BuildContext? context,
+    bool gameOnly = false,
+  }) {
+    if (gameOnly && !isGamePlayPath(_visiblePath)) return false;
+    if (context != null) return isVisibleShellRoute(context);
+    return !gameOnly || isGamePlayPath(_visiblePath);
+  }
+
+  static OverlayEntry insert(
+    OverlayState overlay,
+    WidgetBuilder builder, {
+    BuildContext? host,
+    bool gameOnly = false,
+  }) {
     late OverlayEntry entry;
     entry = OverlayEntry(builder: builder);
+    if (!shouldShowFlight(context: host, gameOnly: gameOnly)) {
+      return entry;
+    }
     _entries.add(entry);
     overlay.insert(entry);
     return entry;

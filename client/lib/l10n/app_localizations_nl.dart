@@ -2020,7 +2020,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tijd per beurt: $time.';
+    return 'Tijd per beurt: $time. Tijd overschrijden is verlies.';
   }
 
   @override

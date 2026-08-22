@@ -2020,7 +2020,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Χρόνος ανά κίνηση: $time.';
+    return 'Χρόνος ανά κίνηση: $time. Η λήξη του χρόνου είναι ήττα.';
   }
 
   @override

@@ -1081,7 +1081,8 @@ func pokerBotAction(state *poker.Game) poker.Action {
 
 // ---- Timeout ----
 
-// applyPokerTurnTimeout — если истёк ход, сбрасывает карты (фолд) действующего игрока.
+// applyPokerTurnTimeout — если истёк ход, действующий игрок проигрывает стол
+// (как сдача), а не просто сбрасывает карты в текущей раздаче.
 func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string, m map[string]string) {
 	if m["status"] != gameStatusActive {
 		return
@@ -1110,15 +1111,16 @@ func (h *GamesHandler) applyPokerTurnTimeout(ctx context.Context, gameID string,
 	if idx < 0 || idx >= len(state.Players) {
 		return
 	}
-	if err := state.Apply(idx, poker.Action{Type: poker.ActionFold}); err != nil {
-		return
-	}
+	state.ForfeitPlayer(idx)
 	h.savePokerState(ctx, gameID, fresh, state)
 	fresh["timeout"] = "1"
 	h.Rdb.HSet(ctx, "game:"+gameID, "timeout", "1")
 	h.broadcastPokerState(gameID, fresh)
-	if state.IsOver() || state.HandOver {
-		h.onPokerHandOrTableOver(ctx, gameID, fresh, state, "timeout")
+	h.promotePokerEliminatedPlayers(ctx, gameID, fresh, state)
+	if state.TableOver {
+		h.onPokerTableFinished(ctx, gameID, fresh, state, "timeout")
+	} else if state.IsOver() || state.HandOver {
+		h.schedulePokerNextHand(gameID)
 	} else if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
 		nextID := state.Players[state.ActingIndex].UserID
 		if isBot(nextID) {

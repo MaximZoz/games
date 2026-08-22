@@ -2020,7 +2020,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tempo per mossa: $time.';
+    return 'Tempo per mossa: $time. Lo scadere del tempo è una sconfitta.';
   }
 
   @override

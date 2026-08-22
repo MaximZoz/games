@@ -193,6 +193,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
+    GameFlyOverlay.syncVisiblePath(path);
     final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;

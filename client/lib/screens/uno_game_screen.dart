@@ -74,6 +74,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   final Map<int, int> _pendingOppDraw = {};
   UnoCard? _discardOverride;
   int _seenEventSeq = 0;
+  int _heardUnoCallSeq = 0;
   int _dealHeroShown = 0;
   int _seenRoundNumber = 0;
   int _seenLastRoundNumber = 0;
@@ -146,6 +147,16 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _localPlayedIds.clear();
     }
     _seenRoundNumber = game.roundNumber;
+    final alreadyDealt = _dealAnimated;
+    if (alreadyDealt &&
+        shouldPlayUnoCallSfx(
+          eventSeq: game.eventSeq,
+          heardSeq: _heardUnoCallSeq,
+          lastEventType: game.lastEventType,
+        )) {
+      _heardUnoCallSeq = game.eventSeq;
+      Sfx.play(SfxId.unoCall);
+    }
     if (game.lastRoundNumber != _seenLastRoundNumber) {
       _seenLastRoundNumber = game.lastRoundNumber;
       _roundOverlayDismissed = false;
@@ -153,6 +164,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final topId = game.topDiscard?.id;
     if (!_dealAnimated) {
       _seenEventSeq = game.eventSeq;
+      _heardUnoCallSeq = game.eventSeq;
       _dealAnimated = true;
       _dealing = true;
       _dealHeroShown = 0;
@@ -238,9 +250,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       if (fromIndex >= 0 && fromIndex != game.myIndex) {
         await _animateOpponentPlay(game, fromIndex);
       }
-    }
-    if (game.lastEventType == UnoActionType.callUno) {
-      Sfx.play(SfxId.unoCall);
     }
     if (game.lastEventType == 'wd4_reveal' && game.lastEventCard != null) {
       await _animateWd4Reveal(game);
@@ -734,9 +743,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       if (_busy) return;
       setState(() => _busy = true);
     }
-    if (type == UnoActionType.callUno) {
-      Sfx.play(SfxId.unoCall);
-    } else if (type == UnoActionType.chooseColor ||
+    if (type == UnoActionType.chooseColor ||
         type == UnoActionType.challengeUno ||
         type == UnoActionType.challengeWd4) {
       Sfx.play(SfxId.unoSpecial);
@@ -1116,6 +1123,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _pendingDrawnIds.clear();
       _pendingOppDraw.clear();
       _seenEventSeq = 0;
+      _heardUnoCallSeq = 0;
       _lastLocalActor = null;
       _lastLocalDrawActor = null;
       _lastLocalPlayCardId = null;

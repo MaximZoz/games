@@ -2020,7 +2020,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Aika per siirto: $time.';
+    return 'Aika per siirto: $time. Ajan loppuminen on tappio.';
   }
 
   @override

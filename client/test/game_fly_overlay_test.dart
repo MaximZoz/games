@@ -3,7 +3,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 void main() {
-  tearDown(GameFlyOverlay.dismissAll);
+  tearDown(GameFlyOverlay.debugReset);
+
+  test('isGamePlayPath только партия, не список и не лобби', () {
+    expect(GameFlyOverlay.isGamePlayPath('/games/durak/game/abc'), isTrue);
+    expect(GameFlyOverlay.isGamePlayPath('/games/uno/offline'), isTrue);
+    expect(GameFlyOverlay.isGamePlayPath('/games'), isFalse);
+    expect(GameFlyOverlay.isGamePlayPath('/games/uno/lobby/l1'), isFalse);
+    expect(GameFlyOverlay.isGamePlayPath('/chats'), isFalse);
+  });
+
+  test('syncVisiblePath снимает полёты при уходе с партии', () {
+    GameFlyOverlay.syncVisiblePath('/games/durak/game/g1');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isTrue);
+    GameFlyOverlay.syncVisiblePath('/chats');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.visiblePath, '/chats');
+  });
+
+  test('shouldShowFlight не пускает игровые полёты с чатов', () {
+    GameFlyOverlay.syncVisiblePath('/chats');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.shouldShowFlight(), isTrue);
+  });
 
   testWidgets('dismissAll removes a leftover root overlay', (tester) async {
     await tester.pumpWidget(

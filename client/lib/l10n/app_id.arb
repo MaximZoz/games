@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Tanpa batas waktu per giliran.",
-  "rulesTurnTime": "Waktu per giliran: {time}.",
+  "rulesTurnTime": "Waktu per giliran: {time}. Kehabisan waktu adalah kekalahan.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

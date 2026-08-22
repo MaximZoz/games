@@ -2020,7 +2020,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Hamle süresi: $time.';
+    return 'Hamle süresi: $time. Süre dolarsa yenilirsiniz.';
   }
 
   @override

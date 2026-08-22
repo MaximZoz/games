@@ -1007,7 +1007,7 @@
     }
   },
   "rulesNoTimeLimit": "Ei aikarajaa siirrolle.",
-  "rulesTurnTime": "Aika per siirto: {time}.",
+  "rulesTurnTime": "Aika per siirto: {time}. Ajan loppuminen on tappio.",
   "@rulesTurnTime": {
     "placeholders": {
       "time": {

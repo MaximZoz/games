@@ -2020,7 +2020,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Yurish vaqti: $time.';
+    return 'Yurish vaqti: $time. Vaqt tugasa — mag\'lubiyat.';
   }
 
   @override
