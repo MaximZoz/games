@@ -53,6 +53,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   double endScale = 1.0,
   double arcLift = 0,
   bool keepAtEnd = false,
+  bool playSfx = true,
 }) async {
   // Не играть поверх чатов/других вкладок shell.
   if (!context.mounted || !TickerMode.of(context)) {
@@ -60,7 +61,9 @@ Future<CardFlyTicket> playCardFlyAnimation({
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
-  Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
+  if (playSfx) {
+    Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
+  }
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);
@@ -216,6 +219,7 @@ Future<void> playCardsFlyAnimation({
   bool keepAtEnd = false,
   void Function(List<CardFlyTicket> tickets)? onTickets,
   void Function(int index, PlayingCard card)? onCardLaunch,
+  bool playSfx = true,
 }) async {
   if (cards.isEmpty) return;
   final tickets = <CardFlyTicket>[];
@@ -247,6 +251,7 @@ Future<void> playCardsFlyAnimation({
         endScale: endScale,
         arcLift: arcLift,
         keepAtEnd: keepAtEnd,
+        playSfx: playSfx,
       );
       tickets.add(ticket);
     }

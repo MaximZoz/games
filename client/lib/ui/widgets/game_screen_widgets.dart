@@ -517,6 +517,9 @@ class _GameActionsOverlayState extends State<GameActionsOverlay>
     if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
       _applyBlink();
     }
+    if (!oldWidget.opponentOfferedDraw && widget.opponentOfferedDraw) {
+      Sfx.play(SfxId.notify);
+    }
   }
 
   void _applyBlink() {
@@ -1759,6 +1762,38 @@ class GameRewardChip extends StatelessWidget {
   }
 }
 
+/// Звук [SfxId.notify], когда [token] впервые появляется или меняется.
+class _SfxNotifyOnChange extends StatefulWidget {
+  const _SfxNotifyOnChange({required this.token, required this.child});
+
+  final String token;
+  final Widget child;
+
+  @override
+  State<_SfxNotifyOnChange> createState() => _SfxNotifyOnChangeState();
+}
+
+class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Sfx.play(SfxId.notify);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _SfxNotifyOnChange oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.token != oldWidget.token) {
+      Sfx.play(SfxId.notify);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 /// Блок «Повторить» / «Другой соперник» и принятие реванша — общий для игр.
 class GameRematchSection extends StatelessWidget {
   const GameRematchSection({
@@ -1822,55 +1857,58 @@ class GameRematchSection extends StatelessWidget {
       final btnPad = compact
           ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
           : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
-      return _capDesktopWidth(
-        context,
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              context.l10n.gameRematchOffer,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: compact ? 15 : 16,
-                fontWeight: FontWeight.w700,
+      return _SfxNotifyOnChange(
+        token: rematchOffer.lobbyId,
+        child: _capDesktopWidth(
+          context,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.l10n.gameRematchOffer,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: compact ? 15 : 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            SizedBox(height: compact ? 12 : 14),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => onDecline(rematchOffer.lobbyId),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color:
-                            AppColors.textSecondary.withValues(alpha: 0.45),
+              SizedBox(height: compact ? 12 : 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => onDecline(rematchOffer.lobbyId),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.45),
+                        ),
+                        padding: btnPad,
+                        minimumSize: const Size(0, 44),
                       ),
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
+                      child: Text(context.l10n.commonDecline),
                     ),
-                    child: Text(context.l10n.commonDecline),
                   ),
-                ),
-                SizedBox(width: compact ? 10 : 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => onAccept(rematchOffer.lobbyId),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
+                  SizedBox(width: compact ? 10 : 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => onAccept(rematchOffer.lobbyId),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accentStart,
+                        foregroundColor: Colors.white,
+                        padding: btnPad,
+                        minimumSize: const Size(0, 44),
+                      ),
+                      child: Text(context.l10n.commonAccept),
                     ),
-                    child: Text(context.l10n.commonAccept),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
