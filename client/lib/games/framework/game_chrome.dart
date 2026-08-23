@@ -4,7 +4,7 @@
 ///
 /// - [GameActionsOverlay] — флаг «сдаться» + рукопожатие «ничья»
 /// - [handleGameScreenClose] / [confirmGameActionDialog] — крестик / свайп назад
-/// - [GameTurnCountdown], [TurnTimerBorder], [TurnTimerAppFrame] — таймер хода
+/// - [GameTurnCountdown], [TurnTimerBorder], [TurnTimerAppFrame], [MyTurnAlert] — таймер и сигнал хода
 /// - [GameActorHighlight] — чей ход: рамка с таймером или без лимита времени
 /// - [GameRematchSection] — «Повторить» / «Другой соперник»
 /// - [GameStatusWithReward], [GameRewardChip] — статус + монеты

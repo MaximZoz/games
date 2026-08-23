@@ -4534,6 +4534,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
+                if (view != null)
+                  MyTurnAlert(
+                    isMyTurn: view.isMyTurn &&
+                        !view.isOver &&
+                        !view.iAmEliminated,
+                  ),
                 // bottom: false — веер чуть заезжает под нижнюю панель.
                 SafeArea(
                   bottom: false,

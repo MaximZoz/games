@@ -12,6 +12,7 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -371,6 +372,20 @@ class AppShell extends ConsumerWidget {
         ref.watch(supportInboxRealtimeProvider);
       }
     }
+    ref.listen<int>(chatsUnreadCountProvider, (prev, next) {
+      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+    });
+    ref.listen<int>(friendsIncomingCountProvider, (prev, next) {
+      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+    });
+    ref.listen<int>(gameInvitesCountProvider, (prev, next) {
+      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+    });
+    ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
+      if (AlertSfx.shouldPlayCountBump(prev, next)) {
+        Sfx.play(SfxId.yourTurn);
+      }
+    });
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
     final gamesMyTurn = ref.watch(gamesMyTurnCountProvider);
