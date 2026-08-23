@@ -24,6 +24,8 @@ enum SfxId {
   win,
   coins,
   deny,
+  tick,
+  yourTurn,
 }
 
 abstract final class Sfx {
@@ -58,6 +60,8 @@ class SfxController {
     SfxId.win: 'assets/sfx/win.wav',
     SfxId.coins: 'assets/sfx/coins.wav',
     SfxId.deny: 'assets/sfx/deny.wav',
+    SfxId.tick: 'assets/sfx/tick.wav',
+    SfxId.yourTurn: 'assets/sfx/your_turn.wav',
   };
 
   final Map<SfxId, String> _dataUris = {};
@@ -105,12 +109,23 @@ class SfxController {
       unawaited(_preload().then((_) {
         final ready = _dataUris[id];
         if (ready != null && _enabled) {
-          html_sfx.htmlSfxPlay(ready, volume: 0.55);
+          html_sfx.htmlSfxPlay(ready, volume: _volumeFor(id));
         }
       }));
       return;
     }
-    html_sfx.htmlSfxPlay(uri, volume: 0.55);
+    html_sfx.htmlSfxPlay(uri, volume: _volumeFor(id));
+  }
+
+  static double _volumeFor(SfxId id) {
+    switch (id) {
+      case SfxId.tick:
+        return 0.28;
+      case SfxId.yourTurn:
+        return 0.5;
+      default:
+        return 0.55;
+    }
   }
 
   Future<void> _preload() async {
@@ -169,5 +184,65 @@ class SfxSplashFactory extends InteractiveInkFeatureFactory {
       radius: radius,
       onRemoved: onRemoved,
     );
+  }
+}
+
+/// Рост бейджа (чаты / заявки / инвайты) → один notify, не на первом кадре.
+abstract final class AlertSfx {
+  static bool shouldPlayCountBump(int? previous, int next) {
+    return previous != null && next > previous;
+  }
+}
+
+/// Тик часов на своём ходе и сигнал «ваш ход» (без двойного звука).
+abstract final class TurnClockSfx {
+  static bool _wasMyTurn = false;
+  static int? _lastTickSecond;
+  static int? _skipTickSecond;
+
+  @visibleForTesting
+  static void Function(SfxId id)? debugOnPlay;
+
+  @visibleForTesting
+  static void reset() {
+    _wasMyTurn = false;
+    _lastTickSecond = null;
+    _skipTickSecond = null;
+    debugOnPlay = null;
+  }
+
+  static void sync({
+    required bool isMyTurn,
+    required int remainingSeconds,
+    required bool clockVisible,
+    bool hasTimer = true,
+    bool announceOnly = false,
+  }) {
+    if (!isMyTurn) {
+      _wasMyTurn = false;
+      _lastTickSecond = null;
+      _skipTickSecond = null;
+      return;
+    }
+    if (!_wasMyTurn) {
+      _wasMyTurn = true;
+      if (!announceOnly) {
+        _lastTickSecond = remainingSeconds;
+        _skipTickSecond = remainingSeconds;
+      }
+      _play(SfxId.yourTurn);
+      return;
+    }
+    if (announceOnly) return;
+    if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
+    if (_skipTickSecond == remainingSeconds) return;
+    if (_lastTickSecond == remainingSeconds) return;
+    _lastTickSecond = remainingSeconds;
+    _play(SfxId.tick);
+  }
+
+  static void _play(SfxId id) {
+    debugOnPlay?.call(id);
+    Sfx.play(id);
   }
 }

@@ -1004,6 +1004,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return Stack(
           clipBehavior: Clip.none,
           children: [
+            MyTurnAlert(isMyTurn: game.isMyTurn && !isOver && !game.isHandOver),
             Positioned.fill(
               child: _buildTable(
                 game,
@@ -2426,6 +2427,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                     borderWidth: borderW,
                     radius: 10,
                     showIdleBorder: false,
+                    myTurnClock: true,
                     child: namePlate,
                   ),
                 ),

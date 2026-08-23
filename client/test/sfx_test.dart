@@ -46,6 +46,60 @@ void main() {
     expect(prefs.getBool('sound_enabled'), isFalse);
   });
 
+  test('тик часов только на своём видимом ходе и раз в секунду', () {
+    TurnClockSfx.reset();
+    final played = <SfxId>[];
+    TurnClockSfx.debugOnPlay = played.add;
+
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 12,
+      clockVisible: true,
+    );
+    expect(played, [SfxId.yourTurn]);
+
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 12,
+      clockVisible: true,
+    );
+    expect(played, [SfxId.yourTurn]);
+
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 11,
+      clockVisible: true,
+    );
+    expect(played, [SfxId.yourTurn, SfxId.tick]);
+
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 10,
+      clockVisible: false,
+    );
+    expect(played, [SfxId.yourTurn, SfxId.tick]);
+
+    TurnClockSfx.sync(
+      isMyTurn: false,
+      remainingSeconds: 9,
+      clockVisible: true,
+    );
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 15,
+      clockVisible: true,
+    );
+    expect(played, [SfxId.yourTurn, SfxId.tick, SfxId.yourTurn]);
+    TurnClockSfx.reset();
+  });
+
+  test('бейдж уведомления только при росте счёта', () {
+    expect(AlertSfx.shouldPlayCountBump(null, 3), isFalse);
+    expect(AlertSfx.shouldPlayCountBump(0, 1), isTrue);
+    expect(AlertSfx.shouldPlayCountBump(2, 2), isFalse);
+    expect(AlertSfx.shouldPlayCountBump(3, 1), isFalse);
+  });
+
   test('soundEnabledProvider читает сохранённое выключение', () async {
     SharedPreferences.setMockInitialValues({'sound_enabled': false});
     final notifier = SoundEnabledNotifier();

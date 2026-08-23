@@ -1027,6 +1027,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         setupDeadline > nowSec;
                     return Column(
                       children: [
+                        MyTurnAlert(isMyTurn: myTurn && !isOver),
                         Padding(
                           padding: EdgeInsets.fromLTRB(
                             narrow ? 12 : 20,
