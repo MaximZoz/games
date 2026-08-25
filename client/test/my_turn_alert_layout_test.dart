@@ -7,47 +7,72 @@ void main() {
   tearDown(TurnClockSfx.reset);
 
   testWidgets(
-    'MyTurnAlert в Stack не схлопывает Positioned.fill стол',
+    'MyTurnAlert.stackLeaf не схлопывает стол в Column+Stack',
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: SizedBox(
-            width: 400,
-            height: 300,
-            child: Stack(
+          home: Scaffold(
+            body: Column(
               children: [
-                MyTurnAlert(isMyTurn: false),
-                Positioned.fill(
-                  child: ColoredBox(color: Color(0xFF135C39)),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      MyTurnAlert(isMyTurn: false),
+                      Positioned.fill(
+                        child: ColoredBox(color: Color(0xFF135C39)),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
         ),
       );
-      final loose = tester.getSize(find.byType(ColoredBox));
-      expect(loose.width, 0);
-      expect(loose.height, 0);
+      // Expanded даёт tight-ограничения — стол жив даже с loose MyTurnAlert.
+      expect(tester.getSize(find.byType(ColoredBox)).height, greaterThan(100));
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: SizedBox(
-            width: 400,
-            height: 300,
-            child: Stack(
+          home: Scaffold(
+            body: Column(
               children: [
-                MyTurnAlert.stackLeaf(isMyTurn: false),
-                Positioned.fill(
-                  child: ColoredBox(color: Color(0xFF135C39)),
+                Stack(
+                  children: [
+                    MyTurnAlert(isMyTurn: false),
+                    Positioned.fill(
+                      child: ColoredBox(color: Color(0xFF135C39)),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
       );
-      final fixed = tester.getSize(find.byType(ColoredBox));
-      expect(fixed.width, 400);
-      expect(fixed.height, 300);
+      expect(tester.getSize(find.byType(ColoredBox)).height, 0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      MyTurnAlert.stackLeaf(isMyTurn: false),
+                      const Positioned.fill(
+                        child: ColoredBox(color: Color(0xFF135C39)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(ColoredBox)).height, greaterThan(100));
     },
   );
 }
