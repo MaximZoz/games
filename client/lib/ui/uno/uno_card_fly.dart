@@ -56,9 +56,7 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
   if (playSfx) {
-    Sfx.play(
-      launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay),
-    );
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
   }
 
   final controller = AnimationController(

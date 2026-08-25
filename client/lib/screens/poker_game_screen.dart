@@ -1002,9 +1002,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         final veryShort = constraints.maxHeight < 480;
 
         return Stack(
+          fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
-            MyTurnAlert(isMyTurn: game.isMyTurn && !isOver && !game.isHandOver),
+            MyTurnAlert.stackLeaf(
+              isMyTurn: game.isMyTurn && !isOver && !game.isHandOver,
+            ),
             Positioned.fill(
               child: _buildTable(
                 game,

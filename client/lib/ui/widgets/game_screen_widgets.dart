@@ -764,8 +764,23 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
 }
 
 /// Сигнал «ваш ход» без таймера (крестики, Уно без лимита и т.п.).
+///
+/// В [Stack], где остальные дети [Positioned], кладите [stackLeaf] —
+/// обычный [SizedBox.shrink] станет единственным loose-ребёнком и
+/// схлопнет стек в 0×0 (пустой стол).
 class MyTurnAlert extends StatefulWidget {
   const MyTurnAlert({super.key, required this.isMyTurn});
+
+  /// Лист стека без влияния на размер родителя.
+  static Widget stackLeaf({Key? key, required bool isMyTurn}) {
+    return Positioned(
+      left: 0,
+      top: 0,
+      width: 0,
+      height: 0,
+      child: MyTurnAlert(key: key, isMyTurn: isMyTurn),
+    );
+  }
 
   final bool isMyTurn;
 

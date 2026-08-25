@@ -315,7 +315,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return;
     }
     final size = _flyCardSize(context);
-    Sfx.play(SfxId.cardDraw);
+    Sfx.play(SfxId.cardPlay);
     for (var round = 0; round < 7; round++) {
       for (var playerIndex = 0;
           playerIndex < game.players.length;
@@ -1291,7 +1291,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
     return Stack(
       children: [
-        MyTurnAlert(
+        MyTurnAlert.stackLeaf(
           isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
         ),
         Padding(

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/achievements/achievements_provider.dart';
@@ -357,23 +356,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   Future<void> _maybeShowPasteSuggestion() async {
     if (!mounted || _textController.text.trim().isNotEmpty) return;
 
-    String? url = ref.read(pendingInvitePasteProvider)?.trim();
+    // Только явный copy из лобби. Скан буфера в Chrome даёт «Вставить»
+    // при каждом открытии чата, если ссылка ещё в clipboard.
+    final url = ref.read(pendingInvitePasteProvider)?.trim();
     if (url == null || url.isEmpty || parseInviteLobbyShareUrl(url) == null) {
-      url = null;
-      try {
-        final data = await Clipboard.getData(Clipboard.kTextPlain);
-        final text = data?.text?.trim();
-        if (text != null &&
-            text.isNotEmpty &&
-            parseInviteLobbyShareUrl(text) != null) {
-          url = text;
-        }
-      } catch (_) {
-        // Safari/PWA часто блокирует чтение буфера без жеста.
-      }
+      return;
     }
-    if (!mounted || url == null) return;
-    if (_textController.text.trim().isNotEmpty) return;
+    if (!mounted || _textController.text.trim().isNotEmpty) return;
     setState(() {
       _pasteInviteUrl = url;
       _pasteSuggestionVisible = true;
@@ -3343,6 +3332,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             TextField(
                               controller: _textController,
                               focusNode: _composerFocusNode,
+                              contextMenuBuilder: (ctx, editableTextState) {
+                                return AdaptiveTextSelectionToolbar.editableText(
+                                  editableTextState: editableTextState,
+                                );
+                              },
                               minLines: 1,
                               maxLines: 4,
                               style: const TextStyle(

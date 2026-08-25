@@ -29,6 +29,12 @@ void main() {
     );
   });
 
+  test('раздача из колоды звучит как полёт в сброс', () {
+    expect(SfxController.resolveId(SfxId.cardDraw), SfxId.cardPlay);
+    expect(SfxController.resolveId(SfxId.cardPlay), SfxId.cardPlay);
+    expect(SfxController.resolveId(SfxId.uiTap), SfxId.uiTap);
+  });
+
   test('Sfx.play в widget-тестах не бросает', () {
     Sfx.setEnabled(true);
     Sfx.play(SfxId.uiTap);

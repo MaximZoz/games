@@ -1734,10 +1734,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       child: InkWell(
                                         onTap: _isNavigatingToChat
                                             ? null
-                                            : () => _openChatRoute(
+                                            : () {
+                                                FocusManager.instance.primaryFocus
+                                                    ?.unfocus();
+                                                _openChatRoute(
                                                   chatID: item.chatID,
                                                   peerName: _chatTitle(item),
-                                                ),
+                                                );
+                                              },
                                         borderRadius: BorderRadius.circular(24),
                                         child: Stack(
                                           clipBehavior: Clip.none,

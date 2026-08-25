@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -27,6 +28,8 @@ void main() {
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
     usePathUrlStrategy();
+    // Иначе клик/трекпад в Chrome/Safari даёт системное «Вставить».
+    BrowserContextMenu.disableContextMenu();
     // iOS PWA: сброс visualViewport offset → hit-test совпадает с картинкой.
     installIosViewportSync();
   }
@@ -199,10 +202,12 @@ class MultiGamesApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return Listener(
-          onPointerDown: (_) => Sfx.instance.warmup(),
-          child: BootSplashHost(
-            child: child ?? const SizedBox.shrink(),
+        return SelectionContainer.disabled(
+          child: Listener(
+            onPointerDown: (_) => Sfx.instance.warmup(),
+            child: BootSplashHost(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },
