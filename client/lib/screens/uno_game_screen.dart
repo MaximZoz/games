@@ -1291,7 +1291,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
     return Stack(
       children: [
-        MyTurnAlert(
+        MyTurnAlert.stackLeaf(
           isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
         ),
         Padding(

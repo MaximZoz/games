@@ -4535,7 +4535,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               fit: StackFit.expand,
               children: [
                 if (view != null)
-                  MyTurnAlert(
+                  MyTurnAlert.stackLeaf(
                     isMyTurn: view.isMyTurn &&
                         !view.isOver &&
                         !view.iAmEliminated,

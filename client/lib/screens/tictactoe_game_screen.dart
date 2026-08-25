@@ -974,7 +974,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
-                MyTurnAlert(isMyTurn: isMyTurn && !isOver),
+                MyTurnAlert.stackLeaf(isMyTurn: isMyTurn && !isOver),
                 SafeArea(
                   child: Padding(
                     padding: EdgeInsets.all(contentPadding),
