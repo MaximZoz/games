@@ -11,7 +11,7 @@
   "settingsLanguage": "言語",
   "settingsLanguageSystem": "システム既定",
   "settingsSoundTitle": "サウンド",
-  "settingsSoundSubtitle": "クリック、手番、ゲームのアニメーション",
+  "settingsSoundSubtitle": "手番とゲームのアニメーション",
   "settingsAddBotsTitle": "30秒後にボットを追加",
   "settingsAddBotsSubtitle": "マッチング中：30秒以内に相手が見つからない場合、ボットと対戦を開始します（賭け金はブロンズ1にリセット）",
   "settingsFriendsOnlyTitle": "フレンドからのメッセージのみ",

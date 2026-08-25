@@ -40,7 +40,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSoundTitle => 'Звук';
 
   @override
-  String get settingsSoundSubtitle => 'Кліки, ходи та анімації в іграх';
+  String get settingsSoundSubtitle => 'Ходи та анімації в іграх';
 
   @override
   String get settingsAddBotsTitle => 'Додавати ботів через 30 с';

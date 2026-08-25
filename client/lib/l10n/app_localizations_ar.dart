@@ -40,7 +40,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSoundTitle => 'الصوت';
 
   @override
-  String get settingsSoundSubtitle => 'النقرات والحركات ورسوم الألعاب';
+  String get settingsSoundSubtitle => 'الحركات ورسوم الألعاب';
 
   @override
   String get settingsAddBotsTitle => 'إضافة بوت بعد 30 ثانية';

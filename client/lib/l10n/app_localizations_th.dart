@@ -40,7 +40,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsSoundTitle => 'เสียง';
 
   @override
-  String get settingsSoundSubtitle => 'คลิก ตาเล่น และแอนิเมชันในเกม';
+  String get settingsSoundSubtitle => 'ตาเล่นและแอนิเมชันในเกม';
 
   @override
   String get settingsAddBotsTitle => 'เพิ่มบอทหลัง 30 วินาที';

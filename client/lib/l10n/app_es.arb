@@ -11,7 +11,7 @@
   "settingsLanguage": "Idioma",
   "settingsLanguageSystem": "Predeterminado del sistema",
   "settingsSoundTitle": "Sonido",
-  "settingsSoundSubtitle": "Clics, jugadas y animaciones",
+  "settingsSoundSubtitle": "Jugadas y animaciones",
   "settingsAddBotsTitle": "Añadir bots tras 30 s",
   "settingsAddBotsSubtitle": "En emparejamiento: si no hay rival en 30 segundos, la partida empieza con un bot (apuesta vuelve a 1 bronce)",
   "settingsFriendsOnlyTitle": "Mensajes solo de amigos",

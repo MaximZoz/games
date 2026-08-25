@@ -40,7 +40,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsSoundTitle => 'Ääni';
 
   @override
-  String get settingsSoundSubtitle => 'Napsautukset, siirrot ja pelianimaatiot';
+  String get settingsSoundSubtitle => 'Siirrot ja pelianimaatiot';
 
   @override
   String get settingsAddBotsTitle => 'Lisää botteja 30 s jälkeen';

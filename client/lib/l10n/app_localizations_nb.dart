@@ -40,7 +40,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsSoundTitle => 'Lyd';
 
   @override
-  String get settingsSoundSubtitle => 'Klikk, trekk og spillanimasjoner';
+  String get settingsSoundSubtitle => 'Trekk og spillanimasjoner';
 
   @override
   String get settingsAddBotsTitle => 'Legg til boter etter 30 s';

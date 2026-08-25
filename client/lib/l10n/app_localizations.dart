@@ -218,7 +218,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSoundSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Клики, ходы и анимации в играх'**
+  /// **'Ходы и анимации в играх'**
   String get settingsSoundSubtitle;
 
   /// No description provided for @settingsAddBotsTitle.

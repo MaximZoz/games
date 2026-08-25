@@ -11,7 +11,7 @@
   "settingsLanguage": "语言",
   "settingsLanguageSystem": "跟随系统",
   "settingsSoundTitle": "声音",
-  "settingsSoundSubtitle": "点击、出牌和游戏动画",
+  "settingsSoundSubtitle": "出牌和游戏动画",
   "settingsAddBotsTitle": "30 秒后加入机器人",
   "settingsAddBotsSubtitle": "匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）",
   "settingsFriendsOnlyTitle": "仅接收好友消息",

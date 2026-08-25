@@ -40,7 +40,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSoundTitle => 'Âm thanh';
 
   @override
-  String get settingsSoundSubtitle => 'Nhấp, nước đi và hoạt ảnh trò chơi';
+  String get settingsSoundSubtitle => 'Nước đi và hoạt ảnh trò chơi';
 
   @override
   String get settingsAddBotsTitle => 'Thêm bot sau 30 giây';

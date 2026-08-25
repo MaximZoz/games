@@ -11,7 +11,7 @@
   "settingsLanguage": "Language",
   "settingsLanguageSystem": "System default",
   "settingsSoundTitle": "Sound",
-  "settingsSoundSubtitle": "Clicks, moves, and game animations",
+  "settingsSoundSubtitle": "Moves and game animations",
   "settingsAddBotsTitle": "Add bots after 30s",
   "settingsAddBotsSubtitle": "In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)",
   "settingsOfflineModeTitle": "Network mode",

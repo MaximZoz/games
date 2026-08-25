@@ -40,7 +40,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsSoundTitle => 'Zvuk';
 
   @override
-  String get settingsSoundSubtitle => 'Kliknutí, tahy a herní animace';
+  String get settingsSoundSubtitle => 'Tahy a herní animace';
 
   @override
   String get settingsAddBotsTitle => 'Přidávat boty po 30 s';

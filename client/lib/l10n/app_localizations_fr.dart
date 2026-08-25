@@ -40,7 +40,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsSoundTitle => 'Son';
 
   @override
-  String get settingsSoundSubtitle => 'Clics, actions et animations de jeu';
+  String get settingsSoundSubtitle => 'Actions et animations de jeu';
 
   @override
   String get settingsAddBotsTitle => 'Ajouter des bots après 30 s';

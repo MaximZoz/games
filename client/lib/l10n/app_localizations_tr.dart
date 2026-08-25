@@ -40,7 +40,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsSoundTitle => 'Ses';
 
   @override
-  String get settingsSoundSubtitle => 'Tıklamalar, hamleler ve oyun animasyonları';
+  String get settingsSoundSubtitle => 'Hamleler ve oyun animasyonları';
 
   @override
   String get settingsAddBotsTitle => '30 sn sonra bot ekle';

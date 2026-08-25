@@ -121,7 +121,6 @@ class SettingsScreen extends ConsumerWidget {
                       onChanged: (v) async {
                         await ref.read(soundEnabledProvider.notifier).set(v);
                         Sfx.setEnabled(v);
-                        if (v) Sfx.play(SfxId.uiTap);
                       },
                     ),
                   ),

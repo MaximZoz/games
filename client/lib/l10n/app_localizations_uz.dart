@@ -40,7 +40,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsSoundTitle => 'Ovoz';
 
   @override
-  String get settingsSoundSubtitle => 'Bosishlar, yurishlar va o‘yin animatsiyalari';
+  String get settingsSoundSubtitle => 'Yurishlar va o‘yin animatsiyalari';
 
   @override
   String get settingsAddBotsTitle => '30 soniyadan keyin bot qo‘shish';

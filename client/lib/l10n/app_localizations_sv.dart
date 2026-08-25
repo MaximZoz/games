@@ -40,7 +40,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsSoundTitle => 'Ljud';
 
   @override
-  String get settingsSoundSubtitle => 'Klick, drag och spelanimationer';
+  String get settingsSoundSubtitle => 'Drag och spelanimationer';
 
   @override
   String get settingsAddBotsTitle => 'Lägg till bottar efter 30 s';

@@ -155,44 +155,6 @@ class SfxController {
   }
 }
 
-/// Ink-всплеск Material-кнопок и [InkWell] + короткий клик.
-class SfxSplashFactory extends InteractiveInkFeatureFactory {
-  const SfxSplashFactory(this.inner);
-
-  final InteractiveInkFeatureFactory inner;
-
-  @override
-  InteractiveInkFeature create({
-    required MaterialInkController controller,
-    required RenderBox referenceBox,
-    required Offset position,
-    required Color color,
-    required TextDirection textDirection,
-    bool containedInkWell = false,
-    RectCallback? rectCallback,
-    BorderRadius? borderRadius,
-    ShapeBorder? customBorder,
-    double? radius,
-    VoidCallback? onRemoved,
-  }) {
-    Sfx.instance.warmup();
-    Sfx.play(SfxId.uiTap);
-    return inner.create(
-      controller: controller,
-      referenceBox: referenceBox,
-      position: position,
-      color: color,
-      textDirection: textDirection,
-      containedInkWell: containedInkWell,
-      rectCallback: rectCallback,
-      borderRadius: borderRadius,
-      customBorder: customBorder,
-      radius: radius,
-      onRemoved: onRemoved,
-    );
-  }
-}
-
 /// Рост бейджа (чаты / заявки / инвайты) → один notify, не на первом кадре.
 abstract final class AlertSfx {
   static bool shouldPlayCountBump(int? previous, int next) {

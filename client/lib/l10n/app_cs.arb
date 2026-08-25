@@ -11,7 +11,7 @@
   "settingsLanguage": "Jazyk",
   "settingsLanguageSystem": "Podle systému",
   "settingsSoundTitle": "Zvuk",
-  "settingsSoundSubtitle": "Kliknutí, tahy a herní animace",
+  "settingsSoundSubtitle": "Tahy a herní animace",
   "settingsAddBotsTitle": "Přidávat boty po 30 s",
   "settingsAddBotsSubtitle": "Ve vyhledávání hry: pokud se do 30 sekund nenajde soupeř, hra začne s botem (sázka se resetuje na 1 bronz)",
   "settingsFriendsOnlyTitle": "Zprávy jen od přátel",
