@@ -1071,7 +1071,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             maxPlayers: game?.players.length ?? 2,
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);

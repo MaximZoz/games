@@ -43,12 +43,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsSoundSubtitle => 'ตาเล่นและแอนิเมชันในเกม';
 
   @override
-  String get settingsAddBotsTitle => 'เพิ่มบอทหลัง 30 วินาที';
-
-  @override
-  String get settingsAddBotsSubtitle => 'ในการจับคู่: หากไม่พบคู่แข่งใน 30 วินาที เกมจะเริ่มกับบอท (เงินเดิมพันรีเซ็ตเป็น 1 บรอนซ์)';
-
-  @override
   String get settingsOfflineModeTitle => 'โหมดเครือข่าย';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get commonGenericError => 'เกิดข้อผิดพลาด โปรดลองอีกครั้ง';
+
+  @override
+  String get apiErrWrongGameType => 'ประเภทเกมไม่ถูกต้อง';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'ประเภทหรือสถานะเกมไม่ถูกต้อง';
+
+  @override
+  String get apiErrLobbyFull => 'ล็อบบี้เต็มแล้ว';
+
+  @override
+  String get apiErrBadState => 'สถานะเกมไม่ถูกต้อง';
+
+  @override
+  String get apiErrIllegalMove => 'ตาเดินนี้ทำไม่ได้';
+
+  @override
+  String get apiErrUnknownMoveType => 'ไม่รู้จักชนิดตาเดิน';
+
+  @override
+  String get apiErrNoOpponents => 'ไม่มีคู่แข่ง';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'ไม่มีคู่แข่งสำหรับรีแมตช์';
+
+  @override
+  String get apiErrAlreadyInLobby => 'คุณอยู่ในล็อบบี้นี้แล้ว';
+
+  @override
+  String get apiErrGameNotActive => 'เกมไม่ได้ดำเนินอยู่';
+
+  @override
+  String get apiErrNotInBattle => 'ไม่ได้อยู่ช่วงต่อสู้';
+
+  @override
+  String get apiErrNotInSetup => 'ไม่ได้อยู่ช่วงจัดวาง';
+
+  @override
+  String get apiErrAlreadyReady => 'คุณพร้อมแล้ว';
+
+  @override
+  String get apiErrAlreadyForfeited => 'คุณยอมแพ้ไปแล้ว';
+
+  @override
+  String get apiErrYouHaveForfeited => 'คุณยอมแพ้แล้ว';
+
+  @override
+  String get apiErrNoDrawOffer => 'ไม่มีข้อเสนอเสมอ';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'เสนอเสมอได้เฉพาะกับผู้เล่น';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'เสนอเสมอได้เฉพาะ 1 ต่อ 1';
+
+  @override
+  String get apiErrDrawVsBot => 'เสนอเสมอกับบอทไม่ได้';
+
+  @override
+  String get apiErrDrawMultiplayer => 'เสนอเสมอไม่ได้ในโหมดหลายคน';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'สำรับ 24 ใบสำหรับ 2 คนเท่านั้น';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'สำรับ 52 ใบต้องมี 3 หรือ 4 คน';
+
+  @override
+  String get apiErrAccountFrozen => 'บัญชีถูกระงับ';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'เวลาต่อตาต้องเป็น 0, 20, 60 หรือ 600 วินาที';
 
   @override
   String get timeJustNow => 'เมื่อสักครู่';

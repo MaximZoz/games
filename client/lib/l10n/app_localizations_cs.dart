@@ -43,12 +43,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsSoundSubtitle => 'Tahy a herní animace';
 
   @override
-  String get settingsAddBotsTitle => 'Přidávat boty po 30 s';
-
-  @override
-  String get settingsAddBotsSubtitle => 'Ve vyhledávání hry: pokud se do 30 sekund nenajde soupeř, hra začne s botem (sázka se resetuje na 1 bronz)';
-
-  @override
   String get settingsOfflineModeTitle => 'Režim sítě';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Něco se pokazilo. Zkuste to znovu.';
+
+  @override
+  String get apiErrWrongGameType => 'Špatný typ hry';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Špatný typ nebo stav hry';
+
+  @override
+  String get apiErrLobbyFull => 'Lobby je plné';
+
+  @override
+  String get apiErrBadState => 'Neplatný stav hry';
+
+  @override
+  String get apiErrIllegalMove => 'Tento tah není povolen';
+
+  @override
+  String get apiErrUnknownMoveType => 'Neznámý typ tahu';
+
+  @override
+  String get apiErrNoOpponents => 'Žádní soupeři';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Žádní soupeři pro odvetu';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Už jste v tomto lobby';
+
+  @override
+  String get apiErrGameNotActive => 'Hra není aktivní';
+
+  @override
+  String get apiErrNotInBattle => 'Teď není fáze boje';
+
+  @override
+  String get apiErrNotInSetup => 'Teď není fáze rozmístění';
+
+  @override
+  String get apiErrAlreadyReady => 'Už jste připraveni';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Už jste se vzdali';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Vzdali jste se';
+
+  @override
+  String get apiErrNoDrawOffer => 'Není nabídka remízy';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Remíza je jen proti hráči';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Remíza je jen ve hře 1 na 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Remíza není dostupná proti botovi';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Remíza není dostupná ve hře více hráčů';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Balíček 24 je jen pro 2 hráče';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Balíček 52 je pro 3 nebo 4 hráče';
+
+  @override
+  String get apiErrAccountFrozen => 'Účet je zmrazen';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Čas na tah musí být 0, 20, 60 nebo 600 sekund';
 
   @override
   String get timeJustNow => 'právě teď';

@@ -221,18 +221,6 @@ abstract class AppLocalizations {
   /// **'Ходы и анимации в играх'**
   String get settingsSoundSubtitle;
 
-  /// No description provided for @settingsAddBotsTitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'Добавлять ботов через 30 с'**
-  String get settingsAddBotsTitle;
-
-  /// No description provided for @settingsAddBotsSubtitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'В режиме «поиск игры»: если соперник не найден за 30 секунд, игра начинается с ботом (цена игры сбрасывается до 1-й бронзы)'**
-  String get settingsAddBotsSubtitle;
-
   /// No description provided for @settingsOfflineModeTitle.
   ///
   /// In ru, this message translates to:
@@ -892,6 +880,150 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Произошла ошибка. Попробуйте ещё раз.'**
   String get commonGenericError;
+
+  /// No description provided for @apiErrWrongGameType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный тип игры'**
+  String get apiErrWrongGameType;
+
+  /// No description provided for @apiErrWrongGameTypeOrState.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный тип или состояние игры'**
+  String get apiErrWrongGameTypeOrState;
+
+  /// No description provided for @apiErrLobbyFull.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лобби заполнено'**
+  String get apiErrLobbyFull;
+
+  /// No description provided for @apiErrBadState.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка состояния игры'**
+  String get apiErrBadState;
+
+  /// No description provided for @apiErrIllegalMove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Такой ход нельзя сделать'**
+  String get apiErrIllegalMove;
+
+  /// No description provided for @apiErrUnknownMoveType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неизвестный тип хода'**
+  String get apiErrUnknownMoveType;
+
+  /// No description provided for @apiErrNoOpponents.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет соперников'**
+  String get apiErrNoOpponents;
+
+  /// No description provided for @apiErrNoOpponentsRematch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет соперников для реванша'**
+  String get apiErrNoOpponentsRematch;
+
+  /// No description provided for @apiErrAlreadyInLobby.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уже в этом лобби'**
+  String get apiErrAlreadyInLobby;
+
+  /// No description provided for @apiErrGameNotActive.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра не активна'**
+  String get apiErrGameNotActive;
+
+  /// No description provided for @apiErrNotInBattle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сейчас не фаза боя'**
+  String get apiErrNotInBattle;
+
+  /// No description provided for @apiErrNotInSetup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сейчас не фаза расстановки'**
+  String get apiErrNotInSetup;
+
+  /// No description provided for @apiErrAlreadyReady.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уже готовы'**
+  String get apiErrAlreadyReady;
+
+  /// No description provided for @apiErrAlreadyForfeited.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уже сдались'**
+  String get apiErrAlreadyForfeited;
+
+  /// No description provided for @apiErrYouHaveForfeited.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы сдались'**
+  String get apiErrYouHaveForfeited;
+
+  /// No description provided for @apiErrNoDrawOffer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет предложения ничьей'**
+  String get apiErrNoDrawOffer;
+
+  /// No description provided for @apiErrDrawOnlyPvp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья доступна только против игрока'**
+  String get apiErrDrawOnlyPvp;
+
+  /// No description provided for @apiErrDrawOnly1v1.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья доступна только в игре 1 на 1'**
+  String get apiErrDrawOnly1v1;
+
+  /// No description provided for @apiErrDrawVsBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья недоступна против бота'**
+  String get apiErrDrawVsBot;
+
+  /// No description provided for @apiErrDrawMultiplayer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья недоступна в игре на несколько игроков'**
+  String get apiErrDrawMultiplayer;
+
+  /// No description provided for @apiErrDeck24TwoPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колода 24 только для двоих'**
+  String get apiErrDeck24TwoPlayers;
+
+  /// No description provided for @apiErrDeck52ThreeOrFour.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колода 52 только для 3 или 4 игроков'**
+  String get apiErrDeck52ThreeOrFour;
+
+  /// No description provided for @apiErrAccountFrozen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аккаунт заморожен'**
+  String get apiErrAccountFrozen;
+
+  /// No description provided for @apiErrTurnTimeInvalid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход должно быть 0, 20, 60 или 600 секунд'**
+  String get apiErrTurnTimeInvalid;
 
   /// No description provided for @timeJustNow.
   ///

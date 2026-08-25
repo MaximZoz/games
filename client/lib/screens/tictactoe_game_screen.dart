@@ -1466,7 +1466,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         variant: variant,
         gridSize: gridSizeForVariant(variant),
         stakeBronze: stakeBronze,
-        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);

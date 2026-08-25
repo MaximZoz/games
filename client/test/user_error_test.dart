@@ -30,6 +30,17 @@ void main() {
       );
     });
 
+    test('raw wrong game type is localized', () {
+      expect(
+        formatUserError(GamesException(
+          400,
+          'wrong game type',
+          errorKey: 'wrong game type',
+        )),
+        'Неверный тип игры',
+      );
+    });
+
     test('raw UNO stack error is localized', () {
       expect(
         formatUserError(GamesException(

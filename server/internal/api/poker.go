@@ -108,11 +108,10 @@ func pokerChipConfig(stakeBronze int) (startingChips, smallBlind, bigBlind int) 
 // ---- CreatePokerLobby ----
 
 type createPokerLobbyBody struct {
-	Mode            string `json:"mode"`          // "invite" | "matchmake"
-	MaxPlayers      int    `json:"max_players"`   // 1..6 (1 = heads-up vs bot)
-	TurnTimeSec     int    `json:"turn_time_sec"` // 0/20/60/600
-	StakeBronze     int    `json:"stake_bronze"`
-	AddBotsAfter30s bool   `json:"add_bots_after_30s"`
+	Mode        string `json:"mode"`          // "invite" | "matchmake"
+	MaxPlayers  int    `json:"max_players"`   // 1..6 (1 = heads-up vs bot)
+	TurnTimeSec int    `json:"turn_time_sec"` // 0/20/60/600
+	StakeBronze int    `json:"stake_bronze"`
 }
 
 func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +213,6 @@ func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) 
 		"game_mode", "holdem",
 		"player_ids", userID.String(),
 		"stake_bronze", strconv.Itoa(stakeBronze),
-		"add_bots_after_30s", strconv.FormatBool(body.AddBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if _, err := pipe.Exec(ctx); err != nil {
@@ -1671,23 +1669,23 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 	}
 
 	return map[string]any{
-		"id":            gameID,
-		"game_type":     pokerGameType,
-		"status":        status,
-		"street":        state.Street,
-		"lobby_id":      m["lobby_id"],
-		"chat_id":       m["chat_id"],
-		"player_ids":    playerIDs,
-		"players":       players,
-		"community":     state.Community,
-		"pot":           state.Pot,
-		"current_bet":   state.CurrentBet,
-		"min_raise":     state.MinRaise,
-		"small_blind":   state.SmallBlind,
-		"big_blind":     state.BigBlind,
-		"dealer_index":  state.DealerIndex,
-		"acting_index":  state.ActingIndex,
-		"my_index":      myIdx,
+		"id":           gameID,
+		"game_type":    pokerGameType,
+		"status":       status,
+		"street":       state.Street,
+		"lobby_id":     m["lobby_id"],
+		"chat_id":      m["chat_id"],
+		"player_ids":   playerIDs,
+		"players":      players,
+		"community":    state.Community,
+		"pot":          state.Pot,
+		"current_bet":  state.CurrentBet,
+		"min_raise":    state.MinRaise,
+		"small_blind":  state.SmallBlind,
+		"big_blind":    state.BigBlind,
+		"dealer_index": state.DealerIndex,
+		"acting_index": state.ActingIndex,
+		"my_index":     myIdx,
 		"is_my_turn": myIdx >= 0 &&
 			!isTableOver &&
 			!state.HandOver &&
@@ -1714,94 +1712,13 @@ func (h *GamesHandler) pokerViewFor(ctx context.Context, state *poker.Game, view
 		"is_table_over":   isTableOver,
 		"can_show_cards":  myIdx >= 0 && !iAmEliminated && state.CanShowCards(myIdx),
 		// Места / выбывание (как дурак).
-		"my_place":          myPlace,
-		"i_am_eliminated":   iAmEliminated,
-		"eliminated_order":  elimOrder,
+		"my_place":         myPlace,
+		"i_am_eliminated":  iAmEliminated,
+		"eliminated_order": elimOrder,
 		// Подсказки по комбинациям для UI.
 		"my_hand_rank":      myHandRank,
 		"my_hand_cards":     myHandCards,
 		"highlighted_cards": myHandCards,
 		"winner_hands":      winnerHands,
-	}
-}
-
-// ---- Bot-fill ticker (add_bots_after_30s) ----
-
-// StartPokerBotTimeoutTicker — через 30 с добивает свободные места ботами и стартует.
-func StartPokerBotTimeoutTicker(ctx context.Context, h *GamesHandler) {
-	if h == nil || h.Rdb == nil {
-		return
-	}
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			h.tickPokerBotTimeout(ctx)
-		}
-	}
-}
-
-func (h *GamesHandler) tickPokerBotTimeout(ctx context.Context) {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
-	if err != nil || len(keys) == 0 {
-		return
-	}
-	now := time.Now().UTC()
-	for _, key := range keys {
-		if strings.HasSuffix(key, ":invited") {
-			continue
-		}
-		m, err := h.Rdb.HGetAll(ctx, key).Result()
-		if err != nil || m["game_type"] != pokerGameType {
-			continue
-		}
-		st := m["status"]
-		if st != lobbyStatusWaitingInvite && st != lobbyStatusWaitingMatchmake {
-			continue
-		}
-		if m["add_bots_after_30s"] != "true" {
-			continue
-		}
-		createdAt, err := time.Parse(time.RFC3339Nano, m["created_at"])
-		if err != nil || now.Sub(createdAt) < botTimeoutSeconds*time.Second {
-			continue
-		}
-		lobbyID := strings.TrimPrefix(key, "lobby:")
-		// Гоняем локом, чтобы не стартовать дважды.
-		lockKey := "poker_fill_lock:" + lobbyID
-		if locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 10*time.Second).Result(); !locked {
-			continue
-		}
-		maxPlayers, _ := strconv.Atoi(m["max_players"])
-		if maxPlayers < 2 {
-			maxPlayers = 2
-		}
-		turnT, _ := strconv.Atoi(m["turn_time_sec"])
-		stake, _ := strconv.Atoi(m["stake_bronze"])
-		if stake < 2 {
-			stake = 2
-		}
-		players := parsePlayerIDsCSV(m["player_ids"])
-		humans := make([]uuid.UUID, 0, len(players))
-		for _, p := range players {
-			if u, e := uuid.Parse(p); e == nil {
-				humans = append(humans, u)
-			}
-		}
-		// Добить ботами до max_players.
-		botN := 1
-		for len(players) < maxPlayers {
-			players = append(players, fmt.Sprintf("%s:%d", pokerBotID, botN))
-			botN++
-		}
-		_, serr := h.startPokerGameCore(ctx, lobbyID, players, humans, turnT, stake, maxPlayers)
-		h.Rdb.Del(ctx, lockKey)
-		if serr != nil {
-			continue
-		}
-		return
 	}
 }

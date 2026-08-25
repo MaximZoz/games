@@ -43,12 +43,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSoundSubtitle => '수와 게임 애니메이션';
 
   @override
-  String get settingsAddBotsTitle => '30초 후 봇 추가';
-
-  @override
-  String get settingsAddBotsSubtitle => '매칭 중: 30초 안에 상대를 찾지 못하면 봇과 게임이 시작됩니다(배팅이 브론즈 1로 초기화됨)';
-
-  @override
   String get settingsOfflineModeTitle => '네트워크 모드';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonGenericError => '문제가 발생했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get apiErrWrongGameType => '잘못된 게임 유형입니다';
+
+  @override
+  String get apiErrWrongGameTypeOrState => '잘못된 게임 유형 또는 상태입니다';
+
+  @override
+  String get apiErrLobbyFull => '로비가 가득 찼습니다';
+
+  @override
+  String get apiErrBadState => '잘못된 게임 상태입니다';
+
+  @override
+  String get apiErrIllegalMove => '둘 수 없는 수입니다';
+
+  @override
+  String get apiErrUnknownMoveType => '알 수 없는 수 유형입니다';
+
+  @override
+  String get apiErrNoOpponents => '상대가 없습니다';
+
+  @override
+  String get apiErrNoOpponentsRematch => '재대결할 상대가 없습니다';
+
+  @override
+  String get apiErrAlreadyInLobby => '이미 이 로비에 있습니다';
+
+  @override
+  String get apiErrGameNotActive => '게임이 활성 상태가 아닙니다';
+
+  @override
+  String get apiErrNotInBattle => '전투 단계가 아닙니다';
+
+  @override
+  String get apiErrNotInSetup => '배치 단계가 아닙니다';
+
+  @override
+  String get apiErrAlreadyReady => '이미 준비되었습니다';
+
+  @override
+  String get apiErrAlreadyForfeited => '이미 기권했습니다';
+
+  @override
+  String get apiErrYouHaveForfeited => '기권했습니다';
+
+  @override
+  String get apiErrNoDrawOffer => '무승부 제안이 없습니다';
+
+  @override
+  String get apiErrDrawOnlyPvp => '무승부는 플레이어전에서만 가능합니다';
+
+  @override
+  String get apiErrDrawOnly1v1 => '무승부는 1대1에서만 가능합니다';
+
+  @override
+  String get apiErrDrawVsBot => '봇과는 무승부를 할 수 없습니다';
+
+  @override
+  String get apiErrDrawMultiplayer => '멀티플레이에서는 무승부를 할 수 없습니다';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24장 덱은 2인용만 가능합니다';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52장 덱은 3명 또는 4명만 가능합니다';
+
+  @override
+  String get apiErrAccountFrozen => '계정이 동결되었습니다';
+
+  @override
+  String get apiErrTurnTimeInvalid => '턴 시간은 0, 20, 60 또는 600초여야 합니다';
 
   @override
   String get timeJustNow => '방금';

@@ -43,12 +43,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSoundSubtitle => 'Nước đi và hoạt ảnh trò chơi';
 
   @override
-  String get settingsAddBotsTitle => 'Thêm bot sau 30 giây';
-
-  @override
-  String get settingsAddBotsSubtitle => 'Khi ghép trận: nếu không tìm thấy đối thủ trong 30 giây, trận sẽ bắt đầu với bot (cược đặt lại thành 1 đồng bronze)';
-
-  @override
   String get settingsOfflineModeTitle => 'Chế độ mạng';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Đã xảy ra lỗi. Vui lòng thử lại.';
+
+  @override
+  String get apiErrWrongGameType => 'Sai loại trò chơi';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Sai loại hoặc trạng thái trò chơi';
+
+  @override
+  String get apiErrLobbyFull => 'Sảnh đã đầy';
+
+  @override
+  String get apiErrBadState => 'Trạng thái ván không hợp lệ';
+
+  @override
+  String get apiErrIllegalMove => 'Nước đi không hợp lệ';
+
+  @override
+  String get apiErrUnknownMoveType => 'Loại nước đi không rõ';
+
+  @override
+  String get apiErrNoOpponents => 'Không có đối thủ';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Không có đối thủ để tái đấu';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Bạn đã ở trong sảnh này';
+
+  @override
+  String get apiErrGameNotActive => 'Ván không còn diễn ra';
+
+  @override
+  String get apiErrNotInBattle => 'Không phải giai đoạn chiến đấu';
+
+  @override
+  String get apiErrNotInSetup => 'Không phải giai đoạn xếp thuyền';
+
+  @override
+  String get apiErrAlreadyReady => 'Bạn đã sẵn sàng';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Bạn đã bỏ cuộc';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Bạn đã bỏ cuộc';
+
+  @override
+  String get apiErrNoDrawOffer => 'Không có đề nghị hòa';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Hòa chỉ có khi đấu người';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Hòa chỉ có trong 1 đấu 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Không thể hòa với bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Không thể hòa trong ván nhiều người';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Bộ 24 lá chỉ dành cho 2 người';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Bộ 52 lá chỉ dành cho 3 hoặc 4 người';
+
+  @override
+  String get apiErrAccountFrozen => 'Tài khoản đã bị đóng băng';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Thời gian lượt phải là 0, 20, 60 hoặc 600 giây';
 
   @override
   String get timeJustNow => 'vừa xong';

@@ -43,12 +43,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsSoundSubtitle => 'Actions et animations de jeu';
 
   @override
-  String get settingsAddBotsTitle => 'Ajouter des bots après 30 s';
-
-  @override
-  String get settingsAddBotsSubtitle => 'En matchmaking : si aucun adversaire n’est trouvé en 30 secondes, la partie commence avec un bot (mise remise à 1 bronze)';
-
-  @override
   String get settingsOfflineModeTitle => 'Mode réseau';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Une erreur s’est produite. Veuillez réessayer.';
+
+  @override
+  String get apiErrWrongGameType => 'Mauvais type de jeu';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Mauvais type ou état de jeu';
+
+  @override
+  String get apiErrLobbyFull => 'Le lobby est plein';
+
+  @override
+  String get apiErrBadState => 'État de partie invalide';
+
+  @override
+  String get apiErrIllegalMove => 'Coup interdit';
+
+  @override
+  String get apiErrUnknownMoveType => 'Type de coup inconnu';
+
+  @override
+  String get apiErrNoOpponents => 'Aucun adversaire';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Aucun adversaire pour la revanche';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Vous êtes déjà dans ce lobby';
+
+  @override
+  String get apiErrGameNotActive => 'La partie n\'est pas active';
+
+  @override
+  String get apiErrNotInBattle => 'Pas en phase de combat';
+
+  @override
+  String get apiErrNotInSetup => 'Pas en phase de placement';
+
+  @override
+  String get apiErrAlreadyReady => 'Vous êtes déjà prêt';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Vous avez déjà abandonné';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Vous avez abandonné';
+
+  @override
+  String get apiErrNoDrawOffer => 'Aucune offre de nul';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Le nul n\'est disponible que contre un joueur';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Le nul n\'est disponible qu\'en 1 contre 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Le nul n\'est pas disponible contre un bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Le nul n\'est pas disponible en multijoueur';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Le jeu de 24 cartes est réservé à 2 joueurs';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Le jeu de 52 cartes nécessite 3 ou 4 joueurs';
+
+  @override
+  String get apiErrAccountFrozen => 'Le compte est gelé';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Le temps de tour doit être 0, 20, 60 ou 600 secondes';
 
   @override
   String get timeJustNow => 'à l’instant';

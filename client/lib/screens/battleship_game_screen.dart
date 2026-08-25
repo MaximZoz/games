@@ -906,7 +906,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
             mode: 'matchmake',
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);

@@ -43,12 +43,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsSoundSubtitle => 'מהלכים ואנימציות משחק';
 
   @override
-  String get settingsAddBotsTitle => 'הוספת בוטים אחרי 30 שנ׳';
-
-  @override
-  String get settingsAddBotsSubtitle => 'בשידוך: אם לא נמצא יריב תוך 30 שניות, המשחק מתחיל עם בוט (ההימור מתאפס ל־1 ברונזה)';
-
-  @override
   String get settingsOfflineModeTitle => 'מצב רשת';
 
   @override
@@ -387,6 +381,78 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get commonGenericError => 'משהו השתבש. נסו שוב.';
+
+  @override
+  String get apiErrWrongGameType => 'סוג משחק שגוי';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'סוג או מצב משחק שגוי';
+
+  @override
+  String get apiErrLobbyFull => 'הלובי מלא';
+
+  @override
+  String get apiErrBadState => 'מצב משחק לא תקין';
+
+  @override
+  String get apiErrIllegalMove => 'מהלך לא חוקי';
+
+  @override
+  String get apiErrUnknownMoveType => 'סוג מהלך לא ידוע';
+
+  @override
+  String get apiErrNoOpponents => 'אין יריבים';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'אין יריבים למשחק חוזר';
+
+  @override
+  String get apiErrAlreadyInLobby => 'אתה כבר בלובי הזה';
+
+  @override
+  String get apiErrGameNotActive => 'המשחק אינו פעיל';
+
+  @override
+  String get apiErrNotInBattle => 'לא בשלב הקרב';
+
+  @override
+  String get apiErrNotInSetup => 'לא בשלב הסידור';
+
+  @override
+  String get apiErrAlreadyReady => 'אתה כבר מוכן';
+
+  @override
+  String get apiErrAlreadyForfeited => 'כבר נכנעת';
+
+  @override
+  String get apiErrYouHaveForfeited => 'נכנעת';
+
+  @override
+  String get apiErrNoDrawOffer => 'אין הצעת תיקו';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'תיקו זמין רק מול שחקן';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'תיקו זמין רק במשחק אחד על אחד';
+
+  @override
+  String get apiErrDrawVsBot => 'תיקו אינו זמין מול בוט';
+
+  @override
+  String get apiErrDrawMultiplayer => 'תיקו אינו זמין במשחק מרובה משתתפים';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'חפיסת 24 מיועדת לשני שחקנים בלבד';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'חפיסת 52 מיועדת ל־3 או 4 שחקנים';
+
+  @override
+  String get apiErrAccountFrozen => 'החשבון הוקפא';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'זמן התור חייב להיות 0, 20, 60 או 600 שניות';
 
   @override
   String get timeJustNow => 'עכשיו';
