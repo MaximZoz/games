@@ -40,13 +40,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsSoundTitle => 'Dźwięk';
 
   @override
-  String get settingsSoundSubtitle => 'Kliknięcia, ruchy i animacje gier';
-
-  @override
-  String get settingsAddBotsTitle => 'Dodawaj boty po 30 s';
-
-  @override
-  String get settingsAddBotsSubtitle => 'W trybie wyszukiwania: jeśli nie znaleziono przeciwnika w 30 sekund, gra zaczyna się z botem (stawka wraca do 1 brązu)';
+  String get settingsSoundSubtitle => 'Ruchy i animacje gier';
 
   @override
   String get settingsOfflineModeTitle => 'Tryb sieci';
@@ -387,6 +381,78 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Coś poszło nie tak. Spróbuj ponownie.';
+
+  @override
+  String get apiErrWrongGameType => 'Nieprawidłowy typ gry';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Nieprawidłowy typ lub stan gry';
+
+  @override
+  String get apiErrLobbyFull => 'Lobby jest pełne';
+
+  @override
+  String get apiErrBadState => 'Nieprawidłowy stan gry';
+
+  @override
+  String get apiErrIllegalMove => 'Niedozwolony ruch';
+
+  @override
+  String get apiErrUnknownMoveType => 'Nieznany typ ruchu';
+
+  @override
+  String get apiErrNoOpponents => 'Brak przeciwników';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Brak przeciwników do rewanżu';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Już jesteś w tym lobby';
+
+  @override
+  String get apiErrGameNotActive => 'Gra nie jest aktywna';
+
+  @override
+  String get apiErrNotInBattle => 'To nie jest faza walki';
+
+  @override
+  String get apiErrNotInSetup => 'To nie jest faza ustawiania';
+
+  @override
+  String get apiErrAlreadyReady => 'Już jesteś gotowy';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Już się poddałeś';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Poddałeś się';
+
+  @override
+  String get apiErrNoDrawOffer => 'Brak oferty remisu';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Remis tylko przeciwko graczowi';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Remis tylko w 1 na 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Remis niedostępny przeciwko botowi';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Remis niedostępny w trybie wielu graczy';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Talia 24 jest tylko dla 2 graczy';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Talia 52 jest dla 3 lub 4 graczy';
+
+  @override
+  String get apiErrAccountFrozen => 'Konto jest zamrożone';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Czas na ruch musi wynosić 0, 20, 60 lub 600 sekund';
 
   @override
   String get timeJustNow => 'przed chwilą';

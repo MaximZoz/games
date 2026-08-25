@@ -558,7 +558,6 @@ class UnoRepository {
     required int maxPlayers,
     required int turnTimeSec,
     required int stakeBronze,
-    bool addBotsAfter30s = false,
   }) async {
     final response = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/uno/lobby'),
@@ -571,7 +570,6 @@ class UnoRepository {
             'max_players': maxPlayers,
             'turn_time_sec': turnTimeSec,
             'stake_bronze': stakeBronze,
-            'add_bots_after_30s': addBotsAfter30s,
           }),
           operation: 'UnoRepository.createLobby',
         ));

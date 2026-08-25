@@ -322,7 +322,6 @@ class BattleshipRepository {
     required int turnTimeSec,
     required int stakeBronze,
     bool firstMoveRestriction = false,
-    bool addBotsAfter30s = false,
   }) async {
     final res = await _sendAuth(
       (token) => ApiClient.post(
@@ -336,7 +335,6 @@ class BattleshipRepository {
           'turn_time_sec': turnTimeSec,
           'stake_bronze': stakeBronze,
           'first_move_restriction': firstMoveRestriction,
-          'add_bots_after_30s': addBotsAfter30s,
         }),
         operation: 'BattleshipRepository.createLobby',
       ),

@@ -40,13 +40,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSoundTitle => 'Suono';
 
   @override
-  String get settingsSoundSubtitle => 'Click, mosse e animazioni di gioco';
-
-  @override
-  String get settingsAddBotsTitle => 'Aggiungi bot dopo 30 s';
-
-  @override
-  String get settingsAddBotsSubtitle => 'In matchmaking: se non trovi un avversario in 30 secondi, la partita inizia con un bot (puntata riportata a 1 bronzo)';
+  String get settingsSoundSubtitle => 'Mosse e animazioni di gioco';
 
   @override
   String get settingsOfflineModeTitle => 'Modalità di rete';
@@ -387,6 +381,78 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Qualcosa è andato storto. Riprova.';
+
+  @override
+  String get apiErrWrongGameType => 'Tipo di gioco errato';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Tipo o stato di gioco errato';
+
+  @override
+  String get apiErrLobbyFull => 'La lobby è piena';
+
+  @override
+  String get apiErrBadState => 'Stato di gioco non valido';
+
+  @override
+  String get apiErrIllegalMove => 'Mossa non valida';
+
+  @override
+  String get apiErrUnknownMoveType => 'Tipo di mossa sconosciuto';
+
+  @override
+  String get apiErrNoOpponents => 'Nessun avversario';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Nessun avversario per il rematch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Sei già in questa lobby';
+
+  @override
+  String get apiErrGameNotActive => 'La partita non è attiva';
+
+  @override
+  String get apiErrNotInBattle => 'Non sei in fase di combattimento';
+
+  @override
+  String get apiErrNotInSetup => 'Non sei in fase di schieramento';
+
+  @override
+  String get apiErrAlreadyReady => 'Sei già pronto';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Hai già abbandonato';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Hai abbandonato';
+
+  @override
+  String get apiErrNoDrawOffer => 'Nessuna proposta di patta';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'La patta è solo contro un giocatore';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'La patta è solo in 1 contro 1';
+
+  @override
+  String get apiErrDrawVsBot => 'La patta non è disponibile contro un bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'La patta non è disponibile in multiplayer';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Il mazzo da 24 è solo per 2 giocatori';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Il mazzo da 52 richiede 3 o 4 giocatori';
+
+  @override
+  String get apiErrAccountFrozen => 'L\'account è bloccato';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Il tempo di turno deve essere 0, 20, 60 o 600 secondi';
 
   @override
   String get timeJustNow => 'adesso';

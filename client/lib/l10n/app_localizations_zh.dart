@@ -40,13 +40,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSoundTitle => '声音';
 
   @override
-  String get settingsSoundSubtitle => '点击、出牌和游戏动画';
-
-  @override
-  String get settingsAddBotsTitle => '30 秒后加入机器人';
-
-  @override
-  String get settingsAddBotsSubtitle => '匹配中：若 30 秒内未找到对手，将与机器人开始对局（赌注重置为 1 青铜）';
+  String get settingsSoundSubtitle => '出牌和游戏动画';
 
   @override
   String get settingsOfflineModeTitle => '网络模式';
@@ -387,6 +381,78 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commonGenericError => '出了点问题，请重试。';
+
+  @override
+  String get apiErrWrongGameType => '游戏类型不正确';
+
+  @override
+  String get apiErrWrongGameTypeOrState => '游戏类型或状态不正确';
+
+  @override
+  String get apiErrLobbyFull => '大厅已满';
+
+  @override
+  String get apiErrBadState => '游戏状态无效';
+
+  @override
+  String get apiErrIllegalMove => '这一步不合法';
+
+  @override
+  String get apiErrUnknownMoveType => '未知的着法类型';
+
+  @override
+  String get apiErrNoOpponents => '没有对手';
+
+  @override
+  String get apiErrNoOpponentsRematch => '没有可再战的对手';
+
+  @override
+  String get apiErrAlreadyInLobby => '你已在此大厅中';
+
+  @override
+  String get apiErrGameNotActive => '对局未在进行';
+
+  @override
+  String get apiErrNotInBattle => '现在不是战斗阶段';
+
+  @override
+  String get apiErrNotInSetup => '现在不是布置阶段';
+
+  @override
+  String get apiErrAlreadyReady => '你已经准备好了';
+
+  @override
+  String get apiErrAlreadyForfeited => '你已经认输了';
+
+  @override
+  String get apiErrYouHaveForfeited => '你已认输';
+
+  @override
+  String get apiErrNoDrawOffer => '没有和棋提议';
+
+  @override
+  String get apiErrDrawOnlyPvp => '仅限玩家对战求和';
+
+  @override
+  String get apiErrDrawOnly1v1 => '仅限单挑求和';
+
+  @override
+  String get apiErrDrawVsBot => '无法与机器人求和';
+
+  @override
+  String get apiErrDrawMultiplayer => '多人模式无法求和';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24 张牌组仅限两人';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52 张牌组需要 3 或 4 人';
+
+  @override
+  String get apiErrAccountFrozen => '账户已冻结';
+
+  @override
+  String get apiErrTurnTimeInvalid => '回合时间必须是 0、20、60 或 600 秒';
 
   @override
   String get timeJustNow => '刚刚';

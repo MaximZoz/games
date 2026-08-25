@@ -40,13 +40,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsSoundTitle => 'ध्वनि';
 
   @override
-  String get settingsSoundSubtitle => 'क्लिक, चालें और गेम एनिमेशन';
-
-  @override
-  String get settingsAddBotsTitle => '30 सेकंड बाद बॉट जोड़ें';
-
-  @override
-  String get settingsAddBotsSubtitle => 'मैचमेकिंग में: यदि 30 सेकंड में कोई प्रतिद्वंद्वी नहीं मिलता, तो गेम बॉट के साथ शुरू होता है (दाँव 1 ब्रॉन्ज़ पर रीसेट)';
+  String get settingsSoundSubtitle => 'चालें और गेम एनिमेशन';
 
   @override
   String get settingsOfflineModeTitle => 'नेटवर्क मोड';
@@ -387,6 +381,78 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get commonGenericError => 'कुछ गलत हुआ। कृपया फिर से कोशिश करें।';
+
+  @override
+  String get apiErrWrongGameType => 'गलत गेम प्रकार';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'गलत गेम प्रकार या स्थिति';
+
+  @override
+  String get apiErrLobbyFull => 'लॉबी भरी हुई है';
+
+  @override
+  String get apiErrBadState => 'गेम की स्थिति अमान्य है';
+
+  @override
+  String get apiErrIllegalMove => 'अवैध चाल';
+
+  @override
+  String get apiErrUnknownMoveType => 'अज्ञात चाल प्रकार';
+
+  @override
+  String get apiErrNoOpponents => 'कोई प्रतिद्वंद्वी नहीं';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'रेमैच के लिए कोई प्रतिद्वंद्वी नहीं';
+
+  @override
+  String get apiErrAlreadyInLobby => 'आप पहले से इस लॉबी में हैं';
+
+  @override
+  String get apiErrGameNotActive => 'गेम सक्रिय नहीं है';
+
+  @override
+  String get apiErrNotInBattle => 'अभी युद्ध चरण नहीं है';
+
+  @override
+  String get apiErrNotInSetup => 'अभी सेटअप चरण नहीं है';
+
+  @override
+  String get apiErrAlreadyReady => 'आप पहले से तैयार हैं';
+
+  @override
+  String get apiErrAlreadyForfeited => 'आप पहले ही हार मान चुके हैं';
+
+  @override
+  String get apiErrYouHaveForfeited => 'आप हार मान चुके हैं';
+
+  @override
+  String get apiErrNoDrawOffer => 'कोई ड्रॉ पेशकश नहीं';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'ड्रॉ केवल खिलाड़ी के खिलाफ';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'ड्रॉ केवल 1 बनाम 1 में';
+
+  @override
+  String get apiErrDrawVsBot => 'बॉट के खिलाफ ड्रॉ उपलब्ध नहीं';
+
+  @override
+  String get apiErrDrawMultiplayer => 'मल्टीप्लेयर में ड्रॉ उपलब्ध नहीं';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24 पत्तों की गड्डी सिर्फ़ 2 खिलाड़ियों के लिए';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52 पत्तों की गड्डी 3 या 4 खिलाड़ियों के लिए';
+
+  @override
+  String get apiErrAccountFrozen => 'खाता फ़्रीज़ है';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'चाल का समय 0, 20, 60 या 600 सेकंड होना चाहिए';
 
   @override
   String get timeJustNow => 'अभी';

@@ -790,7 +790,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             maxPlayers: game?.playerIds.length ?? 2,
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);

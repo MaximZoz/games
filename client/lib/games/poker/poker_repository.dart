@@ -576,7 +576,6 @@ class PokerRepository {
     required int maxPlayers,
     required int turnTimeSec,
     required int stakeBronze,
-    bool addBotsAfter30s = false,
   }) async {
     final r = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/poker/lobby'),
@@ -589,7 +588,6 @@ class PokerRepository {
             'max_players': maxPlayers,
             'turn_time_sec': turnTimeSec,
             'stake_bronze': stakeBronze,
-            'add_bots_after_30s': addBotsAfter30s,
           }),
           operation: 'PokerRepository.createLobby',
         ));

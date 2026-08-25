@@ -40,13 +40,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsSoundTitle => 'Ääni';
 
   @override
-  String get settingsSoundSubtitle => 'Napsautukset, siirrot ja pelianimaatiot';
-
-  @override
-  String get settingsAddBotsTitle => 'Lisää botteja 30 s jälkeen';
-
-  @override
-  String get settingsAddBotsSubtitle => 'Matchmakingissa: jos vastustajaa ei löydy 30 sekunnissa, peli alkaa botin kanssa (panos palautuu 1 pronssiin)';
+  String get settingsSoundSubtitle => 'Siirrot ja pelianimaatiot';
 
   @override
   String get settingsOfflineModeTitle => 'Verkkotila';
@@ -387,6 +381,78 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Jotain meni pieleen. Yritä uudelleen.';
+
+  @override
+  String get apiErrWrongGameType => 'Väärä pelityyppi';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Väärä pelityyppi tai -tila';
+
+  @override
+  String get apiErrLobbyFull => 'Lobby on täynnä';
+
+  @override
+  String get apiErrBadState => 'Virheellinen pelitila';
+
+  @override
+  String get apiErrIllegalMove => 'Laiton siirto';
+
+  @override
+  String get apiErrUnknownMoveType => 'Tuntematon siirtotyyppi';
+
+  @override
+  String get apiErrNoOpponents => 'Ei vastustajia';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Ei vastustajia uusintaotteluun';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Olet jo tässä lobbyissa';
+
+  @override
+  String get apiErrGameNotActive => 'Peli ei ole käynnissä';
+
+  @override
+  String get apiErrNotInBattle => 'Ei taisteluvaiheessa';
+
+  @override
+  String get apiErrNotInSetup => 'Ei sijoitteluvaiheessa';
+
+  @override
+  String get apiErrAlreadyReady => 'Olet jo valmis';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Olet jo luovuttanut';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Olet luovuttanut';
+
+  @override
+  String get apiErrNoDrawOffer => 'Ei tasapelitarjousta';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Tasapeli vain pelaajaa vastaan';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Tasapeli vain 1v1-pelissä';
+
+  @override
+  String get apiErrDrawVsBot => 'Tasapeli ei ole käytössä bottia vastaan';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Tasapeli ei ole käytössä moninpelissä';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24 kortin pakka vain kahdelle';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52 kortin pakka vaatii 3 tai 4 pelaajaa';
+
+  @override
+  String get apiErrAccountFrozen => 'Tili on jäädytetty';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Siirtoajan on oltava 0, 20, 60 tai 600 sekuntia';
 
   @override
   String get timeJustNow => 'juuri nyt';

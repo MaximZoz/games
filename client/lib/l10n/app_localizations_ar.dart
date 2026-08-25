@@ -40,13 +40,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSoundTitle => 'الصوت';
 
   @override
-  String get settingsSoundSubtitle => 'النقرات والحركات ورسوم الألعاب';
-
-  @override
-  String get settingsAddBotsTitle => 'إضافة بوت بعد 30 ثانية';
-
-  @override
-  String get settingsAddBotsSubtitle => 'في البحث عن مباراة: إذا لم يُعثر على منافس خلال 30 ثانية، تبدأ اللعبة مع بوت (تُعاد قيمة الرهان إلى 1 برونز)';
+  String get settingsSoundSubtitle => 'الحركات ورسوم الألعاب';
 
   @override
   String get settingsOfflineModeTitle => 'وضع الشبكة';
@@ -387,6 +381,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commonGenericError => 'حدث خطأ ما. يُرجى المحاولة مرة أخرى.';
+
+  @override
+  String get apiErrWrongGameType => 'نوع اللعبة غير صحيح';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'نوع اللعبة أو حالتها غير صحيحة';
+
+  @override
+  String get apiErrLobbyFull => 'الغرفة ممتلئة';
+
+  @override
+  String get apiErrBadState => 'حالة اللعبة غير صالحة';
+
+  @override
+  String get apiErrIllegalMove => 'حركة غير مسموحة';
+
+  @override
+  String get apiErrUnknownMoveType => 'نوع حركة غير معروف';
+
+  @override
+  String get apiErrNoOpponents => 'لا يوجد خصوم';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'لا يوجد خصوم لإعادة المباراة';
+
+  @override
+  String get apiErrAlreadyInLobby => 'أنت بالفعل في هذه الغرفة';
+
+  @override
+  String get apiErrGameNotActive => 'اللعبة غير نشطة';
+
+  @override
+  String get apiErrNotInBattle => 'لست في مرحلة القتال';
+
+  @override
+  String get apiErrNotInSetup => 'لست في مرحلة التجهيز';
+
+  @override
+  String get apiErrAlreadyReady => 'أنت جاهز بالفعل';
+
+  @override
+  String get apiErrAlreadyForfeited => 'لقد استسلمت بالفعل';
+
+  @override
+  String get apiErrYouHaveForfeited => 'لقد استسلمت';
+
+  @override
+  String get apiErrNoDrawOffer => 'لا يوجد عرض تعادل';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'التعادل متاح فقط ضد لاعب';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'التعادل متاح فقط في مباراة فردية';
+
+  @override
+  String get apiErrDrawVsBot => 'التعادل غير متاح ضد البوت';
+
+  @override
+  String get apiErrDrawMultiplayer => 'التعادل غير متاح في اللعب الجماعي';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'مجموعة 24 بطاقة للاعبين اثنين فقط';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'مجموعة 52 بطاقة تتطلب 3 أو 4 لاعبين';
+
+  @override
+  String get apiErrAccountFrozen => 'تم تجميد الحساب';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'يجب أن يكون وقت الدور 0 أو 20 أو 60 أو 600 ثانية';
 
   @override
   String get timeJustNow => 'الآن';

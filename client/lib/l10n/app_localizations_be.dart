@@ -40,13 +40,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get settingsSoundTitle => 'Гук';
 
   @override
-  String get settingsSoundSubtitle => 'Клікі, хады і анімацыі ў гульнях';
-
-  @override
-  String get settingsAddBotsTitle => 'Дадаваць ботаў праз 30 с';
-
-  @override
-  String get settingsAddBotsSubtitle => 'У рэжыме пошуку гульні: калі супернік не знойдзены за 30 секунд, гульня пачынаецца з ботам (стаўка скідаецца да 1 бронзы)';
+  String get settingsSoundSubtitle => 'Хады і анімацыі ў гульнях';
 
   @override
   String get settingsOfflineModeTitle => 'Рэжым сеткі';
@@ -387,6 +381,78 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Нешта пайшло не так. Паспрабуйце яшчэ раз.';
+
+  @override
+  String get apiErrWrongGameType => 'Няправільны тып гульні';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Няправільны тып або стан гульні';
+
+  @override
+  String get apiErrLobbyFull => 'Лобі запоўненае';
+
+  @override
+  String get apiErrBadState => 'Памылка стану гульні';
+
+  @override
+  String get apiErrIllegalMove => 'Такі ход нельга зрабіць';
+
+  @override
+  String get apiErrUnknownMoveType => 'Невядомы тып ходу';
+
+  @override
+  String get apiErrNoOpponents => 'Няма супернікаў';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Няма супернікаў для рэваншу';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Вы ўжо ў гэтым лобі';
+
+  @override
+  String get apiErrGameNotActive => 'Гульня не актыўная';
+
+  @override
+  String get apiErrNotInBattle => 'Зараз не фаза бою';
+
+  @override
+  String get apiErrNotInSetup => 'Зараз не фаза расстаноўкі';
+
+  @override
+  String get apiErrAlreadyReady => 'Вы ўжо гатовыя';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Вы ўжо здаліся';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Вы здаліся';
+
+  @override
+  String get apiErrNoDrawOffer => 'Няма прапановы нічыі';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Нічыя толькі супраць гульца';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Нічыя толькі ў гульні 1 на 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Нічыя недаступная супраць бота';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Нічыя недаступная ў гульні на некалькіх';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Калода 24 толькі для двух гульцоў';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Калода 52 толькі для 3 або 4 гульцоў';
+
+  @override
+  String get apiErrAccountFrozen => 'Акаўнт замарожаны';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Час ходу павінен быць 0, 20, 60 або 600 секунд';
 
   @override
   String get timeJustNow => 'толькі што';
