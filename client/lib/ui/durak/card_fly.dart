@@ -64,7 +64,7 @@ Future<CardFlyTicket> playCardFlyAnimation({
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
   if (playSfx) {
-    Sfx.play(launchSfx ?? (faceDown ? SfxId.cardDraw : SfxId.cardPlay));
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
   }
 
   final completer = Completer<void>();

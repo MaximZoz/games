@@ -100,8 +100,14 @@ class SfxController {
     unawaited(_preload());
   }
 
+  /// Раздача из колоды звучит как полёт в сброс (`cardPlay`).
+  @visibleForTesting
+  static SfxId resolveId(SfxId id) =>
+      id == SfxId.cardDraw ? SfxId.cardPlay : id;
+
   void play(SfxId id) {
     if (!_enabled || _inWidgetTest) return;
+    id = resolveId(id);
     final now = DateTime.now();
     if (!shouldPlay(id, now)) return;
     final uri = _dataUris[id];
