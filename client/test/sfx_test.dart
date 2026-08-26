@@ -52,6 +52,55 @@ void main() {
     expect(prefs.getBool('sound_enabled'), isFalse);
   });
 
+  test('yourTurn не дублируется чаще 900 мс', () {
+    final c = SfxController();
+    final t0 = DateTime.utc(2026, 1, 1);
+    expect(c.shouldPlay(SfxId.yourTurn, t0), isTrue);
+    expect(
+      c.shouldPlay(SfxId.yourTurn, t0.add(const Duration(milliseconds: 200))),
+      isFalse,
+    );
+    expect(
+      c.shouldPlay(SfxId.yourTurn, t0.add(const Duration(milliseconds: 900))),
+      isTrue,
+    );
+  });
+
+  test('бейдж «ваш ход» молчит на экране партии', () {
+    expect(
+      MyTurnBadgeSfx.shouldPlay(
+        previousCount: 0,
+        nextCount: 1,
+        path: '/games/poker/game/abc',
+      ),
+      isFalse,
+    );
+    expect(
+      MyTurnBadgeSfx.shouldPlay(
+        previousCount: 0,
+        nextCount: 1,
+        path: '/games/poker/offline',
+      ),
+      isFalse,
+    );
+    expect(
+      MyTurnBadgeSfx.shouldPlay(
+        previousCount: 0,
+        nextCount: 1,
+        path: '/chats',
+      ),
+      isTrue,
+    );
+    expect(
+      MyTurnBadgeSfx.shouldPlay(
+        previousCount: null,
+        nextCount: 1,
+        path: '/chats',
+      ),
+      isFalse,
+    );
+  });
+
   test('тик часов только на своём видимом ходе и раз в секунду', () {
     TurnClockSfx.reset();
     final played = <SfxId>[];
