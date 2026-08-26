@@ -1,0 +1,173 @@
+# Авторелиз Android AAB в Google Play Internal testing:
+#   push в develop → API DEV  (multigameszozu-dev.fly.dev)
+#   push в main    → API prod (multigameszozu.fly.dev)
+#
+# Срабатывает при изменениях client/ (и этого workflow), плюс вручную.
+# Один package (com.zozugames.app) / один Internal track — последний успешный
+# upload становится тем, что видят тестировщики.
+#
+# Секреты репозитория (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_PASSWORD
+#   ANDROID_KEY_ALIAS          (обычно zozugames)
+#   PLAY_SERVICE_ACCOUNT_JSON
+#
+# Setup: docs/ANDROID_PLAY_INTERNAL.md § «GitHub Actions»
+
+name: Android Play Internal
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'client/**'
+      - '.github/workflows/android-internal.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Какой API_BASE зашить в AAB'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+concurrency:
+  group: android-play-internal-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Resolve target
+        id: target
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET="${{ inputs.target }}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            TARGET="prod"
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            TARGET="dev"
+          else
+            echo "Неизвестная ветка: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+          if [[ "$TARGET" == "prod" ]]; then
+            API_BASE="https://multigameszozu.fly.dev"
+          else
+            API_BASE="https://multigameszozu-dev.fly.dev"
+          fi
+
+          # versionCode должен расти и быть > уже залитых в Play (локальный +1).
+          VERSION_CODE=$((10000 + ${{ github.run_number }}))
+          VERSION_NAME="0.1.0-${TARGET}.${{ github.run_number }}"
+          RELEASE_NAME="internal-${TARGET}-${VERSION_CODE}"
+
+          {
+            echo "target=$TARGET"
+            echo "api_base=$API_BASE"
+            echo "version_code=$VERSION_CODE"
+            echo "version_name=$VERSION_NAME"
+            echo "release_name=$RELEASE_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Play Internal: branch=${{ github.ref_name }} → $TARGET ($API_BASE)"
+          echo "versionName=$VERSION_NAME versionCode=$VERSION_CODE"
+
+      - name: Check required secrets
+        working-directory: .
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS PLAY_SERVICE_ACCOUNT_JSON; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing secret: $name — см. docs/ANDROID_PLAY_INTERNAL.md"
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: stable
+          cache: true
+
+      - name: Decode keystore + key.properties
+        working-directory: client/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > upload-keystore.jks
+          test -s upload-keystore.jks
+          printf '%s\n' \
+            "storePassword=${ANDROID_KEYSTORE_PASSWORD}" \
+            "keyPassword=${ANDROID_KEY_PASSWORD}" \
+            "keyAlias=${ANDROID_KEY_ALIAS}" \
+            "storeFile=../upload-keystore.jks" \
+            > key.properties
+          grep -q '^keyAlias=' key.properties
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build app bundle
+        run: |
+          set -euo pipefail
+          flutter build appbundle --release \
+            --build-number="${{ steps.target.outputs.version_code }}" \
+            --build-name="${{ steps.target.outputs.version_name }}" \
+            --dart-define=API_BASE=${{ steps.target.outputs.api_base }}
+          ls -lh build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ steps.target.outputs.target }}-${{ steps.target.outputs.version_code }}
+          path: client/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload to Play Internal
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.zozugames.app
+          releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+          tracks: internal
+          status: completed
+          releaseName: ${{ steps.target.outputs.release_name }}
+          changesNotSentForReview: true

@@ -23,7 +23,7 @@ cp client/android/key.properties.example client/android/key.properties
 
 **Важно:** `upload-keystore.jks` и `key.properties` не коммитить. Потеря keystore = нельзя нормально обновлять то же приложение в Play.
 
-## 2. Сборка AAB
+## 2. Сборка AAB (локально)
 
 ```bash
 cd client
@@ -41,7 +41,10 @@ flutter build appbundle --release \
   --dart-define=API_BASE=https://multigameszozu-dev.fly.dev
 ```
 
-## 3. Play Console → Internal testing
+Каждый новый upload в Play должен иметь **больший** `versionCode`  
+(`pubspec.yaml` → `0.1.0+N`, число после `+`).
+
+## 3. Play Console → Internal testing (ручная загрузка)
 
 1. Play Console → приложение **Zozu Games** (`com.zozugames.app`)
 2. **Testing → Internal testing → Create new release**
@@ -51,24 +54,7 @@ flutter build appbundle --release \
 6. **Testers** → добавь свой Google-аккаунт / создай email list
 7. Открой на телефоне ссылку copy link / join on the web → Install
 
-## 4. In-app «Обновить» на Android
 
-После установки **из Play Internal** (не sideload) приложение само проверяет
-наличие новой версии через **Google Play In-App Updates**:
-
-1. Новый AAB попал в Internal (ручная загрузка или CI).
-2. Через некоторое время Play отдаёт update → в приложении диалог / баннер
-   «Доступно обновление» (тот же UX, что на вебе).
-3. Кнопка **«Обновить»** → immediate/flexible update Play API;
-   если API недоступен — открывается страница приложения в Play Store.
-
-**Ограничения**
-
-- Работает только если приложение установлено из Play (Internal/Production).
-- `flutter run` / APK с ПК — `checkForUpdate` обычно молчит (это нормально).
-- На web по-прежнему сверка `BUILD_ID` с `/api/version` + reload страницы.
-
-Код: `client/lib/core/app_play_update*.dart`, `app_update_provider.dart`.
 
 ## 5. Локальный прогон на устройстве (до AAB)
 
@@ -80,10 +66,11 @@ flutter run -d android \
 
 ## 6. Чеклист перед первой загрузкой
 
-- [ ] `applicationId` = `com.zozugames.app`
-- [ ] label = `Zozu Games`
-- [ ] `INTERNET` permission в main manifest
-- [ ] release keystore + `key.properties`
+- [x] `applicationId` = `com.zozugames.app`
+- [x] label = `Zozu Games`
+- [x] `INTERNET` permission в main manifest
+- [ ] release keystore + `key.properties` (локально)
+- [ ] GitHub secrets для Actions (см. §4)
 - [ ] AAB собран с нужным `API_BASE`
 - [ ] Internal testing track создан, ты в списке тестеров
 - [ ] После второго Internal-релиза: in-app диалог «Обновить» на телефоне

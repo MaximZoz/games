@@ -376,7 +376,9 @@ cp deploy.dev.env.example deploy.dev.env
 | `develop` | `https://multigameszozu-dev.fly.dev` |
 | `main` | `https://multigameszozu.fly.dev` |
 
-На push в `develop` гоняется только **Deploy Fly** (DEV). Workflow `CI` (analyze/test) стартует при влитии в `main` и вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
+На push в `develop` гоняется **Deploy Fly** (DEV). Workflow `CI` (analyze/test) стартует при влитии в `main` и вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
+
+**Android → Play Internal** (при изменениях в `client/**`): workflow **Android Play Internal** собирает signed AAB и заливает в Internal testing (`develop` → DEV API, `main` → prod API). Нужны секреты keystore + Play service account — см. `docs/ANDROID_PLAY_INTERNAL.md`.
 
 Windows:
 
