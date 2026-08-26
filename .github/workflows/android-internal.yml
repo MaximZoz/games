@@ -174,4 +174,5 @@ jobs:
           tracks: internal
           status: completed
           releaseName: ${{ steps.target.outputs.release_name }}
-          changesNotSentForReview: true
+          # Не ставить changesNotSentForReview: у аккаунтов с автоотправкой
+          # на review Play отвечает: "must not be set".
