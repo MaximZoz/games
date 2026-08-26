@@ -51,7 +51,26 @@ flutter build appbundle --release \
 6. **Testers** → добавь свой Google-аккаунт / создай email list
 7. Открой на телефоне ссылку copy link / join on the web → Install
 
-## 4. Локальный прогон на устройстве (до AAB)
+## 4. In-app «Обновить» на Android
+
+После установки **из Play Internal** (не sideload) приложение само проверяет
+наличие новой версии через **Google Play In-App Updates**:
+
+1. Новый AAB попал в Internal (ручная загрузка или CI).
+2. Через некоторое время Play отдаёт update → в приложении диалог / баннер
+   «Доступно обновление» (тот же UX, что на вебе).
+3. Кнопка **«Обновить»** → immediate/flexible update Play API;
+   если API недоступен — открывается страница приложения в Play Store.
+
+**Ограничения**
+
+- Работает только если приложение установлено из Play (Internal/Production).
+- `flutter run` / APK с ПК — `checkForUpdate` обычно молчит (это нормально).
+- На web по-прежнему сверка `BUILD_ID` с `/api/version` + reload страницы.
+
+Код: `client/lib/core/app_play_update*.dart`, `app_update_provider.dart`.
+
+## 5. Локальный прогон на устройстве (до AAB)
 
 ```bash
 cd client
@@ -59,7 +78,7 @@ flutter run -d android \
   --dart-define=API_BASE=https://multigameszozu-dev.fly.dev
 ```
 
-## 5. Чеклист перед первой загрузкой
+## 6. Чеклист перед первой загрузкой
 
 - [ ] `applicationId` = `com.zozugames.app`
 - [ ] label = `Zozu Games`
@@ -67,8 +86,9 @@ flutter run -d android \
 - [ ] release keystore + `key.properties`
 - [ ] AAB собран с нужным `API_BASE`
 - [ ] Internal testing track создан, ты в списке тестеров
+- [ ] После второго Internal-релиза: in-app диалог «Обновить» на телефоне
 
-## 6. Позже (не блокер для Internal)
+## 7. Позже (не блокер для Internal)
 
 - иконки/feature graphic для Store listing
 - Privacy Policy URL
