@@ -1,9 +1,10 @@
 # Скопируй в key.properties (НЕ коммить key.properties и .jks/.keystore):
 #   cp key.properties.example key.properties
 #
-# storeFile — путь относительно client/android/  ИЛИ абсолютный путь.
+# storeFile — путь относительно client/android/app/
+# если keystore лежит в client/android/upload-keystore.jks → ../upload-keystore.jks
 
 storePassword=your_store_password
 keyPassword=your_key_password
 keyAlias=zozugames
-storeFile=upload-keystore.jks
+storeFile=../upload-keystore.jks
