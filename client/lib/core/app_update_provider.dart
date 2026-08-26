@@ -4,11 +4,15 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
+import 'package:multigames_client/core/app_play_update.dart';
 import 'package:multigames_client/core/app_reload.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+
+/// Маркер «источник обновления = Google Play» (не серверный BUILD_ID).
+const String kPlayStoreUpdateBuildMarker = 'play_store';
 
 /// Состояние проверки версии клиента vs сервера.
 class AppUpdateState {
@@ -92,7 +96,7 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     await check();
   }
 
-  /// Сравнить с сервером / WS payload.
+  /// Сравнить с Play (Android) или с сервером / WS (web и прочие).
   Future<void> check({
     String? latestBuild,
     String? whatsNew,
@@ -100,8 +104,29 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
     if (_checking && latestBuild == null) return;
     _checking = true;
     try {
-      var remote = latestBuild?.trim();
       var notes = whatsNew?.trim() ?? '';
+
+      // Android из Play: источник правды — In-App Updates API, не BUILD_ID.
+      // Иначе AAB без --dart-define=BUILD_ID=… давал бы ложные диалоги.
+      if (await supportsPlayInAppUpdate()) {
+        if (notes.isEmpty) {
+          final info = await _fetchVersionInfo();
+          notes = info?.whatsNew ?? '';
+        }
+        final playAvailable = await isPlayStoreUpdateAvailable();
+        if (playAvailable) {
+          _setUpdateAvailable(
+            remote: kPlayStoreUpdateBuildMarker,
+            notes: notes,
+          );
+        } else if (state.updateAvailable &&
+            state.latestBuild == kPlayStoreUpdateBuildMarker) {
+          state = const AppUpdateState();
+        }
+        return;
+      }
+
+      var remote = latestBuild?.trim();
       if (remote == null || remote.isEmpty || notes.isEmpty) {
         final info = await _fetchVersionInfo();
         remote ??= info?.buildId;
@@ -127,26 +152,30 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
         return;
       }
 
-      final inGame = _isInActiveGame();
-      final newRemote = remote != state.latestBuild;
-      if (!newRemote &&
-          state.updateAvailable &&
-          state.deferredUntilGameEnd == inGame &&
-          (notes.isEmpty || state.whatsNew == notes)) {
-        return;
-      }
-      state = AppUpdateState(
-        latestBuild: remote,
-        whatsNew: notes.isNotEmpty ? notes : state.whatsNew,
-        updateAvailable: true,
-        deferredUntilGameEnd: inGame,
-        // Новый build на сервере — снова показать диалог.
-        dialogShown: newRemote ? false : state.dialogShown,
-        bannerDismissed: newRemote ? false : state.bannerDismissed,
-      );
+      _setUpdateAvailable(remote: remote, notes: notes);
     } finally {
       _checking = false;
     }
+  }
+
+  void _setUpdateAvailable({required String remote, required String notes}) {
+    final inGame = _isInActiveGame();
+    final newRemote = remote != state.latestBuild;
+    if (!newRemote &&
+        state.updateAvailable &&
+        state.deferredUntilGameEnd == inGame &&
+        (notes.isEmpty || state.whatsNew == notes)) {
+      return;
+    }
+    state = AppUpdateState(
+      latestBuild: remote,
+      whatsNew: notes.isNotEmpty ? notes : state.whatsNew,
+      updateAvailable: true,
+      deferredUntilGameEnd: inGame,
+      // Новый build — снова показать диалог.
+      dialogShown: newRemote ? false : state.dialogShown,
+      bannerDismissed: newRemote ? false : state.bannerDismissed,
+    );
   }
 
   /// Партия закончилась — если ждали обновление, показать диалог.
@@ -173,6 +202,8 @@ class AppUpdateNotifier extends StateNotifier<AppUpdateState> {
   }
 
   Future<void> applyUpdate() async {
+    // Android: Play In-App Update (или страница в Store). Web: hard reload.
+    if (await applyPlayStoreUpdate()) return;
     await reloadApp();
   }
 
