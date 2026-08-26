@@ -264,7 +264,7 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                   const SizedBox(height: 28),
                   Text(
-                    l10n.settingsAppVersion(appBuildId),
+                    l10n.settingsAppVersion(appVersionLabel),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary.withValues(alpha: 0.72),

@@ -6,6 +6,18 @@ const String _apiBaseUrlRaw =
 const String appBuildId =
     String.fromEnvironment('BUILD_ID', defaultValue: 'dev');
 
+/// Человекочитаемая версия для UI (CI: `--dart-define=APP_VERSION=0.1.0-prod.12+10012`).
+/// Если не задана — показываем [appBuildId] (web/local → часто `dev`).
+const String _appVersionRaw =
+    String.fromEnvironment('APP_VERSION', defaultValue: '');
+
+/// Строка «Версия …» в настройках.
+String get appVersionLabel {
+  final v = _appVersionRaw.trim();
+  if (v.isNotEmpty) return v;
+  return appBuildId;
+}
+
 /// Отправка клиентских логов на /api/logs/frontend (для отладки).
 /// По умолчанию отключено.
 const bool frontendApiLogsEnabled =
