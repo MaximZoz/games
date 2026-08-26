@@ -1,4 +1,4 @@
-package com.example.multigames_client
+package com.zozugames.app
 
 import io.flutter.embedding.android.FlutterActivity
 
