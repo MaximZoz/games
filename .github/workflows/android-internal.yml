@@ -34,9 +34,11 @@ on:
           - dev
           - prod
 
+# Один активный релиз на репо: новый run отменяет старые (иначе Queued копятся
+# при cancel-in-progress: false и GitHub UI иногда не даёт Cancel).
 concurrency:
-  group: android-play-internal-${{ github.ref_name }}
-  cancel-in-progress: false
+  group: android-play-internal
+  cancel-in-progress: true
 
 jobs:
   release:
@@ -131,8 +133,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > upload-keystore.jks
+          # Убрать CR/LF/пробелы — частая причина base64: invalid input из Secrets UI.
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 -d > upload-keystore.jks
           test -s upload-keystore.jks
+          echo "keystore bytes=$(wc -c < upload-keystore.jks)"
           printf '%s\n' \
             "storePassword=${ANDROID_KEYSTORE_PASSWORD}" \
             "keyPassword=${ANDROID_KEY_PASSWORD}" \
