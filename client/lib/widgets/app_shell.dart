@@ -382,7 +382,11 @@ class AppShell extends ConsumerWidget {
       if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
     });
     ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
-      if (AlertSfx.shouldPlayCountBump(prev, next)) {
+      if (MyTurnBadgeSfx.shouldPlay(
+        previousCount: prev,
+        nextCount: next,
+        path: path,
+      )) {
         Sfx.play(SfxId.yourTurn);
       }
     });

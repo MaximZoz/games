@@ -73,10 +73,14 @@ class SfxController {
   bool get enabled => _enabled;
 
   @visibleForTesting
+  /// «Ваш ход» с часов стола и с бейджа не должны звучать парой.
+  static const yourTurnDebounce = Duration(milliseconds: 900);
+
   bool shouldPlay(SfxId id, DateTime now) {
+    final window = id == SfxId.yourTurn ? yourTurnDebounce : debounce;
     if (_lastId == id &&
         _lastAt != null &&
-        now.difference(_lastAt!) < debounce) {
+        now.difference(_lastAt!) < window) {
       return false;
     }
     _lastId = id;
@@ -159,6 +163,23 @@ class SfxController {
 abstract final class AlertSfx {
   static bool shouldPlayCountBump(int? previous, int next) {
     return previous != null && next > previous;
+  }
+}
+
+/// Бейдж «ваш ход» в шелле не дублирует звук, если уже открыта партия.
+abstract final class MyTurnBadgeSfx {
+  static bool isOnGameBoard(String path) {
+    final p = path.toLowerCase();
+    return p.contains('/game/') || p.contains('/offline');
+  }
+
+  static bool shouldPlay({
+    required int? previousCount,
+    required int nextCount,
+    required String path,
+  }) {
+    return AlertSfx.shouldPlayCountBump(previousCount, nextCount) &&
+        !isOnGameBoard(path);
   }
 }
 

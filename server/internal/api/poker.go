@@ -18,7 +18,6 @@ import (
 
 const (
 	pokerGameType      = "poker"
-	pokerBotID         = "bot:poker"
 	pokerStatusOver    = "over"
 	pokerBotDelay      = 700 * time.Millisecond
 	pokerNextHandDelay = 4 * time.Second
@@ -109,7 +108,7 @@ func pokerChipConfig(stakeBronze int) (startingChips, smallBlind, bigBlind int) 
 
 type createPokerLobbyBody struct {
 	Mode        string `json:"mode"`          // "invite" | "matchmake"
-	MaxPlayers  int    `json:"max_players"`   // 1..6 (1 = heads-up vs bot)
+	MaxPlayers  int    `json:"max_players"`   // 2..6
 	TurnTimeSec int    `json:"turn_time_sec"` // 0/20/60/600
 	StakeBronze int    `json:"stake_bronze"`
 }
@@ -137,7 +136,7 @@ func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) 
 		mode = "invite"
 	}
 	maxPlayers := body.MaxPlayers
-	if maxPlayers < 1 || maxPlayers > 6 {
+	if maxPlayers < 2 || maxPlayers > 6 {
 		maxPlayers = 2
 	}
 	if !validTurnTimeSec[body.TurnTimeSec] {
@@ -163,24 +162,6 @@ func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
-		return
-	}
-
-	// max_players == 1 — сразу хедз-ап против бота.
-	if maxPlayers == 1 {
-		lobbyID := uuid.New().String()
-		playerIDs := []string{userID.String(), pokerBotID}
-		gameID, serr := h.startPokerGameCore(ctx, lobbyID, playerIDs, []uuid.UUID{userID}, body.TurnTimeSec, stakeBronze, 2)
-		if serr != nil {
-			h.writePokerStartError(w, r, serr)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"lobby_id": lobbyID,
-			"game_id":  gameID,
-			"matched":  true,
-		})
 		return
 	}
 

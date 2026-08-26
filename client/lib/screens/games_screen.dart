@@ -2251,8 +2251,8 @@ class _PokerGameCard extends ConsumerStatefulWidget {
 }
 
 class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
-  // 1 игрок = мгновенная партия с ботом; 2–6 — стол на N мест.
-  static const _playerOptions = <int>[1, 2, 3, 4, 5, 6];
+  // Онлайн и офлайн: стол с 2–6 мест, как в других играх.
+  static const _playerOptions = <int>[2, 3, 4, 5, 6];
 
   int _players = 2;
   int _turnTimeSec = 60;
@@ -2275,7 +2275,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
     if (saved == null) return;
     _settingsHydrated = true;
     setState(() {
-      _players = saved.maxPlayers.clamp(1, 6);
+      _players = saved.maxPlayers.clamp(2, 6);
       _turnTimeSec =
           turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
@@ -2448,7 +2448,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
       setState(() {
-        _players = saved.maxPlayers.clamp(1, 6);
+        _players = saved.maxPlayers.clamp(2, 6);
         _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
             ? saved.turnTimeSec
             : 60;
