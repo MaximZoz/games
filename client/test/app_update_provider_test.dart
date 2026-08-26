@@ -8,6 +8,10 @@ void main() {
     expect(appBuildId, isNotEmpty);
   });
 
+  test('appVersionLabel falls back to appBuildId without APP_VERSION', () {
+    expect(appVersionLabel, appBuildId);
+  });
+
   test('version mismatch detection', () {
     const local = 'abc1234';
     const remote = 'def5678';

@@ -128,6 +128,10 @@ Set-Clipboard -Value $b64
 Web по-прежнему: `BUILD_ID` + reload.  
 Код: `client/lib/core/app_play_update*.dart`, `app_update_provider.dart`.
 
+В **Настройки** на Android из CI показывается `APP_VERSION` вида  
+`0.1.0-prod.12+10012` (не `dev`). Строка `dev` значит сборка без  
+`--dart-define=APP_VERSION` / `BUILD_ID` (локальный run или старый AAB).
+
 ## 6. Локальный прогон на устройстве (до AAB)
 
 ```bash
