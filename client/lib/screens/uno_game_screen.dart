@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
@@ -73,6 +74,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   final Map<int, int> _pendingOppDraw = {};
   UnoCard? _discardOverride;
   int _seenEventSeq = 0;
+  int _heardUnoCallSeq = 0;
   int _dealHeroShown = 0;
   int _seenRoundNumber = 0;
   int _seenLastRoundNumber = 0;
@@ -145,6 +147,16 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _localPlayedIds.clear();
     }
     _seenRoundNumber = game.roundNumber;
+    final alreadyDealt = _dealAnimated;
+    if (alreadyDealt &&
+        shouldPlayUnoCallSfx(
+          eventSeq: game.eventSeq,
+          heardSeq: _heardUnoCallSeq,
+          lastEventType: game.lastEventType,
+        )) {
+      _heardUnoCallSeq = game.eventSeq;
+      Sfx.play(SfxId.unoCall);
+    }
     if (game.lastRoundNumber != _seenLastRoundNumber) {
       _seenLastRoundNumber = game.lastRoundNumber;
       _roundOverlayDismissed = false;
@@ -152,6 +164,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final topId = game.topDiscard?.id;
     if (!_dealAnimated) {
       _seenEventSeq = game.eventSeq;
+      _heardUnoCallSeq = game.eventSeq;
       _dealAnimated = true;
       _dealing = true;
       _dealHeroShown = 0;
@@ -302,6 +315,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return;
     }
     final size = _flyCardSize(context);
+    Sfx.play(SfxId.cardPlay);
     for (var round = 0; round < 7; round++) {
       for (var playerIndex = 0;
           playerIndex < game.players.length;
@@ -336,6 +350,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           beginScale: 0.85,
           endScale: 1,
           arcLift: 18,
+          playSfx: false,
         ));
         if (mounted) {
           setState(() {
@@ -569,6 +584,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   Future<void> _playCard(UnoGameView game, UnoCard card) async {
     if (_busy || !game.isMyTurn) return;
     if (!_canPlayCard(game, card)) {
+      Sfx.play(SfxId.deny);
       if (mounted && game.stackOpen && game.topDiscard != null) {
         showAppSnackBar(
           context,
@@ -726,6 +742,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (manageBusy) {
       if (_busy) return;
       setState(() => _busy = true);
+    }
+    if (type == UnoActionType.chooseColor ||
+        type == UnoActionType.challengeUno ||
+        type == UnoActionType.challengeWd4) {
+      Sfx.play(SfxId.unoSpecial);
     }
     try {
       await ref.read(unoRepositoryProvider).move(
@@ -1050,7 +1071,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             maxPlayers: game?.players.length ?? 2,
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);
@@ -1102,6 +1122,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       _pendingDrawnIds.clear();
       _pendingOppDraw.clear();
       _seenEventSeq = 0;
+      _heardUnoCallSeq = 0;
       _lastLocalActor = null;
       _lastLocalDrawActor = null;
       _lastLocalPlayCardId = null;
@@ -1269,6 +1290,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
     return Stack(
       children: [
+        MyTurnAlert.stackLeaf(
+          isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
+        ),
         Padding(
           padding: EdgeInsets.fromLTRB(
             narrow ? 8 : 20,

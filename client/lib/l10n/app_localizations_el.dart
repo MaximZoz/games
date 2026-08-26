@@ -37,10 +37,10 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsLanguageSystem => 'Προεπιλογή συστήματος';
 
   @override
-  String get settingsAddBotsTitle => 'Προσθήκη bot μετά από 30 δευτ.';
+  String get settingsSoundTitle => 'Ήχος';
 
   @override
-  String get settingsAddBotsSubtitle => 'Στο matchmaking: αν δεν βρεθεί αντίπαλος σε 30 δευτερόλεπτα, το παιχνίδι ξεκινά με bot (το ποντάρισμα επαναφέρεται σε 1 μπρούντζο)';
+  String get settingsSoundSubtitle => 'Κινήσεις και κινούμενα γραφικά';
 
   @override
   String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';
@@ -381,6 +381,78 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Κάτι πήγε στραβά. Δοκιμάστε ξανά.';
+
+  @override
+  String get apiErrWrongGameType => 'Λάθος τύπος παιχνιδιού';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Λάθος τύπος ή κατάσταση παιχνιδιού';
+
+  @override
+  String get apiErrLobbyFull => 'Το λόμπι είναι γεμάτο';
+
+  @override
+  String get apiErrBadState => 'Μη έγκυρη κατάσταση παιχνιδιού';
+
+  @override
+  String get apiErrIllegalMove => 'Μη επιτρεπτή κίνηση';
+
+  @override
+  String get apiErrUnknownMoveType => 'Άγνωστος τύπος κίνησης';
+
+  @override
+  String get apiErrNoOpponents => 'Δεν υπάρχουν αντίπαλοι';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Δεν υπάρχουν αντίπαλοι για ρεβάνς';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Είστε ήδη σε αυτό το λόμπι';
+
+  @override
+  String get apiErrGameNotActive => 'Το παιχνίδι δεν είναι ενεργό';
+
+  @override
+  String get apiErrNotInBattle => 'Δεν είστε στη φάση μάχης';
+
+  @override
+  String get apiErrNotInSetup => 'Δεν είστε στη φάση τοποθέτησης';
+
+  @override
+  String get apiErrAlreadyReady => 'Είστε ήδη έτοιμοι';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Έχετε ήδη εγκαταλείψει';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Έχετε εγκαταλείψει';
+
+  @override
+  String get apiErrNoDrawOffer => 'Δεν υπάρχει πρόταση ισοπαλίας';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Η ισοπαλία είναι μόνο εναντίον παίκτη';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Η ισοπαλία είναι μόνο στο 1 εναντίον 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Η ισοπαλία δεν είναι διαθέσιμη εναντίον bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Η ισοπαλία δεν είναι διαθέσιμη σε πολλούς παίκτες';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Η τράπουλα 24 είναι μόνο για 2 παίκτες';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Η τράπουλα 52 απαιτεί 3 ή 4 παίκτες';
+
+  @override
+  String get apiErrAccountFrozen => 'Ο λογαριασμός είναι παγωμένος';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Ο χρόνος κίνησης πρέπει να είναι 0, 20, 60 ή 600 δευτερόλεπτα';
 
   @override
   String get timeJustNow => 'μόλις τώρα';
@@ -2014,7 +2086,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Χρόνος ανά κίνηση: $time.';
+    return 'Χρόνος ανά κίνηση: $time. Η λήξη του χρόνου είναι ήττα.';
   }
 
   @override

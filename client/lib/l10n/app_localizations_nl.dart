@@ -37,10 +37,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsLanguageSystem => 'Systeemstandaard';
 
   @override
-  String get settingsAddBotsTitle => 'Bots toevoegen na 30 s';
+  String get settingsSoundTitle => 'Geluid';
 
   @override
-  String get settingsAddBotsSubtitle => 'Bij matchmaking: als er binnen 30 seconden geen tegenstander is, start het spel met een bot (inzet terug naar 1 brons)';
+  String get settingsSoundSubtitle => 'Zetten en spelanimaties';
 
   @override
   String get settingsOfflineModeTitle => 'Netwerkmodus';
@@ -381,6 +381,78 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Er ging iets mis. Probeer het opnieuw.';
+
+  @override
+  String get apiErrWrongGameType => 'Verkeerd speltype';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Verkeerd speltype of status';
+
+  @override
+  String get apiErrLobbyFull => 'Lobby is vol';
+
+  @override
+  String get apiErrBadState => 'Ongeldige spelstatus';
+
+  @override
+  String get apiErrIllegalMove => 'Ongeldige zet';
+
+  @override
+  String get apiErrUnknownMoveType => 'Onbekend zettype';
+
+  @override
+  String get apiErrNoOpponents => 'Geen tegenstanders';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Geen tegenstanders voor een rematch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Je zit al in deze lobby';
+
+  @override
+  String get apiErrGameNotActive => 'Het spel is niet actief';
+
+  @override
+  String get apiErrNotInBattle => 'Niet in de gevechtsfase';
+
+  @override
+  String get apiErrNotInSetup => 'Niet in de opstelfase';
+
+  @override
+  String get apiErrAlreadyReady => 'Je bent al klaar';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Je hebt al opgegeven';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Je hebt opgegeven';
+
+  @override
+  String get apiErrNoDrawOffer => 'Geen remise-aanbod';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Remise alleen tegen een speler';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Remise alleen in 1-tegen-1';
+
+  @override
+  String get apiErrDrawVsBot => 'Remise is niet beschikbaar tegen een bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Remise is niet beschikbaar in multiplayer';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Deck van 24 is alleen voor 2 spelers';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Deck van 52 is voor 3 of 4 spelers';
+
+  @override
+  String get apiErrAccountFrozen => 'Account is bevroren';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Zettijd moet 0, 20, 60 of 600 seconden zijn';
 
   @override
   String get timeJustNow => 'zojuist';
@@ -2014,7 +2086,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tijd per beurt: $time.';
+    return 'Tijd per beurt: $time. Tijd overschrijden is verlies.';
   }
 
   @override

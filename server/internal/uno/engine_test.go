@@ -511,6 +511,12 @@ func TestUnoCallAndChallengePenalty(t *testing.T) {
 		if !game.Players[0].SaidUno {
 			t.Fatal("SaidUno was not recorded")
 		}
+		if game.LastEventType != ActionCallUno {
+			t.Fatalf("call uno event = %q, want %q", game.LastEventType, ActionCallUno)
+		}
+		if game.LastEventActor != "p0" {
+			t.Fatalf("call uno actor = %q, want p0", game.LastEventActor)
+		}
 		if err := game.Apply(Action{Type: ActionChallengeUno, ActorUserID: "p1", TargetUserID: "p0"}); err == nil {
 			t.Fatal("challenge should fail after UNO was called")
 		}

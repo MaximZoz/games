@@ -458,9 +458,6 @@ func main() {
 	shopHandler := &api.ShopHandler{Pool: pool, Hub: realtimeHub, Push: pushSender}
 	if rdb != nil {
 		go gamesBroadcaster.Start(ctx)
-		go api.StartBotTimeoutTicker(ctx, gamesHandler)
-		go api.StartBattleshipBotTimeoutTicker(ctx, gamesHandler)
-		go api.StartPokerBotTimeoutTicker(ctx, gamesHandler)
 	}
 	adminInitSecret := getEnv("ADMIN_INIT_SECRET", "")
 	adminHandler := &api.AdminHandler{

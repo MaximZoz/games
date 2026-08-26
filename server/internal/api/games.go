@@ -35,7 +35,6 @@ const (
 	gameStatusDraw              = "draw"
 	lobbyTTL                    = 10 * time.Minute
 	botUserID                   = "bot:ttt"
-	botTimeoutSeconds           = 30
 )
 
 // turn_time_sec: 0=unlimited, 20, 60, 600
@@ -76,7 +75,6 @@ type CreateLobbyBody struct {
 	SwapRule             bool   `json:"swap_rule"`              // deprecated, игнорируется
 	FirstMoveRestriction bool   `json:"first_move_restriction"` // deprecated, игнорируется
 	StakeBronze          int    `json:"stake_bronze"`           // ставка в бронзовых (мин 2)
-	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`     // в matchmake: через 30 с добавить бота
 }
 
 type InviteBody struct {
@@ -88,10 +86,10 @@ type MoveBody struct {
 }
 
 type LobbyPlayerItem struct {
-	ID           string  `json:"id"`
-	DisplayName  string  `json:"display_name,omitempty"`
-	AvatarKind   string  `json:"avatar_kind,omitempty"`
-	AvatarValue  *string `json:"avatar_value,omitempty"`
+	ID          string  `json:"id"`
+	DisplayName string  `json:"display_name,omitempty"`
+	AvatarKind  string  `json:"avatar_kind,omitempty"`
+	AvatarValue *string `json:"avatar_value,omitempty"`
 }
 
 type LobbyItem struct {
@@ -147,29 +145,29 @@ type GameStateItem struct {
 	CanSwap              bool     `json:"can_swap,omitempty"` // всегда false
 	StakeBronze          int      `json:"stake_bronze,omitempty"`
 	// Кто предложил ничью (user id); пусто — предложения нет.
-	DrawOfferBy          string   `json:"draw_offer_by,omitempty"`
-	ChatID               string   `json:"chat_id,omitempty"`
-	EliminatedMarks      []string `json:"eliminated_marks,omitempty"`
-	XDisplayName         *string  `json:"x_display_name,omitempty"`
-	ODisplayName         *string  `json:"o_display_name,omitempty"`
-	TDisplayName         *string  `json:"t_display_name,omitempty"`
-	SDisplayName         *string  `json:"s_display_name,omitempty"`
-	XAvatarKind          string   `json:"x_avatar_kind,omitempty"`
-	XAvatarValue         *string  `json:"x_avatar_value,omitempty"`
-	XFrameColor          string   `json:"x_frame_color,omitempty"`
-	XFrameCode           string   `json:"x_frame_code,omitempty"`
-	OAvatarKind          string   `json:"o_avatar_kind,omitempty"`
-	OAvatarValue         *string  `json:"o_avatar_value,omitempty"`
-	OFrameColor          string   `json:"o_frame_color,omitempty"`
-	OFrameCode           string   `json:"o_frame_code,omitempty"`
-	TAvatarKind          string   `json:"t_avatar_kind,omitempty"`
-	TAvatarValue         *string  `json:"t_avatar_value,omitempty"`
-	TFrameColor          string   `json:"t_frame_color,omitempty"`
-	TFrameCode           string   `json:"t_frame_code,omitempty"`
-	SAvatarKind          string   `json:"s_avatar_kind,omitempty"`
-	SAvatarValue         *string  `json:"s_avatar_value,omitempty"`
-	SFrameColor          string   `json:"s_frame_color,omitempty"`
-	SFrameCode           string   `json:"s_frame_code,omitempty"`
+	DrawOfferBy     string   `json:"draw_offer_by,omitempty"`
+	ChatID          string   `json:"chat_id,omitempty"`
+	EliminatedMarks []string `json:"eliminated_marks,omitempty"`
+	XDisplayName    *string  `json:"x_display_name,omitempty"`
+	ODisplayName    *string  `json:"o_display_name,omitempty"`
+	TDisplayName    *string  `json:"t_display_name,omitempty"`
+	SDisplayName    *string  `json:"s_display_name,omitempty"`
+	XAvatarKind     string   `json:"x_avatar_kind,omitempty"`
+	XAvatarValue    *string  `json:"x_avatar_value,omitempty"`
+	XFrameColor     string   `json:"x_frame_color,omitempty"`
+	XFrameCode      string   `json:"x_frame_code,omitempty"`
+	OAvatarKind     string   `json:"o_avatar_kind,omitempty"`
+	OAvatarValue    *string  `json:"o_avatar_value,omitempty"`
+	OFrameColor     string   `json:"o_frame_color,omitempty"`
+	OFrameCode      string   `json:"o_frame_code,omitempty"`
+	TAvatarKind     string   `json:"t_avatar_kind,omitempty"`
+	TAvatarValue    *string  `json:"t_avatar_value,omitempty"`
+	TFrameColor     string   `json:"t_frame_color,omitempty"`
+	TFrameCode      string   `json:"t_frame_code,omitempty"`
+	SAvatarKind     string   `json:"s_avatar_kind,omitempty"`
+	SAvatarValue    *string  `json:"s_avatar_value,omitempty"`
+	SFrameColor     string   `json:"s_frame_color,omitempty"`
+	SFrameCode      string   `json:"s_frame_code,omitempty"`
 }
 
 type gameUserLookup func(context.Context, uuid.UUID) (*store.User, error)
@@ -452,7 +450,6 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	// Смена сторон / запрет центра удалены.
 	swapRule := false
 	firstMoveRestriction := false
-	addBotsAfter30s := body.AddBotsAfter30s
 	// multi «Найти игру»: mode остаётся matchmake (публичное лобби),
 	// статус waiting_invite — чтобы добирать игроков до N через JoinLobby.
 	openMultiFind := cfg.MaxPlayers > 2 && mode == "matchmake"
@@ -547,7 +544,6 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 		"swap_rule", "false",
 		"first_move_restriction", "false",
 		"stake_bronze", strconv.Itoa(stakeBronze),
-		"add_bots_after_30s", strconv.FormatBool(addBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if mode == "matchmake" && !openMultiFind {
@@ -1172,89 +1168,6 @@ func (h *GamesHandler) createGameFromMatch(ctx context.Context, user1, user2 uui
 	return gameID, lobbyID, err
 }
 
-// createGameWithBot создаёт игру пользователь vs бот и обновляет существующее лобби.
-func (h *GamesHandler) createGameWithBot(ctx context.Context, userID uuid.UUID, existingLobbyID string, turnTimeSec, gridSize int, swapRule, firstMoveRestriction bool, stakeBronze int) (gameID string, err error) {
-	_ = swapRule
-	_ = firstMoveRestriction
-	ok, e := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
-	if e != nil {
-		return "", e
-	}
-	if !ok {
-		return "", store.ErrStakeNotAllowed
-	}
-	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
-		return "", err
-	}
-	variantStr := ""
-	if existingLobbyID != "" {
-		if lm, lerr := h.Rdb.HGetAll(ctx, "lobby:"+existingLobbyID).Result(); lerr == nil {
-			variantStr = lm["variant"]
-			if gs, e := strconv.Atoi(lm["grid_size"]); e == nil && gs > 0 {
-				gridSize = gs
-			}
-		}
-	}
-	cfg, variant := resolveVariantConfig(variantStr, gridSize)
-	// Бот только для 2-игровых режимов.
-	if cfg.MaxPlayers != 2 {
-		cfg, variant = resolveVariantConfig(string(gameengine.VariantClassic), 3)
-	}
-	gridSize = cfg.GridSize
-	gameID = uuid.New().String()
-
-	xUserID := userID.String()
-	oUserID := botUserID
-	if rand.Intn(2) == 1 {
-		xUserID, oUserID = oUserID, xUserID
-	}
-
-	board := emptyBoardJSON(gridSize)
-	key := "game:" + gameID
-	lobbyKey := "lobby:" + existingLobbyID
-
-	pipe := h.Rdb.Pipeline()
-	gameFields := []any{
-		"board", board,
-		"turn", "x",
-		"status", gameStatusActive,
-		"lobby_id", existingLobbyID,
-		"x_user_id", xUserID,
-		"o_user_id", oUserID,
-		"mark_x", xUserID,
-		"mark_o", oUserID,
-		"turn_time_sec", strconv.Itoa(turnTimeSec),
-		"variant", string(variant),
-		"grid_size", strconv.Itoa(gridSize),
-		"max_players", "2",
-		"swap_rule", "false",
-		"first_move_restriction", "false",
-		"swapped", "false",
-		"stake_bronze", strconv.Itoa(stakeBronze),
-		"started_at", time.Now().UTC().Format(time.RFC3339Nano),
-	}
-	if variant == gameengine.VariantUltimate {
-		gameFields = append(gameFields, "next_board", "-1", "meta_board", formatMetaBoard(make([]string, 9)))
-	}
-	if turnTimeSec > 0 {
-		deadline := time.Now().UTC().Unix() + int64(turnTimeSec)
-		gameFields = append(gameFields, "turn_deadline", strconv.FormatInt(deadline, 10))
-	}
-	pipe.HSet(ctx, key, gameFields...)
-	pipe.Expire(ctx, key, 24*time.Hour)
-
-	pipe.HSet(ctx, lobbyKey,
-		"opponent_id", botUserID,
-		"status", lobbyStatusInGame,
-		"game_id", gameID,
-		"variant", string(variant),
-	)
-	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
-
-	_, err = pipe.Exec(ctx)
-	return gameID, err
-}
-
 func isBot(userID string) bool { return strings.HasPrefix(userID, "bot:") }
 
 func validMoves(board []string, gridSize int, turn string, firstMoveRestriction bool) []int {
@@ -1528,72 +1441,6 @@ func humanUserIDs(xUserID, oUserID string) []uuid.UUID {
 		}
 	}
 	return out
-}
-
-// StartBotTimeoutTicker проверяет лобби с add_bots_after_30s: через 30 с без соперника добавляет бота.
-func StartBotTimeoutTicker(ctx context.Context, h *GamesHandler) {
-	if h == nil || h.Rdb == nil {
-		return
-	}
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			h.tickBotTimeout(ctx)
-		}
-	}
-}
-
-func (h *GamesHandler) tickBotTimeout(ctx context.Context) {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
-	if err != nil || len(keys) == 0 {
-		return
-	}
-	now := time.Now().UTC()
-	for _, key := range keys {
-		m, err := h.Rdb.HGetAll(ctx, key).Result()
-		if err != nil || m["status"] != lobbyStatusWaitingMatchmake || m["add_bots_after_30s"] != "true" {
-			continue
-		}
-		createdAt, err := time.Parse(time.RFC3339Nano, m["created_at"])
-		if err != nil {
-			continue
-		}
-		if now.Sub(createdAt) < botTimeoutSeconds*time.Second {
-			continue
-		}
-		lobbyID := strings.TrimPrefix(key, "lobby:")
-		creatorID := m["creator_id"]
-		creatorUUID, err := uuid.Parse(creatorID)
-		if err != nil {
-			continue
-		}
-		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-		gridSize, _ := strconv.Atoi(m["grid_size"])
-		if !validGridSize[gridSize] {
-			gridSize = 3
-		}
-		swapRule := m["swap_rule"] == "true"
-		firstMoveRestriction := m["first_move_restriction"] == "true"
-		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		if stakeBronze < 1 {
-			stakeBronze = 1
-		}
-		mmKey := matchmakeKey(turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze)
-		h.Rdb.LRem(ctx, mmKey, 0, creatorID+":"+lobbyID)
-		// Игры с ботом всегда на 1 бронзовую
-		gameID, err := h.createGameWithBot(ctx, creatorUUID, lobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, 1)
-		if err != nil {
-			continue
-		}
-		clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
-		setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
-		h.publishGameStarted([]uuid.UUID{creatorUUID}, gameID, lobbyID)
-		return
-	}
 }
 
 func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
@@ -2010,14 +1857,14 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		gameType = "tictactoe"
 	}
 	inviteData := map[string]any{
-		"type":                   "game_invite",
-		"lobby_id":               lobbyID,
-		"creator_id":             userID.String(),
-		"creator_name":           creatorName,
-		"game_type":              gameType,
-		"turn_time_sec":          turnTimeSec,
-		"max_players":            maxPlayers,
-		"stake_bronze":           stakeBronze,
+		"type":          "game_invite",
+		"lobby_id":      lobbyID,
+		"creator_id":    userID.String(),
+		"creator_name":  creatorName,
+		"game_type":     gameType,
+		"turn_time_sec": turnTimeSec,
+		"max_players":   maxPlayers,
+		"stake_bronze":  stakeBronze,
 	}
 	if gameType == durakGameType {
 		deckSize, _ := strconv.Atoi(m["deck_size"])
@@ -2965,7 +2812,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 				"board": board, "turn": winnerMark, "winner": winnerMark,
 				"status": status, "timeout": true,
 				"eliminated_marks": strings.Split(elimCSV, ","),
-				"variant":         string(variant),
+				"variant":          string(variant),
 			})
 			return true
 		}
@@ -3142,44 +2989,44 @@ func (h *GamesHandler) GetGame(w http.ResponseWriter, r *http.Request, gameID st
 
 	botName := "Бот"
 	type sideMeta struct {
-		uid   string
-		setDN func(*string)
-		setAK func(string)
-		setAV func(*string)
-		setFC func(string)
+		uid      string
+		setDN    func(*string)
+		setAK    func(string)
+		setAV    func(*string)
+		setFC    func(string)
 		setFCode func(string)
 	}
 	sides := []sideMeta{
 		{
-			uid: m["x_user_id"],
-			setDN: func(v *string) { item.XDisplayName = v },
-			setAK: func(v string) { item.XAvatarKind = v },
-			setAV: func(v *string) { item.XAvatarValue = v },
-			setFC: func(v string) { item.XFrameColor = v },
+			uid:      m["x_user_id"],
+			setDN:    func(v *string) { item.XDisplayName = v },
+			setAK:    func(v string) { item.XAvatarKind = v },
+			setAV:    func(v *string) { item.XAvatarValue = v },
+			setFC:    func(v string) { item.XFrameColor = v },
 			setFCode: func(v string) { item.XFrameCode = v },
 		},
 		{
-			uid: m["o_user_id"],
-			setDN: func(v *string) { item.ODisplayName = v },
-			setAK: func(v string) { item.OAvatarKind = v },
-			setAV: func(v *string) { item.OAvatarValue = v },
-			setFC: func(v string) { item.OFrameColor = v },
+			uid:      m["o_user_id"],
+			setDN:    func(v *string) { item.ODisplayName = v },
+			setAK:    func(v string) { item.OAvatarKind = v },
+			setAV:    func(v *string) { item.OAvatarValue = v },
+			setFC:    func(v string) { item.OFrameColor = v },
 			setFCode: func(v string) { item.OFrameCode = v },
 		},
 		{
-			uid: m["t_user_id"],
-			setDN: func(v *string) { item.TDisplayName = v },
-			setAK: func(v string) { item.TAvatarKind = v },
-			setAV: func(v *string) { item.TAvatarValue = v },
-			setFC: func(v string) { item.TFrameColor = v },
+			uid:      m["t_user_id"],
+			setDN:    func(v *string) { item.TDisplayName = v },
+			setAK:    func(v string) { item.TAvatarKind = v },
+			setAV:    func(v *string) { item.TAvatarValue = v },
+			setFC:    func(v string) { item.TFrameColor = v },
 			setFCode: func(v string) { item.TFrameCode = v },
 		},
 		{
-			uid: m["s_user_id"],
-			setDN: func(v *string) { item.SDisplayName = v },
-			setAK: func(v string) { item.SAvatarKind = v },
-			setAV: func(v *string) { item.SAvatarValue = v },
-			setFC: func(v string) { item.SFrameColor = v },
+			uid:      m["s_user_id"],
+			setDN:    func(v *string) { item.SDisplayName = v },
+			setAK:    func(v string) { item.SAvatarKind = v },
+			setAV:    func(v *string) { item.SAvatarValue = v },
+			setFC:    func(v string) { item.SFrameColor = v },
 			setFCode: func(v string) { item.SFrameCode = v },
 		},
 	}
@@ -3264,7 +3111,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 			"turn": m["turn"], "winner": m["winner"], "status": m["status"],
 			"timeout": true, "grid_size": gridSize, "variant": string(variant),
 			"max_players": cfg.MaxPlayers,
-			"x_user_id":  m["x_user_id"], "o_user_id": m["o_user_id"],
+			"x_user_id":   m["x_user_id"], "o_user_id": m["o_user_id"],
 		}
 		if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
 			resp["chat_id"] = chatID
@@ -3553,8 +3400,8 @@ func (h *GamesHandler) ForfeitGame(w http.ResponseWriter, r *http.Request, gameI
 			"board": board, "turn": winnerMark, "winner": winnerMark,
 			"status": status, "forfeit": true,
 			"eliminated_marks": strings.Split(elimCSV, ","),
-			"variant":         string(variant),
-			"max_players":     cfg.MaxPlayers,
+			"variant":          string(variant),
+			"max_players":      cfg.MaxPlayers,
 		})
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -3863,9 +3710,11 @@ func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {
 	})
 }
 
-func userActiveGameKey(userID uuid.UUID) string     { return "user:" + userID.String() + ":active_game" }
-func userActiveLobbyKey(userID uuid.UUID) string    { return "user:" + userID.String() + ":active_lobby" }
-func userObservingGameKey(userID uuid.UUID) string { return "user:" + userID.String() + ":observing_game" }
+func userActiveGameKey(userID uuid.UUID) string  { return "user:" + userID.String() + ":active_game" }
+func userActiveLobbyKey(userID uuid.UUID) string { return "user:" + userID.String() + ":active_lobby" }
+func userObservingGameKey(userID uuid.UUID) string {
+	return "user:" + userID.String() + ":observing_game"
+}
 
 // blockingActiveGameID — id живой партии, где пользователь ещё играет (не наблюдает).
 // Пустая строка = можно создавать/входить в другую игру.

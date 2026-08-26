@@ -336,6 +336,15 @@ class UnoGameView {
   }
 }
 
+/// Звук «Уно!» у всех за столом, один раз на новое событие.
+bool shouldPlayUnoCallSfx({
+  required int eventSeq,
+  required int heardSeq,
+  required String lastEventType,
+}) {
+  return eventSeq > heardSeq && lastEventType == UnoActionType.callUno;
+}
+
 /// Чужой ход в сброс — только если это не только что сыгранная нами карта.
 bool shouldAnimateRemoteUnoPlay({
   required String lastEventType,
@@ -549,7 +558,6 @@ class UnoRepository {
     required int maxPlayers,
     required int turnTimeSec,
     required int stakeBronze,
-    bool addBotsAfter30s = false,
   }) async {
     final response = await _sendAuth((token) => ApiClient.post(
           Uri.parse('$apiBaseUrl/api/games/uno/lobby'),
@@ -562,7 +570,6 @@ class UnoRepository {
             'max_players': maxPlayers,
             'turn_time_sec': turnTimeSec,
             'stake_bronze': stakeBronze,
-            'add_bots_after_30s': addBotsAfter30s,
           }),
           operation: 'UnoRepository.createLobby',
         ));

@@ -37,10 +37,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsLanguageSystem => 'Жүйе бойынша';
 
   @override
-  String get settingsAddBotsTitle => '30 с кейін бот қосу';
+  String get settingsSoundTitle => 'Дыбыс';
 
   @override
-  String get settingsAddBotsSubtitle => 'Ойын іздеуде: 30 секунд ішінде қарсылас табылмаса, ойын ботпен басталады (ставка 1 қолаға қайтарылады)';
+  String get settingsSoundSubtitle => 'Жүрістер және ойын анимациялары';
 
   @override
   String get settingsOfflineModeTitle => 'Желі режимі';
@@ -381,6 +381,78 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Бірдеңе дұрыс болмады. Қайталап көріңіз.';
+
+  @override
+  String get apiErrWrongGameType => 'Ойын түрі қате';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Ойын түрі немесе күйі қате';
+
+  @override
+  String get apiErrLobbyFull => 'Лобби толы';
+
+  @override
+  String get apiErrBadState => 'Ойын күйі жарамсыз';
+
+  @override
+  String get apiErrIllegalMove => 'Мұндай жүріс жасалмайды';
+
+  @override
+  String get apiErrUnknownMoveType => 'Белгісіз жүріс түрі';
+
+  @override
+  String get apiErrNoOpponents => 'Қарсылас жоқ';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Реваншқа қарсылас жоқ';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Сіз бұл лоббидесіз';
+
+  @override
+  String get apiErrGameNotActive => 'Ойын белсенді емес';
+
+  @override
+  String get apiErrNotInBattle => 'Қазір шайқас кезеңі емес';
+
+  @override
+  String get apiErrNotInSetup => 'Қазір орналастыру кезеңі емес';
+
+  @override
+  String get apiErrAlreadyReady => 'Сіз әлдеқашан дайынсыз';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Сіз әлдеқашан берілдіңіз';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Сіз берілдіңіз';
+
+  @override
+  String get apiErrNoDrawOffer => 'Теңдік ұсынысы жоқ';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Теңдік тек ойыншыға қарсы';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Теңдік тек 1-ге 1-де';
+
+  @override
+  String get apiErrDrawVsBot => 'Ботқа қарсы теңдік жоқ';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Көп ойыншыда теңдік қолжетімсіз';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24 карталық колода тек 2 ойыншыға';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52 карталық колода 3 немесе 4 ойыншыға';
+
+  @override
+  String get apiErrAccountFrozen => 'Аккаунт қатырылған';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Жүріс уақыты 0, 20, 60 немесе 600 секунд болуы керек';
 
   @override
   String get timeJustNow => 'жаңа ғана';
@@ -2014,7 +2086,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Жүріс уақыты: $time.';
+    return 'Жүріс уақыты: $time. Уақыт бітсе — жеңіліс.';
   }
 
   @override

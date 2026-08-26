@@ -37,10 +37,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsLanguageSystem => 'Default sistem';
 
   @override
-  String get settingsAddBotsTitle => 'Tambah bot setelah 30 dtk';
+  String get settingsSoundTitle => 'Suara';
 
   @override
-  String get settingsAddBotsSubtitle => 'Saat matchmaking: jika lawan tidak ditemukan dalam 30 detik, game dimulai dengan bot (taruhan direset ke 1 perunggu)';
+  String get settingsSoundSubtitle => 'Langkah dan animasi permainan';
 
   @override
   String get settingsOfflineModeTitle => 'Mode jaringan';
@@ -381,6 +381,78 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Terjadi kesalahan. Silakan coba lagi.';
+
+  @override
+  String get apiErrWrongGameType => 'Jenis permainan salah';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Jenis atau status permainan salah';
+
+  @override
+  String get apiErrLobbyFull => 'Lobi penuh';
+
+  @override
+  String get apiErrBadState => 'Status permainan tidak valid';
+
+  @override
+  String get apiErrIllegalMove => 'Gerakan tidak sah';
+
+  @override
+  String get apiErrUnknownMoveType => 'Jenis gerakan tidak dikenal';
+
+  @override
+  String get apiErrNoOpponents => 'Tidak ada lawan';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Tidak ada lawan untuk rematch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Anda sudah di lobi ini';
+
+  @override
+  String get apiErrGameNotActive => 'Permainan tidak aktif';
+
+  @override
+  String get apiErrNotInBattle => 'Bukan fase pertempuran';
+
+  @override
+  String get apiErrNotInSetup => 'Bukan fase penempatan';
+
+  @override
+  String get apiErrAlreadyReady => 'Anda sudah siap';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Anda sudah menyerah';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Anda telah menyerah';
+
+  @override
+  String get apiErrNoDrawOffer => 'Tidak ada tawaran seri';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Seri hanya lawan pemain';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Seri hanya di 1 lawan 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Seri tidak tersedia lawan bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Seri tidak tersedia di multipemain';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Dek 24 hanya untuk 2 pemain';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Dek 52 memerlukan 3 atau 4 pemain';
+
+  @override
+  String get apiErrAccountFrozen => 'Akun dibekukan';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Waktu giliran harus 0, 20, 60, atau 600 detik';
 
   @override
   String get timeJustNow => 'baru saja';
@@ -2014,7 +2086,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Waktu per giliran: $time.';
+    return 'Waktu per giliran: $time. Kehabisan waktu adalah kekalahan.';
   }
 
   @override

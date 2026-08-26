@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
@@ -973,6 +974,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
+                MyTurnAlert.stackLeaf(isMyTurn: isMyTurn && !isOver),
                 SafeArea(
                   child: Padding(
                     padding: EdgeInsets.all(contentPadding),
@@ -1464,7 +1466,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         variant: variant,
         gridSize: gridSizeForVariant(variant),
         stakeBronze: stakeBronze,
-        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       ref.invalidate(openLobbiesProvider);
@@ -1751,6 +1752,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   }
 
   Future<void> _makeMove(int cell) async {
+    Sfx.play(SfxId.place);
     setState(() => _isMakingMove = true);
     try {
       final repo = ref.read(gamesRepositoryProvider);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -10,6 +11,8 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/ios_viewport_sync.dart';
+import 'core/settings_provider.dart';
+import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
     as push_nav;
@@ -25,6 +28,8 @@ void main() {
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
     usePathUrlStrategy();
+    // Иначе клик/трекпад в Chrome/Safari даёт системное «Вставить».
+    BrowserContextMenu.disableContextMenu();
     // iOS PWA: сброс visualViewport offset → hit-test совпадает с картинкой.
     installIosViewportSync();
   }
@@ -115,6 +120,9 @@ class MultiGamesApp extends ConsumerWidget {
     final locale = effectiveAppLocale(localeChoice);
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
+    final soundOn = ref.watch(soundEnabledProvider);
+    Sfx.setEnabled(soundOn);
+    Sfx.instance.warmup(unlock: false);
     return MaterialApp.router(
       title: 'Zozu Games',
       debugShowCheckedModeBanner: false,
@@ -193,8 +201,13 @@ class MultiGamesApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return BootSplashHost(
-          child: child ?? const SizedBox.shrink(),
+        return SelectionContainer.disabled(
+          child: Listener(
+            onPointerDown: (_) => Sfx.instance.warmup(),
+            child: BootSplashHost(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
         );
       },
     );

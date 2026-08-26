@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/games_provider.dart' show GameInvite;
 import 'package:multigames_client/games/games_repository.dart'
     show formatStakeAmount, stakeCoinType;
@@ -14,6 +15,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 /// Салют при победе — общий для всех игр.
@@ -38,6 +40,7 @@ class _GameConfettiOverlayState extends State<GameConfettiOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..forward();
+    Sfx.play(SfxId.win);
 
     final r = math.Random();
     const colors = [
@@ -515,6 +518,9 @@ class _GameActionsOverlayState extends State<GameActionsOverlay>
     if (oldWidget.opponentOfferedDraw != widget.opponentOfferedDraw) {
       _applyBlink();
     }
+    if (!oldWidget.opponentOfferedDraw && widget.opponentOfferedDraw) {
+      Sfx.play(SfxId.notify);
+    }
   }
 
   void _applyBlink() {
@@ -626,6 +632,9 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     _updateRemaining();
     _startTimer();
     _syncBlink();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _emitTurnSfx();
+    });
   }
 
   @override
@@ -646,6 +655,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       _updateRemaining();
     }
     _syncBlink();
+    _emitTurnSfx();
   }
 
   bool get _isRedZone {
@@ -670,6 +680,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _updateRemaining();
+      _emitTurnSfx();
       _syncBlink();
       // Только свой ход: чужой/скрытый виджет не должен штрафовать соперника.
       // И только если таймер реально тикал с positive remaining — иначе при
@@ -693,6 +704,16 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
     } else if (r <= 0 && _remaining != 0 && mounted) {
       setState(() => _remaining = 0);
     }
+  }
+
+  void _emitTurnSfx() {
+    if (!mounted) return;
+    TurnClockSfx.sync(
+      isMyTurn: widget.isMyTurn,
+      remainingSeconds: _remaining,
+      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
+      hasTimer: widget.turnDeadline > 0,
+    );
   }
 
   @override
@@ -740,6 +761,60 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       child: row,
     );
   }
+}
+
+/// Сигнал «ваш ход» без таймера (крестики, Уно без лимита и т.п.).
+///
+/// В [Stack], где остальные дети [Positioned], кладите [stackLeaf] —
+/// обычный [SizedBox.shrink] станет единственным loose-ребёнком и
+/// схлопнет стек в 0×0 (пустой стол).
+class MyTurnAlert extends StatefulWidget {
+  const MyTurnAlert({super.key, required this.isMyTurn});
+
+  /// Лист стека без влияния на размер родителя.
+  static Widget stackLeaf({Key? key, required bool isMyTurn}) {
+    return Positioned(
+      left: 0,
+      top: 0,
+      width: 0,
+      height: 0,
+      child: MyTurnAlert(key: key, isMyTurn: isMyTurn),
+    );
+  }
+
+  final bool isMyTurn;
+
+  @override
+  State<MyTurnAlert> createState() => _MyTurnAlertState();
+}
+
+class _MyTurnAlertState extends State<MyTurnAlert> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _emit();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant MyTurnAlert oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isMyTurn != widget.isMyTurn) _emit();
+  }
+
+  void _emit() {
+    TurnClockSfx.sync(
+      isMyTurn: widget.isMyTurn,
+      remainingSeconds: 0,
+      clockVisible: false,
+      hasTimer: false,
+      announceOnly: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 /// Цвет/градиент таймера хода: много времени — зелёный, мало — красный;
@@ -797,6 +872,9 @@ class TurnTimerBorder extends StatelessWidget {
     /// Рисовать фиолетовую рамку, когда ход не активен (1×1-карточка).
     /// В multi-сиденьях — false: место под обводку резервируется, линии нет.
     this.showIdleBorder = true,
+
+    /// Тик часов и «ваш ход», если [active] — это местный игрок.
+    this.myTurnClock = false,
   });
 
   final Widget child;
@@ -807,6 +885,7 @@ class TurnTimerBorder extends StatelessWidget {
   final double radius;
   final VoidCallback? onExpired;
   final bool showIdleBorder;
+  final bool myTurnClock;
 
   @override
   Widget build(BuildContext context) {
@@ -826,6 +905,7 @@ class TurnTimerBorder extends StatelessWidget {
               borderWidth: borderWidth,
               radius: radius,
               showIdleBorder: showIdleBorder,
+              myTurnClock: myTurnClock,
               onExpired: onExpired,
             ),
           ),
@@ -894,6 +974,7 @@ class _TurnTimerRing extends StatefulWidget {
     required this.borderWidth,
     required this.radius,
     required this.showIdleBorder,
+    this.myTurnClock = false,
     this.onExpired,
   });
 
@@ -903,6 +984,7 @@ class _TurnTimerRing extends StatefulWidget {
   final double borderWidth;
   final double radius;
   final bool showIdleBorder;
+  final bool myTurnClock;
   final VoidCallback? onExpired;
 
   @override
@@ -942,10 +1024,12 @@ class _TurnTimerRingState extends State<_TurnTimerRing> {
   void _tick() {
     if (!widget.active) {
       if (_fraction != 1) _fraction = 1;
+      _emitTurnSfx(0);
       return;
     }
     if (!_hasTimer) {
       if (_fraction != 1 && mounted) setState(() => _fraction = 1);
+      _emitTurnSfx(0);
       return;
     }
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -958,6 +1042,18 @@ class _TurnTimerRingState extends State<_TurnTimerRing> {
       _expiredFired = true;
       widget.onExpired?.call();
     }
+    _emitTurnSfx(leftMs);
+  }
+
+  void _emitTurnSfx(int leftMs) {
+    if (!widget.myTurnClock || !mounted) return;
+    final remaining = leftMs > 0 ? leftMs ~/ 1000 : 0;
+    TurnClockSfx.sync(
+      isMyTurn: widget.active,
+      remainingSeconds: remaining,
+      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
+      hasTimer: _hasTimer,
+    );
   }
 
   @override
@@ -1757,6 +1853,38 @@ class GameRewardChip extends StatelessWidget {
   }
 }
 
+/// Звук [SfxId.notify], когда [token] впервые появляется или меняется.
+class _SfxNotifyOnChange extends StatefulWidget {
+  const _SfxNotifyOnChange({required this.token, required this.child});
+
+  final String token;
+  final Widget child;
+
+  @override
+  State<_SfxNotifyOnChange> createState() => _SfxNotifyOnChangeState();
+}
+
+class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Sfx.play(SfxId.notify);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _SfxNotifyOnChange oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.token != oldWidget.token) {
+      Sfx.play(SfxId.notify);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 /// Блок «Повторить» / «Другой соперник» и принятие реванша — общий для игр.
 class GameRematchSection extends StatelessWidget {
   const GameRematchSection({
@@ -1820,55 +1948,58 @@ class GameRematchSection extends StatelessWidget {
       final btnPad = compact
           ? const EdgeInsets.symmetric(horizontal: 18, vertical: 12)
           : const EdgeInsets.symmetric(horizontal: 22, vertical: 14);
-      return _capDesktopWidth(
-        context,
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              context.l10n.gameRematchOffer,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: compact ? 15 : 16,
-                fontWeight: FontWeight.w700,
+      return _SfxNotifyOnChange(
+        token: rematchOffer.lobbyId,
+        child: _capDesktopWidth(
+          context,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.l10n.gameRematchOffer,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: compact ? 15 : 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            SizedBox(height: compact ? 12 : 14),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => onDecline(rematchOffer.lobbyId),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color:
-                            AppColors.textSecondary.withValues(alpha: 0.45),
+              SizedBox(height: compact ? 12 : 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => onDecline(rematchOffer.lobbyId),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.45),
+                        ),
+                        padding: btnPad,
+                        minimumSize: const Size(0, 44),
                       ),
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
+                      child: Text(context.l10n.commonDecline),
                     ),
-                    child: Text(context.l10n.commonDecline),
                   ),
-                ),
-                SizedBox(width: compact ? 10 : 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => onAccept(rematchOffer.lobbyId),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
+                  SizedBox(width: compact ? 10 : 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => onAccept(rematchOffer.lobbyId),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accentStart,
+                        foregroundColor: Colors.white,
+                        padding: btnPad,
+                        minimumSize: const Size(0, 44),
+                      ),
+                      child: Text(context.l10n.commonAccept),
                     ),
-                    child: Text(context.l10n.commonAccept),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }

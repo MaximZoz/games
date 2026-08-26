@@ -131,7 +131,11 @@ func TestCatalogComplete(t *testing.T) {
 }
 
 func TestTNoEnglishLeftovers(t *testing.T) {
-	sample := []string{"unauthorized", "game not found", "server error", "forbidden", "not your turn"}
+	sample := []string{
+		"unauthorized", "game not found", "server error", "forbidden", "not your turn",
+		"wrong game type", "wrong game type or state", "lobby full", "lobby is full",
+		"bad state", "user already in lobby", "turn_time_sec must be 0, 20, 60 or 600",
+	}
 	for _, key := range sample {
 		for code := range supportedLangs {
 			if code == LangEN {

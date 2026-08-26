@@ -37,10 +37,10 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
-  String get settingsAddBotsTitle => 'Tilføj bots efter 30 s';
+  String get settingsSoundTitle => 'Lyd';
 
   @override
-  String get settingsAddBotsSubtitle => 'Ved matchmaking: hvis der ikke findes en modstander inden for 30 sekunder, starter spillet med en bot (indsatsen nulstilles til 1 bronze)';
+  String get settingsSoundSubtitle => 'Træk og spilanimationer';
 
   @override
   String get settingsOfflineModeTitle => 'Netværkstilstand';
@@ -381,6 +381,78 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Noget gik galt. Prøv igen.';
+
+  @override
+  String get apiErrWrongGameType => 'Forkert spiltype';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Forkert spiltype eller tilstand';
+
+  @override
+  String get apiErrLobbyFull => 'Lobbyen er fuld';
+
+  @override
+  String get apiErrBadState => 'Ugyldig spillestatus';
+
+  @override
+  String get apiErrIllegalMove => 'Ulovligt træk';
+
+  @override
+  String get apiErrUnknownMoveType => 'Ukendt træktype';
+
+  @override
+  String get apiErrNoOpponents => 'Ingen modstandere';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Ingen modstandere til revanche';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Du er allerede i denne lobby';
+
+  @override
+  String get apiErrGameNotActive => 'Spillet er ikke aktivt';
+
+  @override
+  String get apiErrNotInBattle => 'Ikke i kampfasen';
+
+  @override
+  String get apiErrNotInSetup => 'Ikke i opstillingsfasen';
+
+  @override
+  String get apiErrAlreadyReady => 'Du er allerede klar';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Du har allerede givet op';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Du har givet op';
+
+  @override
+  String get apiErrNoDrawOffer => 'Der er intet uafgjort-tilbud';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Uafgjort er kun mod en spiller';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Uafgjort er kun i 1 mod 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Uafgjort er ikke tilgængeligt mod en bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Uafgjort er ikke tilgængeligt i multiplayer';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Kortspil med 24 kort er kun til 2 spillere';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Kortspil med 52 kort kræver 3 eller 4 spillere';
+
+  @override
+  String get apiErrAccountFrozen => 'Kontoen er frosset';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Træktiden skal være 0, 20, 60 eller 600 sekunder';
 
   @override
   String get timeJustNow => 'lige nu';
@@ -2014,7 +2086,7 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tid pr. træk: $time.';
+    return 'Tid pr. træk: $time. Tiden ude er et nederlag.';
   }
 
   @override

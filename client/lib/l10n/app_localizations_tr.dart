@@ -37,10 +37,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsLanguageSystem => 'Sistem varsayılanı';
 
   @override
-  String get settingsAddBotsTitle => '30 sn sonra bot ekle';
+  String get settingsSoundTitle => 'Ses';
 
   @override
-  String get settingsAddBotsSubtitle => 'Eşleştirmede: 30 saniye içinde rakip bulunamazsa oyun botla başlar (bahis 1 bronza sıfırlanır)';
+  String get settingsSoundSubtitle => 'Hamleler ve oyun animasyonları';
 
   @override
   String get settingsOfflineModeTitle => 'Ağ modu';
@@ -381,6 +381,78 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Bir şeyler ters gitti. Lütfen tekrar deneyin.';
+
+  @override
+  String get apiErrWrongGameType => 'Yanlış oyun türü';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Yanlış oyun türü veya durumu';
+
+  @override
+  String get apiErrLobbyFull => 'Lobi dolu';
+
+  @override
+  String get apiErrBadState => 'Geçersiz oyun durumu';
+
+  @override
+  String get apiErrIllegalMove => 'Geçersiz hamle';
+
+  @override
+  String get apiErrUnknownMoveType => 'Bilinmeyen hamle türü';
+
+  @override
+  String get apiErrNoOpponents => 'Rakip yok';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Rövanş için rakip yok';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Zaten bu lobidesiniz';
+
+  @override
+  String get apiErrGameNotActive => 'Oyun aktif değil';
+
+  @override
+  String get apiErrNotInBattle => 'Savaş evresinde değilsiniz';
+
+  @override
+  String get apiErrNotInSetup => 'Yerleştirme evresinde değilsiniz';
+
+  @override
+  String get apiErrAlreadyReady => 'Zaten hazırsınız';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Zaten pes ettiniz';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Pes ettiniz';
+
+  @override
+  String get apiErrNoDrawOffer => 'Beraberlik teklifi yok';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Beraberlik yalnızca oyuncuya karşı';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Beraberlik yalnızca 1v1’de';
+
+  @override
+  String get apiErrDrawVsBot => 'Bota karşı beraberlik yok';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Çok oyunculuda beraberlik yok';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24’lük deste yalnızca 2 oyuncu içindir';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52’lik deste 3 veya 4 oyuncu ister';
+
+  @override
+  String get apiErrAccountFrozen => 'Hesap donduruldu';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Tur süresi 0, 20, 60 veya 600 saniye olmalı';
 
   @override
   String get timeJustNow => 'az önce';
@@ -2014,7 +2086,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Hamle süresi: $time.';
+    return 'Hamle süresi: $time. Süre dolarsa yenilirsiniz.';
   }
 
   @override

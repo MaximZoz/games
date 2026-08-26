@@ -37,10 +37,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLanguageSystem => 'Predeterminado del sistema';
 
   @override
-  String get settingsAddBotsTitle => 'Añadir bots tras 30 s';
+  String get settingsSoundTitle => 'Sonido';
 
   @override
-  String get settingsAddBotsSubtitle => 'En emparejamiento: si no hay rival en 30 segundos, la partida empieza con un bot (apuesta vuelve a 1 bronce)';
+  String get settingsSoundSubtitle => 'Jugadas y animaciones';
 
   @override
   String get settingsOfflineModeTitle => 'Modo de red';
@@ -381,6 +381,78 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
+  String get apiErrWrongGameType => 'Tipo de juego incorrecto';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Tipo o estado de juego incorrecto';
+
+  @override
+  String get apiErrLobbyFull => 'El lobby está lleno';
+
+  @override
+  String get apiErrBadState => 'Estado de partida no válido';
+
+  @override
+  String get apiErrIllegalMove => 'Jugada ilegal';
+
+  @override
+  String get apiErrUnknownMoveType => 'Tipo de jugada desconocido';
+
+  @override
+  String get apiErrNoOpponents => 'No hay rivales';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'No hay rivales para la revancha';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Ya estás en este lobby';
+
+  @override
+  String get apiErrGameNotActive => 'La partida no está activa';
+
+  @override
+  String get apiErrNotInBattle => 'No estás en la fase de combate';
+
+  @override
+  String get apiErrNotInSetup => 'No estás en la fase de colocación';
+
+  @override
+  String get apiErrAlreadyReady => 'Ya estás listo';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Ya te has rendido';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Te has rendido';
+
+  @override
+  String get apiErrNoDrawOffer => 'No hay oferta de empate';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'El empate solo está contra un jugador';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'El empate solo está en 1 contra 1';
+
+  @override
+  String get apiErrDrawVsBot => 'El empate no está disponible contra un bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'El empate no está disponible en multijugador';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'La baraja de 24 es solo para 2 jugadores';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'La baraja de 52 es para 3 o 4 jugadores';
+
+  @override
+  String get apiErrAccountFrozen => 'La cuenta está congelada';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'El tiempo de turno debe ser 0, 20, 60 o 600 segundos';
 
   @override
   String get timeJustNow => 'ahora mismo';
@@ -2014,7 +2086,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tiempo por turno: $time.';
+    return 'Tiempo por turno: $time. Si se acaba el tiempo, pierdes.';
   }
 
   @override

@@ -49,3 +49,4 @@ flutter:
     - assets/emojis/lottie/
     - assets/emojis/static/
     - assets/emojis/unicode.json
+    - assets/sfx/

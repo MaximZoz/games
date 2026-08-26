@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -222,6 +223,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     required int cell,
     required bool hit,
     required bool onMyBoard,
+    bool sunk = false,
   }) async {
     if (!mounted) return;
     _fxInProgress = true;
@@ -230,6 +232,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _fxHit = hit;
       _fxShowMineBoard = onMyBoard;
     });
+    if (sunk) {
+      Sfx.play(SfxId.sink);
+    } else {
+      Sfx.play(hit ? SfxId.hit : SfxId.miss);
+    }
     _hitPulse
       ..stop()
       ..forward(from: 0);
@@ -257,6 +264,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       cell: game.lastShot,
       hit: game.lastShotHit,
       onMyBoard: true,
+      sunk: game.mySunkShips.any((ship) => ship.contains(game.lastShot)),
     ));
   }
 
@@ -457,6 +465,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   void _onSetupCellTap(int cell) {
     if (_busy || _localShips.isEmpty) return;
+    Sfx.play(SfxId.place);
     // Тап по своему кораблю — выделить.
     for (var i = 0; i < _localShips.length; i++) {
       if (_localShips[i].contains(cell)) {
@@ -525,6 +534,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         cell: shotCell,
         hit: view.lastShotHit,
         onMyBoard: false,
+        sunk: view.opponentSunkShips.any((ship) => ship.contains(shotCell)),
       );
       if (!mounted) return;
       ref.invalidate(battleshipGameProvider(widget.gameId));
@@ -896,7 +906,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
             mode: 'matchmake',
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);
@@ -1001,7 +1010,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                     _syncLocalShips(game);
                     _syncSetupLocalDeadline(game);
                     final isOver = game.isOver;
-                    final showSurrender = !isOver;
                     _maybeSettleGame(game, me);
                     final chip = _rewardChipBronze(game, me);
                     final status = _statusText(game, me);
@@ -1018,6 +1026,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         setupDeadline > nowSec;
                     return Column(
                       children: [
+                        MyTurnAlert(isMyTurn: myTurn && !isOver),
                         Padding(
                           padding: EdgeInsets.fromLTRB(
                             narrow ? 12 : 20,
@@ -1123,7 +1132,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                               ? _buildSetup(game, me, narrow)
                               : _buildBattle(game, me, narrow),
                         ),
-                        if (showSurrender) const SizedBox(height: 48),
                       ],
                     );
                   },
@@ -1209,73 +1217,94 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final selectedIdx = _selectedShipIndex;
 
     return Padding(
-      padding: EdgeInsets.all(narrow ? 12 : 20),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: ready
-                  ? _BattleshipBoard(
-                      cellSize: narrow ? 28 : 34,
-                      cellBuilder: (cell) {
-                        final occupied = <int>{for (final s in ships) ...s};
-                        return _CellPaint(
-                          color: occupied.contains(cell) ? _kShip : _kWater,
-                        );
-                      },
-                    )
-                  : _BattleshipSetupBoard(
-                      cellSize: narrow ? 28 : 34,
-                      ships: ships,
-                      selectedShipIndex: selectedIdx,
-                      enabled: !_busy,
-                      onTapCell: _onSetupCellTap,
-                      onShipDropped: _onSetupShipDropped,
-                      onShipSelected: (i) =>
-                          setState(() => _selectedShipIndex = i),
-                    ),
-            ),
-          ),
-          if (!ready) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _busy ? null : () => unawaited(_randomPlace()),
-                  icon: const Icon(Icons.casino_rounded, size: 18),
-                  label: Text(context.l10n.gamesBattleshipRandomPlace),
-                ),
-                IconButton.outlined(
-                  onPressed: _busy || selectedIdx == null
-                      ? null
-                      : _rotateSelected,
-                  tooltip: context.l10n.gamesBattleshipRotate,
-                  icon: const Icon(Icons.rotate_right_rounded),
-                ),
-                FilledButton(
-                  onPressed:
-                      _busy ? null : () => unawaited(_confirmPlace()),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                  ),
-                  child: _busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+      padding: EdgeInsets.fromLTRB(
+        narrow ? 8 : 20,
+        narrow ? 4 : 12,
+        narrow ? 8 : 20,
+        narrow ? 8 : 16,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const buttonsH = 56.0;
+          final reserved = ready ? 0.0 : buttonsH + 8;
+          final cell = fitBattleshipCellSize(
+            maxWidth: constraints.maxWidth,
+            maxHeight: constraints.maxHeight - reserved,
+            maxCell: narrow ? 36 : 40,
+          );
+          return Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: ready
+                      ? _BattleshipBoard(
+                          cellSize: cell,
+                          cellBuilder: (cellIdx) {
+                            final occupied = <int>{
+                              for (final s in ships) ...s,
+                            };
+                            return _CellPaint(
+                              color: occupied.contains(cellIdx)
+                                  ? _kShip
+                                  : _kWater,
+                            );
+                          },
                         )
-                      : Text(context.l10n.gamesBattleshipConfirmPlace),
+                      : _BattleshipSetupBoard(
+                          cellSize: cell,
+                          ships: ships,
+                          selectedShipIndex: selectedIdx,
+                          enabled: !_busy,
+                          onTapCell: _onSetupCellTap,
+                          onShipDropped: _onSetupShipDropped,
+                          onShipSelected: (i) =>
+                              setState(() => _selectedShipIndex = i),
+                        ),
+                ),
+              ),
+              if (!ready) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed:
+                          _busy ? null : () => unawaited(_randomPlace()),
+                      icon: const Icon(Icons.casino_rounded, size: 18),
+                      label: Text(context.l10n.gamesBattleshipRandomPlace),
+                    ),
+                    IconButton.outlined(
+                      onPressed: _busy || selectedIdx == null
+                          ? null
+                          : _rotateSelected,
+                      tooltip: context.l10n.gamesBattleshipRotate,
+                      icon: const Icon(Icons.rotate_right_rounded),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          _busy ? null : () => unawaited(_confirmPlace()),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accentStart,
+                      ),
+                      child: _busy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(context.l10n.gamesBattleshipConfirmPlace),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -1285,21 +1314,33 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     // Одно поле: мой ход / конец — поле соперника; ход соперника — моё.
     // Во время FX удерживаем поле, куда пришёл выстрел, ещё 1с.
     final showMyBoard = _fxShowMineBoard ?? (!game.isOver && !myTurn);
-    final cellSize = narrow ? 30.0 : 36.0;
     final pulseCell = _pulseHitCell;
 
-    final board = showMyBoard
-        ? _buildMyDefenseBoard(game, cellSize: cellSize, pulseCell: pulseCell)
-        : _buildOpponentAttackBoard(
-            game,
-            cellSize: cellSize,
-            pulseCell: pulseCell,
-            canShoot: myTurn && !game.isOver && !_busy && !_fxInProgress,
-          );
-
     return Padding(
-      padding: EdgeInsets.all(narrow ? 10 : 16),
-      child: Center(child: board),
+      padding: EdgeInsets.all(narrow ? 8 : 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cellSize = fitBattleshipCellSize(
+            maxWidth: constraints.maxWidth,
+            maxHeight: constraints.maxHeight,
+            maxCell: narrow ? 36 : 40,
+          );
+          final board = showMyBoard
+              ? _buildMyDefenseBoard(
+                  game,
+                  cellSize: cellSize,
+                  pulseCell: pulseCell,
+                )
+              : _buildOpponentAttackBoard(
+                  game,
+                  cellSize: cellSize,
+                  pulseCell: pulseCell,
+                  canShoot:
+                      myTurn && !game.isOver && !_busy && !_fxInProgress,
+                );
+          return Center(child: board);
+        },
+      ),
     );
   }
 
@@ -1493,7 +1534,7 @@ class _BattleshipBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = cellSize.clamp(28.0, 40.0);
+    final size = cellSize.clamp(16.0, 44.0);
     const gap = 2.0;
     final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
     final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
@@ -1583,7 +1624,7 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
   Offset? _panStart;
   bool _didDrag = false;
 
-  double get _size => widget.cellSize.clamp(28.0, 36.0);
+  double get _size => widget.cellSize.clamp(16.0, 44.0);
 
   int? _cellAt(Offset local) {
     final step = _size + _gap;

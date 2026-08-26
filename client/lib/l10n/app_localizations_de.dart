@@ -37,10 +37,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
-  String get settingsAddBotsTitle => 'Bots nach 30 s hinzufügen';
+  String get settingsSoundTitle => 'Ton';
 
   @override
-  String get settingsAddBotsSubtitle => 'Im Matchmaking: Wird in 30 Sekunden kein Gegner gefunden, startet das Spiel mit einem Bot (Einsatz fällt auf 1 Bronze zurück)';
+  String get settingsSoundSubtitle => 'Züge und Spielanimationen';
 
   @override
   String get settingsOfflineModeTitle => 'Netzwerkmodus';
@@ -381,6 +381,78 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Etwas ist schiefgelaufen. Bitte erneut versuchen.';
+
+  @override
+  String get apiErrWrongGameType => 'Falscher Spieltyp';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Falscher Spieltyp oder Zustand';
+
+  @override
+  String get apiErrLobbyFull => 'Lobby ist voll';
+
+  @override
+  String get apiErrBadState => 'Ungültiger Spielzustand';
+
+  @override
+  String get apiErrIllegalMove => 'Ungültiger Zug';
+
+  @override
+  String get apiErrUnknownMoveType => 'Unbekannter Zugtyp';
+
+  @override
+  String get apiErrNoOpponents => 'Keine Gegner';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Keine Gegner für ein Rematch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Du bist bereits in dieser Lobby';
+
+  @override
+  String get apiErrGameNotActive => 'Das Spiel ist nicht aktiv';
+
+  @override
+  String get apiErrNotInBattle => 'Nicht in der Kampfphase';
+
+  @override
+  String get apiErrNotInSetup => 'Nicht in der Aufstellungsphase';
+
+  @override
+  String get apiErrAlreadyReady => 'Du bist bereits bereit';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Du hast bereits aufgegeben';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Du hast aufgegeben';
+
+  @override
+  String get apiErrNoDrawOffer => 'Kein Remisangebot';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Remis nur gegen einen Spieler';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Remis nur im 1-gegen-1';
+
+  @override
+  String get apiErrDrawVsBot => 'Remis gegen einen Bot ist nicht möglich';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Remis ist im Mehrspieler nicht verfügbar';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24er-Deck nur für 2 Spieler';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52er-Deck erfordert 3 oder 4 Spieler';
+
+  @override
+  String get apiErrAccountFrozen => 'Konto ist eingefroren';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Zugzeit muss 0, 20, 60 oder 600 Sekunden sein';
 
   @override
   String get timeJustNow => 'gerade eben';
@@ -2014,7 +2086,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Zeit pro Zug: $time.';
+    return 'Zeit pro Zug: $time. Zeitüberschreitung bedeutet Niederlage.';
   }
 
   @override

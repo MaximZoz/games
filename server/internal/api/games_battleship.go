@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	battleshipGameType   = "battleship"
-	battleshipBotID      = "bot:battleship"
-	battleshipPhaseSetup = "setup"
+	battleshipGameType    = "battleship"
+	battleshipBotID       = "bot:battleship"
+	battleshipPhaseSetup  = "setup"
 	battleshipPhaseBattle = "battle"
-	battleshipStatusOver = "over"
-	battleshipSetupSec   = 60 // расстановка по умолчанию — 1 минута
+	battleshipStatusOver  = "over"
+	battleshipSetupSec    = 60 // расстановка по умолчанию — 1 минута
 )
 
 func battleshipMatchmakeKey(turnTimeSec, stakeBronze int) string {
@@ -96,7 +96,6 @@ type createBattleshipLobbyBody struct {
 	TurnTimeSec          int    `json:"turn_time_sec"`
 	StakeBronze          int    `json:"stake_bronze"`
 	FirstMoveRestriction bool   `json:"first_move_restriction"`
-	AddBotsAfter30s      bool   `json:"add_bots_after_30s"`
 }
 
 func (h *GamesHandler) CreateBattleshipLobby(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +147,6 @@ func (h *GamesHandler) CreateBattleshipLobby(w http.ResponseWriter, r *http.Requ
 
 	turnTimeSec := body.TurnTimeSec
 	firstMoveRestriction := body.FirstMoveRestriction
-	addBotsAfter30s := body.AddBotsAfter30s
 
 	if mode == "matchmake" {
 		otherEntry, err := h.Rdb.RPop(ctx, battleshipMatchmakeKey(turnTimeSec, stakeBronze)).Result()
@@ -220,7 +218,6 @@ func (h *GamesHandler) CreateBattleshipLobby(w http.ResponseWriter, r *http.Requ
 		"player_ids", userID.String(),
 		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
 		"stake_bronze", strconv.Itoa(stakeBronze),
-		"add_bots_after_30s", strconv.FormatBool(addBotsAfter30s),
 	)
 	pipe.Expire(ctx, key, lobbyTTL)
 	if mode == "matchmake" {
@@ -509,7 +506,7 @@ func (h *GamesHandler) startBattleshipGame(
 		p1Ready = "true"
 	}
 	if isBot(b.String()) {
-		ships := battleship.RandomShips(rand.New(rand.NewSource(now.UnixNano()+1)))
+		ships := battleship.RandomShips(rand.New(rand.NewSource(now.UnixNano() + 1)))
 		p2Ships = battleship.ShipsToJSON(ships)
 		p2Ready = "true"
 	}
@@ -574,165 +571,11 @@ func (h *GamesHandler) startBattleshipGame(
 	return gameID, nil
 }
 
-func (h *GamesHandler) createBattleshipGameWithBot(
-	ctx context.Context,
-	userID uuid.UUID,
-	existingLobbyID string,
-	turnTimeSec, stakeBronze int,
-	firstMoveRestriction bool,
-) (string, error) {
-	if stakeBronze < 1 {
-		stakeBronze = 1
-	}
-	ok, e := store.UserMayStake(ctx, h.Pool, userID, stakeBronze)
-	if e != nil {
-		return "", e
-	}
-	if !ok {
-		return "", store.ErrStakeNotAllowed
-	}
-	if err := store.DeductCoins(ctx, h.Pool, userID, stakeBronze); err != nil {
-		return "", err
-	}
-	lobbyID := existingLobbyID
-	if lobbyID == "" {
-		lobbyID = uuid.New().String()
-	}
-	// Не списываем повторно внутри start — передаём stake 0 и выставим вручную.
-	gameID := uuid.New().String()
-	gameKey := "game:" + gameID
-	lobbyKey := "lobby:" + lobbyID
-	now := time.Now().UTC()
-	// Расстановка всегда ровно battleshipSetupSec (1 мин), независимо от turn_time.
-	setupDeadline := now.Unix() + int64(battleshipSetupSec)
-
-	p1, p2 := userID.String(), battleshipBotID
-	if rand.Intn(2) == 1 {
-		p1, p2 = p2, userID.String()
-	}
-	botShips := battleship.ShipsToJSON(battleship.RandomShips(rand.New(rand.NewSource(now.UnixNano()))))
-	p1Ready, p2Ready := "false", "false"
-	p1Ships, p2Ships := "[]", "[]"
-	if p1 == battleshipBotID {
-		p1Ships = botShips
-		p1Ready = "true"
-	} else {
-		p2Ships = botShips
-		p2Ready = "true"
-	}
-
-	fields := []any{
-		"game_type", battleshipGameType,
-		"phase", battleshipPhaseSetup,
-		"status", gameStatusActive,
-		"lobby_id", lobbyID,
-		"p1_user_id", p1,
-		"p2_user_id", p2,
-		"p1_ready", p1Ready,
-		"p2_ready", p2Ready,
-		"p1_ships", p1Ships,
-		"p2_ships", p2Ships,
-		"p1_shots", "[]",
-		"p2_shots", "[]",
-		"turn", "",
-		"turn_time_sec", strconv.Itoa(turnTimeSec),
-		"setup_deadline", strconv.FormatInt(setupDeadline, 10),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
-		"stake_bronze", strconv.Itoa(stakeBronze),
-		"started_at", now.Format(time.RFC3339Nano),
-		"winner", "",
-	}
-	pipe := h.Rdb.Pipeline()
-	pipe.HSet(ctx, gameKey, fields...)
-	pipe.Expire(ctx, gameKey, 24*time.Hour)
-	pipe.HSet(ctx, lobbyKey,
-		"game_type", battleshipGameType,
-		"creator_id", userID.String(),
-		"opponent_id", battleshipBotID,
-		"status", lobbyStatusInGame,
-		"game_id", gameID,
-		"mode", "matchmake",
-		"player_ids", userID.String()+","+battleshipBotID,
-		"turn_time_sec", strconv.Itoa(turnTimeSec),
-		"stake_bronze", strconv.Itoa(stakeBronze),
-		"first_move_restriction", strconv.FormatBool(firstMoveRestriction),
-		"max_players", "2",
-	)
-	pipe.Expire(ctx, lobbyKey, 24*time.Hour)
-	if _, err := pipe.Exec(ctx); err != nil {
-		return "", err
-	}
-	h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
-	return gameID, nil
-}
-
 func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
-}
-
-// StartBattleshipBotTimeoutTicker — через 30 с без соперника добавляет бота.
-func StartBattleshipBotTimeoutTicker(ctx context.Context, h *GamesHandler) {
-	if h == nil || h.Rdb == nil {
-		return
-	}
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			h.tickBattleshipBotTimeout(ctx)
-		}
-	}
-}
-
-func (h *GamesHandler) tickBattleshipBotTimeout(ctx context.Context) {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
-	if err != nil || len(keys) == 0 {
-		return
-	}
-	now := time.Now().UTC()
-	for _, key := range keys {
-		m, err := h.Rdb.HGetAll(ctx, key).Result()
-		if err != nil || m["game_type"] != battleshipGameType {
-			continue
-		}
-		if m["status"] != lobbyStatusWaitingMatchmake || m["add_bots_after_30s"] != "true" {
-			continue
-		}
-		createdAt, err := time.Parse(time.RFC3339Nano, m["created_at"])
-		if err != nil {
-			continue
-		}
-		if now.Sub(createdAt) < botTimeoutSeconds*time.Second {
-			continue
-		}
-		lobbyID := strings.TrimPrefix(key, "lobby:")
-		creatorID := m["creator_id"]
-		creatorUUID, err := uuid.Parse(creatorID)
-		if err != nil {
-			continue
-		}
-		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-		stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-		if stakeBronze < 1 {
-			stakeBronze = 1
-		}
-		firstMoveRestriction := m["first_move_restriction"] == "true"
-		h.Rdb.LRem(ctx, battleshipMatchmakeKey(turnTimeSec, stakeBronze), 0, creatorID+":"+lobbyID)
-		gameID, err := h.createBattleshipGameWithBot(ctx, creatorUUID, lobbyID, turnTimeSec, 1, firstMoveRestriction)
-		if err != nil {
-			continue
-		}
-		clearUserActiveLobby(ctx, h.Rdb, creatorUUID)
-		setUserActiveGame(ctx, h.Rdb, creatorUUID, gameID)
-		h.publishGameStartedTyped([]uuid.UUID{creatorUUID}, gameID, lobbyID, battleshipGameType)
-		return
-	}
 }
 
 func battleshipHumans(m map[string]string) []uuid.UUID {

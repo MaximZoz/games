@@ -420,7 +420,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         swapRule: false,
         firstMoveRestriction: false,
         stakeBronze: _selectedStakeBronze,
-        addBotsAfter30s: false,
       );
       if (!context.mounted) return;
       if (result.matched && result.gameId != null) {
@@ -827,6 +826,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
         await ref.read(durakRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'battleship') {
         await ref.read(battleshipRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'poker') {
+        await ref.read(pokerRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'uno') {
         await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
       } else {
@@ -924,6 +925,51 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 ),
               );
           context.go('/games/battleship/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (e) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(e)
+              ? finishCurrentGameMessage
+              : formatUserError(e),
+          kind: AppSnackKind.error,
+        );
+      } catch (e) {
+        if (context.mounted) {
+          showAppSnackBar(context,
+              message: formatUserError(e), kind: AppSnackKind.error);
+        }
+      }
+      return;
+    }
+    if (gameType == 'poker') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res = await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        if (res.joined && res.gameId != null && res.gameId!.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: res.gameId,
+                  gameType: 'poker',
+                ),
+              );
+          pinBlockingGame(ref, res.gameId, gameType: 'poker');
+          context.go('/games/poker/game/${res.gameId}');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'poker',
+                ),
+              );
+          context.go('/games/poker/lobby/$lobbyId?mode=invite');
         }
       } on GamesException catch (e) {
         if (!context.mounted) return;
@@ -2205,8 +2251,8 @@ class _PokerGameCard extends ConsumerStatefulWidget {
 }
 
 class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
-  // 1 игрок = мгновенная партия с ботом; 2–6 — стол на N мест.
-  static const _playerOptions = <int>[1, 2, 3, 4, 5, 6];
+  // Онлайн и офлайн: стол с 2–6 мест, как в других играх.
+  static const _playerOptions = <int>[2, 3, 4, 5, 6];
 
   int _players = 2;
   int _turnTimeSec = 60;
@@ -2229,7 +2275,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
     if (saved == null) return;
     _settingsHydrated = true;
     setState(() {
-      _players = saved.maxPlayers.clamp(1, 6);
+      _players = saved.maxPlayers.clamp(2, 6);
       _turnTimeSec =
           turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
@@ -2402,7 +2448,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
       setState(() {
-        _players = saved.maxPlayers.clamp(1, 6);
+        _players = saved.maxPlayers.clamp(2, 6);
         _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
             ? saved.turnTimeSec
             : 60;

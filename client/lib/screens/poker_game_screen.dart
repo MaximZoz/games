@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
@@ -285,6 +286,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return l10n.gameYouWon;
       }
       if (place > 1) return l10n.gameYouPlaced(place);
+      if (game.isTimeout) return l10n.unoYouLostTimeout;
       if (game.stakeBronze > 0) return l10n.gameYouLost;
       if (game.winners.isNotEmpty) return _winnersStatus(game);
       return l10n.pokerHandOver;
@@ -439,6 +441,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       unawaited(
         _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
       );
+    }
+    if (type == PokerActionType.fold) {
+      Sfx.play(SfxId.cardPlay);
+    } else if (type == PokerActionType.call ||
+        type == PokerActionType.raise ||
+        type == PokerActionType.allIn) {
+      Sfx.play(SfxId.chip);
     }
     setState(() => _busy = true);
     try {
@@ -781,7 +790,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             maxPlayers: game?.playerIds.length ?? 2,
             turnTimeSec: game?.turnTimeSec ?? 0,
             stakeBronze: game?.stakeBronze ?? 2,
-            addBotsAfter30s: true,
           );
       if (!mounted) return;
       clearBlockingGamePin(ref);
@@ -993,8 +1001,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         final veryShort = constraints.maxHeight < 480;
 
         return Stack(
+          fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
+            MyTurnAlert.stackLeaf(
+              isMyTurn: game.isMyTurn && !isOver && !game.isHandOver,
+            ),
             Positioned.fill(
               child: _buildTable(
                 game,
@@ -1089,6 +1101,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         return;
       }
       setState(() => _shownCommunity++);
+      Sfx.play(SfxId.cardPlay);
     }
     _dealing = false;
   }
@@ -1722,10 +1735,15 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     int count = 3,
     Color color = const Color(0xFFE8C547),
   }) async {
-    if (!mounted || _disposed) return;
+    if (!mounted ||
+        _disposed ||
+        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
+    Sfx.play(SfxId.chip);
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     for (var i = 0; i < count; i++) {
@@ -1752,7 +1770,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required int delayMs,
   }) {
     Future<void>.delayed(Duration(milliseconds: delayMs), () {
-      if (!mounted || _disposed) return;
+      if (!mounted ||
+          _disposed ||
+          !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+        return;
+      }
       late OverlayEntry entry;
       final controller = AnimationController(
         vsync: this,
@@ -1811,6 +1833,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           );
         },
+        host: context,
+        gameOnly: true,
       );
       controller.forward().whenComplete(() {
         GameFlyOverlay.remove(entry);
@@ -2126,12 +2150,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Future<void> _throwFoldCards(int seat) async {
-    if (!mounted || _disposed) return;
+    if (!mounted ||
+        _disposed ||
+        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+      return;
+    }
     final from = globalRectOf(_seatKey(seat));
     final to = globalRectOf(_tableChipsKey);
     if (from == null || to == null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
+    Sfx.play(SfxId.cardPlay);
     const cardSize = Size(34, 48);
     for (var i = 0; i < 2; i++) {
       if (!mounted || _disposed) return;
@@ -2157,7 +2186,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required double spin,
   }) {
     Future<void>.delayed(Duration(milliseconds: delayMs), () {
-      if (!mounted || _disposed) return;
+      if (!mounted ||
+          _disposed ||
+          !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+        return;
+      }
       late OverlayEntry entry;
       final controller = AnimationController(
         vsync: this,
@@ -2201,6 +2234,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           );
         },
+        host: context,
+        gameOnly: true,
       );
       controller.forward().whenComplete(() {
         GameFlyOverlay.remove(entry);
@@ -2394,6 +2429,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                     borderWidth: borderW,
                     radius: 10,
                     showIdleBorder: false,
+                    myTurnClock: true,
                     child: namePlate,
                   ),
                 ),

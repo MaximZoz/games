@@ -37,10 +37,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageSystem => 'System default';
 
   @override
-  String get settingsAddBotsTitle => 'Add bots after 30s';
+  String get settingsSoundTitle => 'Sound';
 
   @override
-  String get settingsAddBotsSubtitle => 'In matchmaking: if no opponent is found in 30 seconds, the game starts with a bot (stake resets to 1 bronze)';
+  String get settingsSoundSubtitle => 'Moves and game animations';
 
   @override
   String get settingsOfflineModeTitle => 'Network mode';
@@ -381,6 +381,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Something went wrong. Please try again.';
+
+  @override
+  String get apiErrWrongGameType => 'Wrong game type';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Wrong game type or state';
+
+  @override
+  String get apiErrLobbyFull => 'The lobby is full';
+
+  @override
+  String get apiErrBadState => 'Invalid game state';
+
+  @override
+  String get apiErrIllegalMove => 'This move is not allowed';
+
+  @override
+  String get apiErrUnknownMoveType => 'Unknown move type';
+
+  @override
+  String get apiErrNoOpponents => 'No opponents';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'No opponents for a rematch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'You are already in this lobby';
+
+  @override
+  String get apiErrGameNotActive => 'The game is not active';
+
+  @override
+  String get apiErrNotInBattle => 'Not in the battle phase';
+
+  @override
+  String get apiErrNotInSetup => 'Not in the setup phase';
+
+  @override
+  String get apiErrAlreadyReady => 'You are already ready';
+
+  @override
+  String get apiErrAlreadyForfeited => 'You have already forfeited';
+
+  @override
+  String get apiErrYouHaveForfeited => 'You have forfeited';
+
+  @override
+  String get apiErrNoDrawOffer => 'There is no draw offer';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Draw is only available against a player';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Draw is only available in 1v1';
+
+  @override
+  String get apiErrDrawVsBot => 'Draw is not available against a bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Draw is not available in multiplayer';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'The 24-card deck is only for 2 players';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'The 52-card deck requires 3 or 4 players';
+
+  @override
+  String get apiErrAccountFrozen => 'The account is frozen';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Turn time must be 0, 20, 60 or 600 seconds';
 
   @override
   String get timeJustNow => 'just now';
@@ -2014,7 +2086,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Time per turn: $time.';
+    return 'Time per turn: $time. Running out of time is a loss.';
   }
 
   @override

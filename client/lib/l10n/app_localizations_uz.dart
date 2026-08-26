@@ -37,10 +37,10 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsLanguageSystem => 'Tizim bo‘yicha';
 
   @override
-  String get settingsAddBotsTitle => '30 soniyadan keyin bot qo‘shish';
+  String get settingsSoundTitle => 'Ovoz';
 
   @override
-  String get settingsAddBotsSubtitle => 'O‘yin qidiruvda: 30 soniya ichida raqib topilmasa, o‘yin bot bilan boshlanadi (stavka 1 bronzaga qaytariladi)';
+  String get settingsSoundSubtitle => 'Yurishlar va o‘yin animatsiyalari';
 
   @override
   String get settingsOfflineModeTitle => 'Tarmoq rejimi';
@@ -381,6 +381,78 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Nimadir xato ketdi. Qayta urinib ko‘ring.';
+
+  @override
+  String get apiErrWrongGameType => 'Oʻyin turi notoʻgʻri';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Oʻyin turi yoki holati notoʻgʻri';
+
+  @override
+  String get apiErrLobbyFull => 'Lobbi toʻlgan';
+
+  @override
+  String get apiErrBadState => 'Oʻyin holati notoʻgʻri';
+
+  @override
+  String get apiErrIllegalMove => 'Bunday yurish mumkin emas';
+
+  @override
+  String get apiErrUnknownMoveType => 'Nomaʼlum yurish turi';
+
+  @override
+  String get apiErrNoOpponents => 'Raqib yoʻq';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Revansh uchun raqib yoʻq';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Siz allaqachon shu lobbidasiz';
+
+  @override
+  String get apiErrGameNotActive => 'Oʻyin faol emas';
+
+  @override
+  String get apiErrNotInBattle => 'Hozir jang bosqichi emas';
+
+  @override
+  String get apiErrNotInSetup => 'Hozir joylashtirish bosqichi emas';
+
+  @override
+  String get apiErrAlreadyReady => 'Siz allaqachon tayyorsiz';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Siz allaqachon taslim boʻldingiz';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Siz taslim boʻldingiz';
+
+  @override
+  String get apiErrNoDrawOffer => 'Durang taklifi yoʻq';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Durang faqat oʻyinchiga qarshi';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Durang faqat 1 ga 1 da';
+
+  @override
+  String get apiErrDrawVsBot => 'Botga qarshi durang yoʻq';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Koʻp oʻyinchida durang yoʻq';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24 kartalik koloda faqat 2 kishiga';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52 kartalik koloda 3 yoki 4 kishiga';
+
+  @override
+  String get apiErrAccountFrozen => 'Hisob muzlatilgan';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Yurish vaqti 0, 20, 60 yoki 600 soniya boʻlishi kerak';
 
   @override
   String get timeJustNow => 'hozirgina';
@@ -2014,7 +2086,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Yurish vaqti: $time.';
+    return 'Yurish vaqti: $time. Vaqt tugasa — mag\'lubiyat.';
   }
 
   @override

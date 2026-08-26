@@ -37,10 +37,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsLanguageSystem => 'システム既定';
 
   @override
-  String get settingsAddBotsTitle => '30秒後にボットを追加';
+  String get settingsSoundTitle => 'サウンド';
 
   @override
-  String get settingsAddBotsSubtitle => 'マッチング中：30秒以内に相手が見つからない場合、ボットと対戦を開始します（賭け金はブロンズ1にリセット）';
+  String get settingsSoundSubtitle => '手番とゲームのアニメーション';
 
   @override
   String get settingsOfflineModeTitle => 'ネットワークモード';
@@ -381,6 +381,78 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get commonGenericError => '問題が発生しました。もう一度お試しください。';
+
+  @override
+  String get apiErrWrongGameType => 'ゲームの種類が違います';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'ゲームの種類または状態が違います';
+
+  @override
+  String get apiErrLobbyFull => 'ロビーは満員です';
+
+  @override
+  String get apiErrBadState => 'ゲーム状態が不正です';
+
+  @override
+  String get apiErrIllegalMove => 'その手は打てません';
+
+  @override
+  String get apiErrUnknownMoveType => '不明な手の種類です';
+
+  @override
+  String get apiErrNoOpponents => '対戦相手がいません';
+
+  @override
+  String get apiErrNoOpponentsRematch => '再戦する相手がいません';
+
+  @override
+  String get apiErrAlreadyInLobby => 'すでにこのロビーにいます';
+
+  @override
+  String get apiErrGameNotActive => 'ゲームは進行中ではありません';
+
+  @override
+  String get apiErrNotInBattle => '戦闘フェーズではありません';
+
+  @override
+  String get apiErrNotInSetup => '配置フェーズではありません';
+
+  @override
+  String get apiErrAlreadyReady => 'すでに準備完了です';
+
+  @override
+  String get apiErrAlreadyForfeited => 'すでに降参しています';
+
+  @override
+  String get apiErrYouHaveForfeited => '降参しました';
+
+  @override
+  String get apiErrNoDrawOffer => '引き分けの提案はありません';
+
+  @override
+  String get apiErrDrawOnlyPvp => '引き分けは対人戦のみです';
+
+  @override
+  String get apiErrDrawOnly1v1 => '引き分けは1対1のみです';
+
+  @override
+  String get apiErrDrawVsBot => 'ボット相手では引き分けできません';
+
+  @override
+  String get apiErrDrawMultiplayer => 'マルチプレイでは引き分けできません';
+
+  @override
+  String get apiErrDeck24TwoPlayers => '24枚デッキは2人専用です';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => '52枚デッキは3〜4人用です';
+
+  @override
+  String get apiErrAccountFrozen => 'アカウントは凍結されています';
+
+  @override
+  String get apiErrTurnTimeInvalid => '持ち時間は 0、20、60、600 秒のいずれかです';
 
   @override
   String get timeJustNow => 'たった今';
@@ -2014,7 +2086,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return '一手の時間：$time。';
+    return '一手の時間：$time。時間切れは負けです。';
   }
 
   @override

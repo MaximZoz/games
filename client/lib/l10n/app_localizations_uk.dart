@@ -37,10 +37,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsLanguageSystem => 'Як у системі';
 
   @override
-  String get settingsAddBotsTitle => 'Додавати ботів через 30 с';
+  String get settingsSoundTitle => 'Звук';
 
   @override
-  String get settingsAddBotsSubtitle => 'У режимі пошуку гри: якщо суперника не знайдено за 30 секунд, гра починається з ботом (ставка скидається до 1 бронзи)';
+  String get settingsSoundSubtitle => 'Ходи та анімації в іграх';
 
   @override
   String get settingsOfflineModeTitle => 'Режим мережі';
@@ -381,6 +381,78 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Щось пішло не так. Спробуйте ще раз.';
+
+  @override
+  String get apiErrWrongGameType => 'Невірний тип гри';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Невірний тип або стан гри';
+
+  @override
+  String get apiErrLobbyFull => 'Лобі заповнене';
+
+  @override
+  String get apiErrBadState => 'Помилка стану гри';
+
+  @override
+  String get apiErrIllegalMove => 'Такий хід не можна зробити';
+
+  @override
+  String get apiErrUnknownMoveType => 'Невідомий тип ходу';
+
+  @override
+  String get apiErrNoOpponents => 'Немає суперників';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Немає суперників для реваншу';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Ви вже в цьому лобі';
+
+  @override
+  String get apiErrGameNotActive => 'Гра не активна';
+
+  @override
+  String get apiErrNotInBattle => 'Зараз не фаза бою';
+
+  @override
+  String get apiErrNotInSetup => 'Зараз не фаза розстановки';
+
+  @override
+  String get apiErrAlreadyReady => 'Ви вже готові';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Ви вже здалися';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Ви здалися';
+
+  @override
+  String get apiErrNoDrawOffer => 'Немає пропозиції нічиєї';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Нічия лише проти гравця';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Нічия лише в грі 1 на 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Нічия недоступна проти бота';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Нічия недоступна в грі на кількох';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Колода 24 лише для двох';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Колода 52 лише для 3 або 4 гравців';
+
+  @override
+  String get apiErrAccountFrozen => 'Акаунт заморожено';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Час на хід має бути 0, 20, 60 або 600 секунд';
 
   @override
   String get timeJustNow => 'щойно';
@@ -2014,7 +2086,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Час на хід: $time.';
+    return 'Час на хід: $time. Якщо час вийшов — поразка.';
   }
 
   @override

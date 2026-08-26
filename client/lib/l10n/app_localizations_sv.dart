@@ -37,10 +37,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemets standard';
 
   @override
-  String get settingsAddBotsTitle => 'Lägg till bottar efter 30 s';
+  String get settingsSoundTitle => 'Ljud';
 
   @override
-  String get settingsAddBotsSubtitle => 'Vid matchning: om ingen motståndare hittas inom 30 sekunder startar spelet med en bot (insatsen återställs till 1 brons)';
+  String get settingsSoundSubtitle => 'Drag och spelanimationer';
 
   @override
   String get settingsOfflineModeTitle => 'Nätverksläge';
@@ -381,6 +381,78 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get commonGenericError => 'Något gick fel. Försök igen.';
+
+  @override
+  String get apiErrWrongGameType => 'Fel speltyp';
+
+  @override
+  String get apiErrWrongGameTypeOrState => 'Fel speltyp eller status';
+
+  @override
+  String get apiErrLobbyFull => 'Lobryn är full';
+
+  @override
+  String get apiErrBadState => 'Ogiltigt spelläge';
+
+  @override
+  String get apiErrIllegalMove => 'Otillåtet drag';
+
+  @override
+  String get apiErrUnknownMoveType => 'Okänd dragtyp';
+
+  @override
+  String get apiErrNoOpponents => 'Inga motståndare';
+
+  @override
+  String get apiErrNoOpponentsRematch => 'Inga motståndare för returmatch';
+
+  @override
+  String get apiErrAlreadyInLobby => 'Du är redan i den här lobbyn';
+
+  @override
+  String get apiErrGameNotActive => 'Spelet är inte aktivt';
+
+  @override
+  String get apiErrNotInBattle => 'Inte i stridsfasen';
+
+  @override
+  String get apiErrNotInSetup => 'Inte i uppställningsfasen';
+
+  @override
+  String get apiErrAlreadyReady => 'Du är redan redo';
+
+  @override
+  String get apiErrAlreadyForfeited => 'Du har redan gett upp';
+
+  @override
+  String get apiErrYouHaveForfeited => 'Du har gett upp';
+
+  @override
+  String get apiErrNoDrawOffer => 'Inget oavgjort-erbjudande';
+
+  @override
+  String get apiErrDrawOnlyPvp => 'Oavgjort bara mot en spelare';
+
+  @override
+  String get apiErrDrawOnly1v1 => 'Oavgjort bara i 1 mot 1';
+
+  @override
+  String get apiErrDrawVsBot => 'Oavgjort är inte tillgängligt mot en bot';
+
+  @override
+  String get apiErrDrawMultiplayer => 'Oavgjort är inte tillgängligt i flerspelarläge';
+
+  @override
+  String get apiErrDeck24TwoPlayers => 'Kortlek med 24 kort är bara för 2 spelare';
+
+  @override
+  String get apiErrDeck52ThreeOrFour => 'Kortlek med 52 kort kräver 3 eller 4 spelare';
+
+  @override
+  String get apiErrAccountFrozen => 'Kontot är fryst';
+
+  @override
+  String get apiErrTurnTimeInvalid => 'Dragetiden måste vara 0, 20, 60 eller 600 sekunder';
 
   @override
   String get timeJustNow => 'just nu';
@@ -2014,7 +2086,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rulesTurnTime(String time) {
-    return 'Tid per drag: $time.';
+    return 'Tid per drag: $time. Tidsgränsen innebär förlust.';
   }
 
   @override

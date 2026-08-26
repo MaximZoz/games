@@ -354,6 +354,20 @@ List<List<int>> generateRandomBattleshipShips([int? seed]) {
   return defaultBattleshipShips();
 }
 
+/// Сторона клетки 10×10, чтобы доска целиком влезла в [maxWidth]×[maxHeight].
+double fitBattleshipCellSize({
+  required double maxWidth,
+  required double maxHeight,
+  double gap = 2,
+  double minCell = 16,
+  double maxCell = 40,
+}) {
+  final side = maxWidth < maxHeight ? maxWidth : maxHeight;
+  if (side <= 0) return minCell;
+  return ((side - gap * (kBattleshipBoardSize - 1)) / kBattleshipBoardSize)
+      .clamp(minCell, maxCell);
+}
+
 /// Дефолтная валидная расстановка (как на сервере при таймауте setup).
 List<List<int>> defaultBattleshipShips() {
   return [

@@ -4,6 +4,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/ui/uno/uno_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -43,12 +44,20 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   double endScale = 1,
   double arcLift = 0,
   bool keepAtEnd = false,
+  SfxId? launchSfx,
+  SfxId? landSfx,
+  bool playSfx = true,
 }) async {
-  if (!context.mounted || !TickerMode.of(context)) {
+  if (!context.mounted ||
+      !TickerMode.of(context) ||
+      !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return UnoCardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
+  if (playSfx) {
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
+  }
 
   final controller = AnimationController(
     vsync: _UnoFlyTicker(),
@@ -96,11 +105,12 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
         },
       ),
     );
-  });
+  }, host: context, gameOnly: true);
 
   try {
     await controller.forward();
   } catch (_) {}
+  if (landSfx != null) Sfx.play(landSfx);
   if (!keepAtEnd) {
     GameFlyOverlay.remove(entry);
     animation.dispose();

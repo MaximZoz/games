@@ -2,6 +2,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 
 void main() {
+  group('fitBattleshipCellSize', () {
+    test('на узком телефоне 10×10 влезает по высоте', () {
+      const maxW = 360.0;
+      const maxH = 220.0;
+      final cell = fitBattleshipCellSize(maxWidth: maxW, maxHeight: maxH);
+      const gap = 2.0;
+      final board = cell * kBattleshipBoardSize +
+          gap * (kBattleshipBoardSize - 1);
+      expect(board, lessThanOrEqualTo(maxH + 0.01));
+      expect(board, lessThanOrEqualTo(maxW + 0.01));
+      expect(cell, greaterThanOrEqualTo(16));
+      expect(cell, lessThan(28));
+    });
+
+    test('не раздувает клетку выше maxCell', () {
+      final cell = fitBattleshipCellSize(
+        maxWidth: 800,
+        maxHeight: 800,
+        maxCell: 40,
+      );
+      expect(cell, 40);
+    });
+  });
+
   group('defaultBattleshipShips', () {
     test('валидна и совпадает с серверным дефолтом', () {
       final ships = defaultBattleshipShips();

@@ -1584,7 +1584,6 @@ class GamesRepository {
     bool swapRule = false,
     bool firstMoveRestriction = false,
     int stakeBronze = 2,
-    bool addBotsAfter30s = false,
   }) async {
     final parsedVariant = parseVariant(variant);
     final body = <String, dynamic>{
@@ -1596,9 +1595,6 @@ class GamesRepository {
       'swap_rule': false,
       'first_move_restriction': false,
     };
-    if (mode == 'matchmake') {
-      body['add_bots_after_30s'] = addBotsAfter30s;
-    }
     final response = await _authorizedRequest(
       (token) => ApiClient.post(
         Uri.parse('$apiBaseUrl/api/games/tictactoe/lobby'),
