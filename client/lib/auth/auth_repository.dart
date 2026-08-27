@@ -384,16 +384,22 @@ class AuthRepository {
     }
   }
 
-  /// Вход через Google Identity Services (JWT credential), без redirect.
+  /// Вход через Google Identity Services (JWT) или Android server_auth_code.
   Future<AuthResult> loginWithGoogleIdToken({
     required String credential,
+    String? serverAuthCode,
     String? redirect,
     String? ref,
   }) async {
     await init();
-    final payload = <String, dynamic>{
-      'credential': credential,
-    };
+    final payload = <String, dynamic>{};
+    final cred = credential.trim();
+    final code = (serverAuthCode ?? '').trim();
+    if (cred.isNotEmpty) payload['credential'] = cred;
+    if (code.isNotEmpty) payload['server_auth_code'] = code;
+    if (cred.isEmpty && code.isEmpty) {
+      throw AuthException(400, LocaleService.l10n.oauthError);
+    }
     final r = (redirect ?? '').trim();
     if (r.isNotEmpty) payload['redirect'] = r;
     final referral = (ref ?? '').trim();
@@ -542,7 +548,7 @@ class AuthRepository {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final accessToken = body['access_token'] as String;
     final refreshToken = body['refresh_token'] as String? ?? '';
-    final expiresIn = body['expires_in'] as int? ?? 900;
+    final expiresIn = (body['expires_in'] as num?)?.toInt() ?? 900;
     final user = AuthUser.fromJson(Map<String, dynamic>.from(body['user'] as Map));
 
     _memoryAccessToken = accessToken;

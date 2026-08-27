@@ -119,8 +119,13 @@ flutter run -d android --flavor prod \
 На Android кнопка «Войти через Google» использует **нативный Google Sign-In**
 (тот же Google-аккаунт, что в Play Market), а не браузерный OAuth.
 
-Поток: `id_token` → `POST /api/auth/oauth/google/id-token`  
+Поток: `id_token` (или Android `server_auth_code`) →
+`POST /api/auth/oauth/google/id-token`  
 (`GOOGLE_CLIENT_ID` на сервере = **Web** OAuth Client ID).
+
+Если после выбора аккаунта «ничего не происходит» — почти всегда пустой
+`id_token` (неверный SHA-1 или Web Client ID из другого GCP-проекта).
+Клиент пробует `server_auth_code`, иначе открывает браузерный OAuth.
 
 ### Google Cloud Console (один раз на проект)
 
@@ -128,21 +133,30 @@ flutter run -d android --flavor prod \
 2. Создай (если ещё нет) тип **Web application** — его Client ID уже в Fly
    как `GOOGLE_CLIENT_ID` (и отдаётся клиенту в `/api/auth/oauth/providers`
    как `google_client_id` → `serverClientId` в приложении).
+   **Android / Web / iOS clients должны быть в одном GCP-проекте.**
 3. Для **каждого** package создай тип **Android**:
-   - `com.zozugames.app` + SHA-1 **upload** keystore (и debug, если тестируешь
-     `flutter run`)
-   - `com.zozugames.app.dev` + те же SHA-1 (отдельный Android client)
-4. SHA-1 upload keystore:
+   - `com.zozugames.app`
+   - `com.zozugames.app.dev`
+4. SHA-1 — добавь **все** релевантные отпечатки в каждый Android client:
+
+   | Сборка | Откуда SHA-1 |
+   |--------|----------------|
+   | Play Internal / Production | Play Console → App integrity / App signing → **App signing key certificate** SHA-1 |
+   | Локальный release AAB/APK | upload keystore (`upload-keystore.jks`) |
+   | `flutter run` debug | `~/.android/debug.keystore` |
+
+   Без **App signing** SHA-1 билд из Play часто показывает picker аккаунта,
+   после выбора `id_token` пустой → вход «молчит».
+
    ```bash
+   # upload keystore
    keytool -list -v -keystore client/android/upload-keystore.jks -alias zozugames
-   ```
-   SHA-1 debug (локальный run):
-   ```bash
+   # debug
    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
      -storepass android -keypass android
    ```
 5. Без Android OAuth client с правильным package+SHA-1 Sign-In падает с
-   `ApiException: 10` / DEVELOPER_ERROR.
+   `ApiException: 10` / DEVELOPER_ERROR или с пустым id_token.
 
 Play Games Services **не** нужны — достаточно Google Sign-In.
 

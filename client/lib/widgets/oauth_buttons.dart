@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, debugPrint, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -224,7 +224,6 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     if (!mounted) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
     final redirect = widget.redirect;
     setState(() => _busyProvider = 'google');
     try {
@@ -232,32 +231,43 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
           await ref.read(authRepositoryProvider).fetchOAuthProvidersInfo();
       final clientId = (info.googleClientId ?? '').trim();
       if (clientId.isEmpty) {
-        // Нет Web Client ID на бэкенде — fallback на браузерный OAuth.
         if (!mounted) return;
         setState(() => _busyProvider = null);
         await _startNativeBrowserPoll('google');
         return;
       }
-      final idToken = await signInWithGoogleIdToken(serverClientId: clientId);
-      if (idToken == null) {
+
+      final native = await signInWithGoogleNative(serverClientId: clientId);
+      if (native == null) {
         // Пользователь закрыл picker.
         return;
       }
       if (!mounted) return;
       await ref.read(authStateProvider.notifier).loginWithGoogleIdToken(
-            credential: idToken,
+            credential: native.idToken ?? '',
+            serverAuthCode: native.serverAuthCode,
             redirect: redirect,
             ref: widget.refCode,
           );
       if (!mounted) return;
       final dest = safeAuthRedirect(redirect) ?? '/games';
-      router.go(dest);
+      context.go(dest);
+    } on GoogleIdTokenMissingException catch (e) {
+      // Пикер прошёл, но id_token пуст — типичный SHA-1 / GCP misconfig.
+      // Сразу браузерный OAuth, без «тихого» обрыва.
+      debugPrint('Google native id_token missing, fallback to browser: $e');
+      if (!mounted) return;
+      setState(() => _busyProvider = null);
+      await _startNativeBrowserPoll('google');
     } on AuthException catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Google native sign-in failed: $e');
       if (!mounted) return;
+      setState(() => _busyProvider = null);
       messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      await _startNativeBrowserPoll('google');
     } finally {
       if (mounted && _busyProvider == 'google') {
         setState(() => _busyProvider = null);

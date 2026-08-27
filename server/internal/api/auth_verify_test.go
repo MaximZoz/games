@@ -73,6 +73,17 @@ func TestGoogleIDTokenLogin_EmptyCredential(t *testing.T) {
 	}
 }
 
+func TestGoogleIDTokenLogin_EmptyCredentialAndCode(t *testing.T) {
+	h := authHandlerForValidation(t)
+	h.OAuth = &OAuthConfig{GoogleClientID: "test-client.apps.googleusercontent.com", GoogleClientSecret: "x"}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/oauth/google/id-token", bytes.NewReader([]byte(`{}`)))
+	rec := httptest.NewRecorder()
+	h.GoogleIDTokenLogin(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
 func TestGenerateEmailCode(t *testing.T) {
 	code, err := generateEmailCode()
 	if err != nil {
