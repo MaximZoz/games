@@ -174,6 +174,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
 
   Future<void> loginWithGoogleIdToken({
     required String credential,
+    String? serverAuthCode,
     String? redirect,
     String? ref,
   }) async {
@@ -181,6 +182,7 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     final repo = _ref.read(authRepositoryProvider);
     final result = await repo.loginWithGoogleIdToken(
       credential: credential,
+      serverAuthCode: serverAuthCode,
       redirect: redirect,
       ref: ref,
     );

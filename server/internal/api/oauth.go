@@ -180,8 +180,8 @@ func (h *AuthHandler) OAuthProviders(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(out)
 }
 
-// GoogleIDTokenLogin — вход по GIS credential (JWT) без redirect/popup.
-// Нужен для iOS PWA: redirect открывает SFSafariViewController, Google показывает белый экран.
+// GoogleIDTokenLogin — вход по GIS credential (JWT) или Android server_auth_code.
+// Нужен для iOS PWA / Android native Google Sign-In без redirect/popup.
 func (h *AuthHandler) GoogleIDTokenLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
@@ -192,22 +192,31 @@ func (h *AuthHandler) GoogleIDTokenLogin(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var body struct {
-		Credential string `json:"credential"`
-		Redirect   string `json:"redirect"`
-		Ref        string `json:"ref"`
+		Credential     string `json:"credential"`
+		ServerAuthCode string `json:"server_auth_code"`
+		Redirect       string `json:"redirect"`
+		Ref            string `json:"ref"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		WriteErr(w, r, http.StatusBadRequest, "invalid json")
 		return
 	}
 	cred := strings.TrimSpace(body.Credential)
-	if cred == "" {
+	authCode := strings.TrimSpace(body.ServerAuthCode)
+
+	var identity *oauthIdentity
+	var err error
+	switch {
+	case cred != "":
+		identity, err = h.verifyGoogleIDToken(r.Context(), cred)
+	case authCode != "":
+		identity, err = h.exchangeGoogleServerAuthCode(r.Context(), authCode)
+	default:
 		WriteErr(w, r, http.StatusBadRequest, "credential required")
 		return
 	}
-	identity, err := h.verifyGoogleIDToken(r.Context(), cred)
 	if err != nil {
-		log.Printf("[oauth] google id_token verify failed: %v", err)
+		log.Printf("[oauth] google native login verify/exchange failed: %v", err)
 		WriteErr(w, r, http.StatusUnauthorized, "invalid google credential")
 		return
 	}
@@ -604,7 +613,25 @@ func (h *AuthHandler) exchangeGoogle(ctx context.Context, code string) (*oauthId
 	form.Set("client_secret", h.OAuth.GoogleClientSecret)
 	form.Set("redirect_uri", h.OAuth.callbackURL("google"))
 	form.Set("grant_type", "authorization_code")
+	return h.exchangeGoogleForm(ctx, form)
+}
 
+// exchangeGoogleServerAuthCode — код из Android GoogleSignIn.requestServerAuthCode.
+// Для mobile server auth code redirect_uri должен быть пустой строкой.
+func (h *AuthHandler) exchangeGoogleServerAuthCode(ctx context.Context, code string) (*oauthIdentity, error) {
+	if strings.TrimSpace(h.OAuth.GoogleClientSecret) == "" {
+		return nil, fmt.Errorf("google client secret not configured")
+	}
+	form := url.Values{}
+	form.Set("code", code)
+	form.Set("client_id", h.OAuth.GoogleClientID)
+	form.Set("client_secret", h.OAuth.GoogleClientSecret)
+	form.Set("redirect_uri", "")
+	form.Set("grant_type", "authorization_code")
+	return h.exchangeGoogleForm(ctx, form)
+}
+
+func (h *AuthHandler) exchangeGoogleForm(ctx context.Context, form url.Values) (*oauthIdentity, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://oauth2.googleapis.com/token", strings.NewReader(form.Encode()))
 	if err != nil {
 		return nil, err
@@ -625,6 +652,14 @@ func (h *AuthHandler) exchangeGoogle(ctx context.Context, code string) (*oauthId
 	}
 	if err := json.Unmarshal(body, &tok); err != nil {
 		return nil, err
+	}
+	if tok.IDToken != "" {
+		if id, err := h.verifyGoogleIDToken(ctx, tok.IDToken); err == nil {
+			return id, nil
+		}
+	}
+	if tok.AccessToken == "" {
+		return nil, fmt.Errorf("google token: empty access_token")
 	}
 
 	ureq, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://openidconnect.googleapis.com/v1/userinfo", nil)
