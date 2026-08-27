@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -792,7 +793,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   Future<void> _copyInviteLink() async {
     final url = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
-      baseUri: Uri.base,
+      baseUri: shareLinkBaseUri,
       gameType: 'tictactoe',
     );
     await Clipboard.setData(ClipboardData(text: url));

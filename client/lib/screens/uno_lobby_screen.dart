@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
@@ -80,7 +81,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   Future<void> _copyLink() async {
     final link = buildInviteLobbyShareUrl(
       lobbyId: widget.lobbyId,
-      baseUri: Uri.base,
+      baseUri: shareLinkBaseUri,
       gameType: 'uno',
     );
     await Clipboard.setData(ClipboardData(text: link));

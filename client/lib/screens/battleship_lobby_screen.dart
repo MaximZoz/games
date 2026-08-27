@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
@@ -156,7 +157,7 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
   Future<void> _copyLink(String lobbyId) async {
     final link = buildInviteLobbyShareUrl(
       lobbyId: lobbyId,
-      baseUri: Uri.base,
+      baseUri: shareLinkBaseUri,
       gameType: 'battleship',
     );
     await Clipboard.setData(ClipboardData(text: link));
