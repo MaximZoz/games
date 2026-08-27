@@ -1,13 +1,21 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/auth/google_native_sign_in.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
+
+/// Android/iOS: Google Sign-In (аккаунт устройства / Play Store).
+bool get _useNativeGoogleSignIn =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 final oauthProvidersProvider = FutureProvider<List<String>>((ref) async {
   return ref.watch(authRepositoryProvider).fetchOAuthProviders();
@@ -39,7 +47,10 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resumePending());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await hydrateOAuthPendingState();
+      if (mounted) await _resumePending();
+    });
   }
 
   @override
@@ -51,7 +62,11 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _resumePending();
+      // ignore: discarded_futures
+      () async {
+        await hydrateOAuthPendingState();
+        if (mounted) await _resumePending();
+      }();
     }
   }
 
@@ -197,6 +212,62 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   }
 
   Future<void> _startNative(BuildContext context, String provider) async {
+    if (provider == 'google' && _useNativeGoogleSignIn) {
+      await _startNativeGoogle();
+      return;
+    }
+    await _startNativeBrowserPoll(provider);
+  }
+
+  /// Google: системный аккаунт (тот же, что в Play Market) → id_token → API.
+  Future<void> _startNativeGoogle() async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final redirect = widget.redirect;
+    setState(() => _busyProvider = 'google');
+    try {
+      final info =
+          await ref.read(authRepositoryProvider).fetchOAuthProvidersInfo();
+      final clientId = (info.googleClientId ?? '').trim();
+      if (clientId.isEmpty) {
+        // Нет Web Client ID на бэкенде — fallback на браузерный OAuth.
+        if (!mounted) return;
+        setState(() => _busyProvider = null);
+        await _startNativeBrowserPoll('google');
+        return;
+      }
+      final idToken = await signInWithGoogleIdToken(serverClientId: clientId);
+      if (idToken == null) {
+        // Пользователь закрыл picker.
+        return;
+      }
+      if (!mounted) return;
+      await ref.read(authStateProvider.notifier).loginWithGoogleIdToken(
+            credential: idToken,
+            redirect: redirect,
+            ref: widget.refCode,
+          );
+      if (!mounted) return;
+      final dest = safeAuthRedirect(redirect) ?? '/games';
+      router.go(dest);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+    } finally {
+      if (mounted && _busyProvider == 'google') {
+        setState(() => _busyProvider = null);
+      }
+    }
+  }
+
+  /// Остальные провайдеры (и Google fallback): внешний браузер + poll.
+  Future<void> _startNativeBrowserPoll(String provider) async {
+    if (!mounted) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final popup = openOAuthWindowBlank();
@@ -211,7 +282,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       _pollingState = started.state;
       navigateOAuthWindow(popup, started.authorizeUrl);
       if (!mounted) return;
-      await _finishPoll(this.context, started.state, providerLabel: provider);
+      await _finishPoll(context, started.state, providerLabel: provider);
     } on AuthException catch (e) {
       closeOAuthWindow(popup);
       clearOAuthPendingState();

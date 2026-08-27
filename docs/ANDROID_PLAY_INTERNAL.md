@@ -114,7 +114,39 @@ flutter run -d android --flavor prod \
 - [ ] Internal + тестеры на обоих
 - [ ] CI зелёный для develop (dev) и main (prod)
 
-## 8. Позже
+## 8. Google Sign-In (Android) — аккаунт Play / устройства
+
+На Android кнопка «Войти через Google» использует **нативный Google Sign-In**
+(тот же Google-аккаунт, что в Play Market), а не браузерный OAuth.
+
+Поток: `id_token` → `POST /api/auth/oauth/google/id-token`  
+(`GOOGLE_CLIENT_ID` на сервере = **Web** OAuth Client ID).
+
+### Google Cloud Console (один раз на проект)
+
+1. APIs & Services → Credentials → **Create credentials → OAuth client ID**
+2. Создай (если ещё нет) тип **Web application** — его Client ID уже в Fly
+   как `GOOGLE_CLIENT_ID` (и отдаётся клиенту в `/api/auth/oauth/providers`
+   как `google_client_id` → `serverClientId` в приложении).
+3. Для **каждого** package создай тип **Android**:
+   - `com.zozugames.app` + SHA-1 **upload** keystore (и debug, если тестируешь
+     `flutter run`)
+   - `com.zozugames.app.dev` + те же SHA-1 (отдельный Android client)
+4. SHA-1 upload keystore:
+   ```bash
+   keytool -list -v -keystore client/android/upload-keystore.jks -alias zozugames
+   ```
+   SHA-1 debug (локальный run):
+   ```bash
+   keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+     -storepass android -keypass android
+   ```
+5. Без Android OAuth client с правильным package+SHA-1 Sign-In падает с
+   `ApiException: 10` / DEVELOPER_ERROR.
+
+Play Games Services **не** нужны — достаточно Google Sign-In.
+
+## 9. Позже
 
 - разные иконки для DEV
 - Store listing / Privacy / Data safety
