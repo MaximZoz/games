@@ -130,3 +130,7 @@ void clearOAuthPendingState() {
     web.window.sessionStorage.removeItem(_pendingKey);
   } catch (_) {}
 }
+
+Future<void> hydrateOAuthPendingState() async {
+  // sessionStorage уже синхронный через readOAuthPendingState.
+}

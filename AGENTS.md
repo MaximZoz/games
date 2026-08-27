@@ -74,5 +74,9 @@ errors.
 - OAuth login buttons (Google / Apple / Yandex / VK) are hidden unless the
   respective `*_CLIENT_ID` / `*_CLIENT_SECRET` env vars are set. Redirect
   URI pattern: `{PUBLIC_BASE_URL}/api/auth/oauth/{provider}/callback`.
+  On Android/iOS, Google uses native Google Sign-In (`google_sign_in`) with
+  the Web client ID as `serverClientId` and `POST .../google/id-token`;
+  Android OAuth clients (package + SHA-1) must exist in the same Google Cloud
+  project — see `docs/ANDROID_PLAY_INTERNAL.md` §8.
 - The server reports messages via the internal i18n package
   (`internal/i18n`); error strings are localized by `Accept-Language`.

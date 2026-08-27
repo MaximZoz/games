@@ -26,6 +26,8 @@ dependencies:
   web: ^1.1.1
   image: ^4.3.0
   material_symbols_icons: ^4.2960.0
+  # Google Sign-In на Android/iOS (аккаунт устройства / Play).
+  google_sign_in: ^6.2.2
   # Google Play In-App Updates (только Android; web использует reloadApp).
   in_app_update: ^4.2.3
   url_launcher: ^6.3.1
