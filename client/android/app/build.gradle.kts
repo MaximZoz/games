@@ -29,11 +29,25 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.zozugames.app"
+        // applicationId задаётся в productFlavors (prod / dev).
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    flavorDimensions += "env"
+    productFlavors {
+        create("prod") {
+            dimension = "env"
+            applicationId = "com.zozugames.app"
+            resValue("string", "app_name", "Zozu Games")
+        }
+        create("dev") {
+            dimension = "env"
+            applicationId = "com.zozugames.app.dev"
+            resValue("string", "app_name", "Zozu Games DEV")
+        }
     }
 
     signingConfigs {
