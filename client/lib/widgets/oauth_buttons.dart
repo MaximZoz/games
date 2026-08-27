@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugPrint, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -232,8 +234,10 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       final clientId = (info.googleClientId ?? '').trim();
       if (clientId.isEmpty) {
         if (!mounted) return;
+        // Без Web Client ID native невозможен — браузер, но не блокируем UI
+        // на 5 минут: открываем и ждём возврата через resume/hydrate.
         setState(() => _busyProvider = null);
-        await _startNativeBrowserPoll('google');
+        await _startNativeBrowserPoll('google', blockUntilDone: false);
         return;
       }
 
@@ -243,31 +247,36 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
         return;
       }
       if (!mounted) return;
-      await ref.read(authStateProvider.notifier).loginWithGoogleIdToken(
+      await ref
+          .read(authStateProvider.notifier)
+          .loginWithGoogleIdToken(
             credential: native.idToken ?? '',
             serverAuthCode: native.serverAuthCode,
             redirect: redirect,
             ref: widget.refCode,
-          );
+          )
+          .timeout(const Duration(seconds: 25));
       if (!mounted) return;
       final dest = safeAuthRedirect(redirect) ?? '/games';
       context.go(dest);
-    } on GoogleIdTokenMissingException catch (e) {
-      // Пикер прошёл, но id_token пуст — типичный SHA-1 / GCP misconfig.
-      // Сразу браузерный OAuth, без «тихого» обрыва.
-      debugPrint('Google native id_token missing, fallback to browser: $e');
+    } on TimeoutException {
       if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+    } on GoogleIdTokenMissingException catch (e) {
+      // Не уходим в 5‑минутный poll со спиннером — показываем ошибку
+      // и открываем браузер без блокировки кнопки.
+      debugPrint('Google native credential missing: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
       setState(() => _busyProvider = null);
-      await _startNativeBrowserPoll('google');
+      await _startNativeBrowserPoll('google', blockUntilDone: false);
     } on AuthException catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       debugPrint('Google native sign-in failed: $e');
       if (!mounted) return;
-      setState(() => _busyProvider = null);
       messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
-      await _startNativeBrowserPoll('google');
     } finally {
       if (mounted && _busyProvider == 'google') {
         setState(() => _busyProvider = null);
@@ -276,7 +285,13 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
   }
 
   /// Остальные провайдеры (и Google fallback): внешний браузер + poll.
-  Future<void> _startNativeBrowserPoll(String provider) async {
+  ///
+  /// [blockUntilDone]: false — открыть браузер, снять лоадер, дождаться
+  /// результата при возврате в приложение (`_resumePending`).
+  Future<void> _startNativeBrowserPoll(
+    String provider, {
+    bool blockUntilDone = true,
+  }) async {
     if (!mounted) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -292,6 +307,10 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       _pollingState = started.state;
       navigateOAuthWindow(popup, started.authorizeUrl);
       if (!mounted) return;
+      if (!blockUntilDone) {
+        // Лоадер снимем в finally; poll добьёт _resumePending при resume.
+        return;
+      }
       await _finishPoll(context, started.state, providerLabel: provider);
     } on AuthException catch (e) {
       closeOAuthWindow(popup);

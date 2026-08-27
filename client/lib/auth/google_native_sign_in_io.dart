@@ -1,13 +1,14 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-/// Нативный Google Sign-In вернул аккаунт, но без id_token / server_auth_code.
+/// Нативный Google Sign-In вернул аккаунт, но без credential.
 class GoogleIdTokenMissingException implements Exception {
   GoogleIdTokenMissingException([
-    this.message = 'Google Sign-In: empty idToken',
+    this.message = 'Google Sign-In: empty credential',
   ]);
   final String message;
   @override
@@ -37,16 +38,17 @@ GoogleSignIn _googleSignInFor(String webClientId) {
     return _cachedSignIn!;
   }
   _cachedServerClientId = webClientId;
+  // Не ставим forceCodeForRefreshToken: после picker это часто зависает
+  // на offline-consent, и кнопка крутит лоадер бесконечно.
   _cachedSignIn = GoogleSignIn(
     scopes: const <String>['openid', 'email', 'profile'],
     serverClientId: webClientId,
-    // Просим server auth code каждый раз — запасной путь, если id_token пуст.
-    forceCodeForRefreshToken: true,
   );
   return _cachedSignIn!;
 }
 
-bool _isCanceled(PlatformException e) {
+bool _isCanceled(Object e) {
+  if (e is! PlatformException) return false;
   final code = e.code.toLowerCase();
   final msg = (e.message ?? '').toLowerCase();
   return code.contains('cancel') ||
@@ -57,10 +59,10 @@ bool _isCanceled(PlatformException e) {
 
 /// Вход через Google-аккаунт на устройстве (тот же, что в Play Store).
 ///
-/// [serverClientId] — Web OAuth Client ID с бэкенда (`google_client_id`).
-///
-/// Возвращает `null`, если пользователь закрыл picker.
-/// Бросает [GoogleIdTokenMissingException], если аккаунт выбран без credential.
+/// Важно: **не** вызываем `account.authentication` / getTokens —
+/// на Android это может открыть recovery Intent и зависнуть, пока Flutter
+/// крутит лоадер. Берём `serverAuthCode` из результата `signIn()` и
+/// меняем его на бэкенде.
 Future<GoogleNativeSignInResult?> signInWithGoogleNative({
   required String serverClientId,
 }) async {
@@ -70,12 +72,13 @@ Future<GoogleNativeSignInResult?> signInWithGoogleNative({
 
   final googleSignIn = _googleSignInFor(webClientId);
 
-  // Не вызываем signOut() перед signIn(): на Android это часто даёт
-  // аккаунт без id_token после выбора в picker.
-
   GoogleSignInAccount? account;
   try {
-    account = await googleSignIn.signIn();
+    account = await googleSignIn.signIn().timeout(const Duration(seconds: 90));
+  } on TimeoutException {
+    throw GoogleIdTokenMissingException(
+      'Google Sign-In: timeout after account picker',
+    );
   } on PlatformException catch (e) {
     if (_isCanceled(e)) return null;
     rethrow;
@@ -83,34 +86,24 @@ Future<GoogleNativeSignInResult?> signInWithGoogleNative({
 
   if (account == null) return null;
 
-  String? idToken;
-  try {
-    final auth = await account.authentication;
-    idToken = auth.idToken?.trim();
-  } catch (e) {
-    debugPrint('Google Sign-In authentication error: $e');
-  }
-
   final serverAuthCode = account.serverAuthCode?.trim();
-  final result = GoogleNativeSignInResult(
-    idToken: (idToken != null && idToken.isNotEmpty) ? idToken : null,
-    serverAuthCode:
-        (serverAuthCode != null && serverAuthCode.isNotEmpty) ? serverAuthCode : null,
-  );
-
-  if (!result.hasCredential) {
-    debugPrint(
-      'Google Sign-In: account=${account.email} but no idToken/serverAuthCode '
-      '(SHA-1 App Signing / GCP project?)',
-    );
-    throw GoogleIdTokenMissingException(
-      'Google Sign-In: empty idToken/serverAuthCode (SHA-1 App Signing / Web Client ID)',
-    );
+  if (serverAuthCode != null && serverAuthCode.isNotEmpty) {
+    debugPrint('Google Sign-In: serverAuthCode ok for ${account.email}');
+    return GoogleNativeSignInResult(serverAuthCode: serverAuthCode);
   }
-  return result;
+
+  // id_token из sign-in лежит в приватном поле; authentication→getTokens
+  // на Android часто зависает. Не вызываем его — пусть UI сделает fallback.
+  debugPrint(
+    'Google Sign-In: account=${account.email} but serverAuthCode empty '
+    '(SHA-1 App Signing / Web Client ID / GCP project?)',
+  );
+  throw GoogleIdTokenMissingException(
+    'Google Sign-In: empty serverAuthCode (SHA-1 App Signing / Web Client ID)',
+  );
 }
 
-/// Совместимость: только id_token (или null при отмене).
+/// Совместимость: только id_token (на native сейчас не извлекаем без getTokens).
 Future<String?> signInWithGoogleIdToken({required String serverClientId}) async {
   final result = await signInWithGoogleNative(serverClientId: serverClientId);
   if (result == null) return null;
