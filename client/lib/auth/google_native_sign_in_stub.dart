@@ -9,6 +9,19 @@ class GoogleIdTokenMissingException implements Exception {
   String toString() => message;
 }
 
+class GoogleSignInDeveloperErrorException implements Exception {
+  GoogleSignInDeveloperErrorException([
+    this.message =
+        'Google Sign-In: код 10 (DEVELOPER_ERROR). '
+        'В Google Cloud → Android OAuth client добавь SHA-1 '
+        'App signing из Play Console (не upload key) '
+        'для package com.zozugames.app / .dev',
+  ]);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 class GoogleNativeSignInResult {
   const GoogleNativeSignInResult({
     this.idToken,
@@ -21,6 +34,11 @@ class GoogleNativeSignInResult {
   bool get hasCredential =>
       (idToken != null && idToken!.isNotEmpty) ||
       (serverAuthCode != null && serverAuthCode!.isNotEmpty);
+}
+
+bool isGoogleDeveloperError(Object e) {
+  if (e is GoogleSignInDeveloperErrorException) return true;
+  return false;
 }
 
 Future<GoogleNativeSignInResult?> signInWithGoogleNative({

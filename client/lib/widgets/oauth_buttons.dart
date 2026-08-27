@@ -262,6 +262,18 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     } on TimeoutException {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+    } on GoogleSignInDeveloperErrorException catch (e) {
+      // Код 10: SHA-1 / package в Google Cloud. Браузерный OAuth всё ещё работает.
+      debugPrint('Google DEVELOPER_ERROR: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          duration: const Duration(seconds: 10),
+        ),
+      );
+      setState(() => _busyProvider = null);
+      await _startNativeBrowserPoll('google', blockUntilDone: false);
     } on GoogleIdTokenMissingException catch (e) {
       // Пустые токены после picker — часто SHA-1. Покажем текст ошибки
       // и откроем браузер; poll при возврате в приложение.
@@ -286,6 +298,15 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     } catch (e) {
       debugPrint('Google native sign-in failed: $e');
       if (!mounted) return;
+      if (isGoogleDeveloperError(e)) {
+        final msg = GoogleSignInDeveloperErrorException().message;
+        messenger.showSnackBar(
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 10)),
+        );
+        setState(() => _busyProvider = null);
+        await _startNativeBrowserPoll('google', blockUntilDone: false);
+        return;
+      }
       messenger.showSnackBar(
         SnackBar(
           content: Text('${l10n.oauthError}: $e'),

@@ -127,39 +127,43 @@ flutter run -d android --flavor prod \
 `signIn()` (без `getTokens`). Если токены пустые — браузерный OAuth
 без блокирующего poll на 5 минут.
 
-Если после выбора аккаунта снова экран входа — почти всегда пустые токены
-(неверный SHA-1 App Signing или Web Client ID из другого GCP-проекта).
+### Ошибка `sign_in_failed` / `d 10` / `ApiException: 10`
 
-### Google Cloud Console (один раз на проект)
+Это **DEVELOPER_ERROR**: в Google Cloud нет Android OAuth client с нужным
+**package name + SHA-1** (или SHA не от того ключа).
 
-1. APIs & Services → Credentials → **Create credentials → OAuth client ID**
-2. Создай (если ещё нет) тип **Web application** — его Client ID уже в Fly
-   как `GOOGLE_CLIENT_ID` (и отдаётся клиенту в `/api/auth/oauth/providers`
-   как `google_client_id` → `serverClientId` в приложении).
-   **Android / Web / iOS clients должны быть в одном GCP-проекте.**
-3. Для **каждого** package создай тип **Android**:
-   - `com.zozugames.app`
-   - `com.zozugames.app.dev`
-4. SHA-1 — добавь **все** релевантные отпечатки в каждый Android client:
+Для билдов **из Play Internal** нужен SHA-1 **App signing key**, не upload:
 
-   | Сборка | Откуда SHA-1 |
-   |--------|----------------|
-   | Play Internal / Production | Play Console → App integrity / App signing → **App signing key certificate** SHA-1 |
-   | Локальный release AAB/APK | upload keystore (`upload-keystore.jks`) |
-   | `flutter run` debug | `~/.android/debug.keystore` |
+1. [Play Console](https://play.google.com/console) → приложение
+   (`com.zozugames.app` или `.dev`)
+2. **Release** → **Setup** → **App integrity** / **App signing**
+3. Скопируй **SHA-1** у **App signing key certificate**
+4. [Google Cloud Console](https://console.cloud.google.com/) → тот же проект,
+   где Web Client ID (`GOOGLE_CLIENT_ID` /
+   `576062919624-….apps.googleusercontent.com`)
+5. APIs & Services → Credentials → **Create OAuth client ID** → тип **Android**
+   - Package name: `com.zozugames.app` (и отдельно `.dev`)
+   - SHA-1: вставь из шага 3
+6. Подожди 5–15 минут, переустанови / обнови приложение, попробуй снова
 
-   Без **App signing** SHA-1 билд из Play часто показывает picker аккаунта,
-   после выбора `id_token` пустой → вход «молчит».
+Дополнительно можно добавить SHA-1 **upload** keystore и **debug** keystore
+в те же Android clients (для локальных сборок).
 
+Без этого native Google на телефоне **не заработает**; браузерный fallback
+может открыться, но native picker будет с кодом 10.
+
+### Google Cloud Console (чеклист)
+
+1. Web application client → уже в Fly как `GOOGLE_CLIENT_ID`
+2. Android clients в **том же** GCP-проекте:
+   - `com.zozugames.app` + SHA-1 App signing (+ upload, debug)
+   - `com.zozugames.app.dev` + те же SHA-1
+3. Проверка upload/debug SHA:
    ```bash
-   # upload keystore
    keytool -list -v -keystore client/android/upload-keystore.jks -alias zozugames
-   # debug
    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
      -storepass android -keypass android
    ```
-5. Без Android OAuth client с правильным package+SHA-1 Sign-In падает с
-   `ApiException: 10` / DEVELOPER_ERROR или с пустым id_token.
 
 Play Games Services **не** нужны — достаточно Google Sign-In.
 
