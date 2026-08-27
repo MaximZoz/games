@@ -123,10 +123,12 @@ flutter run -d android --flavor prod \
 `POST /api/auth/oauth/google/id-token`  
 (`GOOGLE_CLIENT_ID` на сервере = **Web** OAuth Client ID).
 
-Если после выбора аккаунта крутится лоадер — старые сборки могли зависать
-на `getTokens` / offline-consent. Текущий клиент **не** вызывает getTokens:
-берёт `serverAuthCode` из picker и меняет на API; при пустом коде открывает
-браузер **без** блокирующего poll на 5 минут.
+Клиент читает `id_token` / `server_auth_code` из результата platform
+`signIn()` (без `getTokens`). Если токены пустые — браузерный OAuth
+без блокирующего poll на 5 минут.
+
+Если после выбора аккаунта снова экран входа — почти всегда пустые токены
+(неверный SHA-1 App Signing или Web Client ID из другого GCP-проекта).
 
 ### Google Cloud Console (один раз на проект)
 

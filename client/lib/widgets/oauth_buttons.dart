@@ -263,20 +263,35 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
     } on GoogleIdTokenMissingException catch (e) {
-      // Не уходим в 5‑минутный poll со спиннером — показываем ошибку
-      // и открываем браузер без блокировки кнопки.
+      // Пустые токены после picker — часто SHA-1. Покажем текст ошибки
+      // и откроем браузер; poll при возврате в приложение.
       debugPrint('Google native credential missing: $e');
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.oauthError),
+          duration: const Duration(seconds: 4),
+        ),
+      );
       setState(() => _busyProvider = null);
       await _startNativeBrowserPoll('google', blockUntilDone: false);
     } on AuthException catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          duration: const Duration(seconds: 5),
+        ),
+      );
     } catch (e) {
       debugPrint('Google native sign-in failed: $e');
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.oauthError}: $e'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
     } finally {
       if (mounted && _busyProvider == 'google') {
         setState(() => _busyProvider = null);
