@@ -16,6 +16,20 @@ class GoogleIdTokenMissingException implements Exception {
   String toString() => message;
 }
 
+/// Google ApiException 10 / DEVELOPER_ERROR — неверный package или SHA-1.
+class GoogleSignInDeveloperErrorException implements Exception {
+  GoogleSignInDeveloperErrorException([
+    this.message =
+        'Google Sign-In: код 10 (DEVELOPER_ERROR). '
+        'В Google Cloud → Android OAuth client добавь SHA-1 '
+        'App signing из Play Console (не upload key) '
+        'для package com.zozugames.app / .dev',
+  ]);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 /// Результат нативного Google Sign-In.
 class GoogleNativeSignInResult {
   const GoogleNativeSignInResult({
@@ -56,6 +70,26 @@ bool _isCanceled(Object e) {
       e.code == '12501';
 }
 
+/// ApiException: 10 / DEVELOPER_ERROR / "sign_in_failed ... 10" / "d 10"
+bool isGoogleDeveloperError(Object e) {
+  if (e is GoogleSignInDeveloperErrorException) return true;
+  final blob = e.toString().toLowerCase();
+  if (blob.contains('developer_error')) return true;
+  // Типичные формы: "ApiException: 10:", "sign_in_failed ... 10", "d 10"
+  if (RegExp(r'apiexception\s*:?\s*10\b').hasMatch(blob)) return true;
+  if (RegExp(r'\bd\s*10\b').hasMatch(blob)) return true;
+  if (e is PlatformException) {
+    final code = e.code.toLowerCase();
+    final msg = (e.message ?? '').toLowerCase();
+    if (code == '10') return true;
+    if (code.contains('sign_in_failed') &&
+        RegExp(r'(^|[^\d])10(\D|$)').hasMatch(msg)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /// Вход через Google-аккаунт на устройстве (тот же, что в Play Store).
 ///
 /// Берём `idToken` / `serverAuthCode` из [GoogleSignInUserData] через
@@ -83,6 +117,10 @@ Future<GoogleNativeSignInResult?> signInWithGoogleNative({
     );
   } on PlatformException catch (e) {
     if (_isCanceled(e)) return null;
+    if (isGoogleDeveloperError(e)) {
+      debugPrint('Google Sign-In DEVELOPER_ERROR (10): $e');
+      throw GoogleSignInDeveloperErrorException();
+    }
     rethrow;
   }
 
