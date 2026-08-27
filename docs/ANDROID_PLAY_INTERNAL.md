@@ -1,7 +1,14 @@
 # Android → Google Play Internal testing (Zozu Games)
 
-Package / applicationId: **`com.zozugames.app`**  
-(должен совпадать с приложением в Play Console)
+Два приложения на одном телефоне (product flavors):
+
+| Flavor | applicationId | Label | API |
+|--------|---------------|-------|-----|
+| **prod** | `com.zozugames.app` | Zozu Games | `https://multigameszozu.fly.dev` |
+| **dev** | `com.zozugames.app.dev` | Zozu Games DEV | `https://multigameszozu-dev.fly.dev` |
+
+В Play Console для DEV нужно **отдельное** приложение с package `com.zozugames.app.dev`  
+(тот же upload keystore; SA с правом Release to testing tracks на оба приложения).
 
 ## 1. Release keystore (один раз, сохрани навсегда)
 
@@ -14,147 +21,101 @@ keytool -genkey -v \
   -alias zozugames
 ```
 
-Создай `client/android/key.properties` из примера:
-
 ```bash
 cp client/android/key.properties.example client/android/key.properties
-# storeFile=../upload-keystore.jks  (если .jks в client/android/)
+# storeFile=../upload-keystore.jks
 ```
 
-**Важно:** `upload-keystore.jks` и `key.properties` не коммитить. Потеря keystore = нельзя нормально обновлять то же приложение в Play.
+**Важно:** `upload-keystore.jks` и `key.properties` не коммитить.
 
 ## 2. Сборка AAB (локально)
 
+**Prod:**
 ```bash
 cd client
-flutter pub get
-flutter build appbundle --release \
-  --dart-define=API_BASE=https://multigameszozu.fly.dev
+flutter build appbundle --release --flavor prod \
+  --dart-define=API_BASE=https://multigameszozu.fly.dev \
+  --dart-define=ANDROID_APPLICATION_ID=com.zozugames.app \
+  --dart-define=BUILD_ID=local \
+  --dart-define=APP_VERSION=0.1.0-prod-local+1
 ```
+→ `client/build/app/outputs/bundle/prodRelease/app-prod-release.aab`
 
-Файл:
-`client/build/app/outputs/bundle/release/app-release.aab`
-
-Для DEV API:
+**Dev:**
 ```bash
-flutter build appbundle --release \
-  --dart-define=API_BASE=https://multigameszozu-dev.fly.dev
+flutter build appbundle --release --flavor dev \
+  --dart-define=API_BASE=https://multigameszozu-dev.fly.dev \
+  --dart-define=ANDROID_APPLICATION_ID=com.zozugames.app.dev \
+  --dart-define=BUILD_ID=local \
+  --dart-define=APP_VERSION=0.1.0-dev-local+1
 ```
+→ `client/build/app/outputs/bundle/devRelease/app-dev-release.aab`
 
-Каждый новый upload в Play должен иметь **больший** `versionCode`  
-(`pubspec.yaml` → `0.1.0+N`, число после `+`).
+Каждый upload в Play: больший `versionCode` (`--build-number` / число после `+` в pubspec).
 
-## 3. Play Console → Internal testing (ручная загрузка)
+## 3. Play Console
 
-1. Play Console → приложение **Zozu Games** (`com.zozugames.app`)
-2. **Testing → Internal testing → Create new release**
-3. Загрузи `app-release.aab`
-4. Notes for testers: например `Internal build 1`
-5. **Save → Review → Start rollout to Internal testing**
-6. **Testers** → добавь свой Google-аккаунт / создай email list
-7. Открой на телефоне ссылку copy link / join on the web → Install
+### Prod (уже есть)
+**ZozuGames** / `com.zozugames.app` → Internal testing → залей `app-prod-release.aab`.
 
-## 4. GitHub Actions — полный авторелиз в Internal
+### Dev (создай один раз)
+1. Play Console → **Создать приложение**
+2. Package name: **`com.zozugames.app.dev`**
+3. Название: например **Zozu Games DEV**
+4. Internal testing → залей `app-dev-release.aab`
+5. Testers: тот же email-список
+6. Users/API access: дай SA `play-uploader@…` права Release to testing на **это** приложение тоже
 
-Workflow: `.github/workflows/android-internal.yml`  
-Имя в Actions: **Android Play Internal**
+Без второго приложения CI для `develop` соберёт AAB (artifact), но Upload to Play упадёт с package not found / permission.
 
-### Когда запускается
+## 4. GitHub Actions
 
-| Событие | API в AAB | Track |
-|--------|-----------|--------|
-| push в `develop` (изменения в `client/**`) | `https://multigameszozu-dev.fly.dev` | Internal |
-| push в `main` (изменения в `client/**`) | `https://multigameszozu.fly.dev` | Internal |
-| Actions → Run workflow | выбираешь `dev` / `prod` | Internal |
+Workflow: `.github/workflows/android-internal.yml`
 
-Один package / один Internal track — последний успешный upload видят тестировщики  
-(имя релиза `internal-dev-…` / `internal-prod-…`).
+| Событие | Flavor | Package | API |
+|--------|--------|---------|-----|
+| push `develop` (`client/**`) | `dev` | `com.zozugames.app.dev` | DEV |
+| push `main` (`client/**`) | `prod` | `com.zozugames.app` | prod |
+| Run workflow | выбор | см. выше | см. выше |
 
-`versionCode` в CI: `10000 + github.run_number`.
+Секреты те же (`ANDROID_KEYSTORE_*`, `PLAY_SERVICE_ACCOUNT_JSON`).
 
-### Секреты (Settings → Secrets and variables → Actions)
+### Если Queued / Failed to cancel
 
-Вкладка **Repository secrets** (не Environment):
+Settings → Actions → Disable → Enable; не спамь Run workflow.
 
-| Secret | Значение |
-|--------|----------|
-| `ANDROID_KEYSTORE_BASE64` | base64 от `upload-keystore.jks` (одна длинная строка) |
-| `ANDROID_KEYSTORE_PASSWORD` | store password |
-| `ANDROID_KEY_PASSWORD` | key password |
-| `ANDROID_KEY_ALIAS` | `zozugames` |
-| `PLAY_SERVICE_ACCOUNT_JSON` | весь JSON ключа service account |
+## 5. In-app «Обновить»
 
-#### Keystore → Base64 (PowerShell)
+Работает **отдельно** в каждом приложении (свой package / свой Internal track).  
+Установка только из Play (не `flutter run`).
 
-```powershell
-$path = "C:\myProject\client\android\upload-keystore.jks"
-$b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($path))
-$b64.Length
-Set-Clipboard -Value $b64
-```
-
-#### Service account для Play API
-
-1. Google Cloud → Enable **Google Play Android Developer API**
-2. Service account → Keys → JSON
-3. JSON → секрет `PLAY_SERVICE_ACCOUNT_JSON`
-4. Play Console → Users and permissions → Invite `client_email`  
-   с правом **Release apps to testing tracks**
-
-### Проверка
-
-1. Все 5 секретов на месте.  
-2. Actions → **Android Play Internal** → **Run workflow** → `dev` или `prod`.  
-3. Зелёный run → новый выпуск в Play Internal.
-
-### Если run висит в Queued / «Failed to cancel»
-
-1. Открой **конкретный** run → сверху **Cancel workflow** (не только «…» в списке).  
-2. Или: репо **Settings → Actions → General** → **Disable Actions** → ~1 мин → снова **Enable**  
-   (сбрасывает зависшие Queued).  
-3. Не жми Run workflow много раз подряд — в workflow один активный релиз, новый отменяет старый.  
-4. Deploy Fly может при этом работать — очередь часто только у Android-job.
-
-## 5. In-app «Обновить» на Android
-
-После установки **из Play Internal** (не sideload) приложение проверяет новую версию
-через **Google Play In-App Updates**:
-
-1. Новый AAB в Internal.  
-2. Play отдаёт update → диалог / баннер «Доступно обновление».  
-3. **Обновить** → immediate/flexible Play API; иначе страница в Store.
-
-Не работает на `flutter run` / sideload APK.  
-Web по-прежнему: `BUILD_ID` + reload.  
-Код: `client/lib/core/app_play_update*.dart`, `app_update_provider.dart`.
-
-В **Настройки** на Android из CI показывается `APP_VERSION` вида  
-`0.1.0-prod.12+10012` (не `dev`). Строка `dev` значит сборка без  
-`--dart-define=APP_VERSION` / `BUILD_ID` (локальный run или старый AAB).
-
-## 6. Локальный прогон на устройстве (до AAB)
+## 6. Локальный run на устройстве
 
 ```bash
 cd client
-flutter run -d android \
-  --dart-define=API_BASE=https://multigameszozu-dev.fly.dev
+# DEV (рядом с prod на телефоне)
+flutter run -d android --flavor dev \
+  --dart-define=API_BASE=https://multigameszozu-dev.fly.dev \
+  --dart-define=ANDROID_APPLICATION_ID=com.zozugames.app.dev
+
+# Prod
+flutter run -d android --flavor prod \
+  --dart-define=API_BASE=https://multigameszozu.fly.dev \
+  --dart-define=ANDROID_APPLICATION_ID=com.zozugames.app
 ```
+
+Без `--flavor` сборка Android не пройдёт (нужен product flavor).
 
 ## 7. Чеклист
 
-- [x] `applicationId` = `com.zozugames.app`
-- [x] label = `Zozu Games`
-- [x] `INTERNET` в main manifest
-- [ ] release keystore + `key.properties` (локально)
-- [ ] GitHub secrets для Actions (см. §4)
-- [ ] SA приглашён в Play Console
-- [ ] Internal testing + ты в тестерах
-- [ ] После второго Internal-релиза: in-app «Обновить» на телефоне
+- [x] Flavors `dev` / `prod`, разные applicationId
+- [ ] Play app для `com.zozugames.app.dev`
+- [ ] SA права на оба приложения
+- [ ] Internal + тестеры на обоих
+- [ ] CI зелёный для develop (dev) и main (prod)
 
-## 8. Позже (не блокер для Internal)
+## 8. Позже
 
-- иконки/feature graphic для Store listing
-- Privacy Policy URL
-- Data safety form
-- Content rating questionnaire
-- KZ payments / IAP (отдельный этап)
+- разные иконки для DEV
+- Store listing / Privacy / Data safety
+- KZ payments / IAP
