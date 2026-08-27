@@ -1,19 +1,13 @@
 # Авторелиз Android AAB в Google Play Internal testing:
-#   push в develop → API DEV  (multigameszozu-dev.fly.dev)
-#   push в main    → API prod (multigameszozu.fly.dev)
+#   push в develop → flavor dev  → com.zozugames.app.dev  + DEV API
+#   push в main    → flavor prod → com.zozugames.app      + prod API
 #
-# Срабатывает при изменениях client/ (и этого workflow), плюс вручную.
-# Один package (com.zozugames.app) / один Internal track — последний успешный
-# upload становится тем, что видят тестировщики.
+# Два applicationId → оба приложения могут стоять на телефоне одновременно.
+# Для DEV в Play Console нужно ОТДЕЛЬНОЕ приложение с package
+# com.zozugames.app.dev (SA с правом Release to testing tracks).
 #
-# Секреты репозитория (Settings → Secrets and variables → Actions):
-#   ANDROID_KEYSTORE_BASE64
-#   ANDROID_KEYSTORE_PASSWORD
-#   ANDROID_KEY_PASSWORD
-#   ANDROID_KEY_ALIAS          (обычно zozugames)
-#   PLAY_SERVICE_ACCOUNT_JSON
-#
-# Setup: docs/ANDROID_PLAY_INTERNAL.md § «GitHub Actions»
+# Секреты: ANDROID_KEYSTORE_* + PLAY_SERVICE_ACCOUNT_JSON
+# Setup: docs/ANDROID_PLAY_INTERNAL.md
 
 name: Android Play Internal
 
@@ -26,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Какой API_BASE зашить в AAB'
+        description: 'Flavor / API (dev или prod)'
         required: true
         default: 'dev'
         type: choice
@@ -34,9 +28,10 @@ on:
           - dev
           - prod
 
+# develop и main не отменяют друг друга (разные package / flavor).
 concurrency:
   group: android-play-internal-${{ github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   release:
@@ -66,25 +61,38 @@ jobs:
 
           if [[ "$TARGET" == "prod" ]]; then
             API_BASE="https://multigameszozu.fly.dev"
+            PACKAGE_NAME="com.zozugames.app"
+            FLAVOR="prod"
           else
             API_BASE="https://multigameszozu-dev.fly.dev"
+            PACKAGE_NAME="com.zozugames.app.dev"
+            FLAVOR="dev"
           fi
 
           # versionCode должен расти и быть > уже залитых в Play (локальный +1).
           VERSION_CODE=$((10000 + ${{ github.run_number }}))
           VERSION_NAME="0.1.0-${TARGET}.${{ github.run_number }}"
           RELEASE_NAME="internal-${TARGET}-${VERSION_CODE}"
+          BUILD_ID="$(printf '%s' '${{ github.sha }}' | cut -c1-7)"
+          APP_VERSION="${VERSION_NAME}+${VERSION_CODE}"
+          # Flutter flavor output: build/app/outputs/bundle/<flavor>Release/app-<flavor>-release.aab
+          AAB_PATH="build/app/outputs/bundle/${FLAVOR}Release/app-${FLAVOR}-release.aab"
 
           {
             echo "target=$TARGET"
+            echo "flavor=$FLAVOR"
             echo "api_base=$API_BASE"
+            echo "package_name=$PACKAGE_NAME"
             echo "version_code=$VERSION_CODE"
             echo "version_name=$VERSION_NAME"
             echo "release_name=$RELEASE_NAME"
+            echo "build_id=$BUILD_ID"
+            echo "app_version=$APP_VERSION"
+            echo "aab_path=$AAB_PATH"
           } >> "$GITHUB_OUTPUT"
 
-          echo "Play Internal: branch=${{ github.ref_name }} → $TARGET ($API_BASE)"
-          echo "versionName=$VERSION_NAME versionCode=$VERSION_CODE"
+          echo "Play Internal: branch=${{ github.ref_name }} → $TARGET flavor=$FLAVOR package=$PACKAGE_NAME"
+          echo "API_BASE=$API_BASE version=$APP_VERSION BUILD_ID=$BUILD_ID"
 
       - name: Check required secrets
         working-directory: .
@@ -131,8 +139,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > upload-keystore.jks
+          # Убрать CR/LF/пробелы — частая причина base64: invalid input из Secrets UI.
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 -d > upload-keystore.jks
           test -s upload-keystore.jks
+          echo "keystore bytes=$(wc -c < upload-keystore.jks)"
           printf '%s\n' \
             "storePassword=${ANDROID_KEYSTORE_PASSWORD}" \
             "keyPassword=${ANDROID_KEY_PASSWORD}" \
@@ -148,16 +158,20 @@ jobs:
         run: |
           set -euo pipefail
           flutter build appbundle --release \
+            --flavor="${{ steps.target.outputs.flavor }}" \
             --build-number="${{ steps.target.outputs.version_code }}" \
             --build-name="${{ steps.target.outputs.version_name }}" \
-            --dart-define=API_BASE=${{ steps.target.outputs.api_base }}
-          ls -lh build/app/outputs/bundle/release/app-release.aab
+            --dart-define="API_BASE=${{ steps.target.outputs.api_base }}" \
+            --dart-define="BUILD_ID=${{ steps.target.outputs.build_id }}" \
+            --dart-define="APP_VERSION=${{ steps.target.outputs.app_version }}" \
+            --dart-define="ANDROID_APPLICATION_ID=${{ steps.target.outputs.package_name }}"
+          ls -lh "${{ steps.target.outputs.aab_path }}"
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-${{ steps.target.outputs.target }}-${{ steps.target.outputs.version_code }}
-          path: client/build/app/outputs/bundle/release/app-release.aab
+          name: app-${{ steps.target.outputs.flavor }}-${{ steps.target.outputs.version_code }}
+          path: client/${{ steps.target.outputs.aab_path }}
           if-no-files-found: error
           retention-days: 14
 
@@ -165,9 +179,10 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.zozugames.app
-          releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+          packageName: ${{ steps.target.outputs.package_name }}
+          releaseFiles: client/${{ steps.target.outputs.aab_path }}
           tracks: internal
           status: completed
           releaseName: ${{ steps.target.outputs.release_name }}
-          changesNotSentForReview: true
+          # Не ставить changesNotSentForReview: у аккаунтов с автоотправкой
+          # на review Play отвечает: "must not be set".

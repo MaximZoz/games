@@ -3,7 +3,12 @@ import 'dart:io';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const _playStorePackageId = 'com.zozugames.app';
+/// Package / applicationId текущего flavor.
+/// CI и локальный run передают `--dart-define=ANDROID_APPLICATION_ID=...`.
+const String androidApplicationId = String.fromEnvironment(
+  'ANDROID_APPLICATION_ID',
+  defaultValue: 'com.zozugames.app',
+);
 
 Future<bool> supportsPlayInAppUpdate() async => Platform.isAndroid;
 
@@ -42,9 +47,10 @@ Future<bool> applyPlayStoreUpdate() async {
 }
 
 Future<bool> _openPlayStoreListing() async {
-  final market = Uri.parse('market://details?id=$_playStorePackageId');
+  final id = androidApplicationId;
+  final market = Uri.parse('market://details?id=$id');
   final https = Uri.parse(
-    'https://play.google.com/store/apps/details?id=$_playStorePackageId',
+    'https://play.google.com/store/apps/details?id=$id',
   );
   try {
     if (await canLaunchUrl(market)) {

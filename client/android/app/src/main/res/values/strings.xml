@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Переопределяется productFlavors (resValue app_name). -->
+    <string name="app_name">Zozu Games</string>
+</resources>
