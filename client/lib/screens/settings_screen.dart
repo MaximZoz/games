@@ -55,7 +55,7 @@ class SettingsScreen extends ConsumerWidget {
           padding: EdgeInsets.all(padding),
           clipBehavior: Clip.hardEdge,
           child: Align(
-            alignment: Alignment.topLeft,
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
               child: Column(
