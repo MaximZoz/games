@@ -68,4 +68,20 @@ void main() {
       expect(wide, isNot(narrow));
     });
   });
+
+  testWidgets('shop tiles are 3 columns on desktop', (tester) async {
+    late int cols;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(1920, 1080)),
+        child: Builder(
+          builder: (context) {
+            cols = shopTileColumns(context);
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    expect(cols, 3);
+  });
 }

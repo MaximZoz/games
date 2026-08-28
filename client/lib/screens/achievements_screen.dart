@@ -161,7 +161,8 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
           ),
         ),
         body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
               child: items.isEmpty

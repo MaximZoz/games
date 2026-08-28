@@ -168,7 +168,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                     )
                   // Одна колонка сверху вниз, к левому краю (не сетка по центру).
                   : Align(
-                      alignment: Alignment.topCenter,
+                      alignment: Alignment.topLeft,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 520),
                         child: ListView.separated(
@@ -488,16 +488,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                             padding: const EdgeInsets.fromLTRB(10, 8, 2, 10),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                final landscape =
-                                    MediaQuery.sizeOf(context).width >
-                                        MediaQuery.sizeOf(context).height;
-                                // Landscape / планшет: больше колонок, страница
-                                // скроллится — иначе низ обрезается.
-                                final cols = isPhoneLandscape(context)
-                                    ? 4
-                                    : (isTablet(context) && landscape)
-                                        ? 4
-                                        : 3;
+                                final cols = shopTileColumns(context);
                                 const gap = 8.0;
                                 final rows = (pageItems.length / cols)
                                     .ceil()
@@ -508,23 +499,18 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                 final cellH = (constraints.maxHeight -
                                         gap * (rows - 1)) /
                                     rows;
-                                final shortHeight =
-                                    constraints.maxHeight < 420 || landscape;
                                 final ratio = cellH <= 0
                                     ? 0.78
                                     : (cellW / cellH).clamp(0.55, 1.15);
                                 return GridView.builder(
-                                  physics: shortHeight
-                                      ? const BouncingScrollPhysics()
-                                      : const NeverScrollableScrollPhysics(),
+                                  // Страницу листает VerticalPagedSlider (1 щелчок = 1 экран 3×3).
+                                  physics: const NeverScrollableScrollPhysics(),
                                   gridDelegate:
                                       SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: cols,
                                     mainAxisSpacing: gap,
                                     crossAxisSpacing: gap,
-                                    childAspectRatio: shortHeight
-                                        ? 0.78
-                                        : ratio,
+                                    childAspectRatio: ratio,
                                   ),
                                   itemCount: pageItems.length,
                                   itemBuilder: (context, index) {

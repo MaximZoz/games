@@ -20,4 +20,8 @@ void main() {
     expect(shouldUnfocusAboutOnEmptyTap(aboutFocused: true), isTrue);
     expect(shouldUnfocusAboutOnEmptyTap(aboutFocused: false), isFalse);
   });
+
+  test('web blur не сбрасывает «О себе открыто»', () {
+    expect(shouldClearAboutOpenOnFocusLost(), isFalse);
+  });
 }

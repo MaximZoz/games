@@ -189,6 +189,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   bool _isClosing = false;
   bool _focusAboutOnEdit = false;
+  int _editBackTick = 0;
   ProfileExtra? _lastProfileExtra;
   final _cardKey = GlobalKey();
   final _displayNameController = TextEditingController();
@@ -298,7 +299,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profileMaxWidth = phoneLandscape ? 640.0 : 400.0;
 
     Widget scrollableBody(Widget child) {
-      final framed = Center(
+      final framed = Align(
+        alignment: Alignment.topLeft,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: profileMaxWidth),
           child: child,
@@ -334,7 +336,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_isEditing,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_isEditing) {
+          setState(() => _editBackTick++);
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       // iOS Safari/Flutter Web: resize от клавиатуры сбрасывает фокус TextField.
       resizeToAvoidBottomInset: false,
@@ -383,6 +393,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       onSave: _saveProfile,
                       compact: true,
                       focusAboutOnOpen: _focusAboutOnEdit,
+                      editBackTick: _editBackTick,
                     );
                     // Landscape на телефоне — форма прокручивается (иначе обрезается).
                     if (phoneLandscape) {
@@ -427,6 +438,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     onCancelEdit: _cancelEditing,
                     onSave: _saveProfile,
+                    editBackTick: _editBackTick,
                   );
                   if (_isEditing) {
                     content = Listener(
@@ -458,6 +470,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
       ),
+    ),
     );
   }
 }
@@ -603,6 +616,7 @@ class _ProfileContent extends StatelessWidget {
     required this.isEditing,
     required this.isClosing,
     this.focusAboutOnOpen = false,
+    this.editBackTick = 0,
     required this.displayNameController,
     required this.displayNameFocus,
     required this.onStartEdit,
@@ -616,6 +630,7 @@ class _ProfileContent extends StatelessWidget {
   final bool isEditing;
   final bool isClosing;
   final bool focusAboutOnOpen;
+  final int editBackTick;
   final TextEditingController displayNameController;
   final FocusNode displayNameFocus;
   final void Function({bool focusAbout}) onStartEdit;
@@ -629,7 +644,8 @@ class _ProfileContent extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Center(
+        Align(
+          alignment: Alignment.topLeft,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: cardMaxWidth),
             child: AnimatedBorderBox(
@@ -667,6 +683,7 @@ class _ProfileContent extends StatelessWidget {
                           onCancel: onCancelEdit,
                           onSave: onSave,
                           focusAboutOnOpen: focusAboutOnOpen,
+                          editBackTick: editBackTick,
                         ),
                       )
                     : _ProfileView(
@@ -850,7 +867,11 @@ class _ProfileView extends ConsumerWidget {
                 final inv = ref.watch(inventoryListProvider).valueOrNull ??
                     const <InventoryItem>[];
                 final collections =
-                    inv.where((e) => e.kind == 'collection').toList();
+                    inv
+                        .where((e) =>
+                            e.kind == 'collection' &&
+                            !isRetiredCollectionItem(e.code))
+                        .toList();
                 if (collections.isEmpty) return const SizedBox.shrink();
                 return Column(
                   children: [
@@ -947,6 +968,7 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
     required this.onSave,
     this.compact = false,
     this.focusAboutOnOpen = false,
+    this.editBackTick = 0,
   });
 
   final AuthUser user;
@@ -957,6 +979,7 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
   final Future<void> Function(String displayName, ProfileExtra extra) onSave;
   final bool compact;
   final bool focusAboutOnOpen;
+  final int editBackTick;
 
   @override
   ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
@@ -1003,6 +1026,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _initialDisplayName = widget.displayNameController.text;
     _initialExtra = widget.profileExtra;
     widget.displayNameController.addListener(_onFieldsChanged);
+    widget.focusNode.addListener(_onSiblingFocus);
     _ageController = TextEditingController(
       text: widget.profileExtra.age?.toString() ?? '',
     );
@@ -1019,9 +1043,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _avatarValue = widget.profileExtra.avatarValue;
     _showStatsToOthers = widget.profileExtra.showStatsToOthers;
     if (widget.focusAboutOnOpen) {
+      _aboutTypingActive = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _aboutFocus.requestFocus();
       });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProfileEditForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.editBackTick != oldWidget.editBackTick &&
+        widget.editBackTick > oldWidget.editBackTick) {
+      _handleEditBack();
     }
   }
 
@@ -1057,13 +1091,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     return true;
   }
 
+  void _onSiblingFocus() {
+    if (!mounted) return;
+    if (widget.focusNode.hasFocus && _aboutTypingActive) {
+      _leaveAboutField();
+    }
+  }
+
   void _onAboutFocusChanged() {
     if (!mounted) return;
-    final focused = _aboutFocus.hasFocus;
-    // Поднимаем сразу по фокусу (когда выезжает клавиатура); дерево стабильное
-    // через Visibility — setState здесь не пересоздаёт TextField.
-    if (focused == _aboutTypingActive) return;
-    setState(() => _aboutTypingActive = focused);
+    // Web Back сначала снимает фокус — не закрываем «О себе» по blur.
+    if (_aboutFocus.hasFocus && !_aboutTypingActive) {
+      setState(() => _aboutTypingActive = true);
+    }
   }
 
   void _onAboutTextChanged() {
@@ -1162,6 +1202,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   @override
   void dispose() {
     widget.displayNameController.removeListener(_onFieldsChanged);
+    widget.focusNode.removeListener(_onSiblingFocus);
     _ageController.removeListener(_onFieldsChanged);
     _aboutController.removeListener(_onAboutTextChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);

@@ -75,7 +75,9 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     });
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = (cached != null && cached.isNotEmpty) ? cached : _items;
-    final collections = items.where((e) => e.kind == 'collection').toList();
+    final collections = items
+        .where((e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+        .toList();
 
     final bySet = <String, List<ShopItem>>{};
     for (final e in collections) {
@@ -128,7 +130,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                 )
               // Одна колонка сверху вниз, к левому краю (не сетка по центру).
               : Align(
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.topLeft,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: ListView.separated(
