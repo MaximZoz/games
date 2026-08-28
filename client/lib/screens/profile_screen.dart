@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
@@ -16,6 +15,7 @@ import 'package:multigames_client/profile/profile_gallery_widgets.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
+import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -831,20 +831,15 @@ class _ProfileView extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: double.infinity,
-                    constraints: const BoxConstraints(
-                      minHeight: 48,
-                      maxHeight: 160,
-                    ),
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                    child: Text(
-                      profileExtra.about!.trim(),
+                    constraints: const BoxConstraints(minHeight: 48),
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                    child: AboutOneLineText(
+                      text: profileExtra.about!.trim(),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
-                        height: 1.35,
-                        leadingDistribution: TextLeadingDistribution.even,
+                        height: 1.25,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
@@ -1030,12 +1025,32 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
+  bool get _aboutIsOpen => _aboutFocus.hasFocus || _aboutTypingActive;
+
+  void _leaveAboutField() {
+    _aboutFocus.unfocus();
+    if (_aboutTypingActive && mounted) {
+      setState(() => _aboutTypingActive = false);
+    }
+  }
+
+  void _openAboutField() {
+    setState(() => _aboutTypingActive = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _aboutFocus.requestFocus();
+    });
+  }
+
+  void _onEmptyEditorTap() {
+    if (shouldUnfocusAboutOnEmptyTap(aboutFocused: _aboutIsOpen)) {
+      _leaveAboutField();
+    }
+  }
+
   bool _handleEditBack() {
-    final action = profileEditBackAction(
-      aboutFocused: _aboutFocus.hasFocus || _aboutTypingActive,
-    );
+    final action = profileEditBackAction(aboutFocused: _aboutIsOpen);
     if (action == ProfileEditBackAction.stayInEditor) {
-      _aboutFocus.unfocus();
+      _leaveAboutField();
       return true;
     }
     widget.onCancel();
@@ -1418,39 +1433,89 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
-  Widget _buildCompactAboutField({required bool expands}) {
+  Widget _buildAboutPreview({Key? key}) {
+    final text = _aboutController.text.trim();
+    final empty = text.isEmpty;
+    return Material(
+      key: key,
+      color: AppColors.surfaceCard,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: InkWell(
+        onTap: _isSaving ? null : _openAboutField,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.input),
+            border: Border.all(color: AppColors.accentSoft),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      context.l10n.commonAboutMe,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.2,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    AboutOneLineText(
+                      text: empty ? context.l10n.profileAboutHint : text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.25,
+                        color: empty
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutEditorField({Key? key}) {
     return TextFormField(
-      key: const ValueKey('compact_about'),
+      key: key,
       controller: _aboutController,
       focusNode: _aboutFocus,
       inputFormatters: _aboutFormatters,
       textAlignVertical: TextAlignVertical.top,
-      expands: expands,
-      maxLines: expands ? null : 4,
-      minLines: expands ? null : 2,
+      maxLines: 5,
+      minLines: 3,
       maxLength: 100,
       textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
       style: const TextStyle(
         fontSize: 16,
         height: 1.3,
-        leadingDistribution: TextLeadingDistribution.even,
       ),
       decoration: InputDecoration(
         labelText: context.l10n.commonAboutMe,
+        hintText: context.l10n.profileAboutHint,
         alignLabelWithHint: true,
-        isDense: true,
         filled: true,
         fillColor: AppColors.surfaceCard,
-        contentPadding: const EdgeInsets.fromLTRB(12, 18, 12, 16),
-        prefixIcon: const Padding(
-          padding: EdgeInsets.only(top: 10),
-          child: Icon(Icons.info_outline_rounded),
-        ),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 44,
-          minHeight: 44,
-        ),
+        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: const Icon(Icons.info_outline_rounded),
         counterText: '',
       ),
     );
@@ -1525,39 +1590,21 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   Widget _buildCompactEditor(BuildContext context) {
     // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
-    final aboutTypingMode = _aboutTypingActive && _aboutFocus.hasFocus;
+    final aboutTypingMode = _aboutTypingActive;
     // В phone landscape родитель уже SingleChildScrollView — Expanded там
     // ломает скролл и кнопка «Сохранить» уезжает «в бесконечность».
     final phoneLand = isPhoneLandscape(context);
 
     final Widget aboutField;
-    if (phoneLand) {
-      aboutField = SizedBox(
-        height: aboutTypingMode ? 132 : 112,
-        width: double.infinity,
-        child: _buildCompactAboutField(expands: false),
+    if (aboutTypingMode) {
+      final editor = _buildAboutEditorField(
+        key: const ValueKey('compact_about'),
       );
+      aboutField = phoneLand
+          ? SizedBox(height: 148, width: double.infinity, child: editor)
+          : Expanded(child: editor);
     } else {
-      aboutField = Expanded(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final height = math.max(
-              112.0,
-              aboutTypingMode
-                  ? math.min(180.0, constraints.maxHeight)
-                  : constraints.maxHeight,
-            );
-            return Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: height,
-                child: _buildCompactAboutField(expands: height >= 130),
-              ),
-            );
-          },
-        ),
-      );
+      aboutField = _buildAboutPreview(key: const ValueKey('compact_about_preview'));
     }
 
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
@@ -1694,7 +1741,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       child: SwipeBackScope(
         onBack: _handleEditBack,
         opaqueEdge: false,
-        child: form,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _onEmptyEditorTap,
+          child: form,
+        ),
       ),
     );
   }
@@ -1758,7 +1809,16 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (widget.compact) {
       return _buildCompactEditor(context);
     }
-    return Stack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleEditBack();
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _onEmptyEditorTap,
+        child: Stack(
       clipBehavior: Clip.none,
       children: [
         SelectionArea(
@@ -1822,29 +1882,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 const SizedBox(height: 16),
                 _buildShowStatsCheckbox(),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _aboutController,
-                  focusNode: _aboutFocus,
-                  inputFormatters: _aboutFormatters,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.3,
-                    leadingDistribution: TextLeadingDistribution.even,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.commonAboutMe,
-                    hintText: context.l10n.profileAboutHint,
-                    prefixIcon: Icon(Icons.info_outline_rounded),
-                    alignLabelWithHint: true,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.fromLTRB(12, 18, 12, 16),
-                    counterText: '',
-                  ),
-                  maxLines: 4,
-                  minLines: 2,
-                  maxLength: 100,
-                ),
+                _aboutTypingActive
+                    ? _buildAboutEditorField()
+                    : _buildAboutPreview(),
                 const SizedBox(height: 20),
                 Text(
                   context.l10n.profileAvatar,
@@ -1979,6 +2019,8 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           ),
         ),
       ],
+        ),
+      ),
     );
   }
 }

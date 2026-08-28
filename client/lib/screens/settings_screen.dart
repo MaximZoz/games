@@ -49,10 +49,11 @@ class SettingsScreen extends ConsumerWidget {
         : (currentLang?.nativeName ?? effective.languageCode);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.surfaceUnified,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(padding),
+          clipBehavior: Clip.hardEdge,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
@@ -446,14 +447,21 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppRadius.card),
-      decoration: BoxDecoration(
+    return RepaintBoundary(
+      child: Material(
         color: AppColors.surfaceCard,
+        elevation: 0,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.accentSoft),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          padding: const EdgeInsets.all(AppRadius.card),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: AppColors.accentSoft),
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }
