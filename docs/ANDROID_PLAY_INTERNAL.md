@@ -114,7 +114,65 @@ flutter run -d android --flavor prod \
 - [ ] Internal + тестеры на обоих
 - [ ] CI зелёный для develop (dev) и main (prod)
 
-## 8. Позже
+## 8. Google Sign-In (Android) — аккаунт Play / устройства
+
+На Android кнопка «Войти через Google» использует **нативный Google Sign-In**
+(тот же Google-аккаунт, что в Play Market), а не браузерный OAuth.
+
+Поток: `id_token` (или Android `server_auth_code`) →
+`POST /api/auth/oauth/google/id-token`  
+(`GOOGLE_CLIENT_ID` на сервере = **Web** OAuth Client ID).
+
+Клиент читает `id_token` / `server_auth_code` из результата platform
+`signIn()` (без `getTokens`). На Android/iOS **браузер не открываем**:
+только нативный Google Sign-In. Браузерный OAuth уводил в веб-версию.
+
+Если видишь код **10** / DEVELOPER_ERROR — не хватает Android OAuth client
+с SHA-1. После добавления SHA-1 вход снова только через системный picker
+(без браузера).
+
+### Ошибка `sign_in_failed` / `d 10` / `ApiException: 10`
+
+Это **DEVELOPER_ERROR**: в Google Cloud нет Android OAuth client с нужным
+**package name + SHA-1** (или SHA не от того ключа).
+
+Для билдов **из Play Internal** нужен SHA-1 **App signing key**, не upload:
+
+1. [Play Console](https://play.google.com/console) → приложение
+   (`com.zozugames.app` или `.dev`)
+2. **Release** → **Setup** → **App integrity** / **App signing**
+3. Скопируй **SHA-1** у **App signing key certificate**
+4. [Google Cloud Console](https://console.cloud.google.com/) → тот же проект,
+   где Web Client ID (`GOOGLE_CLIENT_ID` /
+   `576062919624-….apps.googleusercontent.com`)
+5. APIs & Services → Credentials → **Create OAuth client ID** → тип **Android**
+   - Package name: `com.zozugames.app` (и отдельно `.dev`)
+   - SHA-1: вставь из шага 3
+6. Подожди 5–15 минут, переустанови / обнови приложение, попробуй снова
+
+Дополнительно можно добавить SHA-1 **upload** keystore и **debug** keystore
+в те же Android clients (для локальных сборок).
+
+Без этого native Google на телефоне **не заработает** (ошибка 10).
+Браузерный fallback на Android для Google отключён специально —
+он открывал веб-приложение вместо нативного.
+
+### Google Cloud Console (чеклист)
+
+1. Web application client → уже в Fly как `GOOGLE_CLIENT_ID`
+2. Android clients в **том же** GCP-проекте:
+   - `com.zozugames.app` + SHA-1 App signing (+ upload, debug)
+   - `com.zozugames.app.dev` + те же SHA-1
+3. Проверка upload/debug SHA:
+   ```bash
+   keytool -list -v -keystore client/android/upload-keystore.jks -alias zozugames
+   keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+     -storepass android -keypass android
+   ```
+
+Play Games Services **не** нужны — достаточно Google Sign-In.
+
+## 9. Позже
 
 - разные иконки для DEV
 - Store listing / Privacy / Data safety

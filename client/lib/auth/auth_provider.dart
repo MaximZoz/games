@@ -172,6 +172,23 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     state = AsyncValue.data(result.user);
   }
 
+  Future<void> loginWithGoogleIdToken({
+    required String credential,
+    String? serverAuthCode,
+    String? redirect,
+    String? ref,
+  }) async {
+    clearUserScopedCaches(_ref);
+    final repo = _ref.read(authRepositoryProvider);
+    final result = await repo.loginWithGoogleIdToken(
+      credential: credential,
+      serverAuthCode: serverAuthCode,
+      redirect: redirect,
+      ref: ref,
+    );
+    state = AsyncValue.data(result.user);
+  }
+
   Future<void> _enablePushForNewUser() async {
     try {
       await _ref.read(webPushEnabledProvider.notifier).enableForNewUser();

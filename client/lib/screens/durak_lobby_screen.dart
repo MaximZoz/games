@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
@@ -163,7 +164,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
     // Абсолютный URL + pendingInvitePaste — как в крестиках: чип «Вставить» в чате.
     final link = buildInviteLobbyShareUrl(
       lobbyId: lobbyId,
-      baseUri: Uri.base,
+      baseUri: shareLinkBaseUri,
       gameType: 'durak',
     );
     await Clipboard.setData(ClipboardData(text: link));
