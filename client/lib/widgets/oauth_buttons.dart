@@ -155,7 +155,11 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                         : () {
                             final p = providers[i];
                             if (kIsWeb) {
-                              _startWebNavigate(p, repo);
+                              if (isStandalonePwa) {
+                                _startStandalonePwaOAuth(p, repo);
+                              } else {
+                                _startWebNavigate(p, repo);
+                              }
                             } else {
                               _startNative(context, p);
                             }
@@ -199,7 +203,45 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// Web: сразу redirect на провайдера в той же вкладке, без промежуточной кнопки.
+  /// Установленная PWA: state в storage до ухода в Safari, oauth_done не грузит Flutter.
+  void _startStandalonePwaOAuth(String provider, AuthRepository repo) {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busyProvider = provider);
+    final startUrl = repo.oauthStartUrl(
+      provider: provider,
+      redirect: widget.redirect,
+      ref: widget.refCode,
+      poll: true,
+      pwa: true,
+    );
+    final started = fetchOAuthPollStartSync(startUrl);
+    if (started != null) {
+      saveOAuthPendingState(started.state);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Завершите вход и вернитесь в Zozu Games с экрана «Домой»',
+          ),
+          duration: Duration(seconds: 8),
+        ),
+      );
+      openOAuthExternal(started.authorizeUrl);
+      return;
+    }
+    saveOAuthPendingState(_cookiePendingSentinel);
+    openOAuthExternal(
+      repo.oauthStartUrl(
+        provider: provider,
+        redirect: widget.redirect,
+        ref: widget.refCode,
+        poll: true,
+        navigate: true,
+        pwa: true,
+      ),
+    );
+  }
+
+  /// Web (не PWA): сразу redirect на провайдера в той же вкладке.
   void _startWebNavigate(String provider, AuthRepository repo) {
     saveOAuthPendingState(_cookiePendingSentinel);
     setState(() => _busyProvider = provider);

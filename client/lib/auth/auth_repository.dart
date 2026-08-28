@@ -420,10 +420,12 @@ class AuthRepository {
     String? ref,
     bool poll = false,
     bool navigate = false,
+    bool pwa = false,
   }) {
     final params = <String, String>{};
     if (poll) params['mode'] = 'poll';
     if (navigate) params['navigate'] = '1';
+    if (pwa) params['pwa'] = '1';
     final r = (redirect ?? '').trim();
     if (r.isNotEmpty) params['redirect'] = r;
     final referral = (ref ?? '').trim();
