@@ -141,15 +141,35 @@ class MultiGamesApp extends ConsumerWidget {
           brightness: Brightness.light,
           primary: AppColors.accentStart,
           surface: AppColors.surfaceUnified,
+          surfaceTint: Colors.transparent,
         ),
         useMaterial3: true,
+        canvasColor: AppColors.surfaceUnified,
+        applyElevationOverlayColor: false,
         scaffoldBackgroundColor: AppColors.surfaceUnified,
+        // ZoomPageTransitions (дефолт Android) на кадр рисует предыдущий route.
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
         // «Предметы», «Монеты за вход» и все AppBar-заголовки — по центру.
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            systemNavigationBarColor: AppColors.surfaceUnified,
+            systemNavigationBarIconBrightness: Brightness.dark,
+            systemNavigationBarDividerColor: AppColors.surfaceUnified,
+          ),
         ),
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
