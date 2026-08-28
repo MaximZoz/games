@@ -77,3 +77,23 @@ class AppDurations {
   static const Duration medium = Duration(milliseconds: 350);
   static const Duration long = Duration(milliseconds: 500);
 }
+
+/// Непрозрачный корень экрана.
+///
+/// На Android Impeller + прозрачный Scaffold / IndexedStack на кадр-два
+/// показывает предыдущий route: Flutter уже снял старый слой, а новый ещё
+/// не закрыл поверхность. Корень каждой страницы должен быть opaque и
+/// совпадать с `android:windowBackground` (`#E8ECF4`).
+class AppOpaqueSurface extends StatelessWidget {
+  const AppOpaqueSurface({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.surfaceUnified,
+      child: child,
+    );
+  }
+}

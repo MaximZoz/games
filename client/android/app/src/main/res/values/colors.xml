@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Тот же #E8ECF4, что AppColors.surfaceUnified — иначе Android
+         на resume / смене экрана сверкает белым windowBackground. -->
+    <color name="app_surface">#E8ECF4</color>
+</resources>

@@ -319,46 +319,56 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 sizing: StackFit.expand,
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  _GamesPageContent(
-                    isDesktop: isDesktop,
-                    isCreating: _isCreating,
-                    isFinding: _isFinding,
-                    isOffline: isOffline,
-                    turnTimeSec: _selectedTurnTimeSec,
-                    onTurnTimeChanged: (v) {
-                      setState(() => _selectedTurnTimeSec = v);
-                      _persistSettings();
-                    },
-                    variant: _selectedVariant,
-                    playersControlActive: _playersControlActive,
-                    onPlayersChipTap: _onPlayersChipTap,
-                    onModeChipTap: _onModeChipTap,
-                    stakeBronze: isOffline ? 0 : _selectedStakeBronze,
-                    stakeOptionsList: availableStakes,
-                    onStakeChanged: (v) {
-                      setState(() => _selectedStakeBronze = v);
-                      _persistSettings();
-                    },
-                    onCreateGame: () => _createGame(context, 'invite'),
-                    // Всегда matchmake: multi схлопывается на сервере в одно лобби.
-                    onFindGame: () => _createGame(context, 'matchmake'),
-                    onPlayOffline: playOffline,
-                    contentPadding: contentPadding,
+                  AppOpaqueSurface(
+                    child: RepaintBoundary(
+                      key: const ValueKey('games-tab-content'),
+                      child: _GamesPageContent(
+                        isDesktop: isDesktop,
+                        isCreating: _isCreating,
+                        isFinding: _isFinding,
+                        isOffline: isOffline,
+                        turnTimeSec: _selectedTurnTimeSec,
+                        onTurnTimeChanged: (v) {
+                          setState(() => _selectedTurnTimeSec = v);
+                          _persistSettings();
+                        },
+                        variant: _selectedVariant,
+                        playersControlActive: _playersControlActive,
+                        onPlayersChipTap: _onPlayersChipTap,
+                        onModeChipTap: _onModeChipTap,
+                        stakeBronze: isOffline ? 0 : _selectedStakeBronze,
+                        stakeOptionsList: availableStakes,
+                        onStakeChanged: (v) {
+                          setState(() => _selectedStakeBronze = v);
+                          _persistSettings();
+                        },
+                        onCreateGame: () => _createGame(context, 'invite'),
+                        // Всегда matchmake: multi схлопывается на сервере в одно лобби.
+                        onFindGame: () => _createGame(context, 'matchmake'),
+                        onPlayOffline: playOffline,
+                        contentPadding: contentPadding,
+                      ),
+                    ),
                   ),
-                  _LobbiesPageContent(
-                    lobbiesAsync: lobbiesAsync,
-                    invites: isOffline ? const [] : invites,
-                    isDesktop: isDesktop,
-                    onJoinLobby: _joinLobby,
-                    onShowLobbyRules: _showLobbyRulesInfo,
-                    onRefresh: () => ref.invalidate(openLobbiesProvider),
-                    onAcceptInvite: _acceptInvite,
-                    onDeclineInvite: _declineInvite,
-                    onShowCreatorInfo: _showCreatorInfo,
-                    onShowInviteRules: _showInviteRules,
-                    contentPadding: contentPadding,
-                    activeAsync: activeAsync,
-                    observation: observation,
+                  AppOpaqueSurface(
+                    child: RepaintBoundary(
+                      key: const ValueKey('lobbies-tab-content'),
+                      child: _LobbiesPageContent(
+                        lobbiesAsync: lobbiesAsync,
+                        invites: isOffline ? const [] : invites,
+                        isDesktop: isDesktop,
+                        onJoinLobby: _joinLobby,
+                        onShowLobbyRules: _showLobbyRulesInfo,
+                        onRefresh: () => ref.invalidate(openLobbiesProvider),
+                        onAcceptInvite: _acceptInvite,
+                        onDeclineInvite: _declineInvite,
+                        onShowCreatorInfo: _showCreatorInfo,
+                        onShowInviteRules: _showInviteRules,
+                        contentPadding: contentPadding,
+                        activeAsync: activeAsync,
+                        observation: observation,
+                      ),
+                    ),
                   ),
                 ],
               ),

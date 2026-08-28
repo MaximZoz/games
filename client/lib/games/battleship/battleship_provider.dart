@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -56,12 +58,17 @@ final battleshipGameProvider = FutureProvider.autoDispose
       if (data == null) return;
       final type = data['type']?.toString() ?? '';
       final gid = data['game_id']?.toString();
-      if ((type == 'game_state' || type == 'game_started') && gid == gameId) {
+      if (type == 'realtime_connected' ||
+          ((type == 'game_state' || type == 'game_started') && gid == gameId)) {
         ref.invalidateSelf();
       }
     },
   );
   ref.onDispose(sub.close);
+  final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(poll.cancel);
 
   Object? lastError;
   for (var attempt = 0; attempt < 4; attempt++) {

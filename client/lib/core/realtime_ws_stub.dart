@@ -7,6 +7,9 @@ class _NoopRealtimeSocket implements RealtimeSocket {
   Stream<String> get messages => const Stream<String>.empty();
 
   @override
+  Stream<void> get connected => const Stream<void>.empty();
+
+  @override
   bool get isOpen => false;
 
   @override

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ModalRoute, RouteObserver;
 import 'package:flutter/widgets.dart' show Widget;
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -80,7 +81,7 @@ class _AuthRefreshListenable extends ChangeNotifier {
 NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
   return NoTransitionPage<void>(
     key: state.pageKey,
-    child: child,
+    child: AppOpaqueSurface(child: child),
   );
 }
 
