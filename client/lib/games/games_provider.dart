@@ -352,10 +352,9 @@ final gameStateProvider =
       },
     );
     ref.onDispose(sub.close);
-    final poll = Stream<void>.periodic(const Duration(seconds: 2)).listen((_) {
-      if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
-        ref.invalidateSelf();
-      }
+    // Poll не блокируем: иначе пропущенный WS = «зависший» ход.
+    final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
+      ref.invalidateSelf();
     });
     ref.onDispose(poll.cancel);
     return repo.getGame(gameId);

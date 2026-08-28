@@ -70,6 +70,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   final Set<String> _rematchRespondedIds = <String>{};
   bool _isFindingGame = false;
   bool _waitingForBotMove = false;
+  int _turnLockTicks = 0;
   Timer? _rematchPollTimer;
   Timer? _syncStateTimer;
   Timer? _timeoutRetryTimer;
@@ -201,12 +202,27 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
     // Fallback-синк + дожим протухшего хода (сервер применяет timeout на GetGame).
-    _syncStateTimer = Timer.periodic(const Duration(seconds: 12), (_) {
-      if (!mounted || _waitingForBotMove) return;
+    _syncStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      if (_waitingForBotMove || _isMakingMove) {
+        _turnLockTicks++;
+        if (_turnLockTicks >= 3) {
+          _turnLockTicks = 0;
+          setState(() {
+            _waitingForBotMove = false;
+            _isMakingMove = false;
+          });
+          ref
+              .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
+              .state = false;
+        }
+      } else {
+        _turnLockTicks = 0;
+      }
       final override = ref.read(gameStateOverrideProvider(widget.gameId));
       final game = override ??
           ref.read(gameStateProvider(widget.gameId)).valueOrNull;
-      if (game != null && !game.isActivePvp) return;
+      if (game != null && !game.isActivePvp && !_waitingForBotMove) return;
       final deadline = game?.turnDeadline;
       if (deadline != null &&
           deadline > 0 &&
@@ -1812,9 +1828,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ref.invalidate(activeGameProvider);
         });
       } else {
-        // PvP: override уже с новым turn/доской. Немедленный invalidate
-        // гоняется со старым AsyncValue и снова показывает «Ваш ход».
-        // Свежие данные подтянет WS game_state или sync-таймер.
+        // PvP: override держит доску; invalidate подтянет ход соперника
+        // (WS + poll). skipLoadingOnReload не сбрасывает UI на «Ваш ход».
+        ref.invalidate(gameStateProvider(widget.gameId));
         ref.invalidate(activeGameProvider);
       }
     } catch (e) {

@@ -12,16 +12,22 @@ class _IoRealtimeSocket implements RealtimeSocket {
   WebSocket? _socket;
   StreamSubscription<dynamic>? _subscription;
   final StreamController<String> _controller = StreamController<String>.broadcast();
+  final StreamController<void> _connectedController =
+      StreamController<void>.broadcast();
   bool _closed = false;
 
   Future<void> _connect(Uri uri) async {
     try {
-      final socket = await WebSocket.connect(uri.toString());
+      final socket = await WebSocket.connect(uri.toString())
+          .timeout(const Duration(seconds: 8));
       if (_closed) {
         await socket.close();
         return;
       }
       _socket = socket;
+      if (!_connectedController.isClosed) {
+        _connectedController.add(null);
+      }
       _subscription = socket.listen(
         (data) {
           if (_closed || _controller.isClosed) return;
@@ -41,13 +47,20 @@ class _IoRealtimeSocket implements RealtimeSocket {
         cancelOnError: false,
       );
     } catch (e) {
-      if (_closed || _controller.isClosed) return;
-      _controller.addError(e);
+      if (_closed) return;
+      if (!_controller.isClosed) {
+        _controller.addError(e);
+      }
+      // Иначе onDone/onError могут не прийти — реконнект не стартует.
+      _finish();
     }
   }
 
   @override
   Stream<String> get messages => _controller.stream;
+
+  @override
+  Stream<void> get connected => _connectedController.stream;
 
   @override
   bool get isOpen => _socket?.readyState == WebSocket.open;
@@ -67,6 +80,9 @@ class _IoRealtimeSocket implements RealtimeSocket {
   }
 
   void _finish() {
+    if (!_connectedController.isClosed) {
+      unawaited(_connectedController.close());
+    }
     if (_controller.isClosed) return;
     unawaited(_controller.close());
   }

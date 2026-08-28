@@ -66,7 +66,7 @@ final durakGameProvider = FutureProvider.autoDispose
     },
   );
   ref.onDispose(sub.close);
-  final poll = Stream<void>.periodic(const Duration(seconds: 2)).listen((_) {
+  final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
     ref.invalidateSelf();
   });
   ref.onDispose(poll.cancel);

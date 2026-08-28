@@ -6,6 +6,10 @@ import 'realtime_socket.dart';
 
 class _WebRealtimeSocket implements RealtimeSocket {
   _WebRealtimeSocket(Uri uri) : _socket = html.WebSocket(uri.toString()) {
+    _socket.onOpen.listen((_) {
+      if (_closed || _connectedController.isClosed) return;
+      _connectedController.add(null);
+    });
     _socket.onMessage.listen((event) {
       if (_closed || _controller.isClosed) return;
       final data = event.data;
@@ -28,10 +32,15 @@ class _WebRealtimeSocket implements RealtimeSocket {
 
   final html.WebSocket _socket;
   final StreamController<String> _controller = StreamController<String>.broadcast();
+  final StreamController<void> _connectedController =
+      StreamController<void>.broadcast();
   bool _closed = false;
 
   @override
   Stream<String> get messages => _controller.stream;
+
+  @override
+  Stream<void> get connected => _connectedController.stream;
 
   @override
   bool get isOpen => _socket.readyState == html.WebSocket.OPEN;
@@ -45,6 +54,9 @@ class _WebRealtimeSocket implements RealtimeSocket {
   }
 
   void _finish() {
+    if (!_connectedController.isClosed) {
+      _connectedController.close();
+    }
     if (_controller.isClosed) return;
     _controller.close();
   }

@@ -62,6 +62,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
   Timer? _rematchPollTimer;
+  Timer? _busyWatchdog;
+  int _busyStuckTicks = 0;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
@@ -139,6 +141,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   @override
   void dispose() {
     _rematchPollTimer?.cancel();
+    _busyWatchdog?.cancel();
     _realtimeSubscription?.close();
     _hitPulse.dispose();
     super.dispose();
@@ -150,6 +153,25 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
+    _busyWatchdog?.cancel();
+    _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      if (_busy || _fxInProgress) {
+        _busyStuckTicks++;
+        if (_busyStuckTicks >= 3) {
+          _busyStuckTicks = 0;
+          setState(() {
+            _busy = false;
+            _fxInProgress = false;
+          });
+          if (!_isOffline) {
+            ref.invalidate(battleshipGameProvider(widget.gameId));
+          }
+        }
+      } else {
+        _busyStuckTicks = 0;
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) return;

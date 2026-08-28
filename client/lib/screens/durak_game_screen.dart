@@ -103,6 +103,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   bool _trumpFaceVisible = true;
   Timer? _timeoutRetryTimer;
   Timer? _rematchPollTimer;
+  Timer? _busyWatchdog;
+  int _busyStuckTicks = 0;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
@@ -279,6 +281,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       }
       unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
+    _busyWatchdog?.cancel();
+    _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      if (_busy || _fxScheduled) {
+        _busyStuckTicks++;
+        if (_busyStuckTicks >= 3) {
+          _busyStuckTicks = 0;
+          setState(() {
+            _busy = false;
+            _fxScheduled = false;
+          });
+          if (!_isOffline) {
+            ref.invalidate(durakGameProvider(widget.gameId));
+          }
+        }
+      } else {
+        _busyStuckTicks = 0;
+      }
+    });
     if (_isOffline) return;
     _realtimeSubscription = ref.listenManual<AsyncValue<Map<String, dynamic>>>(
       realtimeEventsProvider,
@@ -346,6 +367,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   void dispose() {
     _timeoutRetryTimer?.cancel();
     _rematchPollTimer?.cancel();
+    _busyWatchdog?.cancel();
     _realtimeSubscription?.close();
     GameFlyOverlay.dismissAll();
     super.dispose();
