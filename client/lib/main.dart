@@ -154,10 +154,11 @@ class MultiGamesApp extends ConsumerWidget {
         applyElevationOverlayColor: false,
         scaffoldBackgroundColor: AppColors.surfaceUnified,
         // ZoomPageTransitions (дефолт Android) на кадр рисует предыдущий route.
+        // CupertinoPageTransitionsBuilder() не const на Flutter 3.44 / dart2js.
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
