@@ -297,7 +297,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final stakes = isOffline
         ? const <InventoryItem>[]
         : items.where((e) => e.kind == 'stake_unlock').toList();
-    final collections = items.where((e) => e.kind == 'collection').toList();
+    final collections = items
+        .where((e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+        .toList();
     final income = incomeAsync.valueOrNull;
     final incomeAvailable = income?.available == true;
     final unreadGiftCount = _highlightGifts.length;
@@ -305,7 +307,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
     final catalogBySet = <String, int>{};
     final catalogDailyBySet = <String, int>{};
-    for (final e in catalog.where((e) => e.kind == 'collection')) {
+    for (final e in catalog.where(
+        (e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))) {
       final s = (e.collectionSet ?? 'other').trim();
       if (s.isEmpty) continue;
       catalogBySet[s] = (catalogBySet[s] ?? 0) + 1;
@@ -810,8 +813,7 @@ class _CollectionSetFrame extends StatelessWidget {
                   final maxCell = isPhoneLandscape(context)
                       ? 200.0
                       : (isTablet(context) ? 220.0 : 260.0);
-                  final maxCols =
-                      isPhoneLandscape(context) || isTablet(context) ? 4 : 3;
+                  final maxCols = shopTileColumns(context);
                   final cols = (constraints.maxWidth / (maxCell + gap))
                       .floor()
                       .clamp(1, maxCols);
@@ -1012,8 +1014,7 @@ class _Section extends StatelessWidget {
               final maxCell = isPhoneLandscape(context)
                   ? 180.0
                   : (isTablet(context) ? 200.0 : 240.0);
-              final maxCols =
-                  isPhoneLandscape(context) || isTablet(context) ? 4 : 3;
+              final maxCols = shopTileColumns(context);
               final cols =
                   (constraints.maxWidth / (maxCell + gap)).floor().clamp(1, maxCols);
               final itemWidth =

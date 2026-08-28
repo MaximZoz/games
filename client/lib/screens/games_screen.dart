@@ -1271,7 +1271,7 @@ class _GamesPageContent extends ConsumerWidget {
       );
       if (!centerCards) return column;
       return Align(
-        alignment: Alignment.topCenter,
+        alignment: Alignment.topLeft,
         child: SizedBox(width: cardWidth, child: column),
       );
     }
@@ -1362,7 +1362,7 @@ class _LobbiesPageContent extends ConsumerWidget {
               return Wrap(
                 spacing: gap,
                 runSpacing: gap,
-                alignment: WrapAlignment.center,
+                alignment: WrapAlignment.start,
                 children: inviteContent
                     .map((w) => SizedBox(width: itemWidth, child: w))
                     .toList(),

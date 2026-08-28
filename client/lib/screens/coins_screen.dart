@@ -42,7 +42,7 @@ class CoinsScreen extends ConsumerWidget {
         ),
         body: SafeArea(
           child: Align(
-            alignment: Alignment.topCenter,
+            alignment: Alignment.topLeft,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               physics: const AlwaysScrollableScrollPhysics(

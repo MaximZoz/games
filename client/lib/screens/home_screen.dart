@@ -96,7 +96,8 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Center(
+        child: Align(
+          alignment: Alignment.topLeft,
           child: Padding(
             padding: pad,
             child: ConstrainedBox(
