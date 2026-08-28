@@ -319,7 +319,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 sizing: StackFit.expand,
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  _GamesPageContent(
+                  RepaintBoundary(
+                    key: const ValueKey('games-tab-content'),
+                    child: _GamesPageContent(
                     isDesktop: isDesktop,
                     isCreating: _isCreating,
                     isFinding: _isFinding,
@@ -345,7 +347,10 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     onPlayOffline: playOffline,
                     contentPadding: contentPadding,
                   ),
-                  _LobbiesPageContent(
+                  ),
+                  RepaintBoundary(
+                    key: const ValueKey('lobbies-tab-content'),
+                    child: _LobbiesPageContent(
                     lobbiesAsync: lobbiesAsync,
                     invites: isOffline ? const [] : invites,
                     isDesktop: isDesktop,
@@ -359,6 +364,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                     contentPadding: contentPadding,
                     activeAsync: activeAsync,
                     observation: observation,
+                  ),
                   ),
                 ],
               ),

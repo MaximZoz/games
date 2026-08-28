@@ -335,6 +335,29 @@ final gameStateProvider =
       return session.view;
     }
     final repo = ref.read(gamesRepositoryProvider);
+    final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
+      realtimeEventsProvider,
+      (_, next) {
+        final data = next.valueOrNull;
+        if (data == null) return;
+        final type = data['type']?.toString() ?? '';
+        final gid = data['game_id']?.toString();
+        if (type == 'realtime_connected' ||
+            ((type == 'game_state' || type == 'game_started') &&
+                gid == gameId)) {
+          if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+            ref.invalidateSelf();
+          }
+        }
+      },
+    );
+    ref.onDispose(sub.close);
+    final poll = Stream<void>.periodic(const Duration(seconds: 2)).listen((_) {
+      if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
+        ref.invalidateSelf();
+      }
+    });
+    ref.onDispose(poll.cancel);
     return repo.getGame(gameId);
   },
 );

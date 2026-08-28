@@ -205,7 +205,12 @@ class MultiGamesApp extends ConsumerWidget {
           child: Listener(
             onPointerDown: (_) => Sfx.instance.warmup(),
             child: BootSplashHost(
-              child: child ?? const SizedBox.shrink(),
+              // Непрозрачный фон под прозрачными Scaffold: иначе на Android
+              // при смене вкладки/экрана мигает предыдущий кадр.
+              child: ColoredBox(
+                color: AppColors.surfaceUnified,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         );

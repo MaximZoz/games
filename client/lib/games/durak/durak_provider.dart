@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -57,12 +59,17 @@ final durakGameProvider = FutureProvider.autoDispose
       if (data == null) return;
       final type = data['type']?.toString() ?? '';
       final gid = data['game_id']?.toString();
-      if ((type == 'game_state' || type == 'game_started') && gid == gameId) {
+      if (type == 'realtime_connected' ||
+          ((type == 'game_state' || type == 'game_started') && gid == gameId)) {
         ref.invalidateSelf();
       }
     },
   );
   ref.onDispose(sub.close);
+  final poll = Stream<void>.periodic(const Duration(seconds: 2)).listen((_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(poll.cancel);
 
   // Деплой/краткий 503: не отдаём ошибку сразу — иначе экран залипает
   // на красном «temporarily unavailable» у обоих игроков.

@@ -535,6 +535,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ],
         ),
         body: effectiveGameAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (game) {
             final isOver = game.status != 'active';
             final isMultiGame = game.maxPlayers > 2;
