@@ -12,10 +12,9 @@ class GoogleIdTokenMissingException implements Exception {
 class GoogleSignInDeveloperErrorException implements Exception {
   GoogleSignInDeveloperErrorException([
     this.message =
-        'Google Sign-In: код 10 (DEVELOPER_ERROR). '
-        'В Google Cloud → Android OAuth client добавь SHA-1 '
-        'App signing из Play Console (не upload key) '
-        'для package com.zozugames.app / .dev',
+        'Google Sign-In код 10: в Google Cloud создай Android OAuth client '
+        'с package com.zozugames.app(.dev) и SHA-1 App signing из Play Console. '
+        'Без этого вход без браузера не работает.',
   ]);
   final String message;
   @override
