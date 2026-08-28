@@ -30,11 +30,13 @@ type PushPayload struct {
 
 // WebPushSender рассылает уведомления подписчикам.
 type WebPushSender struct {
-	Pool       *pgxpool.Pool
-	PublicKey  string
-	PrivateKey string
-	Subject    string // email, mailto:email или https://…
-	TTLSeconds int
+	Pool                  *pgxpool.Pool
+	PublicKey             string
+	PrivateKey            string
+	Subject               string // email, mailto:email или https://…
+	TTLSeconds            int
+	FCMServiceAccountJSON string
+	HTTPClient            *http.Client
 }
 
 func (s *WebPushSender) Enabled() bool {
@@ -64,7 +66,7 @@ func normalizeVapidSubscriber(raw string) string {
 
 // NotifyUsers шлёт push выбранным пользователям (асинхронно), с учётом категории prefs.
 func (s *WebPushSender) NotifyUsers(userIDs []uuid.UUID, category string, payload PushPayload) {
-	if !s.Enabled() || len(userIDs) == 0 {
+	if !s.CanNotify() || len(userIDs) == 0 {
 		return
 	}
 	// Копия среза — вызывающий может переиспользовать буфер.
@@ -82,6 +84,14 @@ func (s *WebPushSender) send(userIDs []uuid.UUID, category string, payload PushP
 		return
 	}
 	if len(filtered) == 0 {
+		return
+	}
+
+	if s.FCMEnabled() {
+		s.sendFCM(ctx, filtered, payload)
+	}
+
+	if !s.Enabled() {
 		return
 	}
 
@@ -286,6 +296,84 @@ func (h *WebPushHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.Pool != nil {
 		_ = store.DeleteWebPushSubscriptionByEndpoint(r.Context(), h.Pool, userID, endpoint)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+}
+
+type devicePushBody struct {
+	Token    string `json:"token"`
+	Platform string `json:"platform"`
+}
+
+func normalizeDevicePlatform(raw string) string {
+	p := strings.ToLower(strings.TrimSpace(raw))
+	switch p {
+	case "", "android":
+		return "android"
+	case "ios":
+		return "ios"
+	default:
+		return ""
+	}
+}
+
+func (h *WebPushHandler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	if h == nil || h.Pool == nil {
+		writeJSONError(w, r, "push disabled", http.StatusServiceUnavailable)
+		return
+	}
+	userID, ok := currentUserIDFromContext(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body devicePushBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	token := strings.TrimSpace(body.Token)
+	platform := normalizeDevicePlatform(body.Platform)
+	if token == "" || len(token) > 4096 || platform == "" {
+		WriteErr(w, r, http.StatusBadRequest, "token and platform required")
+		return
+	}
+	if err := store.UpsertDevicePushToken(r.Context(), h.Pool, userID, token, platform); err != nil {
+		log.Printf("device push register: %v", err)
+		WriteErr(w, r, http.StatusInternalServerError, "failed to save device token")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+}
+
+func (h *WebPushHandler) UnregisterDevice(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := currentUserIDFromContext(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body devicePushBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	token := strings.TrimSpace(body.Token)
+	if token == "" {
+		WriteErr(w, r, http.StatusBadRequest, "token required")
+		return
+	}
+	if h.Pool != nil {
+		_ = store.DeleteDevicePushToken(r.Context(), h.Pool, userID, token)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})

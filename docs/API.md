@@ -475,14 +475,17 @@ POST /api/inventory/claim-collection-income        // забрать дневн�
 
 ---
 
-## Push-уведомления (Web Push / PWA)
+## Push-уведомления (Web Push / PWA + Android FCM)
 
-> Требуются `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`; иначе push отключён.
+> Web Push: `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`; иначе PWA-push отключён.
+> Android (закрытое приложение): `FCM_SERVICE_ACCOUNT_JSON`.
 
 ```
 GET  /api/push/vapid-key       // публичный VAPID-ключ для подписки
 POST /api/push/subscribe       // подписка браузера (endpoint, p256dh, auth)
 POST /api/push/unsubscribe     // { "endpoint": "..." }
+POST /api/push/device          // FCM-токен: { "token": "...", "platform": "android" }
+POST /api/push/device/unregister // снять токен: { "token": "..." }
 GET  /api/push/preferences     // категории уведомлений (chat/friends/games/rewards)
 PUT  /api/push/preferences     // обновление категорий
 ```

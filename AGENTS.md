@@ -68,6 +68,9 @@ errors.
 - The Go server embeds `client/build/web/` for production — but in dev mode, client and server run separately.
 - Web Push (PWA notifications) is off until `VAPID_PUBLIC_KEY` /
   `VAPID_PRIVATE_KEY` are set; otherwise the server starts with a warning.
+- Android closed-app push needs `FCM_SERVICE_ACCOUNT_JSON` on Fly and
+  `google-services.json` in the Android build (see
+  `docs/ANDROID_PLAY_INTERNAL.md` §9).
 - Email verification / password reset require a mailer (Resend via
   `RESEND_API_KEY`, or SMTP via `SMTP_*`). Without it, verification codes
   are only logged server-side.

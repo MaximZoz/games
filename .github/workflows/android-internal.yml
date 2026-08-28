@@ -151,6 +151,27 @@ jobs:
             > key.properties
           grep -q '^keyAlias=' key.properties
 
+      - name: Write google-services.json (optional FCM)
+        working-directory: client
+        env:
+          ANDROID_GOOGLE_SERVICES_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}
+          ANDROID_GOOGLE_SERVICES_JSON_DEV: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_DEV }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          flavor="${{ steps.target.outputs.flavor }}"
+          json="${ANDROID_GOOGLE_SERVICES_JSON:-}"
+          if [[ "$flavor" == "dev" && -n "${ANDROID_GOOGLE_SERVICES_JSON_DEV:-}" ]]; then
+            json="$ANDROID_GOOGLE_SERVICES_JSON_DEV"
+          fi
+          if [[ -z "$json" ]]; then
+            echo "No google-services.json secret — closed-app FCM will be off in this AAB"
+            exit 0
+          fi
+          mkdir -p "android/app/src/${flavor}"
+          printf '%s' "$json" > "android/app/src/${flavor}/google-services.json"
+          echo "Wrote android/app/src/${flavor}/google-services.json"
+
       - name: Flutter pub get
         run: flutter pub get
 

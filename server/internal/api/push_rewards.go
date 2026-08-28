@@ -10,7 +10,7 @@ import (
 )
 
 func notifyAchievementUnlocks(push *WebPushSender, userID uuid.UUID, unlocked []store.AchievementDef) {
-	if push == nil || !push.Enabled() || len(unlocked) == 0 {
+	if push == nil || !push.CanNotify() || len(unlocked) == 0 {
 		return
 	}
 	// Push has no Accept-Language; default RU (primary audience), body uses localized title.

@@ -172,7 +172,46 @@ flutter run -d android --flavor prod \
 
 Play Games Services **не** нужны — достаточно Google Sign-In.
 
-## 9. Позже
+## 9. Android FCM (уведомления при закрытом приложении)
+
+Локальный баннер из WebSocket работает только пока процесс жив.
+Чтобы пуш приходил как в других приложениях (приложение свайпнули / убили),
+нужен Firebase Cloud Messaging.
+
+### Firebase / Google Cloud (один раз)
+
+1. [Firebase Console](https://console.firebase.google.com/) → тот же GCP-проект,
+   что и Google Sign-In (`GOOGLE_CLIENT_ID`).
+2. Добавь Android-приложения:
+   - `com.zozugames.app`
+   - `com.zozugames.app.dev`
+3. Скачай `google-services.json` (можно один файл, если оба пакета в проекте).
+4. Project settings → Service accounts → Generate new private key.
+   Включи **Firebase Cloud Messaging API** у проекта.
+
+### Секреты
+
+**Fly (сервер шлёт пуш):**
+```bash
+fly secrets set FCM_SERVICE_ACCOUNT_JSON="$(cat firebase-adminsdk.json)" -a multigameszozu
+fly secrets set FCM_SERVICE_ACCOUNT_JSON="$(cat firebase-adminsdk.json)" -a multigameszozu-dev
+```
+
+**GitHub Actions (кладёт json в AAB):**
+- `ANDROID_GOOGLE_SERVICES_JSON` — prod (`com.zozugames.app`)
+- `ANDROID_GOOGLE_SERVICES_JSON_DEV` — dev (если отдельный файл)
+
+Локально: `client/android/app/src/prod/google-services.json` и/или
+`src/dev/google-services.json` (в git не коммитить).
+
+Без этих секретов сборка проходит, но закрытое приложение пуш не получит.
+
+### Logout
+
+Клиент снимает FCM-токен с сервера до очистки JWT. После выхода
+уведомления на это устройство не приходят.
+
+## 10. Позже
 
 - разные иконки для DEV
 - Store listing / Privacy / Data safety

@@ -45,6 +45,9 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
       (_, next) {
     if (lifecycle.isForeground) return;
     if (!ref.read(webPushEnabledProvider)) return;
+    // FCM сам покажет баннер, даже если процесс убит — локальный WS-баннер
+    // тогда дублирует.
+    if (ref.read(fcmDeliveryReadyProvider)) return;
     final me = ref.read(authStateProvider).valueOrNull;
     if (me == null) return;
     final event = next.valueOrNull;
