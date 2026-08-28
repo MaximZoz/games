@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_client.dart';
@@ -7,6 +8,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/browser_push_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/browser_push_web.dart'
     as browser_push;
+import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -176,6 +178,15 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
 
   /// Включить/выключить: permission → subscribe/unsubscribe → API.
   Future<String?> setEnabled(bool value) async {
+    if (value && !kIsWeb && localNotificationsSupported()) {
+      final granted = await requestLocalNotificationPermission();
+      if (!granted) return LocaleService.l10n.errPushPermission;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyWebPushEnabled, true);
+      state = true;
+      await _ref.read(webPushCategoriesProvider.notifier).refresh();
+      return null;
+    }
     if (value) {
       if (!browser_push.browserPushSupported()) {
         return 'Уведомления недоступны в этом браузере. '
@@ -310,5 +321,9 @@ class WebPushCategoriesNotifier extends StateNotifier<WebPushCategoryPrefs> {
 
 /// Поддержка Web Push (для UI).
 bool get isWebPushSupported => browser_push.browserPushSupported();
+
+/// Настройки уведомлений: web push или локальные на Android.
+bool get isPushSettingsAvailable =>
+    isWebPushSupported || localNotificationsSupported();
 
 bool get isWebPushStandalone => browser_push.browserPushStandalone();

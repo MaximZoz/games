@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -186,7 +185,7 @@ class SettingsScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  if (kIsWeb) ...[
+                  if (isPushSettingsAvailable) ...[
                     const SizedBox(height: 12),
                     _SettingsCard(
                       child: Column(
@@ -195,7 +194,7 @@ class SettingsScreen extends ConsumerWidget {
                           _SwitchRow(
                             title: l10n.settingsNotifications,
                             value: webPushEnabled,
-                            onChanged: isWebPushSupported
+                            onChanged: isPushSettingsAvailable
                                 ? (v) async {
                                     final err = await ref
                                         .read(webPushEnabledProvider.notifier)

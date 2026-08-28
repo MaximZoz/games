@@ -11,6 +11,8 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/ios_viewport_sync.dart';
+import 'core/android_notify_bridge.dart';
+import 'core/local_notify.dart';
 import 'core/settings_provider.dart';
 import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
@@ -34,6 +36,9 @@ void main() {
     installIosViewportSync();
   }
   console_log.logToBrowser('main() started');
+  if (!kIsWeb) {
+    unawaited(initLocalNotifications());
+  }
 
   runZonedGuarded(() {
     runApp(
@@ -120,6 +125,7 @@ class MultiGamesApp extends ConsumerWidget {
     final locale = effectiveAppLocale(localeChoice);
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
+    ref.watch(androidNotifyBridgeProvider);
     final soundOn = ref.watch(soundEnabledProvider);
     Sfx.setEnabled(soundOn);
     Sfx.instance.warmup(unlock: false);

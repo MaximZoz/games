@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'sfx_html_stub.dart' if (dart.library.html) 'sfx_html_web.dart' as html_sfx;
+import 'sfx_io_stub.dart' if (dart.library.io) 'sfx_io.dart' as io_sfx;
 
 /// Короткий набор эффектов. Сэмплы — Kenney Interface Sounds (CC0),
 /// плюс голосовое «Уно!».
@@ -114,6 +115,13 @@ class SfxController {
     id = resolveId(id);
     final now = DateTime.now();
     if (!shouldPlay(id, now)) return;
+    if (io_sfx.ioSfxSupported) {
+      final path = assetPaths[id];
+      if (path != null) {
+        io_sfx.ioSfxPlay(path, volume: _volumeFor(id));
+      }
+      return;
+    }
     final uri = _dataUris[id];
     if (uri == null) {
       unawaited(_preload().then((_) {
