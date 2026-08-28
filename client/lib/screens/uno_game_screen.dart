@@ -623,6 +623,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       final to = _rectOf(_discardKey);
       final twin = findUnoTwin(game.myHand, card);
       final thrown = [card, if (twin != null) twin];
+      Sfx.play(SfxId.cardPlay);
       _lastLocalPlayCardId = thrown.last.id;
       _optimisticTopId = thrown.last.id;
       _localPlayedIds.addAll(thrown.map((item) => item.id));
@@ -648,6 +649,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             endAngle: -0.04,
             arcLift: 42,
             keepAtEnd: true,
+            playSfx: i > 0,
           );
           if (mounted) {
             setState(() => _discardOverride = flying);
@@ -1308,6 +1310,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     return Stack(
       children: [
         MyTurnAlert.stackLeaf(
+          key: ValueKey('uno-turn-${game.isMyTurn}-${game.currentIndex}'),
           isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
         ),
         Padding(
