@@ -11,7 +11,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       background: #E8ECF4;
       color: #1a1a2e;
       padding: 24px;
@@ -26,28 +26,76 @@
     }
     h1 { font-size: 1.25rem; margin: 0 0 8px; }
     p { margin: 0; color: #5a6275; line-height: 1.45; }
+    a.stay {
+      display: inline-block;
+      margin-top: 16px;
+      color: #5a6275;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1 id="title">Готово</h1>
     <p id="msg">Возвращаем в приложение…</p>
+    <a class="stay" id="stay" href="#" hidden>Продолжить в браузере</a>
   </div>
   <script>
     (function () {
       var params = new URLSearchParams(location.search);
       var err = params.get('error');
       var state = params.get('state') || '';
-      var q = 'oauth=1';
-      if (state) q += '&state=' + encodeURIComponent(state);
+      var fromPwa = params.get('pwa') === '1';
+
+      function isStandalone() {
+        try {
+          if (window.matchMedia('(display-mode: standalone)').matches) return true;
+          if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+        } catch (e) {}
+        try {
+          if (typeof navigator.standalone === 'boolean' && navigator.standalone) return true;
+        } catch (e) {}
+        return false;
+      }
+
+      function loginUrl() {
+        var q = 'oauth=1';
+        if (state) q += '&state=' + encodeURIComponent(state);
+        if (err) q += '&error=' + encodeURIComponent(err);
+        return '/login?' + q;
+      }
+
+      var stay = document.getElementById('stay');
+      stay.href = loginUrl();
+
       if (err) {
         document.getElementById('title').textContent = 'Ошибка входа';
         document.getElementById('msg').textContent = err + '. Сейчас вернём на экран входа.';
-        q += '&error=' + encodeURIComponent(err);
-        setTimeout(function () { location.replace('/login?' + q); }, 900);
+      }
+
+      // Standalone PWA — poll в том же окне.
+      if (isStandalone()) {
+        location.replace(loginUrl());
         return;
       }
-      location.replace('/login?' + q);
+
+      // Старт был из установленной PWA: не грузим Flutter в Safari,
+      // иначе токены осядут в браузере, а иконка на «Домой» останется без сессии.
+      if (fromPwa) {
+        document.getElementById('title').textContent = err ? 'Ошибка входа' : 'Готово';
+        document.getElementById('msg').textContent = err
+          ? (err + '. Закройте это окно и откройте Zozu Games с экрана «Домой».')
+          : 'Откройте Zozu Games с экрана «Домой» — вход завершится автоматически. Это окно можно закрыть.';
+        stay.hidden = false;
+        try { window.close(); } catch (e) {}
+        return;
+      }
+
+      if (err) {
+        setTimeout(function () { location.replace(loginUrl()); }, 900);
+        return;
+      }
+      location.replace(loginUrl());
     })();
   </script>
 </body>

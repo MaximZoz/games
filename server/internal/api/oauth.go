@@ -51,6 +51,7 @@ type oauthState struct {
 	Provider string
 	Redirect string
 	Ref      string
+	FromPWA  bool
 	Expires  time.Time
 }
 
@@ -98,7 +99,7 @@ func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
 	return res, true
 }
 
-func (c *OAuthConfig) putState(provider, redirect, ref string) (string, error) {
+func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
@@ -111,6 +112,7 @@ func (c *OAuthConfig) putState(provider, redirect, ref string) (string, error) {
 		Provider: provider,
 		Redirect: redirect,
 		Ref:      ref,
+		FromPWA:  fromPWA,
 		Expires:  time.Now().Add(10 * time.Minute),
 	}
 	// Простая уборка
@@ -134,6 +136,14 @@ func (c *OAuthConfig) takeState(state string) (oauthState, bool) {
 	}
 	delete(c.states, state)
 	return s, true
+}
+
+func (c *OAuthConfig) peekFromPWA(state string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.ensureStates()
+	s, ok := c.states[state]
+	return ok && s.FromPWA
 }
 
 func (c *OAuthConfig) EnabledProviders() []string {
@@ -328,7 +338,8 @@ func (h *AuthHandler) OAuthStart(w http.ResponseWriter, r *http.Request) {
 		redirect = "/games"
 	}
 	ref := strings.TrimSpace(r.URL.Query().Get("ref"))
-	state, err := h.OAuth.putState(provider, redirect, ref)
+	fromPWA := strings.TrimSpace(r.URL.Query().Get("pwa")) == "1"
+	state, err := h.OAuth.putState(provider, redirect, ref, fromPWA)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -440,10 +451,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errMsg := r.URL.Query().Get("error"); errMsg != "" {
+		fromPWA := h.OAuth.peekFromPWA(state)
 		if state != "" {
 			h.OAuth.putResult(state, oauthResult{Error: "oauth denied: " + errMsg})
 		}
-		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg)
+		h.oauthDonePage(w, r, state, "oauth denied: "+errMsg, fromPWA)
 		return
 	}
 
@@ -459,7 +471,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if code == "" {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth code required", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth code required")
+		h.oauthDonePage(w, r, state, "oauth code required", st.FromPWA)
 		return
 	}
 
@@ -467,7 +479,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] %s exchange failed: %v", provider, err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth exchange failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth exchange failed")
+		h.oauthDonePage(w, r, state, "oauth exchange failed", st.FromPWA)
 		return
 	}
 
@@ -490,7 +502,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[oauth] find/create user failed: %v", err)
 		h.OAuth.putResult(state, oauthResult{Error: "oauth user create failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth user create failed")
+		h.oauthDonePage(w, r, state, "oauth user create failed", st.FromPWA)
 		return
 	}
 	_ = created
@@ -498,7 +510,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	accessToken, refreshToken, _, err := h.issueSessionTokens(r.Context(), u)
 	if err != nil {
 		h.OAuth.putResult(state, oauthResult{Error: "oauth session failed", Redirect: st.Redirect})
-		h.oauthDonePage(w, r, state, "oauth session failed")
+		h.oauthDonePage(w, r, state, "oauth session failed", st.FromPWA)
 		return
 	}
 
@@ -507,11 +519,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 		Redirect:     st.Redirect,
 	})
-	// PWA: oauth_done → /login?oauth=1&state=… → poll забирает токены.
-	h.oauthDonePage(w, r, state, "")
+	// PWA: oauth_done в Safari не грузит Flutter (pwa=1). Токены забирает poll в standalone.
+	h.oauthDonePage(w, r, state, "", st.FromPWA)
 }
 
-func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string) {
+func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, state, errMsg string, fromPWA bool) {
 	front := ""
 	if h.OAuth != nil {
 		front = strings.TrimRight(h.OAuth.FrontendURL, "/")
@@ -534,6 +546,9 @@ func (h *AuthHandler) oauthDonePage(w http.ResponseWriter, r *http.Request, stat
 	}
 	if s := strings.TrimSpace(state); s != "" {
 		q.Set("state", s)
+	}
+	if fromPWA {
+		q.Set("pwa", "1")
 	}
 	dest := front + "/oauth_done.html"
 	if enc := q.Encode(); enc != "" {

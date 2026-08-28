@@ -7,6 +7,8 @@ import 'package:web/web.dart' as web;
 const _popupName = 'mg_oauth';
 const _pendingKey = 'mg_oauth_pending_state';
 
+bool get isStandalonePwa => _isStandalone();
+
 bool get isIosStandalonePwa {
   if (!_isStandalone()) return false;
   return _isIos();
@@ -113,21 +115,30 @@ void saveOAuthPendingState(String state) {
   try {
     web.window.sessionStorage.setItem(_pendingKey, state);
   } catch (_) {}
+  // localStorage переживает убийство PWA на iOS, sessionStorage — нет.
+  try {
+    web.window.localStorage.setItem(_pendingKey, state);
+  } catch (_) {}
 }
 
 String? readOAuthPendingState() {
   try {
-    final v = web.window.sessionStorage.getItem(_pendingKey);
-    if (v == null || v.isEmpty) return null;
-    return v;
-  } catch (_) {
-    return null;
-  }
+    final session = web.window.sessionStorage.getItem(_pendingKey);
+    if (session != null && session.isNotEmpty) return session;
+  } catch (_) {}
+  try {
+    final local = web.window.localStorage.getItem(_pendingKey);
+    if (local != null && local.isNotEmpty) return local;
+  } catch (_) {}
+  return null;
 }
 
 void clearOAuthPendingState() {
   try {
     web.window.sessionStorage.removeItem(_pendingKey);
+  } catch (_) {}
+  try {
+    web.window.localStorage.removeItem(_pendingKey);
   } catch (_) {}
 }
 

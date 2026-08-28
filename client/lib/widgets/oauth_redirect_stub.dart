@@ -5,6 +5,8 @@ const _pendingKey = 'mg_oauth_pending_state';
 
 String? _pendingMemory;
 
+bool get isStandalonePwa => false;
+
 bool get isIosStandalonePwa => false;
 
 Object? openOAuthWindowBlank() => null;
