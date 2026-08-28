@@ -10,3 +10,7 @@ ProfileEditBackAction profileEditBackAction({required bool aboutFocused}) {
 
 /// Тап по пустому в форме: если фокус в «О себе» — только снять фокус.
 bool shouldUnfocusAboutOnEmptyTap({required bool aboutFocused}) => aboutFocused;
+
+/// Web Back сначала blur'ит TextField. Флаг «О себе открыто» не сбрасываем
+/// по потере фокуса — иначе PopScope выходит в просмотр профиля.
+bool shouldClearAboutOpenOnFocusLost() => false;
