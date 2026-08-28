@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show ModalRoute, RouteObserver;
+import 'package:flutter/material.dart'
+    show Curves, CurvedAnimation, FadeTransition, ModalRoute, RouteObserver;
 import 'package:flutter/widgets.dart' show Widget;
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,10 +79,26 @@ class _AuthRefreshListenable extends ChangeNotifier {
   }
 }
 
-NoTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
-  return NoTransitionPage<void>(
+/// Короткий fade вместо NoTransition: Impeller не успевает снять предыдущий
+/// слой, и на Android мелькает старый виджет. Opaque fade закрывает его.
+CustomTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
     key: state.pageKey,
     child: AppOpaqueSurface(child: child),
+    opaque: true,
+    barrierColor: AppColors.surfaceUnified,
+    transitionDuration: const Duration(milliseconds: 180),
+    reverseTransitionDuration: const Duration(milliseconds: 140),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOut,
+          reverseCurve: Curves.easeIn,
+        ),
+        child: child,
+      );
+    },
   );
 }
 
