@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 var _ready = false;
+var _sessionActive = false;
 
 Future<void> initLocalNotifications() async {
   if (_ready) return;
@@ -31,11 +32,21 @@ Future<bool> requestLocalNotificationPermission() async {
 
 bool localNotificationsSupported() => true;
 
+void setLocalNotifySessionActive(bool active) {
+  _sessionActive = active;
+}
+
+Future<void> cancelAllLocalNotifications() async {
+  if (!_ready) await initLocalNotifications();
+  await _plugin.cancelAll();
+}
+
 Future<void> showLocalNotification({
   required String title,
   required String body,
   String? payload,
 }) async {
+  if (!_sessionActive) return;
   if (!_ready) await initLocalNotifications();
   const details = NotificationDetails(
     android: AndroidNotificationDetails(

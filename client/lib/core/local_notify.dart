@@ -14,3 +14,9 @@ Future<void> showLocalNotification({
   String? payload,
 }) =>
     impl.showLocalNotification(title: title, body: body, payload: payload);
+
+void setLocalNotifySessionActive(bool active) =>
+    impl.setLocalNotifySessionActive(active);
+
+Future<void> cancelAllLocalNotifications() =>
+    impl.cancelAllLocalNotifications();

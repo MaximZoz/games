@@ -9,3 +9,7 @@ Future<void> showLocalNotification({
   required String body,
   String? payload,
 }) async {}
+
+void setLocalNotifySessionActive(bool active) {}
+
+Future<void> cancelAllLocalNotifications() async {}
