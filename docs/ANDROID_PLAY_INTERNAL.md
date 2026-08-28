@@ -124,8 +124,12 @@ flutter run -d android --flavor prod \
 (`GOOGLE_CLIENT_ID` на сервере = **Web** OAuth Client ID).
 
 Клиент читает `id_token` / `server_auth_code` из результата platform
-`signIn()` (без `getTokens`). Если токены пустые — браузерный OAuth
-без блокирующего poll на 5 минут.
+`signIn()` (без `getTokens`). На Android/iOS **браузер не открываем**:
+только нативный Google Sign-In. Браузерный OAuth уводил в веб-версию.
+
+Если видишь код **10** / DEVELOPER_ERROR — не хватает Android OAuth client
+с SHA-1. После добавления SHA-1 вход снова только через системный picker
+(без браузера).
 
 ### Ошибка `sign_in_failed` / `d 10` / `ApiException: 10`
 
@@ -149,8 +153,9 @@ flutter run -d android --flavor prod \
 Дополнительно можно добавить SHA-1 **upload** keystore и **debug** keystore
 в те же Android clients (для локальных сборок).
 
-Без этого native Google на телефоне **не заработает**; браузерный fallback
-может открыться, но native picker будет с кодом 10.
+Без этого native Google на телефоне **не заработает** (ошибка 10).
+Браузерный fallback на Android для Google отключён специально —
+он открывал веб-приложение вместо нативного.
 
 ### Google Cloud Console (чеклист)
 

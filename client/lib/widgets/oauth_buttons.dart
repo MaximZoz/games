@@ -221,7 +221,8 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     await _startNativeBrowserPoll(provider);
   }
 
-  /// Google: системный аккаунт (тот же, что в Play Market) → id_token → API.
+  /// Google на Android/iOS: только нативный Sign-In (без браузера).
+  /// Браузерный OAuth уводит в веб-версию приложения — не используем.
   Future<void> _startNativeGoogle() async {
     if (!mounted) return;
     final l10n = context.l10n;
@@ -234,10 +235,12 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       final clientId = (info.googleClientId ?? '').trim();
       if (clientId.isEmpty) {
         if (!mounted) return;
-        // Без Web Client ID native невозможен — браузер, но не блокируем UI
-        // на 5 минут: открываем и ждём возврата через resume/hydrate.
-        setState(() => _busyProvider = null);
-        await _startNativeBrowserPoll('google', blockUntilDone: false);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.oauthError),
+            duration: const Duration(seconds: 5),
+          ),
+        );
         return;
       }
 
@@ -263,30 +266,28 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(l10n.oauthError)));
     } on GoogleSignInDeveloperErrorException catch (e) {
-      // Код 10: SHA-1 / package в Google Cloud. Браузерный OAuth всё ещё работает.
+      // Код 10: нужен Android OAuth client + SHA-1 App signing в Google Cloud.
       debugPrint('Google DEVELOPER_ERROR: $e');
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
           content: Text(e.message),
-          duration: const Duration(seconds: 10),
+          duration: const Duration(seconds: 12),
         ),
       );
-      setState(() => _busyProvider = null);
-      await _startNativeBrowserPoll('google', blockUntilDone: false);
     } on GoogleIdTokenMissingException catch (e) {
-      // Пустые токены после picker — часто SHA-1. Покажем текст ошибки
-      // и откроем браузер; poll при возврате в приложение.
       debugPrint('Google native credential missing: $e');
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.oauthError),
-          duration: const Duration(seconds: 4),
+          content: Text(
+            'Google Sign-In: нет id_token. Добавь SHA-1 App signing '
+            'в Google Cloud → Android OAuth client '
+            '(com.zozugames.app / .dev).',
+          ),
+          duration: const Duration(seconds: 12),
         ),
       );
-      setState(() => _busyProvider = null);
-      await _startNativeBrowserPoll('google', blockUntilDone: false);
     } on AuthException catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -301,10 +302,8 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
       if (isGoogleDeveloperError(e)) {
         final msg = GoogleSignInDeveloperErrorException().message;
         messenger.showSnackBar(
-          SnackBar(content: Text(msg), duration: const Duration(seconds: 10)),
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 12)),
         );
-        setState(() => _busyProvider = null);
-        await _startNativeBrowserPoll('google', blockUntilDone: false);
         return;
       }
       messenger.showSnackBar(
@@ -320,10 +319,7 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
     }
   }
 
-  /// Остальные провайдеры (и Google fallback): внешний браузер + poll.
-  ///
-  /// [blockUntilDone]: false — открыть браузер, снять лоадер, дождаться
-  /// результата при возврате в приложение (`_resumePending`).
+  /// Остальные провайдеры: внешний браузер + poll.
   Future<void> _startNativeBrowserPoll(
     String provider, {
     bool blockUntilDone = true,
