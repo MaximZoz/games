@@ -7,3 +7,6 @@ ProfileEditBackAction profileEditBackAction({required bool aboutFocused}) {
       ? ProfileEditBackAction.stayInEditor
       : ProfileEditBackAction.exitEditor;
 }
+
+/// Тап по пустому в форме: если фокус в «О себе» — только снять фокус.
+bool shouldUnfocusAboutOnEmptyTap({required bool aboutFocused}) => aboutFocused;

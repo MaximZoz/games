@@ -15,4 +15,9 @@ void main() {
       ProfileEditBackAction.exitEditor,
     );
   });
+
+  test('тап по пустому снимает фокус «О себе», не закрывает редактор', () {
+    expect(shouldUnfocusAboutOnEmptyTap(aboutFocused: true), isTrue);
+    expect(shouldUnfocusAboutOnEmptyTap(aboutFocused: false), isFalse);
+  });
 }
