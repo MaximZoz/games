@@ -26,6 +26,7 @@ import 'src/console_log_stub.dart'
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(AppOverlays.systemUi);
   // Иначе deep-link вида /games/tictactoe/lobby/:id открывает «Главную»,
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
@@ -170,13 +171,7 @@ class MultiGamesApp extends ConsumerWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            systemNavigationBarColor: AppColors.surfaceUnified,
-            systemNavigationBarIconBrightness: Brightness.dark,
-            systemNavigationBarDividerColor: AppColors.surfaceUnified,
-          ),
+          systemOverlayStyle: AppOverlays.systemUi,
         ),
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
@@ -228,15 +223,18 @@ class MultiGamesApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return SelectionContainer.disabled(
-          child: Listener(
-            onPointerDown: (_) => Sfx.instance.warmup(),
-            child: BootSplashHost(
-              // Непрозрачный фон под прозрачными Scaffold: иначе на Android
-              // при смене вкладки/экрана мигает предыдущий кадр.
-              child: ColoredBox(
-                color: AppColors.surfaceUnified,
-                child: child ?? const SizedBox.shrink(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppOverlays.systemUi,
+          child: SelectionContainer.disabled(
+            child: Listener(
+              onPointerDown: (_) => Sfx.instance.warmup(),
+              child: BootSplashHost(
+                // Непрозрачный фон под прозрачными Scaffold: иначе на Android
+                // при смене вкладки/экрана мигает предыдущий кадр.
+                child: ColoredBox(
+                  color: AppColors.surfaceUnified,
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Цвета приложения: один светлый фон, белый в рамках/кнопках, чёрный текст.
 class AppColors {
@@ -67,6 +68,22 @@ class AppSpacing {
   static const double md = 16;
   static const double lg = 24;
   static const double xl = 32;
+}
+
+/// Статус-бар / навигация Android: тот же цвет, что фон (без серого scrim).
+class AppOverlays {
+  AppOverlays._();
+
+  static const SystemUiOverlayStyle systemUi = SystemUiOverlayStyle(
+    statusBarColor: AppColors.surfaceUnified,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemStatusBarContrastEnforced: false,
+    systemNavigationBarColor: AppColors.surfaceUnified,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarDividerColor: AppColors.surfaceUnified,
+  );
 }
 
 /// Длительности анимаций.
