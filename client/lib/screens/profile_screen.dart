@@ -16,6 +16,7 @@ import 'package:multigames_client/profile/profile_gallery_widgets.dart';
 import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
+import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -187,6 +188,7 @@ class _AsyncAvatarImageState extends State<_AsyncAvatarImage> {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   bool _isClosing = false;
+  bool _focusAboutOnEdit = false;
   ProfileExtra? _lastProfileExtra;
   final _cardKey = GlobalKey();
   final _displayNameController = TextEditingController();
@@ -220,11 +222,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  void _startEditing(String currentName, ProfileExtra? extra) {
+  void _startEditing(
+    String currentName,
+    ProfileExtra? extra, {
+    bool focusAbout = false,
+  }) {
     _displayNameController.text = currentName;
     _displayNameController.selection =
         TextSelection.collapsed(offset: currentName.length);
-    setState(() => _isEditing = true);
+    setState(() {
+      _focusAboutOnEdit = focusAbout;
+      _isEditing = true;
+    });
   }
 
   void _startClosing() {
@@ -373,39 +382,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       onCancel: _cancelEditing,
                       onSave: _saveProfile,
                       compact: true,
+                      focusAboutOnOpen: _focusAboutOnEdit,
                     );
                     // Landscape на телефоне — форма прокручивается (иначе обрезается).
                     if (phoneLandscape) {
-                      return SwipeBackScope(
-                        onBack: _cancelEditing,
-                        opaqueEdge: false,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.fromLTRB(12, 4, 12, 10),
-                              physics: const AlwaysScrollableScrollPhysics(
-                                parent: ClampingScrollPhysics(),
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: ClampingScrollPhysics(),
+                            ),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight - 14,
+                                maxWidth: profileMaxWidth,
                               ),
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight: constraints.maxHeight - 14,
-                                  maxWidth: profileMaxWidth,
-                                ),
-                                child: editForm,
-                              ),
-                            );
-                          },
-                        ),
+                              child: editForm,
+                            ),
+                          );
+                        },
                       );
                     }
-                    return SwipeBackScope(
-                      onBack: _cancelEditing,
-                      opaqueEdge: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-                        child: SizedBox.expand(child: editForm),
-                      ),
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                      child: SizedBox.expand(child: editForm),
                     );
                   }
 
@@ -416,11 +417,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     profileExtra: extra,
                     isEditing: _isEditing,
                     isClosing: _isClosing,
+                    focusAboutOnOpen: _focusAboutOnEdit,
                     displayNameController: _displayNameController,
                     displayNameFocus: _displayNameFocus,
-                    onStartEdit: () => _startEditing(
+                    onStartEdit: ({bool focusAbout = false}) => _startEditing(
                       user.displayName ?? user.email,
                       extra,
+                      focusAbout: focusAbout,
                     ),
                     onCancelEdit: _cancelEditing,
                     onSave: _saveProfile,
@@ -599,6 +602,7 @@ class _ProfileContent extends StatelessWidget {
     required this.profileExtra,
     required this.isEditing,
     required this.isClosing,
+    this.focusAboutOnOpen = false,
     required this.displayNameController,
     required this.displayNameFocus,
     required this.onStartEdit,
@@ -611,9 +615,10 @@ class _ProfileContent extends StatelessWidget {
   final ProfileExtra profileExtra;
   final bool isEditing;
   final bool isClosing;
+  final bool focusAboutOnOpen;
   final TextEditingController displayNameController;
   final FocusNode displayNameFocus;
-  final VoidCallback onStartEdit;
+  final void Function({bool focusAbout}) onStartEdit;
   final VoidCallback onCancelEdit;
   final Future<void> Function(String displayName, ProfileExtra extra) onSave;
 
@@ -661,13 +666,15 @@ class _ProfileContent extends StatelessWidget {
                           focusNode: displayNameFocus,
                           onCancel: onCancelEdit,
                           onSave: onSave,
+                          focusAboutOnOpen: focusAboutOnOpen,
                         ),
                       )
                     : _ProfileView(
                         key: const ValueKey('view'),
                         user: user,
                         profileExtra: profileExtra,
-                        onEdit: onStartEdit,
+                        onEdit: () => onStartEdit(),
+                        onEditAbout: () => onStartEdit(focusAbout: true),
                       ),
               ),
             ),
@@ -684,11 +691,13 @@ class _ProfileView extends ConsumerWidget {
     required this.user,
     required this.profileExtra,
     required this.onEdit,
+    this.onEditAbout,
   });
 
   final AuthUser user;
   final ProfileExtra profileExtra;
   final VoidCallback onEdit;
+  final VoidCallback? onEditAbout;
 
   String get _displayTitle => user.displayName?.trim().isNotEmpty == true
       ? user.displayName!
@@ -814,24 +823,29 @@ class _ProfileView extends ConsumerWidget {
             if (profileExtra.about != null &&
                 profileExtra.about!.trim().isNotEmpty) ...[
               SizedBox(height: gapSection),
-              Container(
-                width: double.infinity,
-                constraints: const BoxConstraints(maxHeight: 96),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft.withValues(alpha: 0.55),
+              Material(
+                color: AppColors.accentSoft.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: onEditAbout ?? onEdit,
                   borderRadius: BorderRadius.circular(16),
-                ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    profileExtra.about!.trim(),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      height: 1.35,
+                  child: Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(
+                      minHeight: 48,
+                      maxHeight: 160,
                     ),
-                    textAlign: TextAlign.center,
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                    child: Text(
+                      profileExtra.about!.trim(),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        height: 1.35,
+                        leadingDistribution: TextLeadingDistribution.even,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
@@ -937,6 +951,7 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
     required this.onCancel,
     required this.onSave,
     this.compact = false,
+    this.focusAboutOnOpen = false,
   });
 
   final AuthUser user;
@@ -946,6 +961,7 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
   final VoidCallback onCancel;
   final Future<void> Function(String displayName, ProfileExtra extra) onSave;
   final bool compact;
+  final bool focusAboutOnOpen;
 
   @override
   ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
@@ -1007,6 +1023,23 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
     _showStatsToOthers = widget.profileExtra.showStatsToOthers;
+    if (widget.focusAboutOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _aboutFocus.requestFocus();
+      });
+    }
+  }
+
+  bool _handleEditBack() {
+    final action = profileEditBackAction(
+      aboutFocused: _aboutFocus.hasFocus || _aboutTypingActive,
+    );
+    if (action == ProfileEditBackAction.stayInEditor) {
+      _aboutFocus.unfocus();
+      return true;
+    }
+    widget.onCancel();
+    return true;
   }
 
   void _onAboutFocusChanged() {
@@ -1364,7 +1397,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
             tooltip: context.l10n.commonBack,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            onPressed: _isSaving ? null : widget.onCancel,
+            onPressed: _isSaving ? null : _handleEditBack,
             icon: const Icon(Icons.arrow_back_rounded),
             color: AppColors.textPrimary,
           ),
@@ -1394,22 +1427,29 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       textAlignVertical: TextAlignVertical.top,
       expands: expands,
       maxLines: expands ? null : 4,
-      minLines: expands ? null : 3,
+      minLines: expands ? null : 2,
       maxLength: 100,
       textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
+      style: const TextStyle(
+        fontSize: 16,
+        height: 1.3,
+        leadingDistribution: TextLeadingDistribution.even,
+      ),
       decoration: InputDecoration(
         labelText: context.l10n.commonAboutMe,
         alignLabelWithHint: true,
+        isDense: true,
         filled: true,
         fillColor: AppColors.surfaceCard,
+        contentPadding: const EdgeInsets.fromLTRB(12, 18, 12, 16),
         prefixIcon: const Padding(
-          padding: EdgeInsets.only(top: 12),
+          padding: EdgeInsets.only(top: 10),
           child: Icon(Icons.info_outline_rounded),
         ),
         prefixIconConstraints: const BoxConstraints(
-          minWidth: 48,
-          minHeight: 48,
+          minWidth: 44,
+          minHeight: 44,
         ),
         counterText: '',
       ),
@@ -1493,23 +1533,26 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final Widget aboutField;
     if (phoneLand) {
       aboutField = SizedBox(
-        height: aboutTypingMode ? 120 : 72,
+        height: aboutTypingMode ? 132 : 112,
         width: double.infinity,
-        child: _buildCompactAboutField(expands: true),
+        child: _buildCompactAboutField(expands: false),
       );
     } else {
       aboutField = Expanded(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final height = aboutTypingMode
-                ? math.min(168.0, constraints.maxHeight)
-                : constraints.maxHeight;
+            final height = math.max(
+              112.0,
+              aboutTypingMode
+                  ? math.min(180.0, constraints.maxHeight)
+                  : constraints.maxHeight,
+            );
             return Align(
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: constraints.maxWidth,
                 height: height,
-                child: _buildCompactAboutField(expands: true),
+                child: _buildCompactAboutField(expands: height >= 130),
               ),
             );
           },
@@ -1520,7 +1563,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
     // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
     // SwipeBackScope — снаружи (ProfileScreen), здесь только форма.
-    return Column(
+    final form = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: phoneLand ? MainAxisSize.min : MainAxisSize.max,
         children: [
@@ -1641,6 +1684,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
             ),
           ),
         ],
+    );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleEditBack();
+      },
+      child: SwipeBackScope(
+        onBack: _handleEditBack,
+        opaqueEdge: false,
+        child: form,
+      ),
     );
   }
 
@@ -1769,16 +1824,25 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _aboutController,
+                  focusNode: _aboutFocus,
                   inputFormatters: _aboutFormatters,
                   textCapitalization: TextCapitalization.sentences,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.3,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  ),
                   decoration: InputDecoration(
                     labelText: context.l10n.commonAboutMe,
                     hintText: context.l10n.profileAboutHint,
                     prefixIcon: Icon(Icons.info_outline_rounded),
                     alignLabelWithHint: true,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.fromLTRB(12, 18, 12, 16),
                     counterText: '',
                   ),
-                  maxLines: 3,
+                  maxLines: 4,
+                  minLines: 2,
                   maxLength: 100,
                 ),
                 const SizedBox(height: 20),
