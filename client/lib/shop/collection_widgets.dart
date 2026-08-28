@@ -9,6 +9,9 @@ import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
+/// Снятые с витрины предметы (логика магазина/витрины их не показывает).
+bool isRetiredCollectionItem(String code) => code == 'coll_fireworks';
+
 const collectionSetOrder = [
   'legends',
   'cosmic',
