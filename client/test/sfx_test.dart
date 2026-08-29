@@ -155,6 +155,29 @@ void main() {
     expect(AlertSfx.shouldPlayCountBump(3, 1), isFalse);
   });
 
+  test('вход в открытое сообщение не играет второй notify', () {
+    expect(AlertSfx.isReadingChat('/chats/abc'), isTrue);
+    expect(AlertSfx.isReadingChat('/chats/abc?x=1'), isTrue);
+    expect(AlertSfx.isReadingChat('/chats'), isFalse);
+    expect(AlertSfx.isReadingChat('/chats/blocked'), isFalse);
+    expect(
+      AlertSfx.shouldPlayChatUnread(
+        previous: 0,
+        next: 1,
+        path: '/chats/abc',
+      ),
+      isFalse,
+    );
+    expect(
+      AlertSfx.shouldPlayChatUnread(
+        previous: 0,
+        next: 1,
+        path: '/games',
+      ),
+      isTrue,
+    );
+  });
+
   test('soundEnabledProvider читает сохранённое выключение', () async {
     SharedPreferences.setMockInitialValues({'sound_enabled': false});
     final notifier = SoundEnabledNotifier();

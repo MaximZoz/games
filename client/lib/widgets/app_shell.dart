@@ -374,7 +374,13 @@ class AppShell extends ConsumerWidget {
       }
     }
     ref.listen<int>(chatsUnreadCountProvider, (prev, next) {
-      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+      if (AlertSfx.shouldPlayChatUnread(
+        previous: prev,
+        next: next,
+        path: path,
+      )) {
+        Sfx.play(SfxId.notify);
+      }
     });
     ref.listen<int>(friendsIncomingCountProvider, (prev, next) {
       if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
