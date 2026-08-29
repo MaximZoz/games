@@ -143,6 +143,8 @@ docker exec -it multigames-postgres psql -U multigames -d multigames -c "\dt"
 - **`web_push_preferences`** — категории уведомлений (по умолчанию всё вкл.):
   `user_id` (PK), `chat`, `friends`, `games`, `rewards`,
   `last_daily_reward_push_date`.
+- **`device_push_tokens`** — FCM-токены нативных приложений: `user_id`,
+  `token` (UNIQUE), `platform` (`android` / `ios`).
 
 #### Логи
 

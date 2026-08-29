@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1046,7 +1047,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         game.isSetup &&
                         !_iAmReady(game, me) &&
                         setupDeadline > nowSec;
-                    return Column(
+                    final column = Column(
                       children: [
                         MyTurnAlert(isMyTurn: myTurn && !isOver),
                         Padding(
@@ -1155,6 +1156,23 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                               : _buildBattle(game, me, narrow),
                         ),
                       ],
+                    );
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        const designH = 640.0;
+                        if (constraints.maxHeight >= 520) {
+                          return column;
+                        }
+                        return FittedBox(
+                          fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: math.max(constraints.maxWidth, 280),
+                            height: designH,
+                            child: column,
+                          ),
+                        );
+                      },
                     );
                   },
                   loading: () => const Center(
@@ -1556,7 +1574,7 @@ class _BattleshipBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = cellSize.clamp(16.0, 44.0);
+    final size = cellSize.clamp(11.0, 44.0);
     const gap = 2.0;
     final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
     final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
@@ -1646,7 +1664,7 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
   Offset? _panStart;
   bool _didDrag = false;
 
-  double get _size => widget.cellSize.clamp(16.0, 44.0);
+  double get _size => widget.cellSize.clamp(11.0, 44.0);
 
   int? _cellAt(Offset local) {
     final step = _size + _gap;

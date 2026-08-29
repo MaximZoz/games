@@ -12,8 +12,22 @@ void main() {
           gap * (kBattleshipBoardSize - 1);
       expect(board, lessThanOrEqualTo(maxH + 0.01));
       expect(board, lessThanOrEqualTo(maxW + 0.01));
-      expect(cell, greaterThanOrEqualTo(16));
+      expect(cell, greaterThanOrEqualTo(11));
       expect(cell, lessThan(28));
+    });
+
+    test('на очень коротком экране клетка сжимается ниже 16', () {
+      final cell = fitBattleshipCellSize(
+        maxWidth: 280,
+        maxHeight: 140,
+        minCell: 11,
+      );
+      const gap = 2.0;
+      final board =
+          cell * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+      expect(board, lessThanOrEqualTo(140.01));
+      expect(cell, greaterThanOrEqualTo(11));
+      expect(cell, lessThan(16));
     });
 
     test('не раздувает клетку выше maxCell', () {

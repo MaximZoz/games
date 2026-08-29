@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -16,15 +19,41 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
   WidgetsBinding.instance.addObserver(lifecycle);
   ref.onDispose(() => WidgetsBinding.instance.removeObserver(lifecycle));
 
+  void syncSession(AuthUser? user) {
+    if (user == null) {
+      setLocalNotifySessionActive(false);
+      unawaited(cancelAllLocalNotifications());
+      return;
+    }
+    setLocalNotifySessionActive(true);
+    if (ref.read(webPushEnabledProvider)) {
+      unawaited(requestLocalNotificationPermission());
+    }
+  }
+
+  syncSession(ref.read(authStateProvider).valueOrNull);
+  ref.listen<AsyncValue<AuthUser?>>(authStateProvider, (prev, next) {
+    syncSession(next.valueOrNull);
+  });
+  ref.listen<bool>(webPushEnabledProvider, (prev, next) {
+    if (next && ref.read(authStateProvider).valueOrNull != null) {
+      unawaited(requestLocalNotificationPermission());
+    }
+  });
+
   ref.listen<AsyncValue<Map<String, dynamic>>>(realtimeEventsProvider,
       (_, next) {
     if (lifecycle.isForeground) return;
     if (!ref.read(webPushEnabledProvider)) return;
+    // FCM сам покажет баннер, даже если процесс убит — локальный WS-баннер
+    // тогда дублирует.
+    if (ref.read(fcmDeliveryReadyProvider)) return;
+    final me = ref.read(authStateProvider).valueOrNull;
+    if (me == null) return;
     final event = next.valueOrNull;
     if (event == null) return;
-    final me = ref.read(authStateProvider).valueOrNull?.id;
     final cats = ref.read(webPushCategoriesProvider);
-    final mapped = _mapEvent(event, meId: me, cats: cats);
+    final mapped = _mapEvent(event, meId: me.id, cats: cats);
     if (mapped == null) return;
     showLocalNotification(title: mapped.$1, body: mapped.$2);
   });
@@ -33,9 +62,8 @@ final androidNotifyBridgeProvider = Provider<void>((ref) {
 class _NotifyLifecycle with WidgetsBindingObserver {
   AppLifecycleState _state = AppLifecycleState.resumed;
 
-  bool get isForeground =>
-      _state == AppLifecycleState.resumed ||
-      _state == AppLifecycleState.inactive;
+  /// Только полностью открытое приложение. `inactive` — шторка / уход в фон.
+  bool get isForeground => _state == AppLifecycleState.resumed;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

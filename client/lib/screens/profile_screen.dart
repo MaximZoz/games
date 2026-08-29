@@ -300,7 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     Widget scrollableBody(Widget child) {
       final framed = Align(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: profileMaxWidth),
           child: child,
@@ -346,8 +346,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // iOS Safari/Flutter Web: resize от клавиатуры сбрасывает фокус TextField.
-      resizeToAvoidBottomInset: false,
+      // Web/iOS Safari: resize от клавиатуры сбрасывает фокус TextField.
+      // На нативе при редактировании поднимаем форму, чтобы «Сохранить» не
+      // уезжала за клавиатуру и влезала на коротких экранах.
+      resizeToAvoidBottomInset: _isEditing && !kIsWeb,
       body: SafeArea(
         child: ref.watch(authStateProvider).when(
               data: (user) {
@@ -645,7 +647,7 @@ class _ProfileContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Align(
-          alignment: Alignment.topLeft,
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: cardMaxWidth),
             child: AnimatedBorderBox(
@@ -1643,136 +1645,171 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       );
       aboutField = phoneLand
           ? SizedBox(height: 148, width: double.infinity, child: editor)
-          : Expanded(child: editor);
+          : editor;
     } else {
       aboutField = _buildAboutPreview(key: const ValueKey('compact_about_preview'));
     }
 
-    // Одно стабильное дерево: прячем блоки через Visibility(maintainState),
-    // а не if/else — иначе TextFormField пересоздаётся и iOS закрывает клавиатуру.
-    // SwipeBackScope — снаружи (ProfileScreen), здесь только форма.
-    final form = Column(
+    final avatarAndMeta = Visibility(
+      visible: !aboutTypingMode,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: phoneLand ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          SizedBox(
+            height: phoneLand ? 64 : 82,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: phoneLand ? 56 : 76,
+                  child: Center(child: _buildCurrentAvatar()),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _presetAvatarIcons.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 5),
+                    itemBuilder: (context, index) {
+                      final selected = _avatarKind == AvatarKind.preset &&
+                          _avatarValue == index.toString();
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _avatarKind = AvatarKind.preset;
+                          _avatarValue = index.toString();
+                        }),
+                        child: AnimatedContainer(
+                          duration: AppDurations.short,
+                          width: phoneLand ? 40 : 48,
+                          height: phoneLand ? 40 : 48,
+                          margin: EdgeInsets.symmetric(
+                            vertical: phoneLand ? 12 : 15,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSoft,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.accentStart
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            _presetAvatarIcons[index],
+                            color: AppColors.accentStart,
+                            size: phoneLand ? 22 : 25,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: phoneLand ? 10 : 16),
+          _buildCompactNameAgeRow(),
+          SizedBox(height: phoneLand ? 8 : 12),
+          _buildShowStatsCheckbox(),
+          SizedBox(height: phoneLand ? 8 : 12),
+        ],
+      ),
+    );
+
+    final galleryAndPhoto = Visibility(
+      visible: !aboutTypingMode,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: phoneLand ? 8 : 12),
+          ProfileGalleryEditSlots(
+            userId: widget.user.id,
+            enabled: !_isSaving,
+            compact: true,
+            onPhotosChanged: _onGalleryPhotosChanged,
+            onMutated: _onGalleryMutated,
+          ),
+          SizedBox(height: phoneLand ? 8 : 12),
+          OutlinedButton.icon(
+            onPressed: (_isSaving || _isAvatarProcessing) ? null : _pickImage,
+            icon: _isAvatarProcessing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.photo_library_outlined, size: 19),
+            label: Text(_hasPhoto
+                ? context.l10n.profileChangePhoto
+                : context.l10n.profileUploadPhoto),
+          ),
+          if (_saveError != null) ...[
+            const SizedBox(height: 12),
+            MessageBanner(
+              message: _saveError!,
+              type: BannerType.error,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    // Portrait: поля скроллятся, «Сохранить» всегда внизу экрана.
+    // Landscape: родитель уже скроллит всю форму целиком.
+    final Widget form;
+    if (phoneLand) {
+      form = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildCompactHeader(context),
           SizedBox(height: aboutTypingMode ? 10 : 16),
-          Visibility(
-            visible: !aboutTypingMode,
-            maintainState: true,
-            maintainAnimation: true,
-            maintainSize: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: phoneLand ? 64 : 82,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: phoneLand ? 56 : 76,
-                        child: Center(child: _buildCurrentAvatar()),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _presetAvatarIcons.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 5),
-                          itemBuilder: (context, index) {
-                            final selected =
-                                _avatarKind == AvatarKind.preset &&
-                                    _avatarValue == index.toString();
-                            return GestureDetector(
-                              onTap: () => setState(() {
-                                _avatarKind = AvatarKind.preset;
-                                _avatarValue = index.toString();
-                              }),
-                              child: AnimatedContainer(
-                                duration: AppDurations.short,
-                                width: phoneLand ? 40 : 48,
-                                height: phoneLand ? 40 : 48,
-                                margin: EdgeInsets.symmetric(
-                                  vertical: phoneLand ? 12 : 15,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentSoft,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: selected
-                                        ? AppColors.accentStart
-                                        : Colors.transparent,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Icon(
-                                  _presetAvatarIcons[index],
-                                  color: AppColors.accentStart,
-                                  size: phoneLand ? 22 : 25,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: phoneLand ? 10 : 16),
-                _buildCompactNameAgeRow(),
-                SizedBox(height: phoneLand ? 8 : 12),
-                _buildShowStatsCheckbox(),
-                SizedBox(height: phoneLand ? 8 : 12),
-              ],
-            ),
-          ),
+          avatarAndMeta,
           aboutField,
-          Visibility(
-            visible: !aboutTypingMode,
-            maintainState: true,
-            maintainAnimation: true,
-            maintainSize: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: phoneLand ? 8 : 12),
-                ProfileGalleryEditSlots(
-                  userId: widget.user.id,
-                  enabled: !_isSaving,
-                  compact: true,
-                  onPhotosChanged: _onGalleryPhotosChanged,
-                  onMutated: _onGalleryMutated,
-                ),
-                SizedBox(height: phoneLand ? 8 : 12),
-                OutlinedButton.icon(
-                  onPressed:
-                      (_isSaving || _isAvatarProcessing) ? null : _pickImage,
-                  icon: _isAvatarProcessing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.photo_library_outlined, size: 19),
-                  label: Text(_hasPhoto ? context.l10n.profileChangePhoto : context.l10n.profileUploadPhoto),
-                ),
-                if (_saveError != null) ...[
-                  const SizedBox(height: 12),
-                  MessageBanner(
-                    message: _saveError!,
-                    type: BannerType.error,
-                  ),
-                ],
-                SizedBox(height: phoneLand ? 10 : 16),
-                _buildCompactSaveButton(),
-              ],
-            ),
-          ),
+          galleryAndPhoto,
+          if (!aboutTypingMode) ...[
+            SizedBox(height: phoneLand ? 10 : 16),
+            _buildCompactSaveButton(),
+          ],
         ],
-    );
+      );
+    } else {
+      form = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCompactHeader(context),
+          SizedBox(height: aboutTypingMode ? 10 : 16),
+          if (aboutTypingMode)
+            Expanded(child: aboutField)
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    avatarAndMeta,
+                    aboutField,
+                    galleryAndPhoto,
+                  ],
+                ),
+              ),
+            ),
+          if (!aboutTypingMode) ...[
+            const SizedBox(height: 12),
+            _buildCompactSaveButton(),
+          ],
+        ],
+      );
+    }
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {

@@ -359,16 +359,22 @@ func main() {
 	}
 
 	pushSender := &api.WebPushSender{
-		Pool:       pool,
-		PublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
-		PrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
-		Subject:    getEnv("VAPID_SUBJECT", "admin@zozu.games"),
-		TTLSeconds: 86400,
+		Pool:                  pool,
+		PublicKey:             getEnv("VAPID_PUBLIC_KEY", ""),
+		PrivateKey:            getEnv("VAPID_PRIVATE_KEY", ""),
+		Subject:               getEnv("VAPID_SUBJECT", "admin@zozu.games"),
+		TTLSeconds:            86400,
+		FCMServiceAccountJSON: getEnv("FCM_SERVICE_ACCOUNT_JSON", ""),
 	}
 	if pushSender.Enabled() {
 		log.Printf("Web Push: enabled")
 	} else {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
+	}
+	if pushSender.FCMEnabled() {
+		log.Printf("FCM: enabled")
+	} else {
+		log.Printf("FCM: disabled (set FCM_SERVICE_ACCOUNT_JSON)")
 	}
 
 	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")
@@ -574,6 +580,8 @@ func main() {
 	mux.Handle("/api/push/subscribe", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(webPushHandler.Subscribe)))
 	mux.Handle("/api/push/unsubscribe", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(webPushHandler.Unsubscribe)))
 	mux.Handle("/api/push/preferences", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(webPushHandler.Preferences)))
+	mux.Handle("/api/push/device", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(webPushHandler.RegisterDevice)))
+	mux.Handle("/api/push/device/unregister", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(webPushHandler.UnregisterDevice)))
 
 	mux.HandleFunc("/api/admin/init", adminHandler.Init)
 	mux.Handle("/api/admin/users", adminAuth(http.HandlerFunc(adminHandler.ListUsers)))

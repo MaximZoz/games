@@ -85,3 +85,12 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
+
+val googleServicesFiles = listOf(
+    file("google-services.json"),
+    file("src/prod/google-services.json"),
+    file("src/dev/google-services.json"),
+)
+if (googleServicesFiles.any { it.exists() }) {
+    apply(plugin = "com.google.gms.google-services")
+}

@@ -550,7 +550,7 @@ func TestUnoAutoPlaysIdenticalNonWildPair(t *testing.T) {
 		}
 	})
 
-	t.Run("two +2 add four to the stack", func(t *testing.T) {
+	t.Run("two +2 stay as a single play", func(t *testing.T) {
 		game := controlledGame(t, 2)
 		first := testAction("red-dt-a", ColorRed, KindDrawTwo)
 		second := testAction("red-dt-b", ColorRed, KindDrawTwo)
@@ -559,11 +559,31 @@ func TestUnoAutoPlaysIdenticalNonWildPair(t *testing.T) {
 		if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID}); err != nil {
 			t.Fatal(err)
 		}
-		if game.PendingDraw != 4 {
-			t.Fatalf("pending = %d, want 4", game.PendingDraw)
+		if game.PendingDraw != 2 {
+			t.Fatalf("pending = %d, want 2", game.PendingDraw)
 		}
-		if len(game.Players[0].Hand) != 1 {
-			t.Fatalf("hand = %d, want 1", len(game.Players[0].Hand))
+		if len(game.Players[0].Hand) != 2 {
+			t.Fatalf("hand = %d, want 2", len(game.Players[0].Hand))
+		}
+		if len(game.LastPlayedCards) != 1 {
+			t.Fatalf("played cards = %d, want 1", len(game.LastPlayedCards))
+		}
+	})
+
+	t.Run("two skips stay as a single play", func(t *testing.T) {
+		game := controlledGame(t, 2)
+		first := testAction("red-skip-a", ColorRed, KindSkip)
+		second := testAction("red-skip-b", ColorRed, KindSkip)
+		game.Players[0].Hand = []Card{first, second, testNumber("keep", ColorBlue, 1)}
+
+		if err := game.Apply(Action{Type: ActionPlay, CardID: first.ID}); err != nil {
+			t.Fatal(err)
+		}
+		if len(game.Players[0].Hand) != 2 {
+			t.Fatalf("hand = %d, want 2", len(game.Players[0].Hand))
+		}
+		if len(game.LastPlayedCards) != 1 {
+			t.Fatalf("played cards = %d, want 1", len(game.LastPlayedCards))
 		}
 	})
 
