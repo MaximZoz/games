@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/connectivity_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/connectivity_web.dart'
     if (dart.library.js_interop) 'package:multigames_client/core/connectivity_web.dart';
+import 'package:multigames_client/core/offline_reachability.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyOfflinePreference = 'offline_mode_preference';
@@ -90,29 +92,77 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
           deviceOnline: readDeviceOnline(),
           serverReachable: readDeviceOnline(),
         )) {
+    _reachability = OfflineReachability(
+      deviceOnline: state.deviceOnline,
+      serverReachable: state.serverReachable,
+    );
+    _resumeObserver = _AppResumeObserver(_onAppResumed);
+    WidgetsBinding.instance.addObserver(_resumeObserver);
     _init();
   }
 
+  late final OfflineReachability _reachability;
+  late final _AppResumeObserver _resumeObserver;
   StreamSubscription<bool>? _deviceSub;
   Timer? _probeTimer;
+  Timer? _deviceOfflineHold;
+  int _probeGen = 0;
   bool _disposed = false;
 
   Future<void> _init() async {
     await _loadPreference();
-    _deviceSub = deviceOnlineStream().listen((online) {
+    _deviceSub = deviceOnlineStream().listen(_onDeviceOnlineChanged);
+    unawaited(_probeReachable());
+  }
+
+  void _onDeviceOnlineChanged(bool online) {
+    if (_disposed) return;
+    _deviceOfflineHold?.cancel();
+    _deviceOfflineHold = null;
+    if (online) {
+      _reachability.onDeviceOnline();
+      _publishReachability();
+      unawaited(_probeReachable());
+      return;
+    }
+    _reachability.onDeviceOfflineReported();
+    _deviceOfflineHold = Timer(OfflineReachability.deviceOfflineHold, () {
       if (_disposed) return;
-      state = state.copyWith(deviceOnline: online);
-      if (online) {
-        unawaited(_probeReachable());
-      } else {
-        state = state.copyWith(serverReachable: false);
-      }
+      _reachability.confirmDeviceOffline();
+      _publishReachability();
+      _scheduleNextProbe();
     });
-    // Периодический probe: ловит «online» без реального API.
-    _probeTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+  }
+
+  void _onAppResumed() {
+    if (_disposed) return;
+    if (readDeviceOnline()) {
+      _deviceOfflineHold?.cancel();
+      _deviceOfflineHold = null;
+      _reachability.onDeviceOnline();
+      _publishReachability();
+    }
+    unawaited(_probeReachable());
+  }
+
+  void _publishReachability() {
+    if (_disposed) return;
+    if (state.deviceOnline == _reachability.deviceOnline &&
+        state.serverReachable == _reachability.serverReachable) {
+      return;
+    }
+    state = state.copyWith(
+      deviceOnline: _reachability.deviceOnline,
+      serverReachable: _reachability.serverReachable,
+    );
+  }
+
+  void _scheduleNextProbe() {
+    _probeTimer?.cancel();
+    if (_disposed) return;
+    _probeTimer = Timer(_reachability.nextProbeInterval, () {
       unawaited(_probeReachable());
     });
-    unawaited(_probeReachable());
   }
 
   Future<void> _loadPreference() async {
@@ -122,9 +172,13 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
         ? OfflinePreference.offline
         : OfflinePreference.online;
     if (_disposed) return;
+    final deviceOnline = readDeviceOnline();
+    if (deviceOnline) {
+      _reachability.onDeviceOnline();
+    }
     state = state.copyWith(
       preference: preference,
-      deviceOnline: readDeviceOnline(),
+      deviceOnline: _reachability.deviceOnline,
     );
   }
 
@@ -143,7 +197,7 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
 
   /// Попытка выйти в онлайн. `null` — ок; иначе причина для тоста.
   Future<OnlineUnavailableReason?> tryGoOnline() async {
-    await _probeReachable();
+    await _probeReachable(immediateFailure: true);
     if (_disposed) return OnlineUnavailableReason.serverUnreachable;
     final reason = state.onlineUnavailableReason;
     if (reason != OnlineUnavailableReason.none) {
@@ -154,35 +208,41 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
   }
 
   /// Лёгкая проверка доступности API.
-  Future<void> _probeReachable() async {
-    final deviceOnline = readDeviceOnline() || state.deviceOnline;
-    if (!deviceOnline) {
-      if (_disposed) return;
-      if (state.deviceOnline || state.serverReachable) {
-        state = state.copyWith(deviceOnline: false, serverReachable: false);
-      }
+  Future<void> _probeReachable({bool immediateFailure = false}) async {
+    final gen = ++_probeGen;
+    final osOnline = readDeviceOnline();
+    // Нативный stub всегда online; на web — navigator.onLine.
+    if (!osOnline && !immediateFailure) {
+      // Короткий offline-ивент: HTTP всё равно упадёт, ждём hold.
+      _scheduleNextProbe();
+      return;
+    }
+    if (!osOnline && !_reachability.deviceOnline) {
+      _reachability.onProbeFailure(immediate: immediateFailure);
+      if (gen != _probeGen || _disposed) return;
+      _publishReachability();
+      _scheduleNextProbe();
       return;
     }
     try {
       final res = await http
           .get(Uri.parse('$apiBaseUrl/api/start'))
-          .timeout(const Duration(seconds: 4));
+          .timeout(OfflineReachability.probeTimeout);
+      if (gen != _probeGen || _disposed) return;
       final ok = res.statusCode >= 200 && res.statusCode < 500;
-      if (_disposed) return;
-      // Успешный probe подтверждает и сеть устройства, и сервер.
       if (ok) {
-        if (!state.deviceOnline || !state.serverReachable) {
-          state = state.copyWith(deviceOnline: true, serverReachable: true);
-        }
-      } else if (state.serverReachable) {
-        state = state.copyWith(serverReachable: false);
+        _reachability.onProbeSuccess();
+      } else {
+        _reachability.onProbeFailure(immediate: immediateFailure);
       }
+      _publishReachability();
     } catch (_) {
-      if (_disposed) return;
-      if (state.serverReachable) {
-        state = state.copyWith(serverReachable: false);
-      }
+      if (gen != _probeGen || _disposed) return;
+      _reachability.onProbeFailure(immediate: immediateFailure);
+      _publishReachability();
     }
+    if (gen != _probeGen || _disposed) return;
+    _scheduleNextProbe();
   }
 
   /// Принудительно перепроверить сеть (после всплывашки / возврата в приложение).
@@ -191,8 +251,21 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
   @override
   void dispose() {
     _disposed = true;
+    WidgetsBinding.instance.removeObserver(_resumeObserver);
     _deviceSub?.cancel();
     _probeTimer?.cancel();
+    _deviceOfflineHold?.cancel();
     super.dispose();
+  }
+}
+
+class _AppResumeObserver with WidgetsBindingObserver {
+  _AppResumeObserver(this.onResumed);
+
+  final VoidCallback onResumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) onResumed();
   }
 }

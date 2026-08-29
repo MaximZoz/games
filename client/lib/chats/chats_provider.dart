@@ -161,8 +161,9 @@ final chatsListProvider = StreamProvider.autoDispose<List<ChatPreviewItem>>((ref
               ref.read(locallyReadChatIdsProvider.notifier).state = next;
             }
           }
+          final visible = applyLocallyReadChats(chats, localRead);
           await _emitAfterFrame(() {
-            if (!controller.isClosed) controller.add(chats);
+            if (!controller.isClosed) controller.add(visible);
           });
         } catch (e, st) {
           await _emitAfterFrame(() {
@@ -279,12 +280,26 @@ final blockedUsersProvider = StreamProvider.autoDispose<List<BlockedChatUserItem
   return controller.stream;
 });
 
+/// Сервер ещё отдаёт unread, а пользователь уже открыл чат — не поднимать бейдж.
+List<ChatPreviewItem> applyLocallyReadChats(
+  List<ChatPreviewItem> chats,
+  Set<String> localRead,
+) {
+  if (localRead.isEmpty) return chats;
+  return [
+    for (final chat in chats)
+      if (localRead.contains(chat.chatID) && chat.unreadCount > 0)
+        chat.copyWith(unreadCount: 0)
+      else
+        chat,
+  ];
+}
+
 final chatsUnreadCountProvider = Provider<int>((ref) {
   final chats =
       ref.watch(chatsListProvider).valueOrNull ?? const <ChatPreviewItem>[];
   final localRead = ref.watch(locallyReadChatIdsProvider);
-  return chats.fold<int>(0, (sum, item) {
-    if (localRead.contains(item.chatID)) return sum;
+  return applyLocallyReadChats(chats, localRead).fold<int>(0, (sum, item) {
     return sum + item.unreadCount;
   });
 });

@@ -172,6 +172,28 @@ abstract final class AlertSfx {
   static bool shouldPlayCountBump(int? previous, int next) {
     return previous != null && next > previous;
   }
+
+  /// Открытая комната чата (`/chats/<id>`), не список и не «Заблокированные».
+  static bool isReadingChat(String path) {
+    final segs = path
+        .split('?')
+        .first
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (segs.length < 2 || segs[0] != 'chats') return false;
+    final id = segs[1];
+    return id.isNotEmpty && id != 'blocked';
+  }
+
+  /// Новый unread, но не при входе в уже открытое сообщение (иначе второй ping).
+  static bool shouldPlayChatUnread({
+    required int? previous,
+    required int next,
+    required String path,
+  }) {
+    return shouldPlayCountBump(previous, next) && !isReadingChat(path);
+  }
 }
 
 /// Бейдж «ваш ход» в шелле не дублирует звук, если уже открыта партия.
