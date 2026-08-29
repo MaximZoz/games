@@ -44,9 +44,12 @@ type fcmAndroid struct {
 }
 
 type fcmAndroidNotification struct {
-	ChannelID string `json:"channel_id,omitempty"`
-	Icon      string `json:"icon,omitempty"`
-	Tag       string `json:"tag,omitempty"`
+	ChannelID   string `json:"channel_id,omitempty"`
+	Icon        string `json:"icon,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+	ClickAction string `json:"click_action,omitempty"`
+	Sound       string `json:"sound,omitempty"`
+	Color       string `json:"color,omitempty"`
 }
 
 type fcmErrorBody struct {
@@ -57,6 +60,29 @@ type fcmErrorBody struct {
 			ErrorCode string `json:"errorCode"`
 		} `json:"details"`
 	} `json:"error"`
+}
+
+func fcmDataFromPayload(payload PushPayload) map[string]string {
+	data := map[string]string{}
+	if payload.Title != "" {
+		data["title"] = payload.Title
+	}
+	if payload.Body != "" {
+		data["body"] = payload.Body
+	}
+	if payload.URL != "" {
+		data["url"] = payload.URL
+	}
+	if payload.Tag != "" {
+		data["tag"] = payload.Tag
+	}
+	if payload.Kind != "" {
+		data["kind"] = payload.Kind
+	}
+	if payload.ChatID != "" {
+		data["chat_id"] = payload.ChatID
+	}
+	return data
 }
 
 func parseFCMProjectID(raw string) string {
@@ -120,19 +146,7 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 		client = http.DefaultClient
 	}
 
-	data := map[string]string{}
-	if payload.URL != "" {
-		data["url"] = payload.URL
-	}
-	if payload.Tag != "" {
-		data["tag"] = payload.Tag
-	}
-	if payload.Kind != "" {
-		data["kind"] = payload.Kind
-	}
-	if payload.ChatID != "" {
-		data["chat_id"] = payload.ChatID
-	}
+	data := fcmDataFromPayload(payload)
 
 	const maxParallel = 8
 	sem := make(chan struct{}, maxParallel)
@@ -162,9 +176,12 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 				Android: &fcmAndroid{
 					Priority: "high",
 					Notification: &fcmAndroidNotification{
-						ChannelID: "zozu_events",
-						Icon:      "ic_stat_notify",
-						Tag:       payload.Tag,
+						ChannelID:   "zozu_events",
+						Icon:        "ic_stat_notify",
+						Tag:         payload.Tag,
+						ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+						Sound:       "default",
+						Color:       "#6366F1",
 					},
 				},
 			}})
