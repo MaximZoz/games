@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf16"
 
 	"multigames/server/internal/store"
 
@@ -44,9 +47,12 @@ type fcmAndroid struct {
 }
 
 type fcmAndroidNotification struct {
-	ChannelID string `json:"channel_id,omitempty"`
-	Icon      string `json:"icon,omitempty"`
-	Tag       string `json:"tag,omitempty"`
+	ChannelID   string `json:"channel_id,omitempty"`
+	Icon        string `json:"icon,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+	ClickAction string `json:"click_action,omitempty"`
+	Sound       string `json:"sound,omitempty"`
+	Color       string `json:"color,omitempty"`
 }
 
 type fcmErrorBody struct {
@@ -59,12 +65,111 @@ type fcmErrorBody struct {
 	} `json:"error"`
 }
 
+func fcmDataFromPayload(payload PushPayload) map[string]string {
+	data := map[string]string{}
+	if payload.Title != "" {
+		data["title"] = payload.Title
+	}
+	if payload.Body != "" {
+		data["body"] = payload.Body
+	}
+	if payload.URL != "" {
+		data["url"] = payload.URL
+	}
+	if payload.Tag != "" {
+		data["tag"] = payload.Tag
+	}
+	if payload.Kind != "" {
+		data["kind"] = payload.Kind
+	}
+	if payload.ChatID != "" {
+		data["chat_id"] = payload.ChatID
+	}
+	return data
+}
+
+func utf16LEToString(b []byte) string {
+	if len(b) < 2 {
+		return ""
+	}
+	if b[0] == 0xFF && b[1] == 0xFE {
+		b = b[2:]
+	}
+	if len(b)%2 == 1 {
+		b = b[:len(b)-1]
+	}
+	u := make([]uint16, 0, len(b)/2)
+	for i := 0; i+1 < len(b); i += 2 {
+		u = append(u, uint16(b[i])|uint16(b[i+1])<<8)
+	}
+	return string(utf16.Decode(u))
+}
+
+func nulCount(b []byte) int {
+	n := 0
+	for _, c := range b {
+		if c == 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// NormalizeFCMServiceAccountJSON чинит BOM / UTF-16 с Windows и отбрасывает «-».
+func NormalizeFCMServiceAccountJSON(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	b := []byte(raw)
+	if (len(b) >= 2 && b[0] == 0xFF && b[1] == 0xFE) ||
+		(len(b) > 8 && nulCount(b) > len(b)/4) {
+		if s := utf16LEToString(b); s != "" {
+			raw = s
+		}
+	}
+	s := strings.TrimSpace(raw)
+	s = strings.TrimPrefix(s, "\uFEFF")
+	s = strings.TrimSpace(s)
+	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
+		if u, err := strconv.Unquote(s); err == nil {
+			s = strings.TrimSpace(u)
+		}
+	}
+	if s == "" || s == "-" {
+		return ""
+	}
+	return s
+}
+
 func parseFCMProjectID(raw string) string {
+	n := NormalizeFCMServiceAccountJSON(raw)
 	var sa fcmServiceAccount
-	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &sa); err != nil {
+	if err := json.Unmarshal([]byte(n), &sa); err != nil {
 		return ""
 	}
 	return strings.TrimSpace(sa.ProjectID)
+}
+
+// FCMSecretStatus — причина для лога, без содержимого ключа.
+func FCMSecretStatus(raw string) (ok bool, reason string) {
+	trimmed := strings.TrimSpace(raw)
+	if raw == "" || trimmed == "" {
+		return false, "empty"
+	}
+	if trimmed == "-" {
+		return false, "literal-dash (Windows stdin not read)"
+	}
+	n := NormalizeFCMServiceAccountJSON(raw)
+	if n == "" {
+		return false, fmt.Sprintf("unreadable len=%d", len(raw))
+	}
+	if parseFCMProjectID(n) == "" {
+		if !json.Valid([]byte(n)) {
+			return false, fmt.Sprintf("invalid-json len=%d", len(n))
+		}
+		return false, "no-project_id"
+	}
+	return true, "ok"
 }
 
 func shouldDropFCMToken(status int, body []byte) bool {
@@ -90,7 +195,6 @@ func shouldDropFCMToken(status int, body []byte) bool {
 func (s *WebPushSender) FCMEnabled() bool {
 	return s != nil &&
 		s.Pool != nil &&
-		strings.TrimSpace(s.FCMServiceAccountJSON) != "" &&
 		parseFCMProjectID(s.FCMServiceAccountJSON) != ""
 }
 
@@ -108,31 +212,20 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 		return
 	}
 
-	creds, err := google.CredentialsFromJSON(ctx, []byte(s.FCMServiceAccountJSON), fcmScope)
+	saJSON := NormalizeFCMServiceAccountJSON(s.FCMServiceAccountJSON)
+	creds, err := google.CredentialsFromJSON(ctx, []byte(saJSON), fcmScope)
 	if err != nil {
 		log.Printf("fcm: credentials: %v", err)
 		return
 	}
-	projectID := parseFCMProjectID(s.FCMServiceAccountJSON)
+	projectID := parseFCMProjectID(saJSON)
 	url := "https://fcm.googleapis.com/v1/projects/" + projectID + "/messages:send"
 	client := s.HTTPClient
 	if client == nil {
 		client = http.DefaultClient
 	}
 
-	data := map[string]string{}
-	if payload.URL != "" {
-		data["url"] = payload.URL
-	}
-	if payload.Tag != "" {
-		data["tag"] = payload.Tag
-	}
-	if payload.Kind != "" {
-		data["kind"] = payload.Kind
-	}
-	if payload.ChatID != "" {
-		data["chat_id"] = payload.ChatID
-	}
+	data := fcmDataFromPayload(payload)
 
 	const maxParallel = 8
 	sem := make(chan struct{}, maxParallel)
@@ -162,9 +255,12 @@ func (s *WebPushSender) sendFCM(ctx context.Context, userIDs []uuid.UUID, payloa
 				Android: &fcmAndroid{
 					Priority: "high",
 					Notification: &fcmAndroidNotification{
-						ChannelID: "zozu_events",
-						Icon:      "ic_stat_notify",
-						Tag:       payload.Tag,
+						ChannelID:   "zozu_events",
+						Icon:        "ic_stat_notify",
+						Tag:         payload.Tag,
+						ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+						Sound:       "default",
+						Color:       "#6366F1",
 					},
 				},
 			}})

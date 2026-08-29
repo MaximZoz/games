@@ -3,4 +3,5 @@
     <!-- Тот же #E8ECF4, что AppColors.surfaceUnified — иначе Android
          на resume / смене экрана сверкает белым windowBackground. -->
     <color name="app_surface">#E8ECF4</color>
+    <color name="notify_accent">#6366F1</color>
 </resources>

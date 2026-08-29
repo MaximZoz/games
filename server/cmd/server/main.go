@@ -364,17 +364,19 @@ func main() {
 		PrivateKey:            getEnv("VAPID_PRIVATE_KEY", ""),
 		Subject:               getEnv("VAPID_SUBJECT", "admin@zozu.games"),
 		TTLSeconds:            86400,
-		FCMServiceAccountJSON: getEnv("FCM_SERVICE_ACCOUNT_JSON", ""),
+		FCMServiceAccountJSON: api.NormalizeFCMServiceAccountJSON(
+			getEnv("FCM_SERVICE_ACCOUNT_JSON", ""),
+		),
 	}
 	if pushSender.Enabled() {
 		log.Printf("Web Push: enabled")
 	} else {
 		log.Printf("Web Push: disabled (set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)")
 	}
-	if pushSender.FCMEnabled() {
+	if ok, reason := api.FCMSecretStatus(getEnv("FCM_SERVICE_ACCOUNT_JSON", "")); ok {
 		log.Printf("FCM: enabled")
 	} else {
-		log.Printf("FCM: disabled (set FCM_SERVICE_ACCOUNT_JSON)")
+		log.Printf("FCM: disabled (%s)", reason)
 	}
 
 	publicBase := getEnv("PUBLIC_BASE_URL", "http://localhost:8080")

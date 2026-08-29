@@ -7,6 +7,8 @@ import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
     if (dart.library.html)
         'package:multigames_client/core/push_notification_nav_web.dart'
+    if (dart.library.io)
+        'package:multigames_client/core/push_notification_nav_io.dart'
     show clearPushNotificationsForChat;
 import 'package:multigames_client/core/realtime_events_provider.dart';
 

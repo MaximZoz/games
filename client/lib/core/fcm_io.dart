@@ -2,13 +2,16 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:multigames_client/core/fcm_types.dart';
 
 var _initialized = false;
 
-bool fcmSupported() => Platform.isAndroid;
+bool _inFlutterTest() => Platform.environment.containsKey('FLUTTER_TEST');
+
+bool fcmSupported() => Platform.isAndroid && !_inFlutterTest();
 
 Future<bool> _ensureFirebase() async {
-  if (!Platform.isAndroid) return false;
+  if (!fcmSupported()) return false;
   if (_initialized) return Firebase.apps.isNotEmpty;
   try {
     if (Firebase.apps.isEmpty) {
@@ -20,6 +23,22 @@ Future<bool> _ensureFirebase() async {
     _initialized = true;
     return Firebase.apps.isNotEmpty;
   }
+}
+
+FcmPushMessage _wrap(RemoteMessage message) {
+  final data = <String, String>{};
+  message.data.forEach((key, value) {
+    data[key] = value.toString();
+  });
+  final title = message.notification?.title;
+  final body = message.notification?.body;
+  if (title != null && title.isNotEmpty) {
+    data.putIfAbsent('title', () => title);
+  }
+  if (body != null && body.isNotEmpty) {
+    data.putIfAbsent('body', () => body);
+  }
+  return FcmPushMessage(data);
 }
 
 Future<String?> ensureFcmToken() async {
@@ -37,7 +56,7 @@ Future<String?> ensureFcmToken() async {
 }
 
 Stream<String> fcmTokenRefresh() {
-  if (!Platform.isAndroid) return const Stream.empty();
+  if (!fcmSupported()) return const Stream.empty();
   return FirebaseMessaging.instance.onTokenRefresh;
 }
 
@@ -46,4 +65,25 @@ Future<void> deleteFcmToken() async {
   try {
     await FirebaseMessaging.instance.deleteToken();
   } catch (_) {}
+}
+
+Future<FcmPushMessage?> getInitialFcmMessage() async {
+  if (!await _ensureFirebase()) return null;
+  try {
+    final message = await FirebaseMessaging.instance.getInitialMessage();
+    if (message == null) return null;
+    return _wrap(message);
+  } catch (_) {
+    return null;
+  }
+}
+
+Stream<FcmPushMessage> fcmOpenedAppMessages() {
+  if (!fcmSupported()) return const Stream.empty();
+  return FirebaseMessaging.onMessageOpenedApp.map(_wrap);
+}
+
+Stream<FcmPushMessage> fcmForegroundMessages() {
+  if (!fcmSupported()) return const Stream.empty();
+  return FirebaseMessaging.onMessage.map(_wrap);
 }
