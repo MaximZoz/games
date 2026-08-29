@@ -16,6 +16,7 @@ import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
+import 'package:multigames_client/screens/profile_avatar_button.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -1214,11 +1215,6 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     super.dispose();
   }
 
-  bool get _hasPhoto =>
-      _avatarKind == AvatarKind.file &&
-      _avatarValue != null &&
-      _avatarValue!.isNotEmpty;
-
   Widget _buildCurrentAvatar() {
     final name = widget.displayNameController.text.trim();
     final cacheKey = '$_avatarKind|$_avatarValue|$name';
@@ -1747,9 +1743,13 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.photo_library_outlined, size: 19),
-            label: Text(_hasPhoto
-                ? context.l10n.profileChangePhoto
-                : context.l10n.profileUploadPhoto),
+            label: Text(
+              profileAvatarActionLabel(
+                processing: _isAvatarProcessing,
+                processingLabel: context.l10n.profileProcessingPhoto,
+                changeLabel: context.l10n.profileChangePhoto,
+              ),
+            ),
           ),
           if (_saveError != null) ...[
             const SizedBox(height: 12),
@@ -2055,16 +2055,13 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Icon(
-                          _hasPhoto
-                              ? Icons.change_circle_outlined
-                              : Icons.photo_library_outlined,
-                          size: 20,
-                        ),
+                      : const Icon(Icons.change_circle_outlined, size: 20),
                   label: Text(
-                    _isAvatarProcessing
-                        ? context.l10n.profileProcessingPhoto
-                        : (_hasPhoto ? context.l10n.profileChangePhoto : context.l10n.profileUploadPhoto),
+                    profileAvatarActionLabel(
+                      processing: _isAvatarProcessing,
+                      processingLabel: context.l10n.profileProcessingPhoto,
+                      changeLabel: context.l10n.profileChangePhoto,
+                    ),
                   ),
                 ),
                 if (_saveError != null) ...[

@@ -17,6 +17,7 @@ import 'core/settings_provider.dart';
 import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
     if (dart.library.html) 'core/push_notification_nav_web.dart'
+    if (dart.library.io) 'core/push_notification_nav_io.dart'
     as push_nav;
 import 'router.dart';
 import 'ui/app_theme.dart';
@@ -82,9 +83,8 @@ TextTheme _textThemeNoUnderline(TextTheme base) {
   );
 }
 
-/// Установка слушателя клика по Web Push → go_router без перезагрузки.
+/// Клик по push (PWA SW или Android FCM/локальный баннер) → go_router.
 final _pushNotificationNavProvider = Provider<void>((ref) {
-  if (!kIsWeb) return;
   final router = ref.watch(goRouterProvider);
   push_nav.installPushNotificationNavigation((path) {
     router.go(path);

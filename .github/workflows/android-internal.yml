@@ -160,12 +160,19 @@ jobs:
         run: |
           set -euo pipefail
           flavor="${{ steps.target.outputs.flavor }}"
+          package="${{ steps.target.outputs.package_name }}"
           json="${ANDROID_GOOGLE_SERVICES_JSON:-}"
           if [[ "$flavor" == "dev" && -n "${ANDROID_GOOGLE_SERVICES_JSON_DEV:-}" ]]; then
             json="$ANDROID_GOOGLE_SERVICES_JSON_DEV"
           fi
           if [[ -z "$json" ]]; then
             echo "No google-services.json secret — closed-app FCM will be off in this AAB"
+            exit 0
+          fi
+          # Иначе process*GoogleServices падает: в файле только com.zozugames.app,
+          # а DEV-пакет — com.zozugames.app.dev.
+          if ! printf '%s' "$json" | grep -Fq "\"package_name\": \"$package\""; then
+            echo "google-services.json has no client for $package — skip FCM for $flavor"
             exit 0
           fi
           mkdir -p "android/app/src/${flavor}"

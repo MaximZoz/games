@@ -12,11 +12,31 @@ Future<void> showLocalNotification({
   required String title,
   required String body,
   String? payload,
+  String? tag,
+  int? id,
 }) =>
-    impl.showLocalNotification(title: title, body: body, payload: payload);
+    impl.showLocalNotification(
+      title: title,
+      body: body,
+      payload: payload,
+      tag: tag,
+      id: id,
+    );
 
 void setLocalNotifySessionActive(bool active) =>
     impl.setLocalNotifySessionActive(active);
 
 Future<void> cancelAllLocalNotifications() =>
     impl.cancelAllLocalNotifications();
+
+Future<void> cancelLocalNotificationsForTag(String tag) =>
+    impl.cancelLocalNotificationsForTag(tag);
+
+Future<void> cancelLocalNotificationsForPath(String path, {String? tag}) =>
+    impl.cancelLocalNotificationsForPath(path, tag: tag);
+
+void setLocalNotificationTapHandler(void Function(String payload)? handler) =>
+    impl.setLocalNotificationTapHandler(handler);
+
+Future<String?> consumeLocalNotificationLaunchPayload() =>
+    impl.consumeLocalNotificationLaunchPayload();

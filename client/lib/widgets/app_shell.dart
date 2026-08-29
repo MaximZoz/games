@@ -14,7 +14,8 @@ import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/push_notification_nav_stub.dart'
-    if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart';
+    if (dart.library.html) 'package:multigames_client/core/push_notification_nav_web.dart'
+    if (dart.library.io) 'package:multigames_client/core/push_notification_nav_io.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
