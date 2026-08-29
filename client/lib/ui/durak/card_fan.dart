@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/ui/durak/card_fan_lift.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -119,19 +120,19 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
-  /// Слоты веера: вытащенная карта сразу исключена — веер схлопывается
-  /// в момент подъёма, а не при посадке на стол.
-  List<PlayingCard> get _layoutCards {
-    final lifted = _liftedCard;
-    if (lifted == null) return widget.cards;
-    return [for (final c in widget.cards) if (c != lifted) c];
-  }
+  /// Слоты не схлопываем на lift: вытащенная карта остаётся дыркой.
+  /// Иначе на iOS лицо остаётся в веере, а overlay рисует вторую копию.
+  List<PlayingCard> get _layoutCards => widget.cards;
 
   List<PlayingCard> get _fanCards => _layoutCards;
 
-  bool _isHidden(PlayingCard card) =>
-      widget.hiddenCards?.contains(card) == true ||
-      (_hidePeekUnderOverlay && _peekCard == card);
+  bool _isHidden(PlayingCard card) => fanSlotHidesFace(
+        card: card,
+        liftedCard: _liftedCard,
+        peekCard: _peekCard,
+        hidePeekUnderOverlay: _hidePeekUnderOverlay,
+        parentHidden: widget.hiddenCards,
+      );
 
   @override
   void dispose() {
@@ -712,6 +713,16 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     setState(() => _peekT = next);
   }
 
+  /// Тест: карта на overlay, слот в веере без лица.
+  @visibleForTesting
+  void debugLiftCard(PlayingCard card) {
+    setState(() {
+      _liftedCard = card;
+      _peekCard = null;
+      _peekT = 0;
+    });
+  }
+
   /// Peek → свободный drag без скачка: overlay стартует из приподнятого слота.
   void _promotePeekToFree(
     Offset fingerGlobal,
@@ -863,9 +874,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       final drop = widget.onDrop;
       if (drop != null && canPlay) {
         // Overlay оставляем, пока родитель меряет слот и стартует fly —
-        // иначе кадр без карты. Веер уже сжат (_liftedCard вне layout).
-        // Родитель обязан убрать карту из hand и вернуть true до clearLift —
-        // иначе после снятия lift веер снова растянется.
+        // иначе кадр без карты. Слот в веере уже скрыт (_liftedCard).
+        // Родитель обязан убрать карту из hand и вернуть true до clearLift.
         final scaledFrom = Rect.fromCenter(
           center: from.center,
           width: widget.cardSize.width * dragScale,
@@ -1164,6 +1174,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                 // Selected — только тень (мультивыбор long-press), без подъёма.
                 elevated: active || peeking || selected,
               );
+    child = RepaintBoundary(child: child);
 
     child = GestureDetector(
       onLongPress: !widget.enabled || widget.faceDown || !legal
