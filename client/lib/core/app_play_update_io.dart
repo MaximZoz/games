@@ -47,7 +47,7 @@ Future<bool> applyPlayStoreUpdate() async {
 }
 
 Future<bool> _openPlayStoreListing() async {
-  final id = androidApplicationId;
+  const id = androidApplicationId;
   final market = Uri.parse('market://details?id=$id');
   final https = Uri.parse(
     'https://play.google.com/store/apps/details?id=$id',
