@@ -64,12 +64,12 @@ class UnoCard {
 
   bool stacksOn(UnoCard top) => isDrawStack && kind == top.kind;
 
-  /// Точная пара недиких карт: две жёлтые 8, два красных пропуска.
+  /// Пара только обычных цифр одного цвета: две жёлтые 8.
+  /// +2 / пропуск / реверс / дикие карты вместе не сбрасываются.
   bool sameNonWildFace(UnoCard other) =>
-      !isWild &&
-      !other.isWild &&
+      kind == UnoCardKind.number &&
+      other.kind == UnoCardKind.number &&
       color == other.color &&
-      kind == other.kind &&
       number == other.number;
 
   int get points => switch (kind) {
@@ -178,9 +178,9 @@ List<UnoCard> buildUnoDeck({int? seed, bool shuffle = true}) {
   return deck;
 }
 
-/// Вторая такая же недикая карта в руке, если есть.
+/// Вторая такая же цифровая карта в руке, если есть.
 UnoCard? findUnoTwin(List<UnoCard> hand, UnoCard card) {
-  if (card.isWild) return null;
+  if (card.kind != UnoCardKind.number) return null;
   for (final other in hand) {
     if (other.id != card.id && card.sameNonWildFace(other)) return other;
   }

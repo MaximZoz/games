@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +63,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
   Timer? _rematchPollTimer;
+  Timer? _busyWatchdog;
+  int _busyStuckTicks = 0;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
@@ -139,6 +142,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   @override
   void dispose() {
     _rematchPollTimer?.cancel();
+    _busyWatchdog?.cancel();
     _realtimeSubscription?.close();
     _hitPulse.dispose();
     super.dispose();
@@ -150,6 +154,25 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
+    _busyWatchdog?.cancel();
+    _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      if (_busy || _fxInProgress) {
+        _busyStuckTicks++;
+        if (_busyStuckTicks >= 3) {
+          _busyStuckTicks = 0;
+          setState(() {
+            _busy = false;
+            _fxInProgress = false;
+          });
+          if (!_isOffline) {
+            ref.invalidate(battleshipGameProvider(widget.gameId));
+          }
+        }
+      } else {
+        _busyStuckTicks = 0;
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) return;
@@ -1024,7 +1047,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         game.isSetup &&
                         !_iAmReady(game, me) &&
                         setupDeadline > nowSec;
-                    return Column(
+                    final column = Column(
                       children: [
                         MyTurnAlert(isMyTurn: myTurn && !isOver),
                         Padding(
@@ -1133,6 +1156,23 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                               : _buildBattle(game, me, narrow),
                         ),
                       ],
+                    );
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        const designH = 640.0;
+                        if (constraints.maxHeight >= 520) {
+                          return column;
+                        }
+                        return FittedBox(
+                          fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: math.max(constraints.maxWidth, 280),
+                            height: designH,
+                            child: column,
+                          ),
+                        );
+                      },
                     );
                   },
                   loading: () => const Center(
@@ -1534,7 +1574,7 @@ class _BattleshipBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = cellSize.clamp(16.0, 44.0);
+    final size = cellSize.clamp(11.0, 44.0);
     const gap = 2.0;
     final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
     final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
@@ -1624,7 +1664,7 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
   Offset? _panStart;
   bool _didDrag = false;
 
-  double get _size => widget.cellSize.clamp(16.0, 44.0);
+  double get _size => widget.cellSize.clamp(11.0, 44.0);
 
   int? _cellAt(Offset local) {
     final step = _size + _gap;

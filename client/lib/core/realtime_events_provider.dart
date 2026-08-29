@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -23,12 +24,29 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
   var disposed = false;
   var disconnectedDueToVisibility = false;
   void Function()? cancelVisibilityListener;
+  StreamSubscription<void>? connectedSub;
+  _AppResumeObserver? resumeObserver;
+
+  void emitNow(Map<String, dynamic> data) {
+    if (!disposed && !controller.isClosed) controller.add(data);
+  }
+
   void emitAfterFrame(Map<String, dynamic> data) {
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!disposed && !controller.isClosed) controller.add(data);
-      });
+      if (!disposed && !controller.isClosed) controller.add(data);
     });
+  }
+
+  void emitEvent(Map<String, dynamic> data) {
+    final type = data['type']?.toString() ?? '';
+    // Ходы — сразу, без ожидания двух кадров (иначе на Android «зависает»).
+    if (type == 'game_state' ||
+        type == 'game_started' ||
+        type == 'realtime_connected') {
+      emitNow(data);
+      return;
+    }
+    emitAfterFrame(data);
   }
 
   RealtimeSocket? socket;
@@ -38,6 +56,7 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
 
   Future<void> connect() async {
     await socketSubscription?.cancel();
+    await connectedSub?.cancel();
     socket?.close();
     socket = null;
 
@@ -53,7 +72,6 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
     );
     final nextSocket = connectRealtimeSocket(uri);
     socket = nextSocket;
-    emitAfterFrame(const {'type': 'realtime_connected'});
 
     cancelVisibilityListener?.call();
     cancelVisibilityListener = visibility.setupRealtimeVisibilityDisconnect(
@@ -74,13 +92,24 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
       },
     );
 
+    var sawConnected = false;
+    connectedSub = nextSocket.connected.listen((_) {
+      sawConnected = true;
+      emitEvent(const {'type': 'realtime_connected'});
+    });
+    // Если сокет открылся до подписки — не ждём вечно realtime_connected.
+    scheduleMicrotask(() {
+      if (!disposed && !sawConnected && nextSocket.isOpen) {
+        emitEvent(const {'type': 'realtime_connected'});
+      }
+    });
+
     socketSubscription = nextSocket.messages.listen(
       (raw) {
         try {
           final payload = jsonDecode(raw);
           if (payload is! Map) return;
-          final event = Map<String, dynamic>.from(payload);
-          emitAfterFrame(event);
+          emitEvent(Map<String, dynamic>.from(payload));
         } catch (_) {
           // Игнорируем невалидные фреймы, чтобы не ронять соединение.
         }
@@ -94,13 +123,24 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
   scheduleReconnect = () {
     if (disposed || disconnectedDueToVisibility) return;
     if (reconnectTimer != null || controller.isClosed) return;
-    reconnectTimer = Timer(const Duration(seconds: 2), () {
+    reconnectTimer = Timer(const Duration(seconds: 1), () {
       reconnectTimer = null;
       if (!disposed && !disconnectedDueToVisibility) {
         unawaited(connect());
       }
     });
   };
+
+  void onAppResumed() {
+    if (disposed) return;
+    disconnectedDueToVisibility = false;
+    unawaited(connect());
+    // Даже если сокет ещё открывается — игры сразу перезапросят состояние.
+    emitEvent(const {'type': 'realtime_connected'});
+  }
+
+  resumeObserver = _AppResumeObserver(onAppResumed);
+  WidgetsBinding.instance.addObserver(resumeObserver);
 
   unawaited(connect());
 
@@ -109,6 +149,10 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
     keepAliveLink.close();
     reconnectTimer?.cancel();
     cancelVisibilityListener?.call();
+    if (resumeObserver != null) {
+      WidgetsBinding.instance.removeObserver(resumeObserver);
+    }
+    unawaited(connectedSub?.cancel());
     unawaited(socketSubscription?.cancel());
     socket?.close();
     unawaited(controller.close());
@@ -116,3 +160,14 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
 
   return controller.stream;
 });
+
+class _AppResumeObserver with WidgetsBindingObserver {
+  _AppResumeObserver(this.onResumed);
+
+  final void Function() onResumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) onResumed();
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Цвета приложения: один светлый фон, белый в рамках/кнопках, чёрный текст.
 class AppColors {
@@ -69,6 +70,22 @@ class AppSpacing {
   static const double xl = 32;
 }
 
+/// Статус-бар / навигация Android: тот же цвет, что фон (без серого scrim).
+class AppOverlays {
+  AppOverlays._();
+
+  static const SystemUiOverlayStyle systemUi = SystemUiOverlayStyle(
+    statusBarColor: AppColors.surfaceUnified,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemStatusBarContrastEnforced: false,
+    systemNavigationBarColor: AppColors.surfaceUnified,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarDividerColor: AppColors.surfaceUnified,
+  );
+}
+
 /// Длительности анимаций.
 class AppDurations {
   AppDurations._();
@@ -76,4 +93,24 @@ class AppDurations {
   static const Duration short = Duration(milliseconds: 200);
   static const Duration medium = Duration(milliseconds: 350);
   static const Duration long = Duration(milliseconds: 500);
+}
+
+/// Непрозрачный корень экрана.
+///
+/// На Android Impeller + прозрачный Scaffold / IndexedStack на кадр-два
+/// показывает предыдущий route: Flutter уже снял старый слой, а новый ещё
+/// не закрыл поверхность. Корень каждой страницы должен быть opaque и
+/// совпадать с `android:windowBackground` (`#E8ECF4`).
+class AppOpaqueSurface extends StatelessWidget {
+  const AppOpaqueSurface({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.surfaceUnified,
+      child: child,
+    );
+  }
 }

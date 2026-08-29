@@ -6,6 +6,8 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 
 class ApiClient {
+  static const Duration requestTimeout = Duration(seconds: 12);
+
   static Map<String, String> _withLocale(Map<String, String>? headers) {
     final merged = <String, String>{
       'Accept-Language': LocaleService.acceptLanguageHeader,
@@ -74,7 +76,7 @@ class ApiClient {
     Object? error;
 
     try {
-      response = await call();
+      response = await call().timeout(requestTimeout);
       return response;
     } catch (e) {
       error = e;

@@ -53,10 +53,12 @@ const _modeCycleVariants = <String>[
   variantUltimate,
 ];
 
-class _GamesScreenState extends ConsumerState<GamesScreen> {
+class _GamesScreenState extends ConsumerState<GamesScreen>
+    with SingleTickerProviderStateMixin {
   bool _isCreating = false;
   bool _isFinding = false;
   _GamesTab _selectedTab = _GamesTab.games;
+  late final TabController _hubTabs;
   int _selectedTurnTimeSec = 0; // 0=без лимита, 10, 30, 60, 600
   String _selectedVariant = variantClassic;
 
@@ -69,6 +71,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   @override
   void initState() {
     super.initState();
+    _hubTabs = TabController(length: 2, vsync: this);
+    _hubTabs.addListener(_onHubTabsTick);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mobileToolbarLeadingProvider.notifier).state = null;
@@ -152,8 +156,19 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
 
   @override
   void dispose() {
+    _hubTabs.removeListener(_onHubTabsTick);
+    _hubTabs.dispose();
     _stopLobbyPoll();
     super.dispose();
+  }
+
+  void _onHubTabsTick() {
+    final tab = _hubTabs.index == 0 ? _GamesTab.games : _GamesTab.lobbies;
+    if (_selectedTab != tab) {
+      _applySelectedTab(tab);
+      return;
+    }
+    if (mounted) setState(() {});
   }
 
   void _startLobbyPoll() {
@@ -171,7 +186,15 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
   }
 
   void _onTabChanged(_GamesTab tab) {
+    final index = tab == _GamesTab.games ? 0 : 1;
+    if (_hubTabs.index != index) {
+      _hubTabs.animateTo(index);
+    }
     if (_selectedTab == tab) return;
+    _applySelectedTab(tab);
+  }
+
+  void _applySelectedTab(_GamesTab tab) {
     setState(() => _selectedTab = tab);
     if (tab == _GamesTab.lobbies) {
       ref.invalidate(openLobbiesProvider);
@@ -256,7 +279,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
     final isOffline = ref.watch(isOfflineProvider);
     if (isOffline && _selectedTab != _GamesTab.games) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedTab = _GamesTab.games);
+        if (!mounted) return;
+        _hubTabs.index = 0;
+        setState(() => _selectedTab = _GamesTab.games);
       });
     }
     // Уже есть активная партия/лобби при открытии списка — сразу туда.
@@ -310,58 +335,97 @@ class _GamesScreenState extends ConsumerState<GamesScreen> {
                 ),
               ),
             Expanded(
-              // IndexedStack вместо PageView: ветка /games в StatefulShell
-              // indexedStack остаётся живой при /login|/register (PWA),
-              // а PageController с viewport=0 после возврата ломает смену табов.
-              child: IndexedStack(
-                index:
-                    isOffline ? 0 : (_selectedTab == _GamesTab.games ? 0 : 1),
-                sizing: StackFit.expand,
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  _GamesPageContent(
-                    isDesktop: isDesktop,
-                    isCreating: _isCreating,
-                    isFinding: _isFinding,
-                    isOffline: isOffline,
-                    turnTimeSec: _selectedTurnTimeSec,
-                    onTurnTimeChanged: (v) {
-                      setState(() => _selectedTurnTimeSec = v);
-                      _persistSettings();
-                    },
-                    variant: _selectedVariant,
-                    playersControlActive: _playersControlActive,
-                    onPlayersChipTap: _onPlayersChipTap,
-                    onModeChipTap: _onModeChipTap,
-                    stakeBronze: isOffline ? 0 : _selectedStakeBronze,
-                    stakeOptionsList: availableStakes,
-                    onStakeChanged: (v) {
-                      setState(() => _selectedStakeBronze = v);
-                      _persistSettings();
-                    },
-                    onCreateGame: () => _createGame(context, 'invite'),
-                    // Всегда matchmake: multi схлопывается на сервере в одно лобби.
-                    onFindGame: () => _createGame(context, 'matchmake'),
-                    onPlayOffline: playOffline,
-                    contentPadding: contentPadding,
-                  ),
-                  _LobbiesPageContent(
-                    lobbiesAsync: lobbiesAsync,
-                    invites: isOffline ? const [] : invites,
-                    isDesktop: isDesktop,
-                    onJoinLobby: _joinLobby,
-                    onShowLobbyRules: _showLobbyRulesInfo,
-                    onRefresh: () => ref.invalidate(openLobbiesProvider),
-                    onAcceptInvite: _acceptInvite,
-                    onDeclineInvite: _declineInvite,
-                    onShowCreatorInfo: _showCreatorInfo,
-                    onShowInviteRules: _showInviteRules,
-                    contentPadding: contentPadding,
-                    activeAsync: activeAsync,
-                    observation: observation,
-                  ),
-                ],
-              ),
+              child: isOffline
+                  ? AppOpaqueSurface(
+                      child: RepaintBoundary(
+                        key: const ValueKey('games-tab-content'),
+                        child: _GamesPageContent(
+                          isDesktop: isDesktop,
+                          isCreating: _isCreating,
+                          isFinding: _isFinding,
+                          isOffline: isOffline,
+                          turnTimeSec: _selectedTurnTimeSec,
+                          onTurnTimeChanged: (v) {
+                            setState(() => _selectedTurnTimeSec = v);
+                            _persistSettings();
+                          },
+                          variant: _selectedVariant,
+                          playersControlActive: _playersControlActive,
+                          onPlayersChipTap: _onPlayersChipTap,
+                          onModeChipTap: _onModeChipTap,
+                          stakeBronze: 0,
+                          stakeOptionsList: availableStakes,
+                          onStakeChanged: (v) {
+                            setState(() => _selectedStakeBronze = v);
+                            _persistSettings();
+                          },
+                          onCreateGame: () => _createGame(context, 'invite'),
+                          onFindGame: () =>
+                              _createGame(context, 'matchmake'),
+                          onPlayOffline: playOffline,
+                          contentPadding: contentPadding,
+                        ),
+                      ),
+                    )
+                  : TabBarView(
+                      controller: _hubTabs,
+                      physics: const PageScrollPhysics(),
+                      children: [
+                        AppOpaqueSurface(
+                          child: RepaintBoundary(
+                            key: const ValueKey('games-tab-content'),
+                            child: _GamesPageContent(
+                              isDesktop: isDesktop,
+                              isCreating: _isCreating,
+                              isFinding: _isFinding,
+                              isOffline: isOffline,
+                              turnTimeSec: _selectedTurnTimeSec,
+                              onTurnTimeChanged: (v) {
+                                setState(() => _selectedTurnTimeSec = v);
+                                _persistSettings();
+                              },
+                              variant: _selectedVariant,
+                              playersControlActive: _playersControlActive,
+                              onPlayersChipTap: _onPlayersChipTap,
+                              onModeChipTap: _onModeChipTap,
+                              stakeBronze: _selectedStakeBronze,
+                              stakeOptionsList: availableStakes,
+                              onStakeChanged: (v) {
+                                setState(() => _selectedStakeBronze = v);
+                                _persistSettings();
+                              },
+                              onCreateGame: () =>
+                                  _createGame(context, 'invite'),
+                              onFindGame: () =>
+                                  _createGame(context, 'matchmake'),
+                              onPlayOffline: playOffline,
+                              contentPadding: contentPadding,
+                            ),
+                          ),
+                        ),
+                        AppOpaqueSurface(
+                          child: RepaintBoundary(
+                            key: const ValueKey('lobbies-tab-content'),
+                            child: _LobbiesPageContent(
+                              lobbiesAsync: lobbiesAsync,
+                              invites: invites,
+                              isDesktop: isDesktop,
+                              onJoinLobby: _joinLobby,
+                              onShowLobbyRules: _showLobbyRulesInfo,
+                              onRefresh: () =>
+                                  ref.invalidate(openLobbiesProvider),
+                              onAcceptInvite: _acceptInvite,
+                              onDeclineInvite: _declineInvite,
+                              onShowCreatorInfo: _showCreatorInfo,
+                              onShowInviteRules: _showInviteRules,
+                              contentPadding: contentPadding,
+                              activeAsync: activeAsync,
+                              observation: observation,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -1207,62 +1271,61 @@ class _GamesPageContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final phoneLandscape = isPhoneLandscape(context);
-    final tablet = isTablet(context);
-    final centerCards = isDesktop || phoneLandscape;
-    final minCardWidth = phoneLandscape ? 300.0 : (tablet ? 440.0 : 400.0);
-    final maxCardWidth = phoneLandscape ? 420.0 : (tablet ? 560.0 : 520.0);
 
     Widget gameCards(double maxWidth) {
-      final cardWidth = centerCards
-          ? maxWidth.clamp(minCardWidth, maxCardWidth).toDouble()
-          : maxWidth;
-      final column = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _TictactoeGameCard(
-            isCreating: isCreating,
-            isFinding: isFinding,
-            isOffline: isOffline,
-            turnTimeSec: turnTimeSec,
-            onTurnTimeChanged: onTurnTimeChanged,
-            variant: variant,
-            playersControlActive: playersControlActive,
-            onPlayersChipTap: onPlayersChipTap,
-            onModeChipTap: onModeChipTap,
-            stakeBronze: stakeBronze,
-            stakeOptionsList: stakeOptionsList,
-            onStakeChanged: onStakeChanged,
-            onCreateGame: onCreateGame,
-            onFindGame: onFindGame,
-            onPlayOffline: onPlayOffline,
-          ),
-          const SizedBox(height: 16),
-          _DurakGameCard(
-            isOffline: isOffline,
-            stakeOptionsList: stakeOptionsList,
-          ),
-          const SizedBox(height: 16),
-          _BattleshipGameCard(
-            isOffline: isOffline,
-            stakeOptionsList: stakeOptionsList,
-          ),
-          const SizedBox(height: 16),
-          _PokerGameCard(
-            isOffline: isOffline,
-            stakeOptionsList: stakeOptionsList,
-          ),
-          const SizedBox(height: 16),
-          _UnoGameCard(
-            isOffline: isOffline,
-            stakeOptionsList: stakeOptionsList,
-          ),
-        ],
-      );
-      if (!centerCards) return column;
+      const gap = 16.0;
+      final minTile = phoneLandscape ? 260.0 : 280.0;
+      const maxTile = 360.0;
+      final cols = maxWidth < minTile * 2 + gap
+          ? 1
+          : (maxWidth / (minTile + gap)).floor().clamp(1, 3);
+      final tileWidth =
+          ((maxWidth - gap * (cols - 1)) / cols).clamp(minTile, maxTile);
+      final tiles = <Widget>[
+        _TictactoeGameCard(
+          isCreating: isCreating,
+          isFinding: isFinding,
+          isOffline: isOffline,
+          turnTimeSec: turnTimeSec,
+          onTurnTimeChanged: onTurnTimeChanged,
+          variant: variant,
+          playersControlActive: playersControlActive,
+          onPlayersChipTap: onPlayersChipTap,
+          onModeChipTap: onModeChipTap,
+          stakeBronze: stakeBronze,
+          stakeOptionsList: stakeOptionsList,
+          onStakeChanged: onStakeChanged,
+          onCreateGame: onCreateGame,
+          onFindGame: onFindGame,
+          onPlayOffline: onPlayOffline,
+        ),
+        _DurakGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _BattleshipGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _PokerGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _UnoGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+      ];
       return Align(
         alignment: Alignment.topCenter,
-        child: SizedBox(width: cardWidth, child: column),
+        child: Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final tile in tiles) SizedBox(width: tileWidth, child: tile),
+          ],
+        ),
       );
     }
 
@@ -1562,13 +1625,13 @@ class _LobbiesPageContent extends ConsumerWidget {
                   final itemWidth =
                       (width - gap * (crossAxisCount - 1)) / crossAxisCount;
                   return Align(
-                    alignment: Alignment.topLeft,
+                    alignment: Alignment.topCenter,
                     child: ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: width),
                       child: Wrap(
                         spacing: gap,
                         runSpacing: gap,
-                        alignment: WrapAlignment.start,
+                        alignment: WrapAlignment.center,
                         children: [
                           for (var i = 0; i < lobbyCards.length; i++)
                             SizedBox(

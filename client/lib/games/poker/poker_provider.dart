@@ -70,7 +70,7 @@ final pokerGameProvider = FutureProvider.autoDispose
   ref.onDispose(sub.close);
 
   // Лёгкий poll — страховка, если ping game_state потерялся.
-  final poll = Stream.periodic(const Duration(seconds: 4)).listen((_) {
+  final poll = Stream.periodic(const Duration(milliseconds: 800)).listen((_) {
     ref.invalidateSelf();
   });
   ref.onDispose(poll.cancel);

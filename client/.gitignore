@@ -50,3 +50,5 @@ app.*.map.json
 /android/*.keystore
 /android/app/*.jks
 /android/app/*.keystore
+/android/app/google-services.json
+/android/app/src/*/google-services.json

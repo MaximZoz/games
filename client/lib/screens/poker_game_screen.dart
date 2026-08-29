@@ -51,6 +51,8 @@ class PokerGameScreen extends ConsumerStatefulWidget {
 class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     with TickerProviderStateMixin {
   bool _busy = false;
+  Timer? _busyWatchdog;
+  int _busyStuckTicks = 0;
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
@@ -94,6 +96,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   @override
   void dispose() {
     _disposed = true;
+    _busyWatchdog?.cancel();
     GameFlyOverlay.dismissAll();
     for (final c in _chipControllers) {
       c.dispose();
@@ -157,6 +160,22 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
+    _busyWatchdog?.cancel();
+    _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted || _disposed) return;
+      if (_busy) {
+        _busyStuckTicks++;
+        if (_busyStuckTicks >= 3) {
+          _busyStuckTicks = 0;
+          setState(() => _busy = false);
+          if (!_isOffline) {
+            ref.invalidate(pokerGameProvider(widget.gameId));
+          }
+        }
+      } else {
+        _busyStuckTicks = 0;
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _isOffline) return;
       final known = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;

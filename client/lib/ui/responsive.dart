@@ -35,3 +35,6 @@ bool isTablet(BuildContext context) {
 bool useDesktopTiles(BuildContext context) {
   return isWide(context) || isPhoneLandscape(context);
 }
+
+/// Смайлики и коллекции: 3 колонки на одном экране (не 4 — колесо прыгает рядом).
+int shopTileColumns(BuildContext context) => 3;

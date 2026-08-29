@@ -37,6 +37,23 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
+  testWidgets('page transitions use fade-upwards on all platforms',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(_testApp());
+    await tester.pump();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final builders = app.theme!.pageTransitionsTheme.builders;
+    expect(
+      builders[TargetPlatform.android],
+      isA<FadeUpwardsPageTransitionsBuilder>(),
+    );
+    expect(
+      builders[TargetPlatform.iOS],
+      isA<FadeUpwardsPageTransitionsBuilder>(),
+    );
+  });
+
   testWidgets('Login page shows form and toolbar auth button',
       (WidgetTester tester) async {
     await tester.pumpWidget(_testApp());

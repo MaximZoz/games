@@ -857,17 +857,17 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
             child: Align(
-              alignment: Alignment.topCenter,
+              alignment: Alignment.topLeft,
               child: SizedBox(
                 width: availableWidth,
                 child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Wrap(
                   spacing: gap,
                   runSpacing: gap,
-                  alignment: WrapAlignment.center,
+                  alignment: WrapAlignment.start,
                   children: [
                     for (var i = 0; i < visibleCount; i++)
                       SizedBox(

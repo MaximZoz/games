@@ -49,7 +49,7 @@ final unoGameProvider =
   );
   ref.onDispose(subscription.close);
 
-  final poll = Stream<void>.periodic(const Duration(seconds: 4)).listen((_) {
+  final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
     ref.invalidateSelf();
   });
   ref.onDispose(poll.cancel);

@@ -359,7 +359,7 @@ double fitBattleshipCellSize({
   required double maxWidth,
   required double maxHeight,
   double gap = 2,
-  double minCell = 16,
+  double minCell = 11,
   double maxCell = 40,
 }) {
   final side = maxWidth < maxHeight ? maxWidth : maxHeight;

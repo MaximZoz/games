@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -50,11 +49,13 @@ class SettingsScreen extends ConsumerWidget {
         : (currentLang?.nativeName ?? effective.languageCode);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.surfaceUnified,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(padding),
-          child: Center(
+          clipBehavior: Clip.hardEdge,
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
               child: Column(
@@ -186,7 +187,7 @@ class SettingsScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  if (kIsWeb) ...[
+                  if (isPushSettingsAvailable) ...[
                     const SizedBox(height: 12),
                     _SettingsCard(
                       child: Column(
@@ -195,7 +196,7 @@ class SettingsScreen extends ConsumerWidget {
                           _SwitchRow(
                             title: l10n.settingsNotifications,
                             value: webPushEnabled,
-                            onChanged: isWebPushSupported
+                            onChanged: isPushSettingsAvailable
                                 ? (v) async {
                                     final err = await ref
                                         .read(webPushEnabledProvider.notifier)
@@ -447,14 +448,21 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppRadius.card),
-      decoration: BoxDecoration(
+    return RepaintBoundary(
+      child: Material(
         color: AppColors.surfaceCard,
+        elevation: 0,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.accentSoft),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          padding: const EdgeInsets.all(AppRadius.card),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: AppColors.accentSoft),
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }

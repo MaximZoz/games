@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/api_client.dart';
@@ -7,8 +8,13 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/browser_push_stub.dart'
     if (dart.library.html) 'package:multigames_client/core/browser_push_web.dart'
     as browser_push;
+import 'package:multigames_client/core/fcm.dart';
+import 'package:multigames_client/core/local_notify.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// FCM токен зарегистрирован — системный пуш придёт и при закрытом приложении.
+final fcmDeliveryReadyProvider = StateProvider<bool>((ref) => false);
 
 const _keyWebPushEnabled = 'web_push_enabled';
 
@@ -76,7 +82,11 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
   final Ref _ref;
   bool _ensuring = false;
   bool _boundThisSession = false;
+  bool _deviceBoundThisSession = false;
   DateTime? _lastEnsureAttempt;
+  DateTime? _lastDeviceEnsureAttempt;
+  String? _deviceToken;
+  bool _listeningTokenRefresh = false;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -136,6 +146,12 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
     return null;
   }
 
+  /// Web Push (PWA) + FCM (Android), если уведомления включены.
+  Future<void> ensurePushForSession() async {
+    await ensureActiveSubscription();
+    await ensureAndroidDevicePush();
+  }
+
   /// После логина / рестарта PWA: заново привязать SW и endpoint, если флаг включён.
   Future<void> ensureActiveSubscription() async {
     if (_ensuring || !state || _boundThisSession) return;
@@ -176,6 +192,16 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
 
   /// Включить/выключить: permission → subscribe/unsubscribe → API.
   Future<String?> setEnabled(bool value) async {
+    if (value && !kIsWeb && localNotificationsSupported()) {
+      final granted = await requestLocalNotificationPermission();
+      if (!granted) return LocaleService.l10n.errPushPermission;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyWebPushEnabled, true);
+      state = true;
+      await _ref.read(webPushCategoriesProvider.notifier).refresh();
+      await ensureAndroidDevicePush();
+      return null;
+    }
     if (value) {
       if (!browser_push.browserPushSupported()) {
         return 'Уведомления недоступны в этом браузере. '
@@ -199,7 +225,9 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
       await _ref.read(webPushCategoriesProvider.notifier).refresh();
     } else {
       await _unsubscribeEndpointAndBrowser();
+      await _unregisterDeviceToken();
       _boundThisSession = false;
+      _deviceBoundThisSession = false;
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -213,7 +241,87 @@ class WebPushEnabledNotifier extends StateNotifier<bool> {
   /// Вызывать до очистки JWT.
   Future<void> detachOnLogout() async {
     _boundThisSession = false;
+    _deviceBoundThisSession = false;
     await _unsubscribeEndpointAndBrowser();
+    await _unregisterDeviceToken();
+    _ref.read(fcmDeliveryReadyProvider.notifier).state = false;
+  }
+
+  Future<void> ensureAndroidDevicePush() async {
+    if (kIsWeb || !state || !fcmSupported()) return;
+    if (_ref.read(authStateProvider).valueOrNull == null) return;
+    if (_deviceBoundThisSession && (_deviceToken ?? '').isNotEmpty) return;
+
+    final now = DateTime.now();
+    if (_lastDeviceEnsureAttempt != null &&
+        now.difference(_lastDeviceEnsureAttempt!) < const Duration(seconds: 5)) {
+      return;
+    }
+    _lastDeviceEnsureAttempt = now;
+
+    final granted = await requestLocalNotificationPermission();
+    if (!granted) return;
+    final token = await ensureFcmToken();
+    if (token == null || token.isEmpty) return;
+    if (!await _saveDeviceToken(token)) return;
+    _deviceToken = token;
+    _deviceBoundThisSession = true;
+    _ref.read(fcmDeliveryReadyProvider.notifier).state = true;
+    _listenTokenRefresh();
+  }
+
+  void _listenTokenRefresh() {
+    if (_listeningTokenRefresh) return;
+    _listeningTokenRefresh = true;
+    fcmTokenRefresh().listen((token) async {
+      if (!state || token.isEmpty) return;
+      if (!await _saveDeviceToken(token)) return;
+      _deviceToken = token;
+      _ref.read(fcmDeliveryReadyProvider.notifier).state = true;
+    });
+  }
+
+  Future<bool> _saveDeviceToken(String token) async {
+    try {
+      final auth = _ref.read(authRepositoryProvider);
+      final resp = await auth.sendAuthorized((access) {
+        return ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/push/device'),
+          headers: {
+            'Authorization': 'Bearer $access',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'token': token, 'platform': 'android'}),
+          operation: 'push_device_register',
+        );
+      });
+      return resp.statusCode >= 200 && resp.statusCode < 300;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _unregisterDeviceToken() async {
+    final token = _deviceToken;
+    _deviceToken = null;
+    _ref.read(fcmDeliveryReadyProvider.notifier).state = false;
+    if (token != null && token.isNotEmpty) {
+      try {
+        final auth = _ref.read(authRepositoryProvider);
+        await auth.sendAuthorized((access) {
+          return ApiClient.post(
+            Uri.parse('$apiBaseUrl/api/push/device/unregister'),
+            headers: {
+              'Authorization': 'Bearer $access',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'token': token}),
+            operation: 'push_device_unregister',
+          );
+        });
+      } catch (_) {}
+    }
+    await deleteFcmToken();
   }
 
   Future<void> _unsubscribeEndpointAndBrowser() async {
@@ -310,5 +418,9 @@ class WebPushCategoriesNotifier extends StateNotifier<WebPushCategoryPrefs> {
 
 /// Поддержка Web Push (для UI).
 bool get isWebPushSupported => browser_push.browserPushSupported();
+
+/// Настройки уведомлений: web push или локальные на Android.
+bool get isPushSettingsAvailable =>
+    isWebPushSupported || localNotificationsSupported();
 
 bool get isWebPushStandalone => browser_push.browserPushStandalone();

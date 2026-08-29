@@ -81,6 +81,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool _roundOverlayDismissed = false;
   final Map<int, int> _dealOppShown = {};
   Timer? _unoCatchTimer;
+  Timer? _busyWatchdog;
+  int _busyStuckTicks = 0;
 
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
 
@@ -89,6 +91,20 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     super.didChangeDependencies();
     if (_bindingsInitialized) return;
     _bindingsInitialized = true;
+    _busyWatchdog?.cancel();
+    _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      if (_busy && !_dealing) {
+        _busyStuckTicks++;
+        if (_busyStuckTicks >= 3) {
+          _busyStuckTicks = 0;
+          setState(() => _busy = false);
+          if (!_isOffline) ref.invalidate(unoGameProvider(widget.gameId));
+        }
+      } else {
+        _busyStuckTicks = 0;
+      }
+    });
     if (!_isOffline) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -111,6 +127,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   @override
   void dispose() {
     _unoCatchTimer?.cancel();
+    _busyWatchdog?.cancel();
     GameFlyOverlay.dismissAll();
     super.dispose();
   }
@@ -606,6 +623,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       final to = _rectOf(_discardKey);
       final twin = findUnoTwin(game.myHand, card);
       final thrown = [card, if (twin != null) twin];
+      Sfx.play(SfxId.cardPlay);
       _lastLocalPlayCardId = thrown.last.id;
       _optimisticTopId = thrown.last.id;
       _localPlayedIds.addAll(thrown.map((item) => item.id));
@@ -631,6 +649,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             endAngle: -0.04,
             arcLift: 42,
             keepAtEnd: true,
+            playSfx: i > 0,
           );
           if (mounted) {
             setState(() => _discardOverride = flying);
@@ -1291,6 +1310,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     return Stack(
       children: [
         MyTurnAlert.stackLeaf(
+          key: ValueKey('uno-turn-${game.isMyTurn}-${game.currentIndex}'),
           isMyTurn: game.isMyTurn && !game.isOver && !game.iAmEliminated,
         ),
         Padding(

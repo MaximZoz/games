@@ -11,6 +11,8 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/ios_viewport_sync.dart';
+import 'core/android_notify_bridge.dart';
+import 'core/local_notify.dart';
 import 'core/settings_provider.dart';
 import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
@@ -24,6 +26,7 @@ import 'src/console_log_stub.dart'
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(AppOverlays.systemUi);
   // Иначе deep-link вида /games/tictactoe/lobby/:id открывает «Главную»,
   // а в адресной строке остаётся старый path (дефолт — HashUrlStrategy).
   if (kIsWeb) {
@@ -34,6 +37,9 @@ void main() {
     installIosViewportSync();
   }
   console_log.logToBrowser('main() started');
+  if (!kIsWeb) {
+    unawaited(initLocalNotifications());
+  }
 
   runZonedGuarded(() {
     runApp(
@@ -120,6 +126,7 @@ class MultiGamesApp extends ConsumerWidget {
     final locale = effectiveAppLocale(localeChoice);
     // Клик по push: navigate внутри SPA, без reload и splash.
     ref.watch(_pushNotificationNavProvider);
+    ref.watch(androidNotifyBridgeProvider);
     final soundOn = ref.watch(soundEnabledProvider);
     Sfx.setEnabled(soundOn);
     Sfx.instance.warmup(unlock: false);
@@ -141,15 +148,30 @@ class MultiGamesApp extends ConsumerWidget {
           brightness: Brightness.light,
           primary: AppColors.accentStart,
           surface: AppColors.surfaceUnified,
+          surfaceTint: Colors.transparent,
         ),
         useMaterial3: true,
+        canvasColor: AppColors.surfaceUnified,
+        applyElevationOverlayColor: false,
         scaffoldBackgroundColor: AppColors.surfaceUnified,
+        // ZoomPageTransitions (дефолт Android) на кадр рисует предыдущий route.
+        // CupertinoPageTransitionsBuilder() не const на Flutter 3.44 / dart2js.
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
         // «Предметы», «Монеты за вход» и все AppBar-заголовки — по центру.
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
+          systemOverlayStyle: AppOverlays.systemUi,
         ),
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: AppColors.accentSoft.withValues(alpha: 0.5),
@@ -201,11 +223,19 @@ class MultiGamesApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return SelectionContainer.disabled(
-          child: Listener(
-            onPointerDown: (_) => Sfx.instance.warmup(),
-            child: BootSplashHost(
-              child: child ?? const SizedBox.shrink(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppOverlays.systemUi,
+          child: SelectionContainer.disabled(
+            child: Listener(
+              onPointerDown: (_) => Sfx.instance.warmup(),
+              child: BootSplashHost(
+                // Непрозрачный фон под прозрачными Scaffold: иначе на Android
+                // при смене вкладки/экрана мигает предыдущий кадр.
+                child: ColoredBox(
+                  color: AppColors.surfaceUnified,
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
             ),
           ),
         );

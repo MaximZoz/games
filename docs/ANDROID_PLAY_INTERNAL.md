@@ -172,7 +172,147 @@ flutter run -d android --flavor prod \
 
 Play Games Services **не** нужны — достаточно Google Sign-In.
 
-## 9. Позже
+## 9. Android FCM (уведомления при закрытом приложении)
+
+Нужны **три вещи**. Без любой из них закрытое приложение молчит.
+
+| Что | Зачем | Куда кладём |
+|-----|--------|-------------|
+| `google-services.json` | Телефон понимает «я приложение Zozu в проекте Google» и умеет получить токен | в AAB (через секрет GitHub) |
+| `FCM_SERVICE_ACCOUNT_JSON` | Сервер имеет право сказать Google: «покажи баннер этому телефону» | секрет Fly |
+| Новая сборка + деплой сервера | Старое приложение и старый сервер об FCM не знают | Play Internal + Fly |
+
+Это **один раз**. Потом пуш идёт сам.
+
+Ниже — если смотришь только прод (приложение из Play **Zozu Games**, не DEV).
+DEV — те же шаги, пакет `com.zozugames.app.dev`.
+
+### 9.1. Открыть тот же Google-проект, что для входа
+
+Вход через Google уже заведён: в Fly лежит `GOOGLE_CLIENT_ID`
+(`576062919624-….apps.googleusercontent.com`).
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → сверху
+   выбери **тот проект**, где этот OAuth client.
+2. Открой [Firebase Console](https://console.firebase.google.com/).
+3. **Add project** / **Add Firebase to Google Cloud project** → выбери
+   **этот же** проект. Не создавай второй с нуля.
+
+Если Firebase-проект уже есть на этом GCP — просто открой его.
+
+### 9.2. Зарегистрировать Android-пакеты
+
+В Firebase: шестерёнка рядом с **Project overview** → **Project settings**
+→ вкладка **General** → **Your apps**.
+
+**Первое приложение (прод):**
+
+1. **Add app** → иконка Android.
+2. **Android package name:** `com.zozugames.app`  
+   (ровно так, без пробелов).
+3. **App nickname:** `Zozu Games` (как удобно).
+4. **SHA-1** — тот же, что для Google Sign-In (Play Console → App signing
+   → **App signing key certificate**). Можно добавить сразу, можно позже.
+5. **Register app**.
+6. Скачай **`google-services.json`**. Сохрани как
+   `google-services-prod.json` на компьютер. **В git не клади.**
+
+**Второе приложение (DEV), если ставишь DEV-сборку:**
+
+Те же шаги, package name: `com.zozugames.app.dev`.  
+Скачанный файл сохрани как `google-services-dev.json`.
+
+Если оба пакета в одном Firebase-проекте, в одном `google-services.json`
+могут быть оба клиента — тогда один файл годится и для prod, и для dev.
+
+### 9.3. Включить Cloud Messaging API
+
+1. [Google Cloud → APIs & Services → Library](https://console.cloud.google.com/apis/library)
+2. Найди **Firebase Cloud Messaging API**.
+3. Если не Enabled — **Enable**.
+
+### 9.4. Ключ, которым сервер шлёт пуш
+
+Это **не** `google-services.json`. Это другой JSON — сервис-аккаунт.
+
+1. Firebase → Project settings → вкладка **Service accounts**.
+2. **Generate new private key** → подтверди → скачается файл вида
+   `*-firebase-adminsdk-*.json`.
+3. Открой его блокнотом: внутри должны быть `"type": "service_account"`
+   и `"project_id": "..."`.
+4. Сохрани. **В git не клади.** Этот файл = полный доступ слать пуш
+   от имени проекта.
+
+### 9.5. Положить ключ сервера на Fly
+
+Сервер читает секрет `FCM_SERVICE_ACCOUNT_JSON`.
+
+**Прод** (`https://multigameszozu.fly.dev`):
+
+```bash
+fly secrets set FCM_SERVICE_ACCOUNT_JSON="$(cat *-firebase-adminsdk-*.json)" --app multigameszozu
+```
+
+**DEV** (`https://multigameszozu-dev.fly.dev`):
+
+```bash
+fly secrets set FCM_SERVICE_ACCOUNT_JSON="$(cat *-firebase-adminsdk-*.json)" --app multigameszozu-dev
+```
+
+`cat ...` подставь реальное имя скачанного файла.
+
+Без `fly` в терминале: [Fly Dashboard](https://fly.io/dashboard) →
+приложение `multigameszozu` → **Secrets** → имя
+`FCM_SERVICE_ACCOUNT_JSON` → значение = **весь** JSON одной строкой
+(скопируй содержимое файла целиком).
+
+После `secrets set` Fly сам перезапустит машины. В логах должно быть
+`FCM: enabled`. Если `FCM: disabled` — секрет пустой или это не JSON
+сервис-аккаунта.
+
+Код с эндпоинтами `/api/push/device` должен быть **задеплоен**
+(ветка `main` → прод, `develop` → DEV). Старый сервер секрета не поймёт.
+
+### 9.6. Положить `google-services.json` в GitHub Actions
+
+CI кладёт файл внутрь AAB перед сборкой. В репозиторий файл не коммитим.
+
+1. Открой репозиторий на GitHub → **Settings** → **Secrets and variables**
+   → **Actions** → **New repository secret**.
+2. Имя: `ANDROID_GOOGLE_SERVICES_JSON`
+3. Value: **весь** текст `google-services-prod.json` (или общего файла
+   на оба пакета).
+4. Если DEV-файл **другой**: ещё секрет
+   `ANDROID_GOOGLE_SERVICES_JSON_DEV` с текстом `google-services-dev.json`.
+
+Проверка: в логе Android Play Internal должно быть
+`Wrote android/app/src/.../google-services.json`.
+Если `No google-services.json secret` — секрет не увидели, в AAB FCM нет.
+
+### 9.7. Новая сборка на телефон
+
+1. Дождись зелёного workflow **Android Play Internal**
+   (`develop` = DEV-приложение, `main` = прод).
+2. Play Console → Internal testing → дождись, пока сборка станет доступна.
+3. На телефоне обнови Zozu из Internal track (не старый APK/`flutter run`).
+4. Открой приложение, войди в аккаунт, разреши уведомления (Android 13+).
+5. Выйди из приложения (свайп из недавних). С другого аккаунта напиши
+   в чат / кинь инвайт.
+6. Должен прийти системный баннер.
+
+После **Выйти** в приложении токен снимается — на этот телефон пуш
+больше не должен приходить, пока снова не войдёшь.
+
+### Если что-то не так
+
+| Симптом | Что проверить |
+|---------|----------------|
+| В логах Fly `FCM: disabled` | секрет не тот файл или пустой |
+| Баннера нет, приложение закрыто | новая AAB с `google-services.json` + новый сервер с FCM + разрешение в настройках Android |
+| Баннер только пока игра открыта в фоне | стоит старая сборка без FCM, работает только сокет |
+| После logout пуш ещё приходит | не обновился сервер/клиент, токен не сняли |
+
+## 10. Позже
 
 - разные иконки для DEV
 - Store listing / Privacy / Data safety

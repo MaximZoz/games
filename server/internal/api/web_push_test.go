@@ -1,6 +1,43 @@
 package api
 
-import "testing"
+import (
+	"net/http"
+	"testing"
+)
+
+func TestParseFCMProjectID(t *testing.T) {
+	if got := parseFCMProjectID(`{"project_id":"zozu-prod"}`); got != "zozu-prod" {
+		t.Fatalf("project_id=%q", got)
+	}
+	if got := parseFCMProjectID(`not-json`); got != "" {
+		t.Fatalf("invalid json should be empty, got %q", got)
+	}
+}
+
+func TestShouldDropFCMToken(t *testing.T) {
+	if !shouldDropFCMToken(http.StatusNotFound, nil) {
+		t.Fatal("404 should drop")
+	}
+	if shouldDropFCMToken(http.StatusInternalServerError, []byte(`{}`)) {
+		t.Fatal("500 should keep")
+	}
+	body := []byte(`{"error":{"status":"NOT_FOUND","details":[{"errorCode":"UNREGISTERED"}]}}`)
+	if !shouldDropFCMToken(http.StatusBadRequest, body) {
+		t.Fatal("UNREGISTERED should drop")
+	}
+}
+
+func TestNormalizeDevicePlatform(t *testing.T) {
+	if normalizeDevicePlatform("") != "android" {
+		t.Fatal("empty defaults to android")
+	}
+	if normalizeDevicePlatform("iOS") != "ios" {
+		t.Fatal("ios")
+	}
+	if normalizeDevicePlatform("web") != "" {
+		t.Fatal("unknown rejected")
+	}
+}
 
 func TestNormalizeVapidSubscriber(t *testing.T) {
 	cases := []struct {

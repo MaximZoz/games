@@ -204,6 +204,7 @@ Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18
 - Achievements API: `GET /api/achievements`, `GET /api/achievements/unclaimed-count`, `POST /api/achievements/claim`
 - Settings API: `GET|PUT /api/settings` (например, `messages_friends_only`)
 - Web Push API (PWA): `GET /api/push/vapid-key`, `POST /api/push/subscribe|unsubscribe`, `GET|PUT /api/push/preferences`
+- Android FCM: `POST /api/push/device`, `POST /api/push/device/unregister` (`FCM_SERVICE_ACCOUNT_JSON`)
 - Admin API:
   - `POST /api/admin/init`
   - `GET /api/admin/users`

@@ -279,7 +279,7 @@ class AppShell extends ConsumerWidget {
       ref.listen(authStateProvider, (prev, next) {
         if (next.valueOrNull != null && prev?.valueOrNull == null) {
           unawaited(
-            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+            ref.read(webPushEnabledProvider.notifier).ensurePushForSession(),
           );
           unawaited(syncPreferredLanguageToServer(ref));
         }
@@ -295,7 +295,7 @@ class AppShell extends ConsumerWidget {
       ref.listen<bool>(webPushEnabledProvider, (prev, next) {
         if (next == true && prev != true) {
           unawaited(
-            ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
+            ref.read(webPushEnabledProvider.notifier).ensurePushForSession(),
           );
         }
       });
@@ -303,9 +303,9 @@ class AppShell extends ConsumerWidget {
       if (!_shellDidBootstrapSession && authState.valueOrNull != null) {
         _shellDidBootstrapSession = true;
         unawaited(syncPreferredLanguageToServer(ref));
-        unawaited(
-          ref.read(webPushEnabledProvider.notifier).ensureActiveSubscription(),
-        );
+          unawaited(
+            ref.read(webPushEnabledProvider.notifier).ensurePushForSession(),
+          );
       }
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
@@ -694,6 +694,12 @@ class AppShell extends ConsumerWidget {
       }
     }
 
+    // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
+    // показывал предыдущую вкладку, пока новая не растрировалась.
+    final branchHost = AppOpaqueSurface(
+      child: RepaintBoundary(child: navigationShell),
+    );
+
     final shellBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -876,7 +882,7 @@ class AppShell extends ConsumerWidget {
         ),
         Expanded(
           child: narrow && !narrowLandscape
-              ? SizedBox.expand(child: navigationShell)
+              ? SizedBox.expand(child: branchHost)
               : Row(
                   children: [
                     NavigationRail(
@@ -908,7 +914,7 @@ class AppShell extends ConsumerWidget {
                       }).toList(),
                     ),
                     Expanded(
-                      child: SizedBox.expand(child: navigationShell),
+                      child: SizedBox.expand(child: branchHost),
                     ),
                   ],
                 ),

@@ -51,6 +51,19 @@ void main() {
       expect(url, contains('/api/auth/oauth/google/start'));
       expect(url, contains('mode=poll'));
       expect(url, contains('navigate=1'));
+      expect(url, isNot(contains('pwa=1')));
+    });
+
+    test('PWA start URL marks pwa=1 so oauth_done stays out of Safari', () {
+      final repo = AuthRepository();
+      final url = repo.oauthStartUrl(
+        provider: 'google',
+        poll: true,
+        pwa: true,
+      );
+      expect(url, contains('mode=poll'));
+      expect(url, contains('pwa=1'));
+      expect(url, isNot(contains('navigate=1')));
     });
   });
 

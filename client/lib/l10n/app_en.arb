@@ -311,7 +311,7 @@
   },
   "rulesUnoOfflineBot": "Play against a bot, no turn time limit.",
   "rulesUnoIntro": "Each player is dealt 7 cards. Play a card of the same color or the same rank (number or matching action).",
-  "rulesUnoPlay": "Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 stacks only on +2, and +4 only on +4: the penalty adds up (two +2s make the next player draw 4). A +2 cannot be played on a +4. A player who does not stack draws the whole pile and is skipped. Two identical non-wild cards (for example two yellow 8s) are discarded together: play one and the twin is thrown automatically.",
+  "rulesUnoPlay": "Skip — the next player loses a turn. Reverse with two players acts as Skip. +2 stacks only on +2, and +4 only on +4: the penalty adds up (two +2s make the next player draw 4). A +2 cannot be played on a +4. A player who does not stack draws the whole pile and is skipped. Two identical number cards (for example two yellow 8s) are discarded together: play one and the twin is thrown automatically. Action cards (+2, skip, reverse) and wilds are never dumped as a pair.",
   "rulesUnoWild": "A black card sets a new color. Play +4 only if you have no card of the current color. The next player may challenge: if the +4 was legal they draw 6; if not, the +4 player draws 4 and the challenger plays.",
   "rulesUnoDraw": "If you have no legal card, draw one from the deck. If it matches, you may play it now or keep it and pass. You cannot draw while you still have a legal play.",
   "rulesUnoWin": "Heads-up is first to 100 points; with 3+ players, first to 200. A round is won by emptying your hand.",
