@@ -37,7 +37,7 @@ void main() {
     installIosViewportSync();
   }
   console_log.logToBrowser('main() started');
-  if (!kIsWeb) {
+  if (localNotificationsSupported()) {
     unawaited(initLocalNotifications());
   }
 
