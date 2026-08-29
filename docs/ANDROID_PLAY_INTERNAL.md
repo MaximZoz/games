@@ -220,7 +220,13 @@ DEV — те же шаги, пакет `com.zozugames.app.dev`.
 **Второе приложение (DEV), если ставишь DEV-сборку:**
 
 Те же шаги, package name: `com.zozugames.app.dev`.  
-Скачанный файл сохрани как `google-services-dev.json`.
+Скачанный файл сохрани как `google-services-dev.json`
+и положи в секрет `ANDROID_GOOGLE_SERVICES_JSON_DEV`.
+
+Если в файле нет клиента `com.zozugames.app.dev`, CI **не** кладёт
+JSON в DEV-AAB (сборка проходит, закрытый пуш на DEV выключен).
+Не подставляй прод-файл в DEV — Gradle падает с
+`No matching client found for package name`.
 
 Если оба пакета в одном Firebase-проекте, в одном `google-services.json`
 могут быть оба клиента — тогда один файл годится и для prod, и для dev.
