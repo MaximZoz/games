@@ -78,6 +78,35 @@ void main() {
     expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsNothing);
   });
 
+  testWidgets('подъём не вставляет overlay до кадра с дыркой', (tester) async {
+    final key = GlobalKey<CardFanState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: CardFan(
+              key: key,
+              cards: const [tenDiamonds, queenClubs],
+              cardSize: const Size(72, 100),
+              animateLayout: false,
+            ),
+          ),
+        ),
+      ),
+    );
+    key.currentState!.debugPromotePeekToFree(tenDiamonds);
+    expect(key.currentState!.debugDeferLiftOverlay, isTrue);
+    expect(find.byType(PlayingCardWidget), findsNWidgets(2));
+
+    await tester.pump();
+    expect(find.byType(PlayingCardWidget), findsOneWidget);
+    expect(
+      tester.widget<PlayingCardWidget>(find.byType(PlayingCardWidget)).card,
+      queenClubs,
+    );
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: true)), findsOneWidget);
+  });
+
   testWidgets('peek не меняет тип слота и не двоит лицо', (tester) async {
     final key = GlobalKey<CardFanState>();
     await tester.pumpWidget(
