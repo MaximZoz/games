@@ -1,5 +1,45 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
+
+BattleshipGameView _view({
+  String id = 'g1',
+  String status = 'active',
+  List<int> myShots = const [],
+  List<int> myHits = const [],
+  List<int> opponentShots = const [],
+  List<List<int>> opponentSunkShips = const [],
+  bool isMyTurn = true,
+  String turn = 'me',
+  int lastShot = -1,
+  bool lastShotHit = false,
+}) {
+  return BattleshipGameView(
+    id: id,
+    status: status,
+    phase: 'battle',
+    lobbyId: 'l',
+    p1UserId: 'me',
+    p2UserId: 'op',
+    p1Ready: true,
+    p2Ready: true,
+    myShips: const [],
+    myShots: myShots,
+    myHits: myHits,
+    opponentShots: opponentShots,
+    opponentShipsHit: const [],
+    opponentSunkShips: opponentSunkShips,
+    opponentShips: const [],
+    isMyTurn: isMyTurn,
+    turn: turn,
+    turnTimeSec: 30,
+    turnDeadline: 0,
+    setupDeadline: 0,
+    stakeBronze: 2,
+    lastShot: lastShot,
+    lastShotHit: lastShotHit,
+  );
+}
 
 void main() {
   group('fitBattleshipCellSize', () {
@@ -327,6 +367,191 @@ void main() {
           myHits: const {},
         ),
         isTrue,
+      );
+    });
+  });
+
+  group('battleshipAttackMark', () {
+    test('pending — не промах и не попадание', () {
+      expect(
+        battleshipAttackMark(
+          cell: 7,
+          myHits: const {},
+          myShots: const {},
+          pendingCell: 7,
+        ),
+        BattleshipAttackMark.pending,
+      );
+      expect(
+        battleshipAttackMark(
+          cell: 7,
+          myHits: const {},
+          myShots: const {3},
+          pendingCell: 7,
+        ),
+        isNot(BattleshipAttackMark.miss),
+      );
+    });
+
+    test('hit и sunk важнее pending', () {
+      expect(
+        battleshipAttackMark(
+          cell: 4,
+          myHits: const {4},
+          myShots: const {4},
+          pendingCell: 4,
+        ),
+        BattleshipAttackMark.hit,
+      );
+      expect(
+        battleshipAttackMark(
+          cell: 4,
+          myHits: const {4},
+          myShots: const {4},
+          opponentSunkCells: const {4},
+          pendingCell: 4,
+        ),
+        BattleshipAttackMark.sunk,
+      );
+    });
+
+    test('выстрел без попадания — miss', () {
+      expect(
+        battleshipAttackMark(
+          cell: 2,
+          myHits: const {},
+          myShots: const {2},
+        ),
+        BattleshipAttackMark.miss,
+      );
+    });
+  });
+
+  group('BattleshipClientOverlay', () {
+    test('resolvePending сразу ставит финальную метку и не откатывается', () {
+      var overlay = const BattleshipClientOverlay().beginPending(11);
+      expect(overlay.pendingCell, 11);
+      expect(
+        battleshipAttackMark(
+          cell: 11,
+          myHits: overlay.hits,
+          myShots: overlay.shots,
+          pendingCell: overlay.pendingCell,
+        ),
+        BattleshipAttackMark.pending,
+      );
+
+      overlay = overlay.resolvePending(cell: 11, hit: true);
+      expect(overlay.pendingCell, isNull);
+      expect(overlay.shots, contains(11));
+      expect(overlay.hits, contains(11));
+      expect(
+        battleshipAttackMark(
+          cell: 11,
+          myHits: overlay.hits,
+          myShots: overlay.shots,
+          pendingCell: overlay.pendingCell,
+        ),
+        BattleshipAttackMark.hit,
+      );
+
+      final stale = _view(myShots: const [], myHits: const []);
+      overlay = overlay.absorbServer(stale);
+      expect(overlay.shots, contains(11));
+      expect(overlay.hits, contains(11));
+    });
+
+    test('потопленный корабль мержится без дубля', () {
+      const ship = [0, 1, 2];
+      var overlay = const BattleshipClientOverlay().resolvePending(
+        cell: 1,
+        hit: true,
+        sunkShip: ship,
+      );
+      overlay = overlay.absorbServer(
+        _view(
+          myShots: const [1],
+          myHits: const [1],
+          opponentSunkShips: const [ship],
+        ),
+      );
+      expect(overlay.sunkShips.length, 1);
+      expect(overlay.sunkShips.first, ship);
+    });
+  });
+
+  group('resolveBattleshipClientView', () {
+    test('берёт ход и выстрелы из ответа shoot, пока refetch старый', () {
+      final server = _view(
+        myShots: const [0],
+        isMyTurn: true,
+        turn: 'me',
+      );
+      final optimistic = _view(
+        myShots: const [0, 5],
+        myHits: const [5],
+        isMyTurn: false,
+        turn: 'op',
+        lastShot: 5,
+        lastShotHit: true,
+      );
+      final overlay = const BattleshipClientOverlay()
+          .resolvePending(cell: 5, hit: true);
+      final view = resolveBattleshipClientView(
+        server: server,
+        optimistic: optimistic,
+        overlay: overlay,
+      );
+      expect(view.myShots, containsAll([0, 5]));
+      expect(view.myHits, contains(5));
+      expect(view.isMyTurn, isFalse);
+      expect(view.turn, 'op');
+    });
+
+    test('чужой id optimistic не подмешивается', () {
+      final server = _view(id: 'a', myShots: const [1]);
+      final optimistic = _view(id: 'b', myShots: const [1, 2], isMyTurn: false);
+      final view = resolveBattleshipClientView(
+        server: server,
+        optimistic: optimistic,
+        overlay: const BattleshipClientOverlay(),
+      );
+      expect(view.id, 'a');
+      expect(view.myShots, [1]);
+      expect(view.isMyTurn, isTrue);
+    });
+  });
+
+  group('mergeBattleshipSunkShips', () {
+    test('склеивает и убирает перестановки клеток', () {
+      final merged = mergeBattleshipSunkShips(
+        const [
+          [3, 2, 1],
+        ],
+        const [
+          [1, 2, 3],
+          [10, 11],
+        ],
+      );
+      expect(merged.length, 2);
+      expect(merged.last, [10, 11]);
+    });
+  });
+
+  group('battleshipNewlySunkShip', () {
+    test('возвращает новый корабль после выстрела', () {
+      expect(
+        battleshipNewlySunkShip(
+          after: const [
+            [4, 5],
+            [8],
+          ],
+          before: const [
+            [4, 5],
+          ],
+          lastShot: 8,
+        ),
+        [8],
       );
     });
   });

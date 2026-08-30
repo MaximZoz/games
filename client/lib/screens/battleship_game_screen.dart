@@ -30,6 +30,7 @@ import 'package:multigames_client/utils/user_error.dart';
 
 /// Цвета клеток Морского боя.
 const Color _kWater = Color(0xFF90CAF9);
+const Color _kPendingWater = Color(0xFFBBDEFB);
 const Color _kShip = Color(0xFF607D8B);
 const Color _kConflictShip = Color(0xFFE57373);
 const Color _kPreviewOk = Color(0xFF81C784);
@@ -94,6 +95,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   /// Выстрел уже на поле, ждём ответ сервера.
   int? _pendingShotCell;
+  /// Монотонный слой клеток: ответ `shoot()` сразу на доске, refetch не откатывает.
+  BattleshipClientOverlay _overlay = const BattleshipClientOverlay();
+  BattleshipGameView? _optimisticView;
 
   @override
   void initState() {
@@ -129,7 +133,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _pulseHitCell = null;
       _fxShowMineBoard = null;
       _hideTimers = false;
-      _pendingShotCell = null;
+      _resetClientPaint();
       _hitPulse.stop();
       _hitPulse.reset();
       setState(() {
@@ -169,6 +173,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
             _busy = false;
             _fxInProgress = false;
             _pendingShotCell = null;
+            _overlay = _overlay.clearPending();
           });
           if (!_isOffline) {
             ref.invalidate(battleshipGameProvider(widget.gameId));
@@ -545,18 +550,29 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     setState(() => _localShips = next);
   }
 
+  void _resetClientPaint() {
+    _overlay = const BattleshipClientOverlay();
+    _optimisticView = null;
+    _pendingShotCell = null;
+  }
+
+  BattleshipGameView _displayGame(BattleshipGameView server) {
+    return resolveBattleshipClientView(
+      server: server,
+      optimistic: _optimisticView,
+      overlay: _overlay,
+    );
+  }
+
   void _beginLocalShot(int cell) {
     setState(() {
+      _overlay = _overlay.beginPending(cell);
       _pendingShotCell = cell;
-      _pulseHitCell = cell;
+      _pulseHitCell = null;
       _fxHit = false;
       _fxShowMineBoard = false;
       _busy = true;
     });
-    Sfx.play(SfxId.place);
-    _hitPulse
-      ..stop()
-      ..forward(from: 0);
   }
 
   Future<void> _shoot(int cell) async {
@@ -566,23 +582,39 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       final view =
           await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
       if (!mounted) return;
+      if (view.id != widget.gameId) return;
       final shotCell = view.lastShot >= 0 ? view.lastShot : cell;
+      final sunkShip = battleshipNewlySunkShip(
+        after: view.opponentSunkShips,
+        before: _overlay.sunkShips,
+        lastShot: shotCell,
+      );
       _lastFxKey = _fxKey(view);
-      // Победа/конец — сразу убрать таймер (invalidate идёт после анимации).
-      if (view.isOver && !_hideTimers) {
-        setState(() => _hideTimers = true);
-      }
+      setState(() {
+        _overlay = _overlay.resolvePending(
+          cell: shotCell,
+          hit: view.lastShotHit,
+          sunkShip: sunkShip,
+        );
+        _optimisticView = view;
+        _pendingShotCell = null;
+        if (view.isOver && !_hideTimers) {
+          _hideTimers = true;
+        }
+      });
       await _playShotReveal(
         cell: shotCell,
         hit: view.lastShotHit,
         onMyBoard: false,
-        sunk: view.opponentSunkShips.any((ship) => ship.contains(shotCell)),
+        sunk: sunkShip != null ||
+            view.opponentSunkShips.any((ship) => ship.contains(shotCell)),
       );
       if (!mounted) return;
       ref.invalidate(battleshipGameProvider(widget.gameId));
     } on GamesException catch (e) {
       if (!mounted) return;
       setState(() {
+        _overlay = _overlay.clearPending();
         _pendingShotCell = null;
         _pulseHitCell = null;
         _fxShowMineBoard = null;
@@ -845,6 +877,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           _pulseHitCell = null;
           _fxShowMineBoard = null;
           _hideTimers = false;
+          _resetClientPaint();
           _hitPulse.stop();
           _hitPulse.reset();
           session.restart();
@@ -1012,15 +1045,28 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     ref.listen(battleshipGameProvider(widget.gameId), (_, next) {
       final game = next.valueOrNull;
       if (game == null) return;
+      final absorbed = _overlay.absorbServer(game);
       final pending = _pendingShotCell;
-      if (pending != null &&
-          (game.myShots.contains(pending) || game.myHits.contains(pending))) {
-        _pendingShotCell = null;
+      final pendingDone = pending != null &&
+          (game.myShots.contains(pending) || game.myHits.contains(pending));
+      final local = _optimisticView;
+      final caughtUp = local != null &&
+          local.id == game.id &&
+          game.myShots.length >= local.myShots.length &&
+          game.opponentShots.length >= local.opponentShots.length &&
+          (!local.isOver || game.isOver);
+      if (!absorbed.sameAs(_overlay) ||
+          pendingDone ||
+          caughtUp ||
+          (game.isOver && !_hideTimers)) {
+        setState(() {
+          _overlay = absorbed;
+          if (pendingDone) _pendingShotCell = null;
+          if (caughtUp) _optimisticView = null;
+          if (game.isOver && !_hideTimers) _hideTimers = true;
+        });
       }
       _syncLocalShips(game);
-      if (game.isOver && !_hideTimers) {
-        setState(() => _hideTimers = true);
-      }
       final me = ref.read(authStateProvider).valueOrNull?.id;
       _maybeRevealRemoteShot(game, me);
     });
@@ -1073,7 +1119,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 gameAsync.when(
                   skipLoadingOnReload: true,
                   skipLoadingOnRefresh: true,
-                  data: (game) {
+                  data: (server) {
+                    final game = _displayGame(server);
                     // Сразу при входе в setup — случайная (или серверная) расстановка.
                     _syncLocalShips(game);
                     _syncSetupLocalDeadline(game);
@@ -1496,22 +1543,35 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       pulseHit: _fxHit,
       pulseAnimation: _hitPulse,
       cellBuilder: (cell) {
-        final sunkShip = sunkMap[cell];
-        if (sunkShip != null) {
-          return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
+        final mark = battleshipAttackMark(
+          cell: cell,
+          myHits: myHits,
+          myShots: myShots,
+          opponentSunkCells: sunkCells,
+          pendingCell: _overlay.pendingCell ?? _pendingShotCell,
+        );
+        switch (mark) {
+          case BattleshipAttackMark.sunk:
+            final sunkShip = sunkMap[cell];
+            if (sunkShip != null) {
+              return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
+            }
+            return const _CellPaint(color: _kSunkShip);
+          case BattleshipAttackMark.hit:
+            return const _CellPaint(color: _kHit, mark: _CellMark.hit);
+          case BattleshipAttackMark.miss:
+            return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
+          case BattleshipAttackMark.pending:
+            return const _CellPaint(
+              color: _kPendingWater,
+              mark: _CellMark.pending,
+            );
+          case BattleshipAttackMark.water:
+            if (revealed.contains(cell)) {
+              return const _CellPaint(color: _kShip);
+            }
+            return const _CellPaint(color: _kWater);
         }
-        final isFx = pulseCell == cell && _fxShowMineBoard == false;
-        final isPending = cell == _pendingShotCell;
-        if (myHits.contains(cell) || (isFx && _fxHit)) {
-          return const _CellPaint(color: _kHit, mark: _CellMark.hit);
-        }
-        if (myShots.contains(cell) || (isFx && !_fxHit) || isPending) {
-          return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
-        }
-        if (revealed.contains(cell)) {
-          return const _CellPaint(color: _kShip);
-        }
-        return const _CellPaint(color: _kWater);
       },
       onTap: canShoot
           ? (cell) {
@@ -1520,7 +1580,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 myShots: myShots,
                 myHits: myHits,
                 sunkCells: sunkCells,
-                pendingCell: _pendingShotCell,
+                pendingCell: _overlay.pendingCell ?? _pendingShotCell,
               )) {
                 return;
               }
@@ -1531,7 +1591,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 }
 
-enum _CellMark { none, hit, miss }
+enum _CellMark { none, hit, miss, pending }
 
 class _CellPaint extends StatelessWidget {
   const _CellPaint({required this.color, this.mark = _CellMark.none});
@@ -1549,20 +1609,32 @@ class _CellPaint extends StatelessWidget {
           width: 0.5,
         ),
       ),
-      child: mark == _CellMark.none
-          ? const SizedBox.expand()
-          : Center(
-              child: mark == _CellMark.hit
-                  ? const Icon(Icons.close_rounded, size: 14, color: Colors.white)
-                  : Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.textSecondary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
+      child: switch (mark) {
+        _CellMark.none => const SizedBox.expand(),
+        _CellMark.hit => const Center(
+            child: Icon(Icons.close_rounded, size: 14, color: Colors.white),
+          ),
+        _CellMark.miss => Center(
+            child: Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: AppColors.textSecondary,
+                shape: BoxShape.circle,
+              ),
             ),
+          ),
+        _CellMark.pending => Center(
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.6),
+              ),
+            ),
+          ),
+      },
     );
   }
 }

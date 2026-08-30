@@ -2,6 +2,8 @@
 /// Восстановлено по чатам Cursor (март 2026) и контракту сервера PROD v276.
 library;
 
+import 'package:multigames_client/games/battleship/battleship_repository.dart';
+
 const int kBattleshipBoardSize = 10;
 const int kBattleshipCellCount = kBattleshipBoardSize * kBattleshipBoardSize;
 
@@ -367,6 +369,216 @@ bool battleshipCellSpent({
   return myShots.contains(cell) ||
       myHits.contains(cell) ||
       sunkCells.contains(cell);
+}
+
+/// Финальная метка клетки на поле атаки. Pending — не промах.
+enum BattleshipAttackMark { water, pending, miss, hit, sunk }
+
+BattleshipAttackMark battleshipAttackMark({
+  required int cell,
+  required Set<int> myHits,
+  required Set<int> myShots,
+  Set<int> opponentSunkCells = const {},
+  int? pendingCell,
+}) {
+  if (opponentSunkCells.contains(cell)) return BattleshipAttackMark.sunk;
+  if (myHits.contains(cell)) return BattleshipAttackMark.hit;
+  if (pendingCell != null && cell == pendingCell) {
+    return BattleshipAttackMark.pending;
+  }
+  if (myShots.contains(cell)) return BattleshipAttackMark.miss;
+  return BattleshipAttackMark.water;
+}
+
+String battleshipSunkShipKey(List<int> ship) {
+  if (ship.isEmpty) return '';
+  final sorted = List<int>.from(ship)..sort();
+  return sorted.join(',');
+}
+
+/// Объединяет потопленные корабли без дублей (порядок: сначала server).
+List<List<int>> mergeBattleshipSunkShips(
+  List<List<int>> server,
+  List<List<int>> extra,
+) {
+  if (extra.isEmpty) return server;
+  final seen = <String>{};
+  final out = <List<int>>[];
+  void add(List<int> ship) {
+    if (ship.isEmpty) return;
+    final key = battleshipSunkShipKey(ship);
+    if (key.isEmpty || !seen.add(key)) return;
+    out.add(List<int>.from(ship));
+  }
+
+  for (final ship in server) {
+    add(ship);
+  }
+  for (final ship in extra) {
+    add(ship);
+  }
+  return out;
+}
+
+/// Корабль, который появился в [after] после [before], иначе корабль с [lastShot].
+List<int>? battleshipNewlySunkShip({
+  required List<List<int>> after,
+  required List<List<int>> before,
+  int lastShot = -1,
+}) {
+  final known = <String>{
+    for (final ship in before) battleshipSunkShipKey(ship),
+  };
+  for (final ship in after) {
+    if (ship.isEmpty) continue;
+    if (!known.contains(battleshipSunkShipKey(ship))) {
+      return List<int>.from(ship);
+    }
+  }
+  if (lastShot >= 0) {
+    for (final ship in after) {
+      if (ship.contains(lastShot)) return List<int>.from(ship);
+    }
+  }
+  return null;
+}
+
+/// Локальный монотонный слой выстрелов: не откатывается, пока сервер догоняет.
+class BattleshipClientOverlay {
+  const BattleshipClientOverlay({
+    this.shots = const {},
+    this.hits = const {},
+    this.sunkShips = const [],
+    this.opponentShots = const {},
+    this.pendingCell,
+  });
+
+  final Set<int> shots;
+  final Set<int> hits;
+  final List<List<int>> sunkShips;
+  final Set<int> opponentShots;
+  final int? pendingCell;
+
+  bool get isEmpty =>
+      shots.isEmpty &&
+      hits.isEmpty &&
+      sunkShips.isEmpty &&
+      opponentShots.isEmpty &&
+      pendingCell == null;
+
+  bool sameAs(BattleshipClientOverlay other) {
+    if (pendingCell != other.pendingCell) return false;
+    if (shots.length != other.shots.length || !shots.containsAll(other.shots)) {
+      return false;
+    }
+    if (hits.length != other.hits.length || !hits.containsAll(other.hits)) {
+      return false;
+    }
+    if (opponentShots.length != other.opponentShots.length ||
+        !opponentShots.containsAll(other.opponentShots)) {
+      return false;
+    }
+    if (sunkShips.length != other.sunkShips.length) return false;
+    final keys = <String>{
+      for (final ship in sunkShips) battleshipSunkShipKey(ship),
+    };
+    for (final ship in other.sunkShips) {
+      if (!keys.contains(battleshipSunkShipKey(ship))) return false;
+    }
+    return true;
+  }
+
+  BattleshipClientOverlay beginPending(int cell) {
+    if (shots.contains(cell) || hits.contains(cell)) return this;
+    if (pendingCell == cell) return this;
+    return BattleshipClientOverlay(
+      shots: shots,
+      hits: hits,
+      sunkShips: sunkShips,
+      opponentShots: opponentShots,
+      pendingCell: cell,
+    );
+  }
+
+  BattleshipClientOverlay clearPending() {
+    if (pendingCell == null) return this;
+    return BattleshipClientOverlay(
+      shots: shots,
+      hits: hits,
+      sunkShips: sunkShips,
+      opponentShots: opponentShots,
+    );
+  }
+
+  BattleshipClientOverlay resolvePending({
+    required int cell,
+    required bool hit,
+    List<int>? sunkShip,
+  }) {
+    return BattleshipClientOverlay(
+      shots: {...shots, cell},
+      hits: hit ? {...hits, cell} : hits,
+      sunkShips: sunkShip == null || sunkShip.isEmpty
+          ? sunkShips
+          : mergeBattleshipSunkShips(sunkShips, [sunkShip]),
+      opponentShots: opponentShots,
+      pendingCell: pendingCell == cell ? null : pendingCell,
+    );
+  }
+
+  BattleshipClientOverlay absorbServer(BattleshipGameView view) {
+    final nextPending = pendingCell != null &&
+            (view.myShots.contains(pendingCell) ||
+                view.myHits.contains(pendingCell))
+        ? null
+        : pendingCell;
+    return BattleshipClientOverlay(
+      shots: {...shots, ...view.myShots},
+      hits: {...hits, ...view.myHits},
+      sunkShips: mergeBattleshipSunkShips(sunkShips, view.opponentSunkShips),
+      opponentShots: {...opponentShots, ...view.opponentShots},
+      pendingCell: nextPending,
+    );
+  }
+}
+
+/// Сервер + ответ `shoot()` + оверлей. Лишние локальные выстрелы не откатываются.
+BattleshipGameView resolveBattleshipClientView({
+  required BattleshipGameView server,
+  BattleshipGameView? optimistic,
+  required BattleshipClientOverlay overlay,
+}) {
+  final BattleshipGameView base;
+  if (optimistic != null &&
+      optimistic.id == server.id &&
+      (optimistic.myShots.length > server.myShots.length ||
+          optimistic.myHits.length > server.myHits.length ||
+          optimistic.opponentShots.length > server.opponentShots.length ||
+          optimistic.opponentSunkShips.length > server.opponentSunkShips.length ||
+          (optimistic.isOver && !server.isOver))) {
+    base = optimistic;
+  } else {
+    base = server;
+  }
+  final shots = <int>{...base.myShots, ...overlay.shots};
+  final hits = <int>{...base.myHits, ...overlay.hits};
+  final oppShots = <int>{...base.opponentShots, ...overlay.opponentShots};
+  final sunk = mergeBattleshipSunkShips(
+    base.opponentSunkShips,
+    overlay.sunkShips,
+  );
+  if (shots.length == base.myShots.length &&
+      hits.length == base.myHits.length &&
+      oppShots.length == base.opponentShots.length &&
+      sunk.length == base.opponentSunkShips.length) {
+    return base;
+  }
+  return base.copyWith(
+    myShots: shots.toList(),
+    myHits: hits.toList(),
+    opponentShots: oppShots.toList(),
+    opponentSunkShips: sunk,
+  );
 }
 
 /// Сторона клетки 10×10, чтобы доска целиком влезла в [maxWidth]×[maxHeight].
