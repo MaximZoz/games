@@ -379,14 +379,14 @@ class AppShell extends ConsumerWidget {
         next: next,
         path: path,
       )) {
-        Sfx.play(SfxId.notify);
+        AlertSfx.playNotify();
       }
     });
     ref.listen<int>(friendsIncomingCountProvider, (prev, next) {
-      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+      if (AlertSfx.shouldPlayCountBump(prev, next)) AlertSfx.playNotify();
     });
     ref.listen<int>(gameInvitesCountProvider, (prev, next) {
-      if (AlertSfx.shouldPlayCountBump(prev, next)) Sfx.play(SfxId.notify);
+      if (AlertSfx.shouldPlayCountBump(prev, next)) AlertSfx.playNotify();
     });
     ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
       if (MyTurnBadgeSfx.shouldPlay(
@@ -394,7 +394,7 @@ class AppShell extends ConsumerWidget {
         nextCount: next,
         path: path,
       )) {
-        Sfx.play(SfxId.yourTurn);
+        AlertSfx.playYourTurn();
       }
     });
     final unreadChats = ref.watch(chatsUnreadCountProvider);

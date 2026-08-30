@@ -56,6 +56,44 @@ void main() {
         isFalse,
       );
     });
+
+    test('own rematch lobby does not block accepting another invite', () {
+      final active = ActiveGameItem(type: 'lobby', lobbyId: 'my-rematch');
+      expect(
+        isBusyWithOtherSession(active, targetLobbyId: 'their-rematch'),
+        isFalse,
+      );
+    });
+
+    test('own rematch lobby still blocks creating a new game', () {
+      final active = ActiveGameItem(type: 'lobby', lobbyId: 'my-rematch');
+      expect(isBusyWithOtherSession(active), isTrue);
+    });
+
+    test('game already started in target rematch lobby is allowed', () {
+      final active = ActiveGameItem(
+        type: 'game',
+        gameId: 'new-1',
+        lobbyId: 'their-rematch',
+      );
+      expect(
+        isBusyWithOtherSession(active, targetLobbyId: 'their-rematch'),
+        isFalse,
+      );
+    });
+  });
+
+  group('rematchLobbyToLeave', () {
+    test('returns own lobby when accepting another', () {
+      expect(rematchLobbyToLeave('mine', 'theirs'), 'mine');
+    });
+
+    test('skips empty or same lobby', () {
+      expect(rematchLobbyToLeave(null, 'theirs'), isNull);
+      expect(rematchLobbyToLeave('  ', 'theirs'), isNull);
+      expect(rematchLobbyToLeave('same', 'same'), isNull);
+      expect(rematchLobbyToLeave('mine', ''), isNull);
+    });
   });
 
   group('gameIdFromLocation', () {

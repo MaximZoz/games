@@ -40,7 +40,22 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsSoundTitle => 'Ovoz';
 
   @override
-  String get settingsSoundSubtitle => 'Yurishlar va o‘yin animatsiyalari';
+  String get settingsSoundSubtitle => 'O‘yinlar va bildirishnomalar';
+
+  @override
+  String get settingsSoundGames => 'O‘yinlar';
+
+  @override
+  String get settingsSoundNotifications => 'Bildirishnomalar';
+
+  @override
+  String get settingsSoundTurn => 'Yurish';
+
+  @override
+  String get settingsHapticsTitle => 'Tebranish';
+
+  @override
+  String get settingsHapticsSubtitle => 'Faqat bildirishnomalar: xabarlar, so‘rovlar, yurishingiz va taymer';
 
   @override
   String get settingsOfflineModeTitle => 'Tarmoq rejimi';
@@ -979,7 +994,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Qoidalar';

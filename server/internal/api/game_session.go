@@ -38,3 +38,51 @@ func clearUsersFinishedGame(ctx context.Context, rdb *redis.Client, users []uuid
 		}
 	}
 }
+
+func isWaitingLobbyStatus(status string) bool {
+	return status == lobbyStatusWaitingInvite || status == lobbyStatusWaitingMatchmake
+}
+
+const (
+	getActiveLobbyAsLobby = "lobby"
+	getActiveLobbyAsGame  = "game"
+	getActiveLobbyNone    = ""
+)
+
+// classifyGetActiveLobby — что показать в GetActive по указателю active_lobby.
+// Оконченная / пропавшая партия не должна выглядеть как «текущая игра».
+func classifyGetActiveLobby(lobbyStatus, gameID, gameStatus string) (kind string, clearPointer bool) {
+	if isWaitingLobbyStatus(lobbyStatus) {
+		return getActiveLobbyAsLobby, false
+	}
+	if lobbyStatus == lobbyStatusInGame &&
+		strings.TrimSpace(gameID) != "" &&
+		gameStatus == gameStatusActive {
+		return getActiveLobbyAsGame, false
+	}
+	return getActiveLobbyNone, true
+}
+
+type otherLobbyJoinAction int
+
+const (
+	otherLobbyNone otherLobbyJoinAction = iota
+	otherLobbyRelease
+	otherLobbyBlock
+	otherLobbyClear
+)
+
+// classifyOtherLobbyForJoin — чужой active_lobby при входе в target.
+// Своё ожидание реванша не 409, а закрываем и входим в инвайт соперника.
+func classifyOtherLobbyForJoin(otherLobbyID, targetLobbyID, otherStatus, otherGameStatus string) otherLobbyJoinAction {
+	if otherLobbyID == "" || otherLobbyID == targetLobbyID {
+		return otherLobbyNone
+	}
+	if isWaitingLobbyStatus(otherStatus) {
+		return otherLobbyRelease
+	}
+	if otherStatus == lobbyStatusInGame && otherGameStatus == gameStatusActive {
+		return otherLobbyBlock
+	}
+	return otherLobbyClear
+}

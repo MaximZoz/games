@@ -436,7 +436,7 @@ func TestHandOverButTableContinues(t *testing.T) {
 	if g.HandOver || g.TableOver {
 		t.Fatal("fresh game should not be hand/table over")
 	}
-	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 10 || g.HandsThisLevel != 0 {
+	if g.HandNumber != 1 || g.BlindLevel != 0 || g.HandsPerLevel != 7 || g.HandsThisLevel != 0 {
 		t.Fatalf("cash-table defaults wrong: hand=%d level=%d hpl=%d htl=%d",
 			g.HandNumber, g.BlindLevel, g.HandsPerLevel, g.HandsThisLevel)
 	}
@@ -543,7 +543,7 @@ func TestHandsPerBlindLevel(t *testing.T) {
 		live int
 		want int
 	}{
-		{1, 12}, {2, 12}, {3, 10}, {4, 8}, {5, 10}, {6, 12},
+		{1, 8}, {2, 8}, {3, 7}, {4, 6}, {5, 8}, {6, 8},
 	}
 	for _, tc := range cases {
 		if got := HandsPerBlindLevel(tc.live); got != tc.want {
@@ -554,33 +554,33 @@ func TestHandsPerBlindLevel(t *testing.T) {
 
 func TestNewGameHandsPerLevelByTableSize(t *testing.T) {
 	six, _ := NewGame([]string{"p0", "p1", "p2", "p3", "p4", "p5"}, 1000, 5, 10, newRNG())
-	if six.HandsPerLevel != 12 {
-		t.Fatalf("6-max hpl=%d want 12", six.HandsPerLevel)
+	if six.HandsPerLevel != 8 {
+		t.Fatalf("6-max hpl=%d want 8", six.HandsPerLevel)
 	}
 	hu, _ := NewGame([]string{"p0", "p1"}, 1000, 5, 10, newRNG())
-	if hu.HandsPerLevel != 12 {
-		t.Fatalf("heads-up hpl=%d want 12 (6 orbits)", hu.HandsPerLevel)
+	if hu.HandsPerLevel != 8 {
+		t.Fatalf("heads-up hpl=%d want 8", hu.HandsPerLevel)
 	}
 }
 
 func TestBlindsDoubleEveryOrbits(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2"}, 100000, 5, 10, newRNG())
-	// 3 живых → 10 раздач на уровень.
-	if g.HandsPerLevel != 10 {
-		t.Fatalf("3-max hpl=%d want 10", g.HandsPerLevel)
+	// 3 живых → 7 раздач на уровень.
+	if g.HandsPerLevel != 7 {
+		t.Fatalf("3-max hpl=%d want 7", g.HandsPerLevel)
 	}
 	if g.BigBlind != 10 || g.SmallBlind != 5 || g.BlindLevel != 0 {
 		t.Fatalf("hand1 blinds wrong: sb=%d bb=%d lvl=%d", g.SmallBlind, g.BigBlind, g.BlindLevel)
 	}
 	wantBB := map[int]int{
-		2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10,
-		11: 20,
+		2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10,
+		8: 20,
 	}
 	wantLvl := map[int]int{
-		2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0,
-		11: 1,
+		2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0,
+		8: 1,
 	}
-	for hand := 2; hand <= 11; hand++ {
+	for hand := 2; hand <= 8; hand++ {
 		playHandToEnd(t, g)
 		if g.TableOver {
 			t.Fatalf("table unexpectedly over before hand %d", hand)
@@ -605,8 +605,8 @@ func TestBlindsDoubleEveryOrbits(t *testing.T) {
 
 func TestHandsPerLevelFrozenUntilLevelUp(t *testing.T) {
 	g, _ := NewGame([]string{"p0", "p1", "p2", "p3"}, 100000, 5, 10, newRNG())
-	if g.HandsPerLevel != 8 {
-		t.Fatalf("4-max hpl=%d want 8", g.HandsPerLevel)
+	if g.HandsPerLevel != 6 {
+		t.Fatalf("4-max hpl=%d want 6", g.HandsPerLevel)
 	}
 	playHandToEnd(t, g)
 	g.Players[2].Chips = 0
@@ -614,20 +614,20 @@ func TestHandsPerLevelFrozenUntilLevelUp(t *testing.T) {
 	if err := g.StartNextHand(newRNG()); err != nil {
 		t.Fatal(err)
 	}
-	if g.HandsPerLevel != 8 {
+	if g.HandsPerLevel != 6 {
 		t.Fatalf("mid-level bust must not shrink hpl: %d", g.HandsPerLevel)
 	}
-	for hand := 3; hand <= 9; hand++ {
+	for hand := 3; hand <= 7; hand++ {
 		playHandToEnd(t, g)
 		if err := g.StartNextHand(newRNG()); err != nil {
 			t.Fatalf("StartNextHand for hand %d: %v", hand, err)
 		}
 	}
-	if g.HandNumber != 9 || g.BlindLevel != 1 {
-		t.Fatalf("hand=%d level=%d, want 9 / 1", g.HandNumber, g.BlindLevel)
+	if g.HandNumber != 7 || g.BlindLevel != 1 {
+		t.Fatalf("hand=%d level=%d, want 7 / 1", g.HandNumber, g.BlindLevel)
 	}
-	if g.HandsPerLevel != 12 {
-		t.Fatalf("after level-up HU hpl=%d want 12", g.HandsPerLevel)
+	if g.HandsPerLevel != 8 {
+		t.Fatalf("after level-up HU hpl=%d want 8", g.HandsPerLevel)
 	}
 	if g.HandsThisLevel != 0 {
 		t.Fatalf("handsThisLevel after level-up = %d, want 0", g.HandsThisLevel)

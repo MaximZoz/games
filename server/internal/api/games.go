@@ -1984,22 +1984,12 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			break
 		}
 	}
-	// Уже в другой активной партии / своём лобби — нельзя принять новый инвайт.
+	// Живая партия блокирует. Своё ожидание реванша — закрываем и входим сюда.
 	// Проверяем ДО alreadyMember: иначе повторный join в старое лобби реванша
 	// обходил блокировку, пока идёт другая партия.
-	// Выбывший в multi может смотреть и параллельно войти в новую игру.
-	if h.blockingActiveGameID(ctx, userID) != "" {
+	if h.prepareJoinLobbySession(ctx, userID, lobbyID) {
 		WriteErr(w, r, http.StatusConflict, "finish your current game first")
 		return
-	}
-	if lid, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result(); lerr == nil && lid != "" && lid != lobbyID {
-		if lm, _ := h.Rdb.HGetAll(ctx, "lobby:"+lid).Result(); len(lm) > 0 {
-			st := lm["status"]
-			if st == lobbyStatusWaitingInvite || st == lobbyStatusWaitingMatchmake {
-				WriteErr(w, r, http.StatusConflict, "finish your current game first")
-				return
-			}
-		}
 	}
 
 	// Повторный join (двойной тап / перезаход) — не ошибка, а текущее состояние.
@@ -2335,8 +2325,7 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 	}
 
 	ctx := r.Context()
-	key := "lobby:" + lobbyID
-	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	m, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
 	if err != nil || len(m) == 0 {
 		h.cleanupInviteLobbyChatMessages(ctx, lobbyID)
 		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
@@ -2344,12 +2333,10 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		return
 	}
 
-	creatorID := m["creator_id"]
-	opponentID := m["opponent_id"]
 	status := m["status"]
 	players := parsePlayerIDsCSV(m["player_ids"])
 	if len(players) == 0 {
-		players = []string{creatorID}
+		players = []string{m["creator_id"]}
 	}
 
 	if status == lobbyStatusInGame {
@@ -2357,17 +2344,52 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		return
 	}
 
-	inLobby := creatorID == userID.String() || opponentID == userID.String()
-	for _, p := range players {
-		if p == userID.String() {
-			inLobby = true
-			break
-		}
-	}
-	if !inLobby {
+	if !userInLobbyMembers(userID.String(), m, players) {
 		WriteErr(w, r, http.StatusForbidden, "forbidden")
 		return
 	}
+
+	res := h.applyLeaveWaitingLobby(ctx, userID, lobbyID, m, players)
+	w.Header().Set("Content-Type", "application/json")
+	if res.Closed {
+		_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": true})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"left":       true,
+		"closed":     false,
+		"creator_id": res.CreatorID,
+	})
+}
+
+func userInLobbyMembers(userID string, m map[string]string, players []string) bool {
+	if m["creator_id"] == userID || m["opponent_id"] == userID {
+		return true
+	}
+	for _, p := range players {
+		if p == userID {
+			return true
+		}
+	}
+	return false
+}
+
+type leaveLobbyResult struct {
+	Closed    bool
+	CreatorID string
+}
+
+func (h *GamesHandler) applyLeaveWaitingLobby(
+	ctx context.Context,
+	userID uuid.UUID,
+	lobbyID string,
+	m map[string]string,
+	players []string,
+) leaveLobbyResult {
+	key := "lobby:" + lobbyID
+	creatorID := m["creator_id"]
+	opponentID := m["opponent_id"]
+	status := m["status"]
 
 	clearUserActiveLobby(ctx, h.Rdb, userID)
 
@@ -2418,16 +2440,12 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 			"closed":   true,
 		})
 		h.broadcast(notifyIDs, map[string]any{"type": "chat_list_changed"})
-		// Публичный поиск пропал из списка — обновить вкладку «Лобби» у всех.
 		if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
 			h.notifyPublicLobbiesChanged()
 		}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"left": true, "closed": true})
-		return
+		return leaveLobbyResult{Closed: true, CreatorID: creatorID}
 	}
 
-	// Обычный участник вышел — лобби ждёт дальше.
 	h.Rdb.HSet(ctx, key, "player_ids", formatPlayerIDsCSV(remaining))
 	if opponentID == userID.String() {
 		newOpp := ""
@@ -2461,17 +2479,60 @@ func (h *GamesHandler) LeaveLobby(w http.ResponseWriter, r *http.Request, lobbyI
 		"left_user_id":  userID.String(),
 	})
 	h.broadcast(rest, map[string]any{"type": "chat_list_changed"})
-	// Состав публичного поиска изменился — обновить вкладку «Лобби».
 	if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
 		h.notifyPublicLobbiesChanged()
 	}
+	return leaveLobbyResult{Closed: false, CreatorID: creatorID}
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"left":       true,
-		"closed":     false,
-		"creator_id": creatorID,
-	})
+// prepareJoinLobbySession — true = живая партия, нельзя войти.
+// Своё ожидание реванша / протухший указатель не блокируют: закрываем и идём в target.
+func (h *GamesHandler) prepareJoinLobbySession(ctx context.Context, userID uuid.UUID, targetLobbyID string) bool {
+	if h.blockingActiveGameID(ctx, userID) != "" {
+		return true
+	}
+	return h.reconcileOtherActiveLobby(ctx, userID, targetLobbyID)
+}
+
+func (h *GamesHandler) reconcileOtherActiveLobby(ctx context.Context, userID uuid.UUID, targetLobbyID string) bool {
+	if h.Rdb == nil {
+		return false
+	}
+	lid, err := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
+	if err != nil || lid == "" || lid == targetLobbyID {
+		return false
+	}
+	m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lid).Result()
+	status := ""
+	gameStatus := ""
+	if len(m) > 0 {
+		status = m["status"]
+		if gid := strings.TrimSpace(m["game_id"]); gid != "" {
+			if gm, _ := h.Rdb.HGetAll(ctx, "game:"+gid).Result(); len(gm) > 0 {
+				gameStatus = gm["status"]
+			}
+		}
+	}
+	switch classifyOtherLobbyForJoin(lid, targetLobbyID, status, gameStatus) {
+	case otherLobbyBlock:
+		return true
+	case otherLobbyClear:
+		clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lid)
+		return false
+	case otherLobbyRelease:
+		players := parsePlayerIDsCSV(m["player_ids"])
+		if len(players) == 0 {
+			players = []string{m["creator_id"]}
+		}
+		if !userInLobbyMembers(userID.String(), m, players) {
+			clearUserActiveLobbyIfMatch(ctx, h.Rdb, userID, lid)
+			return false
+		}
+		h.applyLeaveWaitingLobby(ctx, userID, lid, m, players)
+		return false
+	default:
+		return false
+	}
 }
 
 func (h *GamesHandler) DeclineInvite(w http.ResponseWriter, r *http.Request, lobbyID string) {
@@ -4364,18 +4425,40 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 		lobbyID, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result()
 		if lerr == nil && lobbyID != "" {
 			m, merr := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
-			if merr == nil && len(m) > 0 {
-				gt := m["game_type"]
-				if gt == "" {
-					gt = "tictactoe"
-				}
-				active = map[string]any{
-					"type":      "lobby",
-					"lobby_id":  lobbyID,
-					"game_type": gt,
-				}
-			} else {
+			if merr != nil || len(m) == 0 {
 				clearUserActiveLobby(ctx, h.Rdb, userID)
+			} else {
+				gameID := strings.TrimSpace(m["game_id"])
+				gameStatus := ""
+				if gameID != "" {
+					if gm, _ := h.Rdb.HGetAll(ctx, "game:"+gameID).Result(); len(gm) > 0 {
+						gameStatus = gm["status"]
+					}
+				}
+				kind, clear := classifyGetActiveLobby(m["status"], gameID, gameStatus)
+				if clear {
+					clearUserActiveLobby(ctx, h.Rdb, userID)
+				} else {
+					gt := m["game_type"]
+					if gt == "" {
+						gt = "tictactoe"
+					}
+					if kind == getActiveLobbyAsGame {
+						setUserActiveGame(ctx, h.Rdb, userID, gameID)
+						active = map[string]any{
+							"type":      "game",
+							"game_id":   gameID,
+							"lobby_id":  lobbyID,
+							"game_type": gt,
+						}
+					} else {
+						active = map[string]any{
+							"type":      "lobby",
+							"lobby_id":  lobbyID,
+							"game_type": gt,
+						}
+					}
+				}
 			}
 		}
 	}

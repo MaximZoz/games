@@ -218,8 +218,38 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSoundSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Ходы и анимации в играх'**
+  /// **'Игры и уведомления'**
   String get settingsSoundSubtitle;
+
+  /// No description provided for @settingsSoundGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры'**
+  String get settingsSoundGames;
+
+  /// No description provided for @settingsSoundNotifications.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления'**
+  String get settingsSoundNotifications;
+
+  /// No description provided for @settingsSoundTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход'**
+  String get settingsSoundTurn;
+
+  /// No description provided for @settingsHapticsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вибрация'**
+  String get settingsHapticsTitle;
+
+  /// No description provided for @settingsHapticsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только уведомления: сообщения, заявки, ваш ход и таймер'**
+  String get settingsHapticsSubtitle;
 
   /// No description provided for @settingsOfflineModeTitle.
   ///
@@ -1454,7 +1484,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesUnoPlay.
   ///
   /// In ru, this message translates to:
-  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 можно класть только на +2, +4 — только на +4: штраф суммируется (две +2 — следующий берёт 4). +2 на +4 класть нельзя. Кто не отвечает, берёт всю стопку и пропускает ход. Две одинаковые недикие карты (например, две жёлтые 8) сбрасываются вместе: достаточно кинуть одну — вторая уходит автоматически.'**
+  /// **'Пропуск — следующий теряет ход. Смена направления вдвоём работает как пропуск. +2 можно класть только на +2, +4 — только на +4: штраф суммируется (две +2 — следующий берёт 4). +2 на +4 класть нельзя. Кто не отвечает, берёт всю стопку и пропускает ход. Две одинаковые цифровые карты (например, две жёлтые 8) сбрасываются вместе: достаточно кинуть одну — вторая уходит автоматически. +2, пропуск, реверс и чёрные карты парой не кидаются.'**
   String get rulesUnoPlay;
 
   /// No description provided for @rulesUnoWild.
@@ -1976,7 +2006,7 @@ abstract class AppLocalizations {
   /// No description provided for @rulesPokerTable.
   ///
   /// In ru, this message translates to:
-  /// **'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые два круга дилера; втроём — каждые 10 раздач, вдвоём — каждые шесть кругов. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.'**
+  /// **'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые 6–8 раздач: вдвоём — 8, втроём — 7, вчетвером — 6. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.'**
   String get rulesPokerTable;
 
   /// No description provided for @gamesRules.

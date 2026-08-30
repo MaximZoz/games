@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
@@ -31,6 +32,20 @@ void main() {
         activeGameUsableForTest(ActiveGameItem(type: 'game')),
         isFalse,
       );
+    });
+  });
+
+  group('gamesLobbyTabIndexForAnimation', () {
+    test('игры до середины свайпа, лобби после', () {
+      expect(gamesLobbyTabIndexForAnimation(0), 0);
+      expect(gamesLobbyTabIndexForAnimation(0.49), 0);
+      expect(gamesLobbyTabIndexForAnimation(0.5), 1);
+      expect(gamesLobbyTabIndexForAnimation(1), 1);
+    });
+
+    test('анимация вкладки короче дефолтных 300 мс', () {
+      expect(gamesLobbyTabAnimation.inMilliseconds, lessThan(300));
+      expect(gamesLobbyTabAnimation.inMilliseconds, greaterThan(0));
     });
   });
 }

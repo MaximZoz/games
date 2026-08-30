@@ -13,6 +13,7 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 import 'core/ios_viewport_sync.dart';
 import 'core/android_notify_bridge.dart';
 import 'core/local_notify.dart';
+import 'core/haptics.dart';
 import 'core/settings_provider.dart';
 import 'core/sfx.dart';
 import 'core/push_notification_nav_stub.dart'
@@ -129,6 +130,12 @@ class MultiGamesApp extends ConsumerWidget {
     ref.watch(androidNotifyBridgeProvider);
     final soundOn = ref.watch(soundEnabledProvider);
     Sfx.setEnabled(soundOn);
+    Sfx.instance.setCategories(
+      games: ref.watch(soundGamesEnabledProvider),
+      notifications: ref.watch(soundNotificationsEnabledProvider),
+      turn: ref.watch(soundTurnEnabledProvider),
+    );
+    Haptics.setEnabled(ref.watch(hapticsEnabledProvider));
     Sfx.instance.warmup(unlock: false);
     return MaterialApp.router(
       title: 'Zozu Games',

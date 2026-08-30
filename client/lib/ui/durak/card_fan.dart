@@ -723,6 +723,16 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     });
   }
 
+  /// Тест: карта чуть вытащена в веере (ещё не overlay).
+  @visibleForTesting
+  void debugPeekCard(PlayingCard card, {double t = 1}) {
+    setState(() {
+      _peekCard = card;
+      _peekT = t.clamp(0.0, 1.0);
+      _liftedCard = null;
+    });
+  }
+
   /// Peek → свободный drag без скачка: overlay стартует из приподнятого слота.
   void _promotePeekToFree(
     Offset fingerGlobal,
@@ -1158,43 +1168,47 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final showHintShadow = !hidden &&
         ((active || selected) && (!hintLegal || legal));
 
-    Widget child = hidden
-        ? SizedBox(
-            width: widget.cardSize.width,
-            height: widget.cardSize.height,
-          )
-        : widget.faceDown
-            ? CardBackWidget(
-                size: widget.cardSize, elevated: peeking || active)
-            : PlayingCardWidget(
-                card: card,
-                size: widget.cardSize,
-                highlighted: showHintShadow,
-                dimmed: hintLegal && !legal,
-                // Selected — только тень (мультивыбор long-press), без подъёма.
-                elevated: active || peeking || selected,
-              );
-    child = RepaintBoundary(child: child);
+    // Дырка без RepaintBoundary: иначе Impeller держит кэш лица в слоте.
+    final Widget faceOrHole;
+    if (hidden) {
+      faceOrHole = SizedBox(
+        width: widget.cardSize.width,
+        height: widget.cardSize.height,
+      );
+    } else {
+      final face = widget.faceDown
+          ? CardBackWidget(
+              size: widget.cardSize, elevated: peeking || active)
+          : PlayingCardWidget(
+              card: card,
+              size: widget.cardSize,
+              highlighted: showHintShadow,
+              dimmed: hintLegal && !legal,
+              // Selected — только тень (мультивыбор long-press), без подъёма.
+              elevated: active || peeking || selected,
+            );
+      faceOrHole = RepaintBoundary(child: face);
+    }
 
-    child = GestureDetector(
+    final child = GestureDetector(
       onLongPress: !widget.enabled || widget.faceDown || !legal
           ? null
           : () => widget.onLongPress?.call(card),
-      child: child,
+      child: faceOrHole,
     );
 
     // Края веера поднимаются «от стола»: у себя вверх, у соперника к верху экрана.
     final edgeLift = -curveY;
 
-    // Peek — без duration; перестановка после сортировки — плавная.
-    final animMs =
-        peeking || !widget.animateLayout ? 0 : 340;
+    // Peek/hide — duration 0, но виджет всегда AnimatedPositioned.
+    // Смена типа на Positioned на iOS оставляет призрак в старом месте.
+    final instantSlot = peeking || hidden || !widget.animateLayout;
     final left = _cardLeft(i, n, baseSpacing, totalW) + extraX;
     final top = widget.invertFan ? extraY + edgeLift : null;
     final bottom = widget.invertFan ? null : extraY + edgeLift;
     final scaled = AnimatedScale(
       scale: scale,
-      duration: Duration(milliseconds: peeking || !widget.animateLayout ? 0 : 280),
+      duration: Duration(milliseconds: instantSlot ? 0 : 280),
       curve: kDurakLayoutCurve,
       child: Transform.rotate(
         angle: angle,
@@ -1204,19 +1218,9 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       ),
     );
 
-    if (!widget.animateLayout || peeking) {
-      return Positioned(
-        key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
-        left: left,
-        top: top,
-        bottom: bottom,
-        child: scaled,
-      );
-    }
-
     return AnimatedPositioned(
-      key: ValueKey('fan-${card.rank.value}-${card.suit.name}'),
-      duration: Duration(milliseconds: animMs),
+      key: fanSlotPaintKey(card: card, hidden: hidden),
+      duration: fanSlotMoveDuration(instant: instantSlot),
       curve: kDurakLayoutCurve,
       left: left,
       top: top,

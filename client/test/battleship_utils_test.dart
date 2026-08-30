@@ -261,4 +261,73 @@ void main() {
       expect(validateBattleshipShips(next!), isTrue);
     });
   });
+
+  group('battleshipCellSpent', () {
+    test('свободная клетка доступна', () {
+      expect(
+        battleshipCellSpent(
+          cell: 0,
+          myShots: const {},
+          myHits: const {},
+        ),
+        isFalse,
+      );
+    });
+
+    test('повтор, потоп и pending запрещены', () {
+      expect(
+        battleshipCellSpent(
+          cell: 3,
+          myShots: const {3},
+          myHits: const {},
+        ),
+        isTrue,
+      );
+      expect(
+        battleshipCellSpent(
+          cell: 5,
+          myShots: const {},
+          myHits: const {5},
+        ),
+        isTrue,
+      );
+      expect(
+        battleshipCellSpent(
+          cell: 8,
+          myShots: const {},
+          myHits: const {},
+          sunkCells: const {8},
+        ),
+        isTrue,
+      );
+      expect(
+        battleshipCellSpent(
+          cell: 11,
+          myShots: const {},
+          myHits: const {},
+          pendingCell: 11,
+        ),
+        isTrue,
+      );
+    });
+
+    test('вне поля нельзя', () {
+      expect(
+        battleshipCellSpent(
+          cell: -1,
+          myShots: const {},
+          myHits: const {},
+        ),
+        isTrue,
+      );
+      expect(
+        battleshipCellSpent(
+          cell: kBattleshipCellCount,
+          myShots: const {},
+          myHits: const {},
+        ),
+        isTrue,
+      );
+    });
+  });
 }

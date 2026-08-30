@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
@@ -18,6 +19,21 @@ void main() {
     expect(lines.any((l) => l.contains('+4')), isTrue);
     expect(lines.any((l) => l.contains('200')), isTrue);
     expect(lines.last, contains('200'));
+  });
+
+  test('кнопка взять выключена пока запрос в полёте', () {
+    expect(unoDrawControlEnabled(busy: false, canTake: true), isTrue);
+    expect(unoDrawControlEnabled(busy: true, canTake: true), isFalse);
+    expect(unoDrawControlEnabled(busy: false, canTake: false), isFalse);
+  });
+
+  test('второй взять не показывает «не ваш ход»', () {
+    expect(
+      isStaleUnoDrawError(GamesException(400, 'Сейчас не ваш ход',
+          errorKey: 'not your turn')),
+      isTrue,
+    );
+    expect(isStaleUnoDrawError(GamesException(400, 'lobby full')), isFalse);
   });
 
   test('unoRuleLines offline bot hides turn time', () {

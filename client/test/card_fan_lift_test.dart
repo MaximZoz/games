@@ -38,6 +38,18 @@ void main() {
     );
   });
 
+  test('ключ слота меняется при hide — сброс слоя Impeller', () {
+    final visible = fanSlotPaintKey(card: tenDiamonds, hidden: false);
+    final hidden = fanSlotPaintKey(card: tenDiamonds, hidden: true);
+    expect(visible, isNot(hidden));
+    expect(fanSlotPaintKey(card: tenDiamonds, hidden: false), visible);
+    expect(fanSlotMoveDuration(instant: true), Duration.zero);
+    expect(
+      fanSlotMoveDuration(instant: false),
+      const Duration(milliseconds: 340),
+    );
+  });
+
   testWidgets('после lift в веере одно лицо — без двойника', (tester) async {
     final key = GlobalKey<CardFanState>();
     await tester.pumpWidget(
@@ -62,5 +74,32 @@ void main() {
       find.byType(PlayingCardWidget),
     );
     expect(visible.card, queenClubs);
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: true)), findsOneWidget);
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsNothing);
+  });
+
+  testWidgets('peek не меняет тип слота и не двоит лицо', (tester) async {
+    final key = GlobalKey<CardFanState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CardFan(
+            key: key,
+            cards: const [tenDiamonds, queenClubs],
+            cardSize: const Size(72, 100),
+            animateLayout: true,
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(PlayingCardWidget), findsNWidgets(2));
+    expect(find.byType(AnimatedPositioned), findsNWidgets(2));
+
+    key.currentState!.debugPeekCard(tenDiamonds);
+    await tester.pump();
+
+    expect(find.byType(PlayingCardWidget), findsNWidgets(2));
+    expect(find.byType(AnimatedPositioned), findsNWidgets(2));
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsOneWidget);
   });
 }

@@ -741,6 +741,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        setState(() => _rematchLobbyId = null);
+        try {
+          await ref.read(pokerRepositoryProvider).leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
       final result =
           await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;

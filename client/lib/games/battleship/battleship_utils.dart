@@ -354,6 +354,21 @@ List<List<int>> generateRandomBattleshipShips([int? seed]) {
   return defaultBattleshipShips();
 }
 
+/// Клетка уже стреляная, в полёте или потоплена — повторный выстрел нельзя.
+bool battleshipCellSpent({
+  required int cell,
+  required Set<int> myShots,
+  required Set<int> myHits,
+  Set<int> sunkCells = const {},
+  int? pendingCell,
+}) {
+  if (cell < 0 || cell >= kBattleshipCellCount) return true;
+  if (pendingCell != null && cell == pendingCell) return true;
+  return myShots.contains(cell) ||
+      myHits.contains(cell) ||
+      sunkCells.contains(cell);
+}
+
 /// Сторона клетки 10×10, чтобы доска целиком влезла в [maxWidth]×[maxHeight].
 double fitBattleshipCellSize({
   required double maxWidth,

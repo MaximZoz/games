@@ -106,29 +106,27 @@ type Game struct {
 }
 
 const (
-	orbitsPerBlindLevel   = 2
-	headsUpOrbitsPerLevel = 6
-	threeMaxHandsPerLevel = 10
-	minHandsPerBlindLevel = 6
+	headsUpHandsPerLevel   = 8
+	threeMaxHandsPerLevel  = 7
+	fourMaxHandsPerLevel   = 6
+	fullTableHandsPerLevel = 8
 )
 
 // HandsPerBlindLevel — сколько раздач держать текущие блайнды.
-// Обычно два круга дилера; втроём — 10 раздач; вдвоём — шесть кругов (12 раздач).
+// Чуть короче прежнего (HU 12 / 3-max 10 / 6-max 12): 8 / 7 / 6 / 8.
 func HandsPerBlindLevel(livePlayers int) int {
 	if livePlayers < 2 {
 		livePlayers = 2
 	}
-	switch {
-	case livePlayers == 2:
-		return livePlayers * headsUpOrbitsPerLevel
-	case livePlayers == 3:
+	switch livePlayers {
+	case 2:
+		return headsUpHandsPerLevel
+	case 3:
 		return threeMaxHandsPerLevel
+	case 4:
+		return fourMaxHandsPerLevel
 	default:
-		n := livePlayers * orbitsPerBlindLevel
-		if n < minHandsPerBlindLevel {
-			return minHandsPerBlindLevel
-		}
-		return n
+		return fullTableHandsPerLevel
 	}
 }
 
@@ -758,7 +756,7 @@ func (g *Game) StartNextHand(rng *rand.Rand) error {
 
 	g.HandNumber++
 	g.HandsThisLevel++
-	// Уровень держится HandsPerLevel раздач (2 круга; втроём — 10; вдвоём — 6 кругов).
+	// Уровень держится HandsPerLevel раздач (HU 8, втроём 7, вчетвером 6, иначе 8).
 	// Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
 	if g.HandsPerLevel > 0 && g.HandsThisLevel >= g.HandsPerLevel {
 		g.BlindLevel++

@@ -128,7 +128,7 @@ void main() {
       final g = freshHeadsUp(chips: 1000000, seed: 9);
       expect(g.bigBlind, 10);
       expect(g.blindLevel, 0);
-      expect(g.handsPerLevel, 12);
+      expect(g.handsPerLevel, 8);
       final perLevel = g.handsPerLevel;
       for (var h = 0; h < perLevel; h++) {
         g.apply(g.actingIndex, const PokerAction(PokerActionType.fold));
@@ -140,16 +140,16 @@ void main() {
       expect(g.smallBlind, g.bigBlind ~/ 2);
     });
 
-    test('handsPerBlindLevel: 10 hands 3-max, six orbits heads-up', () {
-      expect(handsPerBlindLevel(1), 12);
-      expect(handsPerBlindLevel(2), 12);
-      expect(handsPerBlindLevel(3), 10);
-      expect(handsPerBlindLevel(4), 8);
-      expect(handsPerBlindLevel(5), 10);
-      expect(handsPerBlindLevel(6), 12);
+    test('handsPerBlindLevel: 7 hands 3-max, 8 heads-up', () {
+      expect(handsPerBlindLevel(1), 8);
+      expect(handsPerBlindLevel(2), 8);
+      expect(handsPerBlindLevel(3), 7);
+      expect(handsPerBlindLevel(4), 6);
+      expect(handsPerBlindLevel(5), 8);
+      expect(handsPerBlindLevel(6), 8);
     });
 
-    test('6-max starts with 12 hands per level', () {
+    test('6-max starts with 8 hands per level', () {
       final g = PokerEngine.newGame(
         playerIds: const ['p0', 'p1', 'p2', 'p3', 'p4', 'p5'],
         startingChips: 1000,
@@ -158,7 +158,7 @@ void main() {
         dealerIndex: 0,
         rng: Random(1),
       );
-      expect(g.handsPerLevel, 12);
+      expect(g.handsPerLevel, 8);
     });
 
     test('busting mid-level does not shrink the current level', () {
@@ -176,19 +176,19 @@ void main() {
         dealerIndex: 0,
         rng: Random(4),
       );
-      expect(g.handsPerLevel, 8);
+      expect(g.handsPerLevel, 6);
       foldToHandOver(g);
       g.players[2].chips = 0;
       g.players[3].chips = 0;
       g.startNextHand(Random(5));
-      expect(g.handsPerLevel, 8);
-      for (var hand = 3; hand <= 9; hand++) {
+      expect(g.handsPerLevel, 6);
+      for (var hand = 3; hand <= 7; hand++) {
         foldToHandOver(g);
         g.startNextHand(Random(10 + hand));
       }
-      expect(g.handNumber, 9);
+      expect(g.handNumber, 7);
       expect(g.blindLevel, 1);
-      expect(g.handsPerLevel, 12);
+      expect(g.handsPerLevel, 8);
       expect(g.handsThisLevel, 0);
     });
 
