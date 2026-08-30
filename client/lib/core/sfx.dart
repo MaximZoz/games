@@ -301,12 +301,23 @@ abstract final class AlertSfx {
   }
 }
 
+/// Партия (онлайн или офлайн), не список игр и не лобби.
+@visibleForTesting
+bool isGamePlayPath(String path) {
+  final segs = path
+      .split('?')
+      .first
+      .split('/')
+      .where((part) => part.isNotEmpty)
+      .toList();
+  if (segs.length < 3 || segs[0] != 'games') return false;
+  if (segs[2] == 'offline') return true;
+  return segs.length >= 4 && segs[2] == 'game';
+}
+
 /// Бейдж «ваш ход» в шелле не дублирует звук, если уже открыта партия.
 abstract final class MyTurnBadgeSfx {
-  static bool isOnGameBoard(String path) {
-    final p = path.toLowerCase();
-    return p.contains('/game/') || p.contains('/offline');
-  }
+  static bool isOnGameBoard(String path) => isGamePlayPath(path);
 
   static bool shouldPlay({
     required int? previousCount,
@@ -318,17 +329,97 @@ abstract final class MyTurnBadgeSfx {
   }
 }
 
-/// Интервал тика часов хода: 80% остатка → 800 мс, 50% → 500 мс,
-/// 20% остатка или ≤5 с — частый тик, как ускоренные часы.
+/// С другого экрана игровые события звучат как уведомление, не как тик хода.
+abstract final class GameAwaySfx {
+  static bool _wasMyTurn = false;
+  static String? _gameId;
+  static DateTime? _lastPlayAt;
+
+  @visibleForTesting
+  static const debounce = Duration(milliseconds: 800);
+
+  @visibleForTesting
+  static void reset() {
+    _wasMyTurn = false;
+    _gameId = null;
+    _lastPlayAt = null;
+  }
+
+  static bool isWatchingBoard(String path, String? gameId) {
+    if (!isGamePlayPath(path)) return false;
+    final id = (gameId ?? '').trim();
+    if (id.isEmpty) return true;
+    final p = path.toLowerCase();
+    final needle = id.toLowerCase();
+    return p.contains('/game/$needle') || p.contains('/offline');
+  }
+
+  /// Запомнить ход. true — только что стал моим.
+  static bool noteMyTurn({
+    required bool isMyTurn,
+    String? gameId,
+  }) {
+    final id = (gameId ?? '').trim();
+    final sameGame = id.isEmpty || id == _gameId;
+    final was = sameGame && _wasMyTurn;
+    _wasMyTurn = isMyTurn;
+    if (id.isNotEmpty) _gameId = id;
+    if (!isMyTurn) return false;
+    return !was;
+  }
+
+  static bool shouldPlayNotify({
+    required String path,
+    required String? gameId,
+    required bool becameMyTurn,
+    DateTime? now,
+  }) {
+    if (!becameMyTurn) return false;
+    if (isWatchingBoard(path, gameId)) return false;
+    final at = now ?? DateTime.now();
+    if (_lastPlayAt != null && at.difference(_lastPlayAt!) < debounce) {
+      return false;
+    }
+    _lastPlayAt = at;
+    return true;
+  }
+
+  static void playIfNeeded({
+    required String path,
+    required String? gameId,
+    required bool isMyTurn,
+  }) {
+    final became = noteMyTurn(isMyTurn: isMyTurn, gameId: gameId);
+    if (!shouldPlayNotify(
+      path: path,
+      gameId: gameId,
+      becameMyTurn: became,
+    )) {
+      return;
+    }
+    AlertSfx.playNotify();
+  }
+}
+
+/// Осталось ≤5 с — тики молчат, один сигнал «ваш ход».
+@visibleForTesting
+bool crossedTurnFiveSeconds({
+  required int previousRemainingMs,
+  required int nextRemainingMs,
+}) {
+  return previousRemainingMs > 5000 &&
+      nextRemainingMs <= 5000 &&
+      nextRemainingMs > 0;
+}
+
+/// Интервал тика: 80% → 800 мс, 50%/20% → 500 мс. Последние 5 с — без тиков.
 @visibleForTesting
 int turnTickIntervalMs({
   required int remainingMs,
   required int totalMs,
 }) {
-  if (remainingMs <= 0) return 0;
-  if (remainingMs <= 5000) return 200;
+  if (remainingMs <= 0 || remainingMs <= 5000) return 0;
   if (totalMs > 0) {
-    if (remainingMs * 5 <= totalMs) return 200;
     if (remainingMs * 2 <= totalMs) return 500;
     if (remainingMs * 5 <= totalMs * 4) return 800;
   }
@@ -341,6 +432,7 @@ abstract final class TurnClockSfx {
   static DateTime? _lastTickAt;
   static double? _lastRatio;
   static int? _lastSecondBuzz;
+  static int? _lastRemainingMs;
 
   @visibleForTesting
   static void Function(SfxId id)? debugOnPlay;
@@ -354,6 +446,7 @@ abstract final class TurnClockSfx {
     _lastTickAt = null;
     _lastRatio = null;
     _lastSecondBuzz = null;
+    _lastRemainingMs = null;
     debugOnPlay = null;
     debugOnHaptic = null;
   }
@@ -377,6 +470,7 @@ abstract final class TurnClockSfx {
       _lastTickAt = null;
       _lastRatio = null;
       _lastSecondBuzz = null;
+      _lastRemainingMs = null;
       return;
     }
     if (!_wasMyTurn) {
@@ -384,9 +478,14 @@ abstract final class TurnClockSfx {
       if (!announceOnly) {
         _lastTickAt = at;
       }
-      _play(SfxId.yourTurn);
-      _haptic(HapticKind.yourTurn);
+      // Скрытая вкладка IndexedStack не должна пищать: с другого экрана
+      // звучит GameAwaySfx (notify).
+      if (clockVisible) {
+        _play(SfxId.yourTurn);
+        _haptic(HapticKind.yourTurn);
+      }
       _lastRatio = ratio;
+      _lastRemainingMs = leftMs;
       _lastSecondBuzz =
           hasTimer && remainingSeconds <= 5 ? remainingSeconds : null;
       return;
@@ -399,6 +498,16 @@ abstract final class TurnClockSfx {
         }
       }
       if (ratio != null) _lastRatio = ratio;
+      final prevLeft = _lastRemainingMs;
+      if (prevLeft != null &&
+          crossedTurnFiveSeconds(
+            previousRemainingMs: prevLeft,
+            nextRemainingMs: leftMs,
+          )) {
+        _play(SfxId.yourTurn);
+        _haptic(HapticKind.timerMark);
+      }
+      _lastRemainingMs = leftMs;
       if (shouldBuzzTurnSecond(
         remainingSeconds: remainingSeconds,
         lastBuzzedSecond: _lastSecondBuzz,
@@ -406,8 +515,11 @@ abstract final class TurnClockSfx {
         _lastSecondBuzz = remainingSeconds;
         _haptic(HapticKind.timerSecond);
       }
+    } else {
+      _lastRemainingMs = leftMs;
     }
     if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
+    if (leftMs <= 5000) return;
     final interval = turnTickIntervalMs(remainingMs: leftMs, totalMs: totalMs);
     if (interval <= 0) return;
     if (_lastTickAt != null &&
