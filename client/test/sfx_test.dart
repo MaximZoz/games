@@ -78,6 +78,10 @@ void main() {
   });
 
   test('бейдж «ваш ход» молчит на экране партии', () {
+    expect(isGamePlayPath('/games/poker/game/abc'), isTrue);
+    expect(isGamePlayPath('/games/poker/offline'), isTrue);
+    expect(isGamePlayPath('/games'), isFalse);
+    expect(isGamePlayPath('/chats'), isFalse);
     expect(
       MyTurnBadgeSfx.shouldPlay(
         previousCount: 0,
@@ -110,6 +114,46 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('с другого экрана ваш ход — уведомление, не повтор', () {
+    GameAwaySfx.reset();
+    expect(
+      GameAwaySfx.noteMyTurn(isMyTurn: true, gameId: 'g1'),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.shouldPlayNotify(
+        path: '/chats',
+        gameId: 'g1',
+        becameMyTurn: true,
+        now: DateTime.utc(2026, 8, 30, 18),
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.shouldPlayNotify(
+        path: '/chats',
+        gameId: 'g1',
+        becameMyTurn: true,
+        now: DateTime.utc(2026, 8, 30, 18, 0, 0, 200),
+      ),
+      isFalse,
+    );
+    GameAwaySfx.reset();
+    GameAwaySfx.noteMyTurn(isMyTurn: true, gameId: 'g1');
+    expect(
+      GameAwaySfx.shouldPlayNotify(
+        path: '/games/poker/game/g1',
+        gameId: 'g1',
+        becameMyTurn: true,
+      ),
+      isFalse,
+    );
+    GameAwaySfx.reset();
+    expect(GameAwaySfx.noteMyTurn(isMyTurn: false, gameId: 'g1'), isFalse);
+    expect(GameAwaySfx.noteMyTurn(isMyTurn: true, gameId: 'g1'), isTrue);
+    GameAwaySfx.reset();
   });
 
   test('тик часов только на своём видимом ходе и по интервалу', () {
@@ -176,38 +220,66 @@ void main() {
     TurnClockSfx.reset();
   });
 
-  test('интервал тика ускоряется на 80%, 50%, 20% и на 5 секундах', () {
+  test('интервал тика ускоряется на 80% и 50%, на 5 с — тишина', () {
     const total = 60000;
     expect(turnTickIntervalMs(remainingMs: 54000, totalMs: total), 1000);
     expect(turnTickIntervalMs(remainingMs: 48000, totalMs: total), 800);
     expect(turnTickIntervalMs(remainingMs: 30000, totalMs: total), 500);
-    expect(turnTickIntervalMs(remainingMs: 12000, totalMs: total), 200);
-    expect(turnTickIntervalMs(remainingMs: 5000, totalMs: 20000), 200);
+    expect(turnTickIntervalMs(remainingMs: 12000, totalMs: total), 500);
+    expect(turnTickIntervalMs(remainingMs: 5000, totalMs: 20000), 0);
     expect(turnTickIntervalMs(remainingMs: 0, totalMs: total), 0);
+    expect(crossedTurnFiveSeconds(previousRemainingMs: 5100, nextRemainingMs: 4900), isTrue);
+    expect(crossedTurnFiveSeconds(previousRemainingMs: 4000, nextRemainingMs: 3000), isFalse);
   });
 
-  test('в красной зоне тик чаще секунды', () {
+  test('последние 5 секунд — один сигнал, без града тиков', () {
     TurnClockSfx.reset();
     final played = <SfxId>[];
     TurnClockSfx.debugOnPlay = played.add;
     final t0 = DateTime.utc(2026, 8, 30, 13);
     TurnClockSfx.sync(
       isMyTurn: true,
-      remainingSeconds: 4,
-      remainingMs: 4000,
+      remainingSeconds: 8,
+      remainingMs: 8000,
       turnTimeSec: 20,
       clockVisible: true,
       now: t0,
     );
+    expect(played, [SfxId.yourTurn]);
     TurnClockSfx.sync(
       isMyTurn: true,
-      remainingSeconds: 3,
-      remainingMs: 3700,
+      remainingSeconds: 5,
+      remainingMs: 5000,
       turnTimeSec: 20,
       clockVisible: true,
-      now: t0.add(const Duration(milliseconds: 220)),
+      now: t0.add(const Duration(seconds: 3)),
     );
-    expect(played, [SfxId.yourTurn, SfxId.tick]);
+    expect(played, [SfxId.yourTurn, SfxId.yourTurn]);
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 4,
+      remainingMs: 4200,
+      turnTimeSec: 20,
+      clockVisible: true,
+      now: t0.add(const Duration(milliseconds: 3220)),
+    );
+    expect(played, [SfxId.yourTurn, SfxId.yourTurn]);
+    TurnClockSfx.reset();
+  });
+
+  test('скрытые часы не объявляют ход — это уведомление с другого экрана', () {
+    TurnClockSfx.reset();
+    final played = <SfxId>[];
+    TurnClockSfx.debugOnPlay = played.add;
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 12,
+      remainingMs: 12000,
+      turnTimeSec: 20,
+      clockVisible: false,
+      now: DateTime.utc(2026, 8, 30, 13, 30),
+    );
+    expect(played, isEmpty);
     TurnClockSfx.reset();
   });
 
@@ -377,6 +449,7 @@ void main() {
       HapticKind.timerMark,
       HapticKind.timerMark,
       HapticKind.timerMark,
+      HapticKind.timerMark,
       HapticKind.timerSecond,
     ]);
 
@@ -451,6 +524,27 @@ void main() {
     );
     expect(buzz, [HapticKind.yourTurn]);
     TurnClockSfx.reset();
+  });
+
+  test('паттерн мотора: notify двойной, ход и таймер короткие', () {
+    expect(hapticPatternMs(HapticKind.notify), [0, 50, 40, 50]);
+    expect(hapticPatternMs(HapticKind.yourTurn), [0, 55]);
+    expect(hapticPatternMs(HapticKind.timerMark), [0, 70]);
+    expect(hapticPatternMs(HapticKind.timerSecond), [0, 30]);
+  });
+
+  test('включение вибрации сбрасывает debounce', () {
+    final c = HapticsController();
+    final t0 = DateTime.utc(2026, 1, 1);
+    expect(c.shouldPlay(HapticKind.notify, t0), isTrue);
+    c.setEnabled(true);
+    expect(
+      c.shouldPlay(
+        HapticKind.notify,
+        t0.add(const Duration(milliseconds: 20)),
+      ),
+      isTrue,
+    );
   });
 
   test('хаптик yourTurn не чаще 900 мс', () {

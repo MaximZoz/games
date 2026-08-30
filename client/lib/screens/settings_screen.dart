@@ -196,6 +196,7 @@ class SettingsScreen extends ConsumerWidget {
                       onChanged: (v) async {
                         await ref.read(hapticsEnabledProvider.notifier).set(v);
                         Haptics.setEnabled(v);
+                        if (v) Haptics.play(HapticKind.notify);
                       },
                     ),
                   ),

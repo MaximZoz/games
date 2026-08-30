@@ -495,9 +495,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     // (правый край AppBar). В углу контент игры их не перекрывает → тапы
     // доходят; кнопки идут вертикально друг под другом.
     final topPad = MediaQuery.paddingOf(context).top;
-    // На телефоне доска упирается в левый край: opaque-полоса свайпа
-    // перехватывала клетки и иногда открывала «выйти».
+    // Доска у левого края: свайп вправо не должен жать крестик выхода
+    // (как веер в дураке исключён из полосы свайпа).
     return SwipeBackScope(
+      enabled: false,
       onBack: goBack,
       opaqueEdge: false,
       edgeWidth: 16,
