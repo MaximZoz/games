@@ -244,19 +244,19 @@ class PokerSidePot {
   List<int> eligible;
 }
 
-const int _orbitsPerBlindLevel = 2;
-const int _headsUpOrbitsPerLevel = 6;
-const int _threeMaxHandsPerLevel = 10;
-const int _minHandsPerBlindLevel = 6;
+const int _headsUpHandsPerLevel = 8;
+const int _threeMaxHandsPerLevel = 7;
+const int _fourMaxHandsPerLevel = 6;
+const int _fullTableHandsPerLevel = 8;
 
 /// Сколько раздач держать текущие блайнды:
-/// два круга; втроём — 10 раздач; вдвоём — шесть кругов (12 раздач).
+/// вдвоём 8, втроём 7, вчетвером 6, за большим столом 8.
 int handsPerBlindLevel(int livePlayers) {
   final live = livePlayers < 2 ? 2 : livePlayers;
-  if (live == 2) return live * _headsUpOrbitsPerLevel;
+  if (live == 2) return _headsUpHandsPerLevel;
   if (live == 3) return _threeMaxHandsPerLevel;
-  final n = live * _orbitsPerBlindLevel;
-  return n < _minHandsPerBlindLevel ? _minHandsPerBlindLevel : n;
+  if (live == 4) return _fourMaxHandsPerLevel;
+  return _fullTableHandsPerLevel;
 }
 
 /// Полное состояние одной раздачи Texas Hold'em.
@@ -753,7 +753,7 @@ class PokerEngine {
 
     handNumber++;
     handsThisLevel++;
-    // Уровень держится handsPerLevel раздач (2 круга; втроём — 10; вдвоём — 6 кругов).
+    // Уровень держится handsPerLevel раздач (HU 8, втроём 7, вчетвером 6, иначе 8).
     // Длину текущего уровня не ужимаем, если кто-то выбыл посреди него.
     if (handsPerLevel > 0 && handsThisLevel >= handsPerLevel) {
       blindLevel++;
