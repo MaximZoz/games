@@ -68,22 +68,37 @@ bool hasActiveLobby(ActiveGameItem? active) {
 }
 
 /// Есть блокирующая сессия (партия или своё лобби), мешающая входу в [targetLobbyId].
+///
+/// Живая партия блокирует чужие лобби. Своё ожидание реванша / лобби не
+/// блокирует вход в конкретный инвайт: сервер закроет старое лобби.
+/// Партия, уже стартовавшая в [targetLobbyId], тоже не блокирует.
 bool isBusyWithOtherSession(
   ActiveGameItem? active, {
   String? targetLobbyId,
   String? targetGameId,
 }) {
+  final targetLobby = targetLobbyId?.trim() ?? '';
   if (hasBlockingActiveMatch(active)) {
     final gid = active!.gameId!.trim();
     if (targetGameId != null && targetGameId.trim() == gid) return false;
+    final activeLobby = active.lobbyId?.trim() ?? '';
+    if (targetLobby.isNotEmpty && activeLobby == targetLobby) return false;
     return true;
   }
   if (hasActiveLobby(active)) {
-    final lid = active!.lobbyId!.trim();
-    if (targetLobbyId != null && targetLobbyId.trim() == lid) return false;
+    // Конкретный инвайт/реванш — сервер закроет своё ожидание.
+    if (targetLobby.isNotEmpty) return false;
     return true;
   }
   return false;
+}
+
+/// Своё лобби реванша, которое нужно закрыть перед входом в чужое.
+String? rematchLobbyToLeave(String? ownLobbyId, String incomingLobbyId) {
+  final own = ownLobbyId?.trim() ?? '';
+  final incoming = incomingLobbyId.trim();
+  if (own.isEmpty || incoming.isEmpty || own == incoming) return null;
+  return own;
 }
 
 void goToActiveSession(BuildContext context, ActiveGameItem active) {

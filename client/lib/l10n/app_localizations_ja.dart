@@ -40,7 +40,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSoundTitle => 'サウンド';
 
   @override
-  String get settingsSoundSubtitle => '手番とゲームのアニメーション';
+  String get settingsSoundSubtitle => 'ゲームと通知';
+
+  @override
+  String get settingsSoundGames => 'ゲーム';
+
+  @override
+  String get settingsSoundNotifications => '通知';
+
+  @override
+  String get settingsSoundTurn => '手番';
+
+  @override
+  String get settingsHapticsTitle => '振動';
+
+  @override
+  String get settingsHapticsSubtitle => '通知のみ：メッセージ、リクエスト、手番、タイマー';
 
   @override
   String get settingsOfflineModeTitle => 'ネットワークモード';
@@ -979,7 +994,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'ルール';

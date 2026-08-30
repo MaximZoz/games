@@ -40,7 +40,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsSoundTitle => 'Дыбыс';
 
   @override
-  String get settingsSoundSubtitle => 'Жүрістер және ойын анимациялары';
+  String get settingsSoundSubtitle => 'Ойындар және хабарландырулар';
+
+  @override
+  String get settingsSoundGames => 'Ойындар';
+
+  @override
+  String get settingsSoundNotifications => 'Хабарландырулар';
+
+  @override
+  String get settingsSoundTurn => 'Жүріс';
+
+  @override
+  String get settingsHapticsTitle => 'Діріл';
+
+  @override
+  String get settingsHapticsSubtitle => 'Тек хабарландырулар: хабарлар, өтінімдер, сіздің жүрісіңіз және таймер';
 
   @override
   String get settingsOfflineModeTitle => 'Желі режимі';
@@ -979,7 +994,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Ережелер';

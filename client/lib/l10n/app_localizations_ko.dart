@@ -40,7 +40,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSoundTitle => '소리';
 
   @override
-  String get settingsSoundSubtitle => '수와 게임 애니메이션';
+  String get settingsSoundSubtitle => '게임과 알림';
+
+  @override
+  String get settingsSoundGames => '게임';
+
+  @override
+  String get settingsSoundNotifications => '알림';
+
+  @override
+  String get settingsSoundTurn => '차례';
+
+  @override
+  String get settingsHapticsTitle => '진동';
+
+  @override
+  String get settingsHapticsSubtitle => '알림만: 메시지, 요청, 내 차례, 타이머';
 
   @override
   String get settingsOfflineModeTitle => '네트워크 모드';
@@ -979,7 +994,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => '규칙';

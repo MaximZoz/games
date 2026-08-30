@@ -40,7 +40,22 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsSoundTitle => 'Ήχος';
 
   @override
-  String get settingsSoundSubtitle => 'Κινήσεις και κινούμενα γραφικά';
+  String get settingsSoundSubtitle => 'Παιχνίδια και ειδοποιήσεις';
+
+  @override
+  String get settingsSoundGames => 'Παιχνίδια';
+
+  @override
+  String get settingsSoundNotifications => 'Ειδοποιήσεις';
+
+  @override
+  String get settingsSoundTurn => 'Σειρά';
+
+  @override
+  String get settingsHapticsTitle => 'Δόνηση';
+
+  @override
+  String get settingsHapticsSubtitle => 'Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης';
 
   @override
   String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';
@@ -979,7 +994,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Κανόνες';

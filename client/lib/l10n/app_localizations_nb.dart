@@ -40,7 +40,22 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsSoundTitle => 'Lyd';
 
   @override
-  String get settingsSoundSubtitle => 'Trekk og spillanimasjoner';
+  String get settingsSoundSubtitle => 'Spill og varsler';
+
+  @override
+  String get settingsSoundGames => 'Spill';
+
+  @override
+  String get settingsSoundNotifications => 'Varsler';
+
+  @override
+  String get settingsSoundTurn => 'Tur';
+
+  @override
+  String get settingsHapticsTitle => 'Vibrasjon';
+
+  @override
+  String get settingsHapticsSubtitle => 'Kun varsler: meldinger, forespørsler, din tur og timeren';
 
   @override
   String get settingsOfflineModeTitle => 'Nettverksmodus';
@@ -979,7 +994,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Regler';

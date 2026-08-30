@@ -40,7 +40,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSoundTitle => 'Звук';
 
   @override
-  String get settingsSoundSubtitle => 'Ходы и анимации в играх';
+  String get settingsSoundSubtitle => 'Игры и уведомления';
+
+  @override
+  String get settingsSoundGames => 'Игры';
+
+  @override
+  String get settingsSoundNotifications => 'Уведомления';
+
+  @override
+  String get settingsSoundTurn => 'Ход';
+
+  @override
+  String get settingsHapticsTitle => 'Вибрация';
+
+  @override
+  String get settingsHapticsSubtitle => 'Только уведомления: сообщения, заявки, ваш ход и таймер';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';
@@ -979,7 +994,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pokerShowCards => 'Показать карты';
 
   @override
-  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые два круга дилера; втроём — каждые 10 раздач, вдвоём — каждые шесть кругов. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.';
+  String get rulesPokerTable => 'Стол играется до победителя — кто соберёт все фишки. Блайнды растут каждые 6–8 раздач: вдвоём — 8, втроём — 7, вчетвером — 6. Банк ставки делится по местам: втроём 1-й забирает 2/3, 2-е место ничего не теряет; вчетвером 1-й — 3/4; впятером 1-й — 3/5; вшестером 1-й — 4/6.';
 
   @override
   String get gamesRules => 'Правила';

@@ -40,7 +40,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSoundTitle => 'Geluid';
 
   @override
-  String get settingsSoundSubtitle => 'Zetten en spelanimaties';
+  String get settingsSoundSubtitle => 'Spellen en meldingen';
+
+  @override
+  String get settingsSoundGames => 'Spellen';
+
+  @override
+  String get settingsSoundNotifications => 'Meldingen';
+
+  @override
+  String get settingsSoundTurn => 'Beurt';
+
+  @override
+  String get settingsHapticsTitle => 'Trillen';
+
+  @override
+  String get settingsHapticsSubtitle => 'Alleen meldingen: berichten, verzoeken, jouw beurt en de timer';
 
   @override
   String get settingsOfflineModeTitle => 'Netwerkmodus';
@@ -979,7 +994,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Regels';

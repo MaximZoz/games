@@ -40,7 +40,22 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsSoundTitle => 'Zvuk';
 
   @override
-  String get settingsSoundSubtitle => 'Tahy a herní animace';
+  String get settingsSoundSubtitle => 'Hry a oznámení';
+
+  @override
+  String get settingsSoundGames => 'Hry';
+
+  @override
+  String get settingsSoundNotifications => 'Oznámení';
+
+  @override
+  String get settingsSoundTurn => 'Tah';
+
+  @override
+  String get settingsHapticsTitle => 'Vibrace';
+
+  @override
+  String get settingsHapticsSubtitle => 'Pouze upozornění: zprávy, žádosti, váš tah a časovač';
 
   @override
   String get settingsOfflineModeTitle => 'Režim sítě';
@@ -979,7 +994,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Pravidla';

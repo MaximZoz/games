@@ -41,7 +41,7 @@ const Color _kSunkFrame = Color(0xFF212121);
 /// Мои потопленные — красным (в отличие от тёмных кораблей соперника).
 const Color _kSunkShipMine = Color(0xFFE53935);
 const Color _kSunkFrameMine = Color(0xFFB71C1C);
-const Duration _kShotRevealDelay = Duration(seconds: 1);
+const Duration _kShotRevealDelay = Duration(milliseconds: 280);
 
 class BattleshipGameScreen extends ConsumerStatefulWidget {
   const BattleshipGameScreen({super.key, required this.gameId});
@@ -92,6 +92,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   /// Сразу после победного выстрела — скрыть таймер, не дожидаясь invalidate.
   bool _hideTimers = false;
 
+  /// Выстрел уже на поле, ждём ответ сервера.
+  int? _pendingShotCell;
+
   @override
   void initState() {
     super.initState();
@@ -126,6 +129,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _pulseHitCell = null;
       _fxShowMineBoard = null;
       _hideTimers = false;
+      _pendingShotCell = null;
       _hitPulse.stop();
       _hitPulse.reset();
       setState(() {
@@ -157,13 +161,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
-      if (_busy || _fxInProgress) {
+      if (_busy || _fxInProgress || _pendingShotCell != null) {
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
           setState(() {
             _busy = false;
             _fxInProgress = false;
+            _pendingShotCell = null;
           });
           if (!_isOffline) {
             ref.invalidate(battleshipGameProvider(widget.gameId));
@@ -540,9 +545,23 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     setState(() => _localShips = next);
   }
 
+  void _beginLocalShot(int cell) {
+    setState(() {
+      _pendingShotCell = cell;
+      _pulseHitCell = cell;
+      _fxHit = false;
+      _fxShowMineBoard = false;
+      _busy = true;
+    });
+    Sfx.play(SfxId.place);
+    _hitPulse
+      ..stop()
+      ..forward(from: 0);
+  }
+
   Future<void> _shoot(int cell) async {
-    if (_busy || _fxInProgress) return;
-    setState(() => _busy = true);
+    if (_busy || _fxInProgress || _pendingShotCell != null) return;
+    _beginLocalShot(cell);
     try {
       final view =
           await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
@@ -563,6 +582,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       ref.invalidate(battleshipGameProvider(widget.gameId));
     } on GamesException catch (e) {
       if (!mounted) return;
+      setState(() {
+        _pendingShotCell = null;
+        _pulseHitCell = null;
+        _fxShowMineBoard = null;
+      });
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -860,6 +884,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        _rematchPollTimer?.cancel();
+        setState(() => _rematchLobbyId = null);
+        try {
+          await ref.read(battleshipRepositoryProvider).leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
       final result =
           await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
@@ -979,6 +1012,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     ref.listen(battleshipGameProvider(widget.gameId), (_, next) {
       final game = next.valueOrNull;
       if (game == null) return;
+      final pending = _pendingShotCell;
+      if (pending != null &&
+          (game.myShots.contains(pending) || game.myHits.contains(pending))) {
+        _pendingShotCell = null;
+      }
       _syncLocalShips(game);
       if (game.isOver && !_hideTimers) {
         setState(() => _hideTimers = true);
@@ -990,11 +1028,18 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     return SwipeBackScope(
       enabled: true,
       onBack: _onClosePressed,
+      opaqueEdge: false,
+      edgeWidth: 16,
+      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: kToolbarHeight,
+          leadingWidth: 48,
           leading: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(Icons.close_rounded),
             onPressed: _onClosePressed,
           ),
@@ -1375,8 +1420,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   game,
                   cellSize: cellSize,
                   pulseCell: pulseCell,
-                  canShoot:
-                      myTurn && !game.isOver && !_busy && !_fxInProgress,
+                  canShoot: myTurn &&
+                      !game.isOver &&
+                      !_busy &&
+                      !_fxInProgress &&
+                      _pendingShotCell == null,
                 );
           return Center(child: board);
         },
@@ -1440,6 +1488,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       for (final ship in game.opponentSunkShips)
         for (final c in ship) c: ship,
     };
+    final sunkCells = sunkMap.keys.toSet();
     final revealed = <int>{for (final s in game.opponentShips) ...s};
     return _BattleshipBoard(
       cellSize: cellSize,
@@ -1452,10 +1501,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           return _SunkShipCell(cell: cell, shipCells: sunkShip.toSet());
         }
         final isFx = pulseCell == cell && _fxShowMineBoard == false;
+        final isPending = cell == _pendingShotCell;
         if (myHits.contains(cell) || (isFx && _fxHit)) {
           return const _CellPaint(color: _kHit, mark: _CellMark.hit);
         }
-        if (myShots.contains(cell) || (isFx && !_fxHit)) {
+        if (myShots.contains(cell) || (isFx && !_fxHit) || isPending) {
           return const _CellPaint(color: _kMiss, mark: _CellMark.miss);
         }
         if (revealed.contains(cell)) {
@@ -1465,8 +1515,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       },
       onTap: canShoot
           ? (cell) {
-              if (myShots.contains(cell) || myHits.contains(cell)) return;
-              if (sunkMap.containsKey(cell)) return;
+              if (battleshipCellSpent(
+                cell: cell,
+                myShots: myShots,
+                myHits: myHits,
+                sunkCells: sunkCells,
+                pendingCell: _pendingShotCell,
+              )) {
+                return;
+              }
               unawaited(_shoot(cell));
             }
           : null,
@@ -1581,48 +1638,66 @@ class _BattleshipBoard extends StatelessWidget {
     return SizedBox(
       width: board,
       height: board,
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: kBattleshipBoardSize,
-          mainAxisSpacing: gap,
-          crossAxisSpacing: gap,
-        ),
-        itemCount: kBattleshipCellCount,
-        itemBuilder: (context, index) {
-          Widget child = cellBuilder(index);
-          if (pulseCell == index && pulseAnimation != null) {
-            child = AnimatedBuilder(
-              animation: pulseAnimation!,
-              builder: (context, c) {
-                final t = pulseAnimation!.value;
-                final scale = 1.0 + 0.35 * (1 - (2 * t - 1).abs());
-                return Transform.scale(
-                  scale: scale,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: glow.withValues(alpha: 0.55 * (1 - t)),
-                          blurRadius: 10 * (1 - t),
-                          spreadRadius: 2 * (1 - t),
-                        ),
-                      ],
+      child: Column(
+        children: [
+          for (var row = 0; row < kBattleshipBoardSize; row++) ...[
+            if (row > 0) const SizedBox(height: gap),
+            SizedBox(
+              height: size,
+              child: Row(
+                children: [
+                  for (var col = 0; col < kBattleshipBoardSize; col++) ...[
+                    if (col > 0) const SizedBox(width: gap),
+                    SizedBox(
+                      width: size,
+                      height: size,
+                      child: _boardCell(
+                        index: row * kBattleshipBoardSize + col,
+                        glow: glow,
+                      ),
                     ),
-                    child: c,
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _boardCell({required int index, required Color glow}) {
+    Widget child = cellBuilder(index);
+    if (pulseCell == index && pulseAnimation != null) {
+      child = AnimatedBuilder(
+        animation: pulseAnimation!,
+        builder: (context, c) {
+          final t = pulseAnimation!.value;
+          final scale = 1.0 + 0.35 * (1 - (2 * t - 1).abs());
+          return Transform.scale(
+            scale: scale,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: glow.withValues(alpha: 0.55 * (1 - t)),
+                    blurRadius: 10 * (1 - t),
+                    spreadRadius: 2 * (1 - t),
                   ),
-                );
-              },
-              child: child,
-            );
-          }
-          if (onTap == null) return child;
-          return GestureDetector(
-            onTap: () => onTap!(index),
-            child: child,
+                ],
+              ),
+              child: c,
+            ),
           );
         },
-      ),
+        child: child,
+      );
+    }
+    if (onTap == null) return child;
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => onTap!(index),
+      child: child,
     );
   }
 }

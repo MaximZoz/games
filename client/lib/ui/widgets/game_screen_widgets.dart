@@ -519,7 +519,7 @@ class _GameActionsOverlayState extends State<GameActionsOverlay>
       _applyBlink();
     }
     if (!oldWidget.opponentOfferedDraw && widget.opponentOfferedDraw) {
-      Sfx.play(SfxId.notify);
+      AlertSfx.playNotify();
     }
   }
 
@@ -678,7 +678,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _updateRemaining();
       _emitTurnSfx();
       _syncBlink();
@@ -708,9 +708,14 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
 
   void _emitTurnSfx() {
     if (!mounted) return;
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final leftMs =
+        widget.turnDeadline > 0 ? widget.turnDeadline * 1000 - nowMs : 0;
     TurnClockSfx.sync(
       isMyTurn: widget.isMyTurn,
       remainingSeconds: _remaining,
+      remainingMs: leftMs,
+      turnTimeSec: widget.turnTimeSec,
       clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
       hasTimer: widget.turnDeadline > 0,
     );
@@ -1051,6 +1056,8 @@ class _TurnTimerRingState extends State<_TurnTimerRing> {
     TurnClockSfx.sync(
       isMyTurn: widget.active,
       remainingSeconds: remaining,
+      remainingMs: leftMs,
+      turnTimeSec: widget.turnTimeSec,
       clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
       hasTimer: _hasTimer,
     );
@@ -1869,7 +1876,7 @@ class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Sfx.play(SfxId.notify);
+      if (mounted) AlertSfx.playNotify();
     });
   }
 
@@ -1877,7 +1884,7 @@ class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
   void didUpdateWidget(covariant _SfxNotifyOnChange oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.token != oldWidget.token) {
-      Sfx.play(SfxId.notify);
+      AlertSfx.playNotify();
     }
   }
 

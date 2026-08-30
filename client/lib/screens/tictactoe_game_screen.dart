@@ -1297,6 +1297,18 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        _rematchPollTimer?.cancel();
+        setState(() {
+          _rematchLobbyId = null;
+          _rematchRespondedIds.clear();
+        });
+        try {
+          await ref.read(gamesRepositoryProvider).leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
       await _joinInviteLobby(lobbyId, leaveCurrentIfBusy: true);
     } catch (_) {
       if (context.mounted) _redirectToGamesOnError();

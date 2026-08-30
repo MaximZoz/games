@@ -40,7 +40,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSoundTitle => 'Âm thanh';
 
   @override
-  String get settingsSoundSubtitle => 'Nước đi và hoạt ảnh trò chơi';
+  String get settingsSoundSubtitle => 'Trò chơi và thông báo';
+
+  @override
+  String get settingsSoundGames => 'Trò chơi';
+
+  @override
+  String get settingsSoundNotifications => 'Thông báo';
+
+  @override
+  String get settingsSoundTurn => 'Lượt';
+
+  @override
+  String get settingsHapticsTitle => 'Rung';
+
+  @override
+  String get settingsHapticsSubtitle => 'Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ';
 
   @override
   String get settingsOfflineModeTitle => 'Chế độ mạng';
@@ -979,7 +994,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pokerShowCards => 'Show cards';
 
   @override
-  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every two dealer orbits; 3-max lasts 10 hands, heads-up lasts six orbits.';
+  String get rulesPokerTable => 'The table plays until one player holds all the chips. Blinds rise every 6–8 hands (heads-up 8, 3-max 7, 4-max 6).';
 
   @override
   String get gamesRules => 'Luật';
