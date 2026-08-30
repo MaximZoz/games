@@ -16,6 +16,7 @@ import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -71,7 +72,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   @override
   void initState() {
     super.initState();
-    _hubTabs = TabController(length: 2, vsync: this);
+    _hubTabs = TabController(
+      length: 2,
+      vsync: this,
+      animationDuration: gamesLobbyTabAnimation,
+    );
     _hubTabs.addListener(_onHubTabsTick);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -163,12 +168,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   }
 
   void _onHubTabsTick() {
-    final tab = _hubTabs.index == 0 ? _GamesTab.games : _GamesTab.lobbies;
+    final value = _hubTabs.animation?.value ?? _hubTabs.index.toDouble();
+    final tab = gamesLobbyTabIndexForAnimation(value) == 0
+        ? _GamesTab.games
+        : _GamesTab.lobbies;
     if (_selectedTab != tab) {
       _applySelectedTab(tab);
-      return;
     }
-    if (mounted) setState(() {});
   }
 
   void _startLobbyPoll() {
@@ -188,7 +194,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   void _onTabChanged(_GamesTab tab) {
     final index = tab == _GamesTab.games ? 0 : 1;
     if (_hubTabs.index != index) {
-      _hubTabs.animateTo(index);
+      _hubTabs.animateTo(
+        index,
+        duration: gamesLobbyTabAnimation,
+        curve: Curves.easeOutCubic,
+      );
     }
     if (_selectedTab == tab) return;
     _applySelectedTab(tab);
