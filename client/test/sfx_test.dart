@@ -453,6 +453,27 @@ void main() {
     TurnClockSfx.reset();
   });
 
+  test('паттерн мотора: notify двойной, ход и таймер короткие', () {
+    expect(hapticPatternMs(HapticKind.notify), [0, 50, 40, 50]);
+    expect(hapticPatternMs(HapticKind.yourTurn), [0, 55]);
+    expect(hapticPatternMs(HapticKind.timerMark), [0, 70]);
+    expect(hapticPatternMs(HapticKind.timerSecond), [0, 30]);
+  });
+
+  test('включение вибрации сбрасывает debounce', () {
+    final c = HapticsController();
+    final t0 = DateTime.utc(2026, 1, 1);
+    expect(c.shouldPlay(HapticKind.notify, t0), isTrue);
+    c.setEnabled(true);
+    expect(
+      c.shouldPlay(
+        HapticKind.notify,
+        t0.add(const Duration(milliseconds: 20)),
+      ),
+      isTrue,
+    );
+  });
+
   test('хаптик yourTurn не чаще 900 мс', () {
     final c = HapticsController();
     final t0 = DateTime.utc(2026, 1, 1);
