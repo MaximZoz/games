@@ -223,11 +223,27 @@ abstract final class MyTurnBadgeSfx {
   }
 }
 
+/// Интервал тика часов хода: 80% остатка → 800 мс, 50% → 500 мс,
+/// 20% остатка или ≤5 с — частый тик, как ускоренные часы.
+@visibleForTesting
+int turnTickIntervalMs({
+  required int remainingMs,
+  required int totalMs,
+}) {
+  if (remainingMs <= 0) return 0;
+  if (remainingMs <= 5000) return 200;
+  if (totalMs > 0) {
+    if (remainingMs * 5 <= totalMs) return 200;
+    if (remainingMs * 2 <= totalMs) return 500;
+    if (remainingMs * 5 <= totalMs * 4) return 800;
+  }
+  return 1000;
+}
+
 /// Тик часов на своём ходе и сигнал «ваш ход» (без двойного звука).
 abstract final class TurnClockSfx {
   static bool _wasMyTurn = false;
-  static int? _lastTickSecond;
-  static int? _skipTickSecond;
+  static DateTime? _lastTickAt;
 
   @visibleForTesting
   static void Function(SfxId id)? debugOnPlay;
@@ -235,8 +251,7 @@ abstract final class TurnClockSfx {
   @visibleForTesting
   static void reset() {
     _wasMyTurn = false;
-    _lastTickSecond = null;
-    _skipTickSecond = null;
+    _lastTickAt = null;
     debugOnPlay = null;
   }
 
@@ -246,27 +261,35 @@ abstract final class TurnClockSfx {
     required bool clockVisible,
     bool hasTimer = true,
     bool announceOnly = false,
+    int turnTimeSec = 0,
+    int? remainingMs,
+    DateTime? now,
   }) {
+    final at = now ?? DateTime.now();
     if (!isMyTurn) {
       _wasMyTurn = false;
-      _lastTickSecond = null;
-      _skipTickSecond = null;
+      _lastTickAt = null;
       return;
     }
     if (!_wasMyTurn) {
       _wasMyTurn = true;
       if (!announceOnly) {
-        _lastTickSecond = remainingSeconds;
-        _skipTickSecond = remainingSeconds;
+        _lastTickAt = at;
       }
       _play(SfxId.yourTurn);
       return;
     }
     if (announceOnly) return;
     if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
-    if (_skipTickSecond == remainingSeconds) return;
-    if (_lastTickSecond == remainingSeconds) return;
-    _lastTickSecond = remainingSeconds;
+    final leftMs = remainingMs ?? remainingSeconds * 1000;
+    final totalMs = turnTimeSec > 0 ? turnTimeSec * 1000 : 0;
+    final interval = turnTickIntervalMs(remainingMs: leftMs, totalMs: totalMs);
+    if (interval <= 0) return;
+    if (_lastTickAt != null &&
+        at.difference(_lastTickAt!) < Duration(milliseconds: interval)) {
+      return;
+    }
+    _lastTickAt = at;
     _play(SfxId.tick);
   }
 

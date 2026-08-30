@@ -111,36 +111,49 @@ void main() {
     );
   });
 
-  test('тик часов только на своём видимом ходе и раз в секунду', () {
+  test('тик часов только на своём видимом ходе и по интервалу', () {
     TurnClockSfx.reset();
     final played = <SfxId>[];
     TurnClockSfx.debugOnPlay = played.add;
+    final t0 = DateTime.utc(2026, 8, 30, 12);
 
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 12,
+      remainingMs: 12000,
+      turnTimeSec: 20,
       clockVisible: true,
+      now: t0,
     );
     expect(played, [SfxId.yourTurn]);
 
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 12,
+      remainingMs: 11800,
+      turnTimeSec: 20,
       clockVisible: true,
+      now: t0.add(const Duration(milliseconds: 400)),
     );
     expect(played, [SfxId.yourTurn]);
 
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 11,
+      remainingMs: 11000,
+      turnTimeSec: 20,
       clockVisible: true,
+      now: t0.add(const Duration(seconds: 1)),
     );
     expect(played, [SfxId.yourTurn, SfxId.tick]);
 
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 10,
+      remainingMs: 10000,
+      turnTimeSec: 20,
       clockVisible: false,
+      now: t0.add(const Duration(seconds: 2)),
     );
     expect(played, [SfxId.yourTurn, SfxId.tick]);
 
@@ -148,13 +161,52 @@ void main() {
       isMyTurn: false,
       remainingSeconds: 9,
       clockVisible: true,
+      now: t0.add(const Duration(seconds: 3)),
     );
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 15,
+      remainingMs: 15000,
+      turnTimeSec: 20,
       clockVisible: true,
+      now: t0.add(const Duration(seconds: 4)),
     );
     expect(played, [SfxId.yourTurn, SfxId.tick, SfxId.yourTurn]);
+    TurnClockSfx.reset();
+  });
+
+  test('интервал тика ускоряется на 80%, 50%, 20% и на 5 секундах', () {
+    const total = 60000;
+    expect(turnTickIntervalMs(remainingMs: 54000, totalMs: total), 1000);
+    expect(turnTickIntervalMs(remainingMs: 48000, totalMs: total), 800);
+    expect(turnTickIntervalMs(remainingMs: 30000, totalMs: total), 500);
+    expect(turnTickIntervalMs(remainingMs: 12000, totalMs: total), 200);
+    expect(turnTickIntervalMs(remainingMs: 5000, totalMs: 20000), 200);
+    expect(turnTickIntervalMs(remainingMs: 0, totalMs: total), 0);
+  });
+
+  test('в красной зоне тик чаще секунды', () {
+    TurnClockSfx.reset();
+    final played = <SfxId>[];
+    TurnClockSfx.debugOnPlay = played.add;
+    final t0 = DateTime.utc(2026, 8, 30, 13);
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 4,
+      remainingMs: 4000,
+      turnTimeSec: 20,
+      clockVisible: true,
+      now: t0,
+    );
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 3,
+      remainingMs: 3700,
+      turnTimeSec: 20,
+      clockVisible: true,
+      now: t0.add(const Duration(milliseconds: 220)),
+    );
+    expect(played, [SfxId.yourTurn, SfxId.tick]);
     TurnClockSfx.reset();
   });
 
