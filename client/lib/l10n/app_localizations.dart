@@ -218,8 +218,38 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSoundSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Ходы и анимации в играх'**
+  /// **'Игры и уведомления'**
   String get settingsSoundSubtitle;
+
+  /// No description provided for @settingsSoundGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры'**
+  String get settingsSoundGames;
+
+  /// No description provided for @settingsSoundNotifications.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления'**
+  String get settingsSoundNotifications;
+
+  /// No description provided for @settingsSoundTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход'**
+  String get settingsSoundTurn;
+
+  /// No description provided for @settingsHapticsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вибрация'**
+  String get settingsHapticsTitle;
+
+  /// No description provided for @settingsHapticsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только уведомления: сообщения, заявки, ваш ход и таймер'**
+  String get settingsHapticsSubtitle;
 
   /// No description provided for @settingsOfflineModeTitle.
   ///

@@ -40,7 +40,22 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsSoundTitle => 'Lyd';
 
   @override
-  String get settingsSoundSubtitle => 'Træk og spilanimationer';
+  String get settingsSoundSubtitle => 'Spil og notifikationer';
+
+  @override
+  String get settingsSoundGames => 'Spil';
+
+  @override
+  String get settingsSoundNotifications => 'Notifikationer';
+
+  @override
+  String get settingsSoundTurn => 'Tur';
+
+  @override
+  String get settingsHapticsTitle => 'Vibration';
+
+  @override
+  String get settingsHapticsSubtitle => 'Kun notifikationer: beskeder, anmodninger, din tur og timeren';
 
   @override
   String get settingsOfflineModeTitle => 'Netværkstilstand';

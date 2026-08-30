@@ -519,7 +519,7 @@ class _GameActionsOverlayState extends State<GameActionsOverlay>
       _applyBlink();
     }
     if (!oldWidget.opponentOfferedDraw && widget.opponentOfferedDraw) {
-      Sfx.play(SfxId.notify);
+      AlertSfx.playNotify();
     }
   }
 
@@ -1876,7 +1876,7 @@ class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Sfx.play(SfxId.notify);
+      if (mounted) AlertSfx.playNotify();
     });
   }
 
@@ -1884,7 +1884,7 @@ class _SfxNotifyOnChangeState extends State<_SfxNotifyOnChange> {
   void didUpdateWidget(covariant _SfxNotifyOnChange oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.token != oldWidget.token) {
-      Sfx.play(SfxId.notify);
+      AlertSfx.playNotify();
     }
   }
 

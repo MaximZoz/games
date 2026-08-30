@@ -40,7 +40,22 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsSoundTitle => 'Suara';
 
   @override
-  String get settingsSoundSubtitle => 'Langkah dan animasi permainan';
+  String get settingsSoundSubtitle => 'Game dan notifikasi';
+
+  @override
+  String get settingsSoundGames => 'Game';
+
+  @override
+  String get settingsSoundNotifications => 'Notifikasi';
+
+  @override
+  String get settingsSoundTurn => 'Giliran';
+
+  @override
+  String get settingsHapticsTitle => 'Getar';
+
+  @override
+  String get settingsHapticsSubtitle => 'Hanya notifikasi: pesan, permintaan, giliran Anda, dan timer';
 
   @override
   String get settingsOfflineModeTitle => 'Mode jaringan';

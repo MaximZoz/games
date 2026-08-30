@@ -40,7 +40,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSoundTitle => 'Âm thanh';
 
   @override
-  String get settingsSoundSubtitle => 'Nước đi và hoạt ảnh trò chơi';
+  String get settingsSoundSubtitle => 'Trò chơi và thông báo';
+
+  @override
+  String get settingsSoundGames => 'Trò chơi';
+
+  @override
+  String get settingsSoundNotifications => 'Thông báo';
+
+  @override
+  String get settingsSoundTurn => 'Lượt';
+
+  @override
+  String get settingsHapticsTitle => 'Rung';
+
+  @override
+  String get settingsHapticsSubtitle => 'Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ';
 
   @override
   String get settingsOfflineModeTitle => 'Chế độ mạng';

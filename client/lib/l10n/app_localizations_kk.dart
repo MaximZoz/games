@@ -40,7 +40,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsSoundTitle => 'Дыбыс';
 
   @override
-  String get settingsSoundSubtitle => 'Жүрістер және ойын анимациялары';
+  String get settingsSoundSubtitle => 'Ойындар және хабарландырулар';
+
+  @override
+  String get settingsSoundGames => 'Ойындар';
+
+  @override
+  String get settingsSoundNotifications => 'Хабарландырулар';
+
+  @override
+  String get settingsSoundTurn => 'Жүріс';
+
+  @override
+  String get settingsHapticsTitle => 'Діріл';
+
+  @override
+  String get settingsHapticsSubtitle => 'Тек хабарландырулар: хабарлар, өтінімдер, сіздің жүрісіңіз және таймер';
 
   @override
   String get settingsOfflineModeTitle => 'Желі режимі';

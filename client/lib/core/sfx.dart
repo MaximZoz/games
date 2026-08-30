@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'haptics.dart';
 import 'sfx_html_stub.dart' if (dart.library.html) 'sfx_html_web.dart' as html_sfx;
 import 'sfx_io_stub.dart' if (dart.library.io) 'sfx_io.dart' as io_sfx;
 
@@ -27,6 +28,63 @@ enum SfxId {
   deny,
   tick,
   yourTurn,
+}
+
+/// Категории звука в настройках: игры / уведомления / ход.
+enum SfxCategory {
+  games,
+  notifications,
+  turn,
+}
+
+/// Порог оставшегося времени хода для вибрации (80% / 50% / 20%).
+enum TurnTimerMark {
+  p80(0.8),
+  p50(0.5),
+  p20(0.2);
+
+  const TurnTimerMark(this.remainingRatio);
+
+  final double remainingRatio;
+}
+
+/// Категория сэмпла. Раздача (`cardDraw`) считается игровой, как `cardPlay`.
+@visibleForTesting
+SfxCategory sfxCategoryOf(SfxId id) {
+  switch (id) {
+    case SfxId.notify:
+      return SfxCategory.notifications;
+    case SfxId.yourTurn:
+    case SfxId.tick:
+      return SfxCategory.turn;
+    default:
+      return SfxCategory.games;
+  }
+}
+
+/// Пересечения 80/50/20% остатка между двумя кадрами таймера.
+@visibleForTesting
+List<TurnTimerMark> crossedTurnTimerMarks(
+  double previousRatio,
+  double nextRatio,
+) {
+  return [
+    for (final mark in TurnTimerMark.values)
+      if (previousRatio > mark.remainingRatio &&
+          nextRatio <= mark.remainingRatio)
+        mark,
+  ];
+}
+
+/// Вибрация раз в секунду, когда осталось ≤5 с.
+@visibleForTesting
+bool shouldBuzzTurnSecond({
+  required int remainingSeconds,
+  required int? lastBuzzedSecond,
+}) {
+  return remainingSeconds > 0 &&
+      remainingSeconds <= 5 &&
+      lastBuzzedSecond != remainingSeconds;
 }
 
 abstract final class Sfx {
@@ -68,6 +126,9 @@ class SfxController {
   final Map<SfxId, String> _dataUris = {};
   Completer<void>? _preloadDone;
   bool _enabled = true;
+  bool _games = true;
+  bool _notifications = true;
+  bool _turn = true;
   DateTime? _lastAt;
   SfxId? _lastId;
 
@@ -99,6 +160,29 @@ class SfxController {
     if (enabled) warmup();
   }
 
+  void setCategories({
+    bool? games,
+    bool? notifications,
+    bool? turn,
+  }) {
+    if (games != null) _games = games;
+    if (notifications != null) _notifications = notifications;
+    if (turn != null) _turn = turn;
+  }
+
+  /// Мастер и категория. Без debounce — для настроек и тестов.
+  bool allows(SfxId id) {
+    if (!_enabled) return false;
+    switch (sfxCategoryOf(resolveId(id))) {
+      case SfxCategory.games:
+        return _games;
+      case SfxCategory.notifications:
+        return _notifications;
+      case SfxCategory.turn:
+        return _turn;
+    }
+  }
+
   void warmup({bool unlock = true}) {
     if (!_enabled || _inWidgetTest) return;
     if (unlock) html_sfx.htmlSfxUnlock();
@@ -121,8 +205,9 @@ class SfxController {
       id == SfxId.cardDraw ? SfxId.cardPlay : id;
 
   void play(SfxId id) {
-    if (!_enabled || _inWidgetTest) return;
+    if (_inWidgetTest) return;
     id = resolveId(id);
+    if (!allows(id)) return;
     final now = DateTime.now();
     if (!shouldPlay(id, now)) return;
     if (io_sfx.ioSfxSupported) {
@@ -179,6 +264,16 @@ class SfxController {
 
 /// Рост бейджа (чаты / заявки / инвайты) → один notify, не на первом кадре.
 abstract final class AlertSfx {
+  static void playNotify() {
+    Sfx.play(SfxId.notify);
+    Haptics.play(HapticKind.notify);
+  }
+
+  static void playYourTurn() {
+    Sfx.play(SfxId.yourTurn);
+    Haptics.play(HapticKind.yourTurn);
+  }
+
   static bool shouldPlayCountBump(int? previous, int next) {
     return previous != null && next > previous;
   }
@@ -244,15 +339,23 @@ int turnTickIntervalMs({
 abstract final class TurnClockSfx {
   static bool _wasMyTurn = false;
   static DateTime? _lastTickAt;
+  static double? _lastRatio;
+  static int? _lastSecondBuzz;
 
   @visibleForTesting
   static void Function(SfxId id)? debugOnPlay;
 
   @visibleForTesting
+  static void Function(HapticKind kind)? debugOnHaptic;
+
+  @visibleForTesting
   static void reset() {
     _wasMyTurn = false;
     _lastTickAt = null;
+    _lastRatio = null;
+    _lastSecondBuzz = null;
     debugOnPlay = null;
+    debugOnHaptic = null;
   }
 
   static void sync({
@@ -266,9 +369,14 @@ abstract final class TurnClockSfx {
     DateTime? now,
   }) {
     final at = now ?? DateTime.now();
+    final leftMs = remainingMs ?? remainingSeconds * 1000;
+    final totalMs = turnTimeSec > 0 ? turnTimeSec * 1000 : 0;
+    final ratio = totalMs > 0 ? (leftMs / totalMs).clamp(0.0, 1.0) : null;
     if (!isMyTurn) {
       _wasMyTurn = false;
       _lastTickAt = null;
+      _lastRatio = null;
+      _lastSecondBuzz = null;
       return;
     }
     if (!_wasMyTurn) {
@@ -277,12 +385,29 @@ abstract final class TurnClockSfx {
         _lastTickAt = at;
       }
       _play(SfxId.yourTurn);
+      _haptic(HapticKind.yourTurn);
+      _lastRatio = ratio;
+      _lastSecondBuzz =
+          hasTimer && remainingSeconds <= 5 ? remainingSeconds : null;
       return;
     }
     if (announceOnly) return;
+    if (hasTimer) {
+      if (ratio != null && _lastRatio != null) {
+        if (crossedTurnTimerMarks(_lastRatio!, ratio).isNotEmpty) {
+          _haptic(HapticKind.timerMark);
+        }
+      }
+      if (ratio != null) _lastRatio = ratio;
+      if (shouldBuzzTurnSecond(
+        remainingSeconds: remainingSeconds,
+        lastBuzzedSecond: _lastSecondBuzz,
+      )) {
+        _lastSecondBuzz = remainingSeconds;
+        _haptic(HapticKind.timerSecond);
+      }
+    }
     if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
-    final leftMs = remainingMs ?? remainingSeconds * 1000;
-    final totalMs = turnTimeSec > 0 ? turnTimeSec * 1000 : 0;
     final interval = turnTickIntervalMs(remainingMs: leftMs, totalMs: totalMs);
     if (interval <= 0) return;
     if (_lastTickAt != null &&
@@ -296,5 +421,10 @@ abstract final class TurnClockSfx {
   static void _play(SfxId id) {
     debugOnPlay?.call(id);
     Sfx.play(id);
+  }
+
+  static void _haptic(HapticKind kind) {
+    debugOnHaptic?.call(kind);
+    Haptics.play(kind);
   }
 }

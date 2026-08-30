@@ -4,6 +4,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/core/haptics.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
@@ -15,6 +16,14 @@ import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+
+void _applySoundCategories(WidgetRef ref) {
+  Sfx.instance.setCategories(
+    games: ref.read(soundGamesEnabledProvider),
+    notifications: ref.read(soundNotificationsEnabledProvider),
+    turn: ref.read(soundTurnEnabledProvider),
+  );
+}
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -115,13 +124,78 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SwitchRow(
+                          title: l10n.settingsSoundTitle,
+                          subtitle: l10n.settingsSoundSubtitle,
+                          value: ref.watch(soundEnabledProvider),
+                          onChanged: (v) async {
+                            await ref.read(soundEnabledProvider.notifier).set(v);
+                            Sfx.setEnabled(v);
+                          },
+                        ),
+                        if (ref.watch(soundEnabledProvider)) ...[
+                          const SizedBox(height: 8),
+                          const Divider(
+                            height: 1,
+                            color: AppColors.accentSoft,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 4,
+                            children: [
+                              _CategoryCheck(
+                                title: l10n.settingsSoundGames,
+                                value: ref.watch(soundGamesEnabledProvider),
+                                onChanged: (v) async {
+                                  await ref
+                                      .read(soundGamesEnabledProvider.notifier)
+                                      .set(v);
+                                  _applySoundCategories(ref);
+                                },
+                              ),
+                              _CategoryCheck(
+                                title: l10n.settingsSoundNotifications,
+                                value: ref
+                                    .watch(soundNotificationsEnabledProvider),
+                                onChanged: (v) async {
+                                  await ref
+                                      .read(
+                                        soundNotificationsEnabledProvider
+                                            .notifier,
+                                      )
+                                      .set(v);
+                                  _applySoundCategories(ref);
+                                },
+                              ),
+                              _CategoryCheck(
+                                title: l10n.settingsSoundTurn,
+                                value: ref.watch(soundTurnEnabledProvider),
+                                onChanged: (v) async {
+                                  await ref
+                                      .read(soundTurnEnabledProvider.notifier)
+                                      .set(v);
+                                  _applySoundCategories(ref);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
                     child: _SwitchRow(
-                      title: l10n.settingsSoundTitle,
-                      subtitle: l10n.settingsSoundSubtitle,
-                      value: ref.watch(soundEnabledProvider),
+                      title: l10n.settingsHapticsTitle,
+                      subtitle: l10n.settingsHapticsSubtitle,
+                      value: ref.watch(hapticsEnabledProvider),
                       onChanged: (v) async {
-                        await ref.read(soundEnabledProvider.notifier).set(v);
-                        Sfx.setEnabled(v);
+                        await ref.read(hapticsEnabledProvider.notifier).set(v);
+                        Haptics.setEnabled(v);
                       },
                     ),
                   ),

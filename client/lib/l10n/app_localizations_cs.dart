@@ -40,7 +40,22 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsSoundTitle => 'Zvuk';
 
   @override
-  String get settingsSoundSubtitle => 'Tahy a herní animace';
+  String get settingsSoundSubtitle => 'Hry a oznámení';
+
+  @override
+  String get settingsSoundGames => 'Hry';
+
+  @override
+  String get settingsSoundNotifications => 'Oznámení';
+
+  @override
+  String get settingsSoundTurn => 'Tah';
+
+  @override
+  String get settingsHapticsTitle => 'Vibrace';
+
+  @override
+  String get settingsHapticsSubtitle => 'Pouze upozornění: zprávy, žádosti, váš tah a časovač';
 
   @override
   String get settingsOfflineModeTitle => 'Režim sítě';

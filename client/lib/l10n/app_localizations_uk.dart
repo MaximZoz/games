@@ -40,7 +40,22 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSoundTitle => 'Звук';
 
   @override
-  String get settingsSoundSubtitle => 'Ходи та анімації в іграх';
+  String get settingsSoundSubtitle => 'Ігри та сповіщення';
+
+  @override
+  String get settingsSoundGames => 'Ігри';
+
+  @override
+  String get settingsSoundNotifications => 'Сповіщення';
+
+  @override
+  String get settingsSoundTurn => 'Хід';
+
+  @override
+  String get settingsHapticsTitle => 'Вібрація';
+
+  @override
+  String get settingsHapticsSubtitle => 'Лише сповіщення: повідомлення, заявки, ваш хід і таймер';
 
   @override
   String get settingsOfflineModeTitle => 'Режим мережі';

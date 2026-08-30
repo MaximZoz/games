@@ -40,7 +40,22 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSoundTitle => 'Suono';
 
   @override
-  String get settingsSoundSubtitle => 'Mosse e animazioni di gioco';
+  String get settingsSoundSubtitle => 'Giochi e notifiche';
+
+  @override
+  String get settingsSoundGames => 'Giochi';
+
+  @override
+  String get settingsSoundNotifications => 'Notifiche';
+
+  @override
+  String get settingsSoundTurn => 'Turno';
+
+  @override
+  String get settingsHapticsTitle => 'Vibrazione';
+
+  @override
+  String get settingsHapticsSubtitle => 'Solo avvisi: messaggi, richieste, il tuo turno e il timer';
 
   @override
   String get settingsOfflineModeTitle => 'Modalità di rete';

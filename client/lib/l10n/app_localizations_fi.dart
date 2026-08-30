@@ -40,7 +40,22 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsSoundTitle => 'Ääni';
 
   @override
-  String get settingsSoundSubtitle => 'Siirrot ja pelianimaatiot';
+  String get settingsSoundSubtitle => 'Pelit ja ilmoitukset';
+
+  @override
+  String get settingsSoundGames => 'Pelit';
+
+  @override
+  String get settingsSoundNotifications => 'Ilmoitukset';
+
+  @override
+  String get settingsSoundTurn => 'Vuoro';
+
+  @override
+  String get settingsHapticsTitle => 'Tärinä';
+
+  @override
+  String get settingsHapticsSubtitle => 'Vain ilmoitukset: viestit, pyynnöt, vuorosi ja ajastin';
 
   @override
   String get settingsOfflineModeTitle => 'Verkkotila';

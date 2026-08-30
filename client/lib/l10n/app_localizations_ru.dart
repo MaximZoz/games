@@ -40,7 +40,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSoundTitle => 'Звук';
 
   @override
-  String get settingsSoundSubtitle => 'Ходы и анимации в играх';
+  String get settingsSoundSubtitle => 'Игры и уведомления';
+
+  @override
+  String get settingsSoundGames => 'Игры';
+
+  @override
+  String get settingsSoundNotifications => 'Уведомления';
+
+  @override
+  String get settingsSoundTurn => 'Ход';
+
+  @override
+  String get settingsHapticsTitle => 'Вибрация';
+
+  @override
+  String get settingsHapticsSubtitle => 'Только уведомления: сообщения, заявки, ваш ход и таймер';
 
   @override
   String get settingsOfflineModeTitle => 'Режим сети';

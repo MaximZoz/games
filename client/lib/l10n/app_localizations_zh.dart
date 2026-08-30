@@ -40,7 +40,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSoundTitle => '声音';
 
   @override
-  String get settingsSoundSubtitle => '出牌和游戏动画';
+  String get settingsSoundSubtitle => '游戏和通知';
+
+  @override
+  String get settingsSoundGames => '游戏';
+
+  @override
+  String get settingsSoundNotifications => '通知';
+
+  @override
+  String get settingsSoundTurn => '回合';
+
+  @override
+  String get settingsHapticsTitle => '振动';
+
+  @override
+  String get settingsHapticsSubtitle => '仅提醒：消息、请求、你的回合和计时器';
 
   @override
   String get settingsOfflineModeTitle => '网络模式';

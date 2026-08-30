@@ -40,7 +40,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsSoundTitle => 'Ses';
 
   @override
-  String get settingsSoundSubtitle => 'Hamleler ve oyun animasyonları';
+  String get settingsSoundSubtitle => 'Oyunlar ve bildirimler';
+
+  @override
+  String get settingsSoundGames => 'Oyunlar';
+
+  @override
+  String get settingsSoundNotifications => 'Bildirimler';
+
+  @override
+  String get settingsSoundTurn => 'Sıra';
+
+  @override
+  String get settingsHapticsTitle => 'Titreşim';
+
+  @override
+  String get settingsHapticsSubtitle => 'Yalnızca uyarılar: mesajlar, istekler, sıra ve süre';
 
   @override
   String get settingsOfflineModeTitle => 'Ağ modu';

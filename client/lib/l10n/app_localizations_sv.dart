@@ -40,7 +40,22 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsSoundTitle => 'Ljud';
 
   @override
-  String get settingsSoundSubtitle => 'Drag och spelanimationer';
+  String get settingsSoundSubtitle => 'Spel och aviseringar';
+
+  @override
+  String get settingsSoundGames => 'Spel';
+
+  @override
+  String get settingsSoundNotifications => 'Aviseringar';
+
+  @override
+  String get settingsSoundTurn => 'Tur';
+
+  @override
+  String get settingsHapticsTitle => 'Vibration';
+
+  @override
+  String get settingsHapticsSubtitle => 'Endast aviseringar: meddelanden, förfrågningar, din tur och timern';
 
   @override
   String get settingsOfflineModeTitle => 'Nätverksläge';

@@ -40,7 +40,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsSoundTitle => 'ध्वनि';
 
   @override
-  String get settingsSoundSubtitle => 'चालें और गेम एनिमेशन';
+  String get settingsSoundSubtitle => 'गेम और सूचनाएँ';
+
+  @override
+  String get settingsSoundGames => 'गेम';
+
+  @override
+  String get settingsSoundNotifications => 'सूचनाएँ';
+
+  @override
+  String get settingsSoundTurn => 'चाल';
+
+  @override
+  String get settingsHapticsTitle => 'कंपन';
+
+  @override
+  String get settingsHapticsSubtitle => 'केवल सूचनाएँ: संदेश, अनुरोध, आपकी बारी और टाइमर';
 
   @override
   String get settingsOfflineModeTitle => 'नेटवर्क मोड';

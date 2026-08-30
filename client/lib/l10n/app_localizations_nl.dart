@@ -40,7 +40,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSoundTitle => 'Geluid';
 
   @override
-  String get settingsSoundSubtitle => 'Zetten en spelanimaties';
+  String get settingsSoundSubtitle => 'Spellen en meldingen';
+
+  @override
+  String get settingsSoundGames => 'Spellen';
+
+  @override
+  String get settingsSoundNotifications => 'Meldingen';
+
+  @override
+  String get settingsSoundTurn => 'Beurt';
+
+  @override
+  String get settingsHapticsTitle => 'Trillen';
+
+  @override
+  String get settingsHapticsSubtitle => 'Alleen meldingen: berichten, verzoeken, jouw beurt en de timer';
 
   @override
   String get settingsOfflineModeTitle => 'Netwerkmodus';

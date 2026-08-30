@@ -40,7 +40,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSoundTitle => 'サウンド';
 
   @override
-  String get settingsSoundSubtitle => '手番とゲームのアニメーション';
+  String get settingsSoundSubtitle => 'ゲームと通知';
+
+  @override
+  String get settingsSoundGames => 'ゲーム';
+
+  @override
+  String get settingsSoundNotifications => '通知';
+
+  @override
+  String get settingsSoundTurn => '手番';
+
+  @override
+  String get settingsHapticsTitle => '振動';
+
+  @override
+  String get settingsHapticsSubtitle => '通知のみ：メッセージ、リクエスト、手番、タイマー';
 
   @override
   String get settingsOfflineModeTitle => 'ネットワークモード';

@@ -40,7 +40,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSoundTitle => 'الصوت';
 
   @override
-  String get settingsSoundSubtitle => 'الحركات ورسوم الألعاب';
+  String get settingsSoundSubtitle => 'الألعاب والإشعارات';
+
+  @override
+  String get settingsSoundGames => 'الألعاب';
+
+  @override
+  String get settingsSoundNotifications => 'الإشعارات';
+
+  @override
+  String get settingsSoundTurn => 'الدور';
+
+  @override
+  String get settingsHapticsTitle => 'الاهتزاز';
+
+  @override
+  String get settingsHapticsSubtitle => 'التنبيهات فقط: الرسائل والطلبات ودورَك والمؤقت';
 
   @override
   String get settingsOfflineModeTitle => 'وضع الشبكة';

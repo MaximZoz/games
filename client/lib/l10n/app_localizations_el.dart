@@ -40,7 +40,22 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsSoundTitle => 'Ήχος';
 
   @override
-  String get settingsSoundSubtitle => 'Κινήσεις και κινούμενα γραφικά';
+  String get settingsSoundSubtitle => 'Παιχνίδια και ειδοποιήσεις';
+
+  @override
+  String get settingsSoundGames => 'Παιχνίδια';
+
+  @override
+  String get settingsSoundNotifications => 'Ειδοποιήσεις';
+
+  @override
+  String get settingsSoundTurn => 'Σειρά';
+
+  @override
+  String get settingsHapticsTitle => 'Δόνηση';
+
+  @override
+  String get settingsHapticsSubtitle => 'Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης';
 
   @override
   String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';

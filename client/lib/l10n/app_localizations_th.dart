@@ -40,7 +40,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsSoundTitle => 'เสียง';
 
   @override
-  String get settingsSoundSubtitle => 'ตาเล่นและแอนิเมชันในเกม';
+  String get settingsSoundSubtitle => 'เกมและการแจ้งเตือน';
+
+  @override
+  String get settingsSoundGames => 'เกม';
+
+  @override
+  String get settingsSoundNotifications => 'การแจ้งเตือน';
+
+  @override
+  String get settingsSoundTurn => 'ตา';
+
+  @override
+  String get settingsHapticsTitle => 'การสั่น';
+
+  @override
+  String get settingsHapticsSubtitle => 'เฉพาะการแจ้งเตือน: ข้อความ คำขอ ตาของคุณ และตัวจับเวลา';
 
   @override
   String get settingsOfflineModeTitle => 'โหมดเครือข่าย';

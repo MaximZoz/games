@@ -51,9 +51,13 @@ Future<void> syncPreferredLanguageWith(
 }
 
 const _keySoundEnabled = 'sound_enabled';
+const _keySoundGamesEnabled = 'sound_games_enabled';
+const _keySoundNotificationsEnabled = 'sound_notifications_enabled';
+const _keySoundTurnEnabled = 'sound_turn_enabled';
+const _keyHapticsEnabled = 'haptics_enabled';
 const _keyMessagesFriendsOnlyPrefix = 'messages_friends_only';
 
-/// Настройка: звуки кликов, ходов и анимаций.
+/// Настройка: мастер звука (игры + уведомления + ход).
 final soundEnabledProvider =
     StateNotifierProvider<SoundEnabledNotifier, bool>((ref) {
   return SoundEnabledNotifier();
@@ -75,6 +79,51 @@ class SoundEnabledNotifier extends StateNotifier<bool> {
     state = value;
   }
 }
+
+/// Локальный bool в SharedPreferences (категории звука / вибрация).
+class PrefBoolNotifier extends StateNotifier<bool> {
+  PrefBoolNotifier(this._key, {this.defaultValue = true}) : super(defaultValue) {
+    _load();
+  }
+
+  final String _key;
+  final bool defaultValue;
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? defaultValue;
+  }
+
+  Future<void> set(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+    state = value;
+  }
+}
+
+/// Звук партий: карты, фишки, выстрелы, победа.
+final soundGamesEnabledProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keySoundGamesEnabled);
+});
+
+/// Звук бейджей: чат, друзья, инвайты.
+final soundNotificationsEnabledProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keySoundNotificationsEnabled);
+});
+
+/// Звук «ваш ход» и тик часов.
+final soundTurnEnabledProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keySoundTurnEnabled);
+});
+
+/// Вибрация только для алертов: уведомления, ход, таймер.
+final hapticsEnabledProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keyHapticsEnabled);
+});
 
 /// Настройка: не-друзья могут писать вам только смайликами.
 final messagesFriendsOnlyProvider =

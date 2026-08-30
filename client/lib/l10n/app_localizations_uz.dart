@@ -40,7 +40,22 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsSoundTitle => 'Ovoz';
 
   @override
-  String get settingsSoundSubtitle => 'Yurishlar va o‘yin animatsiyalari';
+  String get settingsSoundSubtitle => 'O‘yinlar va bildirishnomalar';
+
+  @override
+  String get settingsSoundGames => 'O‘yinlar';
+
+  @override
+  String get settingsSoundNotifications => 'Bildirishnomalar';
+
+  @override
+  String get settingsSoundTurn => 'Yurish';
+
+  @override
+  String get settingsHapticsTitle => 'Tebranish';
+
+  @override
+  String get settingsHapticsSubtitle => 'Faqat bildirishnomalar: xabarlar, so‘rovlar, yurishingiz va taymer';
 
   @override
   String get settingsOfflineModeTitle => 'Tarmoq rejimi';

@@ -40,7 +40,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSoundTitle => '소리';
 
   @override
-  String get settingsSoundSubtitle => '수와 게임 애니메이션';
+  String get settingsSoundSubtitle => '게임과 알림';
+
+  @override
+  String get settingsSoundGames => '게임';
+
+  @override
+  String get settingsSoundNotifications => '알림';
+
+  @override
+  String get settingsSoundTurn => '차례';
+
+  @override
+  String get settingsHapticsTitle => '진동';
+
+  @override
+  String get settingsHapticsSubtitle => '알림만: 메시지, 요청, 내 차례, 타이머';
 
   @override
   String get settingsOfflineModeTitle => '네트워크 모드';

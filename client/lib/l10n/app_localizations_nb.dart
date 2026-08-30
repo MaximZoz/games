@@ -40,7 +40,22 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsSoundTitle => 'Lyd';
 
   @override
-  String get settingsSoundSubtitle => 'Trekk og spillanimasjoner';
+  String get settingsSoundSubtitle => 'Spill og varsler';
+
+  @override
+  String get settingsSoundGames => 'Spill';
+
+  @override
+  String get settingsSoundNotifications => 'Varsler';
+
+  @override
+  String get settingsSoundTurn => 'Tur';
+
+  @override
+  String get settingsHapticsTitle => 'Vibrasjon';
+
+  @override
+  String get settingsHapticsSubtitle => 'Kun varsler: meldinger, forespørsler, din tur og timeren';
 
   @override
   String get settingsOfflineModeTitle => 'Nettverksmodus';
