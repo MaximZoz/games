@@ -692,62 +692,72 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Future<void> _draw(UnoGameView before) async {
-    if (_busy) return;
-    _lastLocalDrawActor = before.me?.id;
-    final from = _rectOf(_drawPileKey);
-    await _move(UnoActionType.draw);
-    if (!mounted) return;
-    UnoGameView? after;
-    try {
-      after = await ref.read(unoGameProvider(widget.gameId).future);
-    } catch (_) {}
-    if (!mounted) return;
-    final oldIds = before.myHand.map((card) => card.id).toSet();
-    final drawn = after?.myHand
-            .where((card) => !oldIds.contains(card.id))
-            .toList(growable: false) ??
-        const <UnoCard>[];
-    if (drawn.isNotEmpty) {
-      setState(() => _pendingDrawnIds.addAll(drawn.map((card) => card.id)));
-    }
-    final to = _rectOf(_handKey);
-    if (from == null || to == null) {
-      if (mounted && drawn.isNotEmpty) {
-        setState(
-            () => _pendingDrawnIds.removeAll(drawn.map((card) => card.id)));
-      }
+    if (!unoDrawControlEnabled(
+      busy: _busy,
+      canTake: _canTakeFromDeck(before),
+    )) {
       return;
     }
-    for (final card in drawn) {
+    setState(() => _busy = true);
+    _lastLocalDrawActor = before.me?.id;
+    final from = _rectOf(_drawPileKey);
+    try {
+      await _move(UnoActionType.draw, manageBusy: false);
       if (!mounted) return;
-      await playUnoCardFlyAnimation(
-        context: context,
-        card: card,
-        cardSize: _flyCardSize(context),
-        from: from,
-        to: to,
-        faceDown: true,
-        flipToFace: true,
-        arcLift: 36,
-      );
-      if (mounted) {
-        setState(() => _pendingDrawnIds.remove(card.id));
+      UnoGameView? after;
+      try {
+        after = await ref.read(unoGameProvider(widget.gameId).future);
+      } catch (_) {}
+      if (!mounted) return;
+      final oldIds = before.myHand.map((card) => card.id).toSet();
+      final drawn = after?.myHand
+              .where((card) => !oldIds.contains(card.id))
+              .toList(growable: false) ??
+          const <UnoCard>[];
+      if (drawn.isNotEmpty) {
+        setState(() => _pendingDrawnIds.addAll(drawn.map((card) => card.id)));
       }
-    }
-    if (drawn.isEmpty && mounted) {
-      await playUnoCardFlyAnimation(
-        context: context,
-        card: const UnoCard(
-          id: 'draw-back',
-          color: UnoColor.wild,
-          kind: UnoCardKind.wild,
-        ),
-        cardSize: _flyCardSize(context),
-        from: from,
-        to: to,
-        faceDown: true,
-        arcLift: 36,
-      );
+      final to = _rectOf(_handKey);
+      if (from == null || to == null) {
+        if (mounted && drawn.isNotEmpty) {
+          setState(
+              () => _pendingDrawnIds.removeAll(drawn.map((card) => card.id)));
+        }
+        return;
+      }
+      for (final card in drawn) {
+        if (!mounted) return;
+        await playUnoCardFlyAnimation(
+          context: context,
+          card: card,
+          cardSize: _flyCardSize(context),
+          from: from,
+          to: to,
+          faceDown: true,
+          flipToFace: true,
+          arcLift: 36,
+        );
+        if (mounted) {
+          setState(() => _pendingDrawnIds.remove(card.id));
+        }
+      }
+      if (drawn.isEmpty && mounted) {
+        await playUnoCardFlyAnimation(
+          context: context,
+          card: const UnoCard(
+            id: 'draw-back',
+            color: UnoColor.wild,
+            kind: UnoCardKind.wild,
+          ),
+          cardSize: _flyCardSize(context),
+          from: from,
+          to: to,
+          faceDown: true,
+          arcLift: 36,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -779,7 +789,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         ref.invalidate(unoGameProvider(widget.gameId));
       }
     } on GamesException catch (error) {
-      if (mounted) {
+      if (mounted &&
+          !(type == UnoActionType.draw && isStaleUnoDrawError(error))) {
         showAppSnackBar(
           context,
           message: formatUserError(error),
@@ -1588,7 +1599,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 children: [
                   GestureDetector(
                     key: _drawPileKey,
-                    onTap: _canTakeFromDeck(game) && !_busy
+                    onTap: unoDrawControlEnabled(
+                            busy: _busy,
+                            canTake: _canTakeFromDeck(game),
+                          )
                         ? () => _draw(game)
                         : null,
                     child: Stack(
@@ -1790,7 +1804,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           children: [
             if (canDraw)
               FilledButton.icon(
-                onPressed: _busy ? null : () => _draw(game),
+                onPressed: unoDrawControlEnabled(busy: _busy, canTake: true)
+                    ? () => _draw(game)
+                    : null,
                 style: filled,
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
@@ -1833,7 +1849,12 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 label: Text(context.l10n.unoChallengeWd4),
               ),
               FilledButton.icon(
-                onPressed: _busy ? null : () => _draw(game),
+                onPressed: unoDrawControlEnabled(
+                  busy: _busy,
+                  canTake: _canTakeFromDeck(game),
+                )
+                    ? () => _draw(game)
+                    : null,
                 style: filled,
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
