@@ -1,7 +1,9 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
+import 'package:multigames_client/core/sfx_io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -33,6 +35,14 @@ void main() {
     expect(SfxController.resolveId(SfxId.cardDraw), SfxId.cardPlay);
     expect(SfxController.resolveId(SfxId.cardPlay), SfxId.cardPlay);
     expect(SfxController.resolveId(SfxId.uiTap), SfxId.uiTap);
+  });
+
+  test('Android AssetSource без префикса assets/', () {
+    expect(
+      SfxController.assetSourcePath('assets/sfx/hit.wav'),
+      'sfx/hit.wav',
+    );
+    expect(SfxController.assetSourcePath('sfx/hit.wav'), 'sfx/hit.wav');
   });
 
   test('Sfx.play в widget-тестах не бросает', () {
@@ -183,5 +193,15 @@ void main() {
     final notifier = SoundEnabledNotifier();
     await Future<void>.delayed(const Duration(milliseconds: 30));
     expect(notifier.state, isFalse);
+  });
+
+  test('Android SFX — game/sonification, не media', () {
+    final ctx = ioSfxAudioContext();
+    expect(ctx.android.usageType, AndroidUsageType.game);
+    expect(ctx.android.contentType, AndroidContentType.sonification);
+    expect(
+      ctx.android.audioFocus,
+      AndroidAudioFocus.gainTransientMayDuck,
+    );
   });
 }

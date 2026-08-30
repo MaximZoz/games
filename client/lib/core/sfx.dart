@@ -102,7 +102,17 @@ class SfxController {
   void warmup({bool unlock = true}) {
     if (!_enabled || _inWidgetTest) return;
     if (unlock) html_sfx.htmlSfxUnlock();
+    io_sfx.ioSfxWarmup();
     unawaited(_preload());
+  }
+
+  /// AssetSource на Android/iOS — путь без префикса `assets/`.
+  @visibleForTesting
+  static String assetSourcePath(String assetPath) {
+    const prefix = 'assets/';
+    return assetPath.startsWith(prefix)
+        ? assetPath.substring(prefix.length)
+        : assetPath;
   }
 
   /// Раздача из колоды звучит как полёт в сброс (`cardPlay`).
@@ -118,7 +128,7 @@ class SfxController {
     if (io_sfx.ioSfxSupported) {
       final path = assetPaths[id];
       if (path != null) {
-        io_sfx.ioSfxPlay(path, volume: _volumeFor(id));
+        io_sfx.ioSfxPlay(assetSourcePath(path), volume: _volumeFor(id));
       }
       return;
     }
