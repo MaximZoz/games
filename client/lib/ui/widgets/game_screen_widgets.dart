@@ -812,7 +812,7 @@ class _MyTurnAlertState extends State<MyTurnAlert> {
     TurnClockSfx.sync(
       isMyTurn: widget.isMyTurn,
       remainingSeconds: 0,
-      clockVisible: false,
+      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
       hasTimer: false,
       announceOnly: true,
     );

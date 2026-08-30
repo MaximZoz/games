@@ -184,6 +184,20 @@ class _NavItem {
   final String label;
 }
 
+/// После WS хода GetActive успевает обновить is_my_turn — звук, если не за столом.
+Future<void> _announceAwayGameTurn(WidgetRef ref, BuildContext context) async {
+  await Future<void>.delayed(const Duration(milliseconds: 150));
+  if (!context.mounted) return;
+  final active = ref.read(activeGameProvider).valueOrNull;
+  final path =
+      GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+  GameAwaySfx.playIfNeeded(
+    path: path,
+    gameId: active?.gameId,
+    isMyTurn: active?.type == 'game' && (active?.isMyTurn ?? false),
+  );
+}
+
 class AppShell extends ConsumerWidget {
   const AppShell({
     super.key,
@@ -345,6 +359,9 @@ class AppShell extends ConsumerWidget {
               );
             }
           }
+          if (type == 'game_state' || type == 'game_started') {
+            unawaited(_announceAwayGameTurn(ref, context));
+          }
           if (type == 'daily_reward_available' ||
               type == 'daily_reward_claimed') {
             final available = event['available'] == true;
@@ -389,13 +406,12 @@ class AppShell extends ConsumerWidget {
       if (AlertSfx.shouldPlayCountBump(prev, next)) AlertSfx.playNotify();
     });
     ref.listen<int>(gamesMyTurnCountProvider, (prev, next) {
-      if (MyTurnBadgeSfx.shouldPlay(
-        previousCount: prev,
-        nextCount: next,
+      final active = ref.read(activeGameProvider).valueOrNull;
+      GameAwaySfx.playIfNeeded(
         path: path,
-      )) {
-        AlertSfx.playYourTurn();
-      }
+        gameId: active?.gameId,
+        isMyTurn: next > 0,
+      );
     });
     final unreadChats = ref.watch(chatsUnreadCountProvider);
     final incomingFriends = ref.watch(friendsIncomingCountProvider);
