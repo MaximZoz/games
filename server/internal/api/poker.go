@@ -371,18 +371,9 @@ func (h *GamesHandler) JoinPokerLobby(w http.ResponseWriter, r *http.Request, lo
 		WriteErr(w, r, http.StatusBadRequest, "lobby not joinable")
 		return
 	}
-	if h.blockingActiveGameID(ctx, userID) != "" {
+	if h.prepareJoinLobbySession(ctx, userID, lobbyID) {
 		WriteErr(w, r, http.StatusConflict, "finish your current game first")
 		return
-	}
-	if lid, lerr := h.Rdb.Get(ctx, userActiveLobbyKey(userID)).Result(); lerr == nil && lid != "" && lid != lobbyID {
-		if lm, _ := h.Rdb.HGetAll(ctx, "lobby:"+lid).Result(); len(lm) > 0 {
-			st := lm["status"]
-			if st == lobbyStatusWaitingInvite || st == lobbyStatusWaitingMatchmake {
-				WriteErr(w, r, http.StatusConflict, "finish your current game first")
-				return
-			}
-		}
 	}
 
 	players := parsePlayerIDsCSV(m["player_ids"])

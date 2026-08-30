@@ -1023,6 +1023,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        setState(() => _rematchLobbyId = null);
+        try {
+          await ref.read(unoRepositoryProvider).leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
       final result = await ref.read(unoRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
       clearBlockingGamePin(ref);

@@ -884,6 +884,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     setState(() => _isAcceptingRematch = true);
     ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
     try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        _rematchPollTimer?.cancel();
+        setState(() => _rematchLobbyId = null);
+        try {
+          await ref.read(battleshipRepositoryProvider).leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
       final result =
           await ref.read(battleshipRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
