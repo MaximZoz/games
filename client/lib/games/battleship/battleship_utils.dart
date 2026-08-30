@@ -356,6 +356,16 @@ List<List<int>> generateRandomBattleshipShips([int? seed]) {
   return defaultBattleshipShips();
 }
 
+/// После своего выстрела: попадание — сразу ещё один выстрел; промах/конец — ход отдан.
+///
+/// [shotCell] — клетка, которую послали мы. После промаха бот может сходить
+/// в том же ответе, и тогда `lastShot` уже чужой.
+bool battleshipKeepAttacking(BattleshipGameView view, {int? shotCell}) {
+  if (view.isOver || !view.isMyTurn) return false;
+  if (shotCell != null) return view.myHits.contains(shotCell);
+  return view.lastShotHit;
+}
+
 /// Клетка уже стреляная, в полёте или потоплена — повторный выстрел нельзя.
 bool battleshipCellSpent({
   required int cell,

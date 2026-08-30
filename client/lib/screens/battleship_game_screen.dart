@@ -575,41 +575,72 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     });
   }
 
+  void _playLocalShotFx({
+    required int cell,
+    required bool hit,
+    required bool sunk,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      _pulseHitCell = cell;
+      _fxHit = hit;
+    });
+    if (sunk) {
+      Sfx.play(SfxId.sink);
+    } else {
+      Sfx.play(hit ? SfxId.hit : SfxId.miss);
+    }
+    _hitPulse
+      ..stop()
+      ..forward(from: 0);
+    Future<void>.delayed(_kShotRevealDelay, () {
+      if (!mounted) return;
+      if (_pulseHitCell != cell) return;
+      setState(() => _pulseHitCell = null);
+    });
+  }
+
   Future<void> _shoot(int cell) async {
-    if (_busy || _fxInProgress || _pendingShotCell != null) return;
+    if (_busy || _pendingShotCell != null) return;
     _beginLocalShot(cell);
     try {
       final view =
           await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
       if (!mounted) return;
       if (view.id != widget.gameId) return;
-      final shotCell = view.lastShot >= 0 ? view.lastShot : cell;
+      // Свой выстрел — [cell]. После промаха бот может уже сходить в этом же ответе.
+      final hit = view.myHits.contains(cell);
       final sunkShip = battleshipNewlySunkShip(
         after: view.opponentSunkShips,
         before: _overlay.sunkShips,
-        lastShot: shotCell,
+        lastShot: cell,
       );
+      final sunk = sunkShip != null ||
+          view.opponentSunkShips.any((ship) => ship.contains(cell));
+      final keepAttacking = battleshipKeepAttacking(view, shotCell: cell);
       _lastFxKey = _fxKey(view);
       setState(() {
         _overlay = _overlay.resolvePending(
-          cell: shotCell,
-          hit: view.lastShotHit,
+          cell: cell,
+          hit: hit,
           sunkShip: sunkShip,
         );
         _optimisticView = view;
         _pendingShotCell = null;
+        _busy = false;
         if (view.isOver && !_hideTimers) {
           _hideTimers = true;
         }
+        // Промах / конец — сразу смена хода, без удержания поля на FX.
+        if (!keepAttacking) {
+          _fxShowMineBoard = null;
+        }
       });
-      await _playShotReveal(
-        cell: shotCell,
-        hit: view.lastShotHit,
-        onMyBoard: false,
-        sunk: sunkShip != null ||
-            view.opponentSunkShips.any((ship) => ship.contains(shotCell)),
+      _playLocalShotFx(
+        cell: cell,
+        hit: hit,
+        sunk: sunk,
       );
-      if (!mounted) return;
       ref.invalidate(battleshipGameProvider(widget.gameId));
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -618,10 +649,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _pendingShotCell = null;
         _pulseHitCell = null;
         _fxShowMineBoard = null;
+        _busy = false;
       });
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && _busy) setState(() => _busy = false);
     }
   }
 
@@ -1470,7 +1502,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   canShoot: myTurn &&
                       !game.isOver &&
                       !_busy &&
-                      !_fxInProgress &&
                       _pendingShotCell == null,
                 );
           return Center(child: board);

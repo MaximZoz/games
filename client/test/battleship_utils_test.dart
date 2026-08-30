@@ -538,6 +538,45 @@ void main() {
     });
   });
 
+  group('battleshipKeepAttacking', () {
+    test('попадание — сразу ещё один выстрел', () {
+      final view = _view(
+        myShots: const [5],
+        myHits: const [5],
+        isMyTurn: true,
+        lastShot: 5,
+        lastShotHit: true,
+      );
+      expect(battleshipKeepAttacking(view, shotCell: 5), isTrue);
+    });
+
+    test('промах — ход отдан, даже если lastShot уже чужой', () {
+      final afterBot = _view(
+        myShots: const [5],
+        myHits: const [],
+        opponentShots: const [11],
+        isMyTurn: false,
+        turn: 'op',
+        lastShot: 11,
+        lastShotHit: true,
+      );
+      expect(battleshipKeepAttacking(afterBot, shotCell: 5), isFalse);
+    });
+
+    test('промах бота в том же ответе — наш ход, но не combo', () {
+      final view = _view(
+        myShots: const [5],
+        myHits: const [],
+        opponentShots: const [11],
+        isMyTurn: true,
+        lastShot: 11,
+        lastShotHit: false,
+      );
+      expect(battleshipKeepAttacking(view, shotCell: 5), isFalse);
+      expect(battleshipKeepAttacking(view), isFalse);
+    });
+  });
+
   group('battleshipNewlySunkShip', () {
     test('возвращает новый корабль после выстрела', () {
       expect(
