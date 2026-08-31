@@ -71,6 +71,44 @@ void main() {
     expect(profileEditStripMaxLines(), 1);
   });
 
+  test('клавиатуру убрали — полоска ввода закрывается', () {
+    expect(
+      profileEditShouldLeaveFieldOnKeyboardHidden(
+        fieldTypingActive: true,
+        keyboardWasOpen: true,
+        keyboardOpen: false,
+      ),
+      isTrue,
+    );
+    // Клавиатура ещё не выехала после тапа — полоску не трогаем.
+    expect(
+      profileEditShouldLeaveFieldOnKeyboardHidden(
+        fieldTypingActive: true,
+        keyboardWasOpen: false,
+        keyboardOpen: false,
+      ),
+      isFalse,
+    );
+    // Клавиатура на месте — печатаем дальше.
+    expect(
+      profileEditShouldLeaveFieldOnKeyboardHidden(
+        fieldTypingActive: true,
+        keyboardWasOpen: true,
+        keyboardOpen: true,
+      ),
+      isFalse,
+    );
+    // Поле закрыто — нечего закрывать.
+    expect(
+      profileEditShouldLeaveFieldOnKeyboardHidden(
+        fieldTypingActive: false,
+        keyboardWasOpen: true,
+        keyboardOpen: false,
+      ),
+      isFalse,
+    );
+  });
+
   test('оболочка на профиле не ресайзится, на остальных экранах — да', () {
     expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);

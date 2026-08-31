@@ -895,14 +895,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     if (isOver) ...[
                       SizedBox(height: verticalSpacing * 0.8),
                       if (OfflineTttRegistry.instance.isOffline(widget.gameId))
-                        FilledButton.icon(
-                          onPressed:
-                              _isRematching ? null : () => _rematch(context),
-                          icon: const Icon(Icons.replay_rounded, size: 18),
-                          label: Text(context.l10n.offlinePlayAgain),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.accentStart,
-                            foregroundColor: Colors.white,
+                        Center(
+                          child: FilledButton.icon(
+                            onPressed:
+                                _isRematching ? null : () => _rematch(context),
+                            icon: const Icon(Icons.replay_rounded, size: 18),
+                            label: Text(context.l10n.offlinePlayAgain),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.accentStart,
+                              foregroundColor: Colors.white,
+                            ),
                           ),
                         )
                       else

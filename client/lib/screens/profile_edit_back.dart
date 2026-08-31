@@ -46,6 +46,18 @@ bool profileEditFieldExpands({required bool phoneLandscape}) => false;
 /// Всегда 1 строка, иначе IME уходит в fullscreen extract.
 int profileEditStripMaxLines() => 1;
 
+/// Компактной полоски ввода без клавиатуры быть не должно: если клавиатура
+/// была открыта и её убрали (тап в пустое место, кнопка «свернуть»), поле
+/// закрывается и возвращается обычная форма. Пока клавиатура ещё не успела
+/// выехать (`keyboardWasOpen == false`), полоску не трогаем — иначе она
+/// закроется сразу после тапа, а на десктопе не откроется вовсе.
+bool profileEditShouldLeaveFieldOnKeyboardHidden({
+  required bool fieldTypingActive,
+  required bool keyboardWasOpen,
+  required bool keyboardOpen,
+}) =>
+    fieldTypingActive && keyboardWasOpen && !keyboardOpen;
+
 /// Форма видна и при открытом поле: полоска ввода прижата к клавиатуре снизу,
 /// а над ней остаётся форма. В альбоме от формы остаётся узкая полоса, но это
 /// лучше пустого экрана, а текст стоит у клавиатуры, а не у верхнего края.

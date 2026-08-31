@@ -1244,15 +1244,18 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         if (isOver) ...[
                           const SizedBox(height: 10),
                           if (_isOffline)
-                            FilledButton.icon(
-                              onPressed: _isRematching
-                                  ? null
-                                  : () => unawaited(_rematch()),
-                              icon: const Icon(Icons.replay_rounded, size: 18),
-                              label: Text(context.l10n.offlinePlayAgain),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accentStart,
-                                foregroundColor: Colors.white,
+                            Center(
+                              child: FilledButton.icon(
+                                onPressed: _isRematching
+                                    ? null
+                                    : () => unawaited(_rematch()),
+                                icon:
+                                    const Icon(Icons.replay_rounded, size: 18),
+                                label: Text(context.l10n.offlinePlayAgain),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.accentStart,
+                                  foregroundColor: Colors.white,
+                                ),
                               ),
                             )
                           else

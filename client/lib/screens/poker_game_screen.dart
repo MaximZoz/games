@@ -1240,14 +1240,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           const SizedBox(height: 16),
         ],
         if (_isOffline)
-          FilledButton.icon(
-            onPressed: _isRematching ? null : () => unawaited(_rematch()),
-            icon: const Icon(Icons.replay_rounded, size: 18),
-            label: Text(context.l10n.offlinePlayAgain),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 44),
+          Center(
+            child: FilledButton.icon(
+              onPressed: _isRematching ? null : () => unawaited(_rematch()),
+              icon: const Icon(Icons.replay_rounded, size: 18),
+              label: Text(context.l10n.offlinePlayAgain),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+              ),
             ),
           )
         else

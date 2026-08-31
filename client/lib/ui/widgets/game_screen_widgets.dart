@@ -1972,36 +1972,34 @@ class GameRematchSection extends StatelessWidget {
                 ),
               ),
               SizedBox(height: compact ? 12 : 14),
-              Row(
+              // По ширине содержимого; при длинных переводах переносятся.
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: compact ? 10 : 12,
+                runSpacing: 8,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => onDecline(rematchOffer.lobbyId),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textPrimary,
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.45),
-                        ),
-                        padding: btnPad,
-                        minimumSize: const Size(0, 44),
+                  OutlinedButton(
+                    onPressed: () => onDecline(rematchOffer.lobbyId),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color: AppColors.textSecondary.withValues(alpha: 0.45),
                       ),
-                      child: Text(context.l10n.commonDecline),
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
                     ),
+                    child: Text(context.l10n.commonDecline),
                   ),
-                  SizedBox(width: compact ? 10 : 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => onAccept(rematchOffer.lobbyId),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accentStart,
-                        foregroundColor: Colors.white,
-                        padding: btnPad,
-                        minimumSize: const Size(0, 44),
-                      ),
-                      child: Text(context.l10n.commonAccept),
+                  FilledButton(
+                    onPressed: () => onAccept(rematchOffer.lobbyId),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      foregroundColor: Colors.white,
+                      padding: btnPad,
+                      minimumSize: const Size(0, 44),
                     ),
+                    child: Text(context.l10n.commonAccept),
                   ),
                 ],
               ),
@@ -2067,11 +2065,13 @@ class GameRematchSection extends StatelessWidget {
     final btnPadding = compact
         ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
+    // Кнопки по ширине содержимого с небольшим запасом на паддинги — раньше
+    // они растягивались во всю ширину экрана.
     return _capDesktopWidth(
       context,
       Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           FilledButton.icon(
             onPressed: isRematching ? null : onRematch,
