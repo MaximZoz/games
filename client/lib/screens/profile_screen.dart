@@ -398,24 +398,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       focusAboutOnOpen: _focusAboutOnEdit,
                       editBackTick: _editBackTick,
                     );
-                    // Landscape на телефоне — форма прокручивается (иначе обрезается).
+                    // Landscape: две колонки на всю высоту, без внешней прокрутки.
                     if (phoneLandscape) {
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
-                            physics: const AlwaysScrollableScrollPhysics(
-                              parent: ClampingScrollPhysics(),
-                            ),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight - 14,
-                                maxWidth: profileMaxWidth,
-                              ),
-                              child: editForm,
-                            ),
-                          );
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+                        child: SizedBox.expand(child: editForm),
                       );
                     }
                     return Padding(
@@ -1763,22 +1750,57 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
 
     // Portrait: поля скроллятся, «Сохранить» всегда внизу экрана.
-    // Landscape: родитель уже скроллит всю форму целиком.
+    // Landscape: две колонки на всю высоту — имя/аватар слева, «о себе» справа.
     final Widget form;
     if (phoneLand) {
-      form = Column(
+      form = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildCompactHeader(context),
-          SizedBox(height: aboutTypingMode ? 10 : 16),
-          avatarAndMeta,
-          aboutField,
-          galleryAndPhoto,
-          if (!aboutTypingMode) ...[
-            SizedBox(height: phoneLand ? 10 : 16),
-            _buildCompactSaveButton(),
-          ],
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(right: 8),
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCompactHeader(context),
+                  SizedBox(height: aboutTypingMode ? 8 : 12),
+                  avatarAndMeta,
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(left: 8),
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (aboutTypingMode)
+                          SizedBox(
+                            height: 160,
+                            width: double.infinity,
+                            child: aboutField,
+                          )
+                        else
+                          aboutField,
+                        galleryAndPhoto,
+                      ],
+                    ),
+                  ),
+                ),
+                if (!aboutTypingMode) ...[
+                  const SizedBox(height: 8),
+                  _buildCompactSaveButton(),
+                ],
+              ],
+            ),
+          ),
         ],
       );
     } else {

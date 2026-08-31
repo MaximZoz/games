@@ -21,6 +21,24 @@ void main() {
     expect(find.text('tile'), findsNothing);
   });
 
+  testWidgets('DesktopTileGrid builds tiles on phone landscape', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(800, 360)),
+          child: DesktopTileGrid(
+            itemCount: 2,
+            itemBuilder: (_, i) => Text('tile-$i'),
+            mobileBuilder: (_) => const Text('mobile-list'),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('mobile-list'), findsNothing);
+    expect(find.text('tile-0'), findsOneWidget);
+    expect(find.text('tile-1'), findsOneWidget);
+  });
+
   testWidgets('DesktopTileGrid builds tiles on wide screens', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

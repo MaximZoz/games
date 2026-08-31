@@ -166,19 +166,36 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
-                  : Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                          itemCount: groupKeys.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) => _emojiGroupTile(
-                            context,
-                            groupKeys[index],
-                            byGroup[groupKeys[index]]!,
+                  : DesktopTileGrid(
+                      itemCount: groupKeys.length,
+                      maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
+                      maxContentWidth: 1100,
+                      maxColumns: 3,
+                      padding: EdgeInsets.fromLTRB(
+                        isPhoneLandscape(context) ? 12 : 16,
+                        8,
+                        isPhoneLandscape(context) ? 12 : 16,
+                        24,
+                      ),
+                      itemBuilder: (context, index) => _emojiGroupTile(
+                        context,
+                        groupKeys[index],
+                        byGroup[groupKeys[index]]!,
+                      ),
+                      mobileBuilder: (context) => Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                            itemCount: groupKeys.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) => _emojiGroupTile(
+                              context,
+                              groupKeys[index],
+                              byGroup[groupKeys[index]]!,
+                            ),
                           ),
                         ),
                       ),
@@ -264,8 +281,6 @@ class ShopEmojiGroupScreen extends ConsumerStatefulWidget {
 }
 
 class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
-  static const _pageSize = 9;
-
   List<ShopItem> _items = const [];
   final Set<String> _buyInFlight = {};
   bool _loading = true;
@@ -435,8 +450,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       );
     }
 
-    final pageCount =
-        emojis.isEmpty ? 0 : ((emojis.length + _pageSize - 1) / _pageSize).floor();
+    final fillTiles = useDesktopTiles(context);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -474,59 +488,98 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     )
-                  : DesktopContentFrame(
-                      maxWidth: isWide(context) ? 720 : double.infinity,
-                      child: VerticalPagedSlider(
-                        pageCount: pageCount,
-                        itemBuilder: (context, page) {
-                          final start = page * _pageSize;
-                          final end =
-                              math.min(start + _pageSize, emojis.length);
-                          final pageItems = emojis.sublist(start, end);
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(10, 8, 2, 10),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final cols = shopTileColumns(context);
-                                const gap = 8.0;
-                                final rows = (pageItems.length / cols)
-                                    .ceil()
-                                    .clamp(1, 3);
-                                final cellW = (constraints.maxWidth -
-                                        gap * (cols - 1)) /
-                                    cols;
-                                final cellH = (constraints.maxHeight -
-                                        gap * (rows - 1)) /
-                                    rows;
-                                final ratio = cellH <= 0
-                                    ? 0.78
-                                    : (cellW / cellH).clamp(0.55, 1.15);
-                                return GridView.builder(
-                                  // Страницу листает VerticalPagedSlider (1 щелчок = 1 экран 3×3).
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: cols,
-                                    mainAxisSpacing: gap,
-                                    crossAxisSpacing: gap,
-                                    childAspectRatio: ratio,
-                                  ),
-                                  itemCount: pageItems.length,
-                                  itemBuilder: (context, index) {
-                                    final item = pageItems[index];
-                                    return _EmojiBuyTile(
-                                      item: item,
-                                      busy: _buyInFlight.contains(item.code),
-                                      onPreview: () => _openPreview(item),
-                                      onBuy: () => _buy(item),
+                  : LayoutBuilder(
+                      builder: (context, outer) {
+                        final pad = fillTiles
+                            ? const EdgeInsets.fromLTRB(8, 4, 8, 8)
+                            : const EdgeInsets.fromLTRB(10, 8, 2, 10);
+                        final innerW =
+                            (outer.maxWidth - pad.horizontal).clamp(1.0, 4000.0);
+                        final innerH =
+                            (outer.maxHeight - pad.vertical).clamp(1.0, 4000.0);
+                        final cols =
+                            shopTileColumns(context, maxWidth: innerW);
+                        var rows = shopTileRows(context, maxHeight: innerH);
+                        var pageSize = (cols * rows).clamp(1, 48);
+                        if (fillTiles) {
+                          const minCell = 72.0;
+                          final maxCols =
+                              (innerW / minCell).floor().clamp(3, 8);
+                          final maxRows =
+                              (innerH / minCell).floor().clamp(2, 6);
+                          if (emojis.length <= maxCols * maxRows) {
+                            pageSize = emojis.length;
+                          }
+                        }
+                        final pageCount = emojis.isEmpty
+                            ? 0
+                            : ((emojis.length + pageSize - 1) / pageSize)
+                                .floor();
+                        return DesktopContentFrame(
+                          maxWidth: fillTiles
+                              ? double.infinity
+                              : (isWide(context) ? 720 : double.infinity),
+                          child: VerticalPagedSlider(
+                            pageCount: pageCount,
+                            itemBuilder: (context, page) {
+                              final start = page * pageSize;
+                              final end = math.min(
+                                start + pageSize,
+                                emojis.length,
+                              );
+                              final pageItems = emojis.sublist(start, end);
+                              return Padding(
+                                padding: pad,
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final pageCols = shopTileColumns(
+                                      context,
+                                      maxWidth: constraints.maxWidth,
+                                    );
+                                    final pageRows = (pageItems.length /
+                                            pageCols)
+                                        .ceil()
+                                        .clamp(1, 8);
+                                    const gap = 8.0;
+                                    final cellW = (constraints.maxWidth -
+                                            gap * (pageCols - 1)) /
+                                        pageCols;
+                                    final cellH = (constraints.maxHeight -
+                                            gap * (pageRows - 1)) /
+                                        pageRows;
+                                    final ratio = cellH <= 0
+                                        ? 0.78
+                                        : (cellW / cellH).clamp(0.45, 1.35);
+                                    return GridView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: pageCols,
+                                        mainAxisSpacing: gap,
+                                        crossAxisSpacing: gap,
+                                        childAspectRatio: ratio,
+                                      ),
+                                      itemCount: pageItems.length,
+                                      itemBuilder: (context, index) {
+                                        final item = pageItems[index];
+                                        return _EmojiBuyTile(
+                                          item: item,
+                                          busy: _buyInFlight
+                                              .contains(item.code),
+                                          onPreview: () =>
+                                              _openPreview(item),
+                                          onBuy: () => _buy(item),
+                                        );
+                                      },
                                     );
                                   },
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
         ),
       ),

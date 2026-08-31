@@ -11,7 +11,9 @@ import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -188,22 +190,43 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: section.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final item = section[index];
-                        return _ShopItemCard(
-                          item: item,
-                          busy: _buyInFlight.contains(item.code),
-                          onBuy: () => _buy(item),
-                        );
-                      },
+              : DesktopTileGrid(
+                  itemCount: section.length,
+                  maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
+                  maxContentWidth: 1100,
+                  maxColumns: 3,
+                  padding: EdgeInsets.fromLTRB(
+                    isPhoneLandscape(context) ? 12 : 16,
+                    8,
+                    isPhoneLandscape(context) ? 12 : 16,
+                    24,
+                  ),
+                  itemBuilder: (context, index) {
+                    final item = section[index];
+                    return _ShopItemCard(
+                      item: item,
+                      busy: _buyInFlight.contains(item.code),
+                      onBuy: () => _buy(item),
+                    );
+                  },
+                  mobileBuilder: (context) => Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        itemCount: section.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = section[index];
+                          return _ShopItemCard(
+                            item: item,
+                            busy: _buyInFlight.contains(item.code),
+                            onBuy: () => _buy(item),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
