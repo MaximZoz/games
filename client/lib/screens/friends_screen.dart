@@ -15,7 +15,6 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -44,16 +43,14 @@ EdgeInsets friendsEmptyStatusPadding({
   return const EdgeInsets.fromLTRB(16, 80, 16, 16);
 }
 
-/// Табы с бейджами съедают высоту над клавиатурой.
-/// Прячем сразу при фокусе поиска — inset на iOS часто 0 или опаздывает.
+/// Табы с бейджами съедают высоту над клавиатурой: в альбоме её почти нет,
+/// в портрете без них видно больше результатов поиска.
 @visibleForTesting
 bool friendsHideTabsForKeyboard({
   required bool landscape,
   required double keyboardInset,
-  bool searchFieldOpen = false,
 }) {
-  if (searchFieldOpen) return true;
-  return landscape && keyboardInset >= 80;
+  return keyboardInset >= 80;
 }
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -158,10 +155,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (notifier.state != collapse) {
       notifier.state = collapse;
     }
-    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
-    if (landNotifier.state != collapse) {
-      landNotifier.state = collapse;
-    }
   }
 
   bool _sameTabs(List<_FriendsTabKind> a, List<_FriendsTabKind> b) {
@@ -202,11 +195,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   void dispose() {
     final toolbarNotifier = ref.read(mobileToolbarLeadingProvider.notifier);
     final navNotifier = ref.read(collapseMobileBottomNavProvider.notifier);
-    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       toolbarNotifier.state = null;
       navNotifier.state = false;
-      landNotifier.state = false;
     });
     _searchDebounce?.cancel();
     _tabController.removeListener(_onTabChanged);
@@ -1892,16 +1883,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _applyIncomingDeepLinkIfNeeded();
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
-    final searchFieldOpen = _isSearchExpanded && _searchFocusNode.hasFocus;
     final hideTabs = friendsHideTabsForKeyboard(
       landscape: MediaQuery.sizeOf(context).width >
           MediaQuery.sizeOf(context).height,
       keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
-      searchFieldOpen: searchFieldOpen,
     );
-    final phoneLand = isPhoneLandscape(context);
-    final overlaySearch = !wide && searchFieldOpen;
-    final keyboardPad = MediaQuery.viewInsetsOf(context).bottom;
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1924,10 +1910,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        top: !overlaySearch,
-        child: Stack(
-          children: [
-            Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (wide)
@@ -1935,7 +1918,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                 child: _buildWideHeader(),
               ),
-            if (!wide && !overlaySearch)
+            if (!wide)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: AnimatedSwitcher(
@@ -2037,24 +2020,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ),
               ),
             ),
-          ],
-        ),
-            if (overlaySearch)
-              Align(
-                alignment: profileEditStripAlignment(phoneLandscape: phoneLand),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    top: phoneLand
-                        ? MediaQuery.viewPaddingOf(context).top
-                        : 0,
-                    bottom: phoneLand ? 0 : keyboardPad,
-                  ),
-                  child: Material(
-                    color: AppColors.surfaceUnified,
-                    child: _buildSearchPanel(),
-                  ),
-                ),
-              ),
           ],
         ),
       ),

@@ -312,10 +312,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   void dispose() {
     clearKeepSoftKeyboardRects();
     final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
-    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifier.state = null;
-      landNotifier.state = false;
     });
     WidgetsBinding.instance.removeObserver(this);
     _composerFocusNode.removeListener(_onComposerFocusChanged);
@@ -403,10 +401,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   }
 
   void _onComposerFocusChanged() {
-    final open = _composerFocusNode.hasFocus;
-    if (ref.read(landscapeInputFieldOpenProvider) != open) {
-      ref.read(landscapeInputFieldOpenProvider.notifier).state = open;
-    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncKeepSoftKeyboardRects();
@@ -3027,13 +3021,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         !(widget.inSplitView && !widget.fromFriends && !widget.fromGames) &&
             !_leavingToChats;
 
-    final pinComposerTop =
-        narrowLandscape && _composerFocusNode.hasFocus;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        top: !pinComposerTop,
         child: SwipeBackScope(
           enabled: canSwipeBack,
           onBack: _goBackToChats,
@@ -3041,8 +3031,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           bottomInset: 72,
           child: Column(
             children: [
-              if (pinComposerTop)
-                _buildLandscapeComposerStrip(),
               if (!narrowLandscape)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
@@ -3097,7 +3085,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ],
                 ),
               ),
-              if (!pinComposerTop && _composerAlert != null)
+              if (_composerAlert != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
                   child: Text(
@@ -3110,9 +3098,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
-              if (!pinComposerTop &&
-                  _pasteSuggestionVisible &&
-                  _pasteInviteUrl != null)
+              if (_pasteSuggestionVisible && _pasteInviteUrl != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(48, 0, 12, 6),
                   child: Align(
@@ -3163,7 +3149,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
-              if (!pinComposerTop && _pendingImages.isNotEmpty)
+              if (_pendingImages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
                   child: Align(
@@ -3247,17 +3233,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ),
                   ),
                 ),
-              if (!pinComposerTop)
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  6,
-                  0,
-                  6,
-                  6 +
-                      (isNarrow(context) && !narrowLandscape
-                          ? MediaQuery.viewInsetsOf(context).bottom
-                          : 0),
-                ),
+                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -3361,7 +3338,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 );
                               },
                               minLines: 1,
-                              maxLines: 4,
+                              // В альбоме над клавиатурой остаётся полоска —
+                              // 4 строки съели бы её целиком.
+                              maxLines: narrowLandscape ? 1 : 4,
                               style: const TextStyle(
                                 fontSize: 16,
                                 height: 1.3,
@@ -3481,87 +3460,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  /// Альбом: однострочная полоска сверху, как поле профиля над клавиатурой.
-  Widget _buildLandscapeComposerStrip() {
-    return Material(
-      color: AppColors.surfaceUnified,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _textController,
-                focusNode: _composerFocusNode,
-                maxLines: 1,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.3,
-                  color: AppColors.textPrimary,
-                ),
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: context.l10n.chatMessageHint,
-                  hintStyle: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary.withValues(alpha: 0.85),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(22),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
-                ),
-                textInputAction: TextInputAction.send,
-                onEditingComplete: () {
-                  unawaited(_sendMessage());
-                },
-              ),
-            ),
-            const SizedBox(width: 4),
-            Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              descendantsAreFocusable: false,
-              child: IconButton(
-                key: _sendButtonKey,
-                onPressed:
-                    (_sending || _pendingImages.any((e) => e.isLoading))
-                        ? null
-                        : () {
-                            _syncKeepSoftKeyboardRects();
-                            unawaited(_sendMessage());
-                          },
-                tooltip: _editingMessage != null
-                    ? context.l10n.commonSave
-                    : context.l10n.commonSend,
-                icon: _sending
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: _composerIconPurple,
-                        ),
-                      )
-                    : Icon(
-                        _editingMessage != null
-                            ? Icons.check_rounded
-                            : Icons.send_rounded,
-                        color: _composerIconPurple,
-                        size: 26,
-                      ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -83,34 +83,20 @@ void main() {
     );
     expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
+  });
+
+  test('компактный хром чатов и друзей — только с клавиатурой', () {
     expect(
-      profileEditShellResizeToAvoidInset(
-        onProfile: false,
-        phoneLandscapeInputScreen: true,
-      ),
-      isFalse,
-    );
-    expect(
-      profileEditShellResizeToAvoidInset(
-        onProfile: false,
-        onFriendsOrChats: true,
-      ),
-      isFalse,
-    );
-    expect(
-      landscapeInputHideChrome(phoneLandscape: true, fieldOpen: true),
+      inputHideChrome(phoneLandscape: true, keyboardInset: 220),
       isTrue,
     );
     expect(
-      landscapeInputHideChrome(phoneLandscape: true, fieldOpen: false),
+      inputHideChrome(phoneLandscape: true, keyboardInset: 0),
       isFalse,
     );
     expect(
-      landscapeInputHideChrome(phoneLandscape: false, fieldOpen: true),
+      inputHideChrome(phoneLandscape: false, keyboardInset: 300),
       isFalse,
     );
-    expect(inputHideChrome(narrow: true, fieldOpen: true), isTrue);
-    expect(inputHideChrome(narrow: true, fieldOpen: false), isFalse);
-    expect(inputHideChrome(narrow: false, fieldOpen: true), isFalse);
   });
 }

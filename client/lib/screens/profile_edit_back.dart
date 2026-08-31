@@ -54,26 +54,18 @@ Alignment profileEditStripAlignment({required bool phoneLandscape}) {
   return phoneLandscape ? Alignment.topCenter : Alignment.bottomCenter;
 }
 
-/// На профиле и на друзьях/чатах внешний Scaffold не должен resize:
-/// вместе с viewInsets на iOS получается пустой блок над клавиатурой.
-bool profileEditShellResizeToAvoidInset({
-  required bool onProfile,
-  bool onFriendsOrChats = false,
-  bool phoneLandscapeInputScreen = false,
-}) =>
-    !onProfile && !onFriendsOrChats && !phoneLandscapeInputScreen;
+/// На профиле внешний Scaffold не должен resize: вместе с viewInsets
+/// на iOS получается пустой блок над клавиатурой.
+///
+/// Друзьям и чатам resize нужен: Scaffold снимает viewInsets у вложенных
+/// экранов, иначе чат вычитает клавиатуру дважды и композер уезжает вверх.
+bool profileEditShellResizeToAvoidInset({required bool onProfile}) =>
+    !onProfile;
 
-/// Схлопнуть тулбар сразу при фокусе поля, не дожидаясь inset.
-/// В портрете тоже: иначе iOS оставляет серый блок, поле не видно.
+/// Компактный режим только при реально открытой клавиатуре: по одному фокусу
+/// полоска висела бы без клавиатуры (на iOS фокус есть, клавиатуры нет).
 bool inputHideChrome({
-  required bool narrow,
-  required bool fieldOpen,
-}) =>
-    narrow && fieldOpen;
-
-/// Совместимость: альбом + фокус.
-bool landscapeInputHideChrome({
   required bool phoneLandscape,
-  required bool fieldOpen,
+  required double keyboardInset,
 }) =>
-    inputHideChrome(narrow: phoneLandscape, fieldOpen: fieldOpen);
+    phoneLandscape && keyboardInset >= 80;
