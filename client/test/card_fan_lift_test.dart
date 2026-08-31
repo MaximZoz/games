@@ -20,18 +20,17 @@ void main() {
     );
   });
 
-  test('peek под overlay тоже без лица', () {
+  test('peek тоже без лица в слоте — лицо рисует отдельный слой', () {
     expect(
       fanSlotHidesFace(
         card: tenDiamonds,
         peekCard: tenDiamonds,
-        hidePeekUnderOverlay: true,
       ),
       isTrue,
     );
     expect(
       fanSlotHidesFace(
-        card: tenDiamonds,
+        card: queenClubs,
         peekCard: tenDiamonds,
       ),
       isFalse,
@@ -43,6 +42,10 @@ void main() {
     final hidden = fanSlotPaintKey(card: tenDiamonds, hidden: true);
     expect(visible, isNot(hidden));
     expect(fanSlotPaintKey(card: tenDiamonds, hidden: false), visible);
+    expect(
+      fanPeekOverlayKey(tenDiamonds),
+      isNot(fanSlotPaintKey(card: tenDiamonds, hidden: true)),
+    );
     expect(fanSlotMoveDuration(instant: true), Duration.zero);
     expect(
       fanSlotMoveDuration(instant: false),
@@ -100,6 +103,13 @@ void main() {
 
     expect(find.byType(PlayingCardWidget), findsNWidgets(2));
     expect(find.byType(AnimatedPositioned), findsNWidgets(2));
-    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsOneWidget);
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: true)), findsOneWidget);
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsNothing);
+    final peeked = tester.widgetList<PlayingCardWidget>(
+      find.byType(PlayingCardWidget),
+    );
+    expect(peeked.where((w) => w.card == tenDiamonds), hasLength(1));
+    expect(peeked.where((w) => w.card == queenClubs), hasLength(1));
+    expect(find.byKey(fanPeekOverlayKey(tenDiamonds)), findsOneWidget);
   });
 }

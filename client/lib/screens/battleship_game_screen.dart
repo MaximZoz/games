@@ -1387,88 +1387,88 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         narrow ? 8 : 20,
         narrow ? 8 : 16,
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const buttonsH = 56.0;
-          final reserved = ready ? 0.0 : buttonsH + 8;
-          final cell = fitBattleshipCellSize(
-            maxWidth: constraints.maxWidth,
-            maxHeight: constraints.maxHeight - reserved,
-            maxCell: narrow ? 36 : 40,
-          );
-          return Column(
-            children: [
-              Expanded(
-                child: Center(
-                  child: ready
-                      ? _BattleshipBoard(
-                          cellSize: cell,
-                          cellBuilder: (cellIdx) {
-                            final occupied = <int>{
-                              for (final s in ships) ...s,
-                            };
-                            return _CellPaint(
-                              color: occupied.contains(cellIdx)
-                                  ? _kShip
-                                  : _kWater,
-                            );
-                          },
-                        )
-                      : _BattleshipSetupBoard(
-                          cellSize: cell,
-                          ships: ships,
-                          selectedShipIndex: selectedIdx,
-                          enabled: !_busy,
-                          onTapCell: _onSetupCellTap,
-                          onShipDropped: _onSetupShipDropped,
-                          onShipSelected: (i) =>
-                              setState(() => _selectedShipIndex = i),
-                        ),
+      child: Column(
+        children: [
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cell = fitBattleshipCellSize(
+                  maxWidth: constraints.maxWidth,
+                  maxHeight: constraints.maxHeight,
+                  maxCell: narrow ? 36 : 40,
+                );
+                final board = ready
+                    ? _BattleshipBoard(
+                        cellSize: cell,
+                        cellBuilder: (cellIdx) {
+                          final occupied = <int>{
+                            for (final s in ships) ...s,
+                          };
+                          return _CellPaint(
+                            color: occupied.contains(cellIdx)
+                                ? _kShip
+                                : _kWater,
+                          );
+                        },
+                      )
+                    : _BattleshipSetupBoard(
+                        cellSize: cell,
+                        ships: ships,
+                        selectedShipIndex: selectedIdx,
+                        enabled: !_busy,
+                        onTapCell: _onSetupCellTap,
+                        onShipDropped: _onSetupShipDropped,
+                        onShipSelected: (i) =>
+                            setState(() => _selectedShipIndex = i),
+                      );
+                return Center(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: board,
+                  ),
+                );
+              },
+            ),
+          ),
+          if (!ready) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _busy ? null : () => unawaited(_randomPlace()),
+                  icon: const Icon(Icons.casino_rounded, size: 18),
+                  label: Text(context.l10n.gamesBattleshipRandomPlace),
                 ),
-              ),
-              if (!ready) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed:
-                          _busy ? null : () => unawaited(_randomPlace()),
-                      icon: const Icon(Icons.casino_rounded, size: 18),
-                      label: Text(context.l10n.gamesBattleshipRandomPlace),
-                    ),
-                    IconButton.outlined(
-                      onPressed: _busy || selectedIdx == null
-                          ? null
-                          : _rotateSelected,
-                      tooltip: context.l10n.gamesBattleshipRotate,
-                      icon: const Icon(Icons.rotate_right_rounded),
-                    ),
-                    FilledButton(
-                      onPressed:
-                          _busy ? null : () => unawaited(_confirmPlace()),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accentStart,
-                      ),
-                      child: _busy
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(context.l10n.gamesBattleshipConfirmPlace),
-                    ),
-                  ],
+                IconButton.outlined(
+                  onPressed: _busy || selectedIdx == null
+                      ? null
+                      : _rotateSelected,
+                  tooltip: context.l10n.gamesBattleshipRotate,
+                  icon: const Icon(Icons.rotate_right_rounded),
+                ),
+                FilledButton(
+                  onPressed: _busy ? null : () => unawaited(_confirmPlace()),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentStart,
+                  ),
+                  child: _busy
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(context.l10n.gamesBattleshipConfirmPlace),
                 ),
               ],
-            ],
-          );
-        },
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1946,6 +1946,27 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
     );
   }
 
+  Color _setupCellColor({
+    required int index,
+    required Set<int> occupied,
+    required Set<int> conflictCells,
+    required Set<int> selected,
+    required Set<int> preview,
+    required bool previewOk,
+    required Set<int> draggingShip,
+  }) {
+    if (preview.contains(index)) {
+      return previewOk ? _kPreviewOk : _kConflictShip;
+    }
+    if (_didDrag && draggingShip.contains(index)) {
+      return _kShip.withValues(alpha: 0.35);
+    }
+    if (conflictCells.contains(index)) return _kConflictShip;
+    if (selected.contains(index)) return _kSelectedShip;
+    if (occupied.contains(index)) return _kShip;
+    return _kWater;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = _size;
@@ -1984,29 +2005,37 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
                 if (cell != null) widget.onTapCell(cell);
               }
             : null,
-        child: GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: kBattleshipBoardSize,
-            mainAxisSpacing: _gap,
-            crossAxisSpacing: _gap,
-          ),
-          itemCount: kBattleshipCellCount,
-          itemBuilder: (context, index) {
-            Color color = _kWater;
-            if (preview.contains(index)) {
-              color = previewOk ? _kPreviewOk : _kConflictShip;
-            } else if (_didDrag && draggingShip.contains(index)) {
-              color = _kShip.withValues(alpha: 0.35);
-            } else if (conflictCells.contains(index)) {
-              color = _kConflictShip;
-            } else if (selected.contains(index)) {
-              color = _kSelectedShip;
-            } else if (occupied.contains(index)) {
-              color = _kShip;
-            }
-            return _CellPaint(color: color);
-          },
+        child: Column(
+          children: [
+            for (var row = 0; row < kBattleshipBoardSize; row++) ...[
+              if (row > 0) const SizedBox(height: _gap),
+              SizedBox(
+                height: size,
+                child: Row(
+                  children: [
+                    for (var col = 0; col < kBattleshipBoardSize; col++) ...[
+                      if (col > 0) const SizedBox(width: _gap),
+                      SizedBox(
+                        width: size,
+                        height: size,
+                        child: _CellPaint(
+                          color: _setupCellColor(
+                            index: row * kBattleshipBoardSize + col,
+                            occupied: occupied,
+                            conflictCells: conflictCells,
+                            selected: selected,
+                            preview: preview,
+                            previewOk: previewOk,
+                            draggingShip: draggingShip,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

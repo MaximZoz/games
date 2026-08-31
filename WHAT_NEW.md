@@ -3,11 +3,15 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак: на iPhone PWA карта больше не двоится при вытаскивании из веера
+- Морской бой: поле расстановки на Android больше не обрезается кнопками
 - Уно: очки после раунда, лимит 100 вдвоём и 300 при 3+ игроках, бот больше не зависает на +4
 - Галерея профиля: до 3 фото, просмотр на весь экран, «сделать основным»
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak: pulling a card from the fan on iPhone PWA no longer leaves a duplicate
+- Battleship: setup board on Android is no longer clipped by the action buttons
 - Uno: round score overlay, 100-point heads-up / 300 with 3+ players, bot no longer stalls on +4
 - Profile gallery: up to 3 photos, fullscreen view, set as primary avatar
 - Coin icon next to the stake in game rules
