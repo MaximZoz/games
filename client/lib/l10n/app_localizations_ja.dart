@@ -1352,6 +1352,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get friendsEmpty => 'まだフレンドがいません';
 
   @override
+  String get friendsSearchNoMatches => '検索に一致するフレンドはいません';
+
+  @override
+  String get friendsIncomingSearchNoMatches => '検索に一致する受信リクエストはありません';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => '検索に一致する送信リクエストはありません';
+
+  @override
   String get friendsNoIncoming => '受信リクエストはありません';
 
   @override

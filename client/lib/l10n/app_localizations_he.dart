@@ -1352,6 +1352,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get friendsEmpty => 'עדיין אין לכם חברים';
 
   @override
+  String get friendsSearchNoMatches => 'אין חברים שתואמים לחיפוש';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'אין בקשות נכנסות שתואמות לחיפוש';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'אין בקשות יוצאות שתואמות לחיפוש';
+
+  @override
   String get friendsNoIncoming => 'אין בקשות נכנסות';
 
   @override

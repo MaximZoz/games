@@ -1352,6 +1352,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get friendsEmpty => 'Δεν έχετε ακόμα φίλους';
 
   @override
+  String get friendsSearchNoMatches => 'Κανένας φίλος δεν αντιστοιχεί στην αναζήτηση';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Καμία εισερχόμενη αίτηση για την αναζήτηση';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Καμία εξερχόμενη αίτηση για την αναζήτηση';
+
+  @override
   String get friendsNoIncoming => 'Δεν υπάρχουν εισερχόμενα αιτήματα';
 
   @override

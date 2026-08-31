@@ -4,7 +4,7 @@ import 'package:multigames_client/screens/friends_screen.dart';
 void main() {
   group('friendsListEmptyText', () {
     const emptyList = 'У вас пока нет друзей';
-    const nothingFound = 'Ничего не найдено';
+    const nothingFound = 'Нет друзей, удовлетворяющих поиску';
 
     test('без запроса показывает пустой список', () {
       expect(
@@ -25,7 +25,7 @@ void main() {
       );
     });
 
-    test('при поиске показывает «ничего не найдено»', () {
+    test('при поиске показывает, что нет совпадений', () {
       expect(
         friendsListEmptyText(
           query: 'пр',

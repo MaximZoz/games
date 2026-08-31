@@ -1352,6 +1352,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get friendsEmpty => 'आपके अभी कोई मित्र नहीं हैं';
 
   @override
+  String get friendsSearchNoMatches => 'खोज से कोई मित्र मेल नहीं खाता';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'खोज से कोई आने वाला अनुरोध मेल नहीं खाता';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'खोज से कोई भेजा गया अनुरोध मेल नहीं खाता';
+
+  @override
   String get friendsNoIncoming => 'कोई आने वाला अनुरोध नहीं';
 
   @override

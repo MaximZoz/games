@@ -950,7 +950,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       emptyText: friendsListEmptyText(
         query: searchQuery,
         emptyList: l10n.friendsEmpty,
-        nothingFound: l10n.friendsNothingFound,
+        nothingFound: l10n.friendsSearchNoMatches,
       ),
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
@@ -1008,7 +1008,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       emptyText: friendsListEmptyText(
         query: searchQuery,
         emptyList: l10n.friendsNoIncoming,
-        nothingFound: l10n.friendsNothingFound,
+        nothingFound: l10n.friendsIncomingSearchNoMatches,
       ),
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
@@ -1067,7 +1067,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       emptyText: friendsListEmptyText(
         query: searchQuery,
         emptyList: l10n.friendsNoOutgoing,
-        nothingFound: l10n.friendsNothingFound,
+        nothingFound: l10n.friendsOutgoingSearchNoMatches,
       ),
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {

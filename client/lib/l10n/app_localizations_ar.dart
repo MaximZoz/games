@@ -1352,6 +1352,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get friendsEmpty => 'ليس لديك أصدقاء بعد';
 
   @override
+  String get friendsSearchNoMatches => 'لا يوجد أصدقاء مطابقون للبحث';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'لا توجد طلبات واردة مطابقة للبحث';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'لا توجد طلبات صادرة مطابقة للبحث';
+
+  @override
   String get friendsNoIncoming => 'لا توجد طلبات واردة';
 
   @override

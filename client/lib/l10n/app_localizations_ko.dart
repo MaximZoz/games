@@ -1352,6 +1352,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get friendsEmpty => '아직 친구가 없습니다';
 
   @override
+  String get friendsSearchNoMatches => '검색과 일치하는 친구가 없습니다';
+
+  @override
+  String get friendsIncomingSearchNoMatches => '검색과 일치하는 받은 요청이 없습니다';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => '검색과 일치하는 보낸 요청이 없습니다';
+
+  @override
   String get friendsNoIncoming => '받은 요청이 없습니다';
 
   @override

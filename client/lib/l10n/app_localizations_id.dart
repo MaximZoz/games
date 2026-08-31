@@ -1352,6 +1352,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get friendsEmpty => 'Anda belum punya teman';
 
   @override
+  String get friendsSearchNoMatches => 'Tidak ada teman yang cocok dengan pencarian';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Tidak ada permintaan masuk yang cocok';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Tidak ada permintaan terkirim yang cocok';
+
+  @override
   String get friendsNoIncoming => 'Tidak ada permintaan masuk';
 
   @override

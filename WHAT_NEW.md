@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Поиск друзей: если никто не подходит под запрос — «Ничего не найдено», а не «нет друзей»
+- Поиск друзей: если никто не подходит под запрос — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»
 - Android landscape: при клавиатуре скрываются тулбар и рейл, в профиле видно поле ввода
 - Landscape и широкие экраны: главная, магазин, игры и смайлики — сетка карточек; профиль редактируется в две колонки
 - Дурак: на iPhone PWA карта больше не двоится при вытаскивании из веера
@@ -13,7 +13,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Friends search: a query with no matches shows “Nothing found”, not an empty friends list
+- Friends search: a query with no matches shows “No friends match your search”, not an empty friends list
 - Android landscape: toolbar and rail collapse when the keyboard is open so the focused field stays visible
 - Landscape and large screens: home, shop, games and emoji grids; profile edit uses two columns
 - Durak: pulling a card from the fan on iPhone PWA no longer leaves a duplicate

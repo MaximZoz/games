@@ -1352,6 +1352,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get friendsEmpty => 'Bạn chưa có bạn bè';
 
   @override
+  String get friendsSearchNoMatches => 'Không có bạn bè khớp với tìm kiếm';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Không có lời mời đến khớp với tìm kiếm';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Không có lời mời đi khớp với tìm kiếm';
+
+  @override
   String get friendsNoIncoming => 'Không có lời mời đến';
 
   @override

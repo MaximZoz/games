@@ -1352,6 +1352,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get friendsEmpty => 'Du har inga vänner ännu';
 
   @override
+  String get friendsSearchNoMatches => 'Inga vänner matchar sökningen';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Inga inkommande förfrågningar matchar sökningen';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Inga utgående förfrågningar matchar sökningen';
+
+  @override
   String get friendsNoIncoming => 'Inga inkommande förfrågningar';
 
   @override

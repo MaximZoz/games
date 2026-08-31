@@ -1352,6 +1352,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get friendsEmpty => 'Sinulla ei ole vielä kavereita';
 
   @override
+  String get friendsSearchNoMatches => 'Ei kavereita, jotka vastaavat hakua';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Ei hakuun sopivia saapuvia pyyntöjä';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Ei hakuun sopivia lähteneitä pyyntöjä';
+
+  @override
   String get friendsNoIncoming => 'Ei saapuneita pyyntöjä';
 
   @override

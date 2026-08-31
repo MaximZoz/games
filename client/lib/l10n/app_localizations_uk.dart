@@ -1352,6 +1352,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get friendsEmpty => 'У вас поки немає друзів';
 
   @override
+  String get friendsSearchNoMatches => 'Немає друзів, що відповідають пошуку';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Немає вхідних заявок за запитом';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Немає вихідних заявок за запитом';
+
+  @override
   String get friendsNoIncoming => 'Немає вхідних запитів';
 
   @override

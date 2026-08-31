@@ -1352,6 +1352,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get friendsEmpty => 'Você ainda não tem amigos';
 
   @override
+  String get friendsSearchNoMatches => 'Nenhum amigo corresponde à pesquisa';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Nenhum pedido recebido corresponde';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Nenhum pedido enviado corresponde';
+
+  @override
   String get friendsNoIncoming => 'Sem pedidos recebidos';
 
   @override

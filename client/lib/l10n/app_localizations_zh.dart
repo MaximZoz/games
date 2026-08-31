@@ -1352,6 +1352,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get friendsEmpty => '你还没有好友';
 
   @override
+  String get friendsSearchNoMatches => '没有符合搜索的好友';
+
+  @override
+  String get friendsIncomingSearchNoMatches => '没有符合搜索的收到请求';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => '没有符合搜索的已发请求';
+
+  @override
   String get friendsNoIncoming => '暂无收到的请求';
 
   @override
