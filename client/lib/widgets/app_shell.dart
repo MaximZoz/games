@@ -25,6 +25,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -33,6 +34,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/ui/widgets/keyboard_inset_hud.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -452,6 +454,16 @@ class AppShell extends ConsumerWidget {
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
+    // Друзья и чаты: клавиатуру вычитает только оболочка — ровно один раз
+    // и не больше 60% высоты (iOS PWA умеет отдать inset больше экрана).
+    // Вложенные Scaffold'ы этих экранов идут с resizeToAvoidBottomInset:
+    // false, поэтому второго вычитания нет.
+    final shellOwnsKeyboardInset = narrow && (onFriends || onChatsList || inChatRoom);
+    final keyboardOpen = keyboardIsOpen(media.viewInsets.bottom);
+    final shellKeyboardInset = sanitizeKeyboardInset(
+      inset: media.viewInsets.bottom,
+      viewportHeight: media.size.height,
+    );
     // Друзья и чаты: компактный хром только с открытой клавиатурой.
     final hideInputChrome = (onFriends || onChatsList || inChatRoom) &&
         inputHideChrome(
@@ -1015,14 +1027,21 @@ class AppShell extends ConsumerWidget {
     // Scaffold обнуляет padding.bottom у bottomNavigationBar — поэтому inset
     // берём из viewPadding, а не из SafeArea(padding).
     final bottomInset = media.viewPadding.bottom;
+    // Оболочка сама сдвигает контент на клавиатуру, поэтому панель под ней
+    // не должна занимать высоту — иначе между вводом и клавиатурой щель.
+    final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
     final bottomNav = showBottomNav
         ? ClipRect(
             child: Align(
               alignment: Alignment.topCenter,
               heightFactor:
-                  (collapseBottomNav || profileKeyboard) ? 0.0 : 1.0,
+                  (collapseBottomNav || profileKeyboard || collapseNavForKeyboard)
+                      ? 0.0
+                      : 1.0,
               child: IgnorePointer(
-                ignoring: collapseBottomNav || profileKeyboard,
+                ignoring: collapseBottomNav ||
+                    profileKeyboard ||
+                    collapseNavForKeyboard,
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
                   child: Column(
@@ -1074,10 +1093,20 @@ class AppShell extends ConsumerWidget {
           child: Scaffold(
             // Тот же цвет, что чёлка и низ — без «шва» после splash.
             backgroundColor: AppColors.surfaceUnified,
-            resizeToAvoidBottomInset: profileEditShellResizeToAvoidInset(
-              onProfile: path == '/profile',
+            resizeToAvoidBottomInset: shellOwnsKeyboardInset
+                ? false
+                : profileEditShellResizeToAvoidInset(
+                    onProfile: path == '/profile',
+                  ),
+            body: KeyboardInsetScope(
+              handled: shellOwnsKeyboardInset,
+              child: shellOwnsKeyboardInset
+                  ? Padding(
+                      padding: EdgeInsets.only(bottom: shellKeyboardInset),
+                      child: shellBody,
+                    )
+                  : shellBody,
             ),
-            body: shellBody,
             bottomNavigationBar: bottomNav,
           ),
         ),
@@ -1098,6 +1127,13 @@ class AppShell extends ConsumerWidget {
               onDismiss: () =>
                   ref.read(appUpdateProvider.notifier).dismissBanner(),
             ),
+          ),
+        if (keyboardInsetHudEnabled())
+          Positioned(
+            left: 0,
+            right: 0,
+            top: topInset,
+            child: const KeyboardInsetHud(),
           ),
       ],
     );
