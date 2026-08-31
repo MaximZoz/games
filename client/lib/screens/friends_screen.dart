@@ -44,12 +44,14 @@ EdgeInsets friendsEmptyStatusPadding({
 }
 
 /// Табы с бейджами съедают всю высоту над клавиатурой в альбоме.
+/// Прячем сразу при фокусе поиска — inset на iOS часто 0 или опаздывает.
 @visibleForTesting
 bool friendsHideTabsForKeyboard({
   required bool landscape,
   required double keyboardInset,
+  bool searchFieldOpen = false,
 }) {
-  return landscape && keyboardInset >= 80;
+  return landscape && (searchFieldOpen || keyboardInset >= 80);
 }
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -154,6 +156,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (notifier.state != collapse) {
       notifier.state = collapse;
     }
+    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
+    if (landNotifier.state != collapse) {
+      landNotifier.state = collapse;
+    }
   }
 
   bool _sameTabs(List<_FriendsTabKind> a, List<_FriendsTabKind> b) {
@@ -194,9 +200,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   void dispose() {
     final toolbarNotifier = ref.read(mobileToolbarLeadingProvider.notifier);
     final navNotifier = ref.read(collapseMobileBottomNavProvider.notifier);
+    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       toolbarNotifier.state = null;
       navNotifier.state = false;
+      landNotifier.state = false;
     });
     _searchDebounce?.cancel();
     _tabController.removeListener(_onTabChanged);
@@ -1422,8 +1430,41 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildSearchPanel() {
     final focused = _searchFocusNode.hasFocus;
-    final tight = isPhoneLandscape(context) ||
-        MediaQuery.viewInsetsOf(context).bottom > 0;
+    final phoneLand = isPhoneLandscape(context);
+    final tight = phoneLand || MediaQuery.viewInsetsOf(context).bottom > 0;
+    final showCollapse = phoneLand && focused;
+    final showClear = _searchController.text.isNotEmpty;
+    Widget? suffix;
+    if (showClear || showCollapse) {
+      suffix = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showClear)
+            IconButton(
+              tooltip: context.l10n.commonClear,
+              onPressed: () {
+                _searchDebounce?.cancel();
+                _searchRevision++;
+                _searchController.clear();
+                setState(() {
+                  _searchResults = const [];
+                  _isSearching = false;
+                  _isSearchLoadingMore = false;
+                  _searchHasMore = false;
+                });
+                _searchFocusNode.requestFocus();
+              },
+              icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
+            ),
+          if (showCollapse)
+            IconButton(
+              tooltip: context.l10n.friendsCollapseSearch,
+              onPressed: _toggleSearch,
+              icon: const Icon(Icons.search_off_rounded),
+            ),
+        ],
+      );
+    }
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
       child: Container(
@@ -1453,28 +1494,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           smartQuotesType: SmartQuotesType.disabled,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
+          maxLines: 1,
           decoration: InputDecoration(
             hintText: context.l10n.friendsSearchHint,
             prefixIcon: const Icon(Icons.search_rounded),
-            // Красный крестик без собственной рамки.
-            suffixIcon: _searchController.text.isEmpty
+            suffixIcon: suffix,
+            suffixIconConstraints: suffix == null
                 ? null
-                : IconButton(
-                    tooltip: context.l10n.commonClear,
-                    onPressed: () {
-                      _searchDebounce?.cancel();
-                      _searchRevision++;
-                      _searchController.clear();
-                      setState(() {
-                        _searchResults = const [];
-                        _isSearching = false;
-                        _isSearchLoadingMore = false;
-                        _searchHasMore = false;
-                      });
-                      _searchFocusNode.requestFocus();
-                    },
-                    icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
-                  ),
+                : const BoxConstraints(minWidth: 48, minHeight: 40),
             filled: false,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
@@ -1863,11 +1890,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _applyIncomingDeepLinkIfNeeded();
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
+    final searchFieldOpen = _isSearchExpanded && _searchFocusNode.hasFocus;
     final hideTabs = friendsHideTabsForKeyboard(
       landscape: MediaQuery.sizeOf(context).width >
           MediaQuery.sizeOf(context).height,
       keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
+      searchFieldOpen: searchFieldOpen,
     );
+    final pinSearchStrip =
+        isPhoneLandscape(context) && searchFieldOpen;
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1890,6 +1921,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
+        top: !pinSearchStrip,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

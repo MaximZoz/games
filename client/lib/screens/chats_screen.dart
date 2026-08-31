@@ -30,6 +30,23 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
+/// В альбоме шапка «Новый чат» + поле 28pt не влезают над клавиатурой.
+@visibleForTesting
+bool chatsNewChatUseCompactStrip({required bool phoneLandscape}) =>
+    phoneLandscape;
+
+/// Высота шита поиска друга: в альбоме — щель над клавиатурой, не 420.
+@visibleForTesting
+double chatsNewChatSheetHeight({
+  required bool phoneLandscape,
+  required double viewHeight,
+  required double keyboardInset,
+}) {
+  if (!phoneLandscape) return 420;
+  final available = viewHeight - keyboardInset - 8;
+  return available.clamp(72.0, viewHeight);
+}
+
 class ChatsScreen extends ConsumerStatefulWidget {
   const ChatsScreen({
     super.key,
@@ -131,8 +148,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   @override
   void dispose() {
     final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
+    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifier.state = null;
+      landNotifier.state = false;
     });
     chatsRouteObserver.unsubscribe(this);
     _borderAnimationController.dispose();
@@ -976,6 +995,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final queryController = TextEditingController();
     Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
     final wide = isWide(context);
+    final phoneLand = isPhoneLandscape(context);
+    if (phoneLand) {
+      ref.read(landscapeInputFieldOpenProvider.notifier).state = true;
+    }
     try {
       if (wide) {
         return await _showNewChatDialogCentered(
@@ -988,6 +1011,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         friendsFuture: friendsFuture,
       );
     } finally {
+      if (mounted) {
+        ref.read(landscapeInputFieldOpenProvider.notifier).state = false;
+      }
       queryController.dispose();
     }
   }
@@ -1052,12 +1078,20 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final media = MediaQuery.of(sheetContext);
+        final phoneLand = isPhoneLandscape(sheetContext);
+        final sheetHeight = chatsNewChatSheetHeight(
+          phoneLandscape: phoneLand,
+          viewHeight: media.size.height,
+          keyboardInset: media.viewInsets.bottom,
+        );
         return SafeArea(
+          top: !phoneLand,
           child: Padding(
             padding: EdgeInsets.only(
               left: 12,
               right: 12,
-              bottom: MediaQuery.viewInsetsOf(context).bottom + 10,
+              bottom: phoneLand ? 4 : media.viewInsets.bottom + 10,
             ),
             child: StatefulBuilder(
               builder: (context, setSheetState) {
@@ -1075,6 +1109,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                     setSheetState(() {});
                   },
                   wrapInSheet: true,
+                  sheetHeight: sheetHeight,
                 );
               },
             ),
@@ -1095,6 +1130,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required void Function(int) onVisibleCountChanged,
     required void Function() onRefreshFriends,
     required bool wrapInSheet,
+    double? sheetHeight,
   }) {
     List<FriendItem> filtered(List<FriendItem> source) {
       final q = query.trim().toLowerCase();
@@ -1113,7 +1149,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       padding: const EdgeInsets.all(12),
       child: wrapInSheet
           ? SizedBox(
-              height: 420,
+              height: sheetHeight ?? 420,
               child: _newChatColumn(
                 queryController: queryController,
                 friendsFuture: friendsFuture,
@@ -1157,6 +1193,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     double? maxListHeight,
     Map<String, PresenceEntry> presence = const {},
   }) {
+    final compactStrip = chatsNewChatUseCompactStrip(
+      phoneLandscape: isPhoneLandscape(modalContext),
+    );
     final listChild = FutureBuilder<List<FriendItem>>(
       future: friendsFuture,
       builder: (context, snapshot) {
@@ -1176,7 +1215,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       parent: ClampingScrollPhysics(),
                                     ),
                                     children: [
-                                      const SizedBox(height: 70),
+                                      SizedBox(height: compactStrip ? 8 : 70),
                                       Center(
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1209,7 +1248,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       parent: ClampingScrollPhysics(),
                                     ),
                                     children: [
-                                      const SizedBox(height: 80),
+                                      SizedBox(height: compactStrip ? 8 : 80),
                                       Center(
                                         child: Text(
                                           context.l10n.chatsNeedFriendsFirst,
@@ -1235,7 +1274,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       parent: ClampingScrollPhysics(),
                                     ),
                                     children: [
-                                      const SizedBox(height: 80),
+                                      SizedBox(height: compactStrip ? 8 : 80),
                                       Center(
                                         child: Text(
                                           context.l10n.chatsFriendsNotFound,
@@ -1362,55 +1401,76 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             child: listChild,
           )
         : Expanded(child: listChild);
+    final searchField = TextField(
+      controller: queryController,
+      autofillHints: null,
+      enableSuggestions: false,
+      autocorrect: false,
+      enableIMEPersonalizedLearning: false,
+      textInputAction: TextInputAction.search,
+      maxLines: 1,
+      decoration: InputDecoration(
+        hintText: context.l10n.chatsFindFriendHint,
+        prefixIcon: const Icon(Icons.search_rounded),
+        isDense: compactStrip,
+        contentPadding: compactStrip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+            : null,
+      ),
+      onChanged: (value) {
+        setSheetState(() {
+          onQueryChanged(value);
+          onVisibleCountChanged(_modalPageSize);
+        });
+      },
+    );
+    final supportButton = IconButton(
+      tooltip: context.l10n.supportTitle,
+      onPressed: () {
+        Navigator.of(modalContext).maybePop();
+        _openSupport();
+      },
+      icon: const Icon(
+        Icons.support_agent_rounded,
+        color: AppColors.accentStart,
+      ),
+    );
     return Column(
       mainAxisSize: maxListHeight != null ? MainAxisSize.min : MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                context.l10n.chatsNewChat,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
+        if (compactStrip)
+          Row(
+            children: [
+              Expanded(child: searchField),
+              supportButton,
+              IconButton(
+                tooltip: context.l10n.commonClose,
+                onPressed: () => Navigator.of(modalContext).maybePop(),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          )
+        else ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.chatsNewChat,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: context.l10n.supportTitle,
-              onPressed: () {
-                Navigator.of(modalContext).maybePop();
-                _openSupport();
-              },
-              icon: const Icon(
-                Icons.support_agent_rounded,
-                color: AppColors.accentStart,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: queryController,
-          autofillHints: null,
-          enableSuggestions: false,
-          autocorrect: false,
-          enableIMEPersonalizedLearning: false,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: context.l10n.chatsFindFriendHint,
-            prefixIcon: const Icon(Icons.search_rounded),
+              supportButton,
+            ],
           ),
-          onChanged: (value) {
-            setSheetState(() {
-              onQueryChanged(value);
-              onVisibleCountChanged(_modalPageSize);
-            });
-          },
-        ),
-        const SizedBox(height: 10),
+          const SizedBox(height: 10),
+          searchField,
+        ],
+        SizedBox(height: compactStrip ? 6 : 10),
         listPart,
       ],
     );

@@ -20,3 +20,6 @@ final collapseMobileBottomNavProvider = StateProvider<bool>((ref) => false);
 
 /// Редактор профиля: поле открыто — схлопнуть хром в альбоме до прихода inset.
 final profileEditFieldOpenProvider = StateProvider<bool>((ref) => false);
+
+/// Поиск друзей / ввод в чатах открыт — схлопнуть хром в альбоме до inset.
+final landscapeInputFieldOpenProvider = StateProvider<bool>((ref) => false);

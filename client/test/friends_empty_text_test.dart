@@ -81,5 +81,24 @@ void main() {
         isFalse,
       );
     });
+
+    test('прячет табы в альбоме сразу при фокусе поиска', () {
+      expect(
+        friendsHideTabsForKeyboard(
+          landscape: true,
+          keyboardInset: 0,
+          searchFieldOpen: true,
+        ),
+        isTrue,
+      );
+      expect(
+        friendsHideTabsForKeyboard(
+          landscape: false,
+          keyboardInset: 0,
+          searchFieldOpen: true,
+        ),
+        isFalse,
+      );
+    });
   });
 }
