@@ -3151,21 +3151,13 @@ class _TictactoeGameCard extends StatelessWidget {
               SizedBox(width: isDesktop ? 20 : 12),
               Expanded(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        context.l10n.gamesTicTacToe,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          // На планшете чуть компактнее — полное имя влезает.
-                          fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
-                          letterSpacing: -0.3,
-                          height: 1.15,
-                        ),
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: isMedium || isTablet(context) ? 2 : 1,
+                      child: GameCardTitle(
+                        title: context.l10n.gamesTicTacToe,
+                        isDesktop: isDesktop,
+                        isMedium: isMedium,
                       ),
                     ),
                     if (!isOffline && stakeBronze > 0) ...[
