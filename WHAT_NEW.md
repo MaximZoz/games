@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Профиль: полоска ввода над клавиатурой в портрете и альбоме; возраст 1–111 при вводе; «О себе» в карточке в несколько строк
+- Профиль: в альбоме полоска ввода сверху (клавиатура не перекрывает текст); возраст 1–111 при вводе; «О себе» в несколько строк
 - Название игры на карточке переносится на новую строку, а не обрезается многоточием
 - Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
 - Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
@@ -20,7 +20,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Profile: input strip sits above the keyboard in portrait and landscape; age 1–111 while typing; About me wraps on the card
+- Profile: landscape input strip stays at the top so the keyboard does not cover the text; age 1–111 while typing; About me wraps on the card
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
 - Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
 - Game cards stay a single full-width column on phones so titles and buttons stay readable

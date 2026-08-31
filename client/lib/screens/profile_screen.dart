@@ -354,6 +354,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
+        // В альбоме с открытым полем щель только у верха экрана — без top inset.
+        top: !(ref.watch(profileEditFieldOpenProvider) &&
+            isPhoneLandscape(context)),
         // Клавиатура перекрывает home indicator — не добавляем нижний inset.
         bottom: MediaQuery.viewInsetsOf(context).bottom < 80,
         child: ref.watch(authStateProvider).when(
@@ -1116,6 +1119,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         if (mounted) _aboutFocus.requestFocus();
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncFieldOpenProvider();
+    });
   }
 
   @override
@@ -1136,6 +1142,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != ProfileEditField.none && mounted) {
       setState(() => _activeField = ProfileEditField.none);
     }
+    _syncFieldOpenProvider();
+  }
+
+  void _syncFieldOpenProvider() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final next = _fieldIsOpen;
+      if (ref.read(profileEditFieldOpenProvider) != next) {
+        ref.read(profileEditFieldOpenProvider.notifier).state = next;
+      }
+    });
   }
 
   void _requestFieldFocus(ProfileEditField field) {
@@ -1157,6 +1174,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
+    _syncFieldOpenProvider();
     // Сразу и после кадра: в альбоме IME часто не открывается с первого раза.
     _requestFieldFocus(field);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1188,6 +1206,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
+    _syncFieldOpenProvider();
   }
 
   void _onNameFocusChanged() {
@@ -1314,6 +1333,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   @override
   void dispose() {
+    try {
+      ref.read(profileEditFieldOpenProvider.notifier).state = false;
+    } catch (_) {}
     widget.displayNameController.removeListener(_onFieldsChanged);
     widget.focusNode.removeListener(_onNameFocusChanged);
     _ageController.removeListener(_onAgeTextChanged);
@@ -1803,20 +1825,24 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
-  Widget _buildKeyboardInputStrip(BuildContext context) {
+  Widget _buildKeyboardInputStrip(BuildContext context, {bool compact = false}) {
     return Material(
       color: AppColors.surfaceCard,
-      elevation: 2,
+      elevation: 6,
+      shadowColor: Colors.black54,
       borderRadius: BorderRadius.circular(AppRadius.input),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 4, 8, 4),
+        padding: EdgeInsets.fromLTRB(2, compact ? 2 : 4, 8, compact ? 2 : 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             IconButton(
               tooltip: context.l10n.commonBack,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              constraints: BoxConstraints(
+                minWidth: compact ? 36 : 40,
+                minHeight: compact ? 36 : 40,
+              ),
               onPressed: _isSaving ? null : _handleEditBack,
               icon: const Icon(Icons.arrow_back_rounded),
               color: AppColors.textPrimary,
@@ -2064,13 +2090,15 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final Widget form;
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
-        // Низ видимой области = сразу над клавиатурой. Сверху Safari
-        // показывает пустой Spacer после сдвига visualViewport.
+        final land = phoneLand;
         form = Align(
-          alignment: profileEditStripAlignment(),
+          alignment: profileEditStripAlignment(phoneLandscape: land),
           child: Padding(
-            padding: EdgeInsets.only(bottom: keyboardPad),
-            child: _buildKeyboardInputStrip(context),
+            padding: EdgeInsets.only(
+              top: land ? MediaQuery.viewPaddingOf(context).top : 0,
+              bottom: land ? 0 : keyboardPad,
+            ),
+            child: _buildKeyboardInputStrip(context, compact: land),
           ),
         );
       case ProfileEditCompactLayout.landscapeColumns:

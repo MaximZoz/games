@@ -72,8 +72,15 @@ void main() {
     expect(profileEditStripMaxLines(), 1);
   });
 
-  test('полоска над клавиатурой, shell на профиле не resize', () {
-    expect(profileEditStripAlignment(), Alignment.bottomCenter);
+  test('полоска: в альбоме сверху, в портрете над клавиатурой', () {
+    expect(
+      profileEditStripAlignment(phoneLandscape: true),
+      Alignment.topCenter,
+    );
+    expect(
+      profileEditStripAlignment(phoneLandscape: false),
+      Alignment.bottomCenter,
+    );
     expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
   });

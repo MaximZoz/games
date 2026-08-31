@@ -48,9 +48,11 @@ bool profileEditFieldExpands({required bool phoneLandscape}) => false;
 /// Всегда 1 строка, иначе IME уходит в fullscreen extract.
 int profileEditStripMaxLines() => 1;
 
-/// Полоска сразу над клавиатурой. Сверху iOS Safari уводит visualViewport —
-/// остаётся пустой серый фон.
-Alignment profileEditStripAlignment() => Alignment.bottomCenter;
+/// В альбоме клавиатура занимает почти весь экран — полоска сверху
+/// (единственная видимая щель). В портрете — над клавиатурой снизу.
+Alignment profileEditStripAlignment({required bool phoneLandscape}) {
+  return phoneLandscape ? Alignment.topCenter : Alignment.bottomCenter;
+}
 
 /// На профиле внешний Scaffold не должен resize: вместе с viewInsets
 /// на iOS получается пустой блок над клавиатурой.
