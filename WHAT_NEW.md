@@ -3,6 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
+- Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
+- Поиск друзей в альбоме: текст «нет совпадений» виден над клавиатурой
+- Десктоп: смайлики снова 3×3 в колонке 720px, колёсико листает страницы
 - Меньше пустого места сверху (компактный тулбар, без двойного SafeArea); в альбоме профиль на весь экран
 - Поиск друзей: если никто не подходит под запрос — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»
 - Android landscape: при клавиатуре скрываются тулбар и рейл, в профиле видно поле ввода
@@ -14,6 +18,10 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
+- Game cards stay a single full-width column on phones so titles and buttons stay readable
+- Friends search empty text stays visible above the landscape keyboard
+- Desktop emoji shop is a 3×3 paged grid again (720px), mouse wheel pages
 - Less empty space under the status bar; landscape profile fills the screen
 - Friends search: a query with no matches shows “No friends match your search”, not an empty friends list
 - Android landscape: toolbar and rail collapse when the keyboard is open so the focused field stays visible

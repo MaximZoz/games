@@ -44,4 +44,42 @@ void main() {
       );
     });
   });
+
+  group('friendsEmptyStatusPadding', () {
+    test('в альбоме и при клавиатуре без отступа 80', () {
+      expect(
+        friendsEmptyStatusPadding(phoneLandscape: true, keyboardInset: 0).top,
+        8,
+      );
+      expect(
+        friendsEmptyStatusPadding(phoneLandscape: false, keyboardInset: 220)
+            .top,
+        8,
+      );
+    });
+
+    test('в портрете без клавиатуры оставляет отступ', () {
+      expect(
+        friendsEmptyStatusPadding(phoneLandscape: false, keyboardInset: 0).top,
+        80,
+      );
+    });
+  });
+
+  group('friendsHideTabsForKeyboard', () {
+    test('прячет табы в альбоме над клавиатурой', () {
+      expect(
+        friendsHideTabsForKeyboard(landscape: true, keyboardInset: 200),
+        isTrue,
+      );
+      expect(
+        friendsHideTabsForKeyboard(landscape: true, keyboardInset: 0),
+        isFalse,
+      );
+      expect(
+        friendsHideTabsForKeyboard(landscape: false, keyboardInset: 280),
+        isFalse,
+      );
+    });
+  });
 }
