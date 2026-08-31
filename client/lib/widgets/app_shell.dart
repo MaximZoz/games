@@ -447,17 +447,17 @@ class AppShell extends ConsumerWidget {
     final profileKeyboard =
         path == '/profile' && media.viewInsets.bottom >= 80 && narrow;
     final profileFieldOpen = ref.watch(profileEditFieldOpenProvider);
-    final landscapeInputOpen = ref.watch(landscapeInputFieldOpenProvider);
     final hideLandscapeProfileChrome =
         narrowLandscape && path == '/profile' && profileFieldOpen;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
-    final hideInputChrome = inputHideChrome(
-      narrow: narrow,
-      fieldOpen: landscapeInputOpen &&
-          (onFriends || onChatsList || inChatRoom),
-    );
+    // Друзья и чаты: компактный хром только с открытой клавиатурой.
+    final hideInputChrome = (onFriends || onChatsList || inChatRoom) &&
+        inputHideChrome(
+          phoneLandscape: narrowLandscape,
+          keyboardInset: media.viewInsets.bottom,
+        );
     final hideToolbarForKeyboard = landscapeKeyboard ||
         profileKeyboard ||
         hideLandscapeProfileChrome ||
@@ -1020,11 +1020,9 @@ class AppShell extends ConsumerWidget {
             child: Align(
               alignment: Alignment.topCenter,
               heightFactor:
-                  (collapseBottomNav || profileKeyboard || hideInputChrome)
-                      ? 0.0
-                      : 1.0,
+                  (collapseBottomNav || profileKeyboard) ? 0.0 : 1.0,
               child: IgnorePointer(
-                ignoring: collapseBottomNav || profileKeyboard || hideInputChrome,
+                ignoring: collapseBottomNav || profileKeyboard,
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
                   child: Column(
@@ -1078,7 +1076,6 @@ class AppShell extends ConsumerWidget {
             backgroundColor: AppColors.surfaceUnified,
             resizeToAvoidBottomInset: profileEditShellResizeToAvoidInset(
               onProfile: path == '/profile',
-              onFriendsOrChats: onFriends || onChatsList || inChatRoom,
             ),
             body: shellBody,
             bottomNavigationBar: bottomNav,

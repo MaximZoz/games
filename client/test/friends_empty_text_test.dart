@@ -67,37 +67,25 @@ void main() {
   });
 
   group('friendsHideTabsForKeyboard', () {
-    test('прячет табы в альбоме над клавиатурой', () {
+    test('прячет табы только с открытой клавиатурой', () {
       expect(
         friendsHideTabsForKeyboard(landscape: true, keyboardInset: 200),
         isTrue,
       );
       expect(
+        friendsHideTabsForKeyboard(landscape: false, keyboardInset: 280),
+        isTrue,
+      );
+    });
+
+    test('без клавиатуры табы остаются', () {
+      expect(
         friendsHideTabsForKeyboard(landscape: true, keyboardInset: 0),
         isFalse,
       );
       expect(
-        friendsHideTabsForKeyboard(landscape: false, keyboardInset: 280),
+        friendsHideTabsForKeyboard(landscape: false, keyboardInset: 0),
         isFalse,
-      );
-    });
-
-    test('прячет табы сразу при фокусе поиска в любой ориентации', () {
-      expect(
-        friendsHideTabsForKeyboard(
-          landscape: true,
-          keyboardInset: 0,
-          searchFieldOpen: true,
-        ),
-        isTrue,
-      );
-      expect(
-        friendsHideTabsForKeyboard(
-          landscape: false,
-          keyboardInset: 0,
-          searchFieldOpen: true,
-        ),
-        isTrue,
       );
     });
   });

@@ -148,10 +148,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   @override
   void dispose() {
     final notifier = ref.read(mobileToolbarLeadingProvider.notifier);
-    final landNotifier = ref.read(landscapeInputFieldOpenProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifier.state = null;
-      landNotifier.state = false;
     });
     chatsRouteObserver.unsubscribe(this);
     _borderAnimationController.dispose();
@@ -995,10 +993,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final queryController = TextEditingController();
     Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
     final wide = isWide(context);
-    if (!wide) {
-      ref.read(landscapeInputFieldOpenProvider.notifier).state = true;
-      ref.read(collapseMobileBottomNavProvider.notifier).state = true;
-    }
     try {
       if (wide) {
         return await _showNewChatDialogCentered(
@@ -1011,10 +1005,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
         friendsFuture: friendsFuture,
       );
     } finally {
-      if (mounted) {
-        ref.read(landscapeInputFieldOpenProvider.notifier).state = false;
-        ref.read(collapseMobileBottomNavProvider.notifier).state = false;
-      }
       queryController.dispose();
     }
   }

@@ -3,8 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Поиск друзей и сообщения: полоска ввода как в профиле и в портрете, и в альбоме — клавиатура больше не оставляет пустой экран
-- Поиск друзей и сообщения в альбоме: поле в одну строку сверху, как в профиле — клавиатура больше не прячет ввод
+- Сообщения: поле ввода снова сразу над клавиатурой, сверху видны сообщения (в портрете и в альбоме); компактный ввод только с открытой клавиатурой
+- Поиск друзей: клавиатура на iPhone открывается как раньше, поле не висит внизу без клавиатуры
 - Профиль: в альбоме полоска ввода сверху (клавиатура не перекрывает текст); возраст 1–111 при вводе; «О себе» в несколько строк
 - Название игры на карточке переносится на новую строку, а не обрезается многоточием
 - Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
@@ -22,8 +22,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Friends search and chat input use the same single-line strip as profile in portrait and landscape so the keyboard no longer leaves a blank screen
-- Friends search and chat input in landscape stay on a single top strip, same as profile, so the keyboard no longer hides the field
+- Chats: the composer sits right above the keyboard again with messages visible above it (portrait and landscape); compact input only while the keyboard is open
+- Friends search: the keyboard opens on iPhone as before and the field no longer hangs at the bottom without it
 - Profile: landscape input strip stays at the top so the keyboard does not cover the text; age 1–111 while typing; About me wraps on the card
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
 - Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
