@@ -37,16 +37,53 @@ double? fakeKeyboardInset() {
   return _fakeInset;
 }
 
+/// Фокус стоит в текстовом поле? Подставная клавиатура «выезжает» только
+/// тогда, как настоящая, иначе по приложению не походить.
+bool _focusInTextField() {
+  final ctx = FocusManager.instance.primaryFocus?.context;
+  if (ctx == null) return false;
+  return ctx.findAncestorWidgetOfExactType<EditableText>() != null;
+}
+
 /// Оборачивает приложение подставным viewInsets, если задан `?fakekb=`.
-class FakeKeyboardInset extends StatelessWidget {
+class FakeKeyboardInset extends StatefulWidget {
   const FakeKeyboardInset({super.key, required this.child});
 
   final Widget child;
 
   @override
+  State<FakeKeyboardInset> createState() => _FakeKeyboardInsetState();
+}
+
+class _FakeKeyboardInsetState extends State<FakeKeyboardInset> {
+  bool _typing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (fakeKeyboardInset() != null) {
+      FocusManager.instance.addListener(_onFocusChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (fakeKeyboardInset() != null) {
+      FocusManager.instance.removeListener(_onFocusChanged);
+    }
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    final typing = _focusInTextField();
+    if (typing == _typing || !mounted) return;
+    setState(() => _typing = typing);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final inset = fakeKeyboardInset();
-    if (inset == null) return child;
+    if (inset == null || !_typing) return widget.child;
     final media = MediaQuery.of(context);
     // Геометрия iPhone: чёлка сверху, home indicator снизу. Под клавиатурой
     // padding.bottom обнуляется — так же, как это делает платформа.
@@ -61,7 +98,7 @@ class FakeKeyboardInset extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned.fill(child: child),
+          Positioned.fill(child: widget.child),
           Positioned(
             left: 0,
             right: 0,
