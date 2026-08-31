@@ -33,3 +33,15 @@ ProfileEditCompactLayout profileEditCompactLayout({
   if (phoneLandscape) return ProfileEditCompactLayout.landscapeColumns;
   return ProfileEditCompactLayout.portraitForm;
 }
+
+/// В альбоме поле — однострочная полоска над клавиатурой.
+/// `expands` / multiline включает Android extract UI: клавиатура есть,
+/// а текста в полоске нет.
+bool profileEditLandscapeInputStrip({required bool phoneLandscape}) =>
+    phoneLandscape;
+
+/// Разворачивать TextField на всю высоту — только портрет (есть место).
+bool profileEditFieldExpands({required bool phoneLandscape}) => !phoneLandscape;
+
+/// В альбоме всегда 1 строка, иначе IME уходит в fullscreen extract.
+int profileEditStripMaxLines() => 1;
