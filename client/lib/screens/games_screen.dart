@@ -332,7 +332,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           children: [
             if (!isOffline)
               Padding(
-                padding: EdgeInsets.all(contentPadding),
+                padding: EdgeInsets.fromLTRB(
+                  contentPadding,
+                  phoneLandscape ? 4 : 8,
+                  contentPadding,
+                  phoneLandscape ? 6 : 8,
+                ),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),

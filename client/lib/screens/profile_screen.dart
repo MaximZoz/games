@@ -296,8 +296,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     final phoneLandscape = isPhoneLandscape(context);
-    // Landscape на телефоне — шире; portrait/десктоп без изменений.
-    final profileMaxWidth = phoneLandscape ? 640.0 : 400.0;
+    // Portrait — узкая колонка; landscape заполняет ширину экрана.
+    final profileMaxWidth = phoneLandscape ? double.infinity : 400.0;
 
     Widget scrollableBody(Widget child) {
       final framed = Align(
@@ -307,32 +307,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: child,
         ),
       );
-      // На телефоне — карточка по центру экрана (если помещается).
+      // Сверху, не по центру — меньше пустой полосы над карточкой.
       if (mobile) {
         return LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                phoneLandscape ? 10 : 16,
-                8,
-                phoneLandscape ? 10 : 16,
-                24,
+                phoneLandscape ? 8 : 12,
+                phoneLandscape ? 4 : 6,
+                phoneLandscape ? 8 : 12,
+                phoneLandscape ? 8 : 16,
               ),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - 32,
+                  minHeight: constraints.maxHeight -
+                      (phoneLandscape ? 12 : 22),
                 ),
-                child: Center(child: framed),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: framed,
+                ),
               ),
             );
           },
         );
       }
       return ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
         children: [framed],
       );
     }
@@ -401,12 +405,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // Landscape: две колонки на всю высоту, без внешней прокрутки.
                     if (phoneLandscape) {
                       return Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
                         child: SizedBox.expand(child: editForm),
                       );
                     }
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                       child: SizedBox.expand(child: editForm),
                     );
                   }
@@ -434,6 +438,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     content = Listener(
                       onPointerDown: _onTapOutsideCard,
                       child: content,
+                    );
+                  }
+                  // Landscape: карточка на всю оставшуюся площадь экрана.
+                  if (phoneLandscape) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+                      child: SizedBox.expand(child: content),
                     );
                   }
                   // Важно: при полном заполнении (о себе + коллекции + чипы)
@@ -630,19 +641,15 @@ class _ProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phoneLandscape = isPhoneLandscape(context);
-    final cardMaxWidth = phoneLandscape ? 640.0 : 460.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: cardMaxWidth),
-            child: AnimatedBorderBox(
+    final cardMaxWidth = phoneLandscape ? double.infinity : 460.0;
+    final card = AnimatedBorderBox(
               key: cardKey,
+              expand: phoneLandscape,
               padding: EdgeInsets.symmetric(
-                horizontal: phoneLandscape ? 16 : 18,
-                vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+                horizontal: phoneLandscape ? 14 : 18,
+                vertical: phoneLandscape
+                    ? 12
+                    : (MediaQuery.sizeOf(context).height < 700 ? 16 : 22),
               ),
               child: AnimatedSwitcher(
                 duration: AppDurations.medium,
@@ -684,7 +691,21 @@ class _ProfileContent extends StatelessWidget {
                         onEditAbout: () => onStartEdit(focusAbout: true),
                       ),
               ),
-            ),
+    );
+    if (phoneLandscape) {
+      return SizedBox.expand(
+        key: const ValueKey('profile-landscape-card'),
+        child: card,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: cardMaxWidth),
+            child: card,
           ),
         ),
       ],
@@ -767,144 +788,196 @@ class _ProfileView extends ConsumerWidget {
             ),
           );
 
+    final phoneLandscape = isPhoneLandscape(context);
+    final identity = <Widget>[
+      TappableProfileAvatar(
+        userId: user.id,
+        canManage: true,
+        avatarKind: profileExtra.avatarKind.name,
+        avatarValue: profileExtra.avatarValue,
+        letter: _avatarLetter,
+        child: avatar,
+      ),
+      SizedBox(height: gapAfterAvatar),
+      Text(
+        _displayTitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+        textAlign: TextAlign.center,
+      ),
+      if (user.displayName?.trim().isNotEmpty == true) ...[
+        const SizedBox(height: 2),
+        Text(
+          user.email,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+      if (profileExtra.age != null ||
+          (profileExtra.gender != null &&
+              profileExtra.gender!.isNotEmpty)) ...[
+        SizedBox(height: gapSection),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (profileExtra.age != null)
+              _ProfileInfoChip(
+                icon: Icons.cake_outlined,
+                label: context.l10n.profileAgeYears(profileExtra.age!),
+              ),
+            if (profileExtra.gender != null &&
+                profileExtra.gender!.isNotEmpty)
+              _ProfileInfoChip(
+                icon: isFemaleGender(profileExtra.gender)
+                    ? Icons.female_rounded
+                    : Icons.male_rounded,
+                label: localizeGender(profileExtra.gender, context.l10n),
+              ),
+          ],
+        ),
+      ],
+    ];
+
+    final hasAbout =
+        profileExtra.about != null && profileExtra.about!.trim().isNotEmpty;
+    final aboutBlock = hasAbout
+        ? Material(
+            color: AppColors.accentSoft.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: onEditAbout ?? onEdit,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 48),
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: AboutOneLineText(
+                  text: profileExtra.about!.trim(),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ),
+          )
+        : null;
+
+    final collectionsBlock = Builder(
+      builder: (context) {
+        final inv = ref.watch(inventoryListProvider).valueOrNull ??
+            const <InventoryItem>[];
+        final collections = inv
+            .where((e) =>
+                e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+            .toList();
+        if (collections.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!phoneLandscape) SizedBox(height: gapSection + 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                context.l10n.profileCollections,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            CollectionShowcaseGrid(items: collections),
+          ],
+        );
+      },
+    );
+
+    final editButton = OutlinedButton.icon(
+      onPressed: onEdit,
+      icon: const Icon(Icons.edit_outlined, size: 18),
+      label: Text(
+        context.l10n.profileEdit,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.accentStart,
+        padding: EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: shortScreen ? 11 : 13,
+        ),
+        side: BorderSide(
+          color: AppColors.accentStart.withValues(alpha: 0.6),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+
+    if (phoneLandscape) {
+      return Row(
+        key: const ValueKey('profile-view-landscape'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: identity,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 7,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (aboutBlock != null) ...[
+                  aboutBlock,
+                  SizedBox(height: gapSection),
+                ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: collectionsBlock,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: editButton,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-            TappableProfileAvatar(
-              userId: user.id,
-              canManage: true,
-              avatarKind: profileExtra.avatarKind.name,
-              avatarValue: profileExtra.avatarValue,
-              letter: _avatarLetter,
-              child: avatar,
-            ),
-            SizedBox(height: gapAfterAvatar),
-            Text(
-              _displayTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (user.displayName?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 2),
-              Text(
-                user.email,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            if (profileExtra.age != null ||
-                (profileExtra.gender != null &&
-                    profileExtra.gender!.isNotEmpty)) ...[
-              SizedBox(height: gapSection),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (profileExtra.age != null)
-                    _ProfileInfoChip(
-                      icon: Icons.cake_outlined,
-                      label: context.l10n.profileAgeYears(profileExtra.age!),
-                    ),
-                  if (profileExtra.gender != null &&
-                      profileExtra.gender!.isNotEmpty)
-                    _ProfileInfoChip(
-                      icon: isFemaleGender(profileExtra.gender)
-                          ? Icons.female_rounded
-                          : Icons.male_rounded,
-                      label: localizeGender(profileExtra.gender, context.l10n),
-                    ),
-                ],
-              ),
-            ],
-            if (profileExtra.about != null &&
-                profileExtra.about!.trim().isNotEmpty) ...[
-              SizedBox(height: gapSection),
-              Material(
-                color: AppColors.accentSoft.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: onEditAbout ?? onEdit,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    constraints: const BoxConstraints(minHeight: 48),
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                    child: AboutOneLineText(
-                      text: profileExtra.about!.trim(),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        height: 1.25,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            Builder(
-              builder: (context) {
-                final inv = ref.watch(inventoryListProvider).valueOrNull ??
-                    const <InventoryItem>[];
-                final collections =
-                    inv
-                        .where((e) =>
-                            e.kind == 'collection' &&
-                            !isRetiredCollectionItem(e.code))
-                        .toList();
-                if (collections.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  children: [
-                    SizedBox(height: gapSection + 2),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        context.l10n.profileCollections,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    CollectionShowcaseGrid(items: collections),
-                  ],
-                );
-              },
-            ),
-            SizedBox(height: shortScreen ? 16 : 20),
-            OutlinedButton.icon(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(
-                context.l10n.profileEdit,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.accentStart,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: shortScreen ? 11 : 13,
-                ),
-                side: BorderSide(
-                  color: AppColors.accentStart.withValues(alpha: 0.6),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
+        ...identity,
+        if (aboutBlock != null) ...[
+          SizedBox(height: gapSection),
+          aboutBlock,
+        ],
+        collectionsBlock,
+        SizedBox(height: shortScreen ? 16 : 20),
+        editButton,
       ],
     );
   }

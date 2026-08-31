@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Меньше пустого места сверху (компактный тулбар, без двойного SafeArea); в альбоме профиль на весь экран
 - Поиск друзей: если никто не подходит под запрос — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»
 - Android landscape: при клавиатуре скрываются тулбар и рейл, в профиле видно поле ввода
 - Landscape и широкие экраны: главная, магазин, игры и смайлики — сетка карточек; профиль редактируется в две колонки
@@ -13,6 +14,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Less empty space under the status bar; landscape profile fills the screen
 - Friends search: a query with no matches shows “No friends match your search”, not an empty friends list
 - Android landscape: toolbar and rail collapse when the keyboard is open so the focused field stays visible
 - Landscape and large screens: home, shop, games and emoji grids; profile edit uses two columns

@@ -124,4 +124,35 @@ void main() {
     );
     expect(open, isFalse);
   });
+
+  testWidgets('shellToolbarHeight компактнее на телефоне', (tester) async {
+    late double phone;
+    late double desktop;
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(390, 844)),
+        child: Builder(
+          builder: (context) {
+            phone = shellToolbarHeight(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(phone, 48);
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(1200, 800)),
+        child: Builder(
+          builder: (context) {
+            desktop = shellToolbarHeight(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(desktop, kToolbarHeight);
+  });
 }

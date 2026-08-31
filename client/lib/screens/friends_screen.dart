@@ -863,7 +863,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           final itemWidth =
               (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
             child: Align(
@@ -1844,12 +1844,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           children: [
             if (wide)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                 child: _buildWideHeader(),
               ),
             if (!wide)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 2),
                 child: AnimatedSwitcher(
                   duration: AppDurations.short,
                   child: _isSearchExpanded

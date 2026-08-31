@@ -89,7 +89,7 @@ class HomeScreen extends ConsumerWidget {
       return Align(
         alignment: Alignment.topCenter,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: ListView.separated(
@@ -112,10 +112,10 @@ class HomeScreen extends ConsumerWidget {
                 maxContentWidth: 1100,
                 maxColumns: 3,
                 padding: EdgeInsets.fromLTRB(
-                  dense ? 12 : 20,
-                  dense ? 8 : 16,
-                  dense ? 12 : 20,
-                  dense ? 12 : 24,
+                  dense ? 10 : 16,
+                  dense ? 4 : 8,
+                  dense ? 10 : 16,
+                  dense ? 10 : 16,
                 ),
                 itemBuilder: (_, i) => cards[i],
                 mobileBuilder: mobileList,

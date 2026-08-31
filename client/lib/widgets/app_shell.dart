@@ -434,6 +434,7 @@ class AppShell extends ConsumerWidget {
     // Как и для нижней панели: Scaffold может обнулять padding — для
     // челки/status bar берём viewPadding, чтобы цвет шёл full-bleed.
     final topInset = media.viewPadding.top;
+    final toolbarHeight = shellToolbarHeight(context);
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
@@ -722,8 +723,16 @@ class AppShell extends ConsumerWidget {
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.
+    // Status bar уже занят SizedBox(topInset) выше. Иначе каждый экран
+    // со своим SafeArea добавляет ту же высоту ещё раз.
     final branchHost = AppOpaqueSurface(
-      child: RepaintBoundary(child: navigationShell),
+      child: RepaintBoundary(
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: navigationShell,
+        ),
+      ),
     );
 
     final shellBody = Column(
@@ -743,7 +752,7 @@ class AppShell extends ConsumerWidget {
                   child: IgnorePointer(
                     ignoring: landscapeKeyboard,
                     child: SizedBox(
-                height: kToolbarHeight,
+                height: toolbarHeight,
                 child: ClipRect(
                   child: Row(
                     children: [
@@ -1050,7 +1059,7 @@ class AppShell extends ConsumerWidget {
           Positioned(
             left: 12,
             right: 12,
-            top: topInset + kToolbarHeight + 6,
+            top: topInset + toolbarHeight + 6,
             child: _AppUpdateBanner(
               onUpdate: () => ref.read(appUpdateProvider.notifier).applyUpdate(),
               onDismiss: () =>

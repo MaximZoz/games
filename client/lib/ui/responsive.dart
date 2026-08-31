@@ -36,6 +36,11 @@ bool useDesktopTiles(BuildContext context) {
   return isWide(context) || isPhoneLandscape(context);
 }
 
+/// Высота тулбара AppShell: на телефоне компактнее, меньше пустого верха.
+double shellToolbarHeight(BuildContext context) {
+  return isNarrow(context) ? 48.0 : kToolbarHeight;
+}
+
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
 bool isLandscapeKeyboardOpen(
   BuildContext context, {
