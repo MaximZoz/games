@@ -447,13 +447,21 @@ class AppShell extends ConsumerWidget {
     final profileKeyboard =
         path == '/profile' && media.viewInsets.bottom >= 80 && narrow;
     final profileFieldOpen = ref.watch(profileEditFieldOpenProvider);
+    final landscapeInputOpen = ref.watch(landscapeInputFieldOpenProvider);
     final hideLandscapeProfileChrome =
         narrowLandscape && path == '/profile' && profileFieldOpen;
-    final hideToolbarForKeyboard =
-        landscapeKeyboard || profileKeyboard || hideLandscapeProfileChrome;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
+    final hideLandscapeInputChrome = landscapeInputHideChrome(
+      phoneLandscape: narrowLandscape,
+      fieldOpen: landscapeInputOpen &&
+          (onFriends || onChatsList || inChatRoom),
+    );
+    final hideToolbarForKeyboard = landscapeKeyboard ||
+        profileKeyboard ||
+        hideLandscapeProfileChrome ||
+        hideLandscapeInputChrome;
     final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
@@ -755,7 +763,9 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: hideLandscapeProfileChrome ? 0 : topInset,
+                height: (hideLandscapeProfileChrome || hideLandscapeInputChrome)
+                    ? 0
+                    : topInset,
               ),
               ClipRect(
                 child: Align(
@@ -945,12 +955,15 @@ class AppShell extends ConsumerWidget {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         widthFactor:
-                            (landscapeKeyboard || hideLandscapeProfileChrome)
+                            (landscapeKeyboard ||
+                                    hideLandscapeProfileChrome ||
+                                    hideLandscapeInputChrome)
                                 ? 0.0
                                 : 1.0,
                         child: IgnorePointer(
                           ignoring: landscapeKeyboard ||
-                              hideLandscapeProfileChrome,
+                              hideLandscapeProfileChrome ||
+                              hideLandscapeInputChrome,
                           child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
@@ -1061,8 +1074,11 @@ class AppShell extends ConsumerWidget {
           child: Scaffold(
             // Тот же цвет, что чёлка и низ — без «шва» после splash.
             backgroundColor: AppColors.surfaceUnified,
-            resizeToAvoidBottomInset:
-                profileEditShellResizeToAvoidInset(onProfile: path == '/profile'),
+            resizeToAvoidBottomInset: profileEditShellResizeToAvoidInset(
+              onProfile: path == '/profile',
+              phoneLandscapeInputScreen: narrowLandscape &&
+                  (onFriends || onChatsList || inChatRoom),
+            ),
             body: shellBody,
             bottomNavigationBar: bottomNav,
           ),

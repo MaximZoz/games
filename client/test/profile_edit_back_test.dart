@@ -83,5 +83,24 @@ void main() {
     );
     expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
+    expect(
+      profileEditShellResizeToAvoidInset(
+        onProfile: false,
+        phoneLandscapeInputScreen: true,
+      ),
+      isFalse,
+    );
+    expect(
+      landscapeInputHideChrome(phoneLandscape: true, fieldOpen: true),
+      isTrue,
+    );
+    expect(
+      landscapeInputHideChrome(phoneLandscape: true, fieldOpen: false),
+      isFalse,
+    );
+    expect(
+      landscapeInputHideChrome(phoneLandscape: false, fieldOpen: true),
+      isFalse,
+    );
   });
 }

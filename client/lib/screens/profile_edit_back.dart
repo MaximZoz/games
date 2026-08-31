@@ -54,7 +54,17 @@ Alignment profileEditStripAlignment({required bool phoneLandscape}) {
   return phoneLandscape ? Alignment.topCenter : Alignment.bottomCenter;
 }
 
-/// На профиле внешний Scaffold не должен resize: вместе с viewInsets
-/// на iOS получается пустой блок над клавиатурой.
-bool profileEditShellResizeToAvoidInset({required bool onProfile}) =>
-    !onProfile;
+/// На профиле и в альбоме на друзьях/чатах внешний Scaffold не должен
+/// resize: вместе с viewInsets на iOS получается пустой блок над клавиатурой.
+bool profileEditShellResizeToAvoidInset({
+  required bool onProfile,
+  bool phoneLandscapeInputScreen = false,
+}) =>
+    !onProfile && !phoneLandscapeInputScreen;
+
+/// Схлопнуть тулбар/рейл в альбоме сразу при фокусе поля, не дожидаясь inset.
+bool landscapeInputHideChrome({
+  required bool phoneLandscape,
+  required bool fieldOpen,
+}) =>
+    phoneLandscape && fieldOpen;
