@@ -351,10 +351,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // Web/iOS Safari: resize от клавиатуры сбрасывает фокус TextField.
-      // На нативе при редактировании поднимаем форму, чтобы «Сохранить» не
-      // уезжала за клавиатуру и влезала на коротких экранах.
-      resizeToAvoidBottomInset: _isEditing && !kIsWeb,
+      // Полоска ввода сверху. resize сжимает тело и на Android
+      // открывает пустой extract UI — текста не видно.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: ref.watch(authStateProvider).when(
               data: (user) {
@@ -1136,23 +1135,29 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
+  void _requestFieldFocus(ProfileEditField field) {
+    if (!mounted) return;
+    switch (field) {
+      case ProfileEditField.name:
+        widget.focusNode.requestFocus();
+      case ProfileEditField.age:
+        _ageFocus.requestFocus();
+      case ProfileEditField.about:
+        _aboutFocus.requestFocus();
+      case ProfileEditField.none:
+        break;
+    }
+  }
+
   void _openField(ProfileEditField field) {
     if (_isSaving || field == ProfileEditField.none) return;
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
+    // Сразу и после кадра: в альбоме IME часто не открывается с первого раза.
+    _requestFieldFocus(field);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      switch (field) {
-        case ProfileEditField.name:
-          widget.focusNode.requestFocus();
-        case ProfileEditField.age:
-          _ageFocus.requestFocus();
-        case ProfileEditField.about:
-          _aboutFocus.requestFocus();
-        case ProfileEditField.none:
-          break;
-      }
+      _requestFieldFocus(field);
     });
   }
 
@@ -1626,117 +1631,193 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
-  Widget _buildAboutEditorField({Key? key, bool expand = false}) {
+  Widget _buildAboutEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+  }) {
+    final strip = landscapeStrip;
     return TextFormField(
       key: key,
+      autofocus: true,
       controller: _aboutController,
       focusNode: _aboutFocus,
       inputFormatters: _aboutFormatters,
-      textAlignVertical: TextAlignVertical.top,
-      expands: expand,
-      maxLines: expand ? null : 5,
-      minLines: expand ? null : 3,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : (strip ? profileEditStripMaxLines() : 5),
+      minLines: (expand && !strip) ? null : 1,
       maxLength: 100,
+      keyboardType: strip ? TextInputType.text : TextInputType.multiline,
+      textInputAction: strip ? TextInputAction.done : TextInputAction.newline,
+      enableIMEPersonalizedLearning: false,
       textCapitalization: TextCapitalization.sentences,
-      scrollPadding: const EdgeInsets.only(bottom: 120),
+      scrollPadding: const EdgeInsets.only(bottom: 24),
       style: const TextStyle(
         fontSize: 16,
         height: 1.3,
       ),
       decoration: InputDecoration(
-        labelText: context.l10n.commonAboutMe,
+        labelText: strip ? null : context.l10n.commonAboutMe,
         hintText: context.l10n.profileAboutHint,
-        alignLabelWithHint: true,
+        alignLabelWithHint: !strip,
+        isDense: strip,
         filled: true,
         fillColor: AppColors.surfaceCard,
-        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
-        prefixIcon: const Icon(Icons.info_outline_rounded),
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.info_outline_rounded),
         counterText: '',
       ),
+      onFieldSubmitted: strip ? (_) => _leaveActiveField() : null,
     );
   }
 
-  Widget _buildNameEditorField({Key? key, bool expand = false}) {
+  Widget _buildNameEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+  }) {
+    final strip = landscapeStrip;
     return TextFormField(
       key: key,
+      autofocus: true,
       controller: widget.displayNameController,
       focusNode: widget.focusNode,
       inputFormatters: _displayNameFormatters,
-      textAlignVertical: TextAlignVertical.top,
-      expands: expand,
-      maxLines: expand ? null : 1,
-      minLines: expand ? null : 1,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : profileEditStripMaxLines(),
+      minLines: (expand && !strip) ? null : 1,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.done,
+      enableIMEPersonalizedLearning: false,
       textCapitalization: TextCapitalization.none,
       autocorrect: false,
       enableSuggestions: false,
-      scrollPadding: const EdgeInsets.only(bottom: 120),
+      scrollPadding: const EdgeInsets.only(bottom: 24),
       style: const TextStyle(
         fontSize: 16,
         height: 1.3,
       ),
       decoration: InputDecoration(
-        labelText: context.l10n.registerNameLabel,
+        labelText: strip ? null : context.l10n.registerNameLabel,
         hintText: context.l10n.profileNameHint,
-        alignLabelWithHint: true,
+        alignLabelWithHint: !strip,
+        isDense: strip,
         filled: true,
         fillColor: AppColors.surfaceCard,
-        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
-        prefixIcon: const Icon(Icons.person_outline_rounded),
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.person_outline_rounded),
       ),
       onFieldSubmitted: (_) => _leaveActiveField(),
     );
   }
 
-  Widget _buildAgeEditorField({Key? key, bool expand = false}) {
+  Widget _buildAgeEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+  }) {
+    final strip = landscapeStrip;
     return TextFormField(
       key: key,
+      autofocus: true,
       controller: _ageController,
       focusNode: _ageFocus,
       inputFormatters: _ageFormatters,
-      textAlignVertical: TextAlignVertical.top,
-      expands: expand,
-      maxLines: expand ? null : 1,
-      minLines: expand ? null : 1,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : profileEditStripMaxLines(),
+      minLines: (expand && !strip) ? null : 1,
       keyboardType: TextInputType.number,
-      scrollPadding: const EdgeInsets.only(bottom: 120),
+      textInputAction: TextInputAction.done,
+      enableIMEPersonalizedLearning: false,
+      scrollPadding: const EdgeInsets.only(bottom: 24),
       style: const TextStyle(
         fontSize: 16,
         height: 1.3,
       ),
       decoration: InputDecoration(
-        labelText: context.l10n.profileAge,
+        labelText: strip ? null : context.l10n.profileAge,
         hintText: context.l10n.profileAgeHint,
-        alignLabelWithHint: true,
+        alignLabelWithHint: !strip,
+        isDense: strip,
         filled: true,
         fillColor: AppColors.surfaceCard,
-        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
-        prefixIcon: const Icon(Icons.cake_outlined),
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.cake_outlined),
         errorText: _ageError,
       ),
       onFieldSubmitted: (_) => _leaveActiveField(),
     );
   }
 
-  Widget _buildActiveFieldEditor({Key? key, bool expand = true}) {
+  Widget _buildActiveFieldEditor({
+    Key? key,
+    bool expand = true,
+    bool landscapeStrip = false,
+  }) {
     switch (_activeField) {
       case ProfileEditField.name:
         return _buildNameEditorField(
           key: key ?? const ValueKey('compact_display_name'),
           expand: expand,
+          landscapeStrip: landscapeStrip,
         );
       case ProfileEditField.age:
         return _buildAgeEditorField(
           key: key ?? const ValueKey('compact_age'),
           expand: expand,
+          landscapeStrip: landscapeStrip,
         );
       case ProfileEditField.about:
         return _buildAboutEditorField(
           key: key ?? const ValueKey('compact_about'),
           expand: expand,
+          landscapeStrip: landscapeStrip,
         );
       case ProfileEditField.none:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildKeyboardInputStrip(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceCard,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 4, 8, 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              tooltip: context.l10n.commonBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              onPressed: _isSaving ? null : _handleEditBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: AppColors.textPrimary,
+            ),
+            Expanded(
+              child: _buildActiveFieldEditor(
+                expand: false,
+                landscapeStrip: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildFieldPreview({
@@ -1973,11 +2054,10 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildCompactHeader(context),
-              const SizedBox(height: 8),
-              Expanded(
-                child: _buildActiveFieldEditor(expand: true),
-              ),
+              // Сверху: видно и в портрете, и в альбоме, даже если
+              // клавиатура перекрывает низ и viewInsets = 0.
+              _buildKeyboardInputStrip(context),
+              const Spacer(),
             ],
           ),
         );
@@ -2058,7 +2138,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         opaqueEdge: false,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onTap: _onEmptyEditorTap,
+          onTap: fieldTyping ? null : _onEmptyEditorTap,
           child: form,
         ),
       ),

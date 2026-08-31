@@ -3,6 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Профиль: полоска ввода сверху в портрете и альбоме — текст виден, когда открыта клавиатура
+- Название игры на карточке переносится на новую строку, а не обрезается многоточием
 - Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
 - Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
 - Поиск друзей в альбоме: текст «нет совпадений» виден над клавиатурой
@@ -18,6 +20,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Profile edit: a single-line input strip stays at the top in portrait and landscape so the text stays visible above the keyboard
+- Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
 - Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
 - Game cards stay a single full-width column on phones so titles and buttons stay readable
 - Friends search empty text stays visible above the landscape keyboard

@@ -62,4 +62,12 @@ void main() {
     expect(profileEditFieldActive(ProfileEditField.age), isTrue);
     expect(profileEditFieldActive(ProfileEditField.about), isTrue);
   });
+
+  test('полоска ввода однострочная в портрете и альбоме, без expands', () {
+    expect(profileEditUseInputStrip(fieldTypingActive: true), isTrue);
+    expect(profileEditUseInputStrip(fieldTypingActive: false), isFalse);
+    expect(profileEditFieldExpands(phoneLandscape: true), isFalse);
+    expect(profileEditFieldExpands(phoneLandscape: false), isFalse);
+    expect(profileEditStripMaxLines(), 1);
+  });
 }

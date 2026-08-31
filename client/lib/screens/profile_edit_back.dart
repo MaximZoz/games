@@ -33,3 +33,15 @@ ProfileEditCompactLayout profileEditCompactLayout({
   if (phoneLandscape) return ProfileEditCompactLayout.landscapeColumns;
   return ProfileEditCompactLayout.portraitForm;
 }
+
+/// Полоска ввода при открытом поле — и в портрете, и в альбоме.
+/// `expands` / multiline включает Android extract UI: клавиатура есть,
+/// а текста не видно.
+bool profileEditUseInputStrip({required bool fieldTypingActive}) =>
+    fieldTypingActive;
+
+/// Разворачивать TextField на всю высоту нельзя: extract UI съедает текст.
+bool profileEditFieldExpands({required bool phoneLandscape}) => false;
+
+/// Всегда 1 строка, иначе IME уходит в fullscreen extract.
+int profileEditStripMaxLines() => 1;

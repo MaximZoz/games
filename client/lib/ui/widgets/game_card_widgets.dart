@@ -8,6 +8,47 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
+/// Flutter считает «Крестики-нолики» одним словом и ставит «...» вместо
+/// переноса. Нулевой пробел после дефиса даёт точку разрыва.
+String wrapGameTitle(String title) {
+  return title.replaceAllMapped(
+    RegExp(r'[-–—‐‑‒―־]'),
+    (m) => '${m[0]}\u200b',
+  );
+}
+
+/// Название на карточке игры: перенос на новую строку, не обрезка в одну.
+class GameCardTitle extends StatelessWidget {
+  const GameCardTitle({
+    super.key,
+    required this.title,
+    this.isDesktop = false,
+    this.isMedium = false,
+  });
+
+  final String title;
+  final bool isDesktop;
+  final bool isMedium;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      wrapGameTitle(title),
+      style: theme.textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+        fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
+        letterSpacing: -0.3,
+        height: 1.15,
+      ),
+      softWrap: true,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 3,
+    );
+  }
+}
+
 /// Верхний блок карточки игры: иконка + заголовок + ставка (кликабельная) +
 /// иконка-инфо с правилами. Используется в «Крестики-нолики», «Дурак» и т.д.
 class GameCardHeader extends StatelessWidget {
@@ -75,20 +116,13 @@ class GameCardHeader extends StatelessWidget {
         SizedBox(width: isDesktop ? 20 : 12),
         Expanded(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
-                    letterSpacing: -0.3,
-                    height: 1.15,
-                  ),
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: GameCardTitle(
+                  title: title,
+                  isDesktop: isDesktop,
+                  isMedium: isMedium,
                 ),
               ),
               if (stakeBronze != null && stakeBronze! > 0) ...[
