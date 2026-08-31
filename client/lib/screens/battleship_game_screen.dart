@@ -1398,31 +1398,35 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   maxHeight: constraints.maxHeight,
                   maxCell: narrow ? 36 : 40,
                 );
+                final board = ready
+                    ? _BattleshipBoard(
+                        cellSize: cell,
+                        cellBuilder: (cellIdx) {
+                          final occupied = <int>{
+                            for (final s in ships) ...s,
+                          };
+                          return _CellPaint(
+                            color: occupied.contains(cellIdx)
+                                ? _kShip
+                                : _kWater,
+                          );
+                        },
+                      )
+                    : _BattleshipSetupBoard(
+                        cellSize: cell,
+                        ships: ships,
+                        selectedShipIndex: selectedIdx,
+                        enabled: !_busy,
+                        onTapCell: _onSetupCellTap,
+                        onShipDropped: _onSetupShipDropped,
+                        onShipSelected: (i) =>
+                            setState(() => _selectedShipIndex = i),
+                      );
                 return Center(
-                  child: ready
-                      ? _BattleshipBoard(
-                          cellSize: cell,
-                          cellBuilder: (cellIdx) {
-                            final occupied = <int>{
-                              for (final s in ships) ...s,
-                            };
-                            return _CellPaint(
-                              color: occupied.contains(cellIdx)
-                                  ? _kShip
-                                  : _kWater,
-                            );
-                          },
-                        )
-                      : _BattleshipSetupBoard(
-                          cellSize: cell,
-                          ships: ships,
-                          selectedShipIndex: selectedIdx,
-                          enabled: !_busy,
-                          onTapCell: _onSetupCellTap,
-                          onShipDropped: _onSetupShipDropped,
-                          onShipSelected: (i) =>
-                              setState(() => _selectedShipIndex = i),
-                        ),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: board,
+                  ),
                 );
               },
             ),

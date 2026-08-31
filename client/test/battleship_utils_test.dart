@@ -93,6 +93,21 @@ void main() {
       );
       expect(cell, 40);
     });
+
+    test('после двух строк кнопок 10×10 влезает в остаток Android', () {
+      // 640 логических: appbar, status, nav, соперник, фаза, таймер, padding.
+      const boardH = 640.0 - 56 - 24 - 48 - 72 - 16 - 40 - 12 - 8 - 112;
+      final cell = fitBattleshipCellSize(
+        maxWidth: 344,
+        maxHeight: boardH,
+        maxCell: 36,
+      );
+      const gap = 2.0;
+      final side =
+          cell * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+      expect(side, lessThanOrEqualTo(boardH + 0.01));
+      expect(cell, greaterThanOrEqualTo(11));
+    });
   });
 
   group('defaultBattleshipShips', () {
