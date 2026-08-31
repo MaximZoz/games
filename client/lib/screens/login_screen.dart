@@ -128,7 +128,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           alignment: liftToTop ? Alignment.topCenter : Alignment.center,
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(24, liftToTop ? 8 : 24, 24, 24),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              liftToTop ? 8 : 24,
+              24,
+              24 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: formMaxWidth),
               child: GradientCard(

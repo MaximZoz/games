@@ -437,6 +437,9 @@ class AppShell extends ConsumerWidget {
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
+    // Android landscape: клавиатура забирает 70%+ высоты. Тулбар+рейл
+    // оставляют полю ввода ~60px — текст не видно. Схлопываем хром.
+    final landscapeKeyboard = narrowLandscape && media.viewInsets.bottom >= 80;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
@@ -733,7 +736,13 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: topInset),
-              SizedBox(
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: landscapeKeyboard ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: landscapeKeyboard,
+                    child: SizedBox(
                 height: kToolbarHeight,
                 child: ClipRect(
                   child: Row(
@@ -899,6 +908,9 @@ class AppShell extends ConsumerWidget {
                     ],
                   ),
                 ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -908,7 +920,13 @@ class AppShell extends ConsumerWidget {
               ? SizedBox.expand(child: branchHost)
               : Row(
                   children: [
-                    NavigationRail(
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: landscapeKeyboard ? 0.0 : 1.0,
+                        child: IgnorePointer(
+                          ignoring: landscapeKeyboard,
+                          child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
                       backgroundColor: Colors.transparent,
@@ -935,6 +953,9 @@ class AppShell extends ConsumerWidget {
                           label: Text(item.label),
                         );
                       }).toList(),
+                          ),
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: SizedBox.expand(child: branchHost),

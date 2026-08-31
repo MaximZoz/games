@@ -1518,15 +1518,16 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
-  Widget _buildAboutEditorField({Key? key}) {
+  Widget _buildAboutEditorField({Key? key, bool expand = false}) {
     return TextFormField(
       key: key,
       controller: _aboutController,
       focusNode: _aboutFocus,
       inputFormatters: _aboutFormatters,
       textAlignVertical: TextAlignVertical.top,
-      maxLines: 5,
-      minLines: 3,
+      expands: expand,
+      maxLines: expand ? null : 5,
+      minLines: expand ? null : 3,
       maxLength: 100,
       textCapitalization: TextCapitalization.sentences,
       scrollPadding: const EdgeInsets.only(bottom: 120),
@@ -1565,6 +1566,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           controller: widget.displayNameController,
           focusNode: widget.focusNode,
           inputFormatters: _displayNameFormatters,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
           decoration: InputDecoration(
             labelText: context.l10n.registerNameLabel,
             prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -1582,6 +1584,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 key: const ValueKey('compact_age'),
                 controller: _ageController,
                 inputFormatters: _ageFormatters,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   labelText: context.l10n.profileAge,
                   prefixIcon: const Icon(Icons.cake_outlined),
@@ -1751,8 +1754,29 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
     // Portrait: поля скроллятся, «Сохранить» всегда внизу экрана.
     // Landscape: две колонки на всю высоту — имя/аватар слева, «о себе» справа.
+    // Клавиатура в альбоме: только активное поле, чтобы текст был виден.
     final Widget form;
-    if (phoneLand) {
+    if (phoneLand && isLandscapeKeyboardOpen(context)) {
+      form = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (aboutTypingMode)
+            Expanded(
+              child: _buildAboutEditorField(
+                key: const ValueKey('compact_about'),
+                expand: true,
+              ),
+            )
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: _buildCompactNameAgeRow(),
+              ),
+            ),
+        ],
+      );
+    } else if (phoneLand) {
       form = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
