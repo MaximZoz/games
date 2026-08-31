@@ -61,11 +61,16 @@ int shopTileColumns(BuildContext context, {double? maxWidth}) {
   return 3;
 }
 
-/// Ряды смайликов на одной странице — чтобы сетка заняла высоту экрана.
+/// Ряды смайликов на одной странице.
+/// На десктопе всегда 3×3 и прокрутка страницами; заполнение высоты —
+/// только телефон в альбоме (иначе карточки раздуваются и скролл ломается).
 int shopTileRows(BuildContext context, {double? maxHeight}) {
-  if (isPhoneLandscape(context) || isWide(context)) {
+  if (isPhoneLandscape(context)) {
     final h = maxHeight ?? MediaQuery.sizeOf(context).height;
     return (h / 108).floor().clamp(2, 5);
   }
   return 3;
 }
+
+/// Растягивать сетку смайликов на весь экран — только phone landscape.
+bool shopEmojiFillViewport(BuildContext context) => isPhoneLandscape(context);

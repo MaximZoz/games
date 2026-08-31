@@ -71,23 +71,30 @@ void main() {
 
   testWidgets('shop tiles are 3 columns on desktop', (tester) async {
     late int cols;
+    late int rows;
+    late bool fill;
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(size: Size(1920, 1080)),
         child: Builder(
           builder: (context) {
             cols = shopTileColumns(context);
+            rows = shopTileRows(context, maxHeight: 900);
+            fill = shopEmojiFillViewport(context);
             return const SizedBox.shrink();
           },
         ),
       ),
     );
     expect(cols, 3);
+    expect(rows, 3);
+    expect(fill, isFalse);
   });
 
   testWidgets('shop tiles are 4+ columns on phone landscape', (tester) async {
     late int cols;
     late int rows;
+    late bool fill;
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(size: Size(800, 360)),
@@ -95,6 +102,7 @@ void main() {
           builder: (context) {
             cols = shopTileColumns(context, maxWidth: 720);
             rows = shopTileRows(context, maxHeight: 280);
+            fill = shopEmojiFillViewport(context);
             return const SizedBox.shrink();
           },
         ),
@@ -102,5 +110,6 @@ void main() {
     );
     expect(cols, greaterThanOrEqualTo(4));
     expect(rows, greaterThanOrEqualTo(2));
+    expect(fill, isTrue);
   });
 }

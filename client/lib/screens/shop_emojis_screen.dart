@@ -450,7 +450,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       );
     }
 
-    final fillTiles = useDesktopTiles(context);
+    final fillTiles = shopEmojiFillViewport(context);
 
     return SwipeBackScope(
       onBack: goBack,
@@ -539,7 +539,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                     final pageRows = (pageItems.length /
                                             pageCols)
                                         .ceil()
-                                        .clamp(1, 8);
+                                        .clamp(1, fillTiles ? 8 : 3);
                                     const gap = 8.0;
                                     final cellW = (constraints.maxWidth -
                                             gap * (pageCols - 1)) /
@@ -549,7 +549,10 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                         pageRows;
                                     final ratio = cellH <= 0
                                         ? 0.78
-                                        : (cellW / cellH).clamp(0.45, 1.35);
+                                        : (cellW / cellH).clamp(
+                                            fillTiles ? 0.45 : 0.55,
+                                            1.15,
+                                          );
                                     return GridView.builder(
                                       physics:
                                           const NeverScrollableScrollPhysics(),
