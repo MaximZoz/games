@@ -453,15 +453,15 @@ class AppShell extends ConsumerWidget {
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
-    final hideLandscapeInputChrome = landscapeInputHideChrome(
-      phoneLandscape: narrowLandscape,
+    final hideInputChrome = inputHideChrome(
+      narrow: narrow,
       fieldOpen: landscapeInputOpen &&
           (onFriends || onChatsList || inChatRoom),
     );
     final hideToolbarForKeyboard = landscapeKeyboard ||
         profileKeyboard ||
         hideLandscapeProfileChrome ||
-        hideLandscapeInputChrome;
+        hideInputChrome;
     final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
@@ -763,7 +763,7 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: (hideLandscapeProfileChrome || hideLandscapeInputChrome)
+                height: (hideLandscapeProfileChrome || hideInputChrome)
                     ? 0
                     : topInset,
               ),
@@ -957,13 +957,13 @@ class AppShell extends ConsumerWidget {
                         widthFactor:
                             (landscapeKeyboard ||
                                     hideLandscapeProfileChrome ||
-                                    hideLandscapeInputChrome)
+                                    hideInputChrome)
                                 ? 0.0
                                 : 1.0,
                         child: IgnorePointer(
                           ignoring: landscapeKeyboard ||
                               hideLandscapeProfileChrome ||
-                              hideLandscapeInputChrome,
+                              hideInputChrome,
                           child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
@@ -1020,9 +1020,11 @@ class AppShell extends ConsumerWidget {
             child: Align(
               alignment: Alignment.topCenter,
               heightFactor:
-                  (collapseBottomNav || profileKeyboard) ? 0.0 : 1.0,
+                  (collapseBottomNav || profileKeyboard || hideInputChrome)
+                      ? 0.0
+                      : 1.0,
               child: IgnorePointer(
-                ignoring: collapseBottomNav || profileKeyboard,
+                ignoring: collapseBottomNav || profileKeyboard || hideInputChrome,
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
                   child: Column(
@@ -1076,8 +1078,7 @@ class AppShell extends ConsumerWidget {
             backgroundColor: AppColors.surfaceUnified,
             resizeToAvoidBottomInset: profileEditShellResizeToAvoidInset(
               onProfile: path == '/profile',
-              phoneLandscapeInputScreen: narrowLandscape &&
-                  (onFriends || onChatsList || inChatRoom),
+              onFriendsOrChats: onFriends || onChatsList || inChatRoom,
             ),
             body: shellBody,
             bottomNavigationBar: bottomNav,

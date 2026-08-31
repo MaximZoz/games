@@ -15,6 +15,7 @@ import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -43,7 +44,7 @@ EdgeInsets friendsEmptyStatusPadding({
   return const EdgeInsets.fromLTRB(16, 80, 16, 16);
 }
 
-/// Табы с бейджами съедают всю высоту над клавиатурой в альбоме.
+/// Табы с бейджами съедают высоту над клавиатурой.
 /// Прячем сразу при фокусе поиска — inset на iOS часто 0 или опаздывает.
 @visibleForTesting
 bool friendsHideTabsForKeyboard({
@@ -51,7 +52,8 @@ bool friendsHideTabsForKeyboard({
   required double keyboardInset,
   bool searchFieldOpen = false,
 }) {
-  return landscape && (searchFieldOpen || keyboardInset >= 80);
+  if (searchFieldOpen) return true;
+  return landscape && keyboardInset >= 80;
 }
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -1432,7 +1434,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final focused = _searchFocusNode.hasFocus;
     final phoneLand = isPhoneLandscape(context);
     final tight = phoneLand || MediaQuery.viewInsetsOf(context).bottom > 0;
-    final showCollapse = phoneLand && focused;
+    final showCollapse = focused;
     final showClear = _searchController.text.isNotEmpty;
     Widget? suffix;
     if (showClear || showCollapse) {
@@ -1897,8 +1899,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
       searchFieldOpen: searchFieldOpen,
     );
-    final pinSearchStrip =
-        isPhoneLandscape(context) && searchFieldOpen;
+    final phoneLand = isPhoneLandscape(context);
+    final overlaySearch = !wide && searchFieldOpen;
+    final keyboardPad = MediaQuery.viewInsetsOf(context).bottom;
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1921,8 +1924,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        top: !pinSearchStrip,
-        child: Column(
+        top: !overlaySearch,
+        child: Stack(
+          children: [
+            Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (wide)
@@ -1930,7 +1935,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                 child: _buildWideHeader(),
               ),
-            if (!wide)
+            if (!wide && !overlaySearch)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: AnimatedSwitcher(
@@ -2032,6 +2037,24 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ),
               ),
             ),
+          ],
+        ),
+            if (overlaySearch)
+              Align(
+                alignment: profileEditStripAlignment(phoneLandscape: phoneLand),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: phoneLand
+                        ? MediaQuery.viewPaddingOf(context).top
+                        : 0,
+                    bottom: phoneLand ? 0 : keyboardPad,
+                  ),
+                  child: Material(
+                    color: AppColors.surfaceUnified,
+                    child: _buildSearchPanel(),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

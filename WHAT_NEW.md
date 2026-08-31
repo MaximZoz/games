@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Поиск друзей и сообщения: полоска ввода как в профиле и в портрете, и в альбоме — клавиатура больше не оставляет пустой экран
 - Поиск друзей и сообщения в альбоме: поле в одну строку сверху, как в профиле — клавиатура больше не прячет ввод
 - Профиль: в альбоме полоска ввода сверху (клавиатура не перекрывает текст); возраст 1–111 при вводе; «О себе» в несколько строк
 - Название игры на карточке переносится на новую строку, а не обрезается многоточием
@@ -21,6 +22,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Friends search and chat input use the same single-line strip as profile in portrait and landscape so the keyboard no longer leaves a blank screen
 - Friends search and chat input in landscape stay on a single top strip, same as profile, so the keyboard no longer hides the field
 - Profile: landscape input strip stays at the top so the keyboard does not cover the text; age 1–111 while typing; About me wraps on the card
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
