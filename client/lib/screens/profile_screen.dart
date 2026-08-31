@@ -301,13 +301,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     Widget scrollableBody(Widget child) {
       final framed = Align(
-        alignment: Alignment.topCenter,
+        alignment: Alignment.center,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: profileMaxWidth),
           child: child,
         ),
       );
-      // Сверху, не по центру — меньше пустой полосы над карточкой.
+      // Карточка по центру оставшейся площади (и по вертикали).
       if (mobile) {
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -327,7 +327,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       (phoneLandscape ? 12 : 22),
                 ),
                 child: Align(
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.center,
                   child: framed,
                 ),
               ),
@@ -702,7 +702,7 @@ class _ProfileContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.center,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: cardMaxWidth),
             child: card,
@@ -1066,13 +1066,14 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   bool _galleryDirty = false;
   String? _initialGallerySignature;
   String _gallerySignature = '';
-  bool _aboutTypingActive = false;
+  ProfileEditField _activeField = ProfileEditField.none;
   String? _ageError;
   String? _saveError;
   DateTime? _lastLatinOnlyToastAt;
   late String _lastAboutText;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
+  late FocusNode _ageFocus;
   late FocusNode _aboutFocus;
   late String? _gender;
   late AvatarKind _avatarKind;
@@ -1089,7 +1090,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _initialDisplayName = widget.displayNameController.text;
     _initialExtra = widget.profileExtra;
     widget.displayNameController.addListener(_onFieldsChanged);
-    widget.focusNode.addListener(_onSiblingFocus);
+    widget.focusNode.addListener(_onNameFocusChanged);
     _ageController = TextEditingController(
       text: widget.profileExtra.age?.toString() ?? '',
     );
@@ -1097,7 +1098,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       text: widget.profileExtra.about ?? '',
     );
     _lastAboutText = _aboutController.text;
+    _ageFocus = FocusNode();
     _aboutFocus = FocusNode();
+    _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onFieldsChanged);
     _aboutController.addListener(_onAboutTextChanged);
@@ -1106,7 +1109,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _avatarValue = widget.profileExtra.avatarValue;
     _showStatsToOthers = widget.profileExtra.showStatsToOthers;
     if (widget.focusAboutOnOpen) {
-      _aboutTypingActive = true;
+      _activeField = ProfileEditField.about;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _aboutFocus.requestFocus();
       });
@@ -1122,50 +1125,80 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
-  bool get _aboutIsOpen => _aboutFocus.hasFocus || _aboutTypingActive;
+  bool get _fieldIsOpen => profileEditFieldActive(_activeField);
 
-  void _leaveAboutField() {
+  void _leaveActiveField() {
+    widget.focusNode.unfocus();
+    _ageFocus.unfocus();
     _aboutFocus.unfocus();
-    if (_aboutTypingActive && mounted) {
-      setState(() => _aboutTypingActive = false);
+    if (_activeField != ProfileEditField.none && mounted) {
+      setState(() => _activeField = ProfileEditField.none);
     }
   }
 
-  void _openAboutField() {
-    setState(() => _aboutTypingActive = true);
+  void _openField(ProfileEditField field) {
+    if (_isSaving || field == ProfileEditField.none) return;
+    if (_activeField != field) {
+      setState(() => _activeField = field);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _aboutFocus.requestFocus();
+      if (!mounted) return;
+      switch (field) {
+        case ProfileEditField.name:
+          widget.focusNode.requestFocus();
+        case ProfileEditField.age:
+          _ageFocus.requestFocus();
+        case ProfileEditField.about:
+          _aboutFocus.requestFocus();
+        case ProfileEditField.none:
+          break;
+      }
     });
   }
 
+  void _openAboutField() => _openField(ProfileEditField.about);
+
   void _onEmptyEditorTap() {
-    if (shouldUnfocusAboutOnEmptyTap(aboutFocused: _aboutIsOpen)) {
-      _leaveAboutField();
+    if (shouldUnfocusFieldOnEmptyTap(fieldFocused: _fieldIsOpen)) {
+      _leaveActiveField();
     }
   }
 
   bool _handleEditBack() {
-    final action = profileEditBackAction(aboutFocused: _aboutIsOpen);
+    final action = profileEditBackAction(fieldFocused: _fieldIsOpen);
     if (action == ProfileEditBackAction.stayInEditor) {
-      _leaveAboutField();
+      _leaveActiveField();
       return true;
     }
     widget.onCancel();
     return true;
   }
 
-  void _onSiblingFocus() {
-    if (!mounted) return;
-    if (widget.focusNode.hasFocus && _aboutTypingActive) {
-      _leaveAboutField();
+  void _syncActiveField(ProfileEditField field) {
+    if (!mounted || !widget.compact) return;
+    if (shouldClearFieldOpenOnFocusLost()) return;
+    if (_activeField != field) {
+      setState(() => _activeField = field);
     }
+  }
+
+  void _onNameFocusChanged() {
+    if (widget.focusNode.hasFocus) _syncActiveField(ProfileEditField.name);
+  }
+
+  void _onAgeFocusChanged() {
+    if (_ageFocus.hasFocus) _syncActiveField(ProfileEditField.age);
   }
 
   void _onAboutFocusChanged() {
     if (!mounted) return;
-    // Web Back сначала снимает фокус — не закрываем «О себе» по blur.
-    if (_aboutFocus.hasFocus && !_aboutTypingActive) {
-      setState(() => _aboutTypingActive = true);
+    // Web Back сначала снимает фокус — не закрываем поле по blur.
+    if (_aboutFocus.hasFocus) {
+      if (widget.compact) {
+        _syncActiveField(ProfileEditField.about);
+      } else if (_activeField != ProfileEditField.about) {
+        setState(() => _activeField = ProfileEditField.about);
+      }
     }
   }
 
@@ -1265,10 +1298,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   @override
   void dispose() {
     widget.displayNameController.removeListener(_onFieldsChanged);
-    widget.focusNode.removeListener(_onSiblingFocus);
+    widget.focusNode.removeListener(_onNameFocusChanged);
     _ageController.removeListener(_onFieldsChanged);
     _aboutController.removeListener(_onAboutTextChanged);
+    _ageFocus.removeListener(_onAgeFocusChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);
+    _ageFocus.dispose();
     _aboutFocus.dispose();
     _ageController.dispose();
     _aboutController.dispose();
@@ -1621,6 +1656,125 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
+  Widget _buildNameEditorField({Key? key, bool expand = false}) {
+    return TextFormField(
+      key: key,
+      controller: widget.displayNameController,
+      focusNode: widget.focusNode,
+      inputFormatters: _displayNameFormatters,
+      textAlignVertical: TextAlignVertical.top,
+      expands: expand,
+      maxLines: expand ? null : 1,
+      minLines: expand ? null : 1,
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      enableSuggestions: false,
+      scrollPadding: const EdgeInsets.only(bottom: 120),
+      style: const TextStyle(
+        fontSize: 16,
+        height: 1.3,
+      ),
+      decoration: InputDecoration(
+        labelText: context.l10n.registerNameLabel,
+        hintText: context.l10n.profileNameHint,
+        alignLabelWithHint: true,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: const Icon(Icons.person_outline_rounded),
+      ),
+      onFieldSubmitted: (_) => _leaveActiveField(),
+    );
+  }
+
+  Widget _buildAgeEditorField({Key? key, bool expand = false}) {
+    return TextFormField(
+      key: key,
+      controller: _ageController,
+      focusNode: _ageFocus,
+      inputFormatters: _ageFormatters,
+      textAlignVertical: TextAlignVertical.top,
+      expands: expand,
+      maxLines: expand ? null : 1,
+      minLines: expand ? null : 1,
+      keyboardType: TextInputType.number,
+      scrollPadding: const EdgeInsets.only(bottom: 120),
+      style: const TextStyle(
+        fontSize: 16,
+        height: 1.3,
+      ),
+      decoration: InputDecoration(
+        labelText: context.l10n.profileAge,
+        hintText: context.l10n.profileAgeHint,
+        alignLabelWithHint: true,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: const Icon(Icons.cake_outlined),
+        errorText: _ageError,
+      ),
+      onFieldSubmitted: (_) => _leaveActiveField(),
+    );
+  }
+
+  Widget _buildActiveFieldEditor({Key? key, bool expand = true}) {
+    switch (_activeField) {
+      case ProfileEditField.name:
+        return _buildNameEditorField(
+          key: key ?? const ValueKey('compact_display_name'),
+          expand: expand,
+        );
+      case ProfileEditField.age:
+        return _buildAgeEditorField(
+          key: key ?? const ValueKey('compact_age'),
+          expand: expand,
+        );
+      case ProfileEditField.about:
+        return _buildAboutEditorField(
+          key: key ?? const ValueKey('compact_about'),
+          expand: expand,
+        );
+      case ProfileEditField.none:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildFieldPreview({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required String text,
+    required ProfileEditField field,
+    String? errorText,
+  }) {
+    return Material(
+      key: key,
+      color: AppColors.surfaceCard,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: InkWell(
+        onTap: _isSaving ? null : () => _openField(field),
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon),
+            errorText: errorText,
+          ),
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.25,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCompactSaveButton() {
     return AppButton(
       onPressed: (_isSaving || !_hasChanges) ? null : _submit,
@@ -1634,36 +1788,24 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextFormField(
+        _buildFieldPreview(
           key: const ValueKey('compact_display_name'),
-          controller: widget.displayNameController,
-          focusNode: widget.focusNode,
-          inputFormatters: _displayNameFormatters,
-          scrollPadding: const EdgeInsets.only(bottom: 120),
-          decoration: InputDecoration(
-            labelText: context.l10n.registerNameLabel,
-            prefixIcon: const Icon(Icons.person_outline_rounded),
-          ),
-          textCapitalization: TextCapitalization.none,
-          autocorrect: false,
-          enableSuggestions: false,
-          onFieldSubmitted: (_) => _submit(),
+          icon: Icons.person_outline_rounded,
+          label: context.l10n.registerNameLabel,
+          text: widget.displayNameController.text.trim(),
+          field: ProfileEditField.name,
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: _buildFieldPreview(
                 key: const ValueKey('compact_age'),
-                controller: _ageController,
-                inputFormatters: _ageFormatters,
-                scrollPadding: const EdgeInsets.only(bottom: 120),
-                decoration: InputDecoration(
-                  labelText: context.l10n.profileAge,
-                  prefixIcon: const Icon(Icons.cake_outlined),
-                  errorText: _ageError,
-                ),
-                keyboardType: TextInputType.number,
+                icon: Icons.cake_outlined,
+                label: context.l10n.profileAge,
+                text: _ageController.text.trim(),
+                field: ProfileEditField.age,
+                errorText: _ageError,
               ),
             ),
             const SizedBox(width: 12),
@@ -1691,26 +1833,21 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildCompactEditor(BuildContext context) {
-    // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
-    final aboutTypingMode = _aboutTypingActive;
-    // В phone landscape родитель уже SingleChildScrollView — Expanded там
-    // ломает скролл и кнопка «Сохранить» уезжает «в бесконечность».
+    final fieldTyping = _fieldIsOpen;
     final phoneLand = isPhoneLandscape(context);
+    final layout = profileEditCompactLayout(
+      phoneLandscape: phoneLand,
+      fieldTypingActive: fieldTyping,
+    );
+    // На web resizeToAvoidBottomInset выключен — поднимаем поле над клавиатурой.
+    // На нативе Scaffold уже съел inset, здесь будет 0.
+    final keyboardPad = MediaQuery.viewInsetsOf(context).bottom;
 
-    final Widget aboutField;
-    if (aboutTypingMode) {
-      final editor = _buildAboutEditorField(
-        key: const ValueKey('compact_about'),
-      );
-      aboutField = phoneLand
-          ? SizedBox(height: 148, width: double.infinity, child: editor)
-          : editor;
-    } else {
-      aboutField = _buildAboutPreview(key: const ValueKey('compact_about_preview'));
-    }
+    final aboutField =
+        _buildAboutPreview(key: const ValueKey('compact_about_preview'));
 
     final avatarAndMeta = Visibility(
-      visible: !aboutTypingMode,
+      visible: !fieldTyping,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -1780,7 +1917,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
 
     final galleryAndPhoto = Visibility(
-      visible: !aboutTypingMode,
+      visible: !fieldTyping,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -1825,90 +1962,73 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       ),
     );
 
-    // Portrait: поля скроллятся, «Сохранить» всегда внизу экрана.
-    // Landscape: две колонки на всю высоту — имя/аватар слева, «о себе» справа.
-    // Клавиатура в альбоме: только активное поле, чтобы текст был виден.
+    // Portrait: поля скроллятся, «Сохранить» внизу.
+    // Landscape: две колонки. Активное поле — на весь экран (как «О себе»),
+    // переключение только по тапу, не по viewInsets — иначе iPhone теряет фокус.
     final Widget form;
-    if (phoneLand && isLandscapeKeyboardOpen(context)) {
-      form = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (aboutTypingMode)
-            Expanded(
-              child: _buildAboutEditorField(
-                key: const ValueKey('compact_about'),
-                expand: true,
+    switch (layout) {
+      case ProfileEditCompactLayout.singleField:
+        form = Padding(
+          padding: EdgeInsets.only(bottom: keyboardPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCompactHeader(context),
+              const SizedBox(height: 8),
+              Expanded(
+                child: _buildActiveFieldEditor(expand: true),
               ),
-            )
-          else
+            ],
+          ),
+        );
+      case ProfileEditCompactLayout.landscapeColumns:
+        form = Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Expanded(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.only(right: 8),
                 physics: const ClampingScrollPhysics(),
-                child: _buildCompactNameAgeRow(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildCompactHeader(context),
+                    const SizedBox(height: 12),
+                    avatarAndMeta,
+                  ],
+                ),
               ),
             ),
-        ],
-      );
-    } else if (phoneLand) {
-      form = Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(right: 8),
-              physics: const ClampingScrollPhysics(),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildCompactHeader(context),
-                  SizedBox(height: aboutTypingMode ? 8 : 12),
-                  avatarAndMeta,
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(left: 8),
-                    physics: const ClampingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (aboutTypingMode)
-                          SizedBox(
-                            height: 160,
-                            width: double.infinity,
-                            child: aboutField,
-                          )
-                        else
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(left: 8),
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           aboutField,
-                        galleryAndPhoto,
-                      ],
+                          galleryAndPhoto,
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                if (!aboutTypingMode) ...[
                   const SizedBox(height: 8),
                   _buildCompactSaveButton(),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
-      );
-    } else {
-      form = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildCompactHeader(context),
-          SizedBox(height: aboutTypingMode ? 10 : 16),
-          if (aboutTypingMode)
-            Expanded(child: aboutField)
-          else
+          ],
+        );
+      case ProfileEditCompactLayout.portraitForm:
+        form = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCompactHeader(context),
+            const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
@@ -1922,12 +2042,10 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ),
               ),
             ),
-          if (!aboutTypingMode) ...[
             const SizedBox(height: 12),
             _buildCompactSaveButton(),
           ],
-        ],
-      );
+        );
     }
     return PopScope(
       canPop: false,
@@ -2079,7 +2197,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 const SizedBox(height: 16),
                 _buildShowStatsCheckbox(),
                 const SizedBox(height: 12),
-                _aboutTypingActive
+                _activeField == ProfileEditField.about
                     ? _buildAboutEditorField()
                     : _buildAboutPreview(),
                 const SizedBox(height: 20),
