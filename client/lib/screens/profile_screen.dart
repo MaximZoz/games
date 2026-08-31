@@ -16,6 +16,7 @@ import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
+import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -351,10 +352,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // Полоска ввода сверху. resize сжимает тело и на Android
-      // открывает пустой extract UI — текста не видно.
       resizeToAvoidBottomInset: false,
       body: SafeArea(
+        // В альбоме с открытым полем щель только у верха экрана — без top inset.
+        top: !(ref.watch(profileEditFieldOpenProvider) &&
+            isPhoneLandscape(context)),
+        // Клавиатура перекрывает home indicator — не добавляем нижний inset.
+        bottom: MediaQuery.viewInsetsOf(context).bottom < 80,
         child: ref.watch(authStateProvider).when(
               data: (user) {
                 if (user == null) {
@@ -863,6 +867,7 @@ class _ProfileView extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                 child: AboutOneLineText(
                   text: profileExtra.about!.trim(),
+                  maxLines: 8,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
@@ -1047,10 +1052,11 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
   ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
-/// Только цифры, макс. 3 (возраст 1–111).
+/// Только цифры, макс. 3, не больше 111.
 final _ageFormatters = [
   FilteringTextInputFormatter.digitsOnly,
   LengthLimitingTextInputFormatter(3),
+  const ProfileAgeRangeFormatter(),
 ];
 
 /// Без управляющих символов и обратного слэша, макс. 100 (о себе).
@@ -1101,7 +1107,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _aboutFocus = FocusNode();
     _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
-    _ageController.addListener(_onFieldsChanged);
+    _ageController.addListener(_onAgeTextChanged);
     _aboutController.addListener(_onAboutTextChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
@@ -1113,6 +1119,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         if (mounted) _aboutFocus.requestFocus();
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncFieldOpenProvider();
+    });
   }
 
   @override
@@ -1133,6 +1142,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != ProfileEditField.none && mounted) {
       setState(() => _activeField = ProfileEditField.none);
     }
+    _syncFieldOpenProvider();
+  }
+
+  void _syncFieldOpenProvider() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final next = _fieldIsOpen;
+      if (ref.read(profileEditFieldOpenProvider) != next) {
+        ref.read(profileEditFieldOpenProvider.notifier).state = next;
+      }
+    });
   }
 
   void _requestFieldFocus(ProfileEditField field) {
@@ -1154,6 +1174,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
+    _syncFieldOpenProvider();
     // Сразу и после кадра: в альбоме IME часто не открывается с первого раза.
     _requestFieldFocus(field);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1185,6 +1206,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
+    _syncFieldOpenProvider();
   }
 
   void _onNameFocusChanged() {
@@ -1219,9 +1241,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       _initialExtra ?? widget.profileExtra;
 
   void _onFieldsChanged() => setState(() {
-        _ageError = null;
         _saveError = null;
       });
+
+  void _onAgeTextChanged() {
+    if (!mounted) return;
+    setState(() {
+      _ageError = profileAgeIsInvalid(_ageController.text)
+          ? context.l10n.profileAgeInvalid
+          : null;
+      _saveError = null;
+    });
+  }
 
   /// Только латиница, макс. 10 символов (логин).
   List<TextInputFormatter> get _displayNameFormatters => [
@@ -1302,9 +1333,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   @override
   void dispose() {
+    try {
+      ref.read(profileEditFieldOpenProvider.notifier).state = false;
+    } catch (_) {}
     widget.displayNameController.removeListener(_onFieldsChanged);
     widget.focusNode.removeListener(_onNameFocusChanged);
-    _ageController.removeListener(_onFieldsChanged);
+    _ageController.removeListener(_onAgeTextChanged);
     _aboutController.removeListener(_onAboutTextChanged);
     _ageFocus.removeListener(_onAgeFocusChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);
@@ -1613,6 +1647,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     const SizedBox(height: 2),
                     AboutOneLineText(
                       text: empty ? context.l10n.profileAboutHint : text,
+                      maxLines: 8,
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.25,
@@ -1790,20 +1825,24 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
-  Widget _buildKeyboardInputStrip(BuildContext context) {
+  Widget _buildKeyboardInputStrip(BuildContext context, {bool compact = false}) {
     return Material(
       color: AppColors.surfaceCard,
-      elevation: 2,
+      elevation: 6,
+      shadowColor: Colors.black54,
       borderRadius: BorderRadius.circular(AppRadius.input),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 4, 8, 4),
+        padding: EdgeInsets.fromLTRB(2, compact ? 2 : 4, 8, compact ? 2 : 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             IconButton(
               tooltip: context.l10n.commonBack,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              constraints: BoxConstraints(
+                minWidth: compact ? 36 : 40,
+                minHeight: compact ? 36 : 40,
+              ),
               onPressed: _isSaving ? null : _handleEditBack,
               icon: const Icon(Icons.arrow_back_rounded),
               color: AppColors.textPrimary,
@@ -1858,7 +1897,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   Widget _buildCompactSaveButton() {
     return AppButton(
-      onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+      onPressed: (_isSaving || !_hasChanges || _ageError != null)
+          ? null
+          : _submit,
       label: context.l10n.commonSave,
       isLoading: _isSaving,
       expanded: true,
@@ -2049,16 +2090,15 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final Widget form;
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
-        form = Padding(
-          padding: EdgeInsets.only(bottom: keyboardPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Сверху: видно и в портрете, и в альбоме, даже если
-              // клавиатура перекрывает низ и viewInsets = 0.
-              _buildKeyboardInputStrip(context),
-              const Spacer(),
-            ],
+        final land = phoneLand;
+        form = Align(
+          alignment: profileEditStripAlignment(phoneLandscape: land),
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: land ? MediaQuery.viewPaddingOf(context).top : 0,
+              bottom: land ? 0 : keyboardPad,
+            ),
+            child: _buildKeyboardInputStrip(context, compact: land),
           ),
         );
       case ProfileEditCompactLayout.landscapeColumns:
@@ -2387,7 +2427,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ],
                 const SizedBox(height: 24),
                 AppButton(
-                  onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+                  onPressed: (_isSaving || !_hasChanges || _ageError != null)
+                      ? null
+                      : _submit,
                   label: context.l10n.commonSave,
                   isLoading: _isSaving,
                   expanded: true,

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 
@@ -69,5 +70,18 @@ void main() {
     expect(profileEditFieldExpands(phoneLandscape: true), isFalse);
     expect(profileEditFieldExpands(phoneLandscape: false), isFalse);
     expect(profileEditStripMaxLines(), 1);
+  });
+
+  test('полоска: в альбоме сверху, в портрете над клавиатурой', () {
+    expect(
+      profileEditStripAlignment(phoneLandscape: true),
+      Alignment.topCenter,
+    );
+    expect(
+      profileEditStripAlignment(phoneLandscape: false),
+      Alignment.bottomCenter,
+    );
+    expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
+    expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
   });
 }

@@ -25,6 +25,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
@@ -445,7 +446,11 @@ class AppShell extends ConsumerWidget {
     // чтобы полоска ввода оставалась на экране.
     final profileKeyboard =
         path == '/profile' && media.viewInsets.bottom >= 80 && narrow;
-    final hideToolbarForKeyboard = landscapeKeyboard || profileKeyboard;
+    final profileFieldOpen = ref.watch(profileEditFieldOpenProvider);
+    final hideLandscapeProfileChrome =
+        narrowLandscape && path == '/profile' && profileFieldOpen;
+    final hideToolbarForKeyboard =
+        landscapeKeyboard || profileKeyboard || hideLandscapeProfileChrome;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
@@ -749,7 +754,9 @@ class AppShell extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: topInset),
+              SizedBox(
+                height: hideLandscapeProfileChrome ? 0 : topInset,
+              ),
               ClipRect(
                 child: Align(
                   alignment: Alignment.topCenter,
@@ -937,9 +944,13 @@ class AppShell extends ConsumerWidget {
                     ClipRect(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        widthFactor: landscapeKeyboard ? 0.0 : 1.0,
+                        widthFactor:
+                            (landscapeKeyboard || hideLandscapeProfileChrome)
+                                ? 0.0
+                                : 1.0,
                         child: IgnorePointer(
-                          ignoring: landscapeKeyboard,
+                          ignoring: landscapeKeyboard ||
+                              hideLandscapeProfileChrome,
                           child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
@@ -1050,6 +1061,8 @@ class AppShell extends ConsumerWidget {
           child: Scaffold(
             // Тот же цвет, что чёлка и низ — без «шва» после splash.
             backgroundColor: AppColors.surfaceUnified,
+            resizeToAvoidBottomInset:
+                profileEditShellResizeToAvoidInset(onProfile: path == '/profile'),
             body: shellBody,
             bottomNavigationBar: bottomNav,
           ),

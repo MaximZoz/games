@@ -17,3 +17,6 @@ final friendsNavTapTickProvider = StateProvider<int>((ref) => 0);
 /// чтобы на iOS Safari он не висел блоком над клавиатурой при поиске.
 /// Нельзя убирать nav из дерева — иначе сбрасывается фокус TextField.
 final collapseMobileBottomNavProvider = StateProvider<bool>((ref) => false);
+
+/// Редактор профиля: поле открыто — схлопнуть хром в альбоме до прихода inset.
+final profileEditFieldOpenProvider = StateProvider<bool>((ref) => false);
