@@ -1,5 +1,3 @@
-import 'package:flutter/painting.dart';
-
 /// Какое поле сейчас развёрнуто на весь экран редактора.
 enum ProfileEditField { none, name, age, about }
 
@@ -48,19 +46,14 @@ bool profileEditFieldExpands({required bool phoneLandscape}) => false;
 /// Всегда 1 строка, иначе IME уходит в fullscreen extract.
 int profileEditStripMaxLines() => 1;
 
-/// В альбоме клавиатура занимает почти весь экран — полоска сверху
-/// (единственная видимая щель). В портрете — над клавиатурой снизу.
-Alignment profileEditStripAlignment({required bool phoneLandscape}) {
-  return phoneLandscape ? Alignment.topCenter : Alignment.bottomCenter;
-}
-
-/// Портрет: форма видна и при открытом поле — полоска ввода просто прижата
-/// к клавиатуре снизу. В альбоме места нет, там остаётся только полоска.
+/// Форма видна и при открытом поле: полоска ввода прижата к клавиатуре снизу,
+/// а над ней остаётся форма. В альбоме от формы остаётся узкая полоса, но это
+/// лучше пустого экрана, а текст стоит у клавиатуры, а не у верхнего края.
 bool profileEditKeepFormWithStrip({
   required bool phoneLandscape,
   required bool fieldTypingActive,
 }) =>
-    fieldTypingActive && !phoneLandscape;
+    fieldTypingActive;
 
 /// На профиле внешний Scaffold не должен resize: вместе с viewInsets
 /// на iOS получается пустой блок над клавиатурой.
