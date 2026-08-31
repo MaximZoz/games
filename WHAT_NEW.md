@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
 - Поиск друзей в альбоме: текст «нет совпадений» виден над клавиатурой
 - Десктоп: смайлики снова 3×3 в колонке 720px, колёсико листает страницы
 - Меньше пустого места сверху (компактный тулбар, без двойного SafeArea); в альбоме профиль на весь экран
@@ -16,6 +17,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Game cards stay a single full-width column on phones so titles and buttons stay readable
 - Friends search empty text stays visible above the landscape keyboard
 - Desktop emoji shop is a 3×3 paged grid again (720px), mouse wheel pages
 - Less empty space under the status bar; landscape profile fills the screen

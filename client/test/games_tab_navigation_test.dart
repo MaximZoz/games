@@ -48,4 +48,18 @@ void main() {
       expect(gamesLobbyTabAnimation.inMilliseconds, greaterThan(0));
     });
   });
+
+  group('gamesHubTileColumns / width', () {
+    test('на телефоне одна колонка на всю ширину', () {
+      expect(gamesHubTileColumns(maxWidth: 540, wide: false), 1);
+      expect(gamesHubTileWidth(maxWidth: 540, cols: 1), 540);
+      expect(gamesHubStackActions(320), isTrue);
+      expect(gamesHubStackActions(400), isFalse);
+    });
+
+    test('на широком экране несколько колонок', () {
+      expect(gamesHubTileColumns(maxWidth: 1100, wide: true), greaterThan(1));
+      expect(gamesHubTileWidth(maxWidth: 1100, cols: 3), lessThan(400.1));
+    });
+  });
 }

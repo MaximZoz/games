@@ -1289,14 +1289,11 @@ class _GamesPageContent extends ConsumerWidget {
 
     Widget gameCards(double maxWidth) {
       const gap = 16.0;
-      final minTile = phoneLandscape ? 200.0 : (isDesktop ? 260.0 : 280.0);
-      const maxTile = 360.0;
-      final maxCols = useDesktopTiles(context) ? 3 : 1;
-      final cols = maxWidth < minTile * 2 + gap
-          ? 1
-          : (maxWidth / (minTile + gap)).floor().clamp(1, maxCols);
-      final tileWidth =
-          ((maxWidth - gap * (cols - 1)) / cols).clamp(minTile, maxTile);
+      final cols = gamesHubTileColumns(
+        maxWidth: maxWidth,
+        wide: isDesktop,
+      );
+      final tileWidth = gamesHubTileWidth(maxWidth: maxWidth, cols: cols);
       final tiles = <Widget>[
         _TictactoeGameCard(
           isCreating: isCreating,
