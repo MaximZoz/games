@@ -91,6 +91,13 @@ void main() {
       isFalse,
     );
     expect(
+      profileEditShellResizeToAvoidInset(
+        onProfile: false,
+        onFriendsOrChats: true,
+      ),
+      isFalse,
+    );
+    expect(
       landscapeInputHideChrome(phoneLandscape: true, fieldOpen: true),
       isTrue,
     );
@@ -102,5 +109,8 @@ void main() {
       landscapeInputHideChrome(phoneLandscape: false, fieldOpen: true),
       isFalse,
     );
+    expect(inputHideChrome(narrow: true, fieldOpen: true), isTrue);
+    expect(inputHideChrome(narrow: true, fieldOpen: false), isFalse);
+    expect(inputHideChrome(narrow: false, fieldOpen: true), isFalse);
   });
 }

@@ -82,7 +82,7 @@ void main() {
       );
     });
 
-    test('прячет табы в альбоме сразу при фокусе поиска', () {
+    test('прячет табы сразу при фокусе поиска в любой ориентации', () {
       expect(
         friendsHideTabsForKeyboard(
           landscape: true,
@@ -97,7 +97,7 @@ void main() {
           keyboardInset: 0,
           searchFieldOpen: true,
         ),
-        isFalse,
+        isTrue,
       );
     });
   });

@@ -995,9 +995,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final queryController = TextEditingController();
     Future<List<FriendItem>> friendsFuture = _loadFriendsForStartChat();
     final wide = isWide(context);
-    final phoneLand = isPhoneLandscape(context);
-    if (phoneLand) {
+    if (!wide) {
       ref.read(landscapeInputFieldOpenProvider.notifier).state = true;
+      ref.read(collapseMobileBottomNavProvider.notifier).state = true;
     }
     try {
       if (wide) {
@@ -1013,6 +1013,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     } finally {
       if (mounted) {
         ref.read(landscapeInputFieldOpenProvider.notifier).state = false;
+        ref.read(collapseMobileBottomNavProvider.notifier).state = false;
       }
       queryController.dispose();
     }

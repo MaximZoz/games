@@ -3249,7 +3249,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                 ),
               if (!pinComposerTop)
               Padding(
-                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                padding: EdgeInsets.fromLTRB(
+                  6,
+                  0,
+                  6,
+                  6 +
+                      (isNarrow(context) && !narrowLandscape
+                          ? MediaQuery.viewInsetsOf(context).bottom
+                          : 0),
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
