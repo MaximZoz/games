@@ -351,10 +351,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // Web/iOS Safari: resize от клавиатуры сбрасывает фокус TextField.
-      // На нативе при редактировании поднимаем форму, чтобы «Сохранить» не
-      // уезжала за клавиатуру и влезала на коротких экранах.
-      resizeToAvoidBottomInset: _isEditing && !kIsWeb,
+      // Полоска ввода сверху. resize сжимает тело и на Android
+      // открывает пустой extract UI — текста не видно.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: ref.watch(authStateProvider).when(
               data: (user) {
@@ -1791,27 +1790,32 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
-  Widget _buildLandscapeInputStrip(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 8, 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            tooltip: context.l10n.commonBack,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            onPressed: _isSaving ? null : _handleEditBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: AppColors.textPrimary,
-          ),
-          Expanded(
-            child: _buildActiveFieldEditor(
-              expand: false,
-              landscapeStrip: true,
+  Widget _buildKeyboardInputStrip(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceCard,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 4, 8, 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              tooltip: context.l10n.commonBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              onPressed: _isSaving ? null : _handleEditBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: AppColors.textPrimary,
             ),
-          ),
-        ],
+            Expanded(
+              child: _buildActiveFieldEditor(
+                expand: false,
+                landscapeStrip: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2045,33 +2049,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final Widget form;
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
-        final landscapeStrip = profileEditLandscapeInputStrip(
-          phoneLandscape: phoneLand,
-        );
         form = Padding(
           padding: EdgeInsets.only(bottom: keyboardPad),
-          child: landscapeStrip
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Spacer(),
-                    _buildLandscapeInputStrip(context),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildCompactHeader(context),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildActiveFieldEditor(
-                        expand: profileEditFieldExpands(
-                          phoneLandscape: phoneLand,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Сверху: видно и в портрете, и в альбоме, даже если
+              // клавиатура перекрывает низ и viewInsets = 0.
+              _buildKeyboardInputStrip(context),
+              const Spacer(),
+            ],
+          ),
         );
       case ProfileEditCompactLayout.landscapeColumns:
         form = Row(
@@ -2150,8 +2138,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         opaqueEdge: false,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          // В альбомной полоске тап по полю должен давать фокус, а не свернуть.
-          onTap: phoneLand && fieldTyping ? null : _onEmptyEditorTap,
+          onTap: fieldTyping ? null : _onEmptyEditorTap,
           child: form,
         ),
       ),

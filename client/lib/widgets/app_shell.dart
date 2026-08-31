@@ -441,6 +441,11 @@ class AppShell extends ConsumerWidget {
     // Android landscape: клавиатура забирает 70%+ высоты. Тулбар+рейл
     // оставляют полю ввода ~60px — текст не видно. Схлопываем хром.
     final landscapeKeyboard = narrowLandscape && media.viewInsets.bottom >= 80;
+    // Профиль: клавиатура в портрете тоже съедает низ — прячем тулбар и nav,
+    // чтобы полоска ввода оставалась на экране.
+    final profileKeyboard =
+        path == '/profile' && media.viewInsets.bottom >= 80 && narrow;
+    final hideToolbarForKeyboard = landscapeKeyboard || profileKeyboard;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
@@ -748,9 +753,9 @@ class AppShell extends ConsumerWidget {
               ClipRect(
                 child: Align(
                   alignment: Alignment.topCenter,
-                  heightFactor: landscapeKeyboard ? 0.0 : 1.0,
+                  heightFactor: hideToolbarForKeyboard ? 0.0 : 1.0,
                   child: IgnorePointer(
-                    ignoring: landscapeKeyboard,
+                    ignoring: hideToolbarForKeyboard,
                     child: SizedBox(
                 height: toolbarHeight,
                 child: ClipRect(
@@ -990,9 +995,10 @@ class AppShell extends ConsumerWidget {
         ? ClipRect(
             child: Align(
               alignment: Alignment.topCenter,
-              heightFactor: collapseBottomNav ? 0.0 : 1.0,
+              heightFactor:
+                  (collapseBottomNav || profileKeyboard) ? 0.0 : 1.0,
               child: IgnorePointer(
-                ignoring: collapseBottomNav,
+                ignoring: collapseBottomNav || profileKeyboard,
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
                   child: Column(

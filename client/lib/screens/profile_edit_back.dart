@@ -34,14 +34,14 @@ ProfileEditCompactLayout profileEditCompactLayout({
   return ProfileEditCompactLayout.portraitForm;
 }
 
-/// В альбоме поле — однострочная полоска над клавиатурой.
+/// Полоска ввода при открытом поле — и в портрете, и в альбоме.
 /// `expands` / multiline включает Android extract UI: клавиатура есть,
-/// а текста в полоске нет.
-bool profileEditLandscapeInputStrip({required bool phoneLandscape}) =>
-    phoneLandscape;
+/// а текста не видно.
+bool profileEditUseInputStrip({required bool fieldTypingActive}) =>
+    fieldTypingActive;
 
-/// Разворачивать TextField на всю высоту — только портрет (есть место).
-bool profileEditFieldExpands({required bool phoneLandscape}) => !phoneLandscape;
+/// Разворачивать TextField на всю высоту нельзя: extract UI съедает текст.
+bool profileEditFieldExpands({required bool phoneLandscape}) => false;
 
-/// В альбоме всегда 1 строка, иначе IME уходит в fullscreen extract.
+/// Всегда 1 строка, иначе IME уходит в fullscreen extract.
 int profileEditStripMaxLines() => 1;
