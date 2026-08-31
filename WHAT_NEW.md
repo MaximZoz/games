@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Игры в альбоме: стол больше не съезжает — в дураке видно всю руку и колоду, в уно колоду и сброс, в покере свои карты не наезжают на общие, в морском бое поле слева, а кнопки справа
 - Профиль: полоска ввода имени, возраста и «о себе» всегда вплотную над клавиатурой — в альбоме текст больше не уезжает к верхнему краю экрана
 - Профиль: убрали клавиатуру — компактная полоска ввода тоже закрывается, а не висит одна поверх формы
 - Итоги игры: «Повторить» и «Другой соперник» по ширине текста, а не на весь экран
@@ -29,6 +30,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Games in landscape: the table no longer breaks — Durak shows the whole hand and the deck, Uno the draw and discard piles, Poker keeps hole cards off the board, and Battleship puts the grid on the left with controls on the right
 - Chats: the composer sits right above the keyboard again with messages visible above it (portrait and landscape); compact input only while the keyboard is open
 - Friends search: the keyboard opens on iPhone as before and the field no longer hangs at the bottom without it
 - Profile: the input strip always sits right above the keyboard, so in landscape the text no longer jumps to the top edge
