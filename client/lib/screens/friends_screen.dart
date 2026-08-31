@@ -31,6 +31,27 @@ String friendsListEmptyText({
   return query.trim().isEmpty ? emptyList : nothingFound;
 }
 
+/// В альбоме и при клавиатуре нет места на отступ 80 — текст уезжает за край.
+@visibleForTesting
+EdgeInsets friendsEmptyStatusPadding({
+  required bool phoneLandscape,
+  required double keyboardInset,
+}) {
+  if (phoneLandscape || keyboardInset > 0) {
+    return const EdgeInsets.fromLTRB(16, 8, 16, 8);
+  }
+  return const EdgeInsets.fromLTRB(16, 80, 16, 16);
+}
+
+/// Табы с бейджами съедают всю высоту над клавиатурой в альбоме.
+@visibleForTesting
+bool friendsHideTabsForKeyboard({
+  required bool landscape,
+  required double keyboardInset,
+}) {
+  return landscape && keyboardInset >= 80;
+}
+
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -811,6 +832,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     });
   }
 
+  Widget _friendsStatusPane(Widget child) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final phoneLandscape = isPhoneLandscape(context);
+    final pad = friendsEmptyStatusPadding(
+      phoneLandscape: phoneLandscape,
+      keyboardInset: keyboardInset,
+    );
+    final tight = phoneLandscape || keyboardInset > 0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bodyHeight = constraints.maxHeight.isFinite
+            ? (constraints.maxHeight - pad.vertical).clamp(32.0, 4000.0)
+            : 80.0;
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics()),
+          padding: pad,
+          children: [
+            if (tight)
+              SizedBox(
+                height: bodyHeight,
+                child: Center(child: child),
+              )
+            else
+              Center(child: child),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildAdaptiveList<T>({
     required List<T> items,
     required Widget Function(T item) itemBuilder,
@@ -818,18 +870,16 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required _FriendsTabKind tab,
   }) {
     if (items.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              emptyText,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
+      return _friendsStatusPane(
+        Text(
+          emptyText,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.25,
           ),
-        ],
+        ),
       );
     }
 
@@ -1372,8 +1422,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildSearchPanel() {
     final focused = _searchFocusNode.hasFocus;
+    final tight = isPhoneLandscape(context) ||
+        MediaQuery.viewInsetsOf(context).bottom > 0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
@@ -1427,8 +1479,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: tight ? 8 : 12,
+            ),
           ),
           onChanged: _onSearchTextChanged,
           onSubmitted: (_) => _scheduleSearch(immediate: true),
@@ -1441,53 +1495,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final l10n = context.l10n;
     final query = _searchController.text.trim();
     if (query.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              l10n.friendsSearchPrompt,
-              style: const TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
+      return _friendsStatusPane(
+        Text(
+          l10n.friendsSearchPrompt,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
       );
     }
     if (_isSearching) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: const [
-          Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accentStart,
-              ),
-            ),
+      return _friendsStatusPane(
+        const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accentStart,
           ),
-        ],
+        ),
       );
     }
     if (_searchResults.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              l10n.friendsNothingFound,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
+      return _friendsStatusPane(
+        Text(
+          l10n.friendsNothingFound,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.25,
           ),
-        ],
+        ),
       );
     }
     final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
@@ -1732,6 +1770,14 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       fontWeight: FontWeight.w700,
       color: countColor,
     );
+    if (isPhoneLandscape(context)) {
+      return Text(
+        count != null ? '$title $count' : title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      );
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1817,6 +1863,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _applyIncomingDeepLinkIfNeeded();
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
+    final hideTabs = friendsHideTabsForKeyboard(
+      landscape: MediaQuery.sizeOf(context).width >
+          MediaQuery.sizeOf(context).height,
+      keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
+    );
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1866,6 +1917,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   child: Column(
                     key: const ValueKey('friends-tabs'),
                     children: [
+                      if (!hideTabs)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: TabBar(

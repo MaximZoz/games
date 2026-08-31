@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Поиск друзей в альбоме: текст «нет совпадений» виден над клавиатурой
 - Десктоп: смайлики снова 3×3 в колонке 720px, колёсико листает страницы
 - Меньше пустого места сверху (компактный тулбар, без двойного SafeArea); в альбоме профиль на весь экран
 - Поиск друзей: если никто не подходит под запрос — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»
@@ -15,6 +16,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Friends search empty text stays visible above the landscape keyboard
 - Desktop emoji shop is a 3×3 paged grid again (720px), mouse wheel pages
 - Less empty space under the status bar; landscape profile fills the screen
 - Friends search: a query with no matches shows “No friends match your search”, not an empty friends list
