@@ -21,6 +21,16 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
+/// Пустой список друзей/заявок: без запроса — «список пуст», при поиске — «ничего не найдено».
+@visibleForTesting
+String friendsListEmptyText({
+  required String query,
+  required String emptyList,
+  required String nothingFound,
+}) {
+  return query.trim().isEmpty ? emptyList : nothingFound;
+}
+
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -853,7 +863,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           final itemWidth =
               (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
             child: Align(
@@ -937,7 +947,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         _sortedAndFilteredFriends(snapshot.friends, presence, searchQuery);
     return _buildAdaptiveList<FriendItem>(
       items: items,
-      emptyText: l10n.friendsEmpty,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsEmpty,
+        nothingFound: l10n.friendsSearchNoMatches,
+      ),
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
@@ -991,7 +1005,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.incoming, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoIncoming,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoIncoming,
+        nothingFound: l10n.friendsIncomingSearchNoMatches,
+      ),
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
@@ -1046,7 +1064,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.outgoing, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoOutgoing,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoOutgoing,
+        nothingFound: l10n.friendsOutgoingSearchNoMatches,
+      ),
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
@@ -1822,12 +1844,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           children: [
             if (wide)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                 child: _buildWideHeader(),
               ),
             if (!wide)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 2),
                 child: AnimatedSwitcher(
                   duration: AppDurations.short,
                   child: _isSearchExpanded

@@ -1352,6 +1352,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get friendsEmpty => 'Zatím nemáte žádné přátele';
 
   @override
+  String get friendsSearchNoMatches => 'Žádní přátelé nevyhovují hledání';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Žádné příchozí žádosti pro hledání';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Žádné odchozí žádosti pro hledání';
+
+  @override
   String get friendsNoIncoming => 'Žádné příchozí žádosti';
 
   @override

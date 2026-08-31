@@ -1352,6 +1352,15 @@ class AppLocalizationsBe extends AppLocalizations {
   String get friendsEmpty => 'У вас пакуль няма сяброў';
 
   @override
+  String get friendsSearchNoMatches => 'Няма сяброў, якія адпавядаюць пошуку';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Няма ўваходных заявак па запыце';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Няма выходных заявак па запыце';
+
+  @override
   String get friendsNoIncoming => 'Няма ўваходных запытаў';
 
   @override

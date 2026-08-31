@@ -1352,6 +1352,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get friendsEmpty => 'Henüz arkadaşınız yok';
 
   @override
+  String get friendsSearchNoMatches => 'Aramanızla eşleşen arkadaş yok';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Aramanızla eşleşen gelen istek yok';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Aramanızla eşleşen giden istek yok';
+
+  @override
   String get friendsNoIncoming => 'Gelen istek yok';
 
   @override

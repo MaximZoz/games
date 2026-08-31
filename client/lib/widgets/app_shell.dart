@@ -434,9 +434,13 @@ class AppShell extends ConsumerWidget {
     // Как и для нижней панели: Scaffold может обнулять padding — для
     // челки/status bar берём viewPadding, чтобы цвет шёл full-bleed.
     final topInset = media.viewPadding.top;
+    final toolbarHeight = shellToolbarHeight(context);
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
+    // Android landscape: клавиатура забирает 70%+ высоты. Тулбар+рейл
+    // оставляют полю ввода ~60px — текст не видно. Схлопываем хром.
+    final landscapeKeyboard = narrowLandscape && media.viewInsets.bottom >= 80;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
@@ -719,8 +723,16 @@ class AppShell extends ConsumerWidget {
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.
+    // Status bar уже занят SizedBox(topInset) выше. Иначе каждый экран
+    // со своим SafeArea добавляет ту же высоту ещё раз.
     final branchHost = AppOpaqueSurface(
-      child: RepaintBoundary(child: navigationShell),
+      child: RepaintBoundary(
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: navigationShell,
+        ),
+      ),
     );
 
     final shellBody = Column(
@@ -733,8 +745,14 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: topInset),
-              SizedBox(
-                height: kToolbarHeight,
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: landscapeKeyboard ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: landscapeKeyboard,
+                    child: SizedBox(
+                height: toolbarHeight,
                 child: ClipRect(
                   child: Row(
                     children: [
@@ -899,6 +917,9 @@ class AppShell extends ConsumerWidget {
                     ],
                   ),
                 ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -908,7 +929,13 @@ class AppShell extends ConsumerWidget {
               ? SizedBox.expand(child: branchHost)
               : Row(
                   children: [
-                    NavigationRail(
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: landscapeKeyboard ? 0.0 : 1.0,
+                        child: IgnorePointer(
+                          ignoring: landscapeKeyboard,
+                          child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
                       backgroundColor: Colors.transparent,
@@ -935,6 +962,9 @@ class AppShell extends ConsumerWidget {
                           label: Text(item.label),
                         );
                       }).toList(),
+                          ),
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: SizedBox.expand(child: branchHost),
@@ -1029,7 +1059,7 @@ class AppShell extends ConsumerWidget {
           Positioned(
             left: 12,
             right: 12,
-            top: topInset + kToolbarHeight + 6,
+            top: topInset + toolbarHeight + 6,
             child: _AppUpdateBanner(
               onUpdate: () => ref.read(appUpdateProvider.notifier).applyUpdate(),
               onDismiss: () =>

@@ -1352,6 +1352,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String get friendsEmpty => 'Hali do‘stlaringiz yo‘q';
 
   @override
+  String get friendsSearchNoMatches => 'Qidiruvga mos do‘stlar yo‘q';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Qidiruvga mos kiruvchi so‘rovlar yo‘q';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Qidiruvga mos chiquvchi so‘rovlar yo‘q';
+
+  @override
   String get friendsNoIncoming => 'Kiruvchi so‘rovlar yo‘q';
 
   @override

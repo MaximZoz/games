@@ -1352,6 +1352,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String get friendsEmpty => 'Әзірге достарыңыз жоқ';
 
   @override
+  String get friendsSearchNoMatches => 'Іздеуге сәйкес достар жоқ';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Іздеуге сәйкес кіріс өтінімдер жоқ';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Іздеуге сәйкес шығыс өтінімдер жоқ';
+
+  @override
   String get friendsNoIncoming => 'Кіріс өтінім жоқ';
 
   @override

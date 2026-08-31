@@ -1352,6 +1352,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get friendsEmpty => 'Du hast noch keine Freunde';
 
   @override
+  String get friendsSearchNoMatches => 'Keine Freunde entsprechen der Suche';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Keine eingehenden Anfragen zur Suche';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Keine ausgehenden Anfragen zur Suche';
+
+  @override
   String get friendsNoIncoming => 'Keine eingehenden Anfragen';
 
   @override

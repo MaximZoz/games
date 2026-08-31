@@ -2699,6 +2699,24 @@ abstract class AppLocalizations {
   /// **'У вас пока нет друзей'**
   String get friendsEmpty;
 
+  /// No description provided for @friendsSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет друзей, удовлетворяющих поиску'**
+  String get friendsSearchNoMatches;
+
+  /// No description provided for @friendsIncomingSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет входящих заявок по запросу'**
+  String get friendsIncomingSearchNoMatches;
+
+  /// No description provided for @friendsOutgoingSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет исходящих заявок по запросу'**
+  String get friendsOutgoingSearchNoMatches;
+
   /// No description provided for @friendsNoIncoming.
   ///
   /// In ru, this message translates to:

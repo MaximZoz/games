@@ -36,6 +36,21 @@ bool useDesktopTiles(BuildContext context) {
   return isWide(context) || isPhoneLandscape(context);
 }
 
+/// Высота тулбара AppShell: на телефоне компактнее, меньше пустого верха.
+double shellToolbarHeight(BuildContext context) {
+  return isNarrow(context) ? 48.0 : kToolbarHeight;
+}
+
+/// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
+bool isLandscapeKeyboardOpen(
+  BuildContext context, {
+  double minInset = 80,
+}) {
+  final size = MediaQuery.sizeOf(context);
+  final inset = MediaQuery.viewInsetsOf(context).bottom;
+  return size.width > size.height && inset >= minInset;
+}
+
 /// Смайлики и коллекции: 3 колонки на портрете/десктопе (не 4 — колесо прыгает).
 /// В phone landscape больше колонок, чтобы сетка заняла ширину.
 int shopTileColumns(BuildContext context, {double? maxWidth}) {

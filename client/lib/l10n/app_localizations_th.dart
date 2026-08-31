@@ -1352,6 +1352,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get friendsEmpty => 'คุณยังไม่มีเพื่อน';
 
   @override
+  String get friendsSearchNoMatches => 'ไม่มีเพื่อนที่ตรงกับการค้นหา';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'ไม่มีคำขอเข้าที่ตรงกับการค้นหา';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'ไม่มีคำขอออกที่ตรงกับการค้นหา';
+
+  @override
   String get friendsNoIncoming => 'ไม่มีคำขอเข้า';
 
   @override

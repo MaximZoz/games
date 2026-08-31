@@ -1352,6 +1352,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get friendsEmpty => 'Vous n’avez pas encore d’amis';
 
   @override
+  String get friendsSearchNoMatches => 'Aucun ami ne correspond à la recherche';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Aucune demande reçue ne correspond';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Aucune demande envoyée ne correspond';
+
+  @override
   String get friendsNoIncoming => 'Aucune demande reçue';
 
   @override

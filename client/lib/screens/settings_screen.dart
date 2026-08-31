@@ -38,7 +38,9 @@ class SettingsScreen extends ConsumerWidget {
     final localeChoice = ref.watch(appLocaleProvider);
     final appUpdate = ref.watch(appUpdateProvider);
     final narrow = isNarrow(context);
-    final padding = narrow ? 24.0 : 32.0;
+    final padding = isPhoneLandscape(context)
+        ? 12.0
+        : (narrow ? 16.0 : 24.0);
 
     Future<void> setCategory(Future<String?> Function() save) async {
       final err = await save();
