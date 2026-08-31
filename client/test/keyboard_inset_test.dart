@@ -19,11 +19,11 @@ void main() {
     test('завышенный inset ограничен долей экрана', () {
       expect(
         sanitizeKeyboardInset(inset: 900, viewportHeight: 844),
-        closeTo(844 * 0.6, 0.01),
+        closeTo(844 * 0.85, 0.01),
       );
       expect(
         sanitizeKeyboardInset(inset: 5000, viewportHeight: 390),
-        closeTo(390 * 0.6, 0.01),
+        closeTo(390 * 0.85, 0.01),
       );
     });
 

@@ -19,6 +19,7 @@ import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -1963,13 +1964,22 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
     // На web resizeToAvoidBottomInset выключен — поднимаем поле над клавиатурой.
     // На нативе Scaffold уже съел inset, здесь будет 0.
-    final keyboardPad = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardPad = sanitizeKeyboardInset(
+      inset: MediaQuery.viewInsetsOf(context).bottom,
+      viewportHeight: MediaQuery.sizeOf(context).height,
+    );
+    // Портрет: поле открыто, но форма остаётся на экране — иначе над полоской
+    // ввода пустота и непонятно, что вообще редактируешь.
+    final keepFormBehindStrip = profileEditKeepFormWithStrip(
+      phoneLandscape: phoneLand,
+      fieldTypingActive: fieldTyping,
+    );
 
     final aboutField =
         _buildAboutPreview(key: const ValueKey('compact_about_preview'));
 
     final avatarAndMeta = Visibility(
-      visible: !fieldTyping,
+      visible: !fieldTyping || keepFormBehindStrip,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -2039,7 +2049,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
 
     final galleryAndPhoto = Visibility(
-      visible: !fieldTyping,
+      visible: !fieldTyping || keepFormBehindStrip,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -2091,15 +2101,42 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
         final land = phoneLand;
-        form = Align(
-          alignment: profileEditStripAlignment(phoneLandscape: land),
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: land ? MediaQuery.viewPaddingOf(context).top : 0,
-              bottom: land ? 0 : keyboardPad,
+        if (land) {
+          form = Align(
+            alignment: profileEditStripAlignment(phoneLandscape: land),
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: MediaQuery.viewPaddingOf(context).top,
+              ),
+              child: _buildKeyboardInputStrip(context, compact: true),
             ),
-            child: _buildKeyboardInputStrip(context, compact: land),
-          ),
+          );
+          break;
+        }
+        form = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCompactHeader(context),
+            const SizedBox(height: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    avatarAndMeta,
+                    aboutField,
+                    galleryAndPhoto,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: EdgeInsets.only(bottom: keyboardPad),
+              child: _buildKeyboardInputStrip(context),
+            ),
+          ],
         );
       case ProfileEditCompactLayout.landscapeColumns:
         form = Row(

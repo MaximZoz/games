@@ -54,6 +54,14 @@ Alignment profileEditStripAlignment({required bool phoneLandscape}) {
   return phoneLandscape ? Alignment.topCenter : Alignment.bottomCenter;
 }
 
+/// Портрет: форма видна и при открытом поле — полоска ввода просто прижата
+/// к клавиатуре снизу. В альбоме места нет, там остаётся только полоска.
+bool profileEditKeepFormWithStrip({
+  required bool phoneLandscape,
+  required bool fieldTypingActive,
+}) =>
+    fieldTypingActive && !phoneLandscape;
+
 /// На профиле внешний Scaffold не должен resize: вместе с viewInsets
 /// на iOS получается пустой блок над клавиатурой.
 ///

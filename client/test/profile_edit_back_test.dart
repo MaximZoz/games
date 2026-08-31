@@ -85,6 +85,32 @@ void main() {
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
   });
 
+  test('портрет: форма остаётся видна вместе с полоской ввода', () {
+    expect(
+      profileEditKeepFormWithStrip(
+        phoneLandscape: false,
+        fieldTypingActive: true,
+      ),
+      isTrue,
+    );
+    // В альбоме места нет — только полоска.
+    expect(
+      profileEditKeepFormWithStrip(
+        phoneLandscape: true,
+        fieldTypingActive: true,
+      ),
+      isFalse,
+    );
+    // Поле закрыто — обычная форма, полоски нет.
+    expect(
+      profileEditKeepFormWithStrip(
+        phoneLandscape: false,
+        fieldTypingActive: false,
+      ),
+      isFalse,
+    );
+  });
+
   test('компактный хром чатов и друзей — только с клавиатурой', () {
     expect(
       inputHideChrome(phoneLandscape: true, keyboardInset: 220),
