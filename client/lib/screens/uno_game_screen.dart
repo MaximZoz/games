@@ -150,9 +150,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     return renderObject.localToGlobal(Offset.zero) & renderObject.size;
   }
 
-  /// Высота, на которой стол помещается в полный размер:
-  /// шапка + стол с колодой и сбросом + кнопки + рука.
-  static const double _tableDesignHeight = 470;
+  /// Высота, на которой стол помещается в полный размер: шапка + стол с
+  /// колодой и сбросом + ряд кнопок («Взять», «Уно!», выбор цвета) + рука.
+  static const double _tableDesignHeight = 500;
 
   /// Подгонка под доступную высоту — в альбоме телефона её ~330 px.
   GameTableFit _fit = const GameTableFit(scale: 1, compact: false);
@@ -1469,6 +1469,23 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildTableWithSeats(UnoGameView game, List<int> seats) {
     if (seats.length <= 1) {
+      // Альбом: соперник уходит влево — по вертикали его карточка съедала
+      // место, из-за чего колода со сбросом не помещались в овал.
+      if (isPhoneLandscape(context)) {
+        return Stack(
+          children: [
+            if (seats.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _opponentChip(game, seats.first),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 150),
+              child: _buildCenterTable(game),
+            ),
+          ],
+        );
+      }
       return Column(
         children: [
           if (seats.isNotEmpty) _opponentChip(game, seats.first),
