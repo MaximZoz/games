@@ -125,7 +125,7 @@ void main() {
         tester,
         size: const Size(390, 844),
         keyboardInset: 900,
-        expectedInset: 844 * 0.6,
+        expectedInset: 844 * 0.85,
       );
     });
 

@@ -8,11 +8,12 @@ import 'package:flutter/widgets.dart';
 /// виден только тулбар, а список и поле ввода схлопываются в ноль.
 ///
 /// Клавиатура не занимает больше [maxFraction] высоты экрана, поэтому
-/// всё, что выше, — заведомо мусор.
+/// всё, что выше, — заведомо мусор. Порог высокий: в альбоме клавиатура
+/// честно забирает две трети экрана, и ограничивать её нельзя.
 double sanitizeKeyboardInset({
   required double inset,
   required double viewportHeight,
-  double maxFraction = 0.6,
+  double maxFraction = 0.85,
 }) {
   if (inset <= 0 || !inset.isFinite) return 0;
   if (viewportHeight <= 0 || !viewportHeight.isFinite) return inset;

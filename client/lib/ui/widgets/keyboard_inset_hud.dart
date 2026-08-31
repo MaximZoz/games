@@ -5,8 +5,88 @@ import 'package:multigames_client/ui/keyboard_inset.dart';
 /// Диагностика раскладки под клавиатурой: `?insets=1` в адресе.
 /// Нужна, чтобы поймать завышенный `viewInsets` на iOS PWA — там ни
 /// логов, ни devtools под рукой.
+bool _flagsRead = false;
+bool _hudEnabled = false;
+bool _fakeSafeArea = false;
+double? _fakeInset;
+
+/// Флаги читаются один раз со стартового адреса: go_router переписывает URL
+/// при навигации, и параметры оттуда пропадают.
+void _readFlags() {
+  if (_flagsRead) return;
+  _flagsRead = true;
+  final query = Uri.base.queryParameters;
+  _hudEnabled = query['insets'] == '1';
+  _fakeSafeArea = query['fakesafe'] == '1';
+  final raw = query['fakekb'];
+  if (raw != null) {
+    final value = double.tryParse(raw);
+    if (value != null && value > 0) _fakeInset = value;
+  }
+}
+
 bool keyboardInsetHudEnabled() {
-  return Uri.base.queryParameters['insets'] == '1';
+  _readFlags();
+  return _hudEnabled;
+}
+
+/// Подставная высота клавиатуры: `?fakekb=336`.
+/// На десктопе софт-клавиатуры нет, а раскладку под ней проверять надо.
+double? fakeKeyboardInset() {
+  _readFlags();
+  return _fakeInset;
+}
+
+/// Оборачивает приложение подставным viewInsets, если задан `?fakekb=`.
+class FakeKeyboardInset extends StatelessWidget {
+  const FakeKeyboardInset({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final inset = fakeKeyboardInset();
+    if (inset == null) return child;
+    final media = MediaQuery.of(context);
+    // Геометрия iPhone: чёлка сверху, home indicator снизу. Под клавиатурой
+    // padding.bottom обнуляется — так же, как это делает платформа.
+    final viewPadding = _fakeSafeArea
+        ? media.viewPadding.copyWith(top: 59, bottom: 34)
+        : media.viewPadding;
+    return MediaQuery(
+      data: media.copyWith(
+        viewInsets: media.viewInsets.copyWith(bottom: inset),
+        viewPadding: viewPadding,
+        padding: viewPadding.copyWith(bottom: 0),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: child),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: inset,
+            child: IgnorePointer(
+              child: Container(
+                color: const Color(0x99303030),
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'клавиатура ${inset.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    color: Color(0xFFFFFFFF),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class KeyboardInsetHud extends StatelessWidget {
