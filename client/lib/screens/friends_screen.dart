@@ -16,6 +16,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -450,8 +451,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     });
 
     if (_isSearchExpanded) {
+      // Поле уже смонтировано (свёрнутая панель) — фокус тем же жестом,
+      // иначе браузер не считает открытие клавиатуры пользовательским.
+      openSoftKeyboard(_searchFocusNode);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _searchFocusNode.requestFocus();
+        if (mounted) openSoftKeyboard(_searchFocusNode);
       });
       if (_searchController.text.trim().isNotEmpty) {
         _scheduleSearch(immediate: true, forceRun: true);
@@ -1446,7 +1450,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   _isSearchLoadingMore = false;
                   _searchHasMore = false;
                 });
-                _searchFocusNode.requestFocus();
+                openSoftKeyboard(_searchFocusNode);
               },
               icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
             ),
@@ -1706,7 +1710,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       _isSearchLoadingMore = false;
                       _searchHasMore = false;
                     });
-                    _searchFocusNode.requestFocus();
+                    openSoftKeyboard(_searchFocusNode);
                   },
                   icon: Icon(Icons.close_rounded,
                       size: 20, color: Colors.red.shade600),
@@ -1924,13 +1928,20 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             if (!wide)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: AnimatedSwitcher(
-                  duration: AppDurations.short,
-                  child: _isSearchExpanded
-                      ? _buildSearchPanel()
-                      : const SizedBox(
-                          key: ValueKey('friends-search-collapsed'),
-                        ),
+                // Поле поиска всегда в дереве, свёрнутое — просто нулевой
+                // высоты. Иначе оно создаётся вместе с панелью, фокус уходит
+                // в новый элемент на следующем кадре и клавиатура не выезжает
+                // с первого тапа.
+                child: ClipRect(
+                  child: AnimatedAlign(
+                    duration: AppDurations.short,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isSearchExpanded ? 1.0 : 0.0,
+                    child: IgnorePointer(
+                      ignoring: !_isSearchExpanded,
+                      child: _buildSearchPanel(),
+                    ),
+                  ),
                 ),
               ),
             Expanded(

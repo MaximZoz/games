@@ -18,6 +18,7 @@ import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
+import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -1136,6 +1137,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   bool get _fieldIsOpen => profileEditFieldActive(_activeField);
 
+  static const List<ProfileEditField> _stripFieldOrder = [
+    ProfileEditField.name,
+    ProfileEditField.age,
+    ProfileEditField.about,
+  ];
+
+  /// Полоска ввода переезжает между слотами (низ в портрете, верх в альбоме,
+  /// offstage при закрытом поле) — с GlobalKey элемент и связь с IME живут,
+  /// клавиатура не падает при переносе.
+  final GlobalKey _stripSlotKey = GlobalKey(debugLabel: 'profile-edit-strip');
+
   void _leaveActiveField() {
     widget.focusNode.unfocus();
     _ageFocus.unfocus();
@@ -1160,11 +1172,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     if (!mounted) return;
     switch (field) {
       case ProfileEditField.name:
-        widget.focusNode.requestFocus();
+        openSoftKeyboard(widget.focusNode);
       case ProfileEditField.age:
-        _ageFocus.requestFocus();
+        openSoftKeyboard(_ageFocus);
       case ProfileEditField.about:
-        _aboutFocus.requestFocus();
+        openSoftKeyboard(_aboutFocus);
       case ProfileEditField.none:
         break;
     }
@@ -1172,12 +1184,14 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   void _openField(ProfileEditField field) {
     if (_isSaving || field == ProfileEditField.none) return;
+    // Фокус — до setState: поле уже в дереве (offstage-полоска), поэтому
+    // клавиатура выезжает тем же жестом, без «полоска есть, IME нет».
+    _requestFieldFocus(field);
     if (_activeField != field) {
       setState(() => _activeField = field);
     }
     _syncFieldOpenProvider();
-    // Сразу и после кадра: в альбоме IME часто не открывается с первого раза.
-    _requestFieldFocus(field);
+    // Повтор после кадра: в альбоме IME иногда не открывается с первого раза.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestFieldFocus(field);
     });
@@ -1671,11 +1685,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     Key? key,
     bool expand = false,
     bool landscapeStrip = false,
+    bool autofocus = true,
   }) {
     final strip = landscapeStrip;
     return TextFormField(
       key: key,
-      autofocus: true,
+      autofocus: autofocus,
       controller: _aboutController,
       focusNode: _aboutFocus,
       inputFormatters: _aboutFormatters,
@@ -1715,11 +1730,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     Key? key,
     bool expand = false,
     bool landscapeStrip = false,
+    bool autofocus = true,
   }) {
     final strip = landscapeStrip;
     return TextFormField(
       key: key,
-      autofocus: true,
+      autofocus: autofocus,
       controller: widget.displayNameController,
       focusNode: widget.focusNode,
       inputFormatters: _displayNameFormatters,
@@ -1759,11 +1775,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     Key? key,
     bool expand = false,
     bool landscapeStrip = false,
+    bool autofocus = true,
   }) {
     final strip = landscapeStrip;
     return TextFormField(
       key: key,
-      autofocus: true,
+      autofocus: autofocus,
       controller: _ageController,
       focusNode: _ageFocus,
       inputFormatters: _ageFormatters,
@@ -1797,33 +1814,33 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
-  Widget _buildActiveFieldEditor({
-    Key? key,
-    bool expand = true,
-    bool landscapeStrip = false,
-  }) {
-    switch (_activeField) {
-      case ProfileEditField.name:
-        return _buildNameEditorField(
-          key: key ?? const ValueKey('compact_display_name'),
-          expand: expand,
-          landscapeStrip: landscapeStrip,
-        );
-      case ProfileEditField.age:
-        return _buildAgeEditorField(
-          key: key ?? const ValueKey('compact_age'),
-          expand: expand,
-          landscapeStrip: landscapeStrip,
-        );
-      case ProfileEditField.about:
-        return _buildAboutEditorField(
-          key: key ?? const ValueKey('compact_about'),
-          expand: expand,
-          landscapeStrip: landscapeStrip,
-        );
-      case ProfileEditField.none:
-        return const SizedBox.shrink();
-    }
+  /// Все три поля висят в дереве одновременно: браузер открывает клавиатуру
+  /// только когда фокус приходит в уже смонтированный ввод прямо из жеста.
+  /// Если создавать поле вместе с полоской, фокус попадает в новый элемент
+  /// на следующем кадре — жест уже «просрочен», и IME не выезжает.
+  Widget _buildStripEditors() {
+    final index = _stripFieldOrder.indexOf(_activeField);
+    return IndexedStack(
+      index: index < 0 ? 0 : index,
+      alignment: Alignment.center,
+      children: [
+        _buildNameEditorField(
+          key: const ValueKey('strip_display_name'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+        _buildAgeEditorField(
+          key: const ValueKey('strip_age'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+        _buildAboutEditorField(
+          key: const ValueKey('strip_about'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+      ],
+    );
   }
 
   Widget _buildKeyboardInputStrip(BuildContext context, {bool compact = false}) {
@@ -1848,12 +1865,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
               icon: const Icon(Icons.arrow_back_rounded),
               color: AppColors.textPrimary,
             ),
-            Expanded(
-              child: _buildActiveFieldEditor(
-                expand: false,
-                landscapeStrip: true,
-              ),
-            ),
+            Expanded(child: _buildStripEditors()),
           ],
         ),
       ),
@@ -2097,46 +2109,47 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     // Portrait: поля скроллятся, «Сохранить» внизу.
     // Landscape: две колонки. Активное поле — на весь экран (как «О себе»),
     // переключение только по тапу, не по viewInsets — иначе iPhone теряет фокус.
+    final strip = KeyedSubtree(
+      key: _stripSlotKey,
+      child: _buildKeyboardInputStrip(context, compact: phoneLand),
+    );
+
     final Widget form;
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
-        final land = phoneLand;
-        if (land) {
-          form = Align(
-            alignment: profileEditStripAlignment(phoneLandscape: land),
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.viewPaddingOf(context).top,
+        final scrollableForm = SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              avatarAndMeta,
+              aboutField,
+              galleryAndPhoto,
+            ],
+          ),
+        );
+        // И в портрете, и в альбоме: форма сверху в остатке высоты, полоска
+        // ввода — вплотную над клавиатурой. В альбоме от формы остаётся
+        // узкая полоса, но текст стоит там, где его ждёшь: у клавиатуры.
+        form = Padding(
+          padding: EdgeInsets.only(
+            top: phoneLand ? MediaQuery.viewPaddingOf(context).top : 0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!phoneLand) ...[
+                _buildCompactHeader(context),
+                const SizedBox(height: 12),
+              ],
+              Expanded(child: scrollableForm),
+              SizedBox(height: phoneLand ? 4 : 8),
+              Padding(
+                padding: EdgeInsets.only(bottom: keyboardPad),
+                child: strip,
               ),
-              child: _buildKeyboardInputStrip(context, compact: true),
-            ),
-          );
-          break;
-        }
-        form = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildCompactHeader(context),
-            const SizedBox(height: 12),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    avatarAndMeta,
-                    aboutField,
-                    galleryAndPhoto,
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: EdgeInsets.only(bottom: keyboardPad),
-              child: _buildKeyboardInputStrip(context),
-            ),
-          ],
+            ],
+          ),
         );
       case ProfileEditCompactLayout.landscapeColumns:
         form = Row(
@@ -2204,6 +2217,22 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           ],
         );
     }
+    // Поле закрыто — полоска всё равно в дереве (offstage), иначе первый тап
+    // по превью создаёт ввод только на следующем кадре и клавиатура не выезжает.
+    final editor = fieldTyping
+        ? form
+        : Stack(
+            children: [
+              Positioned.fill(child: form),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Offstage(child: strip),
+              ),
+            ],
+          );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -2216,7 +2245,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: fieldTyping ? null : _onEmptyEditorTap,
-          child: form,
+          child: editor,
         ),
       ),
     );

@@ -3,11 +3,13 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Профиль: при вводе имени, возраста и «о себе» в портрете форма остаётся на экране — полоска ввода просто стоит над клавиатурой, а не на пустом экране
+- Профиль: полоска ввода имени, возраста и «о себе» всегда вплотную над клавиатурой — в альбоме текст больше не уезжает к верхнему краю экрана
+- Профиль и поиск друзей: клавиатура выезжает с первого тапа по полю, а не со второго
+- Профиль: при вводе форма остаётся на экране — полоска ввода просто стоит над клавиатурой, а не на пустом экране
 - Сообщения и друзья: клавиатура вычитается один раз, поэтому список и поле ввода больше не схлопываются в пустоту
 - Сообщения: поле ввода снова сразу над клавиатурой, сверху видны сообщения (в портрете и в альбоме); компактный ввод только с открытой клавиатурой
 - Поиск друзей: клавиатура на iPhone открывается как раньше, поле не висит внизу без клавиатуры
-- Профиль: в альбоме полоска ввода сверху (клавиатура не перекрывает текст); возраст 1–111 при вводе; «О себе» в несколько строк
+- Профиль: возраст 1–111 при вводе; «О себе» в несколько строк
 - Название игры на карточке переносится на новую строку, а не обрезается многоточием
 - Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
 - Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
@@ -26,7 +28,9 @@
 ## en
 - Chats: the composer sits right above the keyboard again with messages visible above it (portrait and landscape); compact input only while the keyboard is open
 - Friends search: the keyboard opens on iPhone as before and the field no longer hangs at the bottom without it
-- Profile: landscape input strip stays at the top so the keyboard does not cover the text; age 1–111 while typing; About me wraps on the card
+- Profile: the input strip always sits right above the keyboard, so in landscape the text no longer jumps to the top edge
+- Profile and friends search: the keyboard opens on the first tap instead of the second
+- Profile: age 1–111 while typing; About me wraps on the card
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
 - Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
 - Game cards stay a single full-width column on phones so titles and buttons stay readable

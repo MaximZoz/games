@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 
@@ -72,20 +71,12 @@ void main() {
     expect(profileEditStripMaxLines(), 1);
   });
 
-  test('полоска: в альбоме сверху, в портрете над клавиатурой', () {
-    expect(
-      profileEditStripAlignment(phoneLandscape: true),
-      Alignment.topCenter,
-    );
-    expect(
-      profileEditStripAlignment(phoneLandscape: false),
-      Alignment.bottomCenter,
-    );
+  test('оболочка на профиле не ресайзится, на остальных экранах — да', () {
     expect(profileEditShellResizeToAvoidInset(onProfile: true), isFalse);
     expect(profileEditShellResizeToAvoidInset(onProfile: false), isTrue);
   });
 
-  test('портрет: форма остаётся видна вместе с полоской ввода', () {
+  test('форма остаётся видна вместе с полоской ввода в любой ориентации', () {
     expect(
       profileEditKeepFormWithStrip(
         phoneLandscape: false,
@@ -93,13 +84,13 @@ void main() {
       ),
       isTrue,
     );
-    // В альбоме места нет — только полоска.
+    // В альбоме от формы остаётся узкая полоса, но экран не пустой.
     expect(
       profileEditKeepFormWithStrip(
         phoneLandscape: true,
         fieldTypingActive: true,
       ),
-      isFalse,
+      isTrue,
     );
     // Поле закрыто — обычная форма, полоски нет.
     expect(
