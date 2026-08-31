@@ -1284,11 +1284,12 @@ class _GamesPageContent extends ConsumerWidget {
 
     Widget gameCards(double maxWidth) {
       const gap = 16.0;
-      final minTile = phoneLandscape ? 260.0 : 280.0;
+      final minTile = phoneLandscape ? 200.0 : (isDesktop ? 260.0 : 280.0);
       const maxTile = 360.0;
+      final maxCols = useDesktopTiles(context) ? 3 : 1;
       final cols = maxWidth < minTile * 2 + gap
           ? 1
-          : (maxWidth / (minTile + gap)).floor().clamp(1, 3);
+          : (maxWidth / (minTile + gap)).floor().clamp(1, maxCols);
       final tileWidth =
           ((maxWidth - gap * (cols - 1)) / cols).clamp(minTile, maxTile);
       final tiles = <Widget>[
@@ -1341,18 +1342,24 @@ class _GamesPageContent extends ConsumerWidget {
 
     // ListView без minHeight на весь экран: иначе при скролле карточки
     // «уезжают» в пустоту и визуально пропадают.
-    return ListView(
-      primary: false,
-      physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        contentPadding,
-        isOffline ? 12 : 8,
-        contentPadding,
-        isDesktop ? 24 : 48,
-      ),
-      children: [
-        gameCards(MediaQuery.sizeOf(context).width - contentPadding * 2),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView(
+          primary: false,
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            contentPadding,
+            isOffline ? 12 : 8,
+            contentPadding,
+            isDesktop || phoneLandscape ? 24 : 48,
+          ),
+          children: [
+            gameCards(
+              (constraints.maxWidth - contentPadding * 2).clamp(0.0, 2000.0),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1412,7 +1419,7 @@ class _LobbiesPageContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        if (isDesktop)
+        if (isDesktop || isPhoneLandscape(context))
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;

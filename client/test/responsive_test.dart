@@ -84,4 +84,23 @@ void main() {
     );
     expect(cols, 3);
   });
+
+  testWidgets('shop tiles are 4+ columns on phone landscape', (tester) async {
+    late int cols;
+    late int rows;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(800, 360)),
+        child: Builder(
+          builder: (context) {
+            cols = shopTileColumns(context, maxWidth: 720);
+            rows = shopTileRows(context, maxHeight: 280);
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    expect(cols, greaterThanOrEqualTo(4));
+    expect(rows, greaterThanOrEqualTo(2));
+  });
 }

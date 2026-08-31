@@ -36,5 +36,21 @@ bool useDesktopTiles(BuildContext context) {
   return isWide(context) || isPhoneLandscape(context);
 }
 
-/// Смайлики и коллекции: 3 колонки на одном экране (не 4 — колесо прыгает рядом).
-int shopTileColumns(BuildContext context) => 3;
+/// Смайлики и коллекции: 3 колонки на портрете/десктопе (не 4 — колесо прыгает).
+/// В phone landscape больше колонок, чтобы сетка заняла ширину.
+int shopTileColumns(BuildContext context, {double? maxWidth}) {
+  if (isPhoneLandscape(context)) {
+    final w = maxWidth ?? MediaQuery.sizeOf(context).width;
+    return (w / 96).floor().clamp(4, 7);
+  }
+  return 3;
+}
+
+/// Ряды смайликов на одной странице — чтобы сетка заняла высоту экрана.
+int shopTileRows(BuildContext context, {double? maxHeight}) {
+  if (isPhoneLandscape(context) || isWide(context)) {
+    final h = maxHeight ?? MediaQuery.sizeOf(context).height;
+    return (h / 108).floor().clamp(2, 5);
+  }
+  return 3;
+}
