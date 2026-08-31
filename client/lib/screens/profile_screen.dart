@@ -352,10 +352,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // Полоска ввода сверху. resize сжимает тело и на Android
-      // открывает пустой extract UI — текста не видно.
       resizeToAvoidBottomInset: false,
       body: SafeArea(
+        // Клавиатура перекрывает home indicator — не добавляем нижний inset.
+        bottom: MediaQuery.viewInsetsOf(context).bottom < 80,
         child: ref.watch(authStateProvider).when(
               data: (user) {
                 if (user == null) {
@@ -2064,16 +2064,13 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final Widget form;
     switch (layout) {
       case ProfileEditCompactLayout.singleField:
-        form = Padding(
-          padding: EdgeInsets.only(bottom: keyboardPad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Сверху: видно и в портрете, и в альбоме, даже если
-              // клавиатура перекрывает низ и viewInsets = 0.
-              _buildKeyboardInputStrip(context),
-              const Spacer(),
-            ],
+        // Низ видимой области = сразу над клавиатурой. Сверху Safari
+        // показывает пустой Spacer после сдвига visualViewport.
+        form = Align(
+          alignment: profileEditStripAlignment(),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: keyboardPad),
+            child: _buildKeyboardInputStrip(context),
           ),
         );
       case ProfileEditCompactLayout.landscapeColumns:

@@ -25,6 +25,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
@@ -1050,6 +1051,8 @@ class AppShell extends ConsumerWidget {
           child: Scaffold(
             // Тот же цвет, что чёлка и низ — без «шва» после splash.
             backgroundColor: AppColors.surfaceUnified,
+            resizeToAvoidBottomInset:
+                profileEditShellResizeToAvoidInset(onProfile: path == '/profile'),
             body: shellBody,
             bottomNavigationBar: bottomNav,
           ),

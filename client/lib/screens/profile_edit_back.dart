@@ -1,3 +1,5 @@
+import 'package:flutter/painting.dart';
+
 /// Какое поле сейчас развёрнуто на весь экран редактора.
 enum ProfileEditField { none, name, age, about }
 
@@ -45,3 +47,12 @@ bool profileEditFieldExpands({required bool phoneLandscape}) => false;
 
 /// Всегда 1 строка, иначе IME уходит в fullscreen extract.
 int profileEditStripMaxLines() => 1;
+
+/// Полоска сразу над клавиатурой. Сверху iOS Safari уводит visualViewport —
+/// остаётся пустой серый фон.
+Alignment profileEditStripAlignment() => Alignment.bottomCenter;
+
+/// На профиле внешний Scaffold не должен resize: вместе с viewInsets
+/// на iOS получается пустой блок над клавиатурой.
+bool profileEditShellResizeToAvoidInset({required bool onProfile}) =>
+    !onProfile;
