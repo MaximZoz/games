@@ -21,6 +21,16 @@ import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 
+/// Пустой список друзей/заявок: без запроса — «список пуст», при поиске — «ничего не найдено».
+@visibleForTesting
+String friendsListEmptyText({
+  required String query,
+  required String emptyList,
+  required String nothingFound,
+}) {
+  return query.trim().isEmpty ? emptyList : nothingFound;
+}
+
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -937,7 +947,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         _sortedAndFilteredFriends(snapshot.friends, presence, searchQuery);
     return _buildAdaptiveList<FriendItem>(
       items: items,
-      emptyText: l10n.friendsEmpty,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsEmpty,
+        nothingFound: l10n.friendsNothingFound,
+      ),
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
@@ -991,7 +1005,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.incoming, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoIncoming,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoIncoming,
+        nothingFound: l10n.friendsNothingFound,
+      ),
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
@@ -1046,7 +1064,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.outgoing, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoOutgoing,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoOutgoing,
+        nothingFound: l10n.friendsNothingFound,
+      ),
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
