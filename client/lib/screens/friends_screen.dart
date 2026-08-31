@@ -16,6 +16,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -1909,6 +1910,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Клавиатуру уже вычел AppShell — иначе поиск и список без высоты.
+      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

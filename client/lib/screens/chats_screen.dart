@@ -20,6 +20,7 @@ import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
@@ -1736,6 +1737,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     if (compact) {
       return Scaffold(
         backgroundColor: Colors.transparent,
+        // Клавиатуру уже вычел AppShell — второй раз нельзя.
+        resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
         body: SafeArea(
           child: Column(
             children: [
@@ -1852,6 +1855,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Клавиатуру уже вычел AppShell — второй раз нельзя.
+      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
       body: SafeArea(
         child: Column(
           children: [

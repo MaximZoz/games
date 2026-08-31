@@ -40,6 +40,7 @@ import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/message_status_ticks.dart';
@@ -3023,6 +3024,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Если клавиатуру уже вычел AppShell, второй раз нельзя: композер
+      // уезжает выше клавиатуры, а сообщения схлопываются в ноль.
+      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
       body: SafeArea(
         child: SwipeBackScope(
           enabled: canSwipeBack,
