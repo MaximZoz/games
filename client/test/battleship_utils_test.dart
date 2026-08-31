@@ -70,6 +70,21 @@ void main() {
       expect(cell, lessThan(16));
     });
 
+    test('после двух рядов кнопок 10×10 всё ещё влезает', () {
+      const available = 400.0;
+      const buttons = 120.0;
+      final cell = fitBattleshipCellSize(
+        maxWidth: 360,
+        maxHeight: available - buttons,
+        minCell: 11,
+      );
+      const gap = 2.0;
+      final board =
+          cell * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+      expect(board, lessThanOrEqualTo(available - buttons + 0.01));
+      expect(cell, greaterThanOrEqualTo(11));
+    });
+
     test('не раздувает клетку выше maxCell', () {
       final cell = fitBattleshipCellSize(
         maxWidth: 800,

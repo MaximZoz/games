@@ -1392,6 +1392,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                // Кнопки уже заняли высоту — клетка из остатка, низ поля не режется.
                 final cell = fitBattleshipCellSize(
                   maxWidth: constraints.maxWidth,
                   maxHeight: constraints.maxHeight,
@@ -1432,40 +1433,46 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           ),
           if (!ready) ...[
             const SizedBox(height: 8),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                OutlinedButton.icon(
-                  onPressed: _busy ? null : () => unawaited(_randomPlace()),
-                  icon: const Icon(Icons.casino_rounded, size: 18),
-                  label: Text(context.l10n.gamesBattleshipRandomPlace),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _busy ? null : () => unawaited(_randomPlace()),
+                    icon: const Icon(Icons.casino_rounded, size: 18),
+                    label: Text(
+                      context.l10n.gamesBattleshipRandomPlace,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ),
+                const SizedBox(width: 8),
                 IconButton.outlined(
-                  onPressed: _busy || selectedIdx == null
-                      ? null
-                      : _rotateSelected,
+                  onPressed:
+                      _busy || selectedIdx == null ? null : _rotateSelected,
                   tooltip: context.l10n.gamesBattleshipRotate,
                   icon: const Icon(Icons.rotate_right_rounded),
                 ),
-                FilledButton(
-                  onPressed: _busy ? null : () => unawaited(_confirmPlace()),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                  ),
-                  child: _busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(context.l10n.gamesBattleshipConfirmPlace),
-                ),
               ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _busy ? null : () => unawaited(_confirmPlace()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentStart,
+                ),
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(context.l10n.gamesBattleshipConfirmPlace),
+              ),
             ),
           ],
         ],
@@ -1881,6 +1888,27 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
     return widget.ships[shipIdx].toSet();
   }
 
+  Color _setupCellColor(
+    int index, {
+    required Set<int> preview,
+    required bool previewOk,
+    required Set<int> draggingShip,
+    required Set<int> conflictCells,
+    required Set<int> selected,
+    required Set<int> occupied,
+  }) {
+    if (preview.contains(index)) {
+      return previewOk ? _kPreviewOk : _kConflictShip;
+    }
+    if (_didDrag && draggingShip.contains(index)) {
+      return _kShip.withValues(alpha: 0.35);
+    }
+    if (conflictCells.contains(index)) return _kConflictShip;
+    if (selected.contains(index)) return _kSelectedShip;
+    if (occupied.contains(index)) return _kShip;
+    return _kWater;
+  }
+
   bool get _previewValid {
     final shipIdx = _dragShipIndex;
     final grab = _grabOffset;
@@ -1946,27 +1974,6 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
     );
   }
 
-  Color _setupCellColor({
-    required int index,
-    required Set<int> occupied,
-    required Set<int> conflictCells,
-    required Set<int> selected,
-    required Set<int> preview,
-    required bool previewOk,
-    required Set<int> draggingShip,
-  }) {
-    if (preview.contains(index)) {
-      return previewOk ? _kPreviewOk : _kConflictShip;
-    }
-    if (_didDrag && draggingShip.contains(index)) {
-      return _kShip.withValues(alpha: 0.35);
-    }
-    if (conflictCells.contains(index)) return _kConflictShip;
-    if (selected.contains(index)) return _kSelectedShip;
-    if (occupied.contains(index)) return _kShip;
-    return _kWater;
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = _size;
@@ -2020,13 +2027,13 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
                         height: size,
                         child: _CellPaint(
                           color: _setupCellColor(
-                            index: row * kBattleshipBoardSize + col,
-                            occupied: occupied,
-                            conflictCells: conflictCells,
-                            selected: selected,
+                            row * kBattleshipBoardSize + col,
                             preview: preview,
                             previewOk: previewOk,
                             draggingShip: draggingShip,
+                            conflictCells: conflictCells,
+                            selected: selected,
+                            occupied: occupied,
                           ),
                         ),
                       ),

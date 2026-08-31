@@ -70,25 +70,35 @@ void main() {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            runSpacing: 8,
+                          Row(
                             children: [
-                              OutlinedButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.casino_rounded, size: 18),
-                                label: const Text('Случайная расстановка'),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.casino_rounded,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'Случайная расстановка',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               IconButton.outlined(
                                 onPressed: () {},
                                 icon: const Icon(Icons.rotate_right_rounded),
                               ),
-                              FilledButton(
-                                onPressed: () {},
-                                child: const Text('Подтвердить'),
-                              ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () {},
+                              child: const Text('Подтвердить'),
+                            ),
                           ),
                         ],
                       ),
