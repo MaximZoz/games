@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Возраст проверяется при вводе (1–111); «О себе» в карточке в несколько строк, при редактировании — одна
 - Профиль: полоска ввода сверху в портрете и альбоме — текст виден, когда открыта клавиатура
 - Название игры на карточке переносится на новую строку, а не обрезается многоточием
 - Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
@@ -20,6 +21,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Age is validated while typing (1–111); About me wraps on the card and becomes one line when editing
 - Profile edit: a single-line input strip stays at the top in portrait and landscape so the text stays visible above the keyboard
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
 - Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape

@@ -16,6 +16,7 @@ import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
+import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
@@ -863,6 +864,7 @@ class _ProfileView extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                 child: AboutOneLineText(
                   text: profileExtra.about!.trim(),
+                  maxLines: 8,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
@@ -1047,10 +1049,11 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
   ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
-/// Только цифры, макс. 3 (возраст 1–111).
+/// Только цифры, макс. 3, не больше 111.
 final _ageFormatters = [
   FilteringTextInputFormatter.digitsOnly,
   LengthLimitingTextInputFormatter(3),
+  const ProfileAgeRangeFormatter(),
 ];
 
 /// Без управляющих символов и обратного слэша, макс. 100 (о себе).
@@ -1101,7 +1104,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _aboutFocus = FocusNode();
     _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
-    _ageController.addListener(_onFieldsChanged);
+    _ageController.addListener(_onAgeTextChanged);
     _aboutController.addListener(_onAboutTextChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
@@ -1219,9 +1222,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       _initialExtra ?? widget.profileExtra;
 
   void _onFieldsChanged() => setState(() {
-        _ageError = null;
         _saveError = null;
       });
+
+  void _onAgeTextChanged() {
+    if (!mounted) return;
+    setState(() {
+      _ageError = profileAgeIsInvalid(_ageController.text)
+          ? context.l10n.profileAgeInvalid
+          : null;
+      _saveError = null;
+    });
+  }
 
   /// Только латиница, макс. 10 символов (логин).
   List<TextInputFormatter> get _displayNameFormatters => [
@@ -1304,7 +1316,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   void dispose() {
     widget.displayNameController.removeListener(_onFieldsChanged);
     widget.focusNode.removeListener(_onNameFocusChanged);
-    _ageController.removeListener(_onFieldsChanged);
+    _ageController.removeListener(_onAgeTextChanged);
     _aboutController.removeListener(_onAboutTextChanged);
     _ageFocus.removeListener(_onAgeFocusChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);
@@ -1613,6 +1625,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     const SizedBox(height: 2),
                     AboutOneLineText(
                       text: empty ? context.l10n.profileAboutHint : text,
+                      maxLines: 8,
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.25,
@@ -1858,7 +1871,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   Widget _buildCompactSaveButton() {
     return AppButton(
-      onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+      onPressed: (_isSaving || !_hasChanges || _ageError != null)
+          ? null
+          : _submit,
       label: context.l10n.commonSave,
       isLoading: _isSaving,
       expanded: true,
@@ -2387,7 +2402,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ],
                 const SizedBox(height: 24),
                 AppButton(
-                  onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+                  onPressed: (_isSaving || !_hasChanges || _ageError != null)
+                      ? null
+                      : _submit,
                   label: context.l10n.commonSave,
                   isLoading: _isSaving,
                   expanded: true,
