@@ -6,6 +6,7 @@
 - Профиль: полоска ввода имени, возраста и «о себе» всегда вплотную над клавиатурой — в альбоме текст больше не уезжает к верхнему краю экрана
 - Профиль: убрали клавиатуру — компактная полоска ввода тоже закрывается, а не висит одна поверх формы
 - Итоги игры: «Повторить» и «Другой соперник» по ширине текста, а не на весь экран
+- «Своя игра» в альбоме: ставка и ссылка в одну строку, друзей снова видно
 - Профиль и поиск друзей: клавиатура выезжает с первого тапа по полю, а не со второго
 - Профиль: при вводе форма остаётся на экране — полоска ввода просто стоит над клавиатурой, а не на пустом экране
 - Сообщения и друзья: клавиатура вычитается один раз, поэтому список и поле ввода больше не схлопываются в пустоту
@@ -33,6 +34,7 @@
 - Profile: the input strip always sits right above the keyboard, so in landscape the text no longer jumps to the top edge
 - Profile: hiding the keyboard also closes the compact input strip instead of leaving it over the form
 - Game results: Rematch and Another opponent are sized to their text instead of stretching across the screen
+- Private game lobby in landscape: stake and invite link share one row, so the friends list is visible again
 - Profile and friends search: the keyboard opens on the first tap instead of the second
 - Profile: age 1–111 while typing; About me wraps on the card
 - Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
