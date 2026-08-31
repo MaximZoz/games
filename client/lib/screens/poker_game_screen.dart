@@ -917,6 +917,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: showGroupChat ? 96 : 48,
           leading: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1005,9 +1006,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         showEndDialog && game.stakeBronze > 0 && rewardBronze != 0;
     final betweenHands = game.isHandOver && !isOver;
 
-    const comboSlot = 30.0;
-    const actionSlot = 52.0;
-    final bottomPad = narrow ? 6.0 : 10.0;
+    // Телефон в альбоме: под столом ~330 px — нижние слоты ужимаем, иначе
+    // hero наезжает на борд.
+    final tight = isPhoneLandscape(context);
     final showActions = !isOver &&
         !game.isHandOver &&
         game.isMyTurn &&
@@ -1017,9 +1018,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         game.me != null &&
         _winnerSeats(game).contains(game.me!.seat);
     final hasCombo = _handRankLabel(game.myHandRank) != null && !iWonHand;
+    final comboSlot = _comboSlotHeight(tight: tight, hasCombo: hasCombo);
+    final actionSlot = tight ? 42.0 : 52.0;
+    final bottomPad = tight ? 4.0 : (narrow ? 6.0 : 10.0);
     // Hero выезжает вверх только когда есть кнопки; поле/борд не двигаются.
     final heroLift = showActions || showCardsBtn
-        ? comboSlot + 6 + actionSlot + bottomPad
+        ? comboSlot + (comboSlot > 0 ? 6 : 0) + actionSlot + bottomPad
         : (hasCombo ? comboSlot + bottomPad : bottomPad);
 
     return LayoutBuilder(
@@ -1040,6 +1044,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 narrow,
                 short: short,
                 veryShort: veryShort,
+                tight: tight,
                 // Пока ждём итоговое окно — статус на столе, чтобы видеть карты.
                 status: showEndDialog ? '' : status,
                 showReward: false,
@@ -1072,13 +1077,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                             narrow ? 16 : 20,
                             16,
                           ),
-                          // Статус + награда + реванш — одно окно, всё вмещается.
-                          child: _buildEndDialog(
-                            game,
-                            status: status,
-                            showReward: showReward,
-                            rewardBronze: rewardBronze,
-                            narrow: narrow,
+                          // Статус + награда + реванш — одно окно; в альбоме
+                          // высоты мало, поэтому окно ещё и скроллится.
+                          child: SingleChildScrollView(
+                            child: _buildEndDialog(
+                              game,
+                              status: status,
+                              showReward: showReward,
+                              rewardBronze: rewardBronze,
+                              narrow: narrow,
+                            ),
                           ),
                         ),
                       ),
@@ -1091,7 +1099,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: _buildBottomBar(game, narrow),
+                child: _buildBottomBar(game, narrow, tight: tight),
               ),
           ],
         );
@@ -1279,6 +1287,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow, {
     bool short = false,
     bool veryShort = false,
+    bool tight = false,
     required String status,
     required bool showReward,
     required int rewardBronze,
@@ -1334,12 +1343,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   clipBehavior: Clip.none,
                   children: [
                     Align(
-                      alignment: Alignment(0, veryShort ? -0.02 : -0.06),
+                      alignment: Alignment(
+                        0,
+                        tight ? -0.38 : (veryShort ? -0.02 : -0.06),
+                      ),
                       child: _buildCenter(
                         game,
                         narrow,
                         cardSize,
                         compact: short || veryShort,
+                        tight: tight,
                         status: status,
                         showReward: showReward,
                         rewardBronze: rewardBronze,
@@ -1453,6 +1466,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow,
     Size cardSize, {
     bool compact = false,
+    bool tight = false,
     required String status,
     required bool showReward,
     required int rewardBronze,
@@ -1579,19 +1593,23 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
           ],
         ),
-        SizedBox(height: gap),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _infoBadge(context.l10n.pokerHandNumber(game.handNumber)),
-            if (game.smallBlind > 0 || game.bigBlind > 0) ...[
-              const SizedBox(width: 6),
-              _infoBadge(
-                context.l10n.pokerBlinds(game.smallBlind, game.bigBlind),
-              ),
+        // В альбоме номер раздачи и блайнды убираем: их строка упирается
+        // в свои карты. Всё важное — банк, борд, стек — остаётся.
+        if (!tight) ...[
+          SizedBox(height: gap),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _infoBadge(context.l10n.pokerHandNumber(game.handNumber)),
+              if (game.smallBlind > 0 || game.bigBlind > 0) ...[
+                const SizedBox(width: 6),
+                _infoBadge(
+                  context.l10n.pokerBlinds(game.smallBlind, game.bigBlind),
+                ),
+              ],
             ],
-          ],
-        ),
+          ),
+        ],
       ],
     );
   }
@@ -2535,7 +2553,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   /// Под столом: комбинация + панель действий с фиксированной высотой
   /// (стол не прыгает при появлении/скрытии кнопок).
-  Widget _buildBottomBar(PokerGameView game, bool narrow) {
+  /// Слот подсказки комбинации: в альбоме пустой ряд не резервируем.
+  double _comboSlotHeight({required bool tight, required bool hasCombo}) {
+    if (!tight) return 30;
+    return hasCombo ? 26 : 0;
+  }
+
+  Widget _buildBottomBar(
+    PokerGameView game,
+    bool narrow, {
+    bool tight = false,
+  }) {
     final comboLabel = _handRankLabel(game.myHandRank);
     final iWonHand = game.isHandOver &&
         game.me != null &&
@@ -2549,9 +2577,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         game.legalActions.isNotEmpty;
     final showCardsBtn = game.canShowCards && !game.isOver;
 
-    const comboSlot = 30.0;
-    const actionSlot = 52.0;
-    final bottomPad = narrow ? 8.0 : 12.0;
+    final comboSlot = _comboSlotHeight(tight: tight, hasCombo: showBottomCombo);
+    final actionSlot = tight ? 42.0 : 52.0;
+    final bottomPad = tight ? 4.0 : (narrow ? 8.0 : 12.0);
 
     final showActionRow = showActions || showCardsBtn;
     // Без кнопок не резервируем пустой ряд — hero остаётся у нижнего края.
@@ -2573,12 +2601,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 : const SizedBox.shrink(),
           ),
           if (showActionRow) ...[
-            const SizedBox(height: 6),
+            if (comboSlot > 0) const SizedBox(height: 6),
             SizedBox(
               height: actionSlot,
               child: showActions
-                  ? _buildActionBar(game)
-                  : Center(child: _buildShowCardsButton()),
+                  ? _buildActionBar(game, buttonHeight: actionSlot)
+                  : Center(
+                      child: _buildShowCardsButton(height: actionSlot),
+                    ),
             ),
           ],
         ],
@@ -2586,16 +2616,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _buildShowCardsButton() {
+  Widget _buildShowCardsButton({double height = 48}) {
     return SizedBox(
-      height: 48,
+      height: height,
       child: FilledButton(
         onPressed: _busy ? null : () => unawaited(_showCards()),
         style: FilledButton.styleFrom(
           backgroundColor: const Color(0xFF3E7CB1),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-          minimumSize: const Size(160, 48),
+          minimumSize: Size(160, height),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -2683,7 +2713,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _buildActionBar(PokerGameView game) {
+  Widget _buildActionBar(PokerGameView game, {double buttonHeight = 48}) {
     final canFold = game.canDo(PokerActionType.fold);
     final canCheck = game.canDo(PokerActionType.check);
     final canCall = game.canDo(PokerActionType.call);
@@ -2696,11 +2726,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _actionButton(
           label: l10n.pokerFold,
           color: const Color(0xFFB0384A),
+          height: buttonHeight,
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.fold)),
         ),
       if (canCheck)
         _actionButton(
           label: l10n.pokerCheck,
+          height: buttonHeight,
           color: const Color(0xFF3E7CB1),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.check)),
         ),
@@ -2709,18 +2741,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           label: game.callAmount > 0
               ? l10n.pokerCall(game.callAmount)
               : l10n.pokerCallShort,
+          height: buttonHeight,
           color: const Color(0xFF3E7CB1),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.call)),
         ),
       if (canRaise)
         _actionButton(
           label: l10n.pokerRaise,
+          height: buttonHeight,
           color: AppColors.accentStart,
           onTap: _busy ? null : () => unawaited(_openRaiseSheet(game)),
         ),
       if (canAllIn)
         _actionButton(
           label: l10n.pokerAllIn,
+          height: buttonHeight,
           color: const Color(0xFFC9782B),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.allIn)),
         ),
@@ -2741,16 +2776,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required String label,
     required Color color,
     required VoidCallback? onTap,
+    double height = 48,
   }) {
     return SizedBox(
-      height: 48,
+      height: height,
       child: FilledButton(
         onPressed: onTap,
         style: FilledButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          minimumSize: const Size(0, 48),
+          minimumSize: Size(0, height),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

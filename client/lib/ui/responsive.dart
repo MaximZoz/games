@@ -41,6 +41,11 @@ double shellToolbarHeight(BuildContext context) {
   return isNarrow(context) ? 48.0 : kToolbarHeight;
 }
 
+/// Высота AppBar игрового экрана: в альбоме телефона вертикали мало,
+/// и каждый лишний пиксель шапки отнимается у стола.
+double gameToolbarHeight(BuildContext context) =>
+    isPhoneLandscape(context) ? 44.0 : kToolbarHeight;
+
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
 bool isLandscapeKeyboardOpen(
   BuildContext context, {

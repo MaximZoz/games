@@ -22,6 +22,7 @@ import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_seats.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/game_table_fit.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/uno/uno_card_fly.dart';
 import 'package:multigames_client/ui/uno/uno_card_widget.dart';
@@ -149,8 +150,16 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     return renderObject.localToGlobal(Offset.zero) & renderObject.size;
   }
 
-  Size _flyCardSize(BuildContext context) =>
-      isNarrow(context) ? const Size(52, 78) : const Size(62, 93);
+  /// Высота, на которой стол помещается в полный размер:
+  /// шапка + стол с колодой и сбросом + кнопки + рука.
+  static const double _tableDesignHeight = 470;
+
+  /// Подгонка под доступную высоту — в альбоме телефона её ~330 px.
+  GameTableFit _fit = const GameTableFit(scale: 1, compact: false);
+
+  Size _flyCardSize(BuildContext context) => _fit.scaled(
+        isNarrow(context) ? const Size(52, 78) : const Size(62, 93),
+      );
 
   void _observeView(UnoGameView game) {
     if (_seenRoundNumber != 0 &&
@@ -1221,6 +1230,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: showGroupChat ? 96 : 48,
           leading: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1310,6 +1320,19 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Widget _buildGame(UnoGameView game) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _fit = gameTableFit(
+          availableHeight: constraints.maxHeight,
+          designHeight: _tableDesignHeight,
+          minScale: 0.6,
+        );
+        return _buildGameBody(game);
+      },
+    );
+  }
+
+  Widget _buildGameBody(UnoGameView game) {
     final narrow = isNarrow(context);
     final seats = unoOpponentSeatOrder(
       myIndex: game.myIndex,
@@ -1378,7 +1401,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 40,
+          height: _fit.compact ? 32 : 40,
           child: GameStatusWithReward(
             statusText: status,
             showReward: game.isOver && game.stakeBronze > 0,
@@ -1557,7 +1580,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildCenterTable(UnoGameView game) {
     final narrow = isNarrow(context);
-    final cardSize = narrow ? const Size(62, 93) : const Size(68, 102);
+    final cardSize =
+        _fit.scaled(narrow ? const Size(62, 93) : const Size(68, 102));
     final shownDiscard = unoVisibleDiscard(
       serverTop: game.topDiscard,
       override: _discardOverride,
@@ -1588,7 +1612,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
           padding: EdgeInsets.symmetric(
             horizontal: narrow ? 22 : 48,
-            vertical: narrow ? 15 : 24,
+            vertical: (narrow ? 15.0 : 24.0) * _fit.scale,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1795,7 +1819,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
     final outlined = _unoActionStyle();
     return SizedBox(
-      height: isWide(context) ? 40 : 48,
+      height: isWide(context) ? 40 : (_fit.compact ? 42 : 48),
       child: Center(
         child: Wrap(
           alignment: WrapAlignment.center,
@@ -1875,7 +1899,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Widget _buildHand(UnoGameView game) {
     final narrow = isNarrow(context);
-    final cardSize = narrow ? const Size(58, 87) : const Size(72, 108);
+    final cardSize =
+        _fit.scaled(narrow ? const Size(58, 87) : const Size(72, 108));
     final hand = _dealing
         ? game.myHand.take(_dealHeroShown).toList(growable: false)
         : unoVisibleHand(game.myHand, {..._hiddenHandIds, ..._pendingDrawnIds});

@@ -507,7 +507,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: kToolbarHeight,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: 48,
           leading: IconButton(
             padding: EdgeInsets.zero,
