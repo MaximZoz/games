@@ -231,8 +231,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
             null;
       }
-      ref.invalidate(gameStateProvider(widget.gameId));
-      unawaited(ref.read(activeGameProvider.notifier).refresh());
+      unawaited(ref.read(gameStateProvider(widget.gameId).notifier).reconcile());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
@@ -243,15 +242,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       realtimeEventsProvider,
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
-        if (type == 'game_state' &&
-            next.valueOrNull?['game_id'] == widget.gameId &&
-            !_waitingForBotMove) {
-          // Не сбрасываем override сразу: иначе на время refetch снова
-          // показывается старый AsyncValue («Ваш ход» после своего хода).
-          // Listener gameStateProvider сбросит override, когда данные не хуже.
-          ref.invalidate(gameStateProvider(widget.gameId));
-          unawaited(ref.read(activeGameProvider.notifier).refresh());
-        }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           final gameId = next.valueOrNull?['game_id']?.toString();

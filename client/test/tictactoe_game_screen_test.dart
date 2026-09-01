@@ -11,6 +11,11 @@ import 'package:multigames_client/screens/tictactoe_game_screen.dart';
 
 import 'test_locale.dart';
 
+class _PendingGameState extends GameStateNotifier {
+  @override
+  Future<GameStateItem> build(String arg) => Completer<GameStateItem>().future;
+}
+
 void main() {
   setUp(setUpTestLocaleRu);
 
@@ -19,9 +24,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          gameStateProvider.overrideWith(
-            (ref, gameId) => Completer<GameStateItem>().future,
-          ),
+          gameStateProvider.overrideWith(_PendingGameState.new),
         ],
         child: const MaterialApp(
           locale: Locale('ru'),
