@@ -15,6 +15,7 @@ import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -876,6 +877,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   void _navigateToGames() {
+    leaveGamesSession(ref);
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
     _rematchPollTimer?.cancel();

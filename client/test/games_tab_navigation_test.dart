@@ -117,7 +117,7 @@ void main() {
   });
 
   group('nextRememberedGamesSessionPath', () {
-    test('помнит стол и забывает на каталоге', () {
+    test('помнит стол и не сносит его вспышкой каталога', () {
       expect(
         nextRememberedGamesSessionPath('/games/durak/offline', null),
         '/games/durak/offline',
@@ -128,7 +128,7 @@ void main() {
       );
       expect(
         nextRememberedGamesSessionPath('/games', '/games/durak/offline'),
-        isNull,
+        '/games/durak/offline',
       );
     });
   });

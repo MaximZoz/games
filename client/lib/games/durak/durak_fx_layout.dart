@@ -65,6 +65,30 @@ bool shouldSnapDurakVisualOnResume({
   return _isDurakPlayPath(nextPath);
 }
 
+/// Стол дурака сейчас на экране — иначе полёты no-op, а карты остаются скрытыми.
+bool durakGameUiActive({
+  required bool tickerEnabled,
+  required String visiblePath,
+  required String herePath,
+}) {
+  if (!tickerEnabled) return false;
+  if (visiblePath.trim().isEmpty) return true;
+  if (!_isDurakPlayPath(visiblePath)) return false;
+  return _isDurakPlayPath(herePath);
+}
+
+/// Полёт/busy слишком долго — вёрстка «пропала», нужен snap к серверу.
+bool durakVisualLooksStuck({
+  required bool busy,
+  required bool fxScheduled,
+  required bool flightActive,
+  required bool hidingTable,
+}) =>
+    busy || fxScheduled || flightActive || hidingTable;
+
+/// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
+int durakStuckSnapTicks({required bool compact}) => compact ? 2 : 3;
+
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;
   final parts = clean.split('/').where((p) => p.isNotEmpty).toList();

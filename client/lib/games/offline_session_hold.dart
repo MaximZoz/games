@@ -19,14 +19,21 @@ void rememberGamesSessionPath(WidgetRef ref, String path) {
   if (next != ref.read(lastGamesSessionPathProvider)) {
     ref.read(lastGamesSessionPathProvider.notifier).state = next;
   }
-  if (path == '/games') {
-    disposeAllOfflineGameSessions();
+}
+
+/// Крестик / сдача — забыть стол и снести локальных ботов.
+///
+/// Каталог `/games` сам по себе этого не делает: при смене вкладки путь
+/// на миг становится `/games`, и иначе партия пропадала.
+void leaveGamesSession(WidgetRef ref) {
+  if (ref.read(lastGamesSessionPathProvider) != null) {
+    ref.read(lastGamesSessionPathProvider.notifier).state = null;
   }
+  disposeAllOfflineGameSessions();
 }
 
 String? nextRememberedGamesSessionPath(String path, String? previous) {
   if (gameRegistry.isActiveGamePath(path)) return path;
-  if (path == '/games') return null;
   return previous;
 }
 

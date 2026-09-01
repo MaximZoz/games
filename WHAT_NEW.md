@@ -4,8 +4,8 @@
 
 ## ru
 - Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
-- Игры с ботом: переключение вкладок возвращает за тот же стол, а не в каталог
-- Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; при возврате с другой вкладки снимаются застрявшие полёты
+- Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
+- Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; застрявшие полёты снимаются при возврате с вкладки, resume и если карта зависла скрытой
 - Дурак в альбоме: полёты карт больше не зависают поверх прошлого кадра (координаты от всего экрана, при повороте overlay снимается); итог — статус и «Повторить» в ряд, без обрезанного стола
 - Игры втроём и вчетвером в альбоме: в покере плашки соперников не уходят под кнопки, в уно кнопки не закрывают колоду и сброс, в дураке «Бито» не наезжает на карты стола
 - iPhone в альбоме: стол игры не заезжает под чёлку и полоску home indicator — карты, кнопки и поле видно целиком
@@ -41,8 +41,8 @@
 
 ## en
 - Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
-- Bot games: switching tabs brings you back to the same table instead of the games catalog
-- Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear when you return from another tab
+- Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
+- Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear on tab return, app resume, or a stuck hidden card
 - Durak in landscape: card flights no longer freeze over the previous frame (overlay uses the real window, and rotates dismiss leftover tickets); the result row keeps Rematch beside the status instead of a clipped table
 - Three- and four-player games in landscape: Poker keeps opponent plates above the action buttons, Uno stops the buttons from covering the draw and discard piles, and Durak keeps the Beat button off the table cards
 - iPhone in landscape: the game table keeps clear of the notch and the home indicator — cards, buttons and boards stay fully visible

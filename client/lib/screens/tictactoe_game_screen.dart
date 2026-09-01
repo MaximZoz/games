@@ -12,6 +12,7 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -1575,6 +1576,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         } else {
           _clearSessionForFinishedGame();
         }
+        leaveGamesSession(ref);
         context.go('/games');
         if (rematchLobbyId != null) {
           unawaited(
@@ -1607,6 +1609,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               .read(activeGameProvider.notifier)
               .clearObservationLocal(ifGameId: gameId);
         }
+        leaveGamesSession(ref);
         context.go('/games');
         unawaited(ref.read(activeGameProvider.notifier).refresh());
       },
