@@ -68,6 +68,41 @@ void main() {
     });
   });
 
+  group('landscapeRailLeadingInset', () {
+    test('альбом с рейлом: сдвигаем рейл от левой системной панели', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: const EdgeInsets.only(left: 48, right: 24, top: 0),
+          phoneLandscape: true,
+          railVisible: true,
+        ),
+        48,
+      );
+    });
+
+    test('без рейла левый inset остаётся контенту, не рейлу', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: _iphoneLandscape,
+          phoneLandscape: true,
+          railVisible: false,
+        ),
+        0,
+      );
+    });
+
+    test('портрет: рейл не сдвигаем', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: const EdgeInsets.only(left: 48, top: 24),
+          phoneLandscape: false,
+          railVisible: true,
+        ),
+        0,
+      );
+    });
+  });
+
   testWidgets('альбом: контенту остаётся высота без home indicator',
       (tester) async {
     tester.view.physicalSize = const Size(852, 393);

@@ -1011,7 +1011,15 @@ class AppShell extends ConsumerWidget {
                           ignoring: landscapeKeyboard ||
                               hideLandscapeProfileChrome ||
                               hideInputChrome,
-                          child: NavigationRail(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: landscapeRailLeadingInset(
+                                viewPadding: media.viewPadding,
+                                phoneLandscape: narrowLandscape,
+                                railVisible: railVisible,
+                              ),
+                            ),
+                            child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
                       backgroundColor: Colors.transparent,
@@ -1038,6 +1046,7 @@ class AppShell extends ConsumerWidget {
                           label: Text(item.label),
                         );
                       }).toList(),
+                            ),
                           ),
                         ),
                       ),

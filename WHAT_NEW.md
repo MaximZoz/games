@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Игры в альбоме на Android: шапка и рейл больше не заезжают под системную панель с часами
+- Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
 - Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
 - Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
 - Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
@@ -43,7 +43,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Android landscape games: the rail and game header no longer sit under the status bar
+- Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
 - Turn timer: the clock keeps ticking after the low-time warning
 - Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
 - Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss

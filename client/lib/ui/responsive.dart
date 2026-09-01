@@ -65,8 +65,8 @@ double shellStatusBarExtent({
 /// В портрете низ закрывает нижнее меню (оно само красит home indicator), а
 /// сверху — тулбар. В альбоме меню нет, и содержимое экрана упирается прямо в
 /// вырез сбоку и в полоску home indicator: карты и кнопки уезжают под них.
-/// Левый inset съедает `NavigationRail` (у него свой `SafeArea`) — если рейл
-/// на экране, второй раз его добавлять нельзя.
+/// Левый inset, когда рейл на экране, вешает [landscapeRailLeadingInset] на
+/// сам рейл — второй раз его в контент добавлять нельзя.
 /// Верх (status bar) в альбоме резервирует [shellStatusBarExtent], не эта
 /// функция: рейл стоит рядом с контентом и тоже должен уйти вниз.
 EdgeInsets landscapeContentSafeArea({
@@ -80,6 +80,21 @@ EdgeInsets landscapeContentSafeArea({
     right: viewPadding.right,
     bottom: viewPadding.bottom,
   );
+}
+
+/// Левый вырез / status bar в альбоме телефона, когда виден рейл.
+///
+/// На Android часы и камера сидят на коротком крае слева. Рейл в [Row]
+/// стоит в x=0, а `NavigationRail.useSafeArea` смотрит в `MediaQuery.padding`,
+/// который Scaffold обнуляет у body. Отступ берём из [viewPadding] и
+/// вешаем на рейл, иначе иконки уезжают под системную панель.
+double landscapeRailLeadingInset({
+  required EdgeInsets viewPadding,
+  required bool phoneLandscape,
+  required bool railVisible,
+}) {
+  if (!phoneLandscape || !railVisible) return 0;
+  return viewPadding.left < 0 ? 0 : viewPadding.left;
 }
 
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
