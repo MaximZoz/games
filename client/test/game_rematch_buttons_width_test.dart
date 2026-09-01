@@ -74,4 +74,17 @@ void main() {
     final rematchCenter = tester.getCenter(find.bySubtype<FilledButton>()).dx;
     expect((rematchCenter - blockCenter).abs(), lessThan(1.0));
   });
+
+  testWidgets('в альбоме телефона кнопки реванша стоят в ряд', (tester) async {
+    tester.view.physicalSize = const Size(800, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrap(_section(), width: 720));
+
+    final rematch = tester.getRect(find.bySubtype<FilledButton>());
+    final other = tester.getRect(find.bySubtype<OutlinedButton>());
+    expect((rematch.center.dy - other.center.dy).abs(), lessThan(8));
+    expect(rematch.right, lessThan(other.left + 1));
+  });
 }

@@ -9,6 +9,8 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
+export 'package:multigames_client/ui/durak/overlay_space.dart';
+
 /// Общая кривая полёта: мягкий разгон и длинное торможение без «щелчка» в конце.
 const Curve kDurakFlyCurve = Curves.easeOutQuint;
 
@@ -17,15 +19,45 @@ const Curve kDurakLayoutCurve = Curves.easeInOutCubic;
 
 /// Билет на полёт: после [done] при [keepAtEnd] карта остаётся, пока не [dismiss].
 class CardFlyTicket {
-  CardFlyTicket._(this._entry, this._controller, this._curved);
+  CardFlyTicket._(this._entry, this._controller, this._curved) {
+    if (_entry != null || _controller != null) {
+      _live.add(this);
+    }
+  }
+
+  static final List<CardFlyTicket> _live = <CardFlyTicket>[];
+
   final OverlayEntry? _entry;
   final AnimationController? _controller;
   final CurvedAnimation? _curved;
   bool _dismissed = false;
 
+  /// Сколько билетов ещё держат overlay/контроллер — для тестов.
+  static int get debugLiveCount => _live.length;
+
+  /// Снять все незакрытые полёты (поворот, конец партии, watchdog).
+  static void dismissAll() {
+    if (_live.isEmpty) return;
+    final copy = List<CardFlyTicket>.of(_live);
+    _live.clear();
+    for (final ticket in copy) {
+      ticket.dismiss();
+    }
+  }
+
+  @visibleForTesting
+  static void debugReset() {
+    dismissAll();
+  }
+
+  @visibleForTesting
+  static CardFlyTicket debugAttach(OverlayEntry entry) =>
+      CardFlyTicket._(entry, null, null);
+
   void dismiss() {
     if (_dismissed) return;
     _dismissed = true;
+    _live.remove(this);
     GameFlyOverlay.remove(_entry);
     _curved?.dispose();
     _controller?.dispose();
