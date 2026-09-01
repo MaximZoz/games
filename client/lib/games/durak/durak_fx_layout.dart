@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show Size;
+
 /// Как показать итог партии дурака.
 enum DurakFinishedChrome {
   /// Партия идёт — стол и веер на месте.
@@ -53,6 +56,178 @@ bool durakPilesPeekOffEdge({required bool compact}) => !compact;
 
 /// Отступ колоды/биты от края доски.
 double durakPileEdgeInset({required bool compact}) => compact ? 10.0 : 2.0;
+
+/// Коридор слева под колоду + козырь.
+double durakBoardLeftReserve({
+  required bool compact,
+  required Size cardSize,
+}) {
+  final deckW = cardSize.width * 0.55 + cardSize.height * 0.82;
+  return deckW + (compact ? 18.0 : 14.0);
+}
+
+/// Коридор справа под биту целиком в кадре (поворот карты + inset).
+double durakBoardRightReserve({
+  required bool compact,
+  required Size cardSize,
+}) {
+  if (!compact) {
+    return math.max(90.0, cardSize.width * 0.70) + 12;
+  }
+  return math.max(96.0, cardSize.width * 1.70) + 18;
+}
+
+/// Минимальная высота плитки веера соперника.
+///
+/// В альбоме 24 px сливались в «иконку» — рубашки должны читаться как карты.
+double durakOpponentFanTileMinH({required bool compact}) =>
+    compact ? 40.0 : 32.0;
+
+/// Минимальная ширина плитки веера соперника.
+double durakOpponentFanTileMinW({required bool compact}) =>
+    compact ? 28.0 : 22.0;
+
+/// Доля ширины экрана под веер соперника.
+double durakOpponentFanMaxWidthFrac({required bool compact}) =>
+    compact ? 0.48 : 1 / 3;
+
+/// Базовый масштаб плитки от карты стола.
+double durakOpponentFanBaseScale({required bool compact}) =>
+    compact ? 0.64 : 0.44;
+
+double durakOpponentFanTileScale({
+  required bool compact,
+  required int shown,
+}) {
+  final base = durakOpponentFanBaseScale(compact: compact);
+  if (shown > 16) return compact ? 0.46 : 0.30;
+  if (shown > 12) return compact ? 0.50 : 0.34;
+  if (shown > 9) return compact ? 0.54 : 0.38;
+  if (shown > 6) return compact ? 0.58 : 0.41;
+  return base;
+}
+
+double durakOpponentFanMinStepFrac(int shown) {
+  if (shown > 16) return 0.18;
+  if (shown > 12) return 0.22;
+  if (shown > 9) return 0.28;
+  if (shown > 6) return 0.36;
+  if (shown > 4) return 0.46;
+  return 0.58;
+}
+
+/// Сколько рубашек рисуем: во время раздачи хотя бы одна — цель полёта.
+int durakOpponentFanShownCount({
+  required int serverCount,
+  required int pending,
+}) {
+  final visible = serverCount - pending;
+  if (visible > 20) return 20;
+  if (visible > 0) return visible;
+  if (serverCount > 0 && pending > 0) return 1;
+  return 0;
+}
+
+/// Геометрия веера соперника: плитка, шаг, дуга, фиксированный слот по высоте.
+class DurakOpponentFanGeometry {
+  const DurakOpponentFanGeometry({
+    required this.tile,
+    required this.step,
+    required this.totalW,
+    required this.arcH,
+    required this.reserveH,
+    required this.shown,
+  });
+
+  final Size tile;
+  final double step;
+  final double totalW;
+  final double arcH;
+  final double reserveH;
+  final int shown;
+}
+
+DurakOpponentFanGeometry durakOpponentFanGeometry({
+  required Size cardSize,
+  required int shown,
+  required double maxWidth,
+  required bool compact,
+}) {
+  final minH = durakOpponentFanTileMinH(compact: compact);
+  final minW = durakOpponentFanTileMinW(compact: compact);
+  final maxTileW = compact ? 58.0 : 52.0;
+  final maxTileH = compact ? 84.0 : 76.0;
+  final tileScale = durakOpponentFanTileScale(compact: compact, shown: shown);
+  var tile = Size(
+    (cardSize.width * tileScale).clamp(minW, maxTileW),
+    (cardSize.height * tileScale).clamp(minH, maxTileH),
+  );
+  final reserveTileH =
+      (cardSize.height * durakOpponentFanBaseScale(compact: compact))
+          .clamp(minH, maxTileH);
+  final reserveH = reserveTileH + reserveTileH * 0.28 + 8;
+
+  if (shown <= 0) {
+    return DurakOpponentFanGeometry(
+      tile: tile,
+      step: 0,
+      totalW: tile.width,
+      arcH: 0,
+      reserveH: reserveH,
+      shown: 0,
+    );
+  }
+
+  var step = shown <= 1 ? 0.0 : tile.width * durakOpponentFanMinStepFrac(shown);
+  var totalW = tile.width + step * math.max(shown - 1, 0);
+  if (shown > 1 && totalW > maxWidth) {
+    for (var i = 0; i < 24 && totalW > maxWidth && tile.width > minW; i++) {
+      final s = (maxWidth / totalW).clamp(0.50, 0.96);
+      tile = Size(
+        (tile.width * s).clamp(minW, tile.width),
+        (tile.height * s).clamp(minH, tile.height),
+      );
+      step = tile.width * durakOpponentFanMinStepFrac(shown);
+      totalW = tile.width + step * (shown - 1);
+    }
+    if (totalW > maxWidth) {
+      step = ((maxWidth - tile.width) / (shown - 1)).clamp(6.0, step);
+      totalW = tile.width + step * (shown - 1);
+    }
+  }
+  final arcH = tile.height *
+      (shown > 12
+          ? 0.10
+          : shown > 8
+              ? 0.16
+              : shown > 4
+                  ? 0.22
+                  : 0.28);
+  return DurakOpponentFanGeometry(
+    tile: tile,
+    step: step,
+    totalW: totalW,
+    arcH: arcH,
+    reserveH: reserveH,
+    shown: shown,
+  );
+}
+
+/// Размер карты в полёте на веер соперника — не мельче читаемой рубашки.
+Size durakOpponentFanFlightSize(
+  Size tableCard, {
+  required bool compact,
+}) {
+  final scale = compact ? 0.72 : 0.55;
+  return Size(
+    (tableCard.width * scale).clamp(compact ? 36.0 : 30.0, 60.0),
+    (tableCard.height * scale).clamp(compact ? 50.0 : 44.0, 86.0),
+  );
+}
+
+/// Раздача в альбоме чуть длиннее: иначе 160 ms не видно за рейлом.
+Duration durakDealFlyDuration({required bool compact}) =>
+    Duration(milliseconds: compact ? 220 : 160);
 
 /// Вернулись с другой вкладки на стол — снять застрявшие полёты.
 bool shouldSnapDurakVisualOnResume({

@@ -101,6 +101,58 @@ void main() {
       expect(durakPileEdgeInset(compact: false), 2);
     });
 
+    test('справа в альбоме хватает места на карту биты', () {
+      const card = Size(43, 61);
+      final right = durakBoardRightReserve(compact: true, cardSize: card);
+      expect(right, greaterThan(card.width * 1.35 + 10));
+      expect(
+        durakBoardLeftReserve(compact: true, cardSize: card),
+        closeTo(card.width * 0.55 + card.height * 0.82 + 18, 0.01),
+      );
+    });
+
+    test('веер соперника в альбоме читаемый, не 24 px', () {
+      expect(durakOpponentFanTileMinH(compact: true), greaterThanOrEqualTo(40));
+      expect(durakOpponentFanTileMinW(compact: true), greaterThanOrEqualTo(28));
+      const card = Size(43, 61);
+      final geo = durakOpponentFanGeometry(
+        cardSize: card,
+        shown: 6,
+        maxWidth: 360,
+        compact: true,
+      );
+      expect(geo.tile.height, greaterThanOrEqualTo(40));
+      expect(geo.tile.width, greaterThanOrEqualTo(28));
+      expect(geo.totalW, greaterThan(geo.tile.width));
+      expect(geo.reserveH, greaterThan(geo.tile.height));
+    });
+
+    test('во время раздачи веер не пустой — есть цель посадки', () {
+      expect(
+        durakOpponentFanShownCount(serverCount: 6, pending: 6),
+        1,
+      );
+      expect(
+        durakOpponentFanShownCount(serverCount: 6, pending: 3),
+        3,
+      );
+      expect(
+        durakOpponentFanShownCount(serverCount: 0, pending: 0),
+        0,
+      );
+    });
+
+    test('полёт на веер в альбоме не мельче 36×50', () {
+      final fly = durakOpponentFanFlightSize(
+        const Size(43, 61),
+        compact: true,
+      );
+      expect(fly.width, greaterThanOrEqualTo(36));
+      expect(fly.height, greaterThanOrEqualTo(50));
+      expect(durakDealFlyDuration(compact: true).inMilliseconds, 220);
+      expect(durakDealFlyDuration(compact: false).inMilliseconds, 160);
+    });
+
     test('запас стола под кнопку в альбоме', () {
       expect(
         durakBoardBottomReserve(
