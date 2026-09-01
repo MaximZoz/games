@@ -4965,8 +4965,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
         child: Column(
           children: [
-            SizedBox(
-              width: double.infinity,
+            Center(
               child: view.playerIds.length == 2
                   ? _opponentsHeader(view)
                   : _multiOpponentsArea(view, tableSize),
@@ -4981,9 +4980,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Expanded(
+                              Flexible(
                                 child: statusBlock(
                                   fontSize: c.maxWidth < 520 ? 15 : 18,
                                 ),
