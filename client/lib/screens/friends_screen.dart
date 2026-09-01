@@ -1823,14 +1823,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               animateFromZeroOnce: true,
             )
           : Text('$count', style: countStyle);
+      // Плашка как в портрете: иначе акцент на выбранном табе сливается с подписью.
+      final countBadge = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: AppColors.accentSoft,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: countChild,
+      );
       return Text.rich(
         TextSpan(
           children: [
             TextSpan(text: '$title '),
             WidgetSpan(
-              alignment: PlaceholderAlignment.baseline,
-              baseline: TextBaseline.alphabetic,
-              child: countChild,
+              alignment: PlaceholderAlignment.middle,
+              child: countBadge,
             ),
           ],
         ),
