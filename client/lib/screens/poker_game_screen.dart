@@ -1386,16 +1386,24 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                         ),
                       ),
                     ),
+                    // Нижние боковые места в альбоме упираются в ряд кнопок:
+                    // он лежит на самом фетре во всю ширину. Отдаём соперникам
+                    // только фетр над кнопками.
                     for (var i = 0; i < opponents.length; i++)
-                      Align(
-                        alignment: oppAnchors[i],
-                        child: _buildSeat(
-                          game,
-                          opponents[i],
-                          narrow,
-                          align: oppAnchors[i],
-                          compact: short || veryShort,
-                          sideways: tight,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: tight ? heroBottom : 0,
+                        ),
+                        child: Align(
+                          alignment: oppAnchors[i],
+                          child: _buildSeat(
+                            game,
+                            opponents[i],
+                            narrow,
+                            align: oppAnchors[i],
+                            compact: short || veryShort,
+                            sideways: tight,
+                          ),
                         ),
                       ),
                   ],

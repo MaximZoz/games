@@ -1468,24 +1468,39 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Widget _buildTableWithSeats(UnoGameView game, List<int> seats) {
-    if (seats.length <= 1) {
-      // Альбом: соперник уходит влево — по вертикали его карточка съедала
-      // место, из-за чего колода со сбросом не помещались в овал.
-      if (isPhoneLandscape(context)) {
-        return Stack(
-          children: [
-            if (seats.isNotEmpty)
-              Align(
+    // Альбом: соперники уходят на боковые колонки. Любая карточка сверху
+    // съедает вертикаль, и овал с колодой и сбросом перестаёт помещаться —
+    // подписи вылезают под ряд кнопок.
+    if (isPhoneLandscape(context)) {
+      final columns = unoLandscapeSideColumns(seats);
+      return Stack(
+        children: [
+          if (columns[0].isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _sideChipColumn(
+                game,
+                columns[0],
                 alignment: Alignment.centerLeft,
-                child: _opponentChip(game, seats.first),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 150),
-              child: _buildCenterTable(game),
             ),
-          ],
-        );
-      }
+          if (columns[1].isNotEmpty)
+            Align(
+              alignment: Alignment.centerRight,
+              child: _sideChipColumn(
+                game,
+                columns[1],
+                alignment: Alignment.centerRight,
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 150),
+            child: _buildCenterTable(game),
+          ),
+        ],
+      );
+    }
+    if (seats.length <= 1) {
       return Column(
         children: [
           if (seats.isNotEmpty) _opponentChip(game, seats.first),
@@ -1524,6 +1539,35 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           child: _buildCenterTable(game),
         ),
       ],
+    );
+  }
+
+  /// Колонка карточек соперников у боковой кромки (альбом).
+  ///
+  /// Карточки горизонтальные: вертикальные вдвое выше и парой в колонку не
+  /// встают. [FittedBox] дожимает колонку, если соперников больше, чем
+  /// помещается по высоте.
+  Widget _sideChipColumn(
+    UnoGameView game,
+    List<int> seats, {
+    required Alignment alignment,
+  }) {
+    if (seats.isEmpty) return const SizedBox.shrink();
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: alignment,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: alignment == Alignment.centerLeft
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < seats.length; i++) ...[
+            if (i > 0) const SizedBox(height: 6),
+            _opponentChip(game, seats[i]),
+          ],
+        ],
+      ),
     );
   }
 

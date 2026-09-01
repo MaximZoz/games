@@ -152,24 +152,54 @@ void main() {
       expect(off.dy + cardsHeight, lessThanOrEqualTo(plateH));
     });
 
+    // Фетр телефона в альбоме: ~341 px по высоте, колонка профиля 74 px.
+    const feltH = 341.0;
+    const seatH = 74.0;
+    // Полоса под соперниками отдана ряду кнопок: комбинация 30 + зазор 6 +
+    // кнопки 42 + отступ от бортика 10.
+    const actionBand = 88.0;
+
+    List<double> topsOnSide(int n, double side, double bandH) =>
+        pokerOpponentSeatAnchors(n, landscape: true)
+            .where((a) => a.x == side)
+            .map((a) => (bandH - seatH) * (1 + a.y) / 2)
+            .toList()
+          ..sort();
+
     test('места на одной кромке не наезжают друг на друга', () {
-      // Фетр телефона в альбоме: ~341 px по высоте, колонка профиля 74 px.
-      const feltH = 341.0;
-      const seatH = 74.0;
       for (var n = 1; n <= 5; n++) {
-        final anchors = pokerOpponentSeatAnchors(n, landscape: true);
         for (final side in [-1.0, 1.0]) {
-          final tops = anchors
-              .where((a) => a.x == side)
-              .map((a) => (feltH - seatH) * (1 + a.y) / 2)
-              .toList()
-            ..sort();
+          final tops = topsOnSide(n, side, feltH);
           for (var i = 1; i < tops.length; i++) {
             expect(
               tops[i] - tops[i - 1],
               greaterThanOrEqualTo(seatH),
               reason: 'n=$n сторона $side: места $i-1 и $i перекрываются',
             );
+          }
+        }
+      }
+    });
+
+    test('в полосе над кнопками места тоже не наезжают и не лезут под них',
+        () {
+      const bandH = feltH - actionBand;
+      for (var n = 1; n <= 5; n++) {
+        for (final side in [-1.0, 1.0]) {
+          final tops = topsOnSide(n, side, bandH);
+          for (var i = 0; i < tops.length; i++) {
+            expect(
+              tops[i] + seatH,
+              lessThanOrEqualTo(bandH + 0.5),
+              reason: 'n=$n сторона $side: место $i заходит под кнопки',
+            );
+            if (i > 0) {
+              expect(
+                tops[i] - tops[i - 1],
+                greaterThanOrEqualTo(seatH),
+                reason: 'n=$n сторона $side: места $i-1 и $i перекрываются',
+              );
+            }
           }
         }
       }
