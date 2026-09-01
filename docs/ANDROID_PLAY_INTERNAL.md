@@ -80,6 +80,12 @@ Workflow: `.github/workflows/android-internal.yml`
 
 Секреты те же (`ANDROID_KEYSTORE_*`, `PLAY_SERVICE_ACCOUNT_JSON`).
 
+`targetSdk` в `client/android/app/build.gradle.kts` должен быть **36**
+(Android 16). С 31.08.2026 Play отклоняет обновления с более низким
+target API: `Target SDK of artifact is too low` (в логе upload-google-play
+рядом может быть `versionCode`, например `10059`). Не брать
+`flutter.targetSdkVersion` из Flutter 3.27 — там 35.
+
 ### Если Queued / Failed to cancel
 
 Settings → Actions → Disable → Enable; не спамь Run workflow.

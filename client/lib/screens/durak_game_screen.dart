@@ -18,6 +18,7 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/games/durak/durak_table_layout.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -196,33 +197,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Экран партии виден (не чаты / другой таб) — иначе FX не на root overlay.
   bool get _gameUiActive {
     if (!mounted) return false;
-    // Офлайн живёт на /games/durak/offline, но path у shell иногда без
-    // этого суффикса — тогда все полёты (колода/бита/веер) молча no-op.
-    if (_isOffline) {
-      try {
-        return TickerMode.of(context);
-      } catch (_) {
-        return true;
-      }
-    }
+    var ticker = true;
     try {
-      final uri = GoRouter.of(context).routeInformationProvider.value.uri;
-      final path = uri.path;
-      final matched = () {
-        try {
-          return GoRouterState.of(context).uri.path;
-        } catch (_) {
-          return '';
-        }
-      }();
-      return path.contains('/games/durak/game/') ||
-          path.contains('/games/durak/offline') ||
-          matched.contains('/games/durak/game/') ||
-          matched.contains('/games/durak/offline');
+      ticker = TickerMode.of(context);
+    } catch (_) {}
+    var here = '';
+    try {
+      here = GoRouterState.of(context).uri.path;
     } catch (_) {
-      final route = ModalRoute.of(context);
-      return route?.isCurrent == true && TickerMode.of(context);
+      try {
+        here = GoRouter.of(context).routeInformationProvider.value.uri.path;
+      } catch (_) {}
     }
+    return durakGameUiActive(
+      tickerEnabled: ticker,
+      visiblePath: GameFlyOverlay.visiblePath,
+      herePath: here,
+    );
   }
 
 
@@ -245,6 +236,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _rememberOrSnapOverlaySpace();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _snapVisualToServer();
+      });
+    }
   }
 
   Size get _flyScreen => overlaySpaceSize(context);
@@ -384,9 +385,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
-      if (_busy || _fxScheduled) {
+      final stuck = durakVisualLooksStuck(
+        busy: _busy,
+        fxScheduled: _fxScheduled,
+        flightActive: _cardFlightActive,
+        hidingTable: _hidingTable || _takeTableHold != null,
+      );
+      if (stuck) {
         _busyStuckTicks++;
-        if (_busyStuckTicks >= 3) {
+        if (_busyStuckTicks >= durakStuckSnapTicks(compact: _fit.compact)) {
           _busyStuckTicks = 0;
           _snapVisualToServer();
           if (!_isOffline) {
@@ -4079,10 +4086,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   void _leaveGoneGame() {
     if (!mounted) return;
     _clearSessionForFinishedGame();
+    leaveGamesSession(ref);
     context.go('/games');
   }
 
   void _navigateToGames({bool keepObservation = false}) {
+    leaveGamesSession(ref);
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
     _rematchRespondedIds.clear();

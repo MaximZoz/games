@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/screens/friends_screen.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 
 void main() {
   group('friendsListEmptyText', () {
@@ -86,6 +88,27 @@ void main() {
       expect(
         friendsHideTabsForKeyboard(landscape: false, keyboardInset: 0),
         isFalse,
+      );
+    });
+  });
+
+  group('friendsTabCountColor', () {
+    test('друзья — акцент, поиск — зелёный, входящие — красный', () {
+      expect(
+        friendsTabCountColor(incoming: false, findFriend: false, count: 3),
+        AppColors.accentStart,
+      );
+      expect(
+        friendsTabCountColor(incoming: false, findFriend: true, count: 108),
+        Colors.green.shade700,
+      );
+      expect(
+        friendsTabCountColor(incoming: true, findFriend: false, count: 2),
+        Colors.red.shade600,
+      );
+      expect(
+        friendsTabCountColor(incoming: true, findFriend: false, count: 0),
+        AppColors.accentStart,
       );
     });
   });

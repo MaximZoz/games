@@ -158,4 +158,58 @@ void main() {
       );
     });
   });
+
+  group('durakGameUiActive', () {
+    test('чужая вкладка — не запускаем FX', () {
+      expect(
+        durakGameUiActive(
+          tickerEnabled: true,
+          visiblePath: '/profile',
+          herePath: '/games/durak/offline',
+        ),
+        isFalse,
+      );
+      expect(
+        durakGameUiActive(
+          tickerEnabled: true,
+          visiblePath: '/games/durak/offline',
+          herePath: '/games/durak/offline',
+        ),
+        isTrue,
+      );
+      expect(
+        durakGameUiActive(
+          tickerEnabled: false,
+          visiblePath: '/games/durak/offline',
+          herePath: '/games/durak/offline',
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('durak stuck snap', () {
+    test('полёт без busy тоже застрявший кадр', () {
+      expect(
+        durakVisualLooksStuck(
+          busy: false,
+          fxScheduled: false,
+          flightActive: true,
+          hidingTable: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakVisualLooksStuck(
+          busy: false,
+          fxScheduled: false,
+          flightActive: false,
+          hidingTable: false,
+        ),
+        isFalse,
+      );
+      expect(durakStuckSnapTicks(compact: true), 2);
+      expect(durakStuckSnapTicks(compact: false), 3);
+    });
+  });
 }

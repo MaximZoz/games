@@ -9,6 +9,7 @@ import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -887,6 +888,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   void _goToGames({bool keepObservation = false}) {
+    leaveGamesSession(ref);
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
     if (!_isOffline) {
