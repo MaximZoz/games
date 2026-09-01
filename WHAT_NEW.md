@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Игры втроём и вчетвером в альбоме: в покере плашки соперников не уходят под кнопки, в уно кнопки не закрывают колоду и сброс, в дураке «Бито» не наезжает на карты стола
 - iPhone в альбоме: стол игры не заезжает под чёлку и полоску home indicator — карты, кнопки и поле видно целиком
 - Покер в альбоме: кнопки «Фолд», «Колл», «Рейз» и «Ва-банк» больше не срезаются бортиком стола
 - Игры в альбоме: стол больше не съезжает — в дураке видно всю руку и колоду, в уно колоду и сброс, в покере свои карты не наезжают на общие, в морском бое поле слева, а кнопки справа
@@ -35,6 +36,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Three- and four-player games in landscape: Poker keeps opponent plates above the action buttons, Uno stops the buttons from covering the draw and discard piles, and Durak keeps the Beat button off the table cards
 - iPhone in landscape: the game table keeps clear of the notch and the home indicator — cards, buttons and boards stay fully visible
 - Poker in landscape: the Fold / Call / Raise / All-in buttons are no longer clipped by the table rim
 - Games in landscape: the table no longer breaks — Durak shows the whole hand and the deck, Uno the draw and discard piles, Poker keeps hole cards off the board, and Battleship puts the grid on the left with controls on the right
