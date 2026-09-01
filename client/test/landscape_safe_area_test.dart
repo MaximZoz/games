@@ -6,6 +6,22 @@ import 'package:multigames_client/ui/responsive.dart';
 const _iphoneLandscape = EdgeInsets.only(left: 59, right: 59, bottom: 21);
 
 void main() {
+  group('shellStatusBarExtent', () {
+    test('альбом партии: status bar остаётся, даже если тулбар спрятан', () {
+      expect(
+        shellStatusBarExtent(viewPaddingTop: 24, collapseForInput: false),
+        24,
+      );
+    });
+
+    test('клавиатура в альбоме: полоску можно схлопнуть', () {
+      expect(
+        shellStatusBarExtent(viewPaddingTop: 24, collapseForInput: true),
+        0,
+      );
+    });
+  });
+
   group('landscapeContentSafeArea', () {
     test('портрет: отступы даёт нижнее меню, здесь их нет', () {
       expect(

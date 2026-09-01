@@ -751,8 +751,9 @@ class AppShell extends ConsumerWidget {
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.
-    // Status bar уже занят SizedBox(topInset) выше. Иначе каждый экран
-    // со своим SafeArea добавляет ту же высоту ещё раз.
+    // Status bar резервирует SizedBox(shellStatusBarExtent) выше — и в
+    // альбоме партии тоже. Иначе каждый экран со своим SafeArea добавляет
+    // ту же высоту ещё раз, а рейл уезжает под часы Android.
     //
     // В альбоме нижнего меню нет, и вырез сбоку с home indicator снизу
     // никто не отступает — стол игры уезжает под них. Отступаем здесь и
@@ -806,11 +807,12 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: (hideLandscapeProfileChrome ||
-                        hideInputChrome ||
-                        hideGameChromeLandscape)
-                    ? 0
-                    : topInset,
+                height: shellStatusBarExtent(
+                  viewPaddingTop: topInset,
+                  // Партия в альбоме прячет тулбар, но status bar остаётся.
+                  collapseForInput:
+                      hideLandscapeProfileChrome || hideInputChrome,
+                ),
               ),
               ClipRect(
                 child: Align(

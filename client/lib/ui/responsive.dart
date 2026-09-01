@@ -46,6 +46,20 @@ double shellToolbarHeight(BuildContext context) {
 double gameToolbarHeight(BuildContext context) =>
     isPhoneLandscape(context) ? 44.0 : kToolbarHeight;
 
+/// Высота полоски под системный status bar в [AppShell].
+///
+/// В альбоме партии тулбар оболочки прячем, но на Android часы и батарея
+/// остаются поверх экрана. Их высоту нельзя обнулять вместе с тулбаром —
+/// иначе рейл и шапка игры уезжают под системную панель. Ноль только когда
+/// клавиатура съела вертикаль (профиль / друзья / чаты).
+double shellStatusBarExtent({
+  required double viewPaddingTop,
+  required bool collapseForInput,
+}) {
+  if (collapseForInput) return 0;
+  return viewPaddingTop < 0 ? 0 : viewPaddingTop;
+}
+
 /// Безопасные зоны для контента вкладки в альбоме телефона.
 ///
 /// В портрете низ закрывает нижнее меню (оно само красит home indicator), а
@@ -53,6 +67,8 @@ double gameToolbarHeight(BuildContext context) =>
 /// вырез сбоку и в полоску home indicator: карты и кнопки уезжают под них.
 /// Левый inset съедает `NavigationRail` (у него свой `SafeArea`) — если рейл
 /// на экране, второй раз его добавлять нельзя.
+/// Верх (status bar) в альбоме резервирует [shellStatusBarExtent], не эта
+/// функция: рейл стоит рядом с контентом и тоже должен уйти вниз.
 EdgeInsets landscapeContentSafeArea({
   required EdgeInsets viewPadding,
   required bool phoneLandscape,
