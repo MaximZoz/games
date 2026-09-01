@@ -1020,7 +1020,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final hasCombo = _handRankLabel(game.myHandRank) != null && !iWonHand;
     final comboSlot = _comboSlotHeight(tight: tight, hasCombo: hasCombo);
     final actionSlot = tight ? 42.0 : 52.0;
-    final bottomPad = tight ? 4.0 : (narrow ? 6.0 : 10.0);
+    // В альбоме кнопки лежат на самом столе: без отступа они срезаются его
+    // бортиком и упираются в нижнюю кромку экрана.
+    final bottomPad = tight ? 10.0 : (narrow ? 6.0 : 10.0);
     // Hero выезжает вверх только когда есть кнопки; поле/борд не двигаются.
     final heroLift = showActions || showCardsBtn
         ? comboSlot + (comboSlot > 0 ? 6 : 0) + actionSlot + bottomPad
@@ -2643,7 +2645,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
     final comboSlot = _comboSlotHeight(tight: tight, hasCombo: showBottomCombo);
     final actionSlot = tight ? 42.0 : 52.0;
-    final bottomPad = tight ? 4.0 : (narrow ? 8.0 : 12.0);
+    final bottomPad = tight ? 10.0 : (narrow ? 8.0 : 12.0);
 
     final showActionRow = showActions || showCardsBtn;
     // Без кнопок не резервируем пустой ряд — hero остаётся у нижнего края.
