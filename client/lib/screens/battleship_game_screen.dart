@@ -608,7 +608,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
       if (!mounted) return;
       if (view.id != widget.gameId) return;
-      // Свой выстрел — [cell]. После промаха бот может уже сходить в этом же ответе.
+      // Свой выстрел — [cell]. Ход бота приходит отдельным state/WS после паузы.
       final hit = view.myHits.contains(cell);
       final sunkShip = battleshipNewlySunkShip(
         after: view.opponentSunkShips,

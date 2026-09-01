@@ -61,5 +61,42 @@ void main() {
       expect(session.view.isSetup, isTrue);
       expect(session.view.myShots, isEmpty);
     });
+
+    test('после промаха бот ждёт паузу', () async {
+      final session = OfflineBattleshipSession.create(
+        humanUserId: 'u1',
+        gameId: 'offline:battleship:test-delay',
+      );
+      addTearDown(session.dispose);
+
+      await session.placeShips(generateRandomBattleshipShips(3));
+      for (var i = 0; i < 50 && !session.view.isMyTurn; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+      }
+      if (!session.view.isMyTurn || session.view.isOver) {
+        return;
+      }
+      var missed = false;
+      for (var cell = 0; cell < 100; cell++) {
+        if (!session.view.isMyTurn || session.view.isOver) break;
+        if (session.view.myShots.contains(cell)) continue;
+        await session.shoot(cell);
+        if (!session.view.isMyTurn) {
+          missed = true;
+          break;
+        }
+      }
+      if (!missed || session.view.isOver) return;
+      final botShotsRightAfter = session.view.opponentShots.length;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(session.view.opponentShots.length, botShotsRightAfter);
+      await Future<void>.delayed(
+        OfflineBattleshipSession.botDelay + const Duration(milliseconds: 250),
+      );
+      expect(
+        session.view.opponentShots.length,
+        greaterThan(botShotsRightAfter),
+      );
+    });
   });
 }
