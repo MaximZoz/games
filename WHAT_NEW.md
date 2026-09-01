@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак в альбоме: полёты карт больше не зависают поверх прошлого кадра (координаты от всего экрана, при повороте overlay снимается); итог — статус и «Повторить» в ряд, без обрезанного стола
 - Игры втроём и вчетвером в альбоме: в покере плашки соперников не уходят под кнопки, в уно кнопки не закрывают колоду и сброс, в дураке «Бито» не наезжает на карты стола
 - iPhone в альбоме: стол игры не заезжает под чёлку и полоску home indicator — карты, кнопки и поле видно целиком
 - Покер в альбоме: кнопки «Фолд», «Колл», «Рейз» и «Ва-банк» больше не срезаются бортиком стола
@@ -36,6 +37,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak in landscape: card flights no longer freeze over the previous frame (overlay uses the real window, and rotates dismiss leftover tickets); the result row keeps Rematch beside the status instead of a clipped table
 - Three- and four-player games in landscape: Poker keeps opponent plates above the action buttons, Uno stops the buttons from covering the draw and discard piles, and Durak keeps the Beat button off the table cards
 - iPhone in landscape: the game table keeps clear of the notch and the home indicator — cards, buttons and boards stay fully visible
 - Poker in landscape: the Fold / Call / Raise / All-in buttons are no longer clipped by the table rim

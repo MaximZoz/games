@@ -15,6 +15,7 @@ import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/games/durak/durak_table_layout.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
@@ -50,7 +51,8 @@ class DurakGameScreen extends ConsumerStatefulWidget {
   ConsumerState<DurakGameScreen> createState() => _DurakGameScreenState();
 }
 
-class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
+class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
+    with WidgetsBindingObserver {
   bool _busy = false;
   /// Во время полёта держим подсказку/слот как в момент броска (без скачка layout).
   bool _flightLockTable = false;
@@ -162,6 +164,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   /// Соперник, у которого сейчас вскрыт младший козырь (одна рубашка скрыта).
   int? _leadRevealHiddenSeat;
   Offset _tablePanAccum = Offset.zero;
+  Size? _lastOverlaySpace;
 
   /// Локальный порядок карт в веере (после ручной сортировки).
   List<PlayingCard>? _handOrder;
@@ -222,10 +225,73 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _captureOpenMode();
     _initializeProviderBindings();
+    _rememberOrSnapOverlaySpace();
+  }
+
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _rememberOrSnapOverlaySpace();
+    });
+  }
+
+  Size get _flyScreen => overlaySpaceSize(context);
+
+  void _rememberOrSnapOverlaySpace() {
+    if (!mounted) return;
+    final next = overlaySpaceSize(context);
+    if (overlaySpaceChangedEnough(previous: _lastOverlaySpace, next: next)) {
+      _snapVisualToServer();
+    }
+    _lastOverlaySpace = next;
+  }
+
+  /// Снять полёты и показать актуальное состояние сервера.
+  ///
+  /// В альбоме global-rect из прошлого кадра (или из размера вкладки)
+  /// оставляет карты и кнопки поверх нового стола.
+  void _snapVisualToServer() {
+    CardFlyTicket.dismissAll();
+    GameFlyOverlay.dismissAll();
+    _fanKey.currentState?.cancelActiveGesture();
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _fxScheduled = false;
+      _fxNeedsReplay = false;
+      _flightLockTable = false;
+      _flightDefendIdx = null;
+      _hidingTable = false;
+      _takeTableHold = null;
+      _leftTableCards.clear();
+      _remoteFlyingCardIds.clear();
+      _flyingFromHand.clear();
+      _flyingToTable.clear();
+      _incomingFanCards.clear();
+      _pendingDealCards.clear();
+      _optimisticAttacks.clear();
+      _optimisticDefends.clear();
+      _fanAnimDuringBusy = false;
+      _suppressFanLayoutAnim = true;
+      _frozenFanCardSize = null;
+      _frozenFanHandCount = null;
+      _holdingFanCard = false;
+      _activeCard = null;
+      _dragGlobal = null;
+      _deckCountFreeze = null;
+      _bitoCountFreeze = null;
+    });
+    _syncOfflineFxHold();
   }
 
   void _captureOpenMode() {
@@ -307,10 +373,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
-          setState(() {
-            _busy = false;
-            _fxScheduled = false;
-          });
+          _snapVisualToServer();
           if (!_isOffline) {
             ref.invalidate(durakGameProvider(widget.gameId));
           }
@@ -384,10 +447,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timeoutRetryTimer?.cancel();
     _rematchPollTimer?.cancel();
     _busyWatchdog?.cancel();
     _realtimeSubscription?.close();
+    CardFlyTicket.dismissAll();
     GameFlyOverlay.dismissAll();
     super.dispose();
   }
@@ -1243,7 +1308,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       );
     }
 
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final defendIdx = doDefend
         ? _defendTargetIndex(view, cards.first, pointer: pointer)
         : -1;
@@ -1575,7 +1640,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     Rect? fromOverride,
     Offset? pointer,
   }) async {
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final fallback = cardFanApproxOrigin(
           _fanKey.currentContext ?? context,
           _handCardSize,
@@ -2148,7 +2213,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   List<Rect> _tableCardGlobalRects(List<DurakTablePairApi> table) {
     if (table.isEmpty) return const [];
     final tableRect = globalRectOf(_tableKey);
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final center = tableRect?.center ??
         Offset(screen.width / 2, screen.height * 0.42);
     final pairW = _tableCardSize.width + 18;
@@ -2183,7 +2248,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   List<Rect> _tableCardGlobalRectsTopFirst(List<DurakTablePairApi> table) {
     if (table.isEmpty) return const [];
     final tableRect = globalRectOf(_tableKey);
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final center = tableRect?.center ??
         Offset(screen.width / 2, screen.height * 0.42);
     final pairW = _tableCardSize.width + 18;
@@ -2270,7 +2335,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
       final from = fromOverrides != null && i < fromOverrides.length
           ? fromOverrides[i]
           : Rect.fromCenter(
-              center: MediaQuery.sizeOf(context).center(Offset.zero).translate(
+              center: _flyScreen.center(Offset.zero).translate(
                     (i - cards.length / 2) * 36,
                     -10,
                   ),
@@ -2443,8 +2508,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final bitoRect = globalRectOf(_bitoKey) ??
         Rect.fromCenter(
           center: Offset(
-            MediaQuery.sizeOf(context).width * 0.88,
-            MediaQuery.sizeOf(context).height * 0.32,
+            _flyScreen.width * 0.88,
+            _flyScreen.height * 0.32,
           ),
           width: _tableCardSize.width,
           height: _tableCardSize.height,
@@ -2460,7 +2525,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         fromOverrides != null && i < fromOverrides.length
             ? fromOverrides[i]
             : Rect.fromCenter(
-                center: MediaQuery.sizeOf(context).center(Offset.zero).translate(
+                center: _flyScreen.center(Offset.zero).translate(
                       (i - n / 2) * 36,
                       -8,
                     ),
@@ -2517,6 +2582,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
   /// Полный сброс FX перед новой раздачей (реванш с ботом на том же экране).
   void _resetTableFxForNewDeal() {
+    CardFlyTicket.dismissAll();
+    GameFlyOverlay.dismissAll();
+    _fanKey.currentState?.cancelActiveGesture();
     _busy = false;
     _fxScheduled = false;
     _fxNeedsReplay = false;
@@ -3132,8 +3200,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final base = globalRectOf(_deckKey) ??
         Rect.fromCenter(
           center: Offset(
-            MediaQuery.sizeOf(context).width * 0.12,
-            MediaQuery.sizeOf(context).height * 0.42,
+            _flyScreen.width * 0.12,
+            _flyScreen.height * 0.42,
           ),
           width: _tableCardSize.width,
           height: _tableCardSize.height,
@@ -3334,8 +3402,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               globalRectOf(_fanKey) ??
               Rect.fromCenter(
                 center: Offset(
-                  MediaQuery.sizeOf(context).width / 2,
-                  MediaQuery.sizeOf(context).height * 0.78,
+                  _flyScreen.width / 2,
+                  _flyScreen.height * 0.78,
                 ),
                 width: _handCardSize.width,
                 height: _handCardSize.height,
@@ -3347,8 +3415,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   : null) ??
               Rect.fromCenter(
                 center: Offset(
-                  MediaQuery.sizeOf(context).width / 2,
-                  MediaQuery.sizeOf(context).height * 0.18,
+                  _flyScreen.width / 2,
+                  _flyScreen.height * 0.18,
                 ),
                 width: _tableCardSize.width * 0.5,
                 height: _tableCardSize.height * 0.5,
@@ -3499,7 +3567,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final cards = _flattenTableCardsTopFirst(table);
     // Геометрию снимаем ДО скрытия карт — иначе полёт из «дырки».
     final froms = _tableCardGlobalRectsTopFirst(table);
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final toKey = _oppFanKeys.putIfAbsent(oppIdx, GlobalKey.new);
     final to = globalRectOf(toKey) ??
         Rect.fromCenter(
@@ -3581,7 +3649,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     for (var i = 0; i < n; i++) {
       if (!mounted || !_gameUiActive) return;
-      final screen = MediaQuery.sizeOf(context);
+      final screen = _flyScreen;
       final to = globalRectOf(toKey) ??
           Rect.fromCenter(
             center: Offset(screen.width / 2, screen.height * 0.16),
@@ -3818,14 +3886,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     final from = (fromKey != null ? globalRectOf(fromKey) : null) ??
         Rect.fromCenter(
           center: Offset(
-            MediaQuery.sizeOf(context).width / 2,
-            MediaQuery.sizeOf(context).height * 0.18,
+            _flyScreen.width / 2,
+            _flyScreen.height * 0.18,
           ),
           width: _tableCardSize.width * 0.5,
           height: _tableCardSize.height * 0.5,
         );
 
-    final screen = MediaQuery.sizeOf(context);
+    final screen = _flyScreen;
     final tableRect = globalRectOf(_tableKey);
     final tableCenter = tableRect?.center ??
         Offset(screen.width / 2, screen.height * 0.42);
@@ -4153,6 +4221,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           view.myPlace == 1) {
         _confettiArmed = true;
       }
+      if (view.isOver &&
+          (_prevGameStatus == 'active' || _prevGameStatus == null)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _snapVisualToServer();
+        });
+      }
       _prevGameStatus = view.status;
       return;
     }
@@ -4227,6 +4301,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           : 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        _snapVisualToServer();
         _clearSessionForFinishedGame();
         setState(() {
           _rematchLobbyId = null;
@@ -4837,6 +4912,97 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
         showPass ||
         showTakeReveal ||
         showBitoReveal;
+    final finishedChrome = durakFinishedChrome(
+      isOver: view.isOver,
+      phoneLandscape: isPhoneLandscape(context),
+    );
+    final layoutTween = durakLayoutTweenDuration(compact: _fit.compact);
+
+    Widget statusBlock({double? fontSize}) {
+      return GameStatusWithReward(
+        statusText: _turnHint(view),
+        showReward: _showRewardChip(view),
+        rewardBronze: _rewardChipBronze(view),
+        rewardKey: _winRewardKey,
+        fontSize: fontSize,
+      );
+    }
+
+    Widget rematchBlock() {
+      if (_isOffline) {
+        return Center(
+          child: FilledButton.icon(
+            onPressed: _isRematching ? null : _rematch,
+            icon: const Icon(Icons.replay_rounded, size: 18),
+            label: Text(context.l10n.offlinePlayAgain),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        );
+      }
+      return GameRematchSection(
+        rematchLobbyId: _rematchLobbyId,
+        rematchDeclined: _rematchDeclined,
+        iDeclinedRematch: _iDeclinedRematch,
+        isRematching: _isRematching,
+        isAcceptingRematch: _isAcceptingRematch,
+        isFindingGame: _isFindingGame,
+        peerIds: _peerIds(view),
+        invites: ref.watch(gameInvitesProvider),
+        onRematch: _rematch,
+        onAccept: _acceptRematch,
+        onDecline: _declineRematch,
+        onCancelWait: _cancelRematchWait,
+        onFindGame: _findGame,
+        compact: true,
+      );
+    }
+
+    if (finishedChrome == DurakFinishedChrome.landscapeRow) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: view.playerIds.length == 2
+                  ? _opponentsHeader(view)
+                  : _multiOpponentsArea(view, tableSize),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  return Center(
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: c.maxHeight),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: statusBlock(
+                                  fontSize: c.maxWidth < 520 ? 15 : 18,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              rematchBlock(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
@@ -4871,45 +5037,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                       !view.isTableReveal)) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                  child: GameStatusWithReward(
-                    statusText: _turnHint(view),
-                    showReward: _showRewardChip(view),
-                    rewardBronze: _rewardChipBronze(view),
-                    rewardKey: _winRewardKey,
+                  child: statusBlock(
                     fontSize: MediaQuery.sizeOf(context).width < 420 ? 15 : null,
                   ),
                 ),
                 if (view.isOver) ...[
                   const SizedBox(height: 10),
-                  if (_isOffline)
-                    Center(
-                      child: FilledButton.icon(
-                        onPressed: _isRematching ? null : _rematch,
-                        icon: const Icon(Icons.replay_rounded, size: 18),
-                        label: Text(context.l10n.offlinePlayAgain),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.accentStart,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    )
-                  else
-                    GameRematchSection(
-                      rematchLobbyId: _rematchLobbyId,
-                      rematchDeclined: _rematchDeclined,
-                      iDeclinedRematch: _iDeclinedRematch,
-                      isRematching: _isRematching,
-                      isAcceptingRematch: _isAcceptingRematch,
-                      isFindingGame: _isFindingGame,
-                      peerIds: _peerIds(view),
-                      invites: ref.watch(gameInvitesProvider),
-                      onRematch: _rematch,
-                      onAccept: _acceptRematch,
-                      onDecline: _declineRematch,
-                      onCancelWait: _cancelRematchWait,
-                      onFindGame: _findGame,
-                      compact: true,
-                    ),
+                  rematchBlock(),
                 ] else
                   const SizedBox(height: 10),
               ],
@@ -4925,12 +5059,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               // Высота зоны, tuck и размер карт — плавно, без рывка экрана.
               TweenAnimationBuilder<double>(
                 tween: Tween(end: fanZoneH),
-                duration: const Duration(milliseconds: 380),
+                duration: layoutTween,
                 curve: kDurakLayoutCurve,
                 builder: (context, zoneH, _) {
                   return TweenAnimationBuilder<double>(
                     tween: Tween(end: seatLift),
-                    duration: const Duration(milliseconds: 380),
+                    duration: layoutTween,
                     curve: kDurakLayoutCurve,
                     builder: (context, animLift, _) {
                       return SizedBox(
@@ -4962,16 +5096,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                                         : Alignment.bottomCenter,
                                     child: TweenAnimationBuilder<double>(
                                       tween: Tween(end: cardSize.width),
-                                      duration: const Duration(
-                                        milliseconds: 380,
-                                      ),
+                                      duration: layoutTween,
                                       curve: kDurakLayoutCurve,
                                       builder: (context, animW, _) {
                                         return TweenAnimationBuilder<double>(
                                           tween: Tween(end: spacing),
-                                          duration: const Duration(
-                                            milliseconds: 380,
-                                          ),
+                                          duration: layoutTween,
                                           curve: kDurakLayoutCurve,
                                           builder: (context, animSp, _) {
                                             final animH = animW * aspect;
@@ -5072,7 +5202,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           // Кнопка чуть выше веера; позиция плавно следует за размером карт.
           TweenAnimationBuilder<double>(
             tween: Tween(end: actionBtnBottom),
-            duration: const Duration(milliseconds: 380),
+            duration: layoutTween,
             curve: kDurakLayoutCurve,
             builder: (context, btnBottom, _) {
               return Positioned(

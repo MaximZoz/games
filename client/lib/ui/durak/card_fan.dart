@@ -145,6 +145,29 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  /// Снять жест и overlay: при повороте global-координаты уже неверны.
+  void cancelActiveGesture() {
+    _gestureGen++;
+    _removeOverlay();
+    _liftedCard = null;
+    _peekCard = null;
+    _hidePeekUnderOverlay = false;
+    _deferLiftOverlay = false;
+    _pendingLiftFinger = null;
+    _liftGlobalCenter = null;
+    _pointerDown = false;
+    _dropBusy = false;
+    _docking = false;
+    _peekT = 0;
+    _upTravel = 0;
+    _panAccum = Offset.zero;
+    _lastPointerGlobal = null;
+    _setHover(null);
+    _setHolding(false);
+    _emitActiveCard(null);
+    if (mounted) setState(() {});
+  }
+
   void _emitActiveCard(PlayingCard? card) {
     // Всегда сообщаем карту под пальцем — подсветка целей на столе по beats(),
     // а не только по legalCards (иначе козырь «не подсвечивает» обе атаки).
@@ -180,7 +203,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
   void _updateLiftVisual(Offset globalCenter) {
     if (_deferLiftOverlay) return;
-    final screen = MediaQuery.sizeOf(context);
+    final screen = overlaySpaceSize(context);
     _liftScale = dragScaleTowardCenter(globalCenter, screen);
     _liftGlobalCenter = globalCenter;
     _overlay?.markNeedsBuild();
