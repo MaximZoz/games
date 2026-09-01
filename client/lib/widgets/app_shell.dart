@@ -23,6 +23,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -66,6 +67,7 @@ String? gameIdFromPathForTest(String path) => _gameIdFromPath(path);
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 /// Active game/lobby — всегда туда. Observation только карточкой в списке.
+/// Офлайн-партию возвращаем по [lastSessionPath], чтобы таб не сбрасывал стол.
 void _goGamesTab(
   BuildContext context,
   String currentPath,
@@ -73,65 +75,43 @@ void _goGamesTab(
   String? pinnedLiveGameId,
   String? pinnedLiveGameType,
   String? observingGameId,
+  String? lastSessionPath,
 }) {
-  final pathGameId = _gameIdFromPath(currentPath);
-  final pinned = pinnedLiveGameId?.trim() ?? '';
-  final observing = observingGameId?.trim() ?? '';
+  final dest = resolveGamesTabPath(
+    currentPath: currentPath,
+    active: active,
+    pinnedLiveGameId: pinnedLiveGameId,
+    pinnedLiveGameType: pinnedLiveGameType,
+    observingGameId: observingGameId,
+    lastSessionPath: lastSessionPath,
+  );
+  if (dest == null || dest == currentPath) return;
+  context.go(dest);
+}
 
-  // Активная партия (пин или active) — всегда в неё (с учётом gameType).
-  String? liveGameId;
-  var liveGameType = 'tictactoe';
-  if (hasBlockingActiveMatch(active)) {
-    liveGameId = active!.gameId!.trim();
-    liveGameType = normalizeGameType(active.gameType);
-  } else if (pinned.isNotEmpty) {
-    liveGameId = pinned;
-    liveGameType = normalizeGameType(
-      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
-    );
-  }
-  if (liveGameId != null && liveGameId.isNotEmpty) {
-    final dest = gamePathFor(liveGameId, gameType: liveGameType);
-    if (currentPath == dest || currentPath.startsWith('$dest/')) return;
-    context.go(dest);
+/// Тап по «Игры»: живую/офлайн партию сначала просто показываем веткой
+/// (IndexedStack), чтобы не пересоздать стол. На каталог — [context.go].
+void _openGamesBranch(
+  BuildContext context,
+  StatefulNavigationShell navigationShell,
+  int branch,
+  String currentPath,
+  String? dest,
+) {
+  if (dest == null || dest == currentPath) {
+    navigationShell.goBranch(branch);
     return;
   }
-
-  // Наблюдение на доске — в список «Игры» (карточка «Наблюдение» там же).
-  if (pathGameId != null &&
-      observing.isNotEmpty &&
-      pathGameId == observing) {
-    if (currentPath != '/games') context.go('/games');
+  if (gameRegistry.isActiveGamePath(dest)) {
+    navigationShell.goBranch(branch);
+    final now =
+        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+    if (now != dest && !gameRegistry.isActiveGamePath(now)) {
+      context.go(dest);
+    }
     return;
   }
-
-  // Уже на экране партии, active ещё грузится — не уходим на список инвайтов.
-  if (pathGameId != null) {
-    return;
-  }
-
-  if (active != null &&
-      active.type == 'lobby' &&
-      active.lobbyId != null &&
-      active.lobbyId!.isNotEmpty) {
-    final dest = lobbyPathFor(
-      active.lobbyId!,
-      gameType: normalizeGameType(active.gameType),
-    );
-    // Уже в этом лобби (с ?mode=… или без) — не уходим на список игр.
-    if (currentPath == dest || currentPath.startsWith(dest)) return;
-    context.go('$dest?mode=invite');
-    return;
-  }
-  // Пока active подгружается после lobby_updated — не сбрасывать экран лобби.
-  if (active == null &&
-      (currentPath.startsWith('/games/tictactoe/lobby/') ||
-          currentPath.startsWith('/games/durak/lobby/'))) {
-    return;
-  }
-  if (currentPath != '/games') {
-    context.go('/games');
-  }
+  context.go(dest);
 }
 
 List<_NavItem> _navItems(BuildContext context, {required bool offline}) {
@@ -486,6 +466,7 @@ class AppShell extends ConsumerWidget {
       if (!context.mounted) return;
       try {
         ref.read(currentRoutePathProvider.notifier).state = path;
+        rememberGamesSessionPath(ref, path);
         // SW глушит пуш про уже открытый чат/матч (особенно iOS PWA).
         reportPushSwActiveRoute(path);
         final shouldClearToolbar =
@@ -554,18 +535,20 @@ class AppShell extends ConsumerWidget {
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
+        final lastSession = ref.read(lastGamesSessionPathProvider);
         if (isOffline) {
+          final dest = resolveGamesTabPath(
+            currentPath: currentPath,
+            lastSessionPath: lastSession,
+          );
           Router.neglect(context, () {
-            if (currentPath != '/games' &&
-                !currentPath.startsWith('/games/tictactoe/offline') &&
-                !currentPath.startsWith('/games/durak/offline') &&
-                !currentPath.startsWith('/games/battleship/offline') &&
-                !currentPath.startsWith('/games/poker/offline') &&
-                !currentPath.startsWith('/games/uno/offline')) {
-              context.go('/games');
-            } else {
-              navigationShell.goBranch(branch, initialLocation: true);
-            }
+            _openGamesBranch(
+              context,
+              navigationShell,
+              branch,
+              currentPath,
+              dest,
+            );
           });
           return;
         }
@@ -604,10 +587,9 @@ class AppShell extends ConsumerWidget {
         }
         final activeForNav = ref.read(activeGameProvider).valueOrNull;
         Router.neglect(context, () {
-          _goGamesTab(
-            context,
-            currentPath,
-            activeForNav ?? cachedActive,
+          final dest = resolveGamesTabPath(
+            currentPath: currentPath,
+            active: activeForNav ?? cachedActive,
             pinnedLiveGameId: pinnedLiveId.isNotEmpty
                 ? pinnedLiveId
                 : (pathIsLive ? pathGameId : null),
@@ -616,6 +598,14 @@ class AppShell extends ConsumerWidget {
                 activeForNav?.gameType ??
                 cachedActive?.gameType,
             observingGameId: observingId.isNotEmpty ? observingId : null,
+            lastSessionPath: lastSession,
+          );
+          _openGamesBranch(
+            context,
+            navigationShell,
+            branch,
+            currentPath,
+            dest,
           );
         });
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
@@ -683,6 +673,7 @@ class AppShell extends ConsumerWidget {
                     nowPath,
                     null,
                     observingGameId: obsNow,
+                    lastSessionPath: lastSession,
                   );
                 });
               }
@@ -706,6 +697,7 @@ class AppShell extends ConsumerWidget {
                 pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
                 pinnedLiveGameType: pinNowType,
                 observingGameId: obsNow.isNotEmpty ? obsNow : null,
+                lastSessionPath: lastSession,
               );
             });
           } catch (_) {

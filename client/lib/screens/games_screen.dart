@@ -16,6 +16,7 @@ import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -321,6 +322,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         path: '/games/tictactoe/offline',
         queryParameters: qs,
       );
+      disposeAllOfflineGameSessions();
       context.go(uri.toString());
     }
 
@@ -2014,6 +2016,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
             'players': '$_players',
             'mode': _gameMode,
           };
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(path: '/games/durak/offline', queryParameters: qs).toString(),
           );
@@ -2293,7 +2296,10 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
-        onOfflinePlay: () => context.push('/games/battleship/offline'),
+        onOfflinePlay: () {
+          disposeAllOfflineGameSessions();
+          context.push('/games/battleship/offline');
+        },
         isCreating: _creating,
         isFinding: _finding,
         isDesktop: isDesktop,
@@ -2601,6 +2607,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
         offlinePlayLabel: context.l10n.gamesPlay,
         onOfflinePlay: () {
           final n = _players < 2 ? 2 : _players;
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(
               path: '/games/poker/offline',
@@ -2870,6 +2877,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
         onOfflinePlay: () {
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(
               path: '/games/uno/offline',

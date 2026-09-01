@@ -362,6 +362,7 @@ class OfflineBattleshipSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
     _botTimer?.cancel();
     OfflineBattleshipRegistry.instance.remove(gameId);
@@ -380,7 +381,18 @@ class OfflineBattleshipRegistry {
 
   OfflineBattleshipSession? get(String gameId) => _sessions[gameId];
 
+  OfflineBattleshipSession? get current =>
+      _sessions.isEmpty ? null : _sessions.values.last;
+
   void remove(String gameId) => _sessions.remove(gameId);
+
+  void disposeAll() {
+    final list = List<OfflineBattleshipSession>.of(_sessions.values);
+    _sessions.clear();
+    for (final s in list) {
+      s.dispose();
+    }
+  }
 
   bool isOffline(String gameId) => gameId.startsWith('offline:battleship:');
 }
