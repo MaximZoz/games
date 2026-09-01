@@ -9,6 +9,7 @@ import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -312,18 +313,27 @@ final lobbyDetailProvider =
   },
 );
 
-final gameStateProvider =
-    FutureProvider.autoDispose.family<GameStateItem, String>(
-  (ref, gameId) async {
-    if (OfflineTttRegistry.instance.isOffline(gameId)) {
-      final session = OfflineTttRegistry.instance.get(gameId);
+final gameStateProvider = AsyncNotifierProvider.autoDispose
+    .family<GameStateNotifier, GameStateItem, String>(
+  GameStateNotifier.new,
+);
+
+class GameStateNotifier
+    extends AutoDisposeFamilyAsyncNotifier<GameStateItem, String> {
+  bool _httpInFlight = false;
+  int _httpGen = 0;
+
+  @override
+  Future<GameStateItem> build(String arg) async {
+    if (OfflineTttRegistry.instance.isOffline(arg)) {
+      final session = OfflineTttRegistry.instance.get(arg);
       if (session == null) {
         throw GamesException(404, 'offline game not found');
       }
       var alive = true;
       void onChanged() {
         Future.microtask(() {
-          if (alive) ref.invalidateSelf();
+          if (alive) state = AsyncData(session.view);
         });
       }
 
@@ -334,32 +344,61 @@ final gameStateProvider =
       });
       return session.view;
     }
-    final repo = ref.read(gamesRepositoryProvider);
-    final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
-      realtimeEventsProvider,
-      (_, next) {
-        final data = next.valueOrNull;
-        if (data == null) return;
-        final type = data['type']?.toString() ?? '';
-        final gid = data['game_id']?.toString();
-        if (type == 'realtime_connected' ||
-            ((type == 'game_state' || type == 'game_started') &&
-                gid == gameId)) {
-          if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
-            ref.invalidateSelf();
-          }
-        }
-      },
+
+    listenLiveGameSync(
+      ref: ref,
+      gameId: arg,
+      hasFullView: hasFullTictactoeView,
+      onFullState: applyWs,
+      onReconcile: () => unawaited(reconcile()),
     );
-    ref.onDispose(sub.close);
-    // Poll не блокируем: иначе пропущенный WS = «зависший» ход.
-    final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
-      ref.invalidateSelf();
-    });
-    ref.onDispose(poll.cancel);
-    return repo.getGame(gameId);
-  },
-);
+    return _fetchPreferringLive();
+  }
+
+  void applyWs(Map<String, dynamic> data) {
+    try {
+      final parsed = GameStateItem.fromJson(data);
+      _commit(parsed);
+    } catch (_) {
+      unawaited(reconcile());
+    }
+  }
+
+  Future<void> reconcile() async {
+    if (OfflineTttRegistry.instance.isOffline(arg) || _httpInFlight) return;
+    _httpInFlight = true;
+    final gen = ++_httpGen;
+    try {
+      final fetched = await ref.read(gamesRepositoryProvider).getGame(arg);
+      if (gen != _httpGen) return;
+      _commit(fetched);
+    } catch (_) {
+      // Оставляем то, что уже на экране.
+    } finally {
+      _httpInFlight = false;
+    }
+  }
+
+  Future<GameStateItem> _fetchPreferringLive() async {
+    final fetched = await fetchGameWithRetry(
+      () => ref.read(gamesRepositoryProvider).getGame(arg),
+    );
+    final current = state.valueOrNull;
+    if (current != null && isOlderTictactoe(fetched, current)) {
+      return current;
+    }
+    if (current != null) return current.mergePreservingIdentity(fetched);
+    return fetched;
+  }
+
+  void _commit(GameStateItem incoming) {
+    final current = state.valueOrNull;
+    final merged =
+        current == null ? incoming : current.mergePreservingIdentity(incoming);
+    if (current != null && isOlderTictactoe(merged, current)) return;
+    state = AsyncData(merged);
+  }
+}
 
 /// Временное состояние после makeMove для немедленного отображения победы/ничьей
 /// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
@@ -422,13 +461,16 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' || type == 'game_started') {
+        if (type == 'game_started') {
           unawaited(ref.read(activeGameProvider.notifier).refresh());
-          final gameId = data['game_id']?.toString();
-          if (gameId != null && gameId.isNotEmpty) {
-            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
-              ref.invalidate(gameStateProvider(gameId));
-            }
+          return;
+        }
+        if (type == 'game_state') {
+          final status = data['status']?.toString() ?? '';
+          if (status == 'over' ||
+              status == 'draw' ||
+              status.endsWith('_won')) {
+            unawaited(ref.read(activeGameProvider.notifier).refresh());
           }
           return;
         }

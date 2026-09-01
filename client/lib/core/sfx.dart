@@ -401,7 +401,7 @@ abstract final class GameAwaySfx {
   }
 }
 
-/// Осталось ≤5 с — тики молчат, один сигнал «ваш ход».
+/// Осталось ≤5 с — один сигнал «ваш ход», тики после него продолжаются.
 @visibleForTesting
 bool crossedTurnFiveSeconds({
   required int previousRemainingMs,
@@ -412,13 +412,14 @@ bool crossedTurnFiveSeconds({
       nextRemainingMs > 0;
 }
 
-/// Интервал тика: 80% → 800 мс, 50%/20% → 500 мс. Последние 5 с — без тиков.
+/// Интервал тика: 80% → 800 мс, 50%/20% и последние 5 с → 500 мс.
 @visibleForTesting
 int turnTickIntervalMs({
   required int remainingMs,
   required int totalMs,
 }) {
-  if (remainingMs <= 0 || remainingMs <= 5000) return 0;
+  if (remainingMs <= 0) return 0;
+  if (remainingMs <= 5000) return 500;
   if (totalMs > 0) {
     if (remainingMs * 2 <= totalMs) return 500;
     if (remainingMs * 5 <= totalMs * 4) return 800;
@@ -506,6 +507,8 @@ abstract final class TurnClockSfx {
           )) {
         _play(SfxId.yourTurn);
         _haptic(HapticKind.timerMark);
+        // Не играть тик в том же кадре, что предупреждение.
+        _lastTickAt = at;
       }
       _lastRemainingMs = leftMs;
       if (shouldBuzzTurnSecond(
@@ -519,7 +522,6 @@ abstract final class TurnClockSfx {
       _lastRemainingMs = leftMs;
     }
     if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
-    if (leftMs <= 5000) return;
     final interval = turnTickIntervalMs(remainingMs: leftMs, totalMs: totalMs);
     if (interval <= 0) return;
     if (_lastTickAt != null &&

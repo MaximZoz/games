@@ -1408,6 +1408,7 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 		if len(res.WinningCells) > 0 {
 			payload["winning_cells"] = res.WinningCells
 		}
+		attachTttIdentity(payload, m)
 		h.broadcast(humans, payload)
 	} else {
 		gameID := strings.TrimPrefix(key, "game:")
@@ -1416,6 +1417,7 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 			"board": res.State.Board, "turn": res.State.Turn, "status": status,
 			"variant": string(variant),
 		}
+		attachTttIdentity(payload, m)
 		if variant == gameengine.VariantUltimate {
 			payload["next_board"] = res.State.NextBoard
 			payload["meta_board"] = res.State.MetaBoard
@@ -3285,6 +3287,7 @@ func (h *GamesHandler) MakeMove(w http.ResponseWriter, r *http.Request, gameID s
 		"board": res.State.Board, "turn": nextTurn, "winner": winner, "status": status,
 		"variant": string(variant), "grid_size": gridSize, "can_swap": false,
 	}
+	attachTttIdentity(broadcastPayload, m)
 	if chatID := strings.TrimSpace(m["chat_id"]); chatID != "" {
 		broadcastPayload["chat_id"] = chatID
 	}
@@ -3733,6 +3736,25 @@ func (h *GamesHandler) notifyYourTurnUser(gameID, userID, gameType string) {
 		Tag:   "game_turn_" + gameID,
 		Kind:  "game_turn",
 	})
+}
+
+func attachTttIdentity(payload map[string]any, m map[string]string) {
+	if payload == nil || m == nil {
+		return
+	}
+	for _, k := range []string{"x_user_id", "o_user_id", "t_user_id", "s_user_id", "chat_id"} {
+		if _, exists := payload[k]; exists {
+			continue
+		}
+		if v := strings.TrimSpace(m[k]); v != "" {
+			payload[k] = v
+		}
+	}
+	if _, exists := payload["stake_bronze"]; !exists {
+		if v, err := strconv.Atoi(strings.TrimSpace(m["stake_bronze"])); err == nil {
+			payload["stake_bronze"] = v
+		}
+	}
 }
 
 func (h *GamesHandler) broadcast(userIDs []uuid.UUID, payload map[string]any) {

@@ -6,6 +6,22 @@ import 'package:multigames_client/ui/responsive.dart';
 const _iphoneLandscape = EdgeInsets.only(left: 59, right: 59, bottom: 21);
 
 void main() {
+  group('shellStatusBarExtent', () {
+    test('альбом партии: status bar остаётся, даже если тулбар спрятан', () {
+      expect(
+        shellStatusBarExtent(viewPaddingTop: 24, collapseForInput: false),
+        24,
+      );
+    });
+
+    test('клавиатура в альбоме: полоску можно схлопнуть', () {
+      expect(
+        shellStatusBarExtent(viewPaddingTop: 24, collapseForInput: true),
+        0,
+      );
+    });
+  });
+
   group('landscapeContentSafeArea', () {
     test('портрет: отступы даёт нижнее меню, здесь их нет', () {
       expect(
@@ -48,6 +64,41 @@ void main() {
           railVisible: true,
         ),
         EdgeInsets.zero,
+      );
+    });
+  });
+
+  group('landscapeRailLeadingInset', () {
+    test('альбом с рейлом: сдвигаем рейл от левой системной панели', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: const EdgeInsets.only(left: 48, right: 24, top: 0),
+          phoneLandscape: true,
+          railVisible: true,
+        ),
+        48,
+      );
+    });
+
+    test('без рейла левый inset остаётся контенту, не рейлу', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: _iphoneLandscape,
+          phoneLandscape: true,
+          railVisible: false,
+        ),
+        0,
+      );
+    });
+
+    test('портрет: рейл не сдвигаем', () {
+      expect(
+        landscapeRailLeadingInset(
+          viewPadding: const EdgeInsets.only(left: 48, top: 24),
+          phoneLandscape: false,
+          railVisible: true,
+        ),
+        0,
       );
     });
   });

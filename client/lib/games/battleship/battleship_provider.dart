@@ -6,82 +6,96 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/live_game_sync.dart';
 
 final battleshipRepositoryProvider = Provider<BattleshipRepository>((ref) {
   return BattleshipRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
-bool _isTransientGamesError(Object e) {
-  if (e is GamesException) {
-    if (e.statusCode == 502 || e.statusCode == 503) return true;
-    final key = e.errorKey.toLowerCase();
-    final msg = e.message.toLowerCase();
-    return key.contains('temporarily unavailable') ||
-        msg.contains('temporarily unavailable') ||
-        msg.contains('временно недоступно') ||
-        msg.contains('попробуйте позже');
-  }
-  final s = e.toString().toLowerCase();
-  return s.contains('temporarily unavailable') ||
-      s.contains('socket') ||
-      s.contains('connection');
-}
+final battleshipGameProvider = AsyncNotifierProvider.autoDispose
+    .family<BattleshipGameNotifier, BattleshipGameView, String>(
+  BattleshipGameNotifier.new,
+);
 
-final battleshipGameProvider = FutureProvider.autoDispose
-    .family<BattleshipGameView, String>((ref, gameId) async {
-  // Офлайн: локальная сессия + бот, тот же BattleshipGameView.
-  if (OfflineBattleshipRegistry.instance.isOffline(gameId)) {
-    final session = OfflineBattleshipRegistry.instance.get(gameId);
-    if (session == null) {
-      throw GamesException(404, 'offline game not found');
-    }
-    var alive = true;
-    void onChanged() {
-      Future.microtask(() {
-        if (alive) ref.invalidateSelf();
-      });
-    }
+class BattleshipGameNotifier
+    extends AutoDisposeFamilyAsyncNotifier<BattleshipGameView, String> {
+  bool _httpInFlight = false;
+  int _httpGen = 0;
 
-    session.addListener(onChanged);
-    ref.onDispose(() {
-      alive = false;
-      session.removeListener(onChanged);
-    });
-    return session.view;
-  }
-
-  final repo = ref.watch(battleshipRepositoryProvider);
-  final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
-    realtimeEventsProvider,
-    (_, next) {
-      final data = next.valueOrNull;
-      if (data == null) return;
-      final type = data['type']?.toString() ?? '';
-      final gid = data['game_id']?.toString();
-      if (type == 'realtime_connected' ||
-          ((type == 'game_state' || type == 'game_started') && gid == gameId)) {
-        ref.invalidateSelf();
+  @override
+  Future<BattleshipGameView> build(String arg) async {
+    if (OfflineBattleshipRegistry.instance.isOffline(arg)) {
+      final session = OfflineBattleshipRegistry.instance.get(arg);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
       }
-    },
-  );
-  ref.onDispose(sub.close);
-  final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(poll.cancel);
+      var alive = true;
+      void onChanged() {
+        Future.microtask(() {
+          if (alive) state = AsyncData(session.view);
+        });
+      }
 
-  Object? lastError;
-  for (var attempt = 0; attempt < 4; attempt++) {
+      session.addListener(onChanged);
+      ref.onDispose(() {
+        alive = false;
+        session.removeListener(onChanged);
+      });
+      return session.view;
+    }
+
+    listenLiveGameSync(
+      ref: ref,
+      gameId: arg,
+      hasFullView: hasFullBattleshipView,
+      onFullState: applyWs,
+      onReconcile: () => unawaited(reconcile()),
+    );
+    return _fetchPreferringLive();
+  }
+
+  void applyWs(Map<String, dynamic> data) {
     try {
-      return await repo.getGame(gameId);
-    } catch (e) {
-      lastError = e;
-      if (!_isTransientGamesError(e) || attempt == 3) rethrow;
-      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      _commit(BattleshipGameView.fromJson(data));
+    } catch (_) {
+      unawaited(reconcile());
     }
   }
-  Error.throwWithStackTrace(lastError!, StackTrace.current);
-});
+
+  Future<void> reconcile() async {
+    if (OfflineBattleshipRegistry.instance.isOffline(arg) || _httpInFlight) {
+      return;
+    }
+    _httpInFlight = true;
+    final gen = ++_httpGen;
+    try {
+      final fetched = await ref.read(battleshipRepositoryProvider).getGame(arg);
+      if (gen != _httpGen) return;
+      _commit(fetched);
+    } catch (_) {
+    } finally {
+      _httpInFlight = false;
+    }
+  }
+
+  Future<BattleshipGameView> _fetchPreferringLive() async {
+    final fetched = await fetchGameWithRetry(
+      () => ref.read(battleshipRepositoryProvider).getGame(arg),
+    );
+    final current = state.valueOrNull;
+    if (current != null && isOlderBattleship(fetched, current)) {
+      return current;
+    }
+    return mergeBattleshipMeta(current, fetched);
+  }
+
+  void _commit(BattleshipGameView incoming) {
+    final current = state.valueOrNull;
+    final merged = mergeBattleshipMeta(current, incoming);
+    if (current != null && isOlderBattleship(merged, current)) return;
+    state = AsyncData(merged);
+  }
+}
 
 final battleshipLobbyProvider = FutureProvider.autoDispose
     .family<BattleshipLobbyView, String>((ref, lobbyId) async {

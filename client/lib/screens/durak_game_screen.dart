@@ -3328,8 +3328,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final myCards = List<PlayingCard>.of(myHand);
     var myIdx = 0;
 
-    // Стартовая раздача — в ~2× быстрее обычного добора.
-    const fly = Duration(milliseconds: 160);
+    // Стартовая раздача — быстрее обычного добора, в альбоме не короче 220 ms.
+    final fly = durakDealFlyDuration(compact: _fit.compact);
     const settle = 90;
     const gap = Duration(milliseconds: 14);
 
@@ -3370,7 +3370,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       for (final h in view.hands) (h.count - 6).clamp(0, 99),
     ];
     if (extras.every((e) => e <= 0)) return;
-    const fly = Duration(milliseconds: 160);
+    final fly = durakDealFlyDuration(compact: _fit.compact);
     const settle = 90;
     const gap = Duration(milliseconds: 14);
     while (extras.any((e) => e > 0)) {
@@ -3592,16 +3592,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final froms = _tableCardGlobalRectsTopFirst(table);
     final screen = _flyScreen;
     final toKey = _oppFanKeys.putIfAbsent(oppIdx, GlobalKey.new);
+    final endSize =
+        durakOpponentFanFlightSize(_tableCardSize, compact: _fit.compact);
     final to = globalRectOf(toKey) ??
         Rect.fromCenter(
           center: Offset(screen.width / 2, screen.height * 0.16),
-          width: _tableCardSize.width * 0.44,
-          height: _tableCardSize.height * 0.44,
+          width: endSize.width,
+          height: endSize.height,
         );
-    final endSize = Size(
-      to.width.clamp(30.0, _tableCardSize.width * 0.55),
-      to.height.clamp(44.0, _tableCardSize.height * 0.55),
-    );
     final endScale = endSize.width / _tableCardSize.width;
     final tos = <Rect>[
       for (var i = 0; i < cards.length; i++)
@@ -3673,16 +3671,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     for (var i = 0; i < n; i++) {
       if (!mounted || !_gameUiActive) return;
       final screen = _flyScreen;
+      final endSize =
+          durakOpponentFanFlightSize(_tableCardSize, compact: _fit.compact);
       final to = globalRectOf(toKey) ??
           Rect.fromCenter(
             center: Offset(screen.width / 2, screen.height * 0.16),
-            width: _tableCardSize.width * 0.44,
-            height: _tableCardSize.height * 0.44,
+            width: endSize.width,
+            height: endSize.height,
           );
-      final endSize = Size(
-        (to.width).clamp(30.0, _tableCardSize.width * 0.55),
-        (to.height).clamp(44.0, _tableCardSize.height * 0.55),
-      );
       final endScale = endSize.width / _tableCardSize.width;
       final from = _deckDealFromRect(jitter: i * 1.8);
       final land = Rect.fromCenter(
@@ -5775,136 +5771,84 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     );
   }
 
-  /// Минимальная высота плитки в веере соперника: в альбоме плитки мельче,
-  /// иначе слот веера отнимает высоту у стола.
-  double get _oppFanTileMinH => _fit.compact ? 24.0 : 32.0;
-
-  /// Фиксированная высота слота веера соперника (макс. плитка + макс. дуга).
-  /// Добор/сброс/выход не меняют высоту — стол и бита не прыгают.
-  double _opponentFanReserveHeight(Size cardSize) {
-    final tileH = (cardSize.height * 0.44).clamp(_oppFanTileMinH, 76.0);
-    final arcH = tileH * 0.28;
-    return tileH + arcH + 6;
-  }
-
   /// Карты соперника дугой с кромкой — не сплошная линия, видно каждую.
-  /// Ширина веера не больше трети экрана; при росте руки сжимаем плитки/шаг.
+  /// В альбоме плитки крупнее, иначе веер сливается в «иконку».
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
     final pending = (_oppDealPending[idx] ?? 0) +
         (_leadRevealHiddenSeat == idx ? 1 : 0);
-    // Пока карта летит из колоды — в веере ещё не показываем.
-    final count = math.max(0, serverCount - pending);
-    final reserveH = _opponentFanReserveHeight(cardSize);
-    final maxW = MediaQuery.sizeOf(context).width / 3;
-    // Показываем до 20 плиток; дальше — ещё плотнее.
-    // pending>0 и count==0 — пустая зона-цель для посадки добора.
-    final shown = count <= 0 ? 0 : (count > 20 ? 20 : count);
-    final placeholderOnly = count <= 0;
-    var tileScale = 0.44;
-    if (shown > 16) {
-      tileScale = 0.30;
-    } else if (shown > 12) {
-      tileScale = 0.34;
-    } else if (shown > 9) {
-      tileScale = 0.38;
-    } else if (shown > 6) {
-      tileScale = 0.41;
-    }
-    var tile = Size(
-      (cardSize.width * tileScale).clamp(22.0, 52.0),
-      (cardSize.height * tileScale).clamp(_oppFanTileMinH, 76.0),
+    final visible = math.max(0, serverCount - pending);
+    final shown = durakOpponentFanShownCount(
+      serverCount: serverCount,
+      pending: pending,
     );
-    // Минимальный шаг (читаемая кромка); шире ⅓ экрана — сжимаем, не растягиваем.
-    double minStepFrac() {
-      if (shown > 16) return 0.18;
-      if (shown > 12) return 0.22;
-      if (shown > 9) return 0.28;
-      if (shown > 6) return 0.36;
-      if (shown > 4) return 0.46;
-      return 0.58;
-    }
-
-    var step = shown <= 1 ? 0.0 : tile.width * minStepFrac();
-    var totalW = shown <= 0
-        ? 1.0
-        : tile.width + step * math.max(shown - 1, 0);
-    if (shown > 1 && totalW > maxW) {
-      for (var i = 0; i < 24 && totalW > maxW && tile.width > 14; i++) {
-        final s = (maxW / totalW).clamp(0.40, 0.96);
-        tile = Size(tile.width * s, tile.height * s);
-        step = tile.width * minStepFrac();
-        totalW = tile.width + step * (shown - 1);
-      }
-      if (totalW > maxW) {
-        step = ((maxW - tile.width) / (shown - 1)).clamp(4.0, step);
-        totalW = tile.width + step * (shown - 1);
-      }
-    }
-    // Плотная рука — более плоская дуга, без «подъёма» середины.
-    final arcH = shown <= 0
-        ? 0.0
-        : tile.height *
-            (shown > 12
-                ? 0.10
-                : shown > 8
-                    ? 0.16
-                    : shown > 4
-                        ? 0.22
-                        : 0.28);
+    final ghostOnly = visible <= 0 && shown > 0;
+    final compact = _fit.compact;
+    final maxW = MediaQuery.sizeOf(context).width *
+        durakOpponentFanMaxWidthFrac(compact: compact);
+    final geo = durakOpponentFanGeometry(
+      cardSize: cardSize,
+      shown: shown,
+      maxWidth: maxW,
+      compact: compact,
+    );
+    final tile = geo.tile;
+    final step = geo.step;
+    final totalW = geo.totalW;
+    final arcH = geo.arcH;
+    final reserveH = geo.reserveH;
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 2),
-      child: KeyedSubtree(
-        key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
-        child: SizedBox(
-          width: double.infinity,
-          height: reserveH,
-          child: placeholderOnly
-              ? const SizedBox.expand()
-              : Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    // Без count/pending в key — иначе весь веер remount при доборе.
-                    key: ValueKey('opp-fan-$idx'),
-                    width: totalW,
-                    height: reserveH,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.topCenter,
-                      children: [
-                        for (var i = 0; i < shown; i++)
-                          Builder(
-                            builder: (_) {
-                              final t = shown <= 1
-                                  ? 0.0
-                                  : (i / (shown - 1)) * 2 - 1; // -1..1
-                              // Середина ниже (к столу), края выше — читаемая дуга.
-                              final y = (1 - t * t) * arcH;
-                              final angleMax = shown > 12
-                                  ? 0.12
-                                  : shown > 8
-                                      ? 0.16
-                                      : 0.22;
-                              final angle = t * angleMax;
-                              return Positioned(
-                                left: i * step,
-                                top: y,
-                                child: Transform.rotate(
-                                  angle: angle,
-                                  alignment: Alignment.topCenter,
+      child: SizedBox(
+        width: double.infinity,
+        height: reserveH,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            // Ключ на самой стопке — полёт садится в веер, не в всю ширину.
+            key: _oppFanKeys.putIfAbsent(idx, GlobalKey.new),
+            width: math.max(totalW, tile.width),
+            height: reserveH,
+            child: shown <= 0
+                ? const SizedBox.expand()
+                : Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topCenter,
+                    children: [
+                      for (var i = 0; i < shown; i++)
+                        Builder(
+                          builder: (_) {
+                            final t = shown <= 1
+                                ? 0.0
+                                : (i / (shown - 1)) * 2 - 1;
+                            final y = (1 - t * t) * arcH;
+                            final angleMax = shown > 12
+                                ? 0.12
+                                : shown > 8
+                                    ? 0.16
+                                    : 0.22;
+                            final angle = t * angleMax;
+                            return Positioned(
+                              left: i * step,
+                              top: y,
+                              child: Transform.rotate(
+                                angle: angle,
+                                alignment: Alignment.topCenter,
+                                child: Opacity(
+                                  opacity: ghostOnly ? 0.55 : 1,
                                   child: CardBackWidget(
                                     size: tile,
                                     elevated: i == shown - 1,
                                     outlined: true,
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
                   ),
-                ),
+          ),
         ),
       ),
     );
@@ -6067,12 +6011,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         // Реальная ширина колоды (козырь + стопка) и биты+таймер — стол строго между ними.
-        final deckW =
-            cardSize.width * 0.55 + cardSize.height * 0.82;
-        final leftReserve = deckW + (_fit.compact ? 18 : 14);
-        final rightReserve = _fit.compact
-            ? math.max(72.0, cardSize.width * 1.15) + 12
-            : math.max(90.0, cardSize.width * 0.70) + 12;
+        final leftReserve = durakBoardLeftReserve(
+          compact: _fit.compact,
+          cardSize: cardSize,
+        );
+        final rightReserve = durakBoardRightReserve(
+          compact: _fit.compact,
+          cardSize: cardSize,
+        );
         final tableMaxW =
             (constraints.maxWidth - leftReserve - rightReserve)
                 .clamp(100.0, constraints.maxWidth);
@@ -6081,7 +6027,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         const pileTop = 4.0;
         final pileInset = durakPileEdgeInset(compact: _fit.compact);
         return Stack(
-          clipBehavior: _fit.compact ? Clip.hardEdge : Clip.none,
+          // hardEdge резал биту и полёты раздачи в альбоме.
+          clipBehavior: Clip.none,
           children: [
             Positioned.fill(
               child: IgnorePointer(

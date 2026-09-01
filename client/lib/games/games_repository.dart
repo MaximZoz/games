@@ -906,6 +906,73 @@ class GameStateItem {
   bool get isActivePvp =>
       status == 'active' && playerUserIds.every((id) => !id.startsWith('bot:'));
 
+  int get filledCellCount =>
+      board.where((c) => c.trim().isNotEmpty).length;
+
+  /// WS крестиков часто без имён/id — оставляем их с последнего HTTP.
+  GameStateItem mergePreservingIdentity(GameStateItem incoming) {
+    String pickId(String next, String prev) =>
+        next.trim().isNotEmpty ? next : prev;
+    return GameStateItem(
+      id: pickId(incoming.id, id),
+      board: incoming.board,
+      variant: incoming.variant,
+      turn: incoming.turn,
+      winner: incoming.winner ?? winner,
+      status: incoming.status,
+      forfeit: incoming.forfeit || forfeit,
+      timeout: incoming.timeout || timeout,
+      turnTimeSec: incoming.turnTimeSec > 0 ? incoming.turnTimeSec : turnTimeSec,
+      turnDeadline: incoming.turnDeadline ?? turnDeadline,
+      gridSize: incoming.gridSize,
+      maxPlayers: incoming.maxPlayers > 0 ? incoming.maxPlayers : maxPlayers,
+      xUserId: pickId(incoming.xUserId, xUserId),
+      oUserId: pickId(incoming.oUserId, oUserId),
+      tUserId: pickId(incoming.tUserId, tUserId),
+      sUserId: pickId(incoming.sUserId, sUserId),
+      swapRule: incoming.swapRule || swapRule,
+      firstMoveRestriction: incoming.firstMoveRestriction || firstMoveRestriction,
+      canSwap: incoming.canSwap,
+      stakeBronze: incoming.stakeBronze != 0 ? incoming.stakeBronze : stakeBronze,
+      xDisplayName: incoming.xDisplayName ?? xDisplayName,
+      oDisplayName: incoming.oDisplayName ?? oDisplayName,
+      xAvatarKind: incoming.xUserId.trim().isNotEmpty
+          ? incoming.xAvatarKind
+          : xAvatarKind,
+      xAvatarValue: incoming.xAvatarValue ?? xAvatarValue,
+      xFrameColor: incoming.xFrameColor ?? xFrameColor,
+      xFrameCode: incoming.xFrameCode ?? xFrameCode,
+      oAvatarKind: incoming.oUserId.trim().isNotEmpty
+          ? incoming.oAvatarKind
+          : oAvatarKind,
+      oAvatarValue: incoming.oAvatarValue ?? oAvatarValue,
+      oFrameColor: incoming.oFrameColor ?? oFrameColor,
+      oFrameCode: incoming.oFrameCode ?? oFrameCode,
+      tDisplayName: incoming.tDisplayName ?? tDisplayName,
+      sDisplayName: incoming.sDisplayName ?? sDisplayName,
+      tAvatarKind: incoming.tUserId.trim().isNotEmpty
+          ? incoming.tAvatarKind
+          : tAvatarKind,
+      tAvatarValue: incoming.tAvatarValue ?? tAvatarValue,
+      tFrameColor: incoming.tFrameColor ?? tFrameColor,
+      tFrameCode: incoming.tFrameCode ?? tFrameCode,
+      sAvatarKind: incoming.sUserId.trim().isNotEmpty
+          ? incoming.sAvatarKind
+          : sAvatarKind,
+      sAvatarValue: incoming.sAvatarValue ?? sAvatarValue,
+      sFrameColor: incoming.sFrameColor ?? sFrameColor,
+      sFrameCode: incoming.sFrameCode ?? sFrameCode,
+      chatId: incoming.chatId ?? chatId,
+      eliminatedMarks: incoming.eliminatedMarks.isNotEmpty
+          ? incoming.eliminatedMarks
+          : eliminatedMarks,
+      winningCells: incoming.winningCells ?? winningCells,
+      nextBoard: incoming.nextBoard ?? nextBoard,
+      metaBoard: incoming.metaBoard.isNotEmpty ? incoming.metaBoard : metaBoard,
+      drawOfferBy: incoming.drawOfferBy,
+    );
+  }
+
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
     final legacyGrid = (json['grid_size'] as num?)?.toInt() ?? 3;
     final rawVariant = json['variant'] as String?;

@@ -138,7 +138,24 @@ class DurakBitoPile extends StatelessWidget {
     final peekW = peek ? cardSize.width * 0.62 : cardSize.width * 1.35;
     final areaH = cardSize.height * (peek ? 1.12 : 1.25);
     if (count <= 0) {
-      return SizedBox(width: peekW, height: areaH);
+      // Пустой слот тоже с рубашкой: иначе в альбоме бита «пропадает».
+      final placeholder = Opacity(
+        opacity: 0.45,
+        child: Transform.rotate(
+          angle: 0.14,
+          child: CardBackWidget(
+            size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+            outlined: true,
+          ),
+        ),
+      );
+      return SizedBox(
+        width: peekW,
+        height: areaH,
+        child: peek
+            ? Align(alignment: Alignment.centerLeft, child: placeholder)
+            : Center(child: placeholder),
+      );
     }
 
     if (count == 1) {
