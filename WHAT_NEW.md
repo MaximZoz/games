@@ -3,6 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- iPhone в альбоме: стол игры не заезжает под чёлку и полоску home indicator — карты, кнопки и поле видно целиком
+- Покер в альбоме: кнопки «Фолд», «Колл», «Рейз» и «Ва-банк» больше не срезаются бортиком стола
 - Игры в альбоме: стол больше не съезжает — в дураке видно всю руку и колоду, в уно колоду и сброс, в покере свои карты не наезжают на общие, в морском бое поле слева, а кнопки справа
 - Покер в альбоме: соперники сидят по бокам стола, поэтому «Пре-флоп», банк, общие карты и свои карты больше не наползают друг на друга
 - Дурак в альбоме: нижний край веера больше не срезается краем экрана
@@ -33,6 +35,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- iPhone in landscape: the game table keeps clear of the notch and the home indicator — cards, buttons and boards stay fully visible
+- Poker in landscape: the Fold / Call / Raise / All-in buttons are no longer clipped by the table rim
 - Games in landscape: the table no longer breaks — Durak shows the whole hand and the deck, Uno the draw and discard piles, Poker keeps hole cards off the board, and Battleship puts the grid on the left with controls on the right
 - Poker in landscape: opponents sit along the table sides, so the street label, pot, community cards and hole cards no longer overlap
 - Durak in landscape: the bottom edge of the hand fan is no longer cut off by the screen
