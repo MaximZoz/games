@@ -17,6 +17,7 @@ class DurakDeckPile extends StatelessWidget {
     required this.cardSize,
     this.trumpSuit,
     this.showTrumpFace = true,
+    this.peekOffEdge = true,
   });
 
   final int deckCount;
@@ -29,12 +30,16 @@ class DurakDeckPile extends StatelessWidget {
   /// false — пока идёт раздача, козырь ещё не вытащили под колоду.
   final bool showTrumpFace;
 
+  /// false — вся колода в кадре (альбом: иначе рубашка режется рейлом).
+  final bool peekOffEdge;
+
   Suit get _suit => trumpSuit ?? trumpCard.suit;
 
   @override
   Widget build(BuildContext context) {
-    // Половина рубашки за краем — колода не «длинная».
-    final hide = cardSize.width * 0.48;
+    // Половина рубашки за краем — колода не «длинная». В альбоме не прячем:
+    // за краем остаётся фиолетовый обрез и «призрак».
+    final hide = peekOffEdge ? cardSize.width * 0.48 : 0.0;
     final stackN = deckCount <= 1
         ? 0
         : math.min(deckCount, showTrumpFace ? 5 : 6);
