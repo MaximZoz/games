@@ -15,6 +15,7 @@ import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
+import 'package:multigames_client/games/durak/durak_table_layout.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
@@ -23,6 +24,7 @@ import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/game_table_fit.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/durak/card_fan.dart';
 import 'package:multigames_client/ui/durak/card_fly.dart';
@@ -165,10 +167,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   List<PlayingCard>? _handOrder;
 
   /// Карты в руке — крупные; на столе/колоде — компактнее.
-  static const Size _handCardSize = Size(92, 132);
-  static const Size _tableCardSize = Size(66, 94);
+  static const Size _handCardSizeBase = Size(92, 132);
+  static const Size _tableCardSizeBase = Size(66, 94);
+
+  /// Высота, на которой стол помещается в полный размер:
+  /// шапка соперника + его веер + стол с колодой + зона руки.
+  static const double _tableDesignHeight = 545;
+
+  /// Подгонка под доступную высоту — в альбоме телефона её ~300 px.
+  /// Пересчитывается в [_buildTable] и держится полем: размеры карт нужны
+  /// и полётам (добор, отбой, бита), которые считаются вне build.
+  GameTableFit _fit = const GameTableFit(scale: 1, compact: false);
+
+  Size get _handCardSize => _fit.scaled(_handCardSizeBase);
+
+  Size get _tableCardSize => _fit.scaled(_tableCardSizeBase);
+
   /// Пар на столе в одном ряду (дальше — следующий ряд).
   static const int _tableCols = 2;
+
+  /// Слот под «Бито»/«Беру»: зарезервирован всегда, иначе стол прыгает.
+  static const double _durakActionSlotH = 52;
   /// Экран партии виден (не чаты / другой таб) — иначе FX не на root overlay.
   bool get _gameUiActive {
     if (!mounted) return false;
@@ -932,7 +951,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     if (tableRect == null || total <= 0) return null;
     const cols = _tableCols;
     final pairW = _tableCardSize.width + 18;
-    final pairH = _tablePairHeight(_tableCardSize);
+    final pairH = durakTablePairHeight(_tableCardSize);
     const gap = 10.0;
     final col = index % cols;
     final row = index ~/ cols;
@@ -4542,7 +4561,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
-            toolbarHeight: kToolbarHeight,
+            toolbarHeight: gameToolbarHeight(context),
             leadingWidth: 48,
             centerTitle: true,
             titleSpacing: 0,
@@ -4690,7 +4709,20 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
   }
 
   Widget _buildTable(DurakGameView view) {
-    const tableSize = _tableCardSize;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _fit = gameTableFit(
+          availableHeight: constraints.maxHeight,
+          designHeight: _tableDesignHeight,
+          minScale: 0.52,
+        );
+        return _buildTableBody(view, constraints.maxHeight);
+      },
+    );
+  }
+
+  Widget _buildTableBody(DurakGameView view, double availableHeight) {
+    final tableSize = _tableCardSize;
     _maybeRunTableFx(view);
     // Сбросить выбор, если карты уже не в руке / нелегальны.
     final trump = _suitFromApi(view.trumpSuit);
@@ -4753,12 +4785,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // Непрерывный tuck (без ступеней 3/6/9) — иначе рывок при смене числа карт.
     // seatLift < 0 — чуть уводим под низ зоны.
     final seatT = nFan <= 1 ? 0.0 : ((nFan - 1) / 11).clamp(0.0, 1.0);
-    final seatLift = -fanCardH * (0.33 * (1 - seatT) + 0.06 * seatT);
+    // Подворот руки под низ экрана рассчитан на портрет с нижним меню.
+    // В альбоме меню нет, и карты просто обрезаются краем экрана. Крайние
+    // карты веера ещё и опускаются по дуге (edgeLift) и наклоняются, поэтому
+    // подъём считаем от высоты карты, а не фиксированным числом.
+    final seatLift = _fit.compact
+        ? math.max(10.0, fanCardH * 0.24)
+        : -fanCardH * (0.33 * (1 - seatT) + 0.06 * seatT);
     // Высота зоны веера всегда по максимальным картам — иначе при сбросе
     // в биту зона сжимается, стол растёт и колода/бита «прыгают».
-    final fanZoneH = _handCardSize.height * 2.05 + 16;
+    // В альбоме запас режем до видимой части веера (подъём + карта): всё,
+    // что выше, отнимается у стола, а там и одна пара не помещалась.
+    final fanZoneH = _fit.compact
+        ? math.min(
+            _handCardSize.height * 1.32 + 6,
+            availableHeight * 0.38,
+          )
+        : _handCardSize.height * 2.05 + 16;
     // Кнопка чуть выше видимых карт веера.
-    final actionBtnBottom = -seatLift + fanCardH + 10;
+    final actionBtnBottom = _fit.compact
+        ? seatLift + fanCardH - 6
+        : -seatLift + fanCardH + 10;
+    // Слот кнопки лежит поверх стола. В альбоме он поднимается выше зоны
+    // веера, и при полном столе пары попадают прямо под «Бито». Отдаём столу
+    // только высоту над слотом — слот зарезервирован всегда, чтобы стол не
+    // прыгал при появлении кнопки. Запас 10 px — на поворот и тень карты
+    // защиты: она рисуется чуть за пределами своего бокса.
+    final boardBottomReserve = _fit.compact
+        ? math.max(
+            0.0,
+            actionBtnBottom + _durakActionSlotH + 10 - fanZoneH,
+          )
+        : 0.0;
 
     // Таймер — только после раздачи (_busy) и когда сервер выставил deadline.
     final showTimer = !view.isOver &&
@@ -4824,13 +4882,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 if (view.isOver) ...[
                   const SizedBox(height: 10),
                   if (_isOffline)
-                    FilledButton.icon(
-                      onPressed: _isRematching ? null : _rematch,
-                      icon: const Icon(Icons.replay_rounded, size: 18),
-                      label: Text(context.l10n.offlinePlayAgain),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accentStart,
-                        foregroundColor: Colors.white,
+                    Center(
+                      child: FilledButton.icon(
+                        onPressed: _isRematching ? null : _rematch,
+                        icon: const Icon(Icons.replay_rounded, size: 18),
+                        label: Text(context.l10n.offlinePlayAgain),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accentStart,
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     )
                   else
@@ -4859,6 +4919,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                   tableSize,
                   trumpCard,
                   showTimer: showTimer,
+                  bottomReserve: boardBottomReserve,
                 ),
               ),
               // Высота зоны, tuck и размер карт — плавно, без рывка экрана.
@@ -5019,7 +5080,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 right: 0,
                 bottom: btnBottom,
                 child: SizedBox(
-                  height: 52,
+                  height: _durakActionSlotH,
                   child: Center(
                     child: showActionOrReveal &&
                             !_holdingFanCard &&
@@ -5232,58 +5293,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                     )),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Opacity(
-                    opacity: finished ? 0.45 : 1,
-                    child: GamePlayerAvatar(
-                      displayName: name,
-                      avatarKind: avatarKind,
-                      avatarValue: avatarValue,
-                      frameCode: frameCode,
-                      frameColor: frameColor,
-                      compact: true,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 96),
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        decoration:
-                            finished ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-                  ),
-                  // Фиксированный слот роли — появление «Бьёт» не двигает веер.
-                  const SizedBox(height: 2),
-                  SizedBox(
-                    height: 14,
-                    child: roleLabel == null
-                        ? null
-                        : Text(
-                            roleLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              height: 1.0,
-                              fontWeight: FontWeight.w700,
-                              color: theirTurn
-                                  ? AppColors.accentStart
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                  ),
-                ],
+              child: _opponentSeatBody(
+                name: name,
+                avatarKind: avatarKind,
+                avatarValue: avatarValue,
+                frameCode: frameCode,
+                frameColor: frameColor,
+                roleLabel: roleLabel,
+                finished: finished,
+                theirTurn: theirTurn,
               ),
             ),
           ),
@@ -5413,7 +5431,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
             messageUnread: unread,
             infoTooltip: context.l10n.userInfoTitle,
             messageTooltip: context.l10n.gameWriteMessage,
-            compact: MediaQuery.sizeOf(context).width < 420,
+            compact: MediaQuery.sizeOf(context).width < 420 ||
+                isPhoneLandscape(context),
             maxWidth: 300,
             align: Alignment.center,
             borderWidth: 0,
@@ -5507,10 +5526,103 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
   }
 
+  /// Плашка соперника: аватар над именем, а в альбоме — рядом с ним.
+  ///
+  /// В альбоме под стол остаётся ~60 px, и вертикальная колонка «аватар →
+  /// имя → роль» съедает высоту, которой не хватает картам на столе.
+  Widget _opponentSeatBody({
+    required String name,
+    required String avatarKind,
+    required String? avatarValue,
+    required String? frameCode,
+    required String? frameColor,
+    required String? roleLabel,
+    required bool finished,
+    required bool theirTurn,
+  }) {
+    final avatar = Opacity(
+      opacity: finished ? 0.45 : 1,
+      child: GamePlayerAvatar(
+        displayName: name,
+        avatarKind: avatarKind,
+        avatarValue: avatarValue,
+        frameCode: frameCode,
+        frameColor: frameColor,
+        compact: true,
+      ),
+    );
+    final nameText = Text(
+      name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+        decoration: finished ? TextDecoration.lineThrough : null,
+      ),
+    );
+    // Фиксированный слот роли — появление «Бьёт» не двигает веер.
+    final roleSlot = SizedBox(
+      height: 14,
+      child: roleLabel == null
+          ? null
+          : Text(
+              roleLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.0,
+                fontWeight: FontWeight.w700,
+                color:
+                    theirTurn ? AppColors.accentStart : AppColors.textSecondary,
+              ),
+            ),
+    );
+    if (isPhoneLandscape(context)) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          avatar,
+          const SizedBox(width: 6),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 96),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [nameText, roleSlot],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        avatar,
+        const SizedBox(height: 2),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 96),
+          child: nameText,
+        ),
+        const SizedBox(height: 2),
+        roleSlot,
+      ],
+    );
+  }
+
+  /// Минимальная высота плитки в веере соперника: в альбоме плитки мельче,
+  /// иначе слот веера отнимает высоту у стола.
+  double get _oppFanTileMinH => _fit.compact ? 24.0 : 32.0;
+
   /// Фиксированная высота слота веера соперника (макс. плитка + макс. дуга).
   /// Добор/сброс/выход не меняют высоту — стол и бита не прыгают.
   double _opponentFanReserveHeight(Size cardSize) {
-    final tileH = (cardSize.height * 0.44).clamp(32.0, 76.0);
+    final tileH = (cardSize.height * 0.44).clamp(_oppFanTileMinH, 76.0);
     final arcH = tileH * 0.28;
     return tileH + arcH + 6;
   }
@@ -5541,7 +5653,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     }
     var tile = Size(
       (cardSize.width * tileScale).clamp(22.0, 52.0),
-      (cardSize.height * tileScale).clamp(32.0, 76.0),
+      (cardSize.height * tileScale).clamp(_oppFanTileMinH, 76.0),
     );
     // Минимальный шаг (читаемая кромка); шире ⅓ экрана — сжимаем, не растягиваем.
     double minStepFrac() {
@@ -5643,6 +5755,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     Size cardSize,
     PlayingCard trumpCard, {
     bool showTimer = false,
+    double bottomReserve = 0,
   }) {
     final focus = _activeCard ??
         (_selected.isNotEmpty ? _selected.first : null);
@@ -5694,7 +5807,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
 
     // Слот над колодой под таймер своего хода; такой же пустой — над битой,
     // чтобы колода и бита всегда на одной линии (появление таймера ничего не двигает).
-    const pileTimerSlotH = 48.0;
+    final pileTimerSlotH = _fit.compact ? 34.0 : 48.0;
     const pileTimerGap = 6.0;
 
     // Колода слева — чуть в кадре, не под боковой панелью.
@@ -5850,11 +5963,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
               ),
             ),
             // Стол только в коридоре между колодой и битой — без наездов.
+            // Снизу коридор упирается в слот «Бито»/«Беру»: он лежит поверх
+            // стола, и в альбоме пары иначе попадают прямо под кнопку.
             Positioned(
               left: leftReserve,
               right: rightReserve,
               top: 0,
-              bottom: 0,
+              bottom: bottomReserve,
               child: Center(
                 child: KeyedSubtree(
                   key: _tableKey,
@@ -5874,7 +5989,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 left: leftReserve,
                 right: rightReserve,
                 top: 0,
-                bottom: 0,
+                bottom: bottomReserve,
                 child: IgnorePointer(
                   child: Align(
                     alignment: const Alignment(0, -0.12),
@@ -5917,7 +6032,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const SizedBox(height: pileTimerSlotH, width: 1),
+                  SizedBox(height: pileTimerSlotH, width: 1),
                   const SizedBox(height: pileTimerGap),
                   RepaintBoundary(child: bitoPeek),
                 ],
@@ -5929,32 +6044,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     );
   }
 
-  /// Высота слота пары на столе (как в [_AnimatedTablePair]).
-  double _tablePairHeight(Size cardSize) => cardSize.height + 20;
+  double _tableRowTop(Size cardSize, int row, int rowCount) =>
+      durakTableRowTop(cardSize, row, rowCount, compact: _fit.compact);
 
-  /// Обычный вертикальный шаг между рядами (без наезда).
-  double _tableNormalRowStep(Size cardSize) => _tablePairHeight(cardSize) + 10;
-
-  /// При 3+ рядах: 2-й ряд слегка наезжает на 1-й (виден ранг+масть);
-  /// 3-й и дальше — обычный зазор, без наложения на предыдущий.
-  double _tableCompactPeek(Size cardSize) => cardSize.height * 0.40;
-
-  /// Y-координата верха ряда [row] (0-based) при [rowCount] рядах.
-  double _tableRowTop(Size cardSize, int row, int rowCount) {
-    if (row <= 0) return 0;
-    final normal = _tableNormalRowStep(cardSize);
-    if (rowCount < 3) return row * normal;
-    // Ряд 1 (второй): чуть ниже, чтобы читалась масть у первого ряда.
-    if (row == 1) return _tableCompactPeek(cardSize);
-    // Ряд 2+ (третий…): как обычно относительно предыдущего полного ряда.
-    return _tableCompactPeek(cardSize) + (row - 1) * normal;
-  }
-
-  double _tableStackHeight(Size cardSize, int rowCount) {
-    if (rowCount <= 0) return 0;
-    return _tableRowTop(cardSize, rowCount - 1, rowCount) +
-        _tablePairHeight(cardSize);
-  }
+  double _tableStackHeight(Size cardSize, int rowCount) =>
+      durakTableStackHeight(cardSize, rowCount, compact: _fit.compact);
 
   /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
   /// При 3+ рядах — передние ряды наезжают на задние: виден только угол карты.
@@ -5994,8 +6088,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           ],
         );
 
-    // 1–2 ряда — обычная колонка с зазором.
-    if (rows.length < 3) {
+    // 1–2 ряда — обычная колонка с зазором; в альбоме уже со второго ряда
+    // нужен наезд «кромкой», иначе стол не помещается по высоте.
+    if (!durakTableUsesRowStack(rows.length, compact: _fit.compact)) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [

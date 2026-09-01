@@ -917,6 +917,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: showGroupChat ? 96 : 48,
           leading: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1005,9 +1006,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         showEndDialog && game.stakeBronze > 0 && rewardBronze != 0;
     final betweenHands = game.isHandOver && !isOver;
 
-    const comboSlot = 30.0;
-    const actionSlot = 52.0;
-    final bottomPad = narrow ? 6.0 : 10.0;
+    // Телефон в альбоме: под столом ~330 px — нижние слоты ужимаем, иначе
+    // hero наезжает на борд.
+    final tight = isPhoneLandscape(context);
     final showActions = !isOver &&
         !game.isHandOver &&
         game.isMyTurn &&
@@ -1017,9 +1018,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         game.me != null &&
         _winnerSeats(game).contains(game.me!.seat);
     final hasCombo = _handRankLabel(game.myHandRank) != null && !iWonHand;
+    final comboSlot = _comboSlotHeight(tight: tight, hasCombo: hasCombo);
+    final actionSlot = tight ? 42.0 : 52.0;
+    // В альбоме кнопки лежат на самом столе: без отступа они срезаются его
+    // бортиком и упираются в нижнюю кромку экрана.
+    final bottomPad = tight ? 10.0 : (narrow ? 6.0 : 10.0);
     // Hero выезжает вверх только когда есть кнопки; поле/борд не двигаются.
     final heroLift = showActions || showCardsBtn
-        ? comboSlot + 6 + actionSlot + bottomPad
+        ? comboSlot + (comboSlot > 0 ? 6 : 0) + actionSlot + bottomPad
         : (hasCombo ? comboSlot + bottomPad : bottomPad);
 
     return LayoutBuilder(
@@ -1040,6 +1046,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 narrow,
                 short: short,
                 veryShort: veryShort,
+                tight: tight,
                 // Пока ждём итоговое окно — статус на столе, чтобы видеть карты.
                 status: showEndDialog ? '' : status,
                 showReward: false,
@@ -1072,13 +1079,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                             narrow ? 16 : 20,
                             16,
                           ),
-                          // Статус + награда + реванш — одно окно, всё вмещается.
-                          child: _buildEndDialog(
-                            game,
-                            status: status,
-                            showReward: showReward,
-                            rewardBronze: rewardBronze,
-                            narrow: narrow,
+                          // Статус + награда + реванш — одно окно; в альбоме
+                          // высоты мало, поэтому окно ещё и скроллится.
+                          child: SingleChildScrollView(
+                            child: _buildEndDialog(
+                              game,
+                              status: status,
+                              showReward: showReward,
+                              rewardBronze: rewardBronze,
+                              narrow: narrow,
+                            ),
                           ),
                         ),
                       ),
@@ -1091,7 +1101,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: _buildBottomBar(game, narrow),
+                child: _buildBottomBar(game, narrow, tight: tight),
               ),
           ],
         );
@@ -1240,14 +1250,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           const SizedBox(height: 16),
         ],
         if (_isOffline)
-          FilledButton.icon(
-            onPressed: _isRematching ? null : () => unawaited(_rematch()),
-            icon: const Icon(Icons.replay_rounded, size: 18),
-            label: Text(context.l10n.offlinePlayAgain),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 44),
+          Center(
+            child: FilledButton.icon(
+              onPressed: _isRematching ? null : () => unawaited(_rematch()),
+              icon: const Icon(Icons.replay_rounded, size: 18),
+              label: Text(context.l10n.offlinePlayAgain),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentStart,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+              ),
             ),
           )
         else
@@ -1277,6 +1289,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow, {
     bool short = false,
     bool veryShort = false,
+    bool tight = false,
     required String status,
     required bool showReward,
     required int rewardBronze,
@@ -1285,7 +1298,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }) {
     final me = game.myIndex;
     final opponents = _opponentsInDisplayOrder(game);
-    final oppAnchors = _seatAnchors(opponents.length);
+    final oppAnchors = _seatAnchors(opponents.length, landscape: tight);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1331,28 +1344,66 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Align(
-                      alignment: Alignment(0, veryShort ? -0.02 : -0.06),
-                      child: _buildCenter(
-                        game,
-                        narrow,
-                        cardSize,
-                        compact: short || veryShort,
-                        status: status,
-                        showReward: showReward,
-                        rewardBronze: rewardBronze,
-                        betweenHands: betweenHands,
+                    // В альбоме борд центрируем в остатке над своими картами:
+                    // фиксированный якорь при такой высоте попадает прямо в них.
+                    // Если в остаток не влезает даже сжатая колонка (статус +
+                    // борд), FittedBox уменьшает её, а не роняет overflow.
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: tight
+                            ? heroBottom +
+                                _heroBlockHeight(
+                                  game,
+                                  narrow,
+                                  compact: short || veryShort,
+                                )
+                            : 0,
+                      ),
+                      child: Align(
+                        alignment: Alignment(
+                          0,
+                          tight ? 0 : (veryShort ? -0.02 : -0.06),
+                        ),
+                        child: Builder(
+                          builder: (context) {
+                            final center = _buildCenter(
+                              game,
+                              narrow,
+                              cardSize,
+                              compact: short || veryShort,
+                              tight: tight,
+                              status: status,
+                              showReward: showReward,
+                              rewardBronze: rewardBronze,
+                              betweenHands: betweenHands,
+                            );
+                            if (!tight) return center;
+                            return FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: center,
+                            );
+                          },
+                        ),
                       ),
                     ),
+                    // Нижние боковые места в альбоме упираются в ряд кнопок:
+                    // он лежит на самом фетре во всю ширину. Отдаём соперникам
+                    // только фетр над кнопками.
                     for (var i = 0; i < opponents.length; i++)
-                      Align(
-                        alignment: oppAnchors[i],
-                        child: _buildSeat(
-                          game,
-                          opponents[i],
-                          narrow,
-                          align: oppAnchors[i],
-                          compact: short || veryShort,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: tight ? heroBottom : 0,
+                        ),
+                        child: Align(
+                          alignment: oppAnchors[i],
+                          child: _buildSeat(
+                            game,
+                            opponents[i],
+                            narrow,
+                            align: oppAnchors[i],
+                            compact: short || veryShort,
+                            sideways: tight,
+                          ),
                         ),
                       ),
                   ],
@@ -1419,7 +1470,25 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return out;
   }
 
-  List<Alignment> _seatAnchors(int n) => pokerOpponentSeatAnchors(n);
+  List<Alignment> _seatAnchors(int n, {bool landscape = false}) =>
+      pokerOpponentSeatAnchors(n, landscape: landscape);
+
+  /// Высота блока героя: карты приподняты над неймплейтом, поэтому колонка
+  /// профиля в высоту не попадает. Нужна, чтобы борд встал строго над ней.
+  double _heroBlockHeight(
+    PokerGameView game,
+    bool narrow, {
+    required bool compact,
+  }) {
+    final me = game.me;
+    if (me == null) return 0;
+    final cards = _heroCardSize(narrow, game.players.length, compact: compact);
+    final showBet = me.bet > 0 && !me.folded;
+    final isDealer = game.dealerIndex == game.myIndex;
+    // namePlateH 34 + avatarPlateGap 3 + блок ставки/дилера.
+    final betBlock = (showBet || isDealer) ? 24.0 : 0.0;
+    return cards.height + 37 + betBlock;
+  }
 
   /// Размер общей карты: 5 карт в ряд с небольшими зазорами.
   Size _communityCardSize(
@@ -1451,6 +1520,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow,
     Size cardSize, {
     bool compact = false,
+    bool tight = false,
     required String status,
     required bool showReward,
     required int rewardBronze,
@@ -1461,22 +1531,59 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final gap = compact ? 4.0 : 6.0;
     final isOver = game.isOver;
 
+    // Улица + чей ход — в центре, не поверх аватара соперника.
+    final streetLabel = Text(
+      _streetLabel(game.street),
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.9),
+        fontSize: compact ? 11 : 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+        shadows: const [
+          Shadow(color: Color(0x99000000), blurRadius: 6),
+        ],
+      ),
+    );
+    // Банк — только уже собранные фишки (без текущих ставок на улице).
+    final potRow = Builder(
+      builder: (context) {
+        final collected = _collectedPot(game);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KeyedSubtree(
+              key: _tableChipsKey,
+              child: _TableChipStack(amount: collected),
+            ),
+            if (collected > 0) ...[
+              const SizedBox(width: 6),
+              _PotBadge(
+                amount: collected,
+                label: context.l10n.pokerPot(collected),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Улица + чей ход — в центре, не поверх аватара соперника.
-        Text(
-          _streetLabel(game.street),
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.9),
-            fontSize: compact ? 11 : 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            shadows: const [
-              Shadow(color: Color(0x99000000), blurRadius: 6),
+        // В альбоме улица и банк идут одной строкой: по вертикали каждый
+        // лишний ряд отбирает высоту у борда, а по горизонтали место есть.
+        if (tight)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              streetLabel,
+              const SizedBox(width: 10),
+              potRow,
             ],
-          ),
-        ),
+          )
+        else
+          streetLabel,
         if (status.isNotEmpty) ...[
           const SizedBox(height: 4),
           ConstrainedBox(
@@ -1532,29 +1639,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           ),
         ],
-        SizedBox(height: gap),
-        // Банк — только уже собранные фишки (без текущих ставок на улице).
-        Builder(
-          builder: (context) {
-            final collected = _collectedPot(game);
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                KeyedSubtree(
-                  key: _tableChipsKey,
-                  child: _TableChipStack(amount: collected),
-                ),
-                if (collected > 0) ...[
-                  const SizedBox(width: 6),
-                  _PotBadge(
-                    amount: collected,
-                    label: context.l10n.pokerPot(collected),
-                  ),
-                ],
-              ],
-            );
-          },
-        ),
+        if (!tight) ...[
+          SizedBox(height: gap),
+          potRow,
+        ],
         SizedBox(height: gap),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -1577,19 +1665,23 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
           ],
         ),
-        SizedBox(height: gap),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _infoBadge(context.l10n.pokerHandNumber(game.handNumber)),
-            if (game.smallBlind > 0 || game.bigBlind > 0) ...[
-              const SizedBox(width: 6),
-              _infoBadge(
-                context.l10n.pokerBlinds(game.smallBlind, game.bigBlind),
-              ),
+        // В альбоме номер раздачи и блайнды убираем: их строка упирается
+        // в свои карты. Всё важное — банк, борд, стек — остаётся.
+        if (!tight) ...[
+          SizedBox(height: gap),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _infoBadge(context.l10n.pokerHandNumber(game.handNumber)),
+              if (game.smallBlind > 0 || game.bigBlind > 0) ...[
+                const SizedBox(width: 6),
+                _infoBadge(
+                  context.l10n.pokerBlinds(game.smallBlind, game.bigBlind),
+                ),
+              ],
             ],
-          ],
-        ),
+          ),
+        ],
       ],
     );
   }
@@ -1880,6 +1972,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow, {
     required Alignment align,
     bool compact = false,
+    bool sideways = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
@@ -1999,8 +2092,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
 
     final cardsWidth = holeSize.width * 1.55;
+    final holePlace = pokerOppHolePlacement(align, sideways: sideways);
     final cardsOnLeft = align.x < -0.05;
-    final holePlace = pokerOppHolePlacement(align);
     final plateH = pokerOppPlateHeight(compact: compact);
     final holeOffset = pokerOppHoleOffset(
       align: align,
@@ -2008,6 +2101,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       plateHeight: plateH,
       cardsWidth: cardsWidth,
       cardsHeight: holeSize.height,
+      sideways: sideways,
     );
     final showBet = p.bet > 0 && !p.folded;
     final isDealer = game.dealerIndex >= 0 &&
@@ -2533,7 +2627,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   /// Под столом: комбинация + панель действий с фиксированной высотой
   /// (стол не прыгает при появлении/скрытии кнопок).
-  Widget _buildBottomBar(PokerGameView game, bool narrow) {
+  /// Слот подсказки комбинации: в альбоме пустой ряд не резервируем.
+  double _comboSlotHeight({required bool tight, required bool hasCombo}) {
+    if (!tight) return 30;
+    return hasCombo ? 30 : 0;
+  }
+
+  Widget _buildBottomBar(
+    PokerGameView game,
+    bool narrow, {
+    bool tight = false,
+  }) {
     final comboLabel = _handRankLabel(game.myHandRank);
     final iWonHand = game.isHandOver &&
         game.me != null &&
@@ -2547,9 +2651,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         game.legalActions.isNotEmpty;
     final showCardsBtn = game.canShowCards && !game.isOver;
 
-    const comboSlot = 30.0;
-    const actionSlot = 52.0;
-    final bottomPad = narrow ? 8.0 : 12.0;
+    final comboSlot = _comboSlotHeight(tight: tight, hasCombo: showBottomCombo);
+    final actionSlot = tight ? 42.0 : 52.0;
+    final bottomPad = tight ? 10.0 : (narrow ? 8.0 : 12.0);
 
     final showActionRow = showActions || showCardsBtn;
     // Без кнопок не резервируем пустой ряд — hero остаётся у нижнего края.
@@ -2571,12 +2675,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 : const SizedBox.shrink(),
           ),
           if (showActionRow) ...[
-            const SizedBox(height: 6),
+            if (comboSlot > 0) const SizedBox(height: 6),
             SizedBox(
               height: actionSlot,
               child: showActions
-                  ? _buildActionBar(game)
-                  : Center(child: _buildShowCardsButton()),
+                  ? _buildActionBar(game, buttonHeight: actionSlot)
+                  : Center(
+                      child: _buildShowCardsButton(height: actionSlot),
+                    ),
             ),
           ],
         ],
@@ -2584,16 +2690,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _buildShowCardsButton() {
+  Widget _buildShowCardsButton({double height = 48}) {
     return SizedBox(
-      height: 48,
+      height: height,
       child: FilledButton(
         onPressed: _busy ? null : () => unawaited(_showCards()),
         style: FilledButton.styleFrom(
           backgroundColor: const Color(0xFF3E7CB1),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-          minimumSize: const Size(160, 48),
+          minimumSize: Size(160, height),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -2681,7 +2787,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  Widget _buildActionBar(PokerGameView game) {
+  Widget _buildActionBar(PokerGameView game, {double buttonHeight = 48}) {
     final canFold = game.canDo(PokerActionType.fold);
     final canCheck = game.canDo(PokerActionType.check);
     final canCall = game.canDo(PokerActionType.call);
@@ -2694,11 +2800,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _actionButton(
           label: l10n.pokerFold,
           color: const Color(0xFFB0384A),
+          height: buttonHeight,
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.fold)),
         ),
       if (canCheck)
         _actionButton(
           label: l10n.pokerCheck,
+          height: buttonHeight,
           color: const Color(0xFF3E7CB1),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.check)),
         ),
@@ -2707,18 +2815,21 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           label: game.callAmount > 0
               ? l10n.pokerCall(game.callAmount)
               : l10n.pokerCallShort,
+          height: buttonHeight,
           color: const Color(0xFF3E7CB1),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.call)),
         ),
       if (canRaise)
         _actionButton(
           label: l10n.pokerRaise,
+          height: buttonHeight,
           color: AppColors.accentStart,
           onTap: _busy ? null : () => unawaited(_openRaiseSheet(game)),
         ),
       if (canAllIn)
         _actionButton(
           label: l10n.pokerAllIn,
+          height: buttonHeight,
           color: const Color(0xFFC9782B),
           onTap: _busy ? null : () => unawaited(_move(PokerActionType.allIn)),
         ),
@@ -2739,16 +2850,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     required String label,
     required Color color,
     required VoidCallback? onTap,
+    double height = 48,
   }) {
     return SizedBox(
-      height: 48,
+      height: height,
       child: FilledButton(
         onPressed: onTap,
         style: FilledButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          minimumSize: const Size(0, 48),
+          minimumSize: Size(0, height),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

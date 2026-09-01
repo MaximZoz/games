@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
@@ -1148,7 +1149,50 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   /// клавиатура не падает при переносе.
   final GlobalKey _stripSlotKey = GlobalKey(debugLabel: 'profile-edit-strip');
 
+  /// Клавиатура успела появиться под открытым полем? Пока нет — полоску не
+  /// закрываем: на телефоне IME выезжает не в том же кадре, а на десктопе
+  /// его нет вовсе.
+  bool _keyboardWasOpenForStrip = false;
+  Timer? _stripKeyboardGrace;
+
+  /// Клавиатуру убрали (тап в пустое место, кнопка «свернуть») — компактной
+  /// полоски ввода без клавиатуры быть не должно, возвращаем обычную форму.
+  void _trackStripKeyboard({
+    required bool fieldTyping,
+    required bool keyboardOpen,
+  }) {
+    if (!fieldTyping) {
+      _keyboardWasOpenForStrip = false;
+      _stripKeyboardGrace?.cancel();
+      _stripKeyboardGrace = null;
+      return;
+    }
+    if (keyboardOpen) {
+      _keyboardWasOpenForStrip = true;
+      _stripKeyboardGrace?.cancel();
+      _stripKeyboardGrace = null;
+      return;
+    }
+    final leave = profileEditShouldLeaveFieldOnKeyboardHidden(
+      fieldTypingActive: fieldTyping,
+      keyboardWasOpen: _keyboardWasOpenForStrip,
+      keyboardOpen: keyboardOpen,
+    );
+    if (!leave || _stripKeyboardGrace != null) return;
+    // Небольшая пауза: при переключении между полями inset на мгновение
+    // обнуляется, закрывать полоску в этот момент нельзя.
+    _stripKeyboardGrace = Timer(const Duration(milliseconds: 250), () {
+      _stripKeyboardGrace = null;
+      if (!mounted || !_fieldIsOpen) return;
+      if (keyboardIsOpen(MediaQuery.viewInsetsOf(context).bottom)) return;
+      _leaveActiveField();
+    });
+  }
+
   void _leaveActiveField() {
+    _keyboardWasOpenForStrip = false;
+    _stripKeyboardGrace?.cancel();
+    _stripKeyboardGrace = null;
     widget.focusNode.unfocus();
     _ageFocus.unfocus();
     _aboutFocus.unfocus();
@@ -1348,6 +1392,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   @override
   void dispose() {
+    _stripKeyboardGrace?.cancel();
     try {
       ref.read(profileEditFieldOpenProvider.notifier).state = false;
     } catch (_) {}
@@ -1980,6 +2025,10 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       inset: MediaQuery.viewInsetsOf(context).bottom,
       viewportHeight: MediaQuery.sizeOf(context).height,
     );
+    _trackStripKeyboard(
+      fieldTyping: fieldTyping,
+      keyboardOpen: keyboardIsOpen(MediaQuery.viewInsetsOf(context).bottom),
+    );
     // Портрет: поле открыто, но форма остаётся на экране — иначе над полоской
     // ввода пустота и непонятно, что вообще редактируешь.
     final keepFormBehindStrip = profileEditKeepFormWithStrip(
@@ -2244,7 +2293,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         opaqueEdge: false,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onTap: fieldTyping ? null : _onEmptyEditorTap,
+          // Тап в пустое место закрывает и клавиатуру, и полоску ввода —
+          // раньше полоска оставалась висеть уже без клавиатуры.
+          onTap: _onEmptyEditorTap,
           child: editor,
         ),
       ),

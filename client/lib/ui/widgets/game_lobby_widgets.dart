@@ -9,6 +9,7 @@ import 'package:multigames_client/games/games_repository.dart'
     show LobbyPlayer, formatStakeAmount, stakeCoinType; // stake — LobbyStakeChip
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -537,24 +538,51 @@ class GameLobbyWaitingLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMulti = maxPlayers > 2;
+    final phoneLandscape = isPhoneLandscape(context);
+    final Widget? topCard = isMulti && multiPlayersCard != null
+        ? multiPlayersCard
+        : (!isMulti && stakeBronze > 0
+            ? LobbyStakeChip(stakeBronze: stakeBronze, label: stakeLabel)
+            : null);
+
+    // В альбоме ставка (или «Игроки N/M») и ссылка стоят в одну строку:
+    // иначе три блока по вертикали съедают экран и друзей не видно.
     final head = <Widget>[
-      if (searchBanner != null) ...[searchBanner!, const SizedBox(height: 12)],
-      if (isMulti && multiPlayersCard != null) ...[
-        multiPlayersCard!,
-        const SizedBox(height: 12),
-      ] else if (!isMulti && stakeBronze > 0) ...[
-        LobbyStakeChip(stakeBronze: stakeBronze, label: stakeLabel),
-        const SizedBox(height: 16),
+      if (searchBanner != null) ...[
+        searchBanner!,
+        SizedBox(height: phoneLandscape ? 8 : 12),
       ],
-      shareLinkCard,
-      const SizedBox(height: 12),
+      if (phoneLandscape)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (topCard != null) ...[
+              // Чип ставки — по содержимому, карточка игроков делит ширину.
+              isMulti ? Expanded(child: topCard) : topCard,
+              const SizedBox(width: 12),
+            ],
+            Expanded(child: shareLinkCard),
+          ],
+        )
+      else ...[
+        if (topCard != null) ...[
+          topCard,
+          SizedBox(height: isMulti ? 12 : 16),
+        ],
+        shareLinkCard,
+      ],
+      SizedBox(height: phoneLandscape ? 8 : 12),
     ];
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
+          constraints: BoxConstraints(
+            maxWidth: phoneLandscape ? 720 : maxWidth,
+          ),
           child: Padding(
-            padding: padding,
+            padding: phoneLandscape
+                ? padding.copyWith(top: 6, bottom: 6)
+                : padding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -564,7 +592,10 @@ class GameLobbyWaitingLayout extends StatelessWidget {
                     builder: (context, constraints) {
                       final estimated =
                           estimateLobbyFriendsCardHeight(friendsCount);
-                      final expand = estimated >= constraints.maxHeight;
+                      // В альбоме высоты почти нет: список всегда занимает
+                      // остаток и скроллится, иначе карточка обрезается.
+                      final expand = phoneLandscape ||
+                          estimated >= constraints.maxHeight;
                       final card = friendsCardBuilder(expand);
                       if (expand) return card;
                       // Мало друзей — высота по контенту, карточка сверху.

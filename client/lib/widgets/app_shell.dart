@@ -20,6 +20,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
@@ -470,10 +471,15 @@ class AppShell extends ConsumerWidget {
           phoneLandscape: narrowLandscape,
           keyboardInset: media.viewInsets.bottom,
         );
+    // Партия на телефоне в альбоме: столу остаётся ~300px по высоте, а тулбар
+    // оболочки дублирует шапку самой игры. Прячем его — навигация в рейле.
+    final hideGameChromeLandscape =
+        narrowLandscape && gameRegistry.isActiveGamePath(path);
     final hideToolbarForKeyboard = landscapeKeyboard ||
         profileKeyboard ||
         hideLandscapeProfileChrome ||
-        hideInputChrome;
+        hideInputChrome ||
+        hideGameChromeLandscape;
     final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
@@ -755,12 +761,45 @@ class AppShell extends ConsumerWidget {
     // показывал предыдущую вкладку, пока новая не растрировалась.
     // Status bar уже занят SizedBox(topInset) выше. Иначе каждый экран
     // со своим SafeArea добавляет ту же высоту ещё раз.
+    //
+    // В альбоме нижнего меню нет, и вырез сбоку с home indicator снизу
+    // никто не отступает — стол игры уезжает под них. Отступаем здесь и
+    // убираем padding из MediaQuery, чтобы SafeArea экранов не сдвинули
+    // содержимое второй раз.
+    final railVisible =
+        !(landscapeKeyboard || hideLandscapeProfileChrome || hideInputChrome);
+    final landscapeSafe = landscapeContentSafeArea(
+      viewPadding: media.viewPadding,
+      phoneLandscape: narrowLandscape,
+      railVisible: railVisible,
+    );
+    // Экраны партий считают раскладку от ширины экрана (веер, анимации). В
+    // альбоме у них остаётся заметно меньше: рейл слева и вырезы по краям —
+    // отдаём им размер их собственной коробки, иначе стол уезжает вбок.
     final branchHost = AppOpaqueSurface(
       child: RepaintBoundary(
         child: MediaQuery.removePadding(
           context: context,
           removeTop: true,
-          child: navigationShell,
+          removeLeft: narrowLandscape,
+          removeRight: narrowLandscape,
+          removeBottom: narrowLandscape,
+          // Padding и LayoutBuilder всегда в дереве: при повороте экрана
+          // условная обёртка пересоздала бы ветки и сбросила их состояние.
+          child: Padding(
+            padding: landscapeSafe,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final data = MediaQuery.of(context);
+                return MediaQuery(
+                  data: hideGameChromeLandscape
+                      ? data.copyWith(size: constraints.biggest)
+                      : data,
+                  child: navigationShell,
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -775,7 +814,9 @@ class AppShell extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: (hideLandscapeProfileChrome || hideInputChrome)
+                height: (hideLandscapeProfileChrome ||
+                        hideInputChrome ||
+                        hideGameChromeLandscape)
                     ? 0
                     : topInset,
               ),

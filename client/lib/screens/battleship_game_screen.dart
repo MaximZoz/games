@@ -1113,7 +1113,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: kToolbarHeight,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: 48,
           leading: IconButton(
             padding: EdgeInsets.zero,
@@ -1171,80 +1171,79 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         game.isSetup &&
                         !_iAmReady(game, me) &&
                         setupDeadline > nowSec;
-                    final column = Column(
-                      children: [
-                        MyTurnAlert(isMyTurn: myTurn && !isOver),
+                    final infoBlocks = <Widget>[
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          narrow ? 12 : 20,
+                          4,
+                          narrow ? 12 : 20,
+                          0,
+                        ),
+                        child: Column(
+                          children: [
+                            if (!isOver) _buildOpponentCard(game, me),
+                            if (!isOver)
+                              Text(
+                                game.isSetup
+                                    ? context.l10n.gamesBattleshipSetupPhase
+                                    : context.l10n.gamesBattleshipBattlePhase,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            if (status.isNotEmpty)
+                              GameStatusWithReward(
+                                statusText: status,
+                                showReward: chip != 0,
+                                rewardBronze: chip,
+                                rewardKey: _winRewardKey,
+                                fontSize: narrow ? 15 : null,
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (showSetupTimer)
                         Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            narrow ? 12 : 20,
-                            4,
-                            narrow ? 12 : 20,
-                            0,
-                          ),
-                          child: Column(
-                            children: [
-                              if (!isOver) _buildOpponentCard(game, me),
-                              if (!isOver)
-                                Text(
-                                  game.isSetup
-                                      ? context.l10n.gamesBattleshipSetupPhase
-                                      : context.l10n.gamesBattleshipBattlePhase,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              if (status.isNotEmpty)
-                                GameStatusWithReward(
-                                  statusText: status,
-                                  showReward: chip != 0,
-                                  rewardBronze: chip,
-                                  rewardKey: _winRewardKey,
-                                  fontSize: narrow ? 15 : null,
-                                ),
-                            ],
+                          padding: const EdgeInsets.only(top: 8),
+                          child: GameTurnCountdown(
+                            key: ValueKey('setup_${game.setupDeadline}'),
+                            turnDeadline: setupDeadline,
+                            turnTimeSec: 60,
+                            isMyTurn: true,
+                            onExpired: () => unawaited(_onSetupExpired()),
+                            labelBuilder: (s) =>
+                                context.l10n.gameSecondsLeft(s),
                           ),
                         ),
-                        if (showSetupTimer)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: GameTurnCountdown(
-                              key: ValueKey('setup_${game.setupDeadline}'),
-                              turnDeadline: setupDeadline,
-                              turnTimeSec: 60,
-                              isMyTurn: true,
-                              onExpired: () => unawaited(_onSetupExpired()),
-                              labelBuilder: (s) =>
-                                  context.l10n.gameSecondsLeft(s),
+                      if (!isOver &&
+                          !_hideTimers &&
+                          game.isBattle &&
+                          game.turnTimeSec > 0 &&
+                          game.turnDeadline > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: GameTurnCountdown(
+                            key: ValueKey(
+                              '${game.turn}_${game.turnDeadline}',
                             ),
-                          ),
-                        if (!isOver &&
-                            !_hideTimers &&
-                            game.isBattle &&
-                            game.turnTimeSec > 0 &&
-                            game.turnDeadline > 0)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: GameTurnCountdown(
-                              key: ValueKey(
-                                '${game.turn}_${game.turnDeadline}',
-                              ),
-                              turnDeadline: game.turnDeadline,
-                              isMyTurn: myTurn,
-                              turnTimeSec: game.turnTimeSec,
-                              onExpired: () => ref.invalidate(
-                                battleshipGameProvider(widget.gameId),
-                              ),
-                              labelBuilder: (s) =>
-                                  context.l10n.gameSecondsLeft(s),
+                            turnDeadline: game.turnDeadline,
+                            isMyTurn: myTurn,
+                            turnTimeSec: game.turnTimeSec,
+                            onExpired: () => ref.invalidate(
+                              battleshipGameProvider(widget.gameId),
                             ),
+                            labelBuilder: (s) =>
+                                context.l10n.gameSecondsLeft(s),
                           ),
-                        if (isOver) ...[
-                          const SizedBox(height: 10),
-                          if (_isOffline)
-                            FilledButton.icon(
+                        ),
+                      if (isOver) ...[
+                        const SizedBox(height: 10),
+                        if (_isOffline)
+                          Center(
+                            child: FilledButton.icon(
                               onPressed: _isRematching
                                   ? null
                                   : () => unawaited(_rematch()),
@@ -1254,33 +1253,92 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                 backgroundColor: AppColors.accentStart,
                                 foregroundColor: Colors.white,
                               ),
-                            )
-                          else
-                            GameRematchSection(
-                              rematchLobbyId: _rematchLobbyId,
-                              rematchDeclined: _rematchDeclined,
-                              iDeclinedRematch: _iDeclinedRematch,
-                              isRematching: _isRematching,
-                              isAcceptingRematch: _isAcceptingRematch,
-                              isFindingGame: _isFindingGame,
-                              peerIds: _peerIds(game, me),
-                              invites: ref.watch(gameInvitesProvider),
-                              onRematch: () => unawaited(_rematch()),
-                              onAccept: (id) => unawaited(_acceptRematch(id)),
-                              onDecline: (id) => unawaited(_declineRematch(id)),
-                              onCancelWait: () =>
-                                  unawaited(_cancelRematchWait()),
-                              onFindGame: () => unawaited(_findGame()),
-                              compact: true,
                             ),
-                        ],
-                        Expanded(
-                          child: game.isSetup
-                              ? _buildSetup(game, me, narrow)
-                              : _buildBattle(game, me, narrow),
-                        ),
+                          )
+                        else
+                          GameRematchSection(
+                            rematchLobbyId: _rematchLobbyId,
+                            rematchDeclined: _rematchDeclined,
+                            iDeclinedRematch: _iDeclinedRematch,
+                            isRematching: _isRematching,
+                            isAcceptingRematch: _isAcceptingRematch,
+                            isFindingGame: _isFindingGame,
+                            peerIds: _peerIds(game, me),
+                            invites: ref.watch(gameInvitesProvider),
+                            onRematch: () => unawaited(_rematch()),
+                            onAccept: (id) => unawaited(_acceptRematch(id)),
+                            onDecline: (id) => unawaited(_declineRematch(id)),
+                            onCancelWait: () => unawaited(_cancelRematchWait()),
+                            onFindGame: () => unawaited(_findGame()),
+                            compact: true,
+                          ),
                       ],
-                    );
+                    ];
+                    final phoneLandscape = isPhoneLandscape(context);
+                    // Альбом: поле слева, вся сопутствующая информация и
+                    // кнопки расстановки — колонкой справа. Иначе всё это
+                    // не помещается по высоте и ужимается до нечитаемого.
+                    final column = phoneLandscape
+                        ? Column(
+                            children: [
+                              MyTurnAlert(isMyTurn: myTurn && !isOver),
+                              Expanded(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      flex: 5,
+                                      child: game.isSetup
+                                          ? _buildSetup(
+                                              game,
+                                              me,
+                                              narrow,
+                                              boardOnly: true,
+                                            )
+                                          : _buildBattle(game, me, narrow),
+                                    ),
+                                    Expanded(
+                                      flex: 4,
+                                      child: SingleChildScrollView(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          4,
+                                          4,
+                                          8,
+                                          8,
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            ...infoBlocks,
+                                            if (game.isSetup &&
+                                                !_iAmReady(game, me)) ...[
+                                              const SizedBox(height: 10),
+                                              _buildSetupControls(
+                                                _selectedShipIndex,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              MyTurnAlert(isMyTurn: myTurn && !isOver),
+                              ...infoBlocks,
+                              Expanded(
+                                child: game.isSetup
+                                    ? _buildSetup(game, me, narrow)
+                                    : _buildBattle(game, me, narrow),
+                              ),
+                            ],
+                          );
+                    if (phoneLandscape) return column;
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         const designH = 640.0;
@@ -1375,7 +1433,12 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     );
   }
 
-  Widget _buildSetup(BattleshipGameView game, String? me, bool narrow) {
+  Widget _buildSetup(
+    BattleshipGameView game,
+    String? me,
+    bool narrow, {
+    bool boardOnly = false,
+  }) {
     final ready = _iAmReady(game, me);
     final ships = ready && game.myShips.isNotEmpty ? game.myShips : _localShips;
     final selectedIdx = _selectedShipIndex;
@@ -1431,52 +1494,61 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
               },
             ),
           ),
-          if (!ready) ...[
+          if (!ready && !boardOnly) ...[
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => unawaited(_randomPlace()),
-                    icon: const Icon(Icons.casino_rounded, size: 18),
-                    label: Text(
-                      context.l10n.gamesBattleshipRandomPlace,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.outlined(
-                  onPressed:
-                      _busy || selectedIdx == null ? null : _rotateSelected,
-                  tooltip: context.l10n.gamesBattleshipRotate,
-                  icon: const Icon(Icons.rotate_right_rounded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _busy ? null : () => unawaited(_confirmPlace()),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                ),
-                child: _busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(context.l10n.gamesBattleshipConfirmPlace),
-              ),
-            ),
+            _buildSetupControls(selectedIdx),
           ],
         ],
       ),
+    );
+  }
+
+  /// Кнопки расстановки: под полем в портрете, сбоку — в альбоме.
+  Widget _buildSetupControls(int? selectedIdx) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _busy ? null : () => unawaited(_randomPlace()),
+                icon: const Icon(Icons.casino_rounded, size: 18),
+                label: Text(
+                  context.l10n.gamesBattleshipRandomPlace,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.outlined(
+              onPressed: _busy || selectedIdx == null ? null : _rotateSelected,
+              tooltip: context.l10n.gamesBattleshipRotate,
+              icon: const Icon(Icons.rotate_right_rounded),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _busy ? null : () => unawaited(_confirmPlace()),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+            ),
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(context.l10n.gamesBattleshipConfirmPlace),
+          ),
+        ),
+      ],
     );
   }
 

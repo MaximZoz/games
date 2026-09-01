@@ -170,6 +170,12 @@
   </style>
 </head>
 <body>
+  <!--
+    Безопасные зоны iOS (чёлка, home indicator). Движок Flutter web их не
+    отдаёт: MediaQuery.padding на вебе всегда нулевой. Замеряем сами —
+    приложение читает вычисленный padding этого элемента.
+  -->
+  <div id="safe-area-probe" aria-hidden="true" style="position: fixed; top: 0; left: 0; width: 0; height: 0; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);"></div>
   <div id="zozu-boot" aria-hidden="true">
     <div class="brand">
       <div class="zozu" aria-label="Zozu">

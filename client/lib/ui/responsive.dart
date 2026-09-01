@@ -41,6 +41,31 @@ double shellToolbarHeight(BuildContext context) {
   return isNarrow(context) ? 48.0 : kToolbarHeight;
 }
 
+/// Высота AppBar игрового экрана: в альбоме телефона вертикали мало,
+/// и каждый лишний пиксель шапки отнимается у стола.
+double gameToolbarHeight(BuildContext context) =>
+    isPhoneLandscape(context) ? 44.0 : kToolbarHeight;
+
+/// Безопасные зоны для контента вкладки в альбоме телефона.
+///
+/// В портрете низ закрывает нижнее меню (оно само красит home indicator), а
+/// сверху — тулбар. В альбоме меню нет, и содержимое экрана упирается прямо в
+/// вырез сбоку и в полоску home indicator: карты и кнопки уезжают под них.
+/// Левый inset съедает `NavigationRail` (у него свой `SafeArea`) — если рейл
+/// на экране, второй раз его добавлять нельзя.
+EdgeInsets landscapeContentSafeArea({
+  required EdgeInsets viewPadding,
+  required bool phoneLandscape,
+  required bool railVisible,
+}) {
+  if (!phoneLandscape) return EdgeInsets.zero;
+  return EdgeInsets.only(
+    left: railVisible ? 0 : viewPadding.left,
+    right: viewPadding.right,
+    bottom: viewPadding.bottom,
+  );
+}
+
 /// Клавиатура открыта в альбоме — вертикали почти нет, хром надо схлопнуть.
 bool isLandscapeKeyboardOpen(
   BuildContext context, {
