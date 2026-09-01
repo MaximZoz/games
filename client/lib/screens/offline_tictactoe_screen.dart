@@ -38,6 +38,15 @@ class _OfflineTicTacToeScreenState
   }
 
   Future<void> _boot() async {
+    final existing = OfflineTttRegistry.instance.current;
+    if (existing != null) {
+      if (!mounted) return;
+      setState(() {
+        _gameId = existing.gameId;
+        _starting = false;
+      });
+      return;
+    }
     final me = ref.read(authStateProvider).valueOrNull?.id ?? 'local:player';
     final session = await OfflineTttSession.create(
       humanUserId: me,
@@ -54,15 +63,6 @@ class _OfflineTicTacToeScreenState
       _gameId = session.gameId;
       _starting = false;
     });
-  }
-
-  @override
-  void dispose() {
-    final id = _gameId;
-    if (id != null) {
-      OfflineTttRegistry.instance.get(id)?.dispose();
-    }
-    super.dispose();
   }
 
   @override

@@ -317,6 +317,7 @@ class OfflinePokerSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
     _botTimer?.cancel();
     _nextHandTimer?.cancel();
@@ -349,7 +350,18 @@ class OfflinePokerRegistry {
 
   OfflinePokerSession? get(String gameId) => _sessions[gameId];
 
+  OfflinePokerSession? get current =>
+      _sessions.isEmpty ? null : _sessions.values.last;
+
   void remove(String gameId) => _sessions.remove(gameId);
+
+  void disposeAll() {
+    final list = List<OfflinePokerSession>.of(_sessions.values);
+    _sessions.clear();
+    for (final s in list) {
+      s.dispose();
+    }
+  }
 
   bool isOffline(String gameId) => gameId.startsWith('offline:poker:');
 }

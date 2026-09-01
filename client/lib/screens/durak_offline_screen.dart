@@ -31,6 +31,11 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_gameId != null) return;
+    final existing = OfflineDurakRegistry.instance.current;
+    if (existing != null) {
+      _gameId = existing.gameId;
+      return;
+    }
     final me = ref.read(authStateProvider).valueOrNull?.id ?? 'local:player';
     final players = widget.playerCount.clamp(2, 4);
     final deck = durakClampDeckForPlayers(players, widget.deckSize);
@@ -43,15 +48,6 @@ class _DurakOfflineScreenState extends ConsumerState<DurakOfflineScreen> {
           : durakModePodkidnoi,
     );
     _gameId = session.gameId;
-  }
-
-  @override
-  void dispose() {
-    final id = _gameId;
-    if (id != null) {
-      OfflineDurakRegistry.instance.get(id)?.dispose();
-    }
-    super.dispose();
   }
 
   @override

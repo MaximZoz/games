@@ -207,6 +207,7 @@ class OfflineTttSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
     _botTimer?.cancel();
     OfflineTttRegistry.instance.remove(gameId);
@@ -224,7 +225,18 @@ class OfflineTttRegistry {
 
   OfflineTttSession? get(String gameId) => _sessions[gameId];
 
+  OfflineTttSession? get current =>
+      _sessions.isEmpty ? null : _sessions.values.last;
+
   void remove(String gameId) => _sessions.remove(gameId);
+
+  void disposeAll() {
+    final list = List<OfflineTttSession>.of(_sessions.values);
+    _sessions.clear();
+    for (final s in list) {
+      s.dispose();
+    }
+  }
 
   bool isOffline(String gameId) => gameId.startsWith('offline:ttt:');
 }

@@ -36,6 +36,7 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -110,6 +111,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Timer? _busyWatchdog;
   int _busyStuckTicks = 0;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
+  ProviderSubscription<String>? _routeResumeSub;
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
@@ -366,6 +368,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       unawaited(ref.read(activeGameProvider.notifier).refresh());
     });
+    _routeResumeSub?.close();
+    _routeResumeSub = ref.listenManual<String>(
+      currentRoutePathProvider,
+      (prev, next) {
+        if (!mounted) return;
+        if (shouldSnapDurakVisualOnResume(
+          previousPath: prev,
+          nextPath: next,
+        )) {
+          _snapVisualToServer();
+        }
+      },
+    );
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
@@ -452,6 +467,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _rematchPollTimer?.cancel();
     _busyWatchdog?.cancel();
     _realtimeSubscription?.close();
+    _routeResumeSub?.close();
     CardFlyTicket.dismissAll();
     GameFlyOverlay.dismissAll();
     super.dispose();
@@ -4877,21 +4893,26 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             availableHeight * 0.38,
           )
         : _handCardSize.height * 2.05 + 16;
-    // Кнопка чуть выше видимых карт веера.
-    final actionBtnBottom = _fit.compact
-        ? seatLift + fanCardH - 6
-        : -seatLift + fanCardH + 10;
+    // Кнопка чуть выше видимых карт веера. В альбоме — целиком над веером,
+    // иначе «Бито»/«Взять» садится на середину карт.
+    final actionBtnBottom = durakActionButtonBottom(
+      compact: _fit.compact,
+      seatLift: seatLift,
+      fanCardH: _fit.compact
+          ? math.max(fanCardH, _handCardSize.height)
+          : fanCardH,
+    );
     // Слот кнопки лежит поверх стола. В альбоме он поднимается выше зоны
     // веера, и при полном столе пары попадают прямо под «Бито». Отдаём столу
     // только высоту над слотом — слот зарезервирован всегда, чтобы стол не
     // прыгал при появлении кнопки. Запас 10 px — на поворот и тень карты
     // защиты: она рисуется чуть за пределами своего бокса.
-    final boardBottomReserve = _fit.compact
-        ? math.max(
-            0.0,
-            actionBtnBottom + _durakActionSlotH + 10 - fanZoneH,
-          )
-        : 0.0;
+    final boardBottomReserve = durakBoardBottomReserve(
+      compact: _fit.compact,
+      actionBtnBottom: actionBtnBottom,
+      actionSlotH: _durakActionSlotH,
+      fanZoneH: fanZoneH,
+    );
 
     // Таймер — только после раздачи (_busy) и когда сервер выставил deadline.
     final showTimer = !view.isOver &&
@@ -5942,6 +5963,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
     // Колода слева — чуть в кадре, не под боковой панелью.
     // Freeze: козырь не исчезает, пока доборные карты не улетели.
+    final pilesPeek = durakPilesPeekOffEdge(compact: _fit.compact);
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: DurakDeckPile(
@@ -5950,6 +5972,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         trumpSuit: _suitFromApi(view.trumpSuit),
         cardSize: cardSize,
         showTrumpFace: _trumpFaceVisible,
+        peekOffEdge: pilesPeek,
       ),
     );
 
@@ -5958,7 +5981,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       child: DurakBitoPile(
         count: _bitoCountFreeze ?? view.bitoCount,
         cardSize: cardSize,
-        peek: true,
+        peek: pilesPeek,
       ),
     );
 
@@ -6037,16 +6060,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         // Реальная ширина колоды (козырь + стопка) и биты+таймер — стол строго между ними.
         final deckW =
             cardSize.width * 0.55 + cardSize.height * 0.82;
-        final leftReserve = deckW + 14;
-        final rightReserve = math.max(90.0, cardSize.width * 0.70) + 12;
+        final leftReserve = deckW + (_fit.compact ? 18 : 14);
+        final rightReserve = _fit.compact
+            ? math.max(72.0, cardSize.width * 1.15) + 12
+            : math.max(90.0, cardSize.width * 0.70) + 12;
         final tableMaxW =
             (constraints.maxWidth - leftReserve - rightReserve)
                 .clamp(100.0, constraints.maxWidth);
         // Якорь от верха стола — НЕ от maxHeight: иначе при смене высоты
         // Expanded (веер/статус/рука) колода и бита «прыгают».
         const pileTop = 4.0;
+        final pileInset = durakPileEdgeInset(compact: _fit.compact);
         return Stack(
-          clipBehavior: Clip.none,
+          clipBehavior: _fit.compact ? Clip.hardEdge : Clip.none,
           children: [
             Positioned.fill(
               child: IgnorePointer(
@@ -6129,7 +6155,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
               ),
             // Колода слева; таймер своего хода — в фиксированном слоте над ней.
             Positioned(
-              left: 2,
+              left: pileInset,
               top: pileTop,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -6156,7 +6182,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             ),
             // Бита справа — тот же вертикальный каркас, что у колоды.
             Positioned(
-              right: 2,
+              right: pileInset,
               top: pileTop,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
