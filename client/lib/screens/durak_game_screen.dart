@@ -272,6 +272,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _busy = false;
       _fxScheduled = false;
       _fxNeedsReplay = false;
+      durakSnapRevealHiddenFx(_oppDealPending);
+      _trumpFaceVisible = true;
+      _leadRevealHiddenSeat = null;
       _flightLockTable = false;
       _flightDefendIdx = null;
       _hidingTable = false;
@@ -1396,9 +1399,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     });
 
     // Цель после layout — летим в финальную точку атаки/слота.
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return true;
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return true;
 
     // Отбой: ключ уже на позиции защиты; fallback — атака + смещение.
@@ -1521,8 +1524,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         setState(() {
           _optimisticDefends[defendIdx] = cards.first;
         });
-        await WidgetsBinding.instance.endOfFrame;
-        if (mounted) await WidgetsBinding.instance.endOfFrame;
+        await awaitDurakFrame();
+        if (mounted) await awaitDurakFrame();
         for (final t in tickets) {
           t.dismiss();
         }
@@ -1537,8 +1540,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         setState(() {
           _flyingToTable.removeAll(cards);
         });
-        await WidgetsBinding.instance.endOfFrame;
-        if (mounted) await WidgetsBinding.instance.endOfFrame;
+        await awaitDurakFrame();
+        if (mounted) await awaitDurakFrame();
         for (final t in tickets) {
           t.dismiss();
         }
@@ -1712,9 +1715,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _suppressFanLayoutAnim = true;
     });
 
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return true;
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return true;
 
     // Финальная точка: pending-пара → слот при подъёме → оценка ряда.
@@ -1794,8 +1797,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       setState(() {
         _flyingToTable.removeAll(cards);
       });
-      await WidgetsBinding.instance.endOfFrame;
-      if (mounted) await WidgetsBinding.instance.endOfFrame;
+      await awaitDurakFrame();
+      if (mounted) await awaitDurakFrame();
       for (final t in tickets) {
         t.dismiss();
       }
@@ -1875,7 +1878,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _syncHandOrderFromServer(v);
       }
       if (!clearFlying) return;
-      await WidgetsBinding.instance.endOfFrame;
+      await awaitDurakFrame();
       if (!mounted) return;
       setState(() {
         for (final c in cards) {
@@ -2085,7 +2088,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (resolvedBito) {
         _prevTable = const [];
         if (snapshot.isNotEmpty && mounted) {
-          await WidgetsBinding.instance.endOfFrame;
+          await awaitDurakFrame();
           if (!mounted) return;
           final froms = _tableCardGlobalRects(snapshot);
           setState(() {
@@ -2100,7 +2103,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           }
           if (mounted) {
             setState(() => _bitoCountFreeze = freezeCount + flown);
-            await WidgetsBinding.instance.endOfFrame;
+            await awaitDurakFrame();
           }
           for (final t in tickets) {
             t.dismiss();
@@ -2344,7 +2347,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _suppressFanLayoutAnim = false;
         _fanAnimDuringBusy = true;
       });
-      await WidgetsBinding.instance.endOfFrame;
+      await awaitDurakFrame();
     }
     if (!mounted) return;
 
@@ -2475,7 +2478,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           _frozenFanCardSize = lay.cardSize;
           _frozenFanHandCount = order.length;
         });
-        await WidgetsBinding.instance.endOfFrame;
+        await awaitDurakFrame();
         if (!mounted) return;
 
         final fan = _fanKey.currentState;
@@ -2996,7 +2999,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           setState(() {
             _bitoCountFreeze = prevBito + flown;
           });
-          await WidgetsBinding.instance.endOfFrame;
+          await awaitDurakFrame();
         }
         for (final t in tickets) {
           t.dismiss();
@@ -3315,9 +3318,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     List<PlayingCard> myHand,
   ) async {
     if (!mounted || !_gameUiActive) return;
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return;
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return;
 
     final n = view.hands.length;
@@ -3414,9 +3417,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _leadRevealHiddenSeat = oppSeat;
       if (iGo && lead != null) _flyingFromHand.add(lead);
     });
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted) return;
-    await WidgetsBinding.instance.endOfFrame;
+    await awaitDurakFrame();
     if (!mounted || !_gameUiActive) return;
 
     if (lead != null) {
@@ -3562,7 +3565,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (idx == view.myIndex) {
         if (dealtMine || myCards.isEmpty) continue;
         dealtMine = true;
-        await WidgetsBinding.instance.endOfFrame;
+        await awaitDurakFrame();
         if (!mounted || !_gameUiActive) return;
         await _animateDealCardsToFan(myCards);
         continue;
@@ -3718,7 +3721,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           _oppDealPending[idx] = left;
         }
       });
-      await WidgetsBinding.instance.endOfFrame;
+      await awaitDurakFrame();
       ticket.dismiss();
       if (!mounted || !_gameUiActive) return;
       if (i + 1 < n) {
@@ -3979,7 +3982,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       // и без долгого двойного силуэта.
       if (mounted) {
         setState(() => _remoteFlyingCardIds.remove(id));
-        await WidgetsBinding.instance.endOfFrame;
+        await awaitDurakFrame();
       }
     } finally {
       _remoteFlyingCardIds.remove(id);
@@ -5775,15 +5778,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// В альбоме плитки крупнее, иначе веер сливается в «иконку».
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
-    final pending = (_oppDealPending[idx] ?? 0) +
-        (_leadRevealHiddenSeat == idx ? 1 : 0);
-    final visible = math.max(0, serverCount - pending);
+    // Раздача не прячет веер: иначе зависший полёт оставляет пустой слот.
+    final hidden = _leadRevealHiddenSeat == idx ? 1 : 0;
     final shown = durakOpponentFanShownCount(
       serverCount: serverCount,
-      pending: pending,
+      hidden: hidden,
     );
-    final ghostOnly = visible <= 0 && shown > 0;
-    final compact = _fit.compact;
+    final compact = _fit.compact || isPhoneLandscape(context);
     final maxW = MediaQuery.sizeOf(context).width *
         durakOpponentFanMaxWidthFrac(compact: compact);
     final geo = durakOpponentFanGeometry(
@@ -5834,14 +5835,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                               child: Transform.rotate(
                                 angle: angle,
                                 alignment: Alignment.topCenter,
-                                child: Opacity(
-                                  opacity: ghostOnly ? 0.55 : 1,
-                                  child: CardBackWidget(
+                                child: CardBackWidget(
                                     size: tile,
                                     elevated: i == shown - 1,
                                     outlined: true,
                                   ),
-                                ),
                               ),
                             );
                           },
@@ -5916,7 +5914,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
     // Колода слева — чуть в кадре, не под боковой панелью.
     // Freeze: козырь не исчезает, пока доборные карты не улетели.
-    final pilesPeek = durakPilesPeekOffEdge(compact: _fit.compact);
+    final pilesPeek = durakPilesPeekOffEdge(
+      compact: _fit.compact || isPhoneLandscape(context),
+    );
     final deckPeek = KeyedSubtree(
       key: _deckKey,
       child: DurakDeckPile(

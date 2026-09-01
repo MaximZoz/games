@@ -135,16 +135,20 @@ class DurakBitoPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peekW = peek ? cardSize.width * 0.62 : cardSize.width * 1.35;
-    final areaH = cardSize.height * (peek ? 1.12 : 1.25);
+    final draw = Size(
+      math.max(cardSize.width, peek ? 36.0 : 48.0),
+      math.max(cardSize.height, peek ? 52.0 : 68.0),
+    );
+    final peekW = peek ? draw.width * 0.62 : draw.width * 1.45;
+    final areaH = draw.height * (peek ? 1.12 : 1.28);
     if (count <= 0) {
       // Пустой слот тоже с рубашкой: иначе в альбоме бита «пропадает».
       final placeholder = Opacity(
-        opacity: 0.45,
+        opacity: 0.82,
         child: Transform.rotate(
           angle: 0.14,
           child: CardBackWidget(
-            size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+            size: Size(draw.width * 0.92, draw.height * 0.92),
             outlined: true,
           ),
         ),
@@ -162,7 +166,7 @@ class DurakBitoPile extends StatelessWidget {
       final card = Transform.rotate(
         angle: 0.18,
         child: CardBackWidget(
-          size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+          size: Size(draw.width * 0.92, draw.height * 0.92),
           elevated: true,
         ),
       );
@@ -184,7 +188,7 @@ class DurakBitoPile extends StatelessWidget {
     }
 
     final shown = math.min(count, 14);
-    final areaW = cardSize.width * (1.15 + 0.4 * (shown / 14));
+    final areaW = draw.width * (1.15 + 0.4 * (shown / 14));
 
     final pile = SizedBox(
       width: areaW,
@@ -199,6 +203,7 @@ class DurakBitoPile extends StatelessWidget {
               shown: shown,
               areaW: areaW,
               areaH: areaH,
+              card: draw,
             ),
         ],
       ),
@@ -222,21 +227,22 @@ class DurakBitoPile extends StatelessWidget {
     required int shown,
     required double areaW,
     required double areaH,
+    required Size card,
   }) {
     final rng = math.Random(9001 + index * 9973);
     final angle = (rng.nextDouble() - 0.5) * 1.2;
-    final dx = (rng.nextDouble() - 0.5) * (areaW - cardSize.width) * 0.7;
-    final dy = (rng.nextDouble() - 0.5) * (areaH - cardSize.height) * 0.65;
+    final dx = (rng.nextDouble() - 0.5) * (areaW - card.width) * 0.7;
+    final dy = (rng.nextDouble() - 0.5) * (areaH - card.height) * 0.65;
     final lift = index / math.max(shown, 1);
     return Positioned(
-      left: areaW / 2 - cardSize.width / 2 + dx,
-      top: areaH / 2 - cardSize.height / 2 + dy - lift * 3,
+      left: areaW / 2 - card.width / 2 + dx,
+      top: areaH / 2 - card.height / 2 + dy - lift * 3,
       child: Transform.rotate(
         angle: angle,
         child: Opacity(
           opacity: 0.92,
           child: CardBackWidget(
-            size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+            size: Size(card.width * 0.92, card.height * 0.92),
             elevated: index == shown - 1,
           ),
         ),

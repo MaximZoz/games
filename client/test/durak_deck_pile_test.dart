@@ -21,8 +21,8 @@ void main() {
 
     expect(find.byType(CardBackWidget), findsOneWidget);
     final back = tester.widget<CardBackWidget>(find.byType(CardBackWidget));
-    expect(back.size.width, closeTo(46, 0.01));
-    expect(back.size.height, closeTo(66.24, 0.01));
+    expect(back.size.width, closeTo(50 * 0.92, 0.01));
+    expect(back.size.height, closeTo(72 * 0.92, 0.01));
   });
 
   testWidgets('бита с картами рисует рубашки', (tester) async {

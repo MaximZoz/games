@@ -139,4 +139,10 @@ void main() {
     expect(find.text('stuck-fly'), findsNothing);
     expect(CardFlyTicket.debugLiveCount, 0);
   });
+
+  testWidgets('awaitDurakFrame завершается по таймауту кадра', (tester) async {
+    final future = awaitDurakFrame();
+    await tester.pump(const Duration(milliseconds: 100));
+    await future;
+  });
 }
