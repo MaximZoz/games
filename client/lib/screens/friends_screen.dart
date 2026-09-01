@@ -55,6 +55,18 @@ bool friendsHideTabsForKeyboard({
   return keyboardInset >= 80;
 }
 
+/// Цвет числа на табе: входящие — красный, поиск — зелёный, иначе акцент.
+@visibleForTesting
+Color friendsTabCountColor({
+  required bool incoming,
+  required bool findFriend,
+  required int count,
+}) {
+  if (incoming && count > 0) return Colors.red.shade600;
+  if (findFriend) return Colors.green.shade700;
+  return AppColors.accentStart;
+}
+
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -1785,19 +1797,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final count = _tabCount(tab, snapshot, totalUsersCount);
     final isIncoming = tab == _FriendsTabKind.incoming;
     final isFindFriend = tab == _FriendsTabKind.findFriend;
-    final countColor = (isIncoming && (count ?? 0) > 0)
-        ? Colors.red.shade600
-        : isFindFriend
-            ? Colors.green.shade700
-            : AppColors.accentStart;
+    final countColor = friendsTabCountColor(
+      incoming: isIncoming,
+      findFriend: isFindFriend,
+      count: count ?? 0,
+    );
     final countStyle = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: countColor,
     );
     if (isPhoneLandscape(context)) {
-      return Text(
-        count != null ? '$title $count' : title,
+      if (count == null) {
+        return Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        );
+      }
+      final countChild = isFindFriend
+          ? _AnimatedCountText(
+              value: count,
+              style: countStyle,
+              animateFromZeroOnce: true,
+            )
+          : Text('$count', style: countStyle);
+      return Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: '$title '),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.baseline,
+              baseline: TextBaseline.alphabetic,
+              child: countChild,
+            ),
+          ],
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,

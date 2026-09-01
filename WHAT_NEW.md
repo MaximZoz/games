@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
 - Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
 - Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
 - Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; застрявшие полёты снимаются при возврате с вкладки, resume и если карта зависла скрытой
@@ -40,6 +41,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
 - Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
 - Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
 - Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear on tab return, app resume, or a stuck hidden card
