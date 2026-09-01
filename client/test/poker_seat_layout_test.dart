@@ -98,4 +98,81 @@ void main() {
       expect(holeRect(left).left, greaterThanOrEqualTo(0));
     });
   });
+
+  group('альбом на телефоне: соперники на боковых кромках', () {
+    test('ни одно место не встаёт в центр по горизонтали', () {
+      for (var n = 1; n <= 5; n++) {
+        for (final align in pokerOpponentSeatAnchors(n, landscape: true)) {
+          expect(
+            align.x.abs(),
+            greaterThanOrEqualTo(1.0),
+            reason: 'n=$n $align занимает центр, где стоят борд и свои карты',
+          );
+        }
+      }
+    });
+
+    test('портретные якоря не изменились', () {
+      for (var n = 0; n <= 5; n++) {
+        expect(
+          pokerOpponentSeatAnchors(n, landscape: false),
+          pokerOpponentSeatAnchors(n),
+        );
+      }
+    });
+
+    test('карты боковых мест уходят внутрь стола, а не вверх/вниз', () {
+      for (var n = 1; n <= 5; n++) {
+        final anchors = pokerOpponentSeatAnchors(n, landscape: true);
+        for (final align in anchors) {
+          final placement = pokerOppHolePlacement(align, sideways: true);
+          expect(
+            placement,
+            align.x < 0
+                ? PokerOppHolePlacement.inwardRight
+                : PokerOppHolePlacement.inwardLeft,
+            reason: 'n=$n $align',
+          );
+        }
+      }
+    });
+
+    test('колонка профиля с картами вбок не выше самой колонки', () {
+      const plateH = 74.0;
+      const cardsHeight = 50.0;
+      final off = pokerOppHoleOffset(
+        align: const Alignment(-1, 0.7),
+        plateWidth: 72,
+        plateHeight: plateH,
+        cardsWidth: 56,
+        cardsHeight: cardsHeight,
+        sideways: true,
+      );
+      expect(off.dy, 0);
+      expect(off.dy + cardsHeight, lessThanOrEqualTo(plateH));
+    });
+
+    test('места на одной кромке не наезжают друг на друга', () {
+      // Фетр телефона в альбоме: ~341 px по высоте, колонка профиля 74 px.
+      const feltH = 341.0;
+      const seatH = 74.0;
+      for (var n = 1; n <= 5; n++) {
+        final anchors = pokerOpponentSeatAnchors(n, landscape: true);
+        for (final side in [-1.0, 1.0]) {
+          final tops = anchors
+              .where((a) => a.x == side)
+              .map((a) => (feltH - seatH) * (1 + a.y) / 2)
+              .toList()
+            ..sort();
+          for (var i = 1; i < tops.length; i++) {
+            expect(
+              tops[i] - tops[i - 1],
+              greaterThanOrEqualTo(seatH),
+              reason: 'n=$n сторона $side: места $i-1 и $i перекрываются',
+            );
+          }
+        }
+      }
+    });
+  });
 }

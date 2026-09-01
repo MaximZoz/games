@@ -4782,9 +4782,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
     // seatLift < 0 — чуть уводим под низ зоны.
     final seatT = nFan <= 1 ? 0.0 : ((nFan - 1) / 11).clamp(0.0, 1.0);
     // Подворот руки под низ экрана рассчитан на портрет с нижним меню.
-    // В альбоме меню нет, и карты просто обрезаются краем экрана.
+    // В альбоме меню нет, и карты просто обрезаются краем экрана. Крайние
+    // карты веера ещё и опускаются по дуге (edgeLift) и наклоняются, поэтому
+    // подъём считаем от высоты карты, а не фиксированным числом.
     final seatLift = _fit.compact
-        ? 10.0
+        ? math.max(10.0, fanCardH * 0.24)
         : -fanCardH * (0.33 * (1 - seatT) + 0.06 * seatT);
     // Высота зоны веера всегда по максимальным картам — иначе при сбросе
     // в биту зона сжимается, стол растёт и колода/бита «прыгают».
@@ -4797,7 +4799,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen> {
           )
         : _handCardSize.height * 2.05 + 16;
     // Кнопка чуть выше видимых карт веера.
-    final actionBtnBottom = -seatLift + fanCardH + 10;
+    final actionBtnBottom = _fit.compact
+        ? seatLift + fanCardH - 6
+        : -seatLift + fanCardH + 10;
 
     // Таймер — только после раздачи (_busy) и когда сервер выставил deadline.
     final showTimer = !view.isOver &&

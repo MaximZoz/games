@@ -1296,7 +1296,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }) {
     final me = game.myIndex;
     final opponents = _opponentsInDisplayOrder(game);
-    final oppAnchors = _seatAnchors(opponents.length);
+    final oppAnchors = _seatAnchors(opponents.length, landscape: tight);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1342,21 +1342,46 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Align(
-                      alignment: Alignment(
-                        0,
-                        tight ? -0.38 : (veryShort ? -0.02 : -0.06),
+                    // В альбоме борд центрируем в остатке над своими картами:
+                    // фиксированный якорь при такой высоте попадает прямо в них.
+                    // Если в остаток не влезает даже сжатая колонка (статус +
+                    // борд), FittedBox уменьшает её, а не роняет overflow.
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: tight
+                            ? heroBottom +
+                                _heroBlockHeight(
+                                  game,
+                                  narrow,
+                                  compact: short || veryShort,
+                                )
+                            : 0,
                       ),
-                      child: _buildCenter(
-                        game,
-                        narrow,
-                        cardSize,
-                        compact: short || veryShort,
-                        tight: tight,
-                        status: status,
-                        showReward: showReward,
-                        rewardBronze: rewardBronze,
-                        betweenHands: betweenHands,
+                      child: Align(
+                        alignment: Alignment(
+                          0,
+                          tight ? 0 : (veryShort ? -0.02 : -0.06),
+                        ),
+                        child: Builder(
+                          builder: (context) {
+                            final center = _buildCenter(
+                              game,
+                              narrow,
+                              cardSize,
+                              compact: short || veryShort,
+                              tight: tight,
+                              status: status,
+                              showReward: showReward,
+                              rewardBronze: rewardBronze,
+                              betweenHands: betweenHands,
+                            );
+                            if (!tight) return center;
+                            return FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: center,
+                            );
+                          },
+                        ),
                       ),
                     ),
                     for (var i = 0; i < opponents.length; i++)
@@ -1368,6 +1393,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                           narrow,
                           align: oppAnchors[i],
                           compact: short || veryShort,
+                          sideways: tight,
                         ),
                       ),
                   ],
@@ -1434,7 +1460,25 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return out;
   }
 
-  List<Alignment> _seatAnchors(int n) => pokerOpponentSeatAnchors(n);
+  List<Alignment> _seatAnchors(int n, {bool landscape = false}) =>
+      pokerOpponentSeatAnchors(n, landscape: landscape);
+
+  /// Высота блока героя: карты приподняты над неймплейтом, поэтому колонка
+  /// профиля в высоту не попадает. Нужна, чтобы борд встал строго над ней.
+  double _heroBlockHeight(
+    PokerGameView game,
+    bool narrow, {
+    required bool compact,
+  }) {
+    final me = game.me;
+    if (me == null) return 0;
+    final cards = _heroCardSize(narrow, game.players.length, compact: compact);
+    final showBet = me.bet > 0 && !me.folded;
+    final isDealer = game.dealerIndex == game.myIndex;
+    // namePlateH 34 + avatarPlateGap 3 + блок ставки/дилера.
+    final betBlock = (showBet || isDealer) ? 24.0 : 0.0;
+    return cards.height + 37 + betBlock;
+  }
 
   /// Размер общей карты: 5 карт в ряд с небольшими зазорами.
   Size _communityCardSize(
@@ -1477,22 +1521,59 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final gap = compact ? 4.0 : 6.0;
     final isOver = game.isOver;
 
+    // Улица + чей ход — в центре, не поверх аватара соперника.
+    final streetLabel = Text(
+      _streetLabel(game.street),
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.9),
+        fontSize: compact ? 11 : 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+        shadows: const [
+          Shadow(color: Color(0x99000000), blurRadius: 6),
+        ],
+      ),
+    );
+    // Банк — только уже собранные фишки (без текущих ставок на улице).
+    final potRow = Builder(
+      builder: (context) {
+        final collected = _collectedPot(game);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KeyedSubtree(
+              key: _tableChipsKey,
+              child: _TableChipStack(amount: collected),
+            ),
+            if (collected > 0) ...[
+              const SizedBox(width: 6),
+              _PotBadge(
+                amount: collected,
+                label: context.l10n.pokerPot(collected),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Улица + чей ход — в центре, не поверх аватара соперника.
-        Text(
-          _streetLabel(game.street),
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.9),
-            fontSize: compact ? 11 : 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            shadows: const [
-              Shadow(color: Color(0x99000000), blurRadius: 6),
+        // В альбоме улица и банк идут одной строкой: по вертикали каждый
+        // лишний ряд отбирает высоту у борда, а по горизонтали место есть.
+        if (tight)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              streetLabel,
+              const SizedBox(width: 10),
+              potRow,
             ],
-          ),
-        ),
+          )
+        else
+          streetLabel,
         if (status.isNotEmpty) ...[
           const SizedBox(height: 4),
           ConstrainedBox(
@@ -1548,29 +1629,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ),
           ),
         ],
-        SizedBox(height: gap),
-        // Банк — только уже собранные фишки (без текущих ставок на улице).
-        Builder(
-          builder: (context) {
-            final collected = _collectedPot(game);
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                KeyedSubtree(
-                  key: _tableChipsKey,
-                  child: _TableChipStack(amount: collected),
-                ),
-                if (collected > 0) ...[
-                  const SizedBox(width: 6),
-                  _PotBadge(
-                    amount: collected,
-                    label: context.l10n.pokerPot(collected),
-                  ),
-                ],
-              ],
-            );
-          },
-        ),
+        if (!tight) ...[
+          SizedBox(height: gap),
+          potRow,
+        ],
         SizedBox(height: gap),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -1900,6 +1962,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow, {
     required Alignment align,
     bool compact = false,
+    bool sideways = false,
   }) {
     final acting = p.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(p.seat);
@@ -2019,8 +2082,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
 
     final cardsWidth = holeSize.width * 1.55;
+    final holePlace = pokerOppHolePlacement(align, sideways: sideways);
     final cardsOnLeft = align.x < -0.05;
-    final holePlace = pokerOppHolePlacement(align);
     final plateH = pokerOppPlateHeight(compact: compact);
     final holeOffset = pokerOppHoleOffset(
       align: align,
@@ -2028,6 +2091,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       plateHeight: plateH,
       cardsWidth: cardsWidth,
       cardsHeight: holeSize.height,
+      sideways: sideways,
     );
     final showBet = p.bet > 0 && !p.folded;
     final isDealer = game.dealerIndex >= 0 &&
@@ -2556,7 +2620,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   /// Слот подсказки комбинации: в альбоме пустой ряд не резервируем.
   double _comboSlotHeight({required bool tight, required bool hasCombo}) {
     if (!tight) return 30;
-    return hasCombo ? 26 : 0;
+    return hasCombo ? 30 : 0;
   }
 
   Widget _buildBottomBar(

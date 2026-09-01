@@ -152,7 +152,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   /// Высота, на которой стол помещается в полный размер: шапка + стол с
   /// колодой и сбросом + ряд кнопок («Взять», «Уно!», выбор цвета) + рука.
-  static const double _tableDesignHeight = 500;
+  static const double _tableDesignHeight = 430;
 
   /// Подгонка под доступную высоту — в альбоме телефона её ~330 px.
   GameTableFit _fit = const GameTableFit(scale: 1, compact: false);
