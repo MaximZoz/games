@@ -4,6 +4,9 @@
 
 ## ru
 - Игры в альбоме: стол больше не съезжает — в дураке видно всю руку и колоду, в уно колоду и сброс, в покере свои карты не наезжают на общие, в морском бое поле слева, а кнопки справа
+- Покер в альбоме: соперники сидят по бокам стола, поэтому «Пре-флоп», банк, общие карты и свои карты больше не наползают друг на друга
+- Дурак в альбоме: нижний край веера больше не срезается краем экрана
+- Уно в альбоме: стол и карты подгоняются под реальную высоту, а не ужимаются на треть
 - Профиль: полоска ввода имени, возраста и «о себе» всегда вплотную над клавиатурой — в альбоме текст больше не уезжает к верхнему краю экрана
 - Профиль: убрали клавиатуру — компактная полоска ввода тоже закрывается, а не висит одна поверх формы
 - Итоги игры: «Повторить» и «Другой соперник» по ширине текста, а не на весь экран
@@ -31,6 +34,9 @@
 
 ## en
 - Games in landscape: the table no longer breaks — Durak shows the whole hand and the deck, Uno the draw and discard piles, Poker keeps hole cards off the board, and Battleship puts the grid on the left with controls on the right
+- Poker in landscape: opponents sit along the table sides, so the street label, pot, community cards and hole cards no longer overlap
+- Durak in landscape: the bottom edge of the hand fan is no longer cut off by the screen
+- Uno in landscape: the table and cards scale to the real height instead of shrinking by a third
 - Chats: the composer sits right above the keyboard again with messages visible above it (portrait and landscape); compact input only while the keyboard is open
 - Friends search: the keyboard opens on iPhone as before and the field no longer hangs at the bottom without it
 - Profile: the input strip always sits right above the keyboard, so in landscape the text no longer jumps to the top edge
