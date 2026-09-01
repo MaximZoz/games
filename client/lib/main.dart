@@ -22,6 +22,7 @@ import 'core/push_notification_nav_stub.dart'
     as push_nav;
 import 'router.dart';
 import 'ui/app_theme.dart';
+import 'ui/widgets/css_safe_area.dart';
 import 'ui/widgets/keyboard_inset_hud.dart';
 import 'ui/widgets/zozu_boot_splash.dart';
 import 'src/console_log_stub.dart'
@@ -241,8 +242,10 @@ class MultiGamesApp extends ConsumerWidget {
                 // при смене вкладки/экрана мигает предыдущий кадр.
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
-                  child: FakeKeyboardInset(
-                    child: child ?? const SizedBox.shrink(),
+                  child: CssSafeArea(
+                    child: FakeKeyboardInset(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
