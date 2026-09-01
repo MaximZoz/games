@@ -32,7 +32,8 @@ double durakActionButtonBottom({
   required double fanCardH,
 }) {
   if (!compact) return -seatLift + fanCardH + 10;
-  return seatLift + fanCardH + 16;
+  // Запас больше высоты слота/свечения: иначе «Взять» садится на середину карт.
+  return seatLift + fanCardH + 36;
 }
 
 /// Сколько высоты отдать столу под слот кнопки в альбоме.

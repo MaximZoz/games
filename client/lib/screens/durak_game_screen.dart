@@ -4898,7 +4898,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final actionBtnBottom = durakActionButtonBottom(
       compact: _fit.compact,
       seatLift: seatLift,
-      fanCardH: fanCardH,
+      fanCardH: _fit.compact
+          ? math.max(fanCardH, _handCardSize.height)
+          : fanCardH,
     );
     // Слот кнопки лежит поверх стола. В альбоме он поднимается выше зоны
     // веера, и при полном столе пары попадают прямо под «Бито». Отдаём столу

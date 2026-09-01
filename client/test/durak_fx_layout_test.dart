@@ -89,9 +89,9 @@ void main() {
         seatLift: -20,
         fanCardH: 90,
       );
-      expect(compact, 16 + 70 + 16);
+      expect(compact, 16 + 70 + 36);
       expect(portrait, 20 + 90 + 10);
-      expect(compact, greaterThan(70));
+      expect(compact, greaterThan(70 + 16));
     });
 
     test('колода в альбоме не выглядывает за край', () {
