@@ -84,7 +84,7 @@ Workflow: `.github/workflows/android-internal.yml`
 (Android 16). С 31.08.2026 Play отклоняет обновления с более низким
 target API: `Target SDK of artifact is too low` (в логе upload-google-play
 рядом может быть `versionCode`, например `10059`). Не брать
-`flutter.targetSdkVersion` из Flutter 3.27 — там 34.
+`flutter.targetSdkVersion` из Flutter 3.27 — там 35.
 
 ### Если Queued / Failed to cancel
 

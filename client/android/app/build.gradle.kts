@@ -36,7 +36,7 @@ android {
         // applicationId задаётся в productFlavors (prod / dev).
         minSdk = flutter.minSdkVersion
         // Play с 31.08.2026 принимает только targetSdk >= 36 (Android 16).
-        // Flutter 3.27.4 даёт flutter.targetSdkVersion = 34 — из-за этого
+        // Flutter 3.27.4 даёт flutter.targetSdkVersion = 35 — из-за этого
         // r0adkll/upload-google-play падает: "Target SDK of artifact is too low".
         targetSdk = 36
         versionCode = flutter.versionCode

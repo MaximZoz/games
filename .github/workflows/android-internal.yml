@@ -123,7 +123,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Play с 31.08.2026 отклоняет AAB с targetSdk < 36 (ошибка 10059).
+          # Play с 31.08.2026 отклоняет AAB с targetSdk < 36.
           if ! grep -Eq 'targetSdk[[:space:]]*=[[:space:]]*36' android/app/build.gradle.kts; then
             echo "::error::targetSdk должен быть 36 — иначе Play: Target SDK of artifact is too low"
             exit 1
