@@ -238,3 +238,22 @@ func TestBotPickCellSmartWinsAndBlocks(t *testing.T) {
 		t.Fatal("full board → -1")
 	}
 }
+
+func TestAttachTttIdentity(t *testing.T) {
+	payload := map[string]any{
+		"type":    "game_state",
+		"game_id": "g1",
+		"board":   []string{"x", "", "", "", "", "", "", "", ""},
+	}
+	attachTttIdentity(payload, map[string]string{
+		"x_user_id":    "u1",
+		"o_user_id":    "u2",
+		"stake_bronze": "4",
+	})
+	if payload["x_user_id"] != "u1" || payload["o_user_id"] != "u2" {
+		t.Fatalf("missing player ids: %v", payload)
+	}
+	if payload["stake_bronze"] != 4 {
+		t.Fatalf("stake=%v", payload["stake_bronze"])
+	}
+}

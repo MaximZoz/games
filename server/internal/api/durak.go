@@ -783,12 +783,7 @@ func (h *GamesHandler) healDurakBitoReveal(ctx context.Context, gameID string, m
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
@@ -851,12 +846,7 @@ func (h *GamesHandler) healDurakTakeReveal(ctx context.Context, gameID string, m
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
@@ -917,12 +907,7 @@ func (h *GamesHandler) armDurakTurnAfterDeal(ctx context.Context, gameID string,
 	m["turn_deadline"] = strconv.FormatInt(time.Now().UTC().Unix()+int64(turnT), 10)
 	m["turn_actor_idx"] = strconv.Itoa(actor)
 	m["deal_grace_until"] = "0"
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	return true
 }
 
@@ -1020,12 +1005,7 @@ func (h *GamesHandler) healDurakShortHands(ctx context.Context, gameID string, m
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, "state", encoded)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	return true
 }
 
@@ -1055,12 +1035,7 @@ func (h *GamesHandler) healDurakDefenderEmpty(ctx context.Context, gameID string
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 	if state.Status == durak.StatusOver {
 		if state.LoserIndex < 0 {
@@ -1103,12 +1078,7 @@ func (h *GamesHandler) healDurakBothEmptyDraw(ctx context.Context, gameID string
 	fields := append([]any{"state", encoded}, durakOverRedisFields(state)...)
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	if state.LoserIndex < 0 {
 		m["draw"] = "1"
 	}
@@ -1161,6 +1131,43 @@ func (h *GamesHandler) enrichDurakPlayersMeta(ctx context.Context, view map[stri
 		}
 	}
 	view["players"] = players
+}
+
+// broadcastDurakState шлёт каждому человеку полный view (как GET), не ping.
+func (h *GamesHandler) broadcastDurakState(ctx context.Context, gameID string, m map[string]string, state *durak.State, extra map[string]any) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if h.Rdb != nil {
+		if fresh, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result(); err == nil && len(fresh) > 0 {
+			m = fresh
+		}
+	}
+	if state == nil && m != nil {
+		state, _ = durak.Decode(m["state"])
+	}
+	if state == nil {
+		payload := map[string]any{
+			"type":      "game_state",
+			"game_id":   gameID,
+			"game_type": durakGameType,
+		}
+		for k, v := range extra {
+			payload[k] = v
+		}
+		h.broadcast(durakHumans(m), payload)
+		return
+	}
+	for _, u := range durakHumans(m) {
+		view := durakViewFor(state, u.String(), m, gameID)
+		h.enrichDurakPlayersMeta(ctx, view, state.PlayerIDs)
+		view["type"] = "game_state"
+		view["game_id"] = gameID
+		for k, v := range extra {
+			view[k] = v
+		}
+		h.broadcast([]uuid.UUID{u}, view)
+	}
 }
 
 // ---- DurakMove ----
@@ -1376,12 +1383,7 @@ func (h *GamesHandler) DurakMove(w http.ResponseWriter, r *http.Request, gameID 
 	h.promoteDurakFinishedPlayers(ctx, gameID, m, state)
 
 	// Broadcast.
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	if state.Status == durak.StatusActive && state.Phase == durak.PhaseBitoReveal {
 		h.scheduleDurakBitoReveal(gameID)
 	}
@@ -1441,7 +1443,6 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 	}
 	continues := state.Eliminate(idx)
 	encoded, _ := durak.Encode(state)
-	humans := durakHumans(m)
 	if continues {
 		// Партия идёт: не ставим forfeit на игру — иначе в конце у
 		// оставшихся будет «Соперник сдался», хотя сдался третий раньше.
@@ -1456,12 +1457,8 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 		// Сбрасываем «липкий» forfeit от прошлой сдачи (если был).
 		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit")
 		moveActiveToObserving(ctx, h.Rdb, userID, gameID)
-		h.broadcast(humans, map[string]any{
-			"type":         "game_state",
-			"game_id":      gameID,
-			"game_type":    durakGameType,
+		h.broadcastDurakState(ctx, gameID, m, state, map[string]any{
 			"forfeit":      true,
-			"eliminated":   true,
 			"left_user_id": userID.String(),
 		})
 		w.Header().Set("Content-Type", "application/json")
@@ -1475,12 +1472,7 @@ func (h *GamesHandler) ForfeitDurakGame(w http.ResponseWriter, r *http.Request, 
 		fields = append(fields, "loser", state.PlayerIDs[state.LoserIndex])
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-		"forfeit":   true,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, map[string]any{"forfeit": true})
 	h.onDurakGameFinished(ctx, gameID, m, state)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": durakStatusOver, "forfeit": true})
@@ -1526,11 +1518,7 @@ func (h *GamesHandler) DurakOfferDraw(w http.ResponseWriter, r *http.Request, ga
 		return
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, "draw_offer_by", userID.String())
-	h.broadcast(durakHumans(m), map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, nil, nil)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"offered": true})
 }
@@ -1567,12 +1555,7 @@ func (h *GamesHandler) DurakAcceptDraw(w http.ResponseWriter, r *http.Request, g
 		"draw", "1",
 	)
 	h.Rdb.HDel(ctx, "game:"+gameID, "draw_offer_by")
-	humans := durakHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-	})
+	h.broadcastDurakState(ctx, gameID, m, state, nil)
 	h.onDurakGameFinished(ctx, gameID, m, state)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"draw": true})
@@ -1952,12 +1935,7 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 		h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 		h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
 		h.promoteDurakFinishedPlayers(ctx, gameID, fresh, state)
-		humans := durakHumans(fresh)
-		h.broadcast(humans, map[string]any{
-			"type":      "game_state",
-			"game_id":   gameID,
-			"game_type": durakGameType,
-		})
+		h.broadcastDurakState(ctx, gameID, fresh, state, nil)
 		if state.Status == durak.StatusActive && state.Phase == durak.PhaseTakeReveal {
 			h.scheduleDurakTakeReveal(gameID)
 		}
@@ -1974,7 +1952,6 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	if err != nil {
 		return
 	}
-	humans := durakHumans(fresh)
 	if continues {
 		// Как с forfeit: mid-game вылет по времени не помечает всю партию
 		// timeout — иначе победителю в конце покажут «время соперника вышло».
@@ -1993,13 +1970,8 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 				moveActiveToObserving(ctx, h.Rdb, u, gameID)
 			}
 		}
-		h.broadcast(humans, map[string]any{
-			"type":       "game_state",
-			"game_id":    gameID,
-			"game_type":  durakGameType,
-			"timeout":    true,
-			"eliminated": true,
-			"status":     gameStatusActive,
+		h.broadcastDurakState(ctx, gameID, fresh, state, map[string]any{
+			"timeout": true,
 		})
 		return
 	}
@@ -2013,12 +1985,9 @@ func (h *GamesHandler) applyDurakTurnTimeout(ctx context.Context, gameID string,
 	}
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": durakGameType,
-		"timeout":   true,
-		"status":    durakStatusOver,
+	h.broadcastDurakState(ctx, gameID, fresh, state, map[string]any{
+		"timeout": true,
+		"status":  durakStatusOver,
 	})
 	h.onDurakGameFinished(ctx, gameID, fresh, state)
 }
