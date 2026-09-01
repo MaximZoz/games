@@ -37,6 +37,21 @@ double? fakeKeyboardInset() {
   return _fakeInset;
 }
 
+/// Подставные безопасные зоны iPhone: `?fakesafe=1`.
+/// В Chrome чёлки и home indicator нет, а из-за них в альбоме съезжает стол.
+bool fakeSafeAreaEnabled() {
+  _readFlags();
+  return _fakeSafeArea;
+}
+
+/// Геометрия iPhone: в портрете чёлка сверху, в альбоме — сбоку.
+EdgeInsets fakeSafeAreaPadding({required Size size}) {
+  final landscape = size.width > size.height;
+  return landscape
+      ? const EdgeInsets.only(left: 59, right: 59, bottom: 21)
+      : const EdgeInsets.only(top: 59, bottom: 34);
+}
+
 /// Фокус стоит в текстовом поле? Подставная клавиатура «выезжает» только
 /// тогда, как настоящая, иначе по приложению не походить.
 bool _focusInTextField() {
@@ -82,47 +97,94 @@ class _FakeKeyboardInsetState extends State<FakeKeyboardInset> {
 
   @override
   Widget build(BuildContext context) {
-    final inset = fakeKeyboardInset();
-    if (inset == null || !_typing) return widget.child;
+    final rawInset = fakeKeyboardInset();
+    final inset = _typing ? rawInset : null;
+    final safeArea = fakeSafeAreaEnabled();
+    if (inset == null && !safeArea) return widget.child;
     final media = MediaQuery.of(context);
-    // Геометрия iPhone: чёлка сверху, home indicator снизу. Под клавиатурой
-    // padding.bottom обнуляется — так же, как это делает платформа.
-    final viewPadding = _fakeSafeArea
-        ? media.viewPadding.copyWith(top: 59, bottom: 34)
-        : media.viewPadding;
+    var data = media;
+    if (safeArea) {
+      final padding = fakeSafeAreaPadding(size: media.size);
+      data = data.copyWith(viewPadding: padding, padding: padding);
+    }
+    if (inset != null) {
+      // Под клавиатурой padding.bottom обнуляется — как это делает платформа.
+      data = data.copyWith(
+        viewInsets: data.viewInsets.copyWith(bottom: inset),
+        padding: data.padding.copyWith(bottom: 0),
+      );
+    }
     return MediaQuery(
-      data: media.copyWith(
-        viewInsets: media.viewInsets.copyWith(bottom: inset),
-        viewPadding: viewPadding,
-        padding: viewPadding.copyWith(bottom: 0),
-      ),
+      data: data,
       child: Stack(
         children: [
           Positioned.fill(child: widget.child),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: inset,
-            child: IgnorePointer(
-              child: Container(
-                color: const Color(0x99303030),
-                alignment: Alignment.topCenter,
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  'клавиатура ${inset.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Color(0xFFFFFFFF),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+          if (inset != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: inset,
+              child: IgnorePointer(
+                child: Container(
+                  color: const Color(0x99303030),
+                  alignment: Alignment.topCenter,
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'клавиатура ${inset.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      color: Color(0xFFFFFFFF),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          if (safeArea) ..._safeAreaMarkers(media.size),
         ],
       ),
     );
+  }
+
+  /// Полупрозрачные полосы по краям — сразу видно, куда залезает вёрстка.
+  List<Widget> _safeAreaMarkers(Size size) {
+    final padding = fakeSafeAreaPadding(size: size);
+    const color = Color(0x33FF3B30);
+    return [
+      if (padding.top > 0)
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: padding.top,
+          child: const IgnorePointer(child: ColoredBox(color: color)),
+        ),
+      if (padding.bottom > 0)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: padding.bottom,
+          child: const IgnorePointer(child: ColoredBox(color: color)),
+        ),
+      if (padding.left > 0)
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: padding.left,
+          child: const IgnorePointer(child: ColoredBox(color: color)),
+        ),
+      if (padding.right > 0)
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: padding.right,
+          child: const IgnorePointer(child: ColoredBox(color: color)),
+        ),
+    ];
   }
 }
 

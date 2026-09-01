@@ -761,12 +761,45 @@ class AppShell extends ConsumerWidget {
     // показывал предыдущую вкладку, пока новая не растрировалась.
     // Status bar уже занят SizedBox(topInset) выше. Иначе каждый экран
     // со своим SafeArea добавляет ту же высоту ещё раз.
+    //
+    // В альбоме нижнего меню нет, и вырез сбоку с home indicator снизу
+    // никто не отступает — стол игры уезжает под них. Отступаем здесь и
+    // убираем padding из MediaQuery, чтобы SafeArea экранов не сдвинули
+    // содержимое второй раз.
+    final railVisible =
+        !(landscapeKeyboard || hideLandscapeProfileChrome || hideInputChrome);
+    final landscapeSafe = landscapeContentSafeArea(
+      viewPadding: media.viewPadding,
+      phoneLandscape: narrowLandscape,
+      railVisible: railVisible,
+    );
+    // Экраны партий считают раскладку от ширины экрана (веер, анимации). В
+    // альбоме у них остаётся заметно меньше: рейл слева и вырезы по краям —
+    // отдаём им размер их собственной коробки, иначе стол уезжает вбок.
     final branchHost = AppOpaqueSurface(
       child: RepaintBoundary(
         child: MediaQuery.removePadding(
           context: context,
           removeTop: true,
-          child: navigationShell,
+          removeLeft: narrowLandscape,
+          removeRight: narrowLandscape,
+          removeBottom: narrowLandscape,
+          // Padding и LayoutBuilder всегда в дереве: при повороте экрана
+          // условная обёртка пересоздала бы ветки и сбросила их состояние.
+          child: Padding(
+            padding: landscapeSafe,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final data = MediaQuery.of(context);
+                return MediaQuery(
+                  data: hideGameChromeLandscape
+                      ? data.copyWith(size: constraints.biggest)
+                      : data,
+                  child: navigationShell,
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
