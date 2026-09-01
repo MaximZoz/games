@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
 - Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
 - Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
 - Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
@@ -41,6 +42,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Turn timer: the clock keeps ticking after the low-time warning
 - Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
 - Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
 - Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
