@@ -88,8 +88,75 @@ void main() {
         durakKeepServerTablePair(optimistic: false, flyingToTable: false),
         isTrue,
       );
+      expect(
+        durakKeepServerTablePair(
+          optimistic: false,
+          flyingToTable: false,
+          remoteFlying: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: false,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: true,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
+        2,
+      );
+      expect(
+        durakRemoteAttackFromSeat(attackerIndex: 1, throwerIndex: -1),
+        1,
+      );
       expect(durakTableSlotOpacity(inFlight: true), 0);
       expect(durakTableSlotOpacity(inFlight: false), 1);
+      expect(
+        durakTableAttackSlotInFlight(localFlying: false, remoteFlying: true),
+        isTrue,
+      );
+      expect(
+        durakTableAttackSlotInFlight(localFlying: true, remoteFlying: false),
+        isTrue,
+      );
+      expect(
+        durakTableAttackSlotInFlight(localFlying: false, remoteFlying: false),
+        isFalse,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: false,
+          remoteDefenseFlying: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: true,
+          remoteDefenseFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: false,
+          remoteDefenseFlying: false,
+        ),
+        isFalse,
+      );
       expect(
         durakNeedsPendingAttackSlot(attackAlreadyOnTable: true),
         isTrue,

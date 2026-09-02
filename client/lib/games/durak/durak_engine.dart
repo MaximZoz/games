@@ -415,6 +415,11 @@ class DurakGame {
     hands[pIndex].remove(card);
     table[idx] = table[idx].withDefense(card);
     if (hands[pIndex].isEmpty) {
+      // Все пары отбиты — пауза «бито», чтобы было видно чем отбились.
+      if (table.every((p) => p.isBeaten)) {
+        turn = DurakTurn.bitoReveal;
+        return;
+      }
       _resolveDefenderEmpty();
       return;
     }

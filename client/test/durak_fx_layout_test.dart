@@ -312,17 +312,38 @@ void main() {
       expect(durakStuckSnapTicks(compact: false), 3);
     });
 
-    test('добор не в веере, пока карта не летит из колоды', () {
+    test('добор не в веере, пока карта pending — даже во время полёта', () {
+      expect(durakDealCardInFanLayout(pendingDeal: true), isFalse);
+      expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
+    });
+
+    test('в биту — только после посадки отбоя', () {
+      expect(kDurakBitoAfterDefensePause.inMilliseconds, greaterThanOrEqualTo(800));
       expect(
-        durakDealCardInFanLayout(pendingDeal: true, flyingIntoFan: false),
+        durakTableReadyForBitoFlight(
+          remoteFlying: true,
+          localFlyingToTable: false,
+          defendLock: false,
+          flyingFromHand: false,
+        ),
         isFalse,
       );
       expect(
-        durakDealCardInFanLayout(pendingDeal: true, flyingIntoFan: true),
-        isTrue,
+        durakTableReadyForBitoFlight(
+          remoteFlying: false,
+          localFlyingToTable: true,
+          defendLock: false,
+          flyingFromHand: false,
+        ),
+        isFalse,
       );
       expect(
-        durakDealCardInFanLayout(pendingDeal: false, flyingIntoFan: false),
+        durakTableReadyForBitoFlight(
+          remoteFlying: false,
+          localFlyingToTable: false,
+          defendLock: false,
+          flyingFromHand: false,
+        ),
         isTrue,
       );
     });

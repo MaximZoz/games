@@ -330,14 +330,22 @@ bool durakVisualLooksStuck({
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
 
-/// Добор из колоды: в веере нет карты, пока она не летит (дырка под overlay).
-bool durakDealCardInFanLayout({
-  required bool pendingDeal,
-  required bool flyingIntoFan,
-}) {
-  if (pendingDeal && !flyingIntoFan) return false;
-  return true;
-}
+/// Добор из колоды: в веере нет карты, пока она ещё pending.
+///
+/// Взятие со стола не ставит pending — слот-дырка остаётся в [_handOrder].
+bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
+
+/// Пауза после посадки отбоя, чтобы было видно чем отбились, затем стол в биту.
+const Duration kDurakBitoAfterDefensePause = Duration(milliseconds: 900);
+
+/// Ждать свои и чужие полёты на стол, прежде чем уводить карты в биту.
+bool durakTableReadyForBitoFlight({
+  required bool remoteFlying,
+  required bool localFlyingToTable,
+  required bool defendLock,
+  required bool flyingFromHand,
+}) =>
+    !remoteFlying && !localFlyingToTable && !defendLock && !flyingFromHand;
 
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;

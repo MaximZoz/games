@@ -185,8 +185,11 @@ void main() {
       expect(game.table.length, 1);
       expect(game.turn, DurakTurn.defender);
 
-      // Последняя карта защитника — сразу бита, без кнопки.
+      // Последняя карта защитника — пауза «бито», стол ещё виден.
       game.defend(PlayingCard(Rank.seven, Suit.hearts), playerIndex: 1);
+      expect(game.turn, DurakTurn.bitoReveal);
+      expect(game.table, isNotEmpty);
+      game.completeReveal();
       expect(game.table, isEmpty);
       expect(game.bito.length, 2);
       expect(game.attackerIndex, 1);
@@ -206,6 +209,8 @@ void main() {
       );
       game.attack(PlayingCard(Rank.nine, Suit.hearts), playerIndex: 0);
       game.defend(PlayingCard(Rank.ten, Suit.hearts), playerIndex: 1);
+      expect(game.turn, DurakTurn.bitoReveal);
+      game.completeReveal();
       expect(game.isOver, isTrue);
       expect(game.endedInDraw, isTrue);
       expect(game.loserIndex, isNull);
@@ -293,7 +298,9 @@ void main() {
       expect(game.isOver, isFalse);
       expect(game.turn, DurakTurn.defender);
       game.defend(PlayingCard(Rank.jack, Suit.hearts), playerIndex: 1);
-      // Защитник тоже в ноль → сразу resolveDefenderEmpty → ничья.
+      // Защитник тоже в ноль → пауза бито, затем ничья.
+      expect(game.turn, DurakTurn.bitoReveal);
+      game.completeReveal();
       expect(game.isOver, isTrue);
       expect(game.endedInDraw, isTrue);
       expect(game.finishedIndices, containsAll([0, 1]));
