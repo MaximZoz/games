@@ -112,8 +112,8 @@ void main() {
     });
 
     test('веер соперника в альбоме читаемый, не 24 px', () {
-      expect(durakOpponentFanTileMinH(compact: true), greaterThanOrEqualTo(40));
-      expect(durakOpponentFanTileMinW(compact: true), greaterThanOrEqualTo(28));
+      expect(durakOpponentFanTileMinH(compact: true), greaterThanOrEqualTo(48));
+      expect(durakOpponentFanTileMinW(compact: true), greaterThanOrEqualTo(34));
       const card = Size(43, 61);
       final geo = durakOpponentFanGeometry(
         cardSize: card,
@@ -121,25 +121,28 @@ void main() {
         maxWidth: 360,
         compact: true,
       );
-      expect(geo.tile.height, greaterThanOrEqualTo(40));
-      expect(geo.tile.width, greaterThanOrEqualTo(28));
+      expect(geo.tile.height, greaterThanOrEqualTo(48));
+      expect(geo.tile.width, greaterThanOrEqualTo(34));
       expect(geo.totalW, greaterThan(geo.tile.width));
       expect(geo.reserveH, greaterThan(geo.tile.height));
     });
 
-    test('во время раздачи веер не пустой — есть цель посадки', () {
+    test('раздача не прячет весь веер — иначе FX зависает на пустом слоте', () {
       expect(
-        durakOpponentFanShownCount(serverCount: 6, pending: 6),
-        1,
+        durakOpponentFanShownCount(serverCount: 6, hidden: 6),
+        6,
       );
       expect(
-        durakOpponentFanShownCount(serverCount: 6, pending: 3),
-        3,
+        durakOpponentFanShownCount(serverCount: 6, hidden: 1),
+        5,
       );
       expect(
-        durakOpponentFanShownCount(serverCount: 0, pending: 0),
+        durakOpponentFanShownCount(serverCount: 0, hidden: 0),
         0,
       );
+      final pending = {1: 6};
+      durakSnapRevealHiddenFx(pending);
+      expect(pending, isEmpty);
     });
 
     test('полёт на веер в альбоме не мельче 36×50', () {
@@ -260,7 +263,7 @@ void main() {
         ),
         isFalse,
       );
-      expect(durakStuckSnapTicks(compact: true), 2);
+      expect(durakStuckSnapTicks(compact: true), 1);
       expect(durakStuckSnapTicks(compact: false), 3);
     });
   });

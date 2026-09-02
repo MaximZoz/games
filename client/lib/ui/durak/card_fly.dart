@@ -11,6 +11,20 @@ import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 export 'package:multigames_client/ui/durak/overlay_space.dart';
 
+/// Кадр для посадки FX. Без таймаута `endOfFrame` висит, если никто
+/// не заказал frame — раздача тогда не заканчивается, веер остаётся скрытым.
+Future<void> awaitDurakFrame({
+  Duration timeout = const Duration(milliseconds: 80),
+}) async {
+  final binding = WidgetsBinding.instance;
+  binding.scheduleFrame();
+  try {
+    await binding.endOfFrame.timeout(timeout);
+  } on TimeoutException {
+    // кадра нет — не держим полёт
+  }
+}
+
 /// Общая кривая полёта: мягкий разгон и длинное торможение без «щелчка» в конце.
 const Curve kDurakFlyCurve = Curves.easeOutQuint;
 
@@ -159,9 +173,10 @@ Future<CardFlyTicket> playCardFlyAnimation({
     gameOnly: true,
   );
   try {
-    await controller.forward();
+    SchedulerBinding.instance.scheduleFrame();
+    await controller.forward().timeout(duration + const Duration(milliseconds: 480));
   } catch (_) {
-    // ignore dispose races
+    // timeout / dispose: не оставляем await навсегда — иначе виснет вся раздача
   }
   if (landSfx != null) Sfx.play(landSfx);
   if (!keepAtEnd) {

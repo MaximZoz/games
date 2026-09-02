@@ -81,19 +81,19 @@ double durakBoardRightReserve({
 ///
 /// В альбоме 24 px сливались в «иконку» — рубашки должны читаться как карты.
 double durakOpponentFanTileMinH({required bool compact}) =>
-    compact ? 40.0 : 32.0;
+    compact ? 48.0 : 32.0;
 
 /// Минимальная ширина плитки веера соперника.
 double durakOpponentFanTileMinW({required bool compact}) =>
-    compact ? 28.0 : 22.0;
+    compact ? 34.0 : 22.0;
 
 /// Доля ширины экрана под веер соперника.
 double durakOpponentFanMaxWidthFrac({required bool compact}) =>
-    compact ? 0.48 : 1 / 3;
+    compact ? 0.56 : 1 / 3;
 
 /// Базовый масштаб плитки от карты стола.
 double durakOpponentFanBaseScale({required bool compact}) =>
-    compact ? 0.64 : 0.44;
+    compact ? 0.82 : 0.44;
 
 double durakOpponentFanTileScale({
   required bool compact,
@@ -116,16 +116,25 @@ double durakOpponentFanMinStepFrac(int shown) {
   return 0.58;
 }
 
-/// Сколько рубашек рисуем: во время раздачи хотя бы одна — цель полёта.
+/// Сколько рубашек рисуем.
+///
+/// [hidden] — только вскрытие козыря (одна карта). Pending раздачи больше
+/// не прячет всю руку: зависший полёт оставлял веер пустым до конца партии.
 int durakOpponentFanShownCount({
   required int serverCount,
-  required int pending,
+  required int hidden,
 }) {
-  final visible = serverCount - pending;
+  final n = serverCount < 0 ? 0 : serverCount;
+  final hide = hidden < 0 ? 0 : hidden;
+  final visible = n - hide;
   if (visible > 20) return 20;
   if (visible > 0) return visible;
-  if (serverCount > 0 && pending > 0) return 1;
-  return 0;
+  return n > 20 ? 20 : n;
+}
+
+/// Snap к серверу обязан открыть то, что прятал незавершённый FX.
+void durakSnapRevealHiddenFx(Map<int, int> oppDealPending) {
+  oppDealPending.clear();
 }
 
 /// Геометрия веера соперника: плитка, шаг, дуга, фиксированный слот по высоте.
@@ -262,7 +271,7 @@ bool durakVisualLooksStuck({
     busy || fxScheduled || flightActive || hidingTable;
 
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
-int durakStuckSnapTicks({required bool compact}) => compact ? 2 : 3;
+int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
 
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;
