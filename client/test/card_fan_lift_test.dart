@@ -9,6 +9,23 @@ void main() {
   const tenDiamonds = PlayingCard(Rank.ten, Suit.diamonds);
   const queenClubs = PlayingCard(Rank.queen, Suit.clubs);
 
+  test('parentHidden прячет лицо до посадки добора', () {
+    expect(
+      fanSlotHidesFace(
+        card: tenDiamonds,
+        parentHidden: {tenDiamonds},
+      ),
+      isTrue,
+    );
+    expect(
+      fanSlotHidesFace(
+        card: queenClubs,
+        parentHidden: {tenDiamonds},
+      ),
+      isFalse,
+    );
+  });
+
   test('вытянутая карта скрыта в слоте, не удалена из веера', () {
     expect(
       fanSlotHidesFace(card: tenDiamonds, liftedCard: tenDiamonds),

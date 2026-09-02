@@ -75,20 +75,24 @@ void main() {
       expect(durakTableStackHeight(card, 0, compact: true), 0);
     });
 
-    test('полёт не прячет серверную пару и pending только до WS', () {
+    test('полёт прячет серверную пару до посадки', () {
       expect(
         durakKeepServerTablePair(optimistic: true, flyingToTable: true),
-        isTrue,
+        isFalse,
+      );
+      expect(
+        durakKeepServerTablePair(optimistic: true, flyingToTable: false),
+        isFalse,
       );
       expect(
         durakKeepServerTablePair(optimistic: false, flyingToTable: false),
         isTrue,
       );
-      expect(durakTableSlotOpacity(inFlight: true), 1);
+      expect(durakTableSlotOpacity(inFlight: true), 0);
       expect(durakTableSlotOpacity(inFlight: false), 1);
       expect(
         durakNeedsPendingAttackSlot(attackAlreadyOnTable: true),
-        isFalse,
+        isTrue,
       );
       expect(
         durakNeedsPendingAttackSlot(attackAlreadyOnTable: false),

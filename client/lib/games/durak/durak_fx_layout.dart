@@ -325,6 +325,15 @@ bool durakVisualLooksStuck({
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
 
+/// Добор из колоды: в веере нет карты, пока она не летит (дырка под overlay).
+bool durakDealCardInFanLayout({
+  required bool pendingDeal,
+  required bool flyingIntoFan,
+}) {
+  if (pendingDeal && !flyingIntoFan) return false;
+  return true;
+}
+
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;
   final parts = clean.split('/').where((p) => p.isNotEmpty).toList();
