@@ -607,8 +607,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   bool _shouldShowTablePair(DurakTablePairApi pair, int _) {
     final atk = pair.attack.toPlayingCard();
-    // Не прячем серверную пару: на Android overlay часто не садится,
-    // и карты, кинутые в центр, исчезают.
+    // Пока fly/optimistic — серверную пару не рисуем: лицо ведёт overlay.
     return durakKeepServerTablePair(
       optimistic: _optimisticAttacks.contains(atk),
       flyingToTable: _flyingToTable.contains(atk),
@@ -809,10 +808,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     };
   }
 
-  /// Оптимистичные атаки, которых ещё нет на серверном столе.
-  ///
-  /// Если карта уже в view.table — pending не рисуем: иначе двоится
-  /// с серверной парой (её больше не прячем на время полёта).
+  /// Optimistic-атаки — слот посадки (opacity 0 под fly), даже если WS уже подтвердил.
   List<PlayingCard> _pendingAttackPlaceholders(DurakGameView view) {
     if (_optimisticAttacks.isEmpty) return const [];
     final seated = {
@@ -843,15 +839,27 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Порядок веера: сохраняем локальную сортировку между синками сервера.
   List<PlayingCard> _orderedHand(List<PlayingCard> serverHand, Suit trump) {
     final gone = _locallyGoneFromHand;
+    final pending = _pendingDealCards;
     if (_handOrder == null) {
       return [
         for (final c in serverHand)
-          if (!gone.contains(c)) c,
+          if (!gone.contains(c) &&
+              durakDealCardInFanLayout(
+                pendingDeal: pending.contains(c),
+                flyingIntoFan: _flyingFromHand.contains(c),
+              ))
+            c,
       ];
     }
     final remain = serverHand.toSet()..removeAll(gone);
     final out = <PlayingCard>[];
     for (final c in _handOrder!) {
+      if (!durakDealCardInFanLayout(
+        pendingDeal: pending.contains(c),
+        flyingIntoFan: _flyingFromHand.contains(c),
+      )) {
+        continue;
+      }
       if (remain.remove(c)) {
         out.add(c);
       } else if (_flyingFromHand.contains(c) || _incomingFanCards.contains(c)) {
@@ -860,10 +868,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
     }
     if (remain.isNotEmpty) {
-      // Только карты, явно помеченные как добор из колоды — остальное
-      // показываем сразу (иначе после хода веер может опустеть).
+      // Добор из колоды не вспыхивает в веере до полёта.
       final added = remain
-          .where((c) => !_pendingDealCards.contains(c))
+          .where(
+            (c) => durakDealCardInFanLayout(
+              pendingDeal: pending.contains(c),
+              flyingIntoFan: _flyingFromHand.contains(c),
+            ),
+          )
           .toList()
         ..sort((a, b) => _compareHandCards(a, b, trump));
       out.addAll(added);
@@ -1522,6 +1534,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           });
           await awaitDurakFrame();
           if (mounted) await awaitDurakFrame();
+          for (final t in tickets) {
+            t.dismiss();
+          }
+          tickets.clear();
           if (mounted) {
             setState(() {
               _flightLockTable = false;
@@ -1535,6 +1551,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           });
           await awaitDurakFrame();
           if (mounted) await awaitDurakFrame();
+          for (final t in tickets) {
+            t.dismiss();
+          }
+          tickets.clear();
         }
 
         try {
@@ -1784,12 +1804,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           );
         }
         if (!mounted) return;
-        // Стол уже виден под overlay; fly не держит скрытие слота.
+        // Стол под overlay → кадр → снять fly (не ждать сеть: иначе двойник).
         setState(() {
           _flyingToTable.removeAll(cards);
         });
         await awaitDurakFrame();
         if (mounted) await awaitDurakFrame();
+        for (final t in tickets) {
+          t.dismiss();
+        }
+        tickets.clear();
         await commitFuture;
         if (!mounted) return;
         setState(() {
@@ -2470,7 +2494,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _consumeDeckFreezeSlot();
         setState(() {
           _handOrder = order;
-          _pendingDealCards.remove(card);
           _flyingFromHand.add(card);
           _frozenFanCardSize = lay.cardSize;
           _frozenFanHandCount = order.length;
@@ -2498,11 +2521,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             awaitSettle: false,
             onHandoff: () {
               if (!mounted) return;
-              setState(() => _flyingFromHand.remove(card));
+              setState(() {
+                _flyingFromHand.remove(card);
+                _pendingDealCards.remove(card);
+              });
             },
           );
         } else if (mounted) {
-          setState(() => _flyingFromHand.remove(card));
+          setState(() {
+            _flyingFromHand.remove(card);
+            _pendingDealCards.remove(card);
+          });
         }
         if (!mounted) return;
         if (i + 1 < cards.length) {
@@ -2513,6 +2542,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (manageBusy) _busy = false;
       _fanAnimDuringBusy = false;
       _pendingDealCards.removeAll(cards);
+      _flyingFromHand.removeAll(cards);
       if (mounted) {
         setState(() {});
         _releaseFanLayoutSnap();
@@ -5156,7 +5186,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                               : legal,
                                           emphasizeLegal: true,
                                           selectedCards: _selected,
-                                          hiddenCards: _flyingFromHand,
+                                          hiddenCards: {
+                                            ..._flyingFromHand,
+                                            ..._pendingDealCards,
+                                          },
                                           enabled: !view.isOver &&
                                               !_busy &&
                                               view.canAct,
@@ -5242,13 +5275,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             duration: layoutTween,
             curve: kDurakLayoutCurve,
             builder: (context, btnBottom, _) {
+              final landscapeBtn =
+                  _fit.compact || isPhoneLandscape(context);
               return Positioned(
                 left: 0,
                 right: 0,
                 bottom: btnBottom,
                 child: SizedBox(
                   height: _durakActionSlotH,
-                  child: Center(
+                  child: Align(
+                    alignment: Alignment(
+                      durakActionButtonAlignX(compact: landscapeBtn),
+                      0,
+                    ),
                     child: showActionOrReveal &&
                             !_holdingFanCard &&
                             !_cardFlightActive

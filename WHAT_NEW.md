@@ -3,7 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак на Android: карты, кинутые в центр, больше не исчезают; пустую биту не показываем
+- Дурак в альбоме: «Взять»/«Бито» правее, не накрывает карты стола
+- Дурак: карта садится на стол и в веер только после полёта, не вспыхивает заранее; пустую биту не показываем
 - Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
 - Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
 - Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
@@ -46,7 +47,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Durak on Android: cards thrown to the table stay visible; the empty discard pile is hidden
+- Durak in landscape: Take/Beat sit to the right so they no longer cover the table cards
+- Durak: a thrown or dealt card appears on the table or in the hand only after the flight lands; the empty discard pile stays hidden
 - Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
 - Turn timer: the clock keeps ticking after the low-time warning
 - Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges

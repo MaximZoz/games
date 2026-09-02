@@ -69,22 +69,21 @@ double durakClampedTableBottomReserve({
   return reserve;
 }
 
-/// Серверную пару оставляем в дереве даже при optimistic/fly.
+/// Серверную пару не рисуем, пока атака ещё в полёте / optimistic.
 ///
-/// Прятать слот нельзя: на Android overlay часто не садится в кадр,
-/// и карты, кинутые в центр, пропадают до конца хода.
+/// Иначе карта вспыхивает на столе до посадки overlay. Если overlay
+/// не стартовал, caller сразу снимает [flyingToTable] — слот не зависает.
 bool durakKeepServerTablePair({
   required bool optimistic,
   required bool flyingToTable,
 }) {
-  // Раньше optimistic/fly прятали слот. На Android overlay часто
-  // не садится — карта пропадает. Оба флага больше не скрывают пару.
-  return !(optimistic && flyingToTable && false);
+  return !optimistic && !flyingToTable;
 }
 
-/// Слот на столе не прячем opacity 0 на время полёта.
-double durakTableSlotOpacity({required bool inFlight}) => inFlight ? 1 : 1;
+/// Пока overlay летит, слот opacity 0 — лицо ведёт полёт.
+double durakTableSlotOpacity({required bool inFlight}) => inFlight ? 0 : 1;
 
-/// Pending-слот нужен, только пока сервер ещё не положил эту атаку.
-bool durakNeedsPendingAttackSlot({required bool attackAlreadyOnTable}) =>
-    !attackAlreadyOnTable;
+/// Pending — якорь посадки даже после WS: серверную пару прячем до конца fly.
+bool durakNeedsPendingAttackSlot({required bool attackAlreadyOnTable}) {
+  return attackAlreadyOnTable || !attackAlreadyOnTable;
+}

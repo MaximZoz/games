@@ -39,6 +39,11 @@ double durakActionButtonBottom({
   return seatLift + fanCardH + 36;
 }
 
+/// Горизонталь кнопки: 0 — центр, 1 — правый край.
+/// В альбоме правее, чтобы не накрывать карты стола.
+double durakActionButtonAlignX({required bool compact}) =>
+    compact ? 0.62 : 0.0;
+
 /// Сколько высоты отдать столу под слот кнопки в альбоме.
 double durakBoardBottomReserve({
   required bool compact,
@@ -324,6 +329,15 @@ bool durakVisualLooksStuck({
 
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
+
+/// Добор из колоды: в веере нет карты, пока она не летит (дырка под overlay).
+bool durakDealCardInFanLayout({
+  required bool pendingDeal,
+  required bool flyingIntoFan,
+}) {
+  if (pendingDeal && !flyingIntoFan) return false;
+  return true;
+}
 
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;
