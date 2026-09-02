@@ -332,6 +332,50 @@ void main() {
       expect(after.lastWasTake, isTrue);
     });
 
+    test('переводной: после перевода бот ходит без снятия вкладки', () async {
+      final session = OfflineDurakSession.create(
+        humanUserId: 'user-1',
+        deckSize: 36,
+        playerCount: 2,
+        mode: durakModePerevodnoi,
+        gameId: 'offline:durak:transfer-bot',
+      );
+      addTearDown(session.dispose);
+      session.markDealReady();
+
+      final g = session.engine;
+      final attackSuit = g.trump == Suit.hearts ? Suit.spades : Suit.hearts;
+      g.attackerIndex = 1;
+      g.throwerIndex = 1;
+      g.turn = DurakTurn.defender;
+      g.table
+        ..clear()
+        ..add(TablePair(PlayingCard(Rank.ten, attackSuit)));
+      g.hands[0]
+        ..clear()
+        ..add(PlayingCard(Rank.ten, g.trump == Suit.clubs ? Suit.diamonds : Suit.clubs))
+        ..add(PlayingCard(Rank.king, attackSuit));
+      g.hands[1]
+        ..clear()
+        ..add(PlayingCard(Rank.ace, attackSuit))
+        ..add(PlayingCard(Rank.six, g.trump));
+
+      expect(session.debugFxHold, isFalse);
+      await session.applyMove(
+        type: 'transfer',
+        card: PlayingCard(
+          Rank.ten,
+          g.trump == Suit.clubs ? Suit.diamonds : Suit.clubs,
+        ),
+      );
+      expect(g.turn, DurakTurn.defender);
+      expect(g.defenderIndex, 1);
+      expect(session.debugBotTimerActive, isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 900));
+      expect(g.table.any((p) => p.defense != null), isTrue);
+    });
+
     test('waitUntilRevealDone: бито нотифаит пустой стол до UI-hold', () async {
       final session = OfflineDurakSession.create(
         humanUserId: 'user-1',

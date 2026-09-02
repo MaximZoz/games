@@ -88,6 +88,40 @@ void main() {
         durakKeepServerTablePair(optimistic: false, flyingToTable: false),
         isTrue,
       );
+      expect(
+        durakKeepServerTablePair(
+          optimistic: false,
+          flyingToTable: false,
+          remoteFlying: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: false,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: true,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
+        2,
+      );
+      expect(
+        durakRemoteAttackFromSeat(attackerIndex: 1, throwerIndex: -1),
+        1,
+      );
       expect(durakTableSlotOpacity(inFlight: true), 0);
       expect(durakTableSlotOpacity(inFlight: false), 1);
       expect(

@@ -73,12 +73,32 @@ double durakClampedTableBottomReserve({
 ///
 /// Иначе карта вспыхивает на столе до посадки overlay. Если overlay
 /// не стартовал, caller сразу снимает [flyingToTable] — слот не зависает.
+/// [remoteFlying] — чужой overlay уже летит или ход ещё ждёт FX.
 bool durakKeepServerTablePair({
   required bool optimistic,
   required bool flyingToTable,
+  bool remoteFlying = false,
 }) {
-  return !optimistic && !flyingToTable;
+  return !optimistic && !flyingToTable && !remoteFlying;
 }
+
+/// Новую чужую атаку прячем, пока busy/replay не успели запустить полёт.
+bool durakHideDeferredRemoteAttack({
+  required bool existedOnPrevTable,
+  required bool optimistic,
+  required bool localFlying,
+  required bool fxDeferred,
+}) {
+  if (optimistic || localFlying || existedOnPrevTable) return false;
+  return fxDeferred;
+}
+
+/// Чья рука кинула новую атаку: подкид — thrower, иначе attacker.
+int durakRemoteAttackFromSeat({
+  required int attackerIndex,
+  required int throwerIndex,
+}) =>
+    throwerIndex >= 0 ? throwerIndex : attackerIndex;
 
 /// Слот атаки скрыт, пока свой или чужой overlay ещё в полёте.
 bool durakTableAttackSlotInFlight({

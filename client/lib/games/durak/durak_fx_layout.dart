@@ -335,6 +335,18 @@ int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
 /// Взятие со стола не ставит pending — слот-дырка остаётся в [_handOrder].
 bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
 
+/// Пауза после посадки отбоя, чтобы было видно чем отбились, затем стол в биту.
+const Duration kDurakBitoAfterDefensePause = Duration(milliseconds: 900);
+
+/// Ждать свои и чужие полёты на стол, прежде чем уводить карты в биту.
+bool durakTableReadyForBitoFlight({
+  required bool remoteFlying,
+  required bool localFlyingToTable,
+  required bool defendLock,
+  required bool flyingFromHand,
+}) =>
+    !remoteFlying && !localFlyingToTable && !defendLock && !flyingFromHand;
+
 bool _isDurakPlayPath(String path) {
   final clean = path.split('?').first;
   final parts = clean.split('/').where((p) => p.isNotEmpty).toList();
