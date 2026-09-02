@@ -66,6 +66,19 @@ class GameInvite {
 
   bool get isUno => gameType == 'uno';
 
+  /// Тот же инвайт на экране — не пересоздавать карточку (иначе мигает).
+  bool sameVisibleCard(GameInvite other) =>
+      lobbyId == other.lobbyId &&
+      creatorId == other.creatorId &&
+      creatorName == other.creatorName &&
+      gameType == other.gameType &&
+      stakeBronze == other.stakeBronze &&
+      turnTimeSec == other.turnTimeSec &&
+      variant == other.variant &&
+      maxPlayers == other.maxPlayers &&
+      deckSize == other.deckSize &&
+      durakMode == other.durakMode;
+
   /// Подпись режима для карточки приглашения.
   /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
   String get modeLabel {
@@ -85,13 +98,24 @@ class GameInvite {
   }
 }
 
+/// Список приглашений визуально тот же — не трогать state.
+bool gameInviteListsVisuallySame(List<GameInvite> a, List<GameInvite> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!a[i].sameVisibleCard(b[i])) return false;
+  }
+  return true;
+}
+
 final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
 
-  // После логина / rebuild — восстановить карточки приглашений с сервера.
-  final user = ref.watch(authStateProvider).valueOrNull;
-  if (user != null) {
+  // Только смена user id (логин/выход). refresh() баланса не должен
+  // создавать новый notifier — иначе карточка «Вас пригласили» мигает.
+  final userId = ref.watch(authStateProvider.select((s) => s.valueOrNull?.id));
+  if (userId != null) {
     unawaited(
       notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
     );
@@ -234,6 +258,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
           next.add(inv);
         }
       }
+      if (gameInviteListsVisuallySame(state, next)) return;
       state = next;
     } catch (_) {}
   }
@@ -272,8 +297,9 @@ final openLobbiesProvider =
 class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
   @override
   Future<List<LobbyItem>> build() async {
-    final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return [];
+    final userId =
+        ref.watch(authStateProvider.select((s) => s.valueOrNull?.id));
+    if (userId == null) return [];
 
     final repo = ref.read(gamesRepositoryProvider);
     final lobbies = await repo.listLobbies();
@@ -286,12 +312,29 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
         if (type == 'lobby_updated' ||
             type == 'game_started' ||
             type == 'lobbies_changed') {
-          ref.invalidate(openLobbiesProvider);
+          unawaited(reloadQuiet());
         }
       },
     );
 
     return lobbies;
+  }
+
+  /// Обновить список, не сбрасывая его в loading — иначе карточки мигают.
+  Future<void> reloadQuiet() async {
+    final userId = ref.read(authStateProvider).valueOrNull?.id;
+    if (userId == null) {
+      state = const AsyncData([]);
+      return;
+    }
+    try {
+      final lobbies = await ref.read(gamesRepositoryProvider).listLobbies();
+      state = AsyncData(lobbies);
+    } catch (e, st) {
+      if (!state.hasValue) {
+        state = AsyncError(e, st);
+      }
+    }
   }
 
   /// Сразу убрать карточку (вход / отмена / старт), не дожидаясь refetch.

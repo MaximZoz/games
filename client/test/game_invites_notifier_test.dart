@@ -52,4 +52,15 @@ void main() {
     n.resolveJoined('L1');
     expect(n.state.map((e) => e.lobbyId), ['L2']);
   });
+
+  test('sameVisibleCard / lists: одинаковые инвайты не считаем новыми', () {
+    final a = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
+    final b = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
+    final c = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Bob');
+    expect(a.sameVisibleCard(b), isTrue);
+    expect(a.sameVisibleCard(c), isFalse);
+    expect(gameInviteListsVisuallySame([a], [b]), isTrue);
+    expect(gameInviteListsVisuallySame([a], [c]), isFalse);
+    expect(gameInviteListsVisuallySame([a], []), isFalse);
+  });
 }
