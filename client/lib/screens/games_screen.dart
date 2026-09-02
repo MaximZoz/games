@@ -183,7 +183,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     // Чаще: отмена/старт должны быстро убирать карточку, даже без WS.
     _lobbyRefreshTimer = Timer.periodic(
       const Duration(seconds: 3),
-      (_) => ref.invalidate(openLobbiesProvider),
+      (_) => unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet()),
     );
   }
 
@@ -208,7 +208,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   void _applySelectedTab(_GamesTab tab) {
     setState(() => _selectedTab = tab);
     if (tab == _GamesTab.lobbies) {
-      ref.invalidate(openLobbiesProvider);
+      unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet());
       _startLobbyPoll();
     } else {
       _stopLobbyPoll();
@@ -429,8 +429,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                               isDesktop: isDesktop,
                               onJoinLobby: _joinLobby,
                               onShowLobbyRules: _showLobbyRulesInfo,
-                              onRefresh: () =>
-                                  ref.invalidate(openLobbiesProvider),
+                              onRefresh: () => unawaited(
+                                ref
+                                    .read(openLobbiesProvider.notifier)
+                                    .reloadQuiet(),
+                              ),
                               onAcceptInvite: _acceptInvite,
                               onDeclineInvite: _declineInvite,
                               onShowCreatorInfo: _showCreatorInfo,
@@ -1403,6 +1406,7 @@ class _LobbiesPageContent extends ConsumerWidget {
     if (invites.isEmpty) return const SizedBox.shrink();
     final inviteContent = invites.map(
       (inv) => _InviteCard(
+        key: ValueKey('invite-${inv.lobbyId}'),
         inv: inv,
         onShowCreatorInfo: onShowCreatorInfo,
         onShowInviteRules: onShowInviteRules,
@@ -1472,6 +1476,8 @@ class _LobbiesPageContent extends ConsumerWidget {
         ],
         _invitesSection(context),
         lobbiesAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (lobbies) {
             // Пустое лобби — без заглушки («Лобби» / refresh).
             if (lobbies.isEmpty) {
@@ -3438,6 +3444,7 @@ class _TabSegment extends StatelessWidget {
 
 class _InviteCard extends ConsumerWidget {
   const _InviteCard({
+    super.key,
     required this.inv,
     required this.onShowCreatorInfo,
     required this.onShowInviteRules,

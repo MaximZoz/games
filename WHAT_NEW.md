@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Хаб игр: приглашение в лобби больше не пропадает и не вспыхивает при переключении «Игры» ↔ «Лобби»
 - Дурак: в переводном бот сразу ходит после перевода; после отбоя пауза перед битой; карта соперника на столе только после посадки
 - Дурак в альбоме: «Взять»/«Бито» правее, не накрывает карты стола
 - Дурак: карта на столе и веер только после посадки — не раньше, чем закончится полёт
@@ -49,6 +50,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Games hub: a lobby invite no longer vanishes or flashes when switching between Games and Lobby
 - Durak: in transfer mode the bot replies after a transfer without switching tabs; a short pause shows the beat before discard; opponent cards land before they appear on the table
 - Durak in landscape: Take/Beat sit to the right so they no longer cover the table cards
 - Durak: a thrown or dealt card appears on the table or in the hand only after the flight lands; the empty discard pile stays hidden
