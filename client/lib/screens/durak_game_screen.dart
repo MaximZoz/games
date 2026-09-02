@@ -5275,13 +5275,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             duration: layoutTween,
             curve: kDurakLayoutCurve,
             builder: (context, btnBottom, _) {
+              final landscapeBtn =
+                  _fit.compact || isPhoneLandscape(context);
               return Positioned(
                 left: 0,
                 right: 0,
                 bottom: btnBottom,
                 child: SizedBox(
                   height: _durakActionSlotH,
-                  child: Center(
+                  child: Align(
+                    alignment: Alignment(
+                      durakActionButtonAlignX(compact: landscapeBtn),
+                      0,
+                    ),
                     child: showActionOrReveal &&
                             !_holdingFanCard &&
                             !_cardFlightActive

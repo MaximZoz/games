@@ -39,6 +39,11 @@ double durakActionButtonBottom({
   return seatLift + fanCardH + 36;
 }
 
+/// Горизонталь кнопки: 0 — центр, 1 — правый край.
+/// В альбоме правее, чтобы не накрывать карты стола.
+double durakActionButtonAlignX({required bool compact}) =>
+    compact ? 0.62 : 0.0;
+
 /// Сколько высоты отдать столу под слот кнопки в альбоме.
 double durakBoardBottomReserve({
   required bool compact,

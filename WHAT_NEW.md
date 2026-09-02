@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак в альбоме: «Взять»/«Бито» правее, не накрывает карты стола
 - Дурак: карта садится на стол и в веер только после полёта, не вспыхивает заранее; пустую биту не показываем
 - Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
 - Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
@@ -46,6 +47,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak in landscape: Take/Beat sit to the right so they no longer cover the table cards
 - Durak: a thrown or dealt card appears on the table or in the hand only after the flight lands; the empty discard pile stays hidden
 - Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
 - Turn timer: the clock keeps ticking after the low-time warning

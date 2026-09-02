@@ -94,6 +94,12 @@ void main() {
       expect(compact, greaterThan(70 + 16));
     });
 
+    test('в альбоме кнопка правее центра, не на картах стола', () {
+      expect(durakActionButtonAlignX(compact: true), greaterThan(0.4));
+      expect(durakActionButtonAlignX(compact: true), lessThan(0.9));
+      expect(durakActionButtonAlignX(compact: false), 0);
+    });
+
     test('колода в альбоме не выглядывает за край', () {
       expect(durakPilesPeekOffEdge(compact: true), isFalse);
       expect(durakPilesPeekOffEdge(compact: false), isTrue);
