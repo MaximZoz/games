@@ -90,3 +90,74 @@ bool shouldAnimateDurakOpeningDeal({
   final expectedDeck = deckSize - total;
   return deckCount == expectedDeck && expectedDeck >= 0;
 }
+
+/// Карта ушла своим ходом — в веере её нет, пока не вернётся взятием.
+///
+/// Взятие/добор ([incomingToFan]) — наоборот, слот держим.
+bool durakCardLeftHandForPlay({
+  required bool markedPlayedAway,
+  required bool optimisticAttack,
+  required bool flyingToTable,
+  required bool flyingFromHand,
+  required bool incomingToFan,
+  required bool inHandOrder,
+}) {
+  if (incomingToFan) return false;
+  if (markedPlayedAway || optimisticAttack || flyingToTable) return true;
+  // Полёт из руки: дырка, только если слота в order уже нет (ход).
+  // Взятие держит карту в order — лицо прячет hiddenCards.
+  return flyingFromHand && !inHandOrder;
+}
+
+/// Сыгранные карты не забываем, пока они снова не сядут в веер.
+/// Иначе кадр со старой рукой снова вспыхнет лицом после хода.
+Set<PlayingCard> durakRetainPlayedAway({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> incomingFanCards,
+  required Iterable<PlayingCard> pendingDealCards,
+}) {
+  return {
+    for (final c in playedAway)
+      if (!incomingFanCards.contains(c) && !pendingDealCards.contains(c)) c,
+  };
+}
+
+/// Карты, которые нельзя снова класть в веер из снимка сервера.
+Set<PlayingCard> durakCardsGoneFromFan({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> optimisticAttacks,
+  required Iterable<PlayingCard> flyingToTable,
+  required Iterable<PlayingCard> flyingFromHand,
+  required Iterable<PlayingCard> incomingFanCards,
+  Iterable<PlayingCard>? handOrder,
+}) {
+  final incoming = incomingFanCards.toSet();
+  final inFan = handOrder?.toSet();
+  return {
+    for (final c in playedAway)
+      if (!incoming.contains(c)) c,
+    ...optimisticAttacks,
+    ...flyingToTable,
+    for (final c in flyingFromHand)
+      if (!incoming.contains(c) && (inFan == null || !inFan.contains(c))) c,
+  };
+}
+
+/// После своего хода: не возвращать в order карты, которые ещё уходят из руки.
+List<PlayingCard> durakMergeHandOrderAfterMove({
+  required List<PlayingCard> prevOrder,
+  required List<PlayingCard> serverHand,
+  required Set<PlayingCard> pendingDeal,
+  required Set<PlayingCard> leavingHand,
+}) {
+  final handSet = serverHand.toSet();
+  final next = <PlayingCard>[
+    for (final c in prevOrder)
+      if (handSet.contains(c) && !leavingHand.contains(c)) c,
+  ];
+  for (final c in serverHand) {
+    if (pendingDeal.contains(c) || leavingHand.contains(c)) continue;
+    if (!next.contains(c)) next.add(c);
+  }
+  return next;
+}

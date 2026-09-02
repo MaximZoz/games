@@ -22,6 +22,12 @@ Size overlaySpaceSize(BuildContext context) {
   return MediaQuery.sizeOf(context);
 }
 
+/// Поворот экрана: ширина и высота поменялись местами.
+bool overlaySpaceLooksRotated(Size previous, Size next) {
+  return (previous.width - next.height).abs() < 48 &&
+      (previous.height - next.width).abs() < 48;
+}
+
 /// Поворот или сильное изменение окна — старые global-rect полётов неверны.
 bool overlaySpaceChangedEnough({
   required Size? previous,
@@ -34,7 +40,19 @@ bool overlaySpaceChangedEnough({
   final dw = (previous.width - next.width).abs();
   final dh = (previous.height - next.height).abs();
   if (dw < minDelta && dh < minDelta) return false;
-  final rotated = (previous.width - next.height).abs() < 48 &&
-      (previous.height - next.width).abs() < 48;
-  return rotated || dw >= 64 || dh >= 64;
+  return overlaySpaceLooksRotated(previous, next) || dw >= 64 || dh >= 64;
+}
+
+/// Во время своего хода snap только на поворот: в альбоме рейл/safe-area
+/// дёргают размер и сбрасывают полёт — карта вспыхивает в веере.
+bool durakShouldSnapOverlaySpace({
+  required Size? previous,
+  required Size next,
+  required bool playInFlight,
+}) {
+  if (!overlaySpaceChangedEnough(previous: previous, next: next)) {
+    return false;
+  }
+  if (!playInFlight) return true;
+  return overlaySpaceLooksRotated(previous!, next);
 }
