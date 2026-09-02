@@ -57,20 +57,67 @@ bool durakPilesPeekOffEdge({required bool compact}) => !compact;
 /// Отступ колоды/биты от края доски.
 double durakPileEdgeInset({required bool compact}) => compact ? 10.0 : 2.0;
 
+/// Ширина колоды: в альбоме стопка в кадре, козырь торчит вправо как в портрете.
+double durakDeckPileWidth({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  if (peekOffEdge) {
+    return cardSize.width * 0.55 + cardSize.height * 0.82;
+  }
+  return cardSize.width * 1.05 + cardSize.height * 0.70;
+}
+
+/// Левый край повёрнутого козыря внутри колоды.
+double durakDeckTrumpLeft({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  if (peekOffEdge) return cardSize.width * 0.22;
+  return cardSize.width * 0.70;
+}
+
+/// Сколько козыря торчит справа от стопки рубашек.
+double durakDeckTrumpVisibleWidth({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  final stackRight = peekOffEdge
+      ? cardSize.width * (1 - 0.48)
+      : cardSize.width;
+  final trumpRight = durakDeckTrumpLeft(
+        cardSize: cardSize,
+        peekOffEdge: peekOffEdge,
+      ) +
+      cardSize.width / 2 +
+      cardSize.height / 2;
+  final visible = trumpRight - stackRight;
+  return visible < 0 ? 0.0 : visible;
+}
+
 /// Коридор слева под колоду + козырь.
 double durakBoardLeftReserve({
   required bool compact,
   required Size cardSize,
 }) {
-  final deckW = cardSize.width * 0.55 + cardSize.height * 0.82;
+  final deckW = durakDeckPileWidth(
+    cardSize: cardSize,
+    peekOffEdge: !compact,
+  );
   return deckW + (compact ? 18.0 : 14.0);
 }
 
 /// Коридор справа под биту целиком в кадре (поворот карты + inset).
+///
+/// Пустая бита не занимает слот — иначе в альбоме справа дыра, как «Бита 0».
 double durakBoardRightReserve({
   required bool compact,
   required Size cardSize,
+  int bitoCount = 1,
 }) {
+  if (bitoCount <= 0) {
+    return compact ? 16.0 : 10.0;
+  }
   if (!compact) {
     return math.max(90.0, cardSize.width * 0.70) + 12;
   }
@@ -267,8 +314,13 @@ bool durakVisualLooksStuck({
   required bool fxScheduled,
   required bool flightActive,
   required bool hidingTable,
+  bool remoteFlightActive = false,
 }) =>
-    busy || fxScheduled || flightActive || hidingTable;
+    busy ||
+    fxScheduled ||
+    flightActive ||
+    hidingTable ||
+    remoteFlightActive;
 
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;

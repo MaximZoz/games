@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Колода: рубашки наполовину за левым краем + козырь лицом вправо.
@@ -37,14 +38,22 @@ class DurakDeckPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Половина рубашки за краем — колода не «длинная». В альбоме не прячем:
-    // за краем остаётся фиолетовый обрез и «призрак».
+    // Портрет: половина рубашки за краем, козырь торчит вправо.
+    // Альбом: стопка в кадре, козырь всё равно сдвинут вправо — иначе
+    // лицо прячется под рубашками и виден только обрезок.
     final hide = peekOffEdge ? cardSize.width * 0.48 : 0.0;
     final stackN = deckCount <= 1
         ? 0
         : math.min(deckCount, showTrumpFace ? 5 : 6);
     final showTrump = showTrumpFace && deckCount >= 1;
-    final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
+    final layoutW = durakDeckPileWidth(
+      cardSize: cardSize,
+      peekOffEdge: peekOffEdge,
+    );
+    final trumpLeft = durakDeckTrumpLeft(
+      cardSize: cardSize,
+      peekOffEdge: peekOffEdge,
+    );
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
 
@@ -59,7 +68,7 @@ class DurakDeckPile extends StatelessWidget {
         children: [
           if (showTrump)
             Positioned(
-              left: cardSize.width * 0.22,
+              left: trumpLeft,
               top: (h - cardSize.width) / 2,
               child: Transform.rotate(
                 angle: -math.pi / 2,
@@ -142,24 +151,8 @@ class DurakBitoPile extends StatelessWidget {
     final peekW = peek ? draw.width * 0.62 : draw.width * 1.45;
     final areaH = draw.height * (peek ? 1.12 : 1.28);
     if (count <= 0) {
-      // Пустой слот тоже с рубашкой: иначе в альбоме бита «пропадает».
-      final placeholder = Opacity(
-        opacity: 0.82,
-        child: Transform.rotate(
-          angle: 0.14,
-          child: CardBackWidget(
-            size: Size(draw.width * 0.92, draw.height * 0.92),
-            outlined: true,
-          ),
-        ),
-      );
-      return SizedBox(
-        width: peekW,
-        height: areaH,
-        child: peek
-            ? Align(alignment: Alignment.centerLeft, child: placeholder)
-            : Center(child: placeholder),
-      );
+      // Пустая бита не занимает слот и не рисует «карту 0».
+      return const SizedBox.shrink();
     }
 
     if (count == 1) {
