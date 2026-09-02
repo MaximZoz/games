@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 void main() {
-  testWidgets('пустая бита всё равно показывает рубашку', (tester) async {
+  testWidgets('пустая бита не рисует карту', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -19,10 +20,27 @@ void main() {
       ),
     );
 
-    expect(find.byType(CardBackWidget), findsOneWidget);
-    final back = tester.widget<CardBackWidget>(find.byType(CardBackWidget));
-    expect(back.size.width, closeTo(50 * 0.92, 0.01));
-    expect(back.size.height, closeTo(72 * 0.92, 0.01));
+    expect(find.byType(CardBackWidget), findsNothing);
+  });
+
+  testWidgets('в альбоме колода показывает козырь лицом', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: DurakDeckPile(
+              deckCount: 12,
+              trumpCard: PlayingCard(Rank.six, Suit.diamonds),
+              cardSize: Size(50, 72),
+              peekOffEdge: false,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(PlayingCardWidget), findsOneWidget);
+    expect(find.byType(CardBackWidget), findsWidgets);
   });
 
   testWidgets('бита с картами рисует рубашки', (tester) async {

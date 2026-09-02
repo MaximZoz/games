@@ -107,7 +107,28 @@ void main() {
       expect(right, greaterThan(card.width * 1.35 + 10));
       expect(
         durakBoardLeftReserve(compact: true, cardSize: card),
-        closeTo(card.width * 0.55 + card.height * 0.82 + 18, 0.01),
+        closeTo(
+          durakDeckPileWidth(cardSize: card, peekOffEdge: false) + 18,
+          0.01,
+        ),
+      );
+    });
+
+    test('в альбоме козырь торчит из колоды, как в портрете', () {
+      const card = Size(43, 61);
+      final visibleIn = durakDeckTrumpVisibleWidth(
+        cardSize: card,
+        peekOffEdge: false,
+      );
+      final visiblePeek = durakDeckTrumpVisibleWidth(
+        cardSize: card,
+        peekOffEdge: true,
+      );
+      expect(visibleIn, greaterThan(card.height * 0.45));
+      expect(visiblePeek, greaterThan(card.height * 0.45));
+      expect(
+        durakDeckTrumpLeft(cardSize: card, peekOffEdge: false),
+        greaterThan(durakDeckTrumpLeft(cardSize: card, peekOffEdge: true)),
       );
     });
 

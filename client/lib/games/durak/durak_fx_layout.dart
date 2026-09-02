@@ -57,12 +57,53 @@ bool durakPilesPeekOffEdge({required bool compact}) => !compact;
 /// Отступ колоды/биты от края доски.
 double durakPileEdgeInset({required bool compact}) => compact ? 10.0 : 2.0;
 
+/// Ширина колоды: в альбоме стопка в кадре, козырь торчит вправо как в портрете.
+double durakDeckPileWidth({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  if (peekOffEdge) {
+    return cardSize.width * 0.55 + cardSize.height * 0.82;
+  }
+  return cardSize.width * 1.05 + cardSize.height * 0.70;
+}
+
+/// Левый край повёрнутого козыря внутри колоды.
+double durakDeckTrumpLeft({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  if (peekOffEdge) return cardSize.width * 0.22;
+  return cardSize.width * 0.70;
+}
+
+/// Сколько козыря торчит справа от стопки рубашек.
+double durakDeckTrumpVisibleWidth({
+  required Size cardSize,
+  required bool peekOffEdge,
+}) {
+  final stackRight = peekOffEdge
+      ? cardSize.width * (1 - 0.48)
+      : cardSize.width;
+  final trumpRight = durakDeckTrumpLeft(
+        cardSize: cardSize,
+        peekOffEdge: peekOffEdge,
+      ) +
+      cardSize.width / 2 +
+      cardSize.height / 2;
+  final visible = trumpRight - stackRight;
+  return visible < 0 ? 0.0 : visible;
+}
+
 /// Коридор слева под колоду + козырь.
 double durakBoardLeftReserve({
   required bool compact,
   required Size cardSize,
 }) {
-  final deckW = cardSize.width * 0.55 + cardSize.height * 0.82;
+  final deckW = durakDeckPileWidth(
+    cardSize: cardSize,
+    peekOffEdge: !compact,
+  );
   return deckW + (compact ? 18.0 : 14.0);
 }
 

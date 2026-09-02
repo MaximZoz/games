@@ -274,6 +274,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _fxNeedsReplay = false;
       durakSnapRevealHiddenFx(_oppDealPending);
       _trumpFaceVisible = true;
+      _firstLeadVisible = true;
       _leadRevealHiddenSeat = null;
       _flightLockTable = false;
       _flightDefendIdx = null;
@@ -3298,6 +3299,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             _fanAnimDuringBusy = false;
             _suppressFanLayoutAnim = false;
             _trumpFaceVisible = true;
+            _firstLeadVisible = true;
             _pendingDealCards.clear();
             _oppDealPending.clear();
             _deckCountFreeze = null;
@@ -3493,10 +3495,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (!mounted || !_gameUiActive) return;
     final trump = view.trumpCard.toPlayingCard();
     final from = _deckDealFromRect();
-    // Куда ляжет в DurakDeckPile: чуть правее стопки, горизонтально.
+    final peek = durakPilesPeekOffEdge(compact: _fit.compact);
+    final trumpLeft = durakDeckTrumpLeft(
+      cardSize: _tableCardSize,
+      peekOffEdge: peek,
+    );
     final to = Rect.fromCenter(
       center: Offset(
-        from.left + _tableCardSize.width * 0.72,
+        from.left + trumpLeft + _tableCardSize.width / 2,
         from.center.dy,
       ),
       width: _tableCardSize.width,
@@ -5055,6 +5061,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       )
                     : _multiOpponentsArea(view, tableSize),
               ),
+              if (_showFirstLeadBanner(view) &&
+                  (isPhoneLandscape(context) || _fit.compact))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
+                  child: _buildFirstLeadBanner(view),
+                ),
               // Пауза «Беру»/«Бито» — в слоте кнопки действия (ниже), не здесь:
               // иначе статус в колонке двигает стол и веер.
               // После mid-finish баннер остаётся на экране (не мигает, когда
@@ -6096,7 +6108,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 ),
               ),
             ),
-            if (_showFirstLeadBanner(view))
+            if (_showFirstLeadBanner(view) &&
+                !_fit.compact &&
+                !isPhoneLandscape(context))
               Positioned(
                 left: leftReserve,
                 right: rightReserve,
@@ -6363,9 +6377,40 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   Widget _buildFirstLeadBanner(DurakGameView view) {
-    final narrow = isNarrow(context);
+    final compact = isPhoneLandscape(context) || _fit.compact;
+    final lead = view.leadTrump?.toPlayingCard();
+    final title = Text(
+      _firstLeadTitle(view),
+      textAlign: TextAlign.center,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: compact ? 14 : (isNarrow(context) ? 16 : 18),
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
+    );
+    final reason = Text(
+      context.l10n.durakFirstLeadReason,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: compact ? 11 : (isNarrow(context) ? 12 : 13),
+        fontWeight: FontWeight.w600,
+        color: AppColors.textSecondary,
+      ),
+    );
+    final texts = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        title,
+        const SizedBox(height: 2),
+        reason,
+      ],
+    );
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: narrow ? 280 : 340),
+      constraints: BoxConstraints(maxWidth: compact ? 360 : (isNarrow(context) ? 280 : 340)),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.surfaceCard.withValues(alpha: 0.94),
@@ -6381,33 +6426,24 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: narrow ? 14 : 18,
-            vertical: narrow ? 8 : 10,
+            horizontal: compact ? 12 : (isNarrow(context) ? 14 : 18),
+            vertical: compact ? 6 : (isNarrow(context) ? 8 : 10),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _firstLeadTitle(view),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: narrow ? 16 : 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                context.l10n.durakFirstLeadReason,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: narrow ? 12 : 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+          child: compact && lead != null
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PlayingCardWidget(
+                      card: lead,
+                      size: const Size(28, 40),
+                      elevated: true,
+                      animate: false,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(child: texts),
+                  ],
+                )
+              : texts,
         ),
       ),
     );
