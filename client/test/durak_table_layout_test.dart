@@ -91,6 +91,39 @@ void main() {
       expect(durakTableSlotOpacity(inFlight: true), 0);
       expect(durakTableSlotOpacity(inFlight: false), 1);
       expect(
+        durakTableAttackSlotInFlight(localFlying: false, remoteFlying: true),
+        isTrue,
+      );
+      expect(
+        durakTableAttackSlotInFlight(localFlying: true, remoteFlying: false),
+        isTrue,
+      );
+      expect(
+        durakTableAttackSlotInFlight(localFlying: false, remoteFlying: false),
+        isFalse,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: false,
+          remoteDefenseFlying: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: true,
+          remoteDefenseFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableDefenseHiddenDuringFlight(
+          localDefendLock: false,
+          remoteDefenseFlying: false,
+        ),
+        isFalse,
+      );
+      expect(
         durakNeedsPendingAttackSlot(attackAlreadyOnTable: true),
         isTrue,
       );

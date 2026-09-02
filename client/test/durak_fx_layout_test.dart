@@ -312,19 +312,9 @@ void main() {
       expect(durakStuckSnapTicks(compact: false), 3);
     });
 
-    test('добор не в веере, пока карта не летит из колоды', () {
-      expect(
-        durakDealCardInFanLayout(pendingDeal: true, flyingIntoFan: false),
-        isFalse,
-      );
-      expect(
-        durakDealCardInFanLayout(pendingDeal: true, flyingIntoFan: true),
-        isTrue,
-      );
-      expect(
-        durakDealCardInFanLayout(pendingDeal: false, flyingIntoFan: false),
-        isTrue,
-      );
+    test('добор не в веере, пока карта pending — даже во время полёта', () {
+      expect(durakDealCardInFanLayout(pendingDeal: true), isFalse);
+      expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
     });
   });
 }

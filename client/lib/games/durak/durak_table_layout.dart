@@ -80,6 +80,20 @@ bool durakKeepServerTablePair({
   return !optimistic && !flyingToTable;
 }
 
+/// Слот атаки скрыт, пока свой или чужой overlay ещё в полёте.
+bool durakTableAttackSlotInFlight({
+  required bool localFlying,
+  required bool remoteFlying,
+}) =>
+    localFlying || remoteFlying;
+
+/// Защиту не рисуем, пока свой отбой или remote-полёт ещё на overlay.
+bool durakTableDefenseHiddenDuringFlight({
+  required bool localDefendLock,
+  required bool remoteDefenseFlying,
+}) =>
+    localDefendLock || remoteDefenseFlying;
+
 /// Пока overlay летит, слот opacity 0 — лицо ведёт полёт.
 double durakTableSlotOpacity({required bool inFlight}) => inFlight ? 0 : 1;
 
