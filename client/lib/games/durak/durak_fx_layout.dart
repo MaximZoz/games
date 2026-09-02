@@ -108,10 +108,16 @@ double durakBoardLeftReserve({
 }
 
 /// Коридор справа под биту целиком в кадре (поворот карты + inset).
+///
+/// Пустая бита не занимает слот — иначе в альбоме справа дыра, как «Бита 0».
 double durakBoardRightReserve({
   required bool compact,
   required Size cardSize,
+  int bitoCount = 1,
 }) {
+  if (bitoCount <= 0) {
+    return compact ? 16.0 : 10.0;
+  }
   if (!compact) {
     return math.max(90.0, cardSize.width * 0.70) + 12;
   }
@@ -308,8 +314,13 @@ bool durakVisualLooksStuck({
   required bool fxScheduled,
   required bool flightActive,
   required bool hidingTable,
+  bool remoteFlightActive = false,
 }) =>
-    busy || fxScheduled || flightActive || hidingTable;
+    busy ||
+    fxScheduled ||
+    flightActive ||
+    hidingTable ||
+    remoteFlightActive;
 
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;

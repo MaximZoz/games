@@ -21,6 +21,7 @@ void main() {
     );
 
     expect(find.byType(CardBackWidget), findsNothing);
+    expect(tester.getSize(find.byType(DurakBitoPile)), Size.zero);
   });
 
   testWidgets('в альбоме колода показывает козырь лицом', (tester) async {

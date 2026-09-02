@@ -112,6 +112,14 @@ void main() {
           0.01,
         ),
       );
+      expect(
+        durakBoardRightReserve(compact: true, cardSize: card, bitoCount: 0),
+        lessThan(24),
+      );
+      expect(
+        durakBoardRightReserve(compact: false, cardSize: card, bitoCount: 0),
+        lessThan(16),
+      );
     });
 
     test('в альбоме козырь торчит из колоды, как в портрете', () {
@@ -283,6 +291,16 @@ void main() {
           hidingTable: false,
         ),
         isFalse,
+      );
+      expect(
+        durakVisualLooksStuck(
+          busy: false,
+          fxScheduled: false,
+          flightActive: false,
+          hidingTable: false,
+          remoteFlightActive: true,
+        ),
+        isTrue,
       );
       expect(durakStuckSnapTicks(compact: true), 1);
       expect(durakStuckSnapTicks(compact: false), 3);

@@ -151,7 +151,8 @@ class DurakBitoPile extends StatelessWidget {
     final peekW = peek ? draw.width * 0.62 : draw.width * 1.45;
     final areaH = draw.height * (peek ? 1.12 : 1.28);
     if (count <= 0) {
-      return SizedBox(width: peekW, height: areaH);
+      // Пустая бита не занимает слот и не рисует «карту 0».
+      return const SizedBox.shrink();
     }
 
     if (count == 1) {

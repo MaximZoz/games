@@ -74,5 +74,54 @@ void main() {
       }
       expect(durakTableStackHeight(card, 0, compact: true), 0);
     });
+
+    test('полёт не прячет серверную пару и pending только до WS', () {
+      expect(
+        durakKeepServerTablePair(optimistic: true, flyingToTable: true),
+        isTrue,
+      );
+      expect(
+        durakKeepServerTablePair(optimistic: false, flyingToTable: false),
+        isTrue,
+      );
+      expect(durakTableSlotOpacity(inFlight: true), 1);
+      expect(durakTableSlotOpacity(inFlight: false), 1);
+      expect(
+        durakNeedsPendingAttackSlot(attackAlreadyOnTable: true),
+        isFalse,
+      );
+      expect(
+        durakNeedsPendingAttackSlot(attackAlreadyOnTable: false),
+        isTrue,
+      );
+    });
+
+    test('запас снизу не съедает высоту одной пары', () {
+      const boardH = 140.0;
+      final minTable = durakTableAreaMinHeight(card);
+      final clamped = durakClampedTableBottomReserve(
+        reserve: 200,
+        boardHeight: boardH,
+        cardSize: card,
+      );
+      expect(clamped, lessThan(boardH));
+      expect(boardH - clamped, greaterThanOrEqualTo(minTable));
+      expect(
+        durakClampedTableBottomReserve(
+          reserve: 10,
+          boardHeight: 200,
+          cardSize: card,
+        ),
+        10,
+      );
+      expect(
+        durakClampedTableBottomReserve(
+          reserve: 80,
+          boardHeight: 40,
+          cardSize: card,
+        ),
+        0,
+      );
+    });
   });
 }

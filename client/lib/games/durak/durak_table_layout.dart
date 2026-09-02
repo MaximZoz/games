@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 /// Геометрия рядов пар на столе дурака.
@@ -50,3 +51,40 @@ double durakTableStackHeight(
 /// Раскладывать ряды стопкой с наездом, а не колонкой с зазором.
 bool durakTableUsesRowStack(int rowCount, {required bool compact}) =>
     rowCount >= 3 || (compact && rowCount >= 2);
+
+/// Минимальная высота коридора стола: хотя бы одна пара + воздух.
+double durakTableAreaMinHeight(Size cardSize) =>
+    durakTablePairHeight(cardSize) + 12;
+
+/// Не отдавать кнопке весь стол: иначе пары получают 0 px и «исчезают».
+double durakClampedTableBottomReserve({
+  required double reserve,
+  required double boardHeight,
+  required Size cardSize,
+}) {
+  final minTable = durakTableAreaMinHeight(cardSize);
+  final maxReserve = math.max(0.0, boardHeight - minTable);
+  if (reserve < 0) return 0;
+  if (reserve > maxReserve) return maxReserve;
+  return reserve;
+}
+
+/// Серверную пару оставляем в дереве даже при optimistic/fly.
+///
+/// Прятать слот нельзя: на Android overlay часто не садится в кадр,
+/// и карты, кинутые в центр, пропадают до конца хода.
+bool durakKeepServerTablePair({
+  required bool optimistic,
+  required bool flyingToTable,
+}) {
+  // Раньше optimistic/fly прятали слот. На Android overlay часто
+  // не садится — карта пропадает. Оба флага больше не скрывают пару.
+  return !(optimistic && flyingToTable && false);
+}
+
+/// Слот на столе не прячем opacity 0 на время полёта.
+double durakTableSlotOpacity({required bool inFlight}) => inFlight ? 1 : 1;
+
+/// Pending-слот нужен, только пока сервер ещё не положил эту атаку.
+bool durakNeedsPendingAttackSlot({required bool attackAlreadyOnTable}) =>
+    !attackAlreadyOnTable;
