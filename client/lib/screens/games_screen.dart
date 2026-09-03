@@ -183,7 +183,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     // Чаще: отмена/старт должны быстро убирать карточку, даже без WS.
     _lobbyRefreshTimer = Timer.periodic(
       const Duration(seconds: 3),
-      (_) => unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet()),
+      (_) {
+        unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet());
+        unawaited(
+          ref.read(gameInvitesProvider.notifier).hydrateFromServer(
+                ref.read(gamesRepositoryProvider),
+              ),
+        );
+      },
     );
   }
 
@@ -209,6 +216,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     setState(() => _selectedTab = tab);
     if (tab == _GamesTab.lobbies) {
       unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet());
+      unawaited(
+        ref.read(gameInvitesProvider.notifier).hydrateFromServer(
+              ref.read(gamesRepositoryProvider),
+            ),
+      );
       _startLobbyPoll();
     } else {
       _stopLobbyPoll();

@@ -3,6 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Приглашение в игру сразу видно другу и догоняется сверкой с сервером, даже если кадр сокета потерялся
+- Покер: после «Фолд» кнопки не возвращаются; повторный клик не показывает «игра уже закончена»
 - Дурак: раздача собирает веер по одной карте из полёта, без вспышки всей руки; бросок на стол не мигает кнопками и картами
 - Из партии в сообщениях остаются звук стола и тик своего хода; бейдж «ваш ход» в меню по-прежнему сигналит
 - Уно в альбоме: подписи «Колода» и «Сброс» помещаются в зелёный овал, а не садятся на его край
@@ -57,6 +59,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Game invites show up for the friend immediately and are reconciled from the server if a socket frame is dropped
+- Poker: Fold stays gone after a hand-ending fold; a second tap no longer shows “the game is already over”
 - Durak: the deal builds the fan one flying card at a time instead of flashing the whole hand; throws no longer flicker buttons or table cards
 - Opening Messages from a live table keeps the game sounds and turn-clock ticks; the Games-tab “your turn” badge still alerts
 - Uno in landscape: the Draw / Discard labels stay inside the green oval instead of sitting on its rim

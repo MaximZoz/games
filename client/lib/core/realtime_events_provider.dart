@@ -10,6 +10,20 @@ import 'package:multigames_client/core/realtime_visibility_stub.dart'
     if (dart.library.html) 'realtime_visibility_web.dart' as visibility;
 import 'package:multigames_client/core/realtime_ws.dart';
 
+/// Сразу в поток, без post-frame: иначе следующий emitNow затирает инвайт.
+bool shouldEmitRealtimeImmediately(String type) {
+  switch (type) {
+    case 'game_state':
+    case 'game_started':
+    case 'realtime_connected':
+    case 'game_invite':
+    case 'invite_cancelled':
+      return true;
+    default:
+      return false;
+  }
+}
+
 /// Общий поток событий realtime (WebSocket), чтобы не открывать отдельный сокет
 /// под каждый экран/провайдер.
 final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>((ref) {
@@ -39,10 +53,9 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
 
   void emitEvent(Map<String, dynamic> data) {
     final type = data['type']?.toString() ?? '';
-    // Ходы — сразу, без ожидания двух кадров (иначе на Android «зависает»).
-    if (type == 'game_state' ||
-        type == 'game_started' ||
-        type == 'realtime_connected') {
+    // Ходы и инвайты — сразу: отложенный кадр теряется, если следом
+    // приходит game_state / realtime_connected.
+    if (shouldEmitRealtimeImmediately(type)) {
       emitNow(data);
       return;
     }

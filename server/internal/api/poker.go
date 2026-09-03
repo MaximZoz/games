@@ -843,6 +843,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	inviteeUUIDs := make([]uuid.UUID, 0, len(invitees))
