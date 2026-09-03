@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
@@ -115,19 +114,15 @@ class _NardyBoardState extends State<NardyBoard> {
         final oppSeat = game.myIndex < 0 ? 1 : game.opponentIndex;
         final diameter = geometry.checkerSize;
 
-        return GestureDetector(
+        // Работаем с сырыми событиями указателя, а не с GestureDetector:
+        // пара «тап + пан» на одном детекторе на вебе отдавала мышь тапу,
+        // и перетаскивание не начиналось.
+        return Listener(
           behavior: HitTestBehavior.opaque,
-          // Тащим от точки касания, а не от места, где жест «выиграл арену»:
-          // иначе шашка берётся с соседнего пункта.
-          dragStartBehavior: DragStartBehavior.down,
-          onTapUp: (details) => _handleTap(geometry, details.localPosition),
-          onPanStart: (details) => _startDrag(geometry, details.localPosition),
-          onPanUpdate: (details) {
-            if (_dragTrack == null) return;
-            setState(() => _dragPosition = details.localPosition);
-          },
-          onPanEnd: (_) => _finishDrag(geometry),
-          onPanCancel: _cancelDrag,
+          onPointerDown: (event) => _onPointerDown(geometry, event),
+          onPointerMove: (event) => _onPointerMove(geometry, event),
+          onPointerUp: (event) => _onPointerUp(geometry, event),
+          onPointerCancel: (_) => _cancelDrag(),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: _kBoardBg,
@@ -180,34 +175,66 @@ class _NardyBoardState extends State<NardyBoard> {
     );
   }
 
-  void _startDrag(NardyBoardGeometry geometry, Offset position) {
-    final track = _showBar && geometry.barRect.contains(position)
-        ? nardyBarTrack
-        : geometry.trackAt(position);
-    if (track == null || !widget.canDragFrom(track)) return;
+  /// Сдвиг, после которого касание считается перетаскиванием, а не тапом.
+  static const double _dragSlop = 8;
+
+  Offset? _pointerDownAt;
+  int? _pointerDownTrack;
+
+  void _onPointerDown(NardyBoardGeometry geometry, PointerDownEvent event) {
+    _pointerDownAt = event.localPosition;
+    _pointerDownTrack = _trackUnder(geometry, event.localPosition);
+  }
+
+  void _onPointerMove(NardyBoardGeometry geometry, PointerMoveEvent event) {
+    if (_dragTrack != null) {
+      setState(() => _dragPosition = event.localPosition);
+      return;
+    }
+    final start = _pointerDownAt;
+    final track = _pointerDownTrack;
+    if (start == null || track == null) return;
+    if ((event.localPosition - start).distance < _dragSlop) return;
+    if (!widget.canDragFrom(track)) {
+      _pointerDownTrack = null;
+      return;
+    }
     setState(() {
       _dragTrack = track;
-      _dragPosition = position;
+      _dragPosition = event.localPosition;
     });
     widget.onDragStart(track);
   }
 
-  void _finishDrag(NardyBoardGeometry geometry) {
-    final position = _dragPosition;
-    final from = _dragTrack;
+  void _onPointerUp(NardyBoardGeometry geometry, PointerUpEvent event) {
+    final dragging = _dragTrack != null;
+    final position = _dragPosition ?? event.localPosition;
+    _pointerDownAt = null;
+    _pointerDownTrack = null;
+    if (!dragging) {
+      _handleTap(geometry, event.localPosition);
+      return;
+    }
     setState(() {
       _dragTrack = null;
       _dragPosition = null;
     });
-    if (from == null || position == null) return;
     if (geometry.trayRect.contains(position)) {
       widget.onDragEnd(nardyPoints);
       return;
     }
-    widget.onDragEnd(geometry.trackAt(position));
+    widget.onDragEnd(_trackUnder(geometry, position));
+  }
+
+  /// Пункт под точкой, включая бар в коротких нардах.
+  int? _trackUnder(NardyBoardGeometry geometry, Offset position) {
+    if (_showBar && geometry.barRect.contains(position)) return nardyBarTrack;
+    return geometry.trackAt(position);
   }
 
   void _cancelDrag() {
+    _pointerDownAt = null;
+    _pointerDownTrack = null;
     if (_dragTrack == null && _dragPosition == null) return;
     setState(() {
       _dragTrack = null;

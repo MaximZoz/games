@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
@@ -173,7 +174,8 @@ void main() {
       final from = board + geometry.trackRect(0).center;
       final to = board + geometry.trackRect(5).center;
 
-      final gesture = await tester.startGesture(from);
+      // Мышью — так же, как на вебе, где раньше жест уходил тапу.
+      final gesture = await tester.startGesture(from, kind: PointerDeviceKind.mouse);
       await tester.pump(const Duration(milliseconds: 20));
       for (var step = 1; step <= 6; step++) {
         await gesture.moveTo(Offset.lerp(from, to, step / 6)!);
@@ -184,6 +186,52 @@ void main() {
 
       expect(dragStarted, 0);
       expect(dropped, 5);
+    });
+
+    testWidgets('короткий тап не превращается в перетаскивание',
+        (tester) async {
+      final engine = NardyEngine.newGame(nardyModeLong);
+      engine.rollWith(5, 3);
+      final tracker = NardyCheckerTracker();
+      var started = false;
+      int? tapped;
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 640,
+              height: 450,
+              child: NardyBoard(
+                game: _view(engine),
+                tracker: tracker,
+                selectedTrack: null,
+                targetTracks: const {},
+                canBearOff: false,
+                undoTracks: const {},
+                onTrackTap: (track) => tapped = track,
+                onBarTap: () {},
+                onBearOffTap: () {},
+                canDragFrom: (track) => track == 0,
+                onDragStart: (_) => started = true,
+                onDragEnd: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final geometry = NardyBoardGeometry(
+        size: const Size(640, 450),
+        showBar: false,
+      );
+      final board = tester.getTopLeft(find.byType(NardyBoard));
+      await tester.tapAt(board + geometry.trackRect(0).center);
+      await tester.pumpAndSettle();
+
+      expect(started, isFalse);
+      expect(tapped, 0);
     });
 
     testWidgets('с чужого пункта шашка не тащится', (tester) async {
