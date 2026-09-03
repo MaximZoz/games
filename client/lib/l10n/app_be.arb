@@ -273,6 +273,8 @@
   "rulesNardyWin": "Перамагае той, хто першым здыме ўсе свае шашкі.",
   "nardyRoll": "Кінуць",
   "nardySkipTurn": "Прапусціць ход",
+  "nardyUndoMove": "Вярнуць",
+  "nardyDoneTurn": "Гатова",
   "nardyNoMoves": "Хадоў няма — прапусціце ход",
   "nardyYourRoll": "Ваш кідок",
   "nardyPipsShort": "Засталося:",

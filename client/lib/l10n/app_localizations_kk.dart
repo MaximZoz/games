@@ -726,6 +726,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get nardySkipTurn => 'Жүрісті өткізу';
 
   @override
+  String get nardyUndoMove => 'Қайтару';
+
+  @override
+  String get nardyDoneTurn => 'Дайын';
+
+  @override
   String get nardyNoMoves => 'Жүріс жоқ — жүрісті өткізіңіз';
 
   @override

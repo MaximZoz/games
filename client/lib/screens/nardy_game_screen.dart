@@ -13,6 +13,8 @@ import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
 import 'package:multigames_client/games/nardy/nardy_board_widget.dart';
+import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
+import 'package:multigames_client/games/nardy/nardy_dice_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
@@ -42,6 +44,7 @@ class NardyGameScreen extends ConsumerStatefulWidget {
 class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   final GameTurnActionLock _turnAction = GameTurnActionLock();
   final GlobalKey _rewardKey = GlobalKey();
+  final NardyCheckerTracker _tracker = NardyCheckerTracker();
 
   int? _selectedTrack;
   bool _busy = false;
@@ -122,7 +125,15 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Future<void> _roll() => _run(() => _repo.roll(widget.gameId));
 
-  Future<void> _skipTurn() => _run(() => _repo.endTurn(widget.gameId));
+  Future<void> _endTurn() {
+    setState(() => _selectedTrack = null);
+    return _run(() => _repo.endTurn(widget.gameId));
+  }
+
+  Future<void> _undo() {
+    setState(() => _selectedTrack = null);
+    return _run(() => _repo.undo(widget.gameId));
+  }
 
   Future<void> _applyMove(NardyMove mv) async {
     setState(() => _selectedTrack = null);
@@ -130,8 +141,19 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   void _onTrackTap(NardyGameView game, int track) {
-    if (_busy || !game.isMyTurn || game.dice.isEmpty) return;
+    if (_busy || !game.isMyTurn) return;
     final selected = _selectedTrack;
+
+    // Промах: выбрал сходившую шашку и ткнул туда, откуда она пришла.
+    final played = game.lastPlayed;
+    if (played != null &&
+        selected != null &&
+        selected == played.to &&
+        track == played.from) {
+      unawaited(_undo());
+      return;
+    }
+
     if (selected != null) {
       final mv = _moveTo(game, selected, track);
       if (mv != null) {
@@ -139,17 +161,21 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         return;
       }
     }
-    if (!game.movableTracks.contains(track)) {
-      setState(() => _selectedTrack = null);
+
+    // Выбрать можно и только что сходившую шашку — чтобы вернуть её назад.
+    final canSelect = game.movableTracks.contains(track) ||
+        (played != null && played.to == track);
+    if (!canSelect) {
+      if (selected != null) setState(() => _selectedTrack = null);
       return;
     }
     final dice = game.diceFrom(track);
-    // Единственный кубик — ходим сразу, без второго касания.
-    if (dice.length == 1) {
+    // Единственный кубик и нечего отменять — ходим сразу, без второго касания.
+    if (dice.length == 1 && (played == null || played.to != track)) {
       unawaited(_applyMove(NardyMove(track, dice.first)));
       return;
     }
-    setState(() => _selectedTrack = track);
+    setState(() => _selectedTrack = selected == track ? null : track);
   }
 
   void _onBarTap(NardyGameView game) {
@@ -161,6 +187,15 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       return;
     }
     setState(() => _selectedTrack = nardyBarTrack);
+  }
+
+  /// Пункты, подсвеченные как «вернуть шашку сюда».
+  Set<int> _undoTargets(NardyGameView game) {
+    final played = game.lastPlayed;
+    if (played == null || !game.isMyTurn) return const {};
+    if (_selectedTrack != played.to) return const {};
+    if (played.from == nardyBarTrack) return const {};
+    return {played.from};
   }
 
   void _onBearOffTap(NardyGameView game) {
@@ -289,6 +324,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     setState(() => _isRematching = true);
     try {
       if (_isOffline) {
+        _tracker.reset();
         OfflineNardyRegistry.instance.get(widget.gameId)?.restart();
         ref.invalidate(nardyGameProvider(widget.gameId));
         if (mounted) {
@@ -543,10 +579,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         messageReturnPath: '/games/nardy/game/${widget.gameId}',
       )),
       onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
-      trailing: [
-        if (opp != null)
-          _PipsChip(label: context.l10n.nardyPipsShort, value: opp.pips),
-      ],
     );
   }
 
@@ -559,13 +591,21 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     }
     final narrow = isNarrow(context);
 
+    final game = gameAsync.valueOrNull;
     return SwipeBackScope(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          automaticallyImplyLeading: false,
+          toolbarHeight: gameToolbarHeight(context),
+          leading: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            tooltip: context.l10n.gameLeave,
+            icon: const Icon(Icons.close_rounded),
+            onPressed: _busy ? null : () => unawaited(_onClosePressed()),
+          ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -583,38 +623,33 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             ],
           ),
           centerTitle: true,
-          actions: [
-            IconButton(
-              tooltip: context.l10n.gamesRulesTitle,
-              icon: const Icon(Icons.rule_rounded),
-              onPressed: () {
-                final game = gameAsync.valueOrNull;
-                showGameRulesDialog(
-                  context: context,
-                  title: context.l10n.rulesNardyTitle,
-                  content: rulesTextLines(nardyRuleLines(
-                    gameMode: game?.gameMode ?? nardyModeShort,
-                    turnTimeSec: game?.turnTimeSec ?? 0,
-                    stakeBronze: game?.stakeBronze ?? 0,
-                    l10n: context.l10n,
-                  )),
-                  closeLabel: context.l10n.commonClose,
-                );
-              },
+          actions: buildGameAppBarActions(
+            context: context,
+            onSurrender: game == null || game.isOver
+                ? null
+                : () => unawaited(_confirmSurrender()),
+            surrenderTooltip: context.l10n.gameSurrender,
+            onShowRules: () => showGameRulesDialog(
+              context: context,
+              title: context.l10n.rulesNardyTitle,
+              content: rulesTextLines(nardyRuleLines(
+                gameMode: game?.gameMode ?? nardyModeShort,
+                turnTimeSec: game?.turnTimeSec ?? 0,
+                stakeBronze: game?.stakeBronze ?? 0,
+                offline: _isOffline,
+                l10n: context.l10n,
+              )),
+              closeLabel: context.l10n.commonClose,
             ),
-            IconButton(
-              tooltip: context.l10n.gameLeave,
-              icon: const Icon(Icons.close_rounded),
-              onPressed: () => unawaited(_onClosePressed()),
-            ),
-          ],
+            rulesTooltip: context.l10n.gamesRulesTitle,
+          ),
         ),
         body: GradientBackground(
           child: SafeArea(
             child: gameAsync.when(
               skipLoadingOnReload: true,
               skipLoadingOnRefresh: true,
-              data: (game) => _buildGame(game, me, narrow),
+              data: (game) => _buildGame(game, me),
               loading: () => const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
@@ -634,109 +669,167 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
   }
 
-  Widget _buildGame(NardyGameView game, String? me, bool narrow) {
+  Widget _buildGame(NardyGameView game, String? me) {
     final myTurn = game.isMyTurn && !game.isOver;
-    final selected = _selectedTrack;
-    final canBearOff =
-        selected != null && selected != nardyBarTrack &&
-            _bearOffDie(game, selected) != null;
-    final pad = narrow ? 12.0 : 20.0;
-
-    final board = NardyBoard(
-      game: game,
-      selectedTrack: selected,
-      targetTracks: _targetsFor(game),
-      canBearOff: canBearOff,
-      onTrackTap: (track) => _onTrackTap(game, track),
-      onBarTap: () => _onBarTap(game),
-      onBearOffTap: () => _onBearOffTap(game),
-    );
+    final landscape = isPhoneLandscape(context) ||
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Stack(
       children: [
-        SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(pad, 4, pad, pad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildOpponentCard(game, me),
-              const SizedBox(height: 8),
-              board,
-              const SizedBox(height: 10),
-              _buildControls(game, myTurn),
-              const SizedBox(height: 8),
-              GameStatusWithReward(
-                statusText: _statusText(game),
-                showReward: game.isOver && game.stakeBronze > 0,
-                rewardBronze:
-                    game.iWon ? game.stakeBronze : -game.stakeBronze,
-                rewardKey: _rewardKey,
-                wrap: true,
-              ),
-              if (!game.isOver &&
-                  game.turnTimeSec > 0 &&
-                  game.turnDeadline > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: GameTurnCountdown(
-                    key: ValueKey('${game.turn}_${game.turnDeadline}'),
-                    turnDeadline: game.turnDeadline,
-                    isMyTurn: myTurn,
-                    turnTimeSec: game.turnTimeSec,
-                    onExpired: () =>
-                        ref.invalidate(nardyGameProvider(widget.gameId)),
-                    labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-                  ),
-                ),
-              if (game.isOver) ...[
-                const SizedBox(height: 12),
-                if (_isOffline)
-                  FilledButton.icon(
-                    onPressed:
-                        _isRematching ? null : () => unawaited(_rematch()),
-                    icon: const Icon(Icons.replay_rounded, size: 18),
-                    label: Text(context.l10n.offlinePlayAgain),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                    ),
-                  )
-                else
-                  GameRematchSection(
-                    rematchLobbyId: _rematchLobbyId,
-                    rematchDeclined: _rematchDeclined,
-                    iDeclinedRematch: _iDeclinedRematch,
-                    isRematching: _isRematching,
-                    isAcceptingRematch: _isAcceptingRematch,
-                    isFindingGame: _isFindingGame,
-                    peerIds: _peerIds(game, me),
-                    invites: ref.watch(gameInvitesProvider),
-                    onRematch: () => unawaited(_rematch()),
-                    onAccept: (id) => unawaited(_acceptRematch(id)),
-                    onDecline: (id) => unawaited(_declineRematch(id)),
-                    onCancelWait: () => unawaited(_cancelRematchWait()),
-                    onFindGame: () => unawaited(_findGame()),
-                    compact: true,
-                  ),
-              ],
-            ],
-          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+          child: landscape
+              ? _buildLandscape(game, me, myTurn)
+              : _buildPortrait(game, me, myTurn),
         ),
         MyTurnAlert.stackLeaf(isMyTurn: myTurn),
-        if (!game.isOver)
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: GameActionsOverlay(
-              canDraw: false,
-              iOfferedDraw: false,
-              opponentOfferedDraw: false,
-              onSurrender: () => unawaited(_confirmSurrender()),
-              onDraw: () {},
-              surrenderTooltip: context.l10n.gameSurrender,
-              drawTooltip: context.l10n.gameOfferDraw,
-              acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-              drawOfferedTooltip: context.l10n.gameDrawOffered,
+      ],
+    );
+  }
+
+  /// Доска занимает всю доступную высоту, остальное — компактные полосы.
+  Widget _buildBoard(NardyGameView game) {
+    final selected = _selectedTrack;
+    final canBearOff = selected != null &&
+        selected != nardyBarTrack &&
+        _bearOffDie(game, selected) != null;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = nardyFitBoard(
+          Size(constraints.maxWidth, constraints.maxHeight),
+        );
+        if (size.isEmpty) return const SizedBox.shrink();
+        return Center(
+          child: SizedBox(
+            width: size.width,
+            height: size.height,
+            child: NardyBoard(
+              game: game,
+              tracker: _tracker,
+              selectedTrack: selected,
+              targetTracks: _targetsFor(game),
+              canBearOff: canBearOff,
+              undoTracks: _undoTargets(game),
+              onTrackTap: (track) => _onTrackTap(game, track),
+              onBarTap: () => _onBarTap(game),
+              onBearOffTap: () => _onBearOffTap(game),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPortrait(NardyGameView game, String? me, bool myTurn) {
+    return Column(
+      children: [
+        _buildOpponentRow(game, me, compact: true),
+        const SizedBox(height: 6),
+        Expanded(child: _buildBoard(game)),
+        const SizedBox(height: 6),
+        _buildStatusLine(game, myTurn),
+        const SizedBox(height: 6),
+        _buildControls(game, myTurn),
+        if (game.isOver) ...[
+          const SizedBox(height: 8),
+          _buildFinishRow(game, me),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLandscape(NardyGameView game, String? me, bool myTurn) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(flex: 7, child: _buildBoard(game)),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 210,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildOpponentRow(game, me, compact: true),
+                const SizedBox(height: 8),
+                _buildStatusLine(game, myTurn),
+                const SizedBox(height: 8),
+                _buildControls(game, myTurn),
+                if (game.isOver) ...[
+                  const SizedBox(height: 10),
+                  _buildFinishRow(game, me),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOpponentRow(
+    NardyGameView game,
+    String? me, {
+    required bool compact,
+  }) {
+    final opp = game.opponent;
+    final mine = game.me;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildOpponentCard(game, me),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          alignment: WrapAlignment.center,
+          children: [
+            if (opp != null)
+              NardyProgressBar(
+                label: context.l10n.nardyPipsShort,
+                pips: opp.pips,
+                off: opp.off,
+                mine: false,
+                active: !game.isMyTurn && !game.isOver,
+              ),
+            if (mine != null)
+              NardyProgressBar(
+                label: context.l10n.nardyPipsShort,
+                pips: mine.pips,
+                off: mine.off,
+                mine: true,
+                active: game.isMyTurn && !game.isOver,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusLine(NardyGameView game, bool myTurn) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GameStatusWithReward(
+          statusText: _statusText(game),
+          showReward: game.isOver && game.stakeBronze > 0,
+          rewardBronze: game.iWon ? game.stakeBronze : -game.stakeBronze,
+          rewardKey: _rewardKey,
+          fontSize: 14,
+          wrap: true,
+        ),
+        if (!game.isOver && game.turnTimeSec > 0 && game.turnDeadline > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: GameTurnCountdown(
+              key: ValueKey('${game.turn}_${game.turnDeadline}'),
+              turnDeadline: game.turnDeadline,
+              isMyTurn: myTurn,
+              turnTimeSec: game.turnTimeSec,
+              onExpired: () =>
+                  ref.invalidate(nardyGameProvider(widget.gameId)),
+              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
             ),
           ),
       ],
@@ -745,15 +838,23 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Widget _buildControls(NardyGameView game, bool myTurn) {
     final l10n = context.l10n;
-    final myPips = game.me?.pips ?? 0;
+    final showRoll = myTurn && game.needsRoll;
+    final showEndTurn = myTurn && !game.needsRoll && game.legalMoves.isEmpty;
+    final noMoves = showEndTurn && game.currentTurn.isEmpty;
     return Wrap(
       spacing: 10,
       runSpacing: 8,
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        NardyDiceRow(rolled: game.rolled, remaining: game.dice),
-        if (myTurn && game.needsRoll)
+        NardyDiceRow(
+          rolled: game.rolled,
+          remaining: game.dice,
+          rollKey: '${game.turnNo}_${game.rolled.join(",")}',
+          highlight: myTurn,
+          size: 38,
+        ),
+        if (showRoll)
           FilledButton.icon(
             onPressed: _busy ? null : () => unawaited(_roll()),
             icon: const Icon(Icons.casino_rounded, size: 18),
@@ -763,53 +864,62 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               foregroundColor: Colors.white,
             ),
           ),
-        if (myTurn && !game.needsRoll && game.legalMoves.isEmpty)
+        if (myTurn && game.canUndo)
+          OutlinedButton.icon(
+            onPressed: _busy ? null : () => unawaited(_undo()),
+            icon: const Icon(Icons.undo_rounded, size: 18),
+            label: Text(l10n.nardyUndoMove),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.accentStart),
+            ),
+          ),
+        if (showEndTurn)
           FilledButton.icon(
-            onPressed: _busy ? null : () => unawaited(_skipTurn()),
-            icon: const Icon(Icons.skip_next_rounded, size: 18),
-            label: Text(l10n.nardySkipTurn),
+            onPressed: _busy ? null : () => unawaited(_endTurn()),
+            icon: Icon(
+              noMoves ? Icons.skip_next_rounded : Icons.check_rounded,
+              size: 18,
+            ),
+            label: Text(noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentEnd,
               foregroundColor: Colors.white,
             ),
           ),
-        _PipsChip(label: l10n.nardyPipsShort, value: myPips, mine: true),
       ],
     );
   }
-}
 
-class _PipsChip extends StatelessWidget {
-  const _PipsChip({
-    required this.label,
-    required this.value,
-    this.mine = false,
-  });
-
-  final String label;
-  final int value;
-  final bool mine;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: (mine ? AppColors.accentStart : Colors.white24)
-              .withValues(alpha: 0.5),
+  Widget _buildFinishRow(NardyGameView game, String? me) {
+    if (_isOffline) {
+      return Center(
+        child: FilledButton.icon(
+          onPressed: _isRematching ? null : () => unawaited(_rematch()),
+          icon: const Icon(Icons.replay_rounded, size: 18),
+          label: Text(context.l10n.offlinePlayAgain),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accentStart,
+            foregroundColor: Colors.white,
+          ),
         ),
-      ),
-      child: Text(
-        '$label $value',
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textSecondary,
-        ),
-      ),
+      );
+    }
+    return GameRematchSection(
+      rematchLobbyId: _rematchLobbyId,
+      rematchDeclined: _rematchDeclined,
+      iDeclinedRematch: _iDeclinedRematch,
+      isRematching: _isRematching,
+      isAcceptingRematch: _isAcceptingRematch,
+      isFindingGame: _isFindingGame,
+      peerIds: _peerIds(game, me),
+      invites: ref.watch(gameInvitesProvider),
+      onRematch: () => unawaited(_rematch()),
+      onAccept: (id) => unawaited(_acceptRematch(id)),
+      onDecline: (id) => unawaited(_declineRematch(id)),
+      onCancelWait: () => unawaited(_cancelRematchWait()),
+      onFindGame: () => unawaited(_findGame()),
+      compact: true,
     );
   }
 }

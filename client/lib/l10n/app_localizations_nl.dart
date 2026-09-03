@@ -726,6 +726,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nardySkipTurn => 'Beurt overslaan';
 
   @override
+  String get nardyUndoMove => 'Ongedaan';
+
+  @override
+  String get nardyDoneTurn => 'Klaar';
+
+  @override
   String get nardyNoMoves => 'Geen zetten — sla de beurt over';
 
   @override

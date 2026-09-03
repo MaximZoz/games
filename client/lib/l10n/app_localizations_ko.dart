@@ -726,6 +726,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get nardySkipTurn => '차례 넘기기';
 
   @override
+  String get nardyUndoMove => '되돌리기';
+
+  @override
+  String get nardyDoneTurn => '완료';
+
+  @override
   String get nardyNoMoves => '둘 수 없음 — 차례를 넘기세요';
 
   @override

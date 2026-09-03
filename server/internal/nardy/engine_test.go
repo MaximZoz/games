@@ -387,6 +387,154 @@ func TestCheckerCountStaysConsistent(t *testing.T) {
 	}
 }
 
+func TestUndoRestoresPositionAndDice(t *testing.T) {
+	g := NewGame(ModeLong)
+	if err := g.RollWith(5, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	before := g.Board
+	beforeDice := append([]int(nil), g.Dice...)
+	if err := g.ApplyMove(0, Move{From: 0, Die: 5}); err != nil {
+		t.Fatalf("move: %v", err)
+	}
+	if !g.CanUndo() {
+		t.Fatal("move must be undoable")
+	}
+	if err := g.Undo(0); err != nil {
+		t.Fatalf("undo: %v", err)
+	}
+	if g.Board != before {
+		t.Fatal("board was not restored")
+	}
+	if len(g.Dice) != len(beforeDice) {
+		t.Fatalf("dice = %v, want %v", g.Dice, beforeDice)
+	}
+	if g.HeadMoved != 0 {
+		t.Fatalf("head counter = %d, want 0", g.HeadMoved)
+	}
+	if g.CanUndo() {
+		t.Fatal("history must be empty after undo")
+	}
+}
+
+func TestUndoRestoresHitChecker(t *testing.T) {
+	g := NewGame(ModeShort)
+	g.Board = [Points]int{}
+	g.setTrack(0, 0, 1)
+	g.Board[TrackToBoard(ModeShort, 0, 3)] = -1
+	if err := g.RollWith(3, 4); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 0, Die: 3}); err != nil {
+		t.Fatalf("hit: %v", err)
+	}
+	if g.Bar[1] != 1 {
+		t.Fatalf("bar[1] = %d, want 1", g.Bar[1])
+	}
+	if err := g.Undo(0); err != nil {
+		t.Fatalf("undo: %v", err)
+	}
+	if g.Bar[1] != 0 {
+		t.Fatalf("bar[1] = %d after undo, want 0", g.Bar[1])
+	}
+	if g.OpponentAt(0, 3) != 1 {
+		t.Fatal("hit checker was not returned to its point")
+	}
+	if g.CountAt(0, 0) != 1 {
+		t.Fatal("own checker was not returned to the head")
+	}
+}
+
+func TestUndoRestoresBorneOffChecker(t *testing.T) {
+	g := NewGame(ModeShort)
+	g.Board = [Points]int{}
+	g.setTrack(0, 20, 1)
+	g.setTrack(1, 0, 2)
+	if err := g.RollWith(4, 2); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 20, Die: 4}); err != nil {
+		t.Fatalf("bear off: %v", err)
+	}
+	if g.Off[0] != 1 {
+		t.Fatalf("off = %d", g.Off[0])
+	}
+	if err := g.Undo(0); err != nil {
+		t.Fatalf("undo: %v", err)
+	}
+	if g.Off[0] != 0 || g.CountAt(0, 20) != 1 {
+		t.Fatalf("bear off not undone: off=%d track20=%d", g.Off[0], g.CountAt(0, 20))
+	}
+}
+
+func TestTurnStaysOpenUntilConfirmed(t *testing.T) {
+	g := NewGame(ModeLong)
+	if err := g.RollWith(5, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 0, Die: 5}); err != nil {
+		t.Fatalf("first move: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 5, Die: 3}); err != nil {
+		t.Fatalf("second move: %v", err)
+	}
+	if g.Turn != 0 {
+		t.Fatal("turn must wait for confirmation so the player can undo")
+	}
+	if !g.TurnComplete() {
+		t.Fatal("all dice are used — turn is complete")
+	}
+	if err := g.Undo(0); err != nil {
+		t.Fatalf("undo after the last die: %v", err)
+	}
+	if len(g.Dice) == 0 {
+		t.Fatal("undo must return the die")
+	}
+}
+
+func TestUndoRejectedForOtherSeat(t *testing.T) {
+	g := NewGame(ModeLong)
+	if err := g.RollWith(5, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 0, Die: 5}); err != nil {
+		t.Fatalf("move: %v", err)
+	}
+	if err := g.Undo(1); err == nil {
+		t.Fatal("opponent must not undo your move")
+	}
+}
+
+func TestEndTurnPublishesLastMoves(t *testing.T) {
+	g := NewGame(ModeLong)
+	if err := g.RollWith(5, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 0, Die: 5}); err != nil {
+		t.Fatalf("move: %v", err)
+	}
+	if err := g.ApplyMove(0, Move{From: 5, Die: 3}); err != nil {
+		t.Fatalf("move: %v", err)
+	}
+	g.EndTurn()
+	if len(g.LastTurn) != 2 {
+		t.Fatalf("last turn = %+v, want 2 moves", g.LastTurn)
+	}
+	if g.LastTurnSeat != 0 {
+		t.Fatalf("last turn seat = %d", g.LastTurnSeat)
+	}
+	first := g.LastTurn[0]
+	if first.FromPoint != TrackToBoard(ModeLong, 0, 0) {
+		t.Fatalf("from point = %d", first.FromPoint)
+	}
+	if first.ToPoint != TrackToBoard(ModeLong, 0, 5) {
+		t.Fatalf("to point = %d", first.ToPoint)
+	}
+	if g.CanUndo() {
+		t.Fatal("history must be cleared after the turn ends")
+	}
+}
+
 func TestForfeitGivesWinToOpponent(t *testing.T) {
 	g := NewGame(ModeShort)
 	g.Forfeit(1)

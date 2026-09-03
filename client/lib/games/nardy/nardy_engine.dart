@@ -33,6 +33,79 @@ class NardyMove {
   String toString() => 'NardyMove($from, $die)';
 }
 
+/// Сыгранный ход и всё нужное, чтобы его откатить.
+class NardyMoveRecord {
+  NardyMoveRecord({
+    required this.from,
+    required this.die,
+    required this.hit,
+    required this.boreOff,
+    required this.diceBefore,
+    required this.headBefore,
+  });
+
+  final int from;
+  final int die;
+  final bool hit;
+  final bool boreOff;
+
+  /// Кубики до хода: правило максимума могло срезать оставшиеся.
+  final List<int> diceBefore;
+  final int headBefore;
+}
+
+/// Сыгранная в этом ходу шашка в координатах своей дорожки.
+class NardyPlayedMove {
+  const NardyPlayedMove({
+    required this.from,
+    required this.to,
+    required this.die,
+    this.boreOff = false,
+  });
+
+  final int from;
+
+  /// [nardyPoints] — шашка снята с доски.
+  final int to;
+  final int die;
+  final bool boreOff;
+
+  factory NardyPlayedMove.fromJson(Map<String, dynamic> json) => NardyPlayedMove(
+        from: (json['from'] as num?)?.toInt() ?? 0,
+        to: (json['to'] as num?)?.toInt() ?? 0,
+        die: (json['die'] as num?)?.toInt() ?? 0,
+        boreOff: json['bore_off'] == true,
+      );
+}
+
+/// Ход в физических пунктах доски — для подсветки хода соперника.
+class NardyTurnMove {
+  const NardyTurnMove({
+    required this.fromPoint,
+    required this.toPoint,
+    this.fromBar = false,
+    this.boreOff = false,
+    this.hit = false,
+  });
+
+  /// `-1` — с бара.
+  final int fromPoint;
+
+  /// `-1` — снято с доски.
+  final int toPoint;
+  final bool fromBar;
+  final bool boreOff;
+  final bool hit;
+
+  factory NardyTurnMove.fromJson(Map<String, dynamic> json) => NardyTurnMove(
+        fromPoint: (json['from_point'] as num?)?.toInt() ?? -1,
+        toPoint: (json['to_point'] as num?)?.toInt() ?? -1,
+        fromBar: json['from_bar'] == true,
+        boreOff: json['bore_off'] == true,
+        hit: json['hit'] == true,
+      );
+}
+
 /// Индекс дорожки игрока → физический пункт доски.
 int nardyTrackToBoard(String mode, int seat, int track) {
   if (track < 0 || track >= nardyPoints) return -1;
@@ -69,11 +142,17 @@ class NardyEngine {
     required this.turnNo,
     required this.winner,
     required this.winKind,
+    List<NardyMoveRecord>? history,
+    List<NardyTurnMove>? lastTurn,
+    this.lastTurnSeat = -1,
+    this.seq = 0,
   })  : _board = board,
         _bar = bar,
         _off = off,
         _dice = dice,
-        _rolled = rolled;
+        _rolled = rolled,
+        _history = history ?? <NardyMoveRecord>[],
+        _lastTurn = lastTurn ?? <NardyTurnMove>[];
 
   /// Стартовая расстановка выбранного режима.
   factory NardyEngine.newGame(String mode) {
@@ -111,21 +190,49 @@ class NardyEngine {
   final List<int> _off;
   final List<int> _dice;
   final List<int> _rolled;
+  final List<NardyMoveRecord> _history;
+  List<NardyTurnMove> _lastTurn;
 
   int turn;
   int headMoved;
   int turnNo;
   int winner;
   String winKind;
+  int lastTurnSeat;
+
+  /// Монотонный счётчик изменений — отмена хода откатывает позицию.
+  int seq;
 
   List<int> get board => List<int>.unmodifiable(_board);
   List<int> get bar => List<int>.unmodifiable(_bar);
   List<int> get off => List<int>.unmodifiable(_off);
   List<int> get dice => List<int>.unmodifiable(_dice);
   List<int> get rolled => List<int>.unmodifiable(_rolled);
+  List<NardyTurnMove> get lastTurn => List<NardyTurnMove>.unmodifiable(_lastTurn);
 
   bool get isLong => nardyNormalizeMode(mode) == nardyModeLong;
   bool get isOver => winner >= 0;
+
+  /// Кубиков не осталось — ход ждёт подтверждения.
+  bool get turnComplete => !isOver && _dice.isEmpty;
+
+  /// Есть что откатить в текущем ходу.
+  bool get canUndo => !isOver && _history.isNotEmpty;
+
+  /// Шашки, сыгранные в этом ходу, в координатах своей дорожки.
+  List<NardyPlayedMove> get currentTurn => [
+        for (final rec in _history)
+          NardyPlayedMove(
+            from: rec.from,
+            to: rec.boreOff
+                ? nardyPoints
+                : (rec.from == nardyBarTrack
+                    ? rec.die - 1
+                    : rec.from + rec.die),
+            die: rec.die,
+            boreOff: rec.boreOff,
+          ),
+      ];
 
   NardyEngine clone() => NardyEngine._(
         mode: mode,
@@ -139,6 +246,10 @@ class NardyEngine {
         turnNo: turnNo,
         winner: winner,
         winKind: winKind,
+        history: List<NardyMoveRecord>.of(_history),
+        lastTurn: List<NardyTurnMove>.of(_lastTurn),
+        lastTurnSeat: lastTurnSeat,
+        seq: seq,
       );
 
   /// Расставить позицию вручную — только для тестов и восстановления.
@@ -275,7 +386,9 @@ class NardyEngine {
   bool rollWith(int a, int b) {
     if (isOver || _dice.isNotEmpty) return false;
     if (a < 1 || a > 6 || b < 1 || b > 6) return false;
+    seq++;
     headMoved = 0;
+    _history.clear();
     _rolled.clear();
     _dice.clear();
     if (a == b) {
@@ -332,7 +445,7 @@ class NardyEngine {
     var best = 0;
     for (final mv in legalMoves()) {
       final probe = clone();
-      if (!probe._applyMoveRaw(mv)) continue;
+      if (probe._applyMoveTracked(mv) == null) continue;
       final got = 1 + probe._bestSequence(limit - 1);
       if (got > best) best = got;
       if (best >= limit) return best;
@@ -344,55 +457,103 @@ class NardyEngine {
   bool applyMove(int seat, NardyMove mv) {
     if (isOver || seat != turn || _dice.isEmpty) return false;
     if (!legalMoves().contains(mv)) return false;
-    if (!_applyMoveRaw(mv)) return false;
+    final diceBefore = List<int>.of(_dice);
+    final headBefore = headMoved;
+    final result = _applyMoveTracked(mv);
+    if (result == null) return false;
+    _history.add(NardyMoveRecord(
+      from: mv.from,
+      die: mv.die,
+      hit: result.hit,
+      boreOff: result.boreOff,
+      diceBefore: diceBefore,
+      headBefore: headBefore,
+    ));
+    seq++;
     _checkWinner();
     if (isOver) {
       _dice.clear();
+      _history.clear();
       return true;
     }
+    // Ход не закрываем сами: игрок ещё может отменить последнюю шашку.
     _dropUnusableDice();
-    if (_dice.isEmpty) endTurn();
+    return true;
+  }
+
+  /// Откатить последний ход текущего игрока.
+  bool undo(int seat) {
+    if (isOver || seat != turn || _history.isEmpty) return false;
+    final rec = _history.removeLast();
+    var to = rec.from + rec.die;
+    if (rec.from == nardyBarTrack) to = rec.die - 1;
+    if (rec.boreOff) {
+      _off[seat]--;
+    } else {
+      _addAt(seat, to, -1);
+      if (rec.hit) {
+        final opp = nardyOpponent(seat);
+        final oppTrack =
+            nardyBoardToTrack(mode, opp, nardyTrackToBoard(mode, seat, to));
+        _addAt(opp, oppTrack, 1);
+        _bar[opp]--;
+      }
+    }
+    if (rec.from == nardyBarTrack) {
+      _bar[seat]++;
+    } else {
+      _addAt(seat, rec.from, 1);
+    }
+    _dice
+      ..clear()
+      ..addAll(rec.diceBefore);
+    headMoved = rec.headBefore;
+    seq++;
     return true;
   }
 
   /// Ход без проверки легальности — для перебора вариантов ботом на клоне.
-  bool applyMoveUnchecked(NardyMove mv) => _applyMoveRaw(mv);
+  bool applyMoveUnchecked(NardyMove mv) => _applyMoveTracked(mv) != null;
 
-  bool _applyMoveRaw(NardyMove mv) {
+  ({bool hit, bool boreOff})? _applyMoveTracked(NardyMove mv) {
     final seat = turn;
     final idx = _dice.indexOf(mv.die);
-    if (idx < 0) return false;
+    if (idx < 0) return null;
     if (mv.from == nardyBarTrack) {
-      if (_bar[seat] == 0) return false;
+      if (_bar[seat] == 0) return null;
       final to = mv.die - 1;
       _bar[seat]--;
-      _hitIfNeeded(seat, to);
+      final hit = _hitIfNeeded(seat, to);
       _addAt(seat, to, 1);
       _dice.removeAt(idx);
-      return true;
+      return (hit: hit, boreOff: false);
     }
-    if (countAt(seat, mv.from) == 0) return false;
+    if (countAt(seat, mv.from) == 0) return null;
     _addAt(seat, mv.from, -1);
     if (mv.from == 0 && isLong) headMoved++;
     final to = mv.from + mv.die;
+    var hit = false;
+    var boreOff = false;
     if (to >= nardyPoints) {
       _off[seat]++;
+      boreOff = true;
     } else {
-      _hitIfNeeded(seat, to);
+      hit = _hitIfNeeded(seat, to);
       _addAt(seat, to, 1);
     }
     _dice.removeAt(idx);
-    return true;
+    return (hit: hit, boreOff: boreOff);
   }
 
-  void _hitIfNeeded(int seat, int track) {
-    if (isLong) return;
-    if (opponentAt(seat, track) != 1) return;
+  bool _hitIfNeeded(int seat, int track) {
+    if (isLong) return false;
+    if (opponentAt(seat, track) != 1) return false;
     final opp = nardyOpponent(seat);
     final oppTrack =
         nardyBoardToTrack(mode, opp, nardyTrackToBoard(mode, seat, track));
     _addAt(opp, oppTrack, -1);
     _bar[opp]++;
+    return true;
   }
 
   void _checkWinner() {
@@ -407,10 +568,37 @@ class NardyEngine {
   /// Передать ход сопернику. Бросок остаётся видимым до броска соперника.
   void endTurn() {
     if (isOver) return;
+    _lastTurn = _turnMovesForHighlight();
+    lastTurnSeat = turn;
+    _history.clear();
     _dice.clear();
     headMoved = 0;
     turn = nardyOpponent(turn);
     turnNo++;
+    seq++;
+  }
+
+  /// Ходы этого хода в физических пунктах — соперник видит, что произошло.
+  List<NardyTurnMove> _turnMovesForHighlight() {
+    final seat = turn;
+    return [
+      for (final rec in _history)
+        NardyTurnMove(
+          fromPoint: rec.from == nardyBarTrack
+              ? -1
+              : nardyTrackToBoard(mode, seat, rec.from),
+          toPoint: rec.boreOff
+              ? -1
+              : nardyTrackToBoard(
+                  mode,
+                  seat,
+                  rec.from == nardyBarTrack ? rec.die - 1 : rec.from + rec.die,
+                ),
+          fromBar: rec.from == nardyBarTrack,
+          boreOff: rec.boreOff,
+          hit: rec.hit,
+        ),
+    ];
   }
 
   /// Сдача: побеждает соперник.
@@ -419,6 +607,8 @@ class NardyEngine {
     winner = nardyOpponent(seat);
     winKind = 'single';
     _dice.clear();
+    _history.clear();
+    seq++;
   }
 
   /// Сколько очков осталось пройти игроку до снятия всех шашек.

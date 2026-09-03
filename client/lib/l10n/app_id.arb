@@ -273,6 +273,8 @@
   "rulesNardyWin": "Yang pertama menurunkan semua bidak menang.",
   "nardyRoll": "Lempar dadu",
   "nardySkipTurn": "Lewati giliran",
+  "nardyUndoMove": "Batalkan",
+  "nardyDoneTurn": "Selesai",
   "nardyNoMoves": "Tidak ada langkah — lewati giliran",
   "nardyYourRoll": "Lemparan Anda",
   "nardyPipsShort": "Sisa:",

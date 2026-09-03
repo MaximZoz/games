@@ -273,6 +273,8 @@
   "rulesNardyWin": "Den, der først tager alle brikker af, vinder.",
   "nardyRoll": "Slå",
   "nardySkipTurn": "Spring turen over",
+  "nardyUndoMove": "Fortryd",
+  "nardyDoneTurn": "Færdig",
   "nardyNoMoves": "Ingen træk — spring turen over",
   "nardyYourRoll": "Dit slag",
   "nardyPipsShort": "Tilbage:",

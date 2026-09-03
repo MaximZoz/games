@@ -5,6 +5,44 @@ import "math/rand"
 // BotID — идентификатор бота нард.
 const BotID = "bot:nardy"
 
+// PlayBotTurn доигрывает ход бота целиком: бросок, все шашки, передача хода.
+func PlayBotTurn(g *Game, rng *rand.Rand) {
+	if g == nil || g.Winner >= 0 {
+		return
+	}
+	if rng == nil {
+		rng = rand.New(rand.NewSource(1))
+	}
+	seat := g.Turn
+	if len(g.Dice) == 0 {
+		if err := g.Roll(rng); err != nil {
+			return
+		}
+	}
+	// Каждый ход снимает кубик, поэтому цикл конечен; лимит — страховка.
+	for step := 0; step < 8; step++ {
+		if g.Winner >= 0 || g.Turn != seat {
+			return
+		}
+		if len(g.Dice) == 0 {
+			g.EndTurn()
+			return
+		}
+		mv, ok := BotBestMove(g, rng)
+		if !ok {
+			g.EndTurn()
+			return
+		}
+		if err := g.ApplyMove(seat, mv); err != nil {
+			g.EndTurn()
+			return
+		}
+	}
+	if g.Winner < 0 && g.Turn == seat {
+		g.EndTurn()
+	}
+}
+
 // BotBestMove выбирает ход жадно: оценивает позицию после каждого варианта.
 //
 // Возвращает `false`, если ходов нет.

@@ -273,6 +273,8 @@
   "rulesNardyWin": "Den som først tar av alle brikker, vinner.",
   "nardyRoll": "Kast",
   "nardySkipTurn": "Hopp over turen",
+  "nardyUndoMove": "Angre",
+  "nardyDoneTurn": "Ferdig",
   "nardyNoMoves": "Ingen trekk — hopp over turen",
   "nardyYourRoll": "Ditt kast",
   "nardyPipsShort": "Igjen:",

@@ -273,6 +273,8 @@
   "rulesNardyWin": "Vyhrává ten, kdo první sundá všechny kameny.",
   "nardyRoll": "Hodit",
   "nardySkipTurn": "Přeskočit tah",
+  "nardyUndoMove": "Vrátit",
+  "nardyDoneTurn": "Hotovo",
   "nardyNoMoves": "Žádné tahy — přeskočte tah",
   "nardyYourRoll": "Váš hod",
   "nardyPipsShort": "Zbývá:",

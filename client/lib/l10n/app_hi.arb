@@ -273,6 +273,8 @@
   "rulesNardyWin": "जो पहले सारे मोहरे उतार ले, वही जीते।",
   "nardyRoll": "पासा फेंकें",
   "nardySkipTurn": "बारी छोड़ें",
+  "nardyUndoMove": "वापस लें",
+  "nardyDoneTurn": "हो गया",
   "nardyNoMoves": "कोई चाल नहीं — बारी छोड़ें",
   "nardyYourRoll": "आपका पासा",
   "nardyPipsShort": "शेष:",

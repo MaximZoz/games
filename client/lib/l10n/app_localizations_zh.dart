@@ -726,6 +726,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nardySkipTurn => '跳过回合';
 
   @override
+  String get nardyUndoMove => '撤销';
+
+  @override
+  String get nardyDoneTurn => '完成';
+
+  @override
   String get nardyNoMoves => '无棋可走 — 跳过回合';
 
   @override

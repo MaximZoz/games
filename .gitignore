@@ -64,3 +64,6 @@ Thumbs.db
 !.env.example
 deploy.cursor.env
 deploy.dev.env
+
+# Локальный журнал событий сервера — только рантайм.
+server/logs/app_events.jsonl

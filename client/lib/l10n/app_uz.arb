@@ -273,6 +273,8 @@
   "rulesNardyWin": "Barcha toshlarini birinchi olgan g‘olib.",
   "nardyRoll": "Tashlash",
   "nardySkipTurn": "Yurishni o‘tkazish",
+  "nardyUndoMove": "Qaytarish",
+  "nardyDoneTurn": "Tayyor",
   "nardyNoMoves": "Yurish yo‘q — yurishni o‘tkazing",
   "nardyYourRoll": "Sizning tashlashingiz",
   "nardyPipsShort": "Qoldi:",
