@@ -273,6 +273,8 @@
   "rulesNardyWin": "Vince chi toglie per primo tutte le pedine.",
   "nardyRoll": "Lancia",
   "nardySkipTurn": "Salta il turno",
+  "nardyUndoMove": "Annulla",
+  "nardyDoneTurn": "Fatto",
   "nardyNoMoves": "Nessuna mossa — salta il turno",
   "nardyYourRoll": "Il tuo lancio",
   "nardyPipsShort": "Restano:",

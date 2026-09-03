@@ -726,6 +726,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nardySkipTurn => 'Пропустить ход';
 
   @override
+  String get nardyUndoMove => 'Вернуть';
+
+  @override
+  String get nardyDoneTurn => 'Готово';
+
+  @override
   String get nardyNoMoves => 'Ходов нет — пропустите ход';
 
   @override

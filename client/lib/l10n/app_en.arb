@@ -325,6 +325,8 @@
   "rulesNardyWin": "The first player to bear off all checkers wins.",
   "nardyRoll": "Roll",
   "nardySkipTurn": "Skip turn",
+  "nardyUndoMove": "Undo",
+  "nardyDoneTurn": "Done",
   "nardyNoMoves": "No moves — skip the turn",
   "nardyYourRoll": "Your roll",
   "nardyPipsShort": "Left:",

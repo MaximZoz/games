@@ -273,6 +273,8 @@
   "rulesNardyWin": "Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.",
   "nardyRoll": "Rzuć",
   "nardySkipTurn": "Pomiń turę",
+  "nardyUndoMove": "Cofnij",
+  "nardyDoneTurn": "Gotowe",
   "nardyNoMoves": "Brak ruchów — pomiń turę",
   "nardyYourRoll": "Twój rzut",
   "nardyPipsShort": "Zostało:",

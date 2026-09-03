@@ -32,12 +32,14 @@ const (
 )
 
 var (
-	ErrNotYourTurn  = errors.New("not your turn")
-	ErrDiceRolled   = errors.New("dice already rolled")
-	ErrNoDice       = errors.New("no dice to move")
-	ErrIllegalMove  = errors.New("illegal move")
-	ErrGameOver     = errors.New("game is over")
-	ErrInvalidState = errors.New("invalid state")
+	ErrNotYourTurn   = errors.New("not your turn")
+	ErrDiceRolled    = errors.New("dice already rolled")
+	ErrNoDice        = errors.New("no dice to move")
+	ErrIllegalMove   = errors.New("illegal move")
+	ErrGameOver      = errors.New("game is over")
+	ErrInvalidState  = errors.New("invalid state")
+	ErrNothingToUndo = errors.New("nothing to undo")
+	ErrMovesLeft     = errors.New("moves are still available")
 )
 
 // NormalizeMode приводит режим к одному из поддерживаемых.
@@ -52,6 +54,29 @@ func NormalizeMode(mode string) string {
 type Move struct {
 	From int `json:"from"`
 	Die  int `json:"die"`
+}
+
+// MoveRecord — сыгранный ход и всё нужное, чтобы его откатить.
+type MoveRecord struct {
+	From int `json:"from"`
+	Die  int `json:"die"`
+	// Hit — сбили одиночную шашку соперника (короткие нарды).
+	Hit bool `json:"hit"`
+	// BoreOff — шашка ушла за доску.
+	BoreOff bool `json:"bore_off"`
+	// DiceBefore — набор кубиков до хода: правило максимума могло срезать
+	// оставшиеся, поэтому восстанавливаем снимком, а не возвратом одного.
+	DiceBefore []int `json:"dice_before"`
+	HeadBefore int   `json:"head_before"`
+}
+
+// TurnMove — сыгранный ход в физических пунктах доски (для подсветки).
+type TurnMove struct {
+	FromPoint int  `json:"from_point"`
+	ToPoint   int  `json:"to_point"`
+	FromBar   bool `json:"from_bar"`
+	BoreOff   bool `json:"bore_off"`
+	Hit       bool `json:"hit"`
 }
 
 // Game — состояние партии.
@@ -77,16 +102,28 @@ type Game struct {
 	Winner int `json:"winner"`
 	// WinKind — "single" или "mars" (соперник не снял ни одной шашки).
 	WinKind string `json:"win_kind"`
+	// History — ходы текущего хода; позволяет отменить последний.
+	History []MoveRecord `json:"history"`
+	// LastTurn — ходы предыдущего завершённого хода (подсветка у соперника).
+	LastTurn []TurnMove `json:"last_turn"`
+	// LastTurnSeat — чей это был ход, или -1.
+	LastTurnSeat int `json:"last_turn_seat"`
+	// Seq — монотонный счётчик изменений: отмена хода откатывает позицию,
+	// поэтому «свежесть» снимка нельзя мерить прогрессом партии.
+	Seq int `json:"seq"`
 }
 
 // NewGame создаёт стартовую расстановку выбранного режима.
 func NewGame(mode string) *Game {
 	g := &Game{
-		Mode:   NormalizeMode(mode),
-		Turn:   0,
-		Winner: -1,
-		Dice:   []int{},
-		Rolled: []int{},
+		Mode:         NormalizeMode(mode),
+		Turn:         0,
+		Winner:       -1,
+		Dice:         []int{},
+		Rolled:       []int{},
+		History:      []MoveRecord{},
+		LastTurn:     []TurnMove{},
+		LastTurnSeat: -1,
 	}
 	if g.Mode == ModeLong {
 		// Обе головы полные: 15 шашек на своей голове.
@@ -359,7 +396,9 @@ func (g *Game) RollWith(a, b int) error {
 }
 
 func (g *Game) applyRoll(a, b int) {
+	g.Seq++
 	g.HeadMoved = 0
+	g.History = g.History[:0]
 	if a == b {
 		g.Rolled = []int{a, a, a, a}
 		g.Dice = []int{a, a, a, a}
@@ -462,18 +501,77 @@ func (g *Game) ApplyMove(seat int, mv Move) error {
 	if !g.isLegal(mv) {
 		return fmt.Errorf("%w: from %d die %d", ErrIllegalMove, mv.From, mv.Die)
 	}
-	if err := g.applyMoveRaw(mv); err != nil {
+	diceBefore := append([]int(nil), g.Dice...)
+	headBefore := g.HeadMoved
+	hit, boreOff, err := g.applyMoveTracked(mv)
+	if err != nil {
 		return err
 	}
+	g.History = append(g.History, MoveRecord{
+		From:       mv.From,
+		Die:        mv.Die,
+		Hit:        hit,
+		BoreOff:    boreOff,
+		DiceBefore: diceBefore,
+		HeadBefore: headBefore,
+	})
+	g.Seq++
 	g.checkWinner()
 	if g.Winner >= 0 {
 		g.Dice = g.Dice[:0]
+		g.History = g.History[:0]
 		return nil
 	}
+	// Ход не закрываем сами: игрок ещё может отменить последнюю шашку.
 	g.dropUnusableDice()
-	if len(g.Dice) == 0 {
-		g.EndTurn()
+	return nil
+}
+
+// TurnComplete — кубиков не осталось, ход ждёт подтверждения.
+func (g *Game) TurnComplete() bool {
+	return g.Winner < 0 && len(g.Dice) == 0
+}
+
+// CanUndo — есть что откатить в текущем ходу.
+func (g *Game) CanUndo() bool { return g.Winner < 0 && len(g.History) > 0 }
+
+// Undo откатывает последний ход текущего игрока.
+func (g *Game) Undo(seat int) error {
+	if g.Winner >= 0 {
+		return ErrGameOver
 	}
+	if seat != g.Turn {
+		return ErrNotYourTurn
+	}
+	if len(g.History) == 0 {
+		return ErrNothingToUndo
+	}
+	rec := g.History[len(g.History)-1]
+	g.History = g.History[:len(g.History)-1]
+
+	to := rec.From + rec.Die
+	if rec.From == BarTrack {
+		to = rec.Die - 1
+	}
+	if rec.BoreOff {
+		g.Off[seat]--
+	} else {
+		g.addAt(seat, to, -1)
+		if rec.Hit {
+			opp := Opponent(seat)
+			oppTrack := BoardToTrack(g.Mode, opp, TrackToBoard(g.Mode, seat, to))
+			g.addAt(opp, oppTrack, 1)
+			g.Bar[opp]--
+		}
+	}
+	if rec.From == BarTrack {
+		g.Bar[seat]++
+	} else {
+		g.addAt(seat, rec.From, 1)
+	}
+	g.Dice = append([]int(nil), rec.DiceBefore...)
+	g.HeadMoved = rec.HeadBefore
+	g.Seq++
 	return nil
 }
 
@@ -487,24 +585,30 @@ func (g *Game) isLegal(mv Move) bool {
 }
 
 func (g *Game) applyMoveRaw(mv Move) error {
+	_, _, err := g.applyMoveTracked(mv)
+	return err
+}
+
+// applyMoveTracked двигает шашку и сообщает, был ли бой и снятие с доски.
+func (g *Game) applyMoveTracked(mv Move) (hit bool, boreOff bool, err error) {
 	seat := g.Turn
 	idx := indexOf(g.Dice, mv.Die)
 	if idx < 0 {
-		return ErrIllegalMove
+		return false, false, ErrIllegalMove
 	}
 	if mv.From == BarTrack {
 		if g.Bar[seat] == 0 {
-			return ErrIllegalMove
+			return false, false, ErrIllegalMove
 		}
 		to := mv.Die - 1
 		g.Bar[seat]--
-		g.hitIfNeeded(seat, to)
+		hit = g.hitIfNeeded(seat, to)
 		g.addAt(seat, to, 1)
 		g.Dice = removeAt(g.Dice, idx)
-		return nil
+		return hit, false, nil
 	}
 	if g.CountAt(seat, mv.From) == 0 {
-		return ErrIllegalMove
+		return false, false, ErrIllegalMove
 	}
 	g.addAt(seat, mv.From, -1)
 	if mv.From == 0 && g.IsLong() {
@@ -513,25 +617,27 @@ func (g *Game) applyMoveRaw(mv Move) error {
 	to := mv.From + mv.Die
 	if to >= Points {
 		g.Off[seat]++
+		boreOff = true
 	} else {
-		g.hitIfNeeded(seat, to)
+		hit = g.hitIfNeeded(seat, to)
 		g.addAt(seat, to, 1)
 	}
 	g.Dice = removeAt(g.Dice, idx)
-	return nil
+	return hit, boreOff, nil
 }
 
-func (g *Game) hitIfNeeded(seat, track int) {
+func (g *Game) hitIfNeeded(seat, track int) bool {
 	if g.IsLong() {
-		return
+		return false
 	}
 	if g.OpponentAt(seat, track) != 1 {
-		return
+		return false
 	}
 	opp := Opponent(seat)
 	oppTrack := BoardToTrack(g.Mode, opp, TrackToBoard(g.Mode, seat, track))
 	g.addAt(opp, oppTrack, -1)
 	g.Bar[opp]++
+	return true
 }
 
 func (g *Game) checkWinner() {
@@ -557,10 +663,42 @@ func (g *Game) EndTurn() {
 	if g.Winner >= 0 {
 		return
 	}
+	g.LastTurn = g.turnMovesForHighlight()
+	g.LastTurnSeat = g.Turn
+	g.History = g.History[:0]
 	g.Dice = g.Dice[:0]
 	g.HeadMoved = 0
 	g.Turn = Opponent(g.Turn)
 	g.TurnNo++
+	g.Seq++
+}
+
+// turnMovesForHighlight — ходы этого хода в физических пунктах доски,
+// чтобы соперник увидел, что именно произошло, независимо от своей дорожки.
+func (g *Game) turnMovesForHighlight() []TurnMove {
+	seat := g.Turn
+	out := make([]TurnMove, 0, len(g.History))
+	for _, rec := range g.History {
+		item := TurnMove{
+			FromBar: rec.From == BarTrack,
+			BoreOff: rec.BoreOff,
+			Hit:     rec.Hit,
+		}
+		to := rec.From + rec.Die
+		if rec.From == BarTrack {
+			item.FromPoint = -1
+			to = rec.Die - 1
+		} else {
+			item.FromPoint = TrackToBoard(g.Mode, seat, rec.From)
+		}
+		if rec.BoreOff {
+			item.ToPoint = -1
+		} else {
+			item.ToPoint = TrackToBoard(g.Mode, seat, to)
+		}
+		out = append(out, item)
+	}
+	return out
 }
 
 // Forfeit — сдача: побеждает соперник.
@@ -571,6 +709,8 @@ func (g *Game) Forfeit(seat int) {
 	g.Winner = Opponent(seat)
 	g.WinKind = "single"
 	g.Dice = g.Dice[:0]
+	g.History = g.History[:0]
+	g.Seq++
 }
 
 // Clone — глубокая копия состояния.
@@ -578,6 +718,8 @@ func (g *Game) Clone() *Game {
 	cp := *g
 	cp.Dice = append([]int(nil), g.Dice...)
 	cp.Rolled = append([]int(nil), g.Rolled...)
+	cp.History = append([]MoveRecord(nil), g.History...)
+	cp.LastTurn = append([]TurnMove(nil), g.LastTurn...)
 	return &cp
 }
 
@@ -614,6 +756,12 @@ func Decode(raw string) (*Game, error) {
 	}
 	if g.Rolled == nil {
 		g.Rolled = []int{}
+	}
+	if g.History == nil {
+		g.History = []MoveRecord{}
+	}
+	if g.LastTurn == nil {
+		g.LastTurn = []TurnMove{}
 	}
 	return &g, nil
 }

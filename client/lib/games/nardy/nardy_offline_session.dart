@@ -103,13 +103,19 @@ class OfflineNardySession extends ChangeNotifier {
       rolled: _engine.rolled,
       turn: _engine.turn,
       turnNo: _engine.turnNo,
+      seq: _engine.seq,
       headMoved: _engine.headMoved,
       players: players,
       playerIds: [humanUserId, nardyBotUserId],
       legalMoves: myTurn ? _engine.legalMoves() : const [],
       myIndex: 0,
       isMyTurn: myTurn,
-      needsRoll: myTurn && _engine.dice.isEmpty,
+      needsRoll: myTurn && _engine.dice.isEmpty && !_engine.canUndo,
+      canUndo: myTurn && _engine.canUndo,
+      turnComplete: myTurn && _engine.turnComplete,
+      currentTurn: myTurn ? _engine.currentTurn : const [],
+      lastTurn: _engine.lastTurn,
+      lastTurnSeat: _engine.lastTurnSeat,
       turnTimeSec: 0,
       turnDeadline: 0,
       stakeBronze: 0,
@@ -140,6 +146,8 @@ class OfflineNardySession extends ChangeNotifier {
         if (!_engine.applyMove(0, mv)) {
           throw GamesException(400, 'illegal move');
         }
+      case 'undo':
+        if (!_engine.undo(0)) throw GamesException(400, 'nothing to undo');
       case 'end_turn':
         if (_engine.turn != 0) throw GamesException(400, 'not your turn');
         if (_engine.hasLegalMove) {

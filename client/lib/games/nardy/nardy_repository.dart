@@ -136,6 +136,7 @@ class NardyGameView {
     required this.rolled,
     required this.turn,
     required this.turnNo,
+    required this.seq,
     required this.headMoved,
     required this.players,
     required this.playerIds,
@@ -143,6 +144,11 @@ class NardyGameView {
     required this.myIndex,
     required this.isMyTurn,
     required this.needsRoll,
+    required this.canUndo,
+    required this.turnComplete,
+    required this.currentTurn,
+    required this.lastTurn,
+    required this.lastTurnSeat,
     required this.turnTimeSec,
     required this.turnDeadline,
     required this.stakeBronze,
@@ -166,6 +172,9 @@ class NardyGameView {
   final List<int> rolled;
   final int turn;
   final int turnNo;
+
+  /// Монотонный счётчик изменений состояния — «часы» для WS/HTTP сверки.
+  final int seq;
   final int headMoved;
   final List<NardyPlayerView> players;
   final List<String> playerIds;
@@ -173,6 +182,19 @@ class NardyGameView {
   final int myIndex;
   final bool isMyTurn;
   final bool needsRoll;
+
+  /// Можно отменить последний ход этого хода.
+  final bool canUndo;
+
+  /// Кубики отыграны, ход ждёт подтверждения.
+  final bool turnComplete;
+
+  /// Шашки, сыгранные в этом ходу — последнюю можно вернуть.
+  final List<NardyPlayedMove> currentTurn;
+
+  /// Ходы прошлого завершённого хода — подсветка «что сделал соперник».
+  final List<NardyTurnMove> lastTurn;
+  final int lastTurnSeat;
   final int turnTimeSec;
   final int turnDeadline;
   final int stakeBronze;
@@ -206,14 +228,17 @@ class NardyGameView {
   }
 
   /// Мои шашки на пункте моей дорожки.
-  int myCountAt(int track) => _countFor(myIndex, track);
+  int myCountAt(int track) => _countAtMyTrack(track, myIndex);
 
-  /// Шашки соперника на пункте моей дорожки.
-  int opponentCountAt(int track) => _countFor(opponentIndex, track);
+  /// Шашки соперника на том же пункте моей дорожки.
+  ///
+  /// Пункт всегда адресуется координатами зрителя: соперник ходит по своей
+  /// дорожке, но на экране обе стороны живут на одной сетке.
+  int opponentCountAt(int track) => _countAtMyTrack(track, opponentIndex);
 
-  int _countFor(int seat, int track) {
-    if (seat < 0) return 0;
-    final p = nardyTrackToBoard(gameMode, seat, track);
+  int _countAtMyTrack(int track, int seat) {
+    if (seat < 0 || myIndex < 0) return 0;
+    final p = nardyTrackToBoard(gameMode, myIndex, track);
     if (p < 0 || p >= board.length) return 0;
     final v = board[p];
     if (seat == 0) return v > 0 ? v : 0;
@@ -228,6 +253,10 @@ class NardyGameView {
 
   /// Пункты дорожки, откуда можно сходить.
   Set<int> get movableTracks => {for (final mv in legalMoves) mv.from};
+
+  /// Последняя сыгранная в этом ходу шашка — её можно вернуть.
+  NardyPlayedMove? get lastPlayed =>
+      currentTurn.isEmpty ? null : currentTurn.last;
 
   factory NardyGameView.fromJson(Map<String, dynamic> json) {
     List<int> parseInts(dynamic raw) {
@@ -269,6 +298,7 @@ class NardyGameView {
       rolled: parseInts(json['rolled']),
       turn: (json['turn'] as num?)?.toInt() ?? 0,
       turnNo: (json['turn_no'] as num?)?.toInt() ?? 0,
+      seq: (json['seq'] as num?)?.toInt() ?? 0,
       headMoved: (json['head_moved'] as num?)?.toInt() ?? 0,
       players: players,
       playerIds: json['player_ids'] is List
@@ -278,6 +308,21 @@ class NardyGameView {
       myIndex: (json['my_index'] as num?)?.toInt() ?? -1,
       isMyTurn: json['is_my_turn'] == true,
       needsRoll: json['needs_roll'] == true,
+      canUndo: json['can_undo'] == true,
+      turnComplete: json['turn_complete'] == true,
+      currentTurn: json['current_turn'] is List
+          ? (json['current_turn'] as List)
+              .whereType<Map>()
+              .map((e) => NardyPlayedMove.fromJson(e.cast<String, dynamic>()))
+              .toList()
+          : const <NardyPlayedMove>[],
+      lastTurn: json['last_turn'] is List
+          ? (json['last_turn'] as List)
+              .whereType<Map>()
+              .map((e) => NardyTurnMove.fromJson(e.cast<String, dynamic>()))
+              .toList()
+          : const <NardyTurnMove>[],
+      lastTurnSeat: (json['last_turn_seat'] as num?)?.toInt() ?? -1,
       turnTimeSec: (json['turn_time_sec'] as num?)?.toInt() ?? 0,
       turnDeadline: (json['turn_deadline'] as num?)?.toInt() ?? 0,
       stakeBronze: (json['stake_bronze'] as num?)?.toInt() ?? 2,
@@ -489,6 +534,8 @@ class NardyRepository {
       });
 
   Future<void> endTurn(String gameId) => _move(gameId, {'action': 'end_turn'});
+
+  Future<void> undo(String gameId) => _move(gameId, {'action': 'undo'});
 
   Future<void> _move(String gameId, Map<String, dynamic> body) async {
     if (OfflineNardyRegistry.instance.isOffline(gameId)) {

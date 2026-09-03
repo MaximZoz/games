@@ -726,6 +726,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nardySkipTurn => 'Salta il turno';
 
   @override
+  String get nardyUndoMove => 'Annulla';
+
+  @override
+  String get nardyDoneTurn => 'Fatto';
+
+  @override
   String get nardyNoMoves => 'Nessuna mossa — salta il turno';
 
   @override

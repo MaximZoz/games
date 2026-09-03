@@ -273,6 +273,8 @@
   "rulesNardyWin": "Νικά όποιος βγάλει πρώτος όλα τα πούλια.",
   "nardyRoll": "Ρίξε",
   "nardySkipTurn": "Παράλειψη σειράς",
+  "nardyUndoMove": "Αναίρεση",
+  "nardyDoneTurn": "Έτοιμο",
   "nardyNoMoves": "Καμία κίνηση — παραλείψτε τη σειρά",
   "nardyYourRoll": "Η ζαριά σας",
   "nardyPipsShort": "Απομένουν:",

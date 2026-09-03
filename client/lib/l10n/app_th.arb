@@ -273,6 +273,8 @@
   "rulesNardyWin": "ผู้ที่นำหมากออกครบก่อนชนะ",
   "nardyRoll": "ทอยลูกเต๋า",
   "nardySkipTurn": "ข้ามตา",
+  "nardyUndoMove": "ย้อนกลับ",
+  "nardyDoneTurn": "เสร็จ",
   "nardyNoMoves": "ไม่มีตาเดิน — ข้ามตา",
   "nardyYourRoll": "การทอยของคุณ",
   "nardyPipsShort": "เหลือ:",

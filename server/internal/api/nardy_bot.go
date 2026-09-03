@@ -57,31 +57,7 @@ func (h *GamesHandler) scheduleNardyBotAct(gameID string) {
 
 // nardyPlayBotTurn играет ровно один ход бота целиком.
 func nardyPlayBotTurn(state *nardy.Game) {
-	if state == nil || nardyIsOver(state) {
-		return
-	}
-	rng := nardyRNG()
-	seat := state.Turn
-	if len(state.Dice) == 0 {
-		if err := state.Roll(rng); err != nil {
-			return
-		}
-	}
-	// Каждый ход снимает кубик, поэтому цикл конечен; лимит — страховка.
-	for step := 0; step < 8; step++ {
-		if nardyIsOver(state) || state.Turn != seat || len(state.Dice) == 0 {
-			return
-		}
-		mv, ok := nardy.BotBestMove(state, rng)
-		if !ok {
-			state.EndTurn()
-			return
-		}
-		if err := state.ApplyMove(seat, mv); err != nil {
-			state.EndTurn()
-			return
-		}
-	}
+	nardy.PlayBotTurn(state, nardyRNG())
 }
 
 // applyNardyTurnTimeout — просроченный ход засчитывается как поражение.
@@ -115,7 +91,13 @@ func (h *GamesHandler) applyNardyTurnTimeout(
 		return
 	}
 	timedOutID := players[state.Turn]
-	state.Forfeit(state.Turn)
+	if state.TurnComplete() && state.CanUndo() {
+		// Кубики отыграны, не хватило только подтверждения — не засчитываем
+		// поражение, просто закрываем ход.
+		state.EndTurn()
+	} else {
+		state.Forfeit(state.Turn)
+	}
 	h.saveNardyState(ctx, gameID, fresh, state)
 	fresh["timeout"] = "1"
 	h.Rdb.HSet(ctx, "game:"+gameID, "timeout", "1")

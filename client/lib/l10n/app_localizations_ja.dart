@@ -726,6 +726,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nardySkipTurn => '手番をパス';
 
   @override
+  String get nardyUndoMove => '戻す';
+
+  @override
+  String get nardyDoneTurn => '完了';
+
+  @override
   String get nardyNoMoves => '動かせません — 手番をパス';
 
   @override

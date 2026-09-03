@@ -726,6 +726,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nardySkipTurn => 'Bỏ lượt';
 
   @override
+  String get nardyUndoMove => 'Hoàn tác';
+
+  @override
+  String get nardyDoneTurn => 'Xong';
+
+  @override
   String get nardyNoMoves => 'Không có nước đi — bỏ lượt';
 
   @override
