@@ -82,6 +82,16 @@ void main() {
     });
   });
 
+  group('durakFirstLeadShowsBannerCard', () {
+    test('в альбоме мини-карта не нужна — достаточно надписи и анимации', () {
+      expect(durakFirstLeadShowsBannerCard(compact: true), isFalse);
+    });
+
+    test('в портрете мини-карта тоже не рисуется', () {
+      expect(durakFirstLeadShowsBannerCard(compact: false), isFalse);
+    });
+  });
+
   group('durakFinishedChrome', () {
     test('партия — обычный стол', () {
       expect(
