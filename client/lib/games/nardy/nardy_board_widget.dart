@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
@@ -23,7 +24,7 @@ const Color _kTarget = Color(0xFF56E39F);
 const Color _kLastMove = Color(0xFF6EC6FF);
 
 /// Доска нард глазами игрока с плавным переездом шашек.
-class NardyBoard extends StatelessWidget {
+class NardyBoard extends StatefulWidget {
   const NardyBoard({
     super.key,
     required this.game,
@@ -35,6 +36,10 @@ class NardyBoard extends StatelessWidget {
     required this.onTrackTap,
     required this.onBarTap,
     required this.onBearOffTap,
+    required this.canDragFrom,
+    required this.onDragStart,
+    required this.onDragEnd,
+    this.dragCancel,
   });
 
   final NardyGameView game;
@@ -56,7 +61,31 @@ class NardyBoard extends StatelessWidget {
   final VoidCallback onBarTap;
   final VoidCallback onBearOffTap;
 
+  /// С этого пункта шашку можно потащить.
+  final bool Function(int track) canDragFrom;
+
+  /// Начался перенос шашки с пункта [track] — показать подсветку целей.
+  final void Function(int track) onDragStart;
+
+  /// Шашку отпустили: [track] — пункт под пальцем, [nardyPoints] — зона снятия,
+  /// `null` — мимо доски.
+  final void Function(int? track) onDragEnd;
+
+  /// Перенос отменён (жест прерван).
+  final VoidCallback? dragCancel;
+
   static const Duration moveDuration = Duration(milliseconds: 420);
+
+  @override
+  State<NardyBoard> createState() => _NardyBoardState();
+}
+
+class _NardyBoardState extends State<NardyBoard> {
+  /// Пункт, с которого сейчас тащат шашку.
+  int? _dragTrack;
+  Offset? _dragPosition;
+
+  NardyGameView get game => widget.game;
 
   bool get _showBar => !game.isLong;
 
@@ -84,10 +113,21 @@ class NardyBoard extends StatelessWidget {
         final lastMove = _lastMoveTracks;
         final mySeat = game.myIndex < 0 ? 0 : game.myIndex;
         final oppSeat = game.myIndex < 0 ? 1 : game.opponentIndex;
+        final diameter = geometry.checkerSize;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
+          // Тащим от точки касания, а не от места, где жест «выиграл арену»:
+          // иначе шашка берётся с соседнего пункта.
+          dragStartBehavior: DragStartBehavior.down,
           onTapUp: (details) => _handleTap(geometry, details.localPosition),
+          onPanStart: (details) => _startDrag(geometry, details.localPosition),
+          onPanUpdate: (details) {
+            if (_dragTrack == null) return;
+            setState(() => _dragPosition = details.localPosition);
+          },
+          onPanEnd: (_) => _finishDrag(geometry),
+          onPanCancel: _cancelDrag,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: _kBoardBg,
@@ -107,11 +147,11 @@ class NardyBoard extends StatelessWidget {
                   child: CustomPaint(
                     painter: _BoardPainter(
                       geometry: geometry,
-                      selectedTrack: selectedTrack,
-                      targetTracks: targetTracks,
+                      selectedTrack: widget.selectedTrack,
+                      targetTracks: widget.targetTracks,
                       lastMoveTracks: lastMove,
-                      undoTracks: undoTracks,
-                      canBearOff: canBearOff,
+                      undoTracks: widget.undoTracks,
+                      canBearOff: widget.canBearOff,
                       showBar: _showBar,
                     ),
                   ),
@@ -119,6 +159,19 @@ class NardyBoard extends StatelessWidget {
                 ..._buildCheckers(geometry, oppSeat, mine: false),
                 ..._buildCheckers(geometry, mySeat, mine: true),
                 ..._buildTrayLabels(geometry, mySeat, oppSeat),
+                if (_dragPosition != null)
+                  Positioned(
+                    left: _dragPosition!.dx - diameter / 2,
+                    top: _dragPosition!.dy - diameter / 2,
+                    width: diameter,
+                    height: diameter,
+                    child: IgnorePointer(
+                      child: Transform.scale(
+                        scale: 1.15,
+                        child: _Checker(mine: true, diameter: diameter),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -127,33 +180,77 @@ class NardyBoard extends StatelessWidget {
     );
   }
 
+  void _startDrag(NardyBoardGeometry geometry, Offset position) {
+    final track = _showBar && geometry.barRect.contains(position)
+        ? nardyBarTrack
+        : geometry.trackAt(position);
+    if (track == null || !widget.canDragFrom(track)) return;
+    setState(() {
+      _dragTrack = track;
+      _dragPosition = position;
+    });
+    widget.onDragStart(track);
+  }
+
+  void _finishDrag(NardyBoardGeometry geometry) {
+    final position = _dragPosition;
+    final from = _dragTrack;
+    setState(() {
+      _dragTrack = null;
+      _dragPosition = null;
+    });
+    if (from == null || position == null) return;
+    if (geometry.trayRect.contains(position)) {
+      widget.onDragEnd(nardyPoints);
+      return;
+    }
+    widget.onDragEnd(geometry.trackAt(position));
+  }
+
+  void _cancelDrag() {
+    if (_dragTrack == null && _dragPosition == null) return;
+    setState(() {
+      _dragTrack = null;
+      _dragPosition = null;
+    });
+    widget.dragCancel?.call();
+  }
+
   List<Widget> _buildCheckers(
     NardyBoardGeometry geometry,
     int seat, {
     required bool mine,
   }) {
-    final spots = tracker.spotsFor(game, seat);
+    final spots = widget.tracker.spotsFor(game, seat);
     final diameter = geometry.checkerSize;
     return [
       for (final spot in spots)
-        AnimatedPositioned(
-          key: ValueKey('nardy-checker-$seat-${spot.id}'),
-          duration: moveDuration,
-          curve: Curves.easeOutCubic,
-          left: _centerOf(geometry, spot, mine: mine).dx - diameter / 2,
-          top: _centerOf(geometry, spot, mine: mine).dy - diameter / 2,
-          width: diameter,
-          height: diameter,
-          child: IgnorePointer(
-            child: _Checker(
-              mine: mine,
-              diameter: diameter,
-              label: _stackLabel(spot),
-              dimmed: spot.isOff,
+        if (!_hiddenWhileDragging(spot, mine: mine))
+          AnimatedPositioned(
+            key: ValueKey('nardy-checker-$seat-${spot.id}'),
+            duration: NardyBoard.moveDuration,
+            curve: Curves.easeOutCubic,
+            left: _centerOf(geometry, spot, mine: mine).dx - diameter / 2,
+            top: _centerOf(geometry, spot, mine: mine).dy - diameter / 2,
+            width: diameter,
+            height: diameter,
+            child: IgnorePointer(
+              child: _Checker(
+                mine: mine,
+                diameter: diameter,
+                label: _stackLabel(spot),
+                dimmed: spot.isOff,
+              ),
             ),
           ),
-        ),
     ];
+  }
+
+  /// Верхняя шашка стопки едет за пальцем — из стопки её убираем.
+  bool _hiddenWhileDragging(NardyCheckerSpot spot, {required bool mine}) {
+    if (!mine || _dragTrack == null) return false;
+    if (spot.track != _dragTrack) return false;
+    return spot.index == spot.stackSize - 1;
   }
 
   Offset _centerOf(
@@ -221,15 +318,15 @@ class NardyBoard extends StatelessWidget {
 
   void _handleTap(NardyBoardGeometry geometry, Offset position) {
     if (geometry.trayRect.contains(position)) {
-      onBearOffTap();
+      widget.onBearOffTap();
       return;
     }
     if (_showBar && geometry.barRect.contains(position)) {
-      onBarTap();
+      widget.onBarTap();
       return;
     }
     final track = geometry.trackAt(position);
-    if (track != null) onTrackTap(track);
+    if (track != null) widget.onTrackTap(track);
   }
 }
 

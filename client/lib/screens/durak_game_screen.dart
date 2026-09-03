@@ -5029,15 +5029,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: 48,
+          leadingWidth: gameAppBarLeadingWidth(),
           centerTitle: true,
           titleSpacing: 0,
           // Крестик на одной линии с «правилами» (как в 1×1).
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            icon: const Icon(Icons.close_rounded),
-            onPressed: _busy ? null : _onClosePressed,
+          leading: buildGameAppBarLeading(
+            onClose: _busy ? null : _onClosePressed,
           ),
           title: Text(context.l10n.gamesDurak),
           actions: view == null
