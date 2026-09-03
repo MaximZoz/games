@@ -3,6 +3,8 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Из партии в сообщениях остаются звук стола и тик своего хода; бейдж «ваш ход» в меню по-прежнему сигналит
+- Уно в альбоме: подписи «Колода» и «Сброс» помещаются в зелёный овал, а не садятся на его край
 - Покер и другие игры: кнопку своего хода нельзя нажать дважды — повторный клик не шлёт ход и не показывает «Сейчас не ваш ход»
 - Дурак: в портрете раздача кладёт карты в веер по одной после полёта из колоды; подкид без мигания хода, кнопок и карты на столе; победа и реванш — после короткой паузы на последний отбой
 - Деплой на Fly: установка `flyctl` с повторами, без падения `setup-flyctl` на пустом логе
@@ -54,6 +56,8 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Opening Messages from a live table keeps the game sounds and turn-clock ticks; the Games-tab “your turn” badge still alerts
+- Uno in landscape: the Draw / Discard labels stay inside the green oval instead of sitting on its rim
 - Poker and the other tables: you cannot tap your turn action twice — the second click does not send a move or show “It is not your turn”
 - Durak: in portrait the deal seats fan cards one by one after each flight from the deck; a throw no longer flickers turn chrome or the table card; win and rematch wait for a short pause after the last beat
 - Fly deploy: install `flyctl` with retries instead of a silent `setup-flyctl` crash
