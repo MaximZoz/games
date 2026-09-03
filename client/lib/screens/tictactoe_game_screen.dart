@@ -504,16 +504,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: 48,
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 44,
-              minHeight: 44,
-            ),
-            onPressed: goBack,
-            icon: const Icon(Icons.close_rounded),
-          ),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(onClose: goBack),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
             // Multi: «сдаться» в AppBar, чтобы не налезала на блок чата/игроков.

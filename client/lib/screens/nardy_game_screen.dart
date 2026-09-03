@@ -20,6 +20,7 @@ import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
+import 'package:multigames_client/games/nardy/nardy_sfx.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -169,24 +170,47 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       if (selected != null) setState(() => _selectedTrack = null);
       return;
     }
-    final dice = game.diceFrom(track);
-    // Единственный кубик и нечего отменять — ходим сразу, без второго касания.
-    if (dice.length == 1 && (played == null || played.to != track)) {
-      unawaited(_applyMove(NardyMove(track, dice.first)));
-      return;
-    }
+    // Ходим только вторым касанием: первое всегда показывает, куда можно.
     setState(() => _selectedTrack = selected == track ? null : track);
   }
 
   void _onBarTap(NardyGameView game) {
     if (_busy || !game.isMyTurn || game.dice.isEmpty) return;
     if (!game.movableTracks.contains(nardyBarTrack)) return;
-    final dice = game.diceFrom(nardyBarTrack);
-    if (dice.length == 1) {
-      unawaited(_applyMove(NardyMove(nardyBarTrack, dice.first)));
+    setState(() => _selectedTrack =
+        _selectedTrack == nardyBarTrack ? null : nardyBarTrack);
+  }
+
+  /// Шашку с этого пункта можно потащить.
+  bool _canDragFrom(NardyGameView game, int track) {
+    if (_busy || !game.isMyTurn || game.dice.isEmpty) return false;
+    return game.movableTracks.contains(track);
+  }
+
+  /// Шашку отпустили: [track] — пункт, [nardyPoints] — зона снятия.
+  void _onDropOn(NardyGameView game, int? track) {
+    final from = _selectedTrack;
+    if (from == null) return;
+    if (track == null) {
+      setState(() => _selectedTrack = null);
       return;
     }
-    setState(() => _selectedTrack = nardyBarTrack);
+    if (track >= nardyPoints) {
+      final die = _bearOffDie(game, from);
+      if (die != null) {
+        unawaited(_applyMove(NardyMove(from, die)));
+        return;
+      }
+      setState(() => _selectedTrack = null);
+      return;
+    }
+    final mv = _moveTo(game, from, track);
+    if (mv != null) {
+      unawaited(_applyMove(mv));
+      return;
+    }
+    // Бросили мимо — оставляем шашку выбранной, подсветка целей уже видна.
+    if (track != from) setState(() => _selectedTrack = from);
   }
 
   /// Пункты, подсвеченные как «вернуть шашку сюда».
@@ -591,6 +615,22 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     }
     final narrow = isNarrow(context);
 
+    ref.listen(nardyGameProvider(widget.gameId), (previous, next) {
+      final before = previous?.valueOrNull;
+      final after = next.valueOrNull;
+      if (after == null) return;
+      for (final cue in nardySfxCues(before, after)) {
+        switch (cue) {
+          case NardySfxCue.roll:
+            NardySfx.roll();
+          case NardySfxCue.move:
+            NardySfx.move();
+          case NardySfxCue.hit:
+            NardySfx.hit();
+        }
+      }
+    });
+
     final game = gameAsync.valueOrNull;
     return SwipeBackScope(
       onBack: _onClosePressed,
@@ -599,12 +639,9 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            tooltip: context.l10n.gameLeave,
-            icon: const Icon(Icons.close_rounded),
-            onPressed: _busy ? null : () => unawaited(_onClosePressed()),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(
+            onClose: _busy ? null : () => unawaited(_onClosePressed()),
           ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
@@ -713,6 +750,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               onTrackTap: (track) => _onTrackTap(game, track),
               onBarTap: () => _onBarTap(game),
               onBearOffTap: () => _onBearOffTap(game),
+              canDragFrom: (track) => _canDragFrom(game, track),
+              onDragStart: (track) => setState(() => _selectedTrack = track),
+              onDragEnd: (track) => _onDropOn(game, track),
+              dragCancel: () => setState(() => _selectedTrack = null),
             ),
           ),
         );

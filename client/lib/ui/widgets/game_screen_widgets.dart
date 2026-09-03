@@ -1538,6 +1538,52 @@ class GameStatusLine extends StatelessWidget {
 
 /// Действия в AppBar экрана партии — общий набор для всех игр.
 /// Кнопки показываются только если передан соответствующий колбэк.
+/// Крестик выхода из партии — один и тот же во всех играх.
+///
+/// Держим его отдельным виджетом, чтобы новая игра не изобретала свой размер
+/// и отступы: иначе кнопка съезжает и налезает на игровое поле.
+class GameCloseButton extends StatelessWidget {
+  const GameCloseButton({super.key, required this.onPressed, this.tooltip});
+
+  final VoidCallback? onPressed;
+  final String? tooltip;
+
+  /// Ширина `leading` под один крестик.
+  static const double width = 48;
+
+  /// Ширина `leading`, когда рядом стоит ещё одна кнопка (групповой чат).
+  static const double widthWithExtra = 96;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      icon: const Icon(Icons.close_rounded),
+      tooltip: tooltip ?? MaterialLocalizations.of(context).closeButtonTooltip,
+      onPressed: onPressed,
+    );
+  }
+}
+
+/// `leading` игрового AppBar: крестик и, при необходимости, соседняя кнопка.
+Widget buildGameAppBarLeading({
+  required VoidCallback? onClose,
+  String? closeTooltip,
+  Widget? extra,
+}) {
+  final close = GameCloseButton(onPressed: onClose, tooltip: closeTooltip);
+  if (extra == null) return close;
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [close, extra],
+  );
+}
+
+/// Ширина `leading` под крестик игрового AppBar.
+double gameAppBarLeadingWidth({bool withExtra = false}) =>
+    withExtra ? GameCloseButton.widthWithExtra : GameCloseButton.width;
+
 List<Widget> buildGameAppBarActions({
   required BuildContext context,
   VoidCallback? onSurrender,

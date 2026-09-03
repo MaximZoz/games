@@ -67,6 +67,9 @@ void main() {
           onTrackTap: (_) {},
           onBarTap: () {},
           onBearOffTap: () {},
+          canDragFrom: (_) => false,
+          onDragStart: (_) {},
+          onDragEnd: (_) {},
         );
 
     await tester.pumpWidget(_wrap(board(_view(engine))));
@@ -121,6 +124,9 @@ void main() {
           onTrackTap: (_) {},
           onBarTap: () {},
           onBearOffTap: () {},
+          canDragFrom: (_) => false,
+          onDragStart: (_) {},
+          onDragEnd: (_) {},
         );
 
     for (final size in const [Size(360, 620), Size(820, 380)]) {

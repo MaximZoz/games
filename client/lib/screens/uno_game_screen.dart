@@ -1248,23 +1248,18 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: showGroupChat ? 96 : 48,
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: context.l10n.commonBack,
-                onPressed: _onClose,
-                icon: const Icon(Icons.close_rounded),
-              ),
-              if (game != null && showGroupChat)
-                GameIconWithBadge(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  tooltip: context.l10n.chatGroupTooltip,
-                  badge: groupUnread,
-                  onPressed: () => _openGroupChat(game),
-                ),
-            ],
+          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
+          leading: buildGameAppBarLeading(
+            onClose: _onClose,
+            closeTooltip: context.l10n.commonBack,
+            extra: game != null && showGroupChat
+                ? GameIconWithBadge(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    tooltip: context.l10n.chatGroupTooltip,
+                    badge: groupUnread,
+                    onPressed: () => _openGroupChat(game),
+                  )
+                : null,
           ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
