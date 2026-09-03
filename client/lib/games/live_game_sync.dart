@@ -82,6 +82,10 @@ int pokerStreetRank(String street) {
       return 4;
     case 'showdown':
       return 5;
+    case 'over':
+      // Фолд-вина: street=over, isHandOver. Раньше default=0 откатывал
+      // прогресс ниже preflop и отбрасывал снимок — «Фолд» вспыхивал снова.
+      return 6;
     default:
       return 0;
   }
@@ -116,8 +120,47 @@ bool isOlderUno(UnoGameView incoming, UnoGameView current) {
   return incoming.eventSeq < current.eventSeq;
 }
 
-bool isOlderPoker(PokerGameView incoming, PokerGameView current) =>
-    pokerProgress(incoming) < pokerProgress(current);
+bool isOlderPoker(PokerGameView incoming, PokerGameView current) {
+  if (incoming.handNumber != current.handNumber) {
+    return incoming.handNumber < current.handNumber;
+  }
+  // Конец раздачи/стола не должен проигрывать кадру «ещё хожу».
+  if (current.isTableOver && !incoming.isTableOver) return true;
+  if (incoming.isTableOver && !current.isTableOver) return false;
+  if (current.isOver && !incoming.isOver) return true;
+  if (incoming.isOver && !current.isOver) return false;
+  if (current.isHandOver && !incoming.isHandOver) return true;
+  if (incoming.isHandOver && !current.isHandOver) return false;
+  return pokerProgress(incoming) < pokerProgress(current);
+}
+
+/// Кнопки хода: не показывать фолд после своего хода, пока сервер не подтвердил.
+bool pokerShouldKeepActionBarHidden({
+  required bool hideUntilSync,
+  required bool isMyTurn,
+  required bool isHandOver,
+  required bool isOver,
+  required bool meFolded,
+}) {
+  if (!hideUntilSync) return false;
+  if (isOver || isHandOver || meFolded || !isMyTurn) return false;
+  return true;
+}
+
+bool pokerActionBarVisible({
+  required bool isOver,
+  required bool isHandOver,
+  required bool isMyTurn,
+  required bool hasLegalActions,
+  required bool meFolded,
+  required bool hideUntilSync,
+}) =>
+    !isOver &&
+    !isHandOver &&
+    isMyTurn &&
+    hasLegalActions &&
+    !meFolded &&
+    !hideUntilSync;
 
 BattleshipGameView mergeBattleshipMeta(
   BattleshipGameView? previous,

@@ -14,6 +14,7 @@ import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/poker/poker_combo_sheet.dart';
@@ -53,6 +54,8 @@ class PokerGameScreen extends ConsumerStatefulWidget {
 class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     with TickerProviderStateMixin {
   bool _busy = false;
+  /// Ход ушёл на сервер — не возвращать «Фолд», пока снимок не подтвердит.
+  bool _hideActionsUntilSync = false;
   final GameTurnActionLock _turnAction = GameTurnActionLock();
   Timer? _busyWatchdog;
   int _busyStuckTicks = 0;
@@ -448,6 +451,28 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   // ---- moves --------------------------------------------------------------
 
+  bool _showPokerActions(PokerGameView game) {
+    final meFolded = game.me?.folded ?? false;
+    final keepHidden = pokerShouldKeepActionBarHidden(
+      hideUntilSync: _hideActionsUntilSync,
+      isMyTurn: game.isMyTurn,
+      isHandOver: game.isHandOver,
+      isOver: game.isOver,
+      meFolded: meFolded,
+    );
+    if (_hideActionsUntilSync && !keepHidden) {
+      _hideActionsUntilSync = false;
+    }
+    return pokerActionBarVisible(
+      isOver: game.isOver,
+      isHandOver: game.isHandOver,
+      isMyTurn: game.isMyTurn,
+      hasLegalActions: game.legalActions.isNotEmpty,
+      meFolded: meFolded,
+      hideUntilSync: _hideActionsUntilSync,
+    );
+  }
+
   Future<void> _move(
     String type, {
     int? amount,
@@ -476,10 +501,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         type == PokerActionType.allIn) {
       Sfx.play(SfxId.chip);
     }
+    var succeeded = false;
     try {
       await ref
           .read(pokerRepositoryProvider)
           .move(widget.gameId, type: type, amount: amount);
+      succeeded = true;
       if (mounted) {
         ref.invalidate(pokerGameProvider(widget.gameId));
         try {
@@ -487,18 +514,25 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         } catch (_) {}
       }
     } on GamesException catch (e) {
-      if (mounted && !isStaleNotYourTurnError(e)) {
+      if (mounted &&
+          !isStaleNotYourTurnError(e) &&
+          !isStaleGameOverError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } catch (e) {
-      if (mounted && !isStaleNotYourTurnError(e)) {
+      if (mounted &&
+          !isStaleNotYourTurnError(e) &&
+          !isStaleGameOverError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } finally {
       if (acquireLock) _turnAction.release();
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        if (succeeded) _hideActionsUntilSync = true;
+        setState(() => _busy = false);
+      }
     }
   }
 
@@ -1032,10 +1066,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     // Телефон в альбоме: под столом ~330 px — нижние слоты ужимаем, иначе
     // hero наезжает на борд.
     final tight = isPhoneLandscape(context);
-    final showActions = !isOver &&
-        !game.isHandOver &&
-        game.isMyTurn &&
-        game.legalActions.isNotEmpty;
+    final showActions = _showPokerActions(game);
     final showCardsBtn = game.canShowCards && !isOver;
     final iWonHand = game.isHandOver &&
         game.me != null &&
@@ -2667,10 +2698,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final comboAccent = _shouldHighlightCombo(game) || iWonHand;
     // На вскрытии комбинация уже у неймплейта — не дублировать снизу.
     final showBottomCombo = comboLabel != null && !iWonHand;
-    final showActions = !game.isOver &&
-        !game.isHandOver &&
-        game.isMyTurn &&
-        game.legalActions.isNotEmpty;
+    final showActions = _showPokerActions(game);
     final showCardsBtn = game.canShowCards && !game.isOver;
 
     final comboSlot = _comboSlotHeight(tight: tight, hasCombo: showBottomCombo);
