@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Деплой на Fly: установка `flyctl` с повторами, без падения `setup-flyctl` на пустом логе
 - Дурак: после хода карта не вспыхивает в веере (портрет и альбом) — слот-дырка до посадки
 - Хаб игр: приглашение в лобби больше не пропадает и не вспыхивает при переключении «Игры» ↔ «Лобби»
 - Дурак: в переводном бот сразу ходит после перевода; после отбоя пауза перед битой; карта соперника на столе только после посадки
@@ -51,6 +52,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Fly deploy: install `flyctl` with retries instead of a silent `setup-flyctl` crash
 - Durak: a played card no longer flashes in the fan (portrait and landscape) — the slot stays empty until the card lands
 - Games hub: a lobby invite no longer vanishes or flashes when switching between Games and Lobby
 - Durak: in transfer mode the bot replies after a transfer without switching tabs; a short pause shows the beat before discard; opponent cards land before they appear on the table
