@@ -101,17 +101,19 @@ Future<CardFlyTicket> playCardFlyAnimation({
   bool keepAtEnd = false,
   bool playSfx = true,
 }) async {
-  // Не играть поверх чатов/других вкладок shell (IndexedStack держит партию).
-  if (!context.mounted ||
-      !TickerMode.of(context) ||
+  // Картинку полёта не кладём поверх чата; звук партии в сообщениях оставляем.
+  if (!context.mounted) {
+    return CardFlyTicket._(null, null, null);
+  }
+  if (playSfx && GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
+  }
+  if (!TickerMode.of(context) ||
       !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return CardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
-  if (playSfx) {
-    Sfx.play(launchSfx ?? SfxId.cardPlay);
-  }
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);

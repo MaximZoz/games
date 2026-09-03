@@ -1873,15 +1873,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     int count = 3,
     Color color = const Color(0xFFE8C547),
   }) async {
-    if (!mounted ||
-        _disposed ||
-        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+    if (!mounted || _disposed) return;
+    if (GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+      Sfx.play(SfxId.chip);
+    }
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
       return;
     }
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
-    Sfx.play(SfxId.chip);
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     for (var i = 0; i < count; i++) {
@@ -2291,9 +2292,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Future<void> _throwFoldCards(int seat) async {
-    if (!mounted ||
-        _disposed ||
-        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+    if (!mounted || _disposed) return;
+    if (GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+      Sfx.play(SfxId.cardPlay);
+    }
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
       return;
     }
     final from = globalRectOf(_seatKey(seat));
@@ -2301,7 +2304,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     if (from == null || to == null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    Sfx.play(SfxId.cardPlay);
     const cardSize = Size(34, 48);
     for (var i = 0; i < 2; i++) {
       if (!mounted || _disposed) return;

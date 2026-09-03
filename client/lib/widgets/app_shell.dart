@@ -57,6 +57,9 @@ bool _activeGameUsable(ActiveGameItem? active) {
 /// Одноразовый bootstrap в shell (listen без fireImmediately в этой версии Riverpod).
 bool _shellDidBootstrapSession = false;
 
+/// Прошлый путь shell — чтобы поймать уход со стола в сообщения во время хода.
+String? _lastAwaySfxPath;
+
 String? _gameIdFromPath(String path) => gameIdFromGamePath(path);
 
 /// Для unit-тестов навигации таба «Игры».
@@ -182,6 +185,28 @@ Future<void> _announceAwayGameTurn(WidgetRef ref, BuildContext context) async {
   );
 }
 
+/// Уход из партии в сообщения: бейдж меню + notify, часы стола не глушим.
+void _announceLeftBoardToMessages(WidgetRef ref, String path) {
+  final prev = _lastAwaySfxPath;
+  if (prev == path) return;
+  _lastAwaySfxPath = path;
+  final active = ref.read(activeGameProvider).valueOrNull;
+  final isMyTurn = active?.type == 'game' && (active?.isMyTurn ?? false);
+  if (!GameAwaySfx.leftBoardToMessages(
+    previousPath: prev,
+    nextPath: path,
+    gameId: active?.gameId,
+  )) {
+    return;
+  }
+  GameAwaySfx.playIfNeeded(
+    path: path,
+    gameId: active?.gameId,
+    isMyTurn: isMyTurn,
+    leftBoardWhileMyTurn: true,
+  );
+}
+
 class AppShell extends ConsumerWidget {
   const AppShell({
     super.key,
@@ -194,6 +219,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     GameFlyOverlay.syncVisiblePath(path);
+    _announceLeftBoardToMessages(ref, path);
     final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
