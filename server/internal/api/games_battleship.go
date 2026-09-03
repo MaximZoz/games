@@ -1187,6 +1187,7 @@ func (h *GamesHandler) BattleshipRematch(w http.ResponseWriter, r *http.Request)
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	h.trackUserInvites(ctx, lobbyID, []string{oppID})
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	creator, _ := store.GetUserByID(ctx, h.Pool, userID)

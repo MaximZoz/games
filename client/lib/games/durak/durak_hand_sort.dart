@@ -70,6 +70,31 @@ bool durakOpeningDealConcealsFan({
 }) =>
     prevDeckUninitialized && shouldAnimateOpening;
 
+/// Слот в веере до полёта: карта уже в порядке, лицо прячет hidden.
+///
+/// Иначе foldCardIn целится в центр пустого веера, а вся рука вспыхивает
+/// в onHandoff — веер «пропал и появился».
+List<PlayingCard> durakReserveDealFanSlot({
+  required List<PlayingCard> seated,
+  required PlayingCard incoming,
+  int Function(PlayingCard a, PlayingCard b)? compare,
+}) {
+  final next = [
+    for (final c in seated)
+      if (c != incoming) c,
+    incoming,
+  ];
+  if (compare != null) next.sort(compare);
+  return next;
+}
+
+/// После одной карты стартовой раздачи freeze веера не отпускаем.
+bool durakKeepFanFreezeAfterDealBatch({
+  required bool openingDeal,
+  required bool manageBusy,
+}) =>
+    openingDeal || !manageBusy;
+
 /// Свежая партия: руки полные (6+ добор козыря), стол пуст — крутить раздачу.
 bool shouldAnimateDurakOpeningDeal({
   required bool isOver,

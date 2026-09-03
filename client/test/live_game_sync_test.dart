@@ -269,5 +269,111 @@ void main() {
         isTrue,
       );
     });
+
+    test('фолд-вина (street over) не старше preflop той же руки', () {
+      PokerGameView poker({
+        required int hand,
+        required String street,
+        bool handOver = false,
+        bool tableOver = false,
+        bool isOver = false,
+      }) {
+        return PokerGameView(
+          id: 'g',
+          status: isOver ? 'over' : 'active',
+          street: street,
+          lobbyId: '',
+          chatId: null,
+          playerIds: const ['a', 'b'],
+          players: const [],
+          community: const [],
+          pot: 0,
+          currentBet: 0,
+          minRaise: 0,
+          smallBlind: 1,
+          bigBlind: 2,
+          dealerIndex: 0,
+          actingIndex: 0,
+          myIndex: 0,
+          legalActions: const ['fold'],
+          callAmount: 0,
+          minRaiseTo: 0,
+          maxRaiseTo: 0,
+          turnTimeSec: 0,
+          turnDeadline: 0,
+          stakeBronze: 0,
+          winners: const [],
+          winnerIds: const [],
+          isOver: isOver,
+          isForfeit: false,
+          isTimeout: false,
+          handNumber: hand,
+          blindLevel: 1,
+          handsPerLevel: 0,
+          isHandOver: handOver,
+          isTableOver: tableOver,
+          canShowCards: false,
+          myPlace: 0,
+          iAmEliminated: false,
+          eliminatedOrder: const [],
+          myHandRank: null,
+          myHandCards: const [],
+          highlightedCards: const [],
+          winnerHands: const [],
+        );
+      }
+
+      final preflop = poker(hand: 3, street: 'preflop');
+      final foldWin = poker(hand: 3, street: 'over', handOver: true);
+      expect(pokerStreetRank('over'), 6);
+      expect(isOlderPoker(foldWin, preflop), isFalse);
+      expect(isOlderPoker(preflop, foldWin), isTrue);
+      expect(pokerProgress(foldWin), greaterThan(pokerProgress(preflop)));
+    });
+
+    test('кнопки хода не возвращаются после своего фолда', () {
+      expect(
+        pokerShouldKeepActionBarHidden(
+          hideUntilSync: true,
+          isMyTurn: true,
+          isHandOver: false,
+          isOver: false,
+          meFolded: false,
+        ),
+        isTrue,
+      );
+      expect(
+        pokerShouldKeepActionBarHidden(
+          hideUntilSync: true,
+          isMyTurn: true,
+          isHandOver: true,
+          isOver: false,
+          meFolded: false,
+        ),
+        isFalse,
+      );
+      expect(
+        pokerActionBarVisible(
+          isOver: false,
+          isHandOver: false,
+          isMyTurn: true,
+          hasLegalActions: true,
+          meFolded: false,
+          hideUntilSync: true,
+        ),
+        isFalse,
+      );
+      expect(
+        pokerActionBarVisible(
+          isOver: false,
+          isHandOver: true,
+          isMyTurn: false,
+          hasLegalActions: true,
+          meFolded: false,
+          hideUntilSync: false,
+        ),
+        isFalse,
+      );
+    });
   });
 }

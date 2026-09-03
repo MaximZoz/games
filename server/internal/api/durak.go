@@ -1639,6 +1639,7 @@ func (h *GamesHandler) DurakRematch(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	// game_invite всем приглашённым.

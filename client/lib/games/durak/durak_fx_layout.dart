@@ -286,9 +286,9 @@ Size durakOpponentFanFlightSize(
   );
 }
 
-/// Раздача в альбоме чуть длиннее: иначе 160 ms не видно за рейлом.
+/// Раздача: достаточно длинная, чтобы слот в веере читался, без паузы.
 Duration durakDealFlyDuration({required bool compact}) =>
-    Duration(milliseconds: compact ? 220 : 160);
+    Duration(milliseconds: compact ? 260 : 240);
 
 /// Вернулись с другой вкладки на стол — снять застрявшие полёты.
 bool shouldSnapDurakVisualOnResume({
@@ -328,7 +328,27 @@ bool durakVisualLooksStuck({
     remoteFlightActive;
 
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
-int durakStuckSnapTicks({required bool compact}) => compact ? 1 : 3;
+/// Раздача живёт дольше 2 с — не режем её одним тиком.
+int durakStuckSnapTicks({
+  required bool compact,
+  bool openingDeal = false,
+}) {
+  if (openingDeal) return 5;
+  return compact ? 2 : 3;
+}
+
+/// Кнопка «Бито»/«Взять» не прячется из-за полёта — только из-за жеста в веере.
+bool durakActionChromeVisible({
+  required bool liveCanShow,
+  required bool holdingFanCard,
+}) =>
+    liveCanShow && !holdingFanCard;
+
+/// Overlay полёта на стол снимать после того, как лицо уже в слоте.
+bool durakRevealTableBeforeDismissOverlay({
+  required bool tableCardVisible,
+}) =>
+    tableCardVisible;
 
 /// Добор из колоды: в веере нет карты, пока она ещё pending.
 ///

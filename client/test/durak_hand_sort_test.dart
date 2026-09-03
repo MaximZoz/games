@@ -120,6 +120,33 @@ void main() {
       );
     });
 
+    test('добор: слот в веере до полёта, сортировка на месте', () {
+      const seated = PlayingCard(Rank.six, Suit.clubs);
+      const incoming = PlayingCard(Rank.seven, Suit.hearts);
+      expect(
+        durakReserveDealFanSlot(
+          seated: const [seated],
+          incoming: incoming,
+          compare: (a, b) => compareDurakHandCards(a, b, Suit.hearts),
+        ),
+        const [seated, incoming],
+      );
+      expect(
+        durakKeepFanFreezeAfterDealBatch(
+          openingDeal: true,
+          manageBusy: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepFanFreezeAfterDealBatch(
+          openingDeal: false,
+          manageBusy: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('после базы колоды веер не прячем этим флагом', () {
       expect(
         durakOpeningDealConcealsFan(

@@ -843,6 +843,7 @@ func (h *GamesHandler) createUnoInviteLobby(
 	if _, err := pipe.Exec(ctx); err != nil {
 		return "", err
 	}
+	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, creatorID, lobbyID)
 	if maxPlayers > 2 {
 		if chatID, err := store.EnsureGameGroupChat(

@@ -30,4 +30,22 @@ void main() {
       );
     });
   });
+
+  group('isStaleGameOverError', () {
+    test('ловит ключ и русский текст', () {
+      expect(
+        isStaleGameOverError(
+          GamesException(400, 'Игра окончена', errorKey: 'game is over'),
+        ),
+        isTrue,
+      );
+      expect(
+        isStaleGameOverError(
+          GamesException(400, 'Эта игра уже закончилась.'),
+        ),
+        isTrue,
+      );
+      expect(isStaleGameOverError(GamesException(400, 'not your turn')), isFalse);
+    });
+  });
 }

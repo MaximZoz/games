@@ -108,6 +108,39 @@ bool gameInviteListsVisuallySame(List<GameInvite> a, List<GameInvite> b) {
   return true;
 }
 
+/// Сверка с сервером, если WS-кадр приглашения потерялся.
+const Duration kGameInvitesReconcileInterval = Duration(seconds: 5);
+
+/// Карточка с WS не стирается сразу, если GET ещё пустой (гонка / SCAN).
+const Duration kGameInviteHydrateGrace = Duration(seconds: 20);
+
+/// Сервер — база; локальные инвайты держим, если пришли во время GET
+/// или ещё в grace-окне после WS.
+List<GameInvite> mergeHydratedGameInvites({
+  required List<GameInvite> snapshot,
+  required List<GameInvite> current,
+  required List<GameInvite> fromServer,
+  required Map<String, DateTime> localSeenAt,
+  required DateTime now,
+  Duration grace = kGameInviteHydrateGrace,
+}) {
+  final next = List<GameInvite>.of(fromServer);
+  final serverIds = {for (final inv in next) inv.lobbyId};
+  for (final inv in current) {
+    if (serverIds.contains(inv.lobbyId)) continue;
+    final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
+    if (!wasKnown) {
+      next.add(inv);
+      continue;
+    }
+    final seen = localSeenAt[inv.lobbyId];
+    if (seen != null && now.difference(seen) < grace) {
+      next.add(inv);
+    }
+  }
+  return next;
+}
+
 final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
@@ -119,6 +152,7 @@ final gameInvitesProvider =
     unawaited(
       notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
     );
+    notifier.startPolling(() => ref.read(gamesRepositoryProvider));
   }
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(
@@ -207,22 +241,39 @@ final gameInvitesProvider =
 class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   GameInvitesNotifier() : super(const []);
 
+  final Map<String, DateTime> _localSeenAt = {};
+  Timer? _poll;
+
+  void startPolling(GamesRepository Function() repo) {
+    _poll?.cancel();
+    _poll = Timer.periodic(kGameInvitesReconcileInterval, (_) {
+      unawaited(hydrateFromServer(repo()));
+    });
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
   void add(GameInvite invite) {
+    _localSeenAt[invite.lobbyId] = DateTime.now();
     if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
     state = [...state, invite];
   }
 
   /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
   /// Сервер — источник истины для уже известных карточек; WS-инвайты,
-  /// пришедшие во время запроса, сохраняем.
+  /// пришедшие во время запроса или в grace-окне, сохраняем.
   Future<void> hydrateFromServer(GamesRepository repo) async {
     try {
       final snapshot = List<GameInvite>.of(state);
       final raw = await repo.listPendingInvites();
-      final next = <GameInvite>[];
+      final fromServer = <GameInvite>[];
       for (final m in raw) {
         final lobbyId = m['lobby_id']?.toString() ?? '';
-        if (lobbyId.isEmpty || next.any((i) => i.lobbyId == lobbyId)) {
+        if (lobbyId.isEmpty || fromServer.any((i) => i.lobbyId == lobbyId)) {
           continue;
         }
         final gameType = m['game_type']?.toString() ?? 'tictactoe';
@@ -232,7 +283,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
             ? variantFromLegacyGrid(legacyGrid)
             : parseVariant(rawVariant);
         final cfg = configForVariant(variant);
-        next.add(GameInvite(
+        fromServer.add(GameInvite(
           lobbyId: lobbyId,
           creatorId: m['creator_id']?.toString() ?? '',
           creatorName: localizeDisplayName(m['creator_name']?.toString()),
@@ -250,24 +301,33 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
           durakMode: m['game_mode']?.toString() ?? 'podkidnoi',
         ));
       }
-      final serverIds = next.map((i) => i.lobbyId).toSet();
-      // Инвайты, пришедшие по WS пока шёл GET — не затирать.
-      for (final inv in state) {
-        final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
-        if (!wasKnown && !serverIds.contains(inv.lobbyId)) {
-          next.add(inv);
-        }
+      final now = DateTime.now();
+      for (final inv in fromServer) {
+        _localSeenAt.putIfAbsent(inv.lobbyId, () => now);
       }
+      final next = mergeHydratedGameInvites(
+        snapshot: snapshot,
+        current: state,
+        fromServer: fromServer,
+        localSeenAt: _localSeenAt,
+        now: now,
+      );
       if (gameInviteListsVisuallySame(state, next)) return;
       state = next;
     } catch (_) {}
   }
 
   void remove(String lobbyId) {
+    _localSeenAt.remove(lobbyId);
     state = state.where((i) => i.lobbyId != lobbyId).toList();
   }
 
   void removeByCreatorId(String creatorId) {
+    for (final inv in state) {
+      if (inv.creatorId == creatorId) {
+        _localSeenAt.remove(inv.lobbyId);
+      }
+    }
     state = state.where((i) => i.creatorId != creatorId).toList();
   }
 
@@ -280,12 +340,18 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
       return;
     }
     final creatorId = match.first.creatorId;
+    for (final inv in state) {
+      if (inv.lobbyId == lobbyId || inv.creatorId == creatorId) {
+        _localSeenAt.remove(inv.lobbyId);
+      }
+    }
     state = state
         .where((i) => i.lobbyId != lobbyId && i.creatorId != creatorId)
         .toList();
   }
 
   void clear() {
+    _localSeenAt.clear();
     state = [];
   }
 }
