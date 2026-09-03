@@ -338,6 +338,36 @@ bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
 /// Пауза после посадки отбоя, чтобы было видно чем отбились, затем стол в биту.
 const Duration kDurakBitoAfterDefensePause = Duration(milliseconds: 900);
 
+/// После последнего отбоя стол ещё виден, потом победа и реванш.
+const Duration kDurakFinishAfterLastTrickPause = Duration(milliseconds: 900);
+
+/// Итог и «Повторить» — только когда пауза после последнего трюка прошла.
+bool durakFinishChromeVisible({
+  required bool isOver,
+  required bool finishReady,
+}) =>
+    isOver && finishReady;
+
+/// Партия только что кончилась на этом экране — ждём посадку и паузу.
+bool durakFinishHoldNeeded({
+  required bool isOver,
+  required bool finishReady,
+  required bool alreadyScheduled,
+}) {
+  if (!isOver || finishReady || alreadyScheduled) return false;
+  return true;
+}
+
+/// Открыли уже завершённую партию — реванш сразу, без паузы на стол.
+bool durakRevealFinishImmediately({
+  required bool openedAsObserver,
+  required bool firstSnapshotAlreadyOver,
+  required bool flightActive,
+}) {
+  if (openedAsObserver) return true;
+  return firstSnapshotAlreadyOver && !flightActive;
+}
+
 /// Ждать свои и чужие полёты на стол, прежде чем уводить карты в биту.
 bool durakTableReadyForBitoFlight({
   required bool remoteFlying,

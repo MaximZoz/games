@@ -355,6 +355,61 @@ void main() {
       expect(durakDealCardInFanLayout(pendingDeal: false), isTrue);
     });
 
+    test('победа и реванш — после паузы на последний отбой', () {
+      expect(
+        kDurakFinishAfterLastTrickPause.inMilliseconds,
+        greaterThanOrEqualTo(800),
+      );
+      expect(
+        durakFinishChromeVisible(isOver: true, finishReady: false),
+        isFalse,
+      );
+      expect(
+        durakFinishChromeVisible(isOver: true, finishReady: true),
+        isTrue,
+      );
+      expect(
+        durakFinishHoldNeeded(
+          isOver: true,
+          finishReady: false,
+          alreadyScheduled: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakFinishHoldNeeded(
+          isOver: true,
+          finishReady: true,
+          alreadyScheduled: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakRevealFinishImmediately(
+          openedAsObserver: true,
+          firstSnapshotAlreadyOver: false,
+          flightActive: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakRevealFinishImmediately(
+          openedAsObserver: false,
+          firstSnapshotAlreadyOver: true,
+          flightActive: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakRevealFinishImmediately(
+          openedAsObserver: false,
+          firstSnapshotAlreadyOver: false,
+          flightActive: false,
+        ),
+        isFalse,
+      );
+    });
+
     test('в биту — только после посадки отбоя', () {
       expect(kDurakBitoAfterDefensePause.inMilliseconds, greaterThanOrEqualTo(800));
       expect(

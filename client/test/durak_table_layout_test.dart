@@ -158,12 +158,36 @@ void main() {
         isFalse,
       );
       expect(
-        durakNeedsPendingAttackSlot(attackAlreadyOnTable: true),
+        durakNeedsPendingAttackSlot(
+          attackAlreadyOnTable: true,
+          stillFlying: true,
+        ),
         isTrue,
+      );
+      expect(
+        durakNeedsPendingAttackSlot(
+          attackAlreadyOnTable: true,
+          stillFlying: false,
+        ),
+        isFalse,
       );
       expect(
         durakNeedsPendingAttackSlot(attackAlreadyOnTable: false),
         isTrue,
+      );
+      expect(
+        durakHoldTableFxForLocalAttack(
+          optimisticAttack: true,
+          flyingToTable: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakHoldTableFxForLocalAttack(
+          optimisticAttack: false,
+          flyingToTable: false,
+        ),
+        isFalse,
       );
     });
 

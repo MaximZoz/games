@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак: в портрете раздача кладёт карты в веер по одной после полёта из колоды; подкид без мигания хода, кнопок и карты на столе; победа и реванш — после короткой паузы на последний отбой
 - Деплой на Fly: установка `flyctl` с повторами, без падения `setup-flyctl` на пустом логе
 - Дурак: после хода карта не вспыхивает в веере (портрет и альбом) — слот-дырка до посадки
 - Хаб игр: приглашение в лобби больше не пропадает и не вспыхивает при переключении «Игры» ↔ «Лобби»
@@ -52,6 +53,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak: in portrait the deal seats fan cards one by one after each flight from the deck; a throw no longer flickers turn chrome or the table card; win and rematch wait for a short pause after the last beat
 - Fly deploy: install `flyctl` with retries instead of a silent `setup-flyctl` crash
 - Durak: a played card no longer flashes in the fan (portrait and landscape) — the slot stays empty until the card lands
 - Games hub: a lobby invite no longer vanishes or flashes when switching between Games and Lobby

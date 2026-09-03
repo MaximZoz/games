@@ -109,6 +109,53 @@ void main() {
     });
   });
 
+  group('durakOpeningDealConcealsFan', () {
+    test('первый кадр свежей партии прячет веер', () {
+      expect(
+        durakOpeningDealConcealsFan(
+          prevDeckUninitialized: true,
+          shouldAnimateOpening: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('после базы колоды веер не прячем этим флагом', () {
+      expect(
+        durakOpeningDealConcealsFan(
+          prevDeckUninitialized: false,
+          shouldAnimateOpening: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('pending раздачи не даёт дописать руку в пустой order', () {
+      const six = PlayingCard(Rank.six, Suit.clubs);
+      const ace = PlayingCard(Rank.ace, Suit.spades);
+      expect(
+        durakOrderedHandSlots(
+          prevOrder: const [],
+          serverHand: const [six, ace],
+          pendingDeal: {six, ace},
+          leavingHand: const {},
+          holeCards: const {},
+        ),
+        isEmpty,
+      );
+      expect(
+        durakOrderedHandSlots(
+          prevOrder: null,
+          serverHand: const [six, ace],
+          pendingDeal: {six, ace},
+          leavingHand: const {},
+          holeCards: const {},
+        ),
+        isEmpty,
+      );
+    });
+  });
+
   group('shouldAnimateDurakOpeningDeal', () {
     test('fresh 36-card heads-up qualifies', () {
       expect(
