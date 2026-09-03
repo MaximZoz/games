@@ -12,6 +12,7 @@ import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -52,6 +53,7 @@ class PokerGameScreen extends ConsumerStatefulWidget {
 class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     with TickerProviderStateMixin {
   bool _busy = false;
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
   Timer? _busyWatchdog;
   int _busyStuckTicks = 0;
   bool _providerBindingsInitialized = false;
@@ -64,10 +66,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _prevOver = false;
   bool _balanceGainPlayed = false;
   bool _lossChipRevealed = false;
+
   /// Пауза перед итоговым окном — сначала видно карты/борд.
   bool _endDialogReady = false;
   bool _endDialogScheduled = false;
   bool _observeEntered = false;
+
   /// Повторный вход из «Наблюдение» — без анимации/refresh монет.
   bool _openedAsObserver = false;
   bool _openModeCaptured = false;
@@ -88,11 +92,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   final Map<int, bool> _prevFolded = {};
   int _foldHand = -1;
   final List<AnimationController> _chipControllers = [];
+
   /// Фолд со ставкой: уже отправили фишки в банк (не дублировать).
   final Set<int> _foldChipFlownSeats = {};
 
-  bool get _isOffline =>
-      OfflinePokerRegistry.instance.isOffline(widget.gameId);
+  bool get _isOffline => OfflinePokerRegistry.instance.isOffline(widget.gameId);
 
   @override
   void dispose() {
@@ -168,6 +172,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
+          _turnAction.release();
           setState(() => _busy = false);
           if (!_isOffline) {
             ref.invalidate(pokerGameProvider(widget.gameId));
@@ -251,9 +256,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     var kind = p.avatarKind;
     var value = p.avatarValue;
     final me = ref.read(authStateProvider).valueOrNull;
-    if (me != null &&
-        p.id == me.id &&
-        (value == null || value.isEmpty)) {
+    if (me != null && p.id == me.id && (value == null || value.isEmpty)) {
       kind = me.avatarKind;
       value = me.avatarValue;
     }
@@ -445,8 +448,14 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   // ---- moves --------------------------------------------------------------
 
-  Future<void> _move(String type, {int? amount}) async {
-    if (_busy) return;
+  Future<void> _move(
+    String type, {
+    int? amount,
+    bool acquireLock = true,
+  }) async {
+    if (acquireLock && !_turnAction.tryAcquire()) return;
+    _busy = true;
+    if (mounted) setState(() {});
     // Колл/рейз: фишки остаются ставкой у места — в банк НЕ летят.
     // В банк — только сбор улицы (карты открылись) / фолд со ставкой / вскрытие.
     final gameSnap = ref.read(pokerGameProvider(widget.gameId)).valueOrNull ??
@@ -454,9 +463,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             ? OfflinePokerRegistry.instance.get(widget.gameId)?.view
             : null);
     final meSnap = gameSnap?.me;
-    if (meSnap != null &&
-        type == PokerActionType.fold &&
-        meSnap.bet > 0) {
+    if (meSnap != null && type == PokerActionType.fold && meSnap.bet > 0) {
       _foldChipFlownSeats.add(meSnap.seat);
       unawaited(
         _flyChips(fromKey: _seatKey(meSnap.seat), toKey: _tableChipsKey),
@@ -469,139 +476,150 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         type == PokerActionType.allIn) {
       Sfx.play(SfxId.chip);
     }
-    setState(() => _busy = true);
     try {
       await ref
           .read(pokerRepositoryProvider)
           .move(widget.gameId, type: type, amount: amount);
-      if (!_isOffline && mounted) {
+      if (mounted) {
         ref.invalidate(pokerGameProvider(widget.gameId));
+        try {
+          await ref.read(pokerGameProvider(widget.gameId).future);
+        } catch (_) {}
       }
     } on GamesException catch (e) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } finally {
+      if (acquireLock) _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _openRaiseSheet(PokerGameView game) async {
-    final minTo = game.minRaiseTo;
-    final maxTo = game.maxRaiseTo;
-    if (maxTo <= 0) return;
-    if (minTo >= maxTo) {
-      // Единственный вариант — ва-банк.
-      await _move(PokerActionType.allIn);
-      return;
-    }
-    final step = game.bigBlind > 0 ? game.bigBlind : 1;
-    var value = minTo;
-    final chosen = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (ctx, setSheet) {
-            final divisions = math.max(1, ((maxTo - minTo) / step).ceil());
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: GradientCard(
-                  animate: false,
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        ctx.l10n.pokerRaiseTitle,
-                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        ctx.l10n.pokerRaiseTo(value),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.accentStart,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Slider(
-                        min: minTo.toDouble(),
-                        max: maxTo.toDouble(),
-                        divisions: divisions,
-                        value: value.toDouble().clamp(
-                              minTo.toDouble(),
-                              maxTo.toDouble(),
-                            ),
-                        activeColor: AppColors.accentStart,
-                        label: '$value',
-                        onChanged: (v) => setSheet(() {
-                          final snapped = (v / step).round() * step;
-                          value = snapped.clamp(minTo, maxTo);
-                        }),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('$minTo',
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary)),
-                          Text('$maxTo',
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(ctx).pop(),
-                              child: Text(ctx.l10n.commonCancel),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () => Navigator.of(ctx).pop(value),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accentStart,
-                                foregroundColor: Colors.white,
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    if (mounted) setState(() {});
+    try {
+      final minTo = game.minRaiseTo;
+      final maxTo = game.maxRaiseTo;
+      if (maxTo <= 0) return;
+      if (minTo >= maxTo) {
+        // Единственный вариант — ва-банк.
+        await _move(PokerActionType.allIn, acquireLock: false);
+        return;
+      }
+      final step = game.bigBlind > 0 ? game.bigBlind : 1;
+      var value = minTo;
+      final chosen = await showModalBottomSheet<int>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (ctx, setSheet) {
+              final divisions = math.max(1, ((maxTo - minTo) / step).ceil());
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GradientCard(
+                    animate: false,
+                    margin: EdgeInsets.zero,
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          ctx.l10n.pokerRaiseTitle,
+                          style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
                               ),
-                              child: Text(ctx.l10n.pokerRaise),
-                            ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          ctx.l10n.pokerRaiseTo(value),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.accentStart,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        Slider(
+                          min: minTo.toDouble(),
+                          max: maxTo.toDouble(),
+                          divisions: divisions,
+                          value: value.toDouble().clamp(
+                                minTo.toDouble(),
+                                maxTo.toDouble(),
+                              ),
+                          activeColor: AppColors.accentStart,
+                          label: '$value',
+                          onChanged: (v) => setSheet(() {
+                            final snapped = (v / step).round() * step;
+                            value = snapped.clamp(minTo, maxTo);
+                          }),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('$minTo',
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary)),
+                            Text('$maxTo',
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                child: Text(ctx.l10n.commonCancel),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () => Navigator.of(ctx).pop(value),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.accentStart,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(ctx.l10n.pokerRaise),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
-    if (chosen == null || !mounted) return;
-    if (chosen >= maxTo) {
-      await _move(PokerActionType.allIn);
-    } else {
-      await _move(PokerActionType.raise, amount: chosen);
+              );
+            },
+          );
+        },
+      );
+      if (chosen == null || !mounted) return;
+      if (chosen >= maxTo) {
+        await _move(PokerActionType.allIn, acquireLock: false);
+      } else {
+        await _move(PokerActionType.raise, amount: chosen, acquireLock: false);
+      }
+    } finally {
+      _turnAction.release();
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -751,8 +769,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         } catch (_) {}
         if (!mounted) return;
       }
-      final result =
-          await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
+      final result = await ref.read(pokerRepositoryProvider).joinLobby(lobbyId);
       if (!mounted) return;
       clearBlockingGamePin(ref);
       if (result.gameId != null && result.gameId!.isNotEmpty) {
@@ -868,7 +885,10 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     ref.listen(pokerGameProvider(widget.gameId), (_, next) {
       final game = next.valueOrNull;
       if (game == null) return;
-      if (game.iAmEliminated && !_observeEntered && !game.isOver && !_isOffline) {
+      if (game.iAmEliminated &&
+          !_observeEntered &&
+          !game.isOver &&
+          !_isOffline) {
         _observeEntered = true;
         enterGameObservation(ref, widget.gameId, gameType: 'poker');
         _maybeSettleGame(game);
@@ -982,7 +1002,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               ),
               error: (e, _) => Center(
                 child: Text(
-                  formatUserError(e, fallback: context.l10n.commonServerErrorShort),
+                  formatUserError(e,
+                      fallback: context.l10n.commonServerErrorShort),
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
@@ -1498,9 +1519,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     bool narrow, {
     bool short = false,
   }) {
-    final maxW = short
-        ? (narrow ? 52.0 : 64.0)
-        : (narrow ? 68.0 : 90.0);
+    final maxW = short ? (narrow ? 52.0 : 64.0) : (narrow ? 68.0 : 90.0);
     final minW = short ? 36.0 : 40.0;
     final avail = maxWidth - (narrow ? 12.0 : 40.0);
     var w = (avail - 20.0) / 5;
@@ -1619,9 +1638,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                       )
                     : GameStatusLine(
                         text: status,
-                        highlight: game.isMyTurn &&
-                            !isOver &&
-                            !game.isHandOver,
+                        highlight: game.isMyTurn && !isOver && !game.isHandOver,
                       ),
               ),
             ),
@@ -1699,7 +1716,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       return _emptyCardSlot(cardSize);
     }
     final c = game.community[i];
-    final hl = hasHighlight && highlightKeys.contains(PokerGameView.cardKeyOf(c));
+    final hl =
+        hasHighlight && highlightKeys.contains(PokerGameView.cardKeyOf(c));
     final dim = hasHighlight && !hl;
     return _EntranceCard(
       key: ValueKey('board_${game.handNumber}_${i}_${c.rank}_${c.suit}'),
@@ -1743,8 +1761,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     );
   }
 
-  GlobalKey _seatKey(int seat) =>
-      _seatKeys.putIfAbsent(seat, GlobalKey.new);
+  GlobalKey _seatKey(int seat) => _seatKeys.putIfAbsent(seat, GlobalKey.new);
 
   /// Собранный банк: без текущих ставок активных игроков.
   /// Ставки фолдов уже «в банке» (бейдж ставки у места скрыт).
@@ -1856,15 +1873,16 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     int count = 3,
     Color color = const Color(0xFFE8C547),
   }) async {
-    if (!mounted ||
-        _disposed ||
-        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+    if (!mounted || _disposed) return;
+    if (GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+      Sfx.play(SfxId.chip);
+    }
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
       return;
     }
     final from = globalRectOf(fromKey);
     final to = globalRectOf(toKey);
     if (from == null || to == null) return;
-    Sfx.play(SfxId.chip);
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     for (var i = 0; i < count; i++) {
@@ -1902,15 +1920,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         duration: const Duration(milliseconds: 520),
       );
       _chipControllers.add(controller);
-      final curved = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
-      entry = GameFlyOverlay.insert(overlay, (_) {
+      final curved =
+          CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
+      entry = GameFlyOverlay.insert(
+        overlay,
+        (_) {
           return IgnorePointer(
             child: AnimatedBuilder(
               animation: curved,
               builder: (context, _) {
                 final t = curved.value;
                 final x = from.dx + (to.dx - from.dx) * t;
-                final y = from.dy + (to.dy - from.dy) * t -
+                final y = from.dy +
+                    (to.dy - from.dy) * t -
                     28 * math.sin(math.pi * t);
                 final s = 1.0 - 0.25 * t;
                 return Stack(
@@ -1935,7 +1957,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                                   Color.lerp(color, Colors.black, 0.25)!,
                                 ],
                               ),
-                              border: Border.all(color: Colors.white, width: 1.2),
+                              border:
+                                  Border.all(color: Colors.white, width: 1.2),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.35),
@@ -1981,16 +2004,12 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final dim = p.folded;
 
     // Чужие hole_cards приходят только на showdown или после «Показать карты».
-    final reveal = !p.folded &&
-        p.holeCards != null &&
-        p.holeCards!.length >= 2;
+    final reveal = !p.folded && p.holeCards != null && p.holeCards!.length >= 2;
     final showCards = reveal;
     final holeSize = compact
         ? (narrow ? const Size(36, 50) : const Size(42, 60))
         : (narrow ? const Size(44, 62) : const Size(52, 74));
-    final plateW = compact
-        ? (narrow ? 72.0 : 80.0)
-        : (narrow ? 78.0 : 86.0);
+    final plateW = compact ? (narrow ? 72.0 : 80.0) : (narrow ? 78.0 : 86.0);
     const borderW = 2.0;
 
     // Подсветка карт победителя — из его winner_hand, не из моей комбинации.
@@ -2000,8 +2019,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         for (final c in wh.cards) PokerGameView.cardKeyOf(c),
     };
     final hasOppHl = reveal && isWinner && oppHighlight.isNotEmpty;
-    final winnerCombo =
-        (reveal && isWinner) ? _handRankLabel(wh?.rank) : null;
+    final winnerCombo = (reveal && isWinner) ? _handRankLabel(wh?.rank) : null;
 
     // Непрозрачный фон — иначе на web карты «просвечивают» сквозь неймплейт.
     final namePlate = Container(
@@ -2228,7 +2246,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      Color.lerp(const Color(0xFFE8C547), Colors.white, i * 0.1)!,
+                      Color.lerp(
+                          const Color(0xFFE8C547), Colors.white, i * 0.1)!,
                       const Color(0xFFC9A227),
                     ],
                   ),
@@ -2273,9 +2292,11 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Future<void> _throwFoldCards(int seat) async {
-    if (!mounted ||
-        _disposed ||
-        !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
+    if (!mounted || _disposed) return;
+    if (GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+      Sfx.play(SfxId.cardPlay);
+    }
+    if (!GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
       return;
     }
     final from = globalRectOf(_seatKey(seat));
@@ -2283,7 +2304,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     if (from == null || to == null) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    Sfx.play(SfxId.cardPlay);
     const cardSize = Size(34, 48);
     for (var i = 0; i < 2; i++) {
       if (!mounted || _disposed) return;
@@ -2322,7 +2342,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
       _chipControllers.add(controller);
       final curved =
           CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
-      entry = GameFlyOverlay.insert(overlay, (_) {
+      entry = GameFlyOverlay.insert(
+        overlay,
+        (_) {
           return IgnorePointer(
             child: AnimatedBuilder(
               animation: curved,
@@ -2421,9 +2443,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     final acting = me.isActing && !game.isOver && !game.isHandOver;
     final isWinner = game.isHandOver && _winnerSeats(game).contains(me.seat);
     final dim = me.folded;
-    final plateW = compact
-        ? (narrow ? 72.0 : 80.0)
-        : (narrow ? 78.0 : 86.0);
+    final plateW = compact ? (narrow ? 72.0 : 80.0) : (narrow ? 78.0 : 86.0);
     const borderW = 2.0;
     // Compact GamePlayerAvatar: FramedAvatar size = 36.
     const avatarSize = 36.0;
@@ -2696,7 +2716,9 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     return SizedBox(
       height: height,
       child: FilledButton(
-        onPressed: _busy ? null : () => unawaited(_showCards()),
+        onPressed: (_busy || _turnAction.held)
+            ? null
+            : () => unawaited(_showCards()),
         style: FilledButton.styleFrom(
           backgroundColor: const Color(0xFF3E7CB1),
           foregroundColor: Colors.white,
@@ -2715,24 +2737,29 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Future<void> _showCards() async {
-    if (_busy) return;
-    setState(() => _busy = true);
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    if (mounted) setState(() {});
     try {
       await ref.read(pokerRepositoryProvider).showCards(widget.gameId);
-      if (!_isOffline && mounted) {
+      if (mounted) {
         ref.invalidate(pokerGameProvider(widget.gameId));
+        try {
+          await ref.read(pokerGameProvider(widget.gameId).future);
+        } catch (_) {}
       }
     } on GamesException catch (e) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(e)) {
         showAppSnackBar(context,
             message: formatUserError(e), kind: AppSnackKind.error);
       }
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -2803,14 +2830,18 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           label: l10n.pokerFold,
           color: const Color(0xFFB0384A),
           height: buttonHeight,
-          onTap: _busy ? null : () => unawaited(_move(PokerActionType.fold)),
+          onTap: (_busy || _turnAction.held)
+              ? null
+              : () => unawaited(_move(PokerActionType.fold)),
         ),
       if (canCheck)
         _actionButton(
           label: l10n.pokerCheck,
           height: buttonHeight,
           color: const Color(0xFF3E7CB1),
-          onTap: _busy ? null : () => unawaited(_move(PokerActionType.check)),
+          onTap: (_busy || _turnAction.held)
+              ? null
+              : () => unawaited(_move(PokerActionType.check)),
         ),
       if (canCall)
         _actionButton(
@@ -2819,21 +2850,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               : l10n.pokerCallShort,
           height: buttonHeight,
           color: const Color(0xFF3E7CB1),
-          onTap: _busy ? null : () => unawaited(_move(PokerActionType.call)),
+          onTap: (_busy || _turnAction.held)
+              ? null
+              : () => unawaited(_move(PokerActionType.call)),
         ),
       if (canRaise)
         _actionButton(
           label: l10n.pokerRaise,
           height: buttonHeight,
           color: AppColors.accentStart,
-          onTap: _busy ? null : () => unawaited(_openRaiseSheet(game)),
+          onTap: (_busy || _turnAction.held)
+              ? null
+              : () => unawaited(_openRaiseSheet(game)),
         ),
       if (canAllIn)
         _actionButton(
           label: l10n.pokerAllIn,
           height: buttonHeight,
           color: const Color(0xFFC9782B),
-          onTap: _busy ? null : () => unawaited(_move(PokerActionType.allIn)),
+          onTap: (_busy || _turnAction.held)
+              ? null
+              : () => unawaited(_move(PokerActionType.allIn)),
         ),
     ];
 
@@ -2979,7 +3016,8 @@ class _TableChipStack extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color.lerp(const Color(0xFFE8C547), Colors.white, i * 0.08)!,
+                      Color.lerp(
+                          const Color(0xFFE8C547), Colors.white, i * 0.08)!,
                       Color.lerp(const Color(0xFFC9A227), Colors.black, 0.2)!,
                     ],
                   ),

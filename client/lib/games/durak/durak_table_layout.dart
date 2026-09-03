@@ -117,7 +117,19 @@ bool durakTableDefenseHiddenDuringFlight({
 /// Пока overlay летит, слот opacity 0 — лицо ведёт полёт.
 double durakTableSlotOpacity({required bool inFlight}) => inFlight ? 0 : 1;
 
-/// Pending — якорь посадки даже после WS: серверную пару прячем до конца fly.
-bool durakNeedsPendingAttackSlot({required bool attackAlreadyOnTable}) {
-  return attackAlreadyOnTable || !attackAlreadyOnTable;
+/// Pending — якорь посадки, пока overlay летит. После посадки, если карта
+/// уже на столе сервера, слот не дублируем — иначе вспышка при снятии optimistic.
+bool durakNeedsPendingAttackSlot({
+  required bool attackAlreadyOnTable,
+  bool stillFlying = false,
+}) {
+  if (stillFlying) return true;
+  return !attackAlreadyOnTable;
 }
+
+/// Свой подкид ещё не сел: не запускать чужой FX и не перерисовывать ход.
+bool durakHoldTableFxForLocalAttack({
+  required bool optimisticAttack,
+  required bool flyingToTable,
+}) =>
+    optimisticAttack || flyingToTable;

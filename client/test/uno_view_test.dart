@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
+import 'package:multigames_client/games/uno/uno_center_table_style.dart';
 import 'package:multigames_client/games/uno/uno_seats.dart';
 
 void main() {
@@ -206,6 +207,24 @@ void main() {
     final columns = unoLandscapeSideColumns(seats);
     expect([...columns[0], ...columns[1]], seats);
     expect(columns[0].length - columns[1].length, inInclusiveRange(0, 1));
+  });
+
+  test('альбом: овал ниже и с запасом под Колода/Сброс', () {
+    final land = UnoCenterTableStyle.of(
+      narrow: true,
+      phoneLandscape: true,
+    );
+    final port = UnoCenterTableStyle.of(
+      narrow: true,
+      phoneLandscape: false,
+    );
+    expect(land.borderRadius, lessThan(port.borderRadius));
+    expect(land.padding.bottom, greaterThan(land.padding.top));
+    expect(land.minHeight, lessThanOrEqualTo(150));
+    expect(
+      land.minHeight,
+      greaterThan(land.cardSize.height + land.labelLineHeight),
+    );
   });
 
   test('timeout loss is detected for the eliminated player', () {

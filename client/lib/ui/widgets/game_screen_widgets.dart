@@ -724,7 +724,7 @@ class _GameTurnCountdownState extends State<GameTurnCountdown>
       remainingSeconds: _remaining,
       remainingMs: leftMs,
       turnTimeSec: widget.turnTimeSec,
-      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
+      clockVisible: GameFlyOverlay.shouldKeepTurnClock(context),
       hasTimer: widget.turnDeadline > 0,
     );
   }
@@ -820,7 +820,7 @@ class _MyTurnAlertState extends State<MyTurnAlert> {
     TurnClockSfx.sync(
       isMyTurn: widget.isMyTurn,
       remainingSeconds: 0,
-      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
+      clockVisible: GameFlyOverlay.shouldKeepTurnClock(context),
       hasTimer: false,
       announceOnly: true,
     );
@@ -1066,7 +1066,7 @@ class _TurnTimerRingState extends State<_TurnTimerRing> {
       remainingSeconds: remaining,
       remainingMs: leftMs,
       turnTimeSec: widget.turnTimeSec,
-      clockVisible: GameFlyOverlay.isVisibleShellRoute(context),
+      clockVisible: GameFlyOverlay.shouldKeepTurnClock(context),
       hasTimer: _hasTimer,
     );
   }

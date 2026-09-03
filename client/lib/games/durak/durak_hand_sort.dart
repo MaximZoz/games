@@ -60,6 +60,16 @@ int? drawUntilTrumpAppears({
   return owner;
 }
 
+/// Первый кадр ещё без раздачи: веер не берёт всю руку с сервера.
+///
+/// Иначе в портрете (твин 380 ms) вспыхивают все карты, и только потом
+/// летит колода.
+bool durakOpeningDealConcealsFan({
+  required bool prevDeckUninitialized,
+  required bool shouldAnimateOpening,
+}) =>
+    prevDeckUninitialized && shouldAnimateOpening;
+
 /// Свежая партия: руки полные (6+ добор козыря), стол пуст — крутить раздачу.
 bool shouldAnimateDurakOpeningDeal({
   required bool isOver,

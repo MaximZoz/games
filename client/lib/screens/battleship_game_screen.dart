@@ -15,6 +15,7 @@ import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/battleship/battleship_rules.dart';
 import 'package:multigames_client/games/battleship/battleship_utils.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -40,6 +41,7 @@ const Color _kMiss = Color(0xFFFFFFFF);
 const Color _kSelectedShip = Color(0xFF455A64);
 const Color _kSunkShip = Color(0xFF37474F);
 const Color _kSunkFrame = Color(0xFF212121);
+
 /// Мои потопленные — красным (в отличие от тёмных кораблей соперника).
 const Color _kSunkShipMine = Color(0xFFE53935);
 const Color _kSunkFrameMine = Color(0xFFB71C1C);
@@ -57,6 +59,7 @@ class BattleshipGameScreen extends ConsumerStatefulWidget {
 class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     with SingleTickerProviderStateMixin {
   bool _busy = false;
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
   bool _providerBindingsInitialized = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
@@ -70,6 +73,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
+
   /// Чип «−N» при проигрыше — только после анимации списания.
   bool _lossChipRevealed = false;
   String? _prevGameStatus;
@@ -79,6 +83,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   int? _selectedShipIndex;
   bool _shipsSyncedFromServer = false;
   bool _setupAutoSubmitted = false;
+
   /// Локальный unix-дедлайн расстановки (от setup_seconds_left), без перекоса часов.
   int _setupLocalDeadline = 0;
   int _setupDeadlineKey = 0;
@@ -89,13 +94,16 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   bool _fxInProgress = false;
   int? _pulseHitCell;
   bool _fxHit = false;
+
   /// Во время FX: true = своё поле, false = поле соперника, null = по ходу.
   bool? _fxShowMineBoard;
+
   /// Сразу после победного выстрела — скрыть таймер, не дожидаясь invalidate.
   bool _hideTimers = false;
 
   /// Выстрел уже на поле, ждём ответ сервера.
   int? _pendingShotCell;
+
   /// Монотонный слой клеток: ответ `shoot()` сразу на доске, refetch не откатывает.
   BattleshipClientOverlay _overlay = const BattleshipClientOverlay();
   BattleshipGameView? _optimisticView;
@@ -170,6 +178,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
+          _turnAction.release();
           setState(() {
             _busy = false;
             _fxInProgress = false;
@@ -397,8 +406,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   Future<void> _confirmPlace() async {
-    if (_busy) return;
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
     if (!validateBattleshipShips(_localShips)) {
+      _turnAction.release();
+      _busy = false;
       showAppSnackBar(
         context,
         message: context.l10n.gamesBattleshipShipsMustNotTouch,
@@ -406,7 +418,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       );
       return;
     }
-    setState(() => _busy = true);
+    setState(() {});
     try {
       await ref
           .read(battleshipRepositoryProvider)
@@ -417,6 +429,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       if (!mounted) return;
       showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -453,9 +466,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final me = ref.read(authStateProvider).valueOrNull?.id;
     // Перепроверяем сервер: не авто-ставим, если у сервера ещё есть время.
     try {
-      final fresh = await ref
-          .read(battleshipRepositoryProvider)
-          .getGame(widget.gameId);
+      final fresh =
+          await ref.read(battleshipRepositoryProvider).getGame(widget.gameId);
       if (!mounted) return;
       if (!fresh.isSetup || _iAmReady(fresh, me)) {
         ref.invalidate(battleshipGameProvider(widget.gameId));
@@ -602,11 +614,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   }
 
   Future<void> _shoot(int cell) async {
-    if (_busy || _pendingShotCell != null) return;
+    if (_busy || _pendingShotCell != null || !_turnAction.tryAcquire()) {
+      return;
+    }
+    _busy = true;
     _beginLocalShot(cell);
     try {
-      final view =
-          await ref.read(battleshipRepositoryProvider).shoot(widget.gameId, cell);
+      final view = await ref
+          .read(battleshipRepositoryProvider)
+          .shoot(widget.gameId, cell);
       if (!mounted) return;
       if (view.id != widget.gameId) return;
       // Свой выстрел — [cell]. Ход бота приходит отдельным state/WS после паузы.
@@ -652,8 +668,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _fxShowMineBoard = null;
         _busy = false;
       });
-      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      if (!isStaleNotYourTurnError(e)) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
     } finally {
+      _turnAction.release();
       if (mounted && _busy) setState(() => _busy = false);
     }
   }
@@ -733,8 +752,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   Future<void> _openChat(String userId, String displayName) async {
     try {
-      final chatId =
-          await ref.read(chatsRepositoryProvider).startChat(userId);
+      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
       if (!mounted || chatId.isEmpty) return;
       final uri = Uri(
         path: '/chats/$chatId',
@@ -778,11 +796,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
     final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
     final outgoing =
-        friends?.outgoing.where((r) => r.user.id == oppId).toList() ??
-            const [];
+        friends?.outgoing.where((r) => r.user.id == oppId).toList() ?? const [];
     final incoming =
-        friends?.incoming.where((r) => r.user.id == oppId).toList() ??
-            const [];
+        friends?.incoming.where((r) => r.user.id == oppId).toList() ?? const [];
     final hasOutgoing = outgoing.isNotEmpty;
     final hasIncoming = incoming.isNotEmpty;
     final incomingRequestId = hasIncoming ? incoming.first.requestId : null;
@@ -811,22 +827,22 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 ? context.l10n.friendsRequestSent
                 : context.l10n.friendsAdd),
         onAddFriendTap: () => unawaited(_addFriend(
-              oppId,
-              name,
-              requestId: hasIncoming ? incomingRequestId : null,
-            )),
+          oppId,
+          name,
+          requestId: hasIncoming ? incomingRequestId : null,
+        )),
         onInfoTap: () => unawaited(showUserProfileDialog(
-              context: context,
-              ref: ref,
-              userId: oppId,
-              displayName: name,
-              avatarKind: avatar.kind,
-              avatarValue: avatar.value,
-              frameCode: avatar.frameCode,
-              frameColor: avatar.frameColor,
-              messageFrom: 'games',
-              messageReturnPath: '/games/battleship/game/${widget.gameId}',
-            )),
+          context: context,
+          ref: ref,
+          userId: oppId,
+          displayName: name,
+          avatarKind: avatar.kind,
+          avatarValue: avatar.value,
+          frameCode: avatar.frameCode,
+          frameColor: avatar.frameColor,
+          messageFrom: 'games',
+          messageReturnPath: '/games/battleship/game/${widget.gameId}',
+        )),
         onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
       ),
     );
@@ -1397,16 +1413,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                     builder: (context) {
                       final g = gameAsync.valueOrNull!;
                       final offerBy = g.drawOfferBy?.trim();
-                      final iOffered = offerBy != null &&
-                          me != null &&
-                          offerBy == me;
+                      final iOffered =
+                          offerBy != null && me != null && offerBy == me;
                       final oppOffered = offerBy != null &&
                           me != null &&
                           offerBy.isNotEmpty &&
                           offerBy != me;
-                      final canDraw = g.isBattle &&
-                          !g.isOver &&
-                          !g.hasBotOpponent;
+                      final canDraw =
+                          g.isBattle && !g.isOver && !g.hasBotOpponent;
                       return Positioned(
                         right: 4,
                         top: 4,
@@ -1420,8 +1434,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                               : unawaited(_confirmOfferDraw()),
                           surrenderTooltip: context.l10n.gameSurrender,
                           drawTooltip: context.l10n.gameOfferDraw,
-                          acceptDrawTooltip:
-                              context.l10n.gameAcceptDrawTitle,
+                          acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
                           drawOfferedTooltip: context.l10n.gameDrawOffered,
                         ),
                       );
@@ -1471,9 +1484,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             for (final s in ships) ...s,
                           };
                           return _CellPaint(
-                            color: occupied.contains(cellIdx)
-                                ? _kShip
-                                : _kWater,
+                            color:
+                                occupied.contains(cellIdx) ? _kShip : _kWater,
                           );
                         },
                       )
@@ -1817,7 +1829,8 @@ class _BattleshipBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = cellSize.clamp(11.0, 44.0);
     const gap = 2.0;
-    final board = size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+    final board =
+        size * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
     final glow = pulseHit ? _kHit : const Color(0xFF90A4AE);
     return SizedBox(
       width: board,
@@ -2065,10 +2078,10 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
         : <int>{};
     final preview = _previewCells;
     final previewOk = _previewValid;
-    final draggingShip = _dragShipIndex != null &&
-            _dragShipIndex! < widget.ships.length
-        ? widget.ships[_dragShipIndex!].toSet()
-        : <int>{};
+    final draggingShip =
+        _dragShipIndex != null && _dragShipIndex! < widget.ships.length
+            ? widget.ships[_dragShipIndex!].toSet()
+            : <int>{};
 
     return SizedBox(
       width: board,

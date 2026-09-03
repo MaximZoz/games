@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/sfx.dart';
 
 /// Корневые [OverlayEntry] полётов (монеты, карты, фишки).
 ///
@@ -56,6 +57,19 @@ class GameFlyOverlay {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Тики и «ваш ход» не глушим в сообщениях: партия жива в IndexedStack.
+  static bool shouldKeepTurnClock(BuildContext context) {
+    if (!context.mounted) return false;
+    if (isVisibleShellRoute(context)) return true;
+    return isMessagesPath(_visiblePath);
+  }
+
+  /// Звук полёта/фишки — и на столе, и в сообщениях (без картинки поверх чата).
+  static bool shouldPlayGameSfx({BuildContext? context}) {
+    if (shouldShowFlight(context: context, gameOnly: true)) return true;
+    return isMessagesPath(_visiblePath);
   }
 
   /// [gameOnly] — карты/фишки партии. Иначе монеты тулбара на любой вкладке,

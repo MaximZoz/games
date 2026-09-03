@@ -1,6 +1,7 @@
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, formatTurnTime, rulesStakeLine;
+    show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Строки правил «Уно» — соответствуют движку (7 карт, без стека +2,
@@ -40,8 +41,4 @@ bool unoDrawControlEnabled({
     !busy && canTake;
 
 /// Второй тап «Взять» после смены хода — не показывать «Сейчас не ваш ход».
-bool isStaleUnoDrawError(Object error) {
-  if (error is! GamesException) return false;
-  final blob = '${error.errorKey}\n${error.message}'.toLowerCase();
-  return blob.contains('not your turn') || blob.contains('не ваш ход');
-}
+bool isStaleUnoDrawError(Object error) => isStaleNotYourTurnError(error);

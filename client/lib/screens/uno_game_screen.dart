@@ -11,6 +11,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -20,11 +21,13 @@ import 'package:multigames_client/games/uno/uno_offline_session.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
+import 'package:multigames_client/games/uno/uno_center_table_style.dart';
 import 'package:multigames_client/games/uno/uno_seats.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/game_table_fit.dart';
 import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/uno/uno_draw_discard_field.dart';
 import 'package:multigames_client/ui/uno/uno_card_fly.dart';
 import 'package:multigames_client/ui/uno/uno_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
@@ -54,6 +57,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   final GlobalKey _rewardKey = GlobalKey();
 
   bool _busy = false;
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
   bool _dealing = false;
   bool _dealAnimated = false;
   bool _colorDialogOpen = false;
@@ -100,6 +104,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
+          _turnAction.release();
           setState(() => _busy = false);
           if (!_isOffline) ref.invalidate(unoGameProvider(widget.gameId));
         }
@@ -305,7 +310,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final to = _rectOf(_handKey);
     if (from == null || to == null || !mounted) {
       if (mounted) {
-        setState(() => _pendingDrawnIds.removeAll(cards.map((card) => card.id)));
+        setState(
+            () => _pendingDrawnIds.removeAll(cards.map((card) => card.id)));
       }
       return;
     }
@@ -621,7 +627,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
       return;
     }
-    setState(() => _busy = true);
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    setState(() {});
     _lastLocalActor = game.viewerUserId ?? game.me?.id;
     try {
       UnoColor? color;
@@ -697,6 +705,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         });
       } catch (_) {}
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -708,7 +717,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     )) {
       return;
     }
-    setState(() => _busy = true);
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    setState(() {});
     _lastLocalDrawActor = before.me?.id;
     final from = _rectOf(_drawPileKey);
     try {
@@ -767,6 +778,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -779,8 +791,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     bool manageBusy = true,
   }) async {
     if (manageBusy) {
-      if (_busy) return;
-      setState(() => _busy = true);
+      if (!_turnAction.tryAcquire()) return;
+      _busy = true;
+      setState(() {});
     }
     if (type == UnoActionType.chooseColor ||
         type == UnoActionType.challengeUno ||
@@ -799,8 +812,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         ref.invalidate(unoGameProvider(widget.gameId));
       }
     } on GamesException catch (error) {
-      if (mounted &&
-          !(type == UnoActionType.draw && isStaleUnoDrawError(error))) {
+      if (mounted && !isStaleNotYourTurnError(error)) {
         showAppSnackBar(
           context,
           message: formatUserError(error),
@@ -808,7 +820,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(error)) {
         showAppSnackBar(
           context,
           message: formatUserError(error),
@@ -816,7 +828,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } finally {
-      if (manageBusy && mounted) setState(() => _busy = false);
+      if (manageBusy) {
+        _turnAction.release();
+        if (mounted) setState(() => _busy = false);
+      }
     }
   }
 
@@ -1476,6 +1491,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     if (isPhoneLandscape(context)) {
       final columns = unoLandscapeSideColumns(seats);
       return Stack(
+        clipBehavior: Clip.none,
         children: [
           if (columns[0].isNotEmpty)
             Align(
@@ -1495,9 +1511,14 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 alignment: Alignment.centerRight,
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 150),
-            child: _buildCenterTable(game),
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 136),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: _buildCenterTable(game, tight: true),
+              ),
+            ),
           ),
         ],
       );
@@ -1641,152 +1662,73 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     return context.l10n.gameOpponent;
   }
 
-  Widget _buildCenterTable(UnoGameView game) {
-    final narrow = isNarrow(context);
-    final cardSize =
-        _fit.scaled(narrow ? const Size(62, 93) : const Size(68, 102));
+  Widget _buildCenterTable(UnoGameView game, {bool tight = false}) {
+    final style = UnoCenterTableStyle.of(
+      narrow: isNarrow(context),
+      phoneLandscape: isPhoneLandscape(context),
+      scale: _fit.scale,
+    );
+    final cardSize = style.cardSize;
     final shownDiscard = unoVisibleDiscard(
       serverTop: game.topDiscard,
       override: _discardOverride,
     );
+    final field = UnoDrawDiscardField(
+      style: style,
+      drawLabel: context.l10n.unoDrawPile,
+      discardLabel: context.l10n.unoDiscardPile,
+      currentColor: _colorValue(game.currentColor),
+      pendingDrawLabel: game.pendingDraw > 0
+          ? context.l10n.unoPendingDraw(game.pendingDraw)
+          : null,
+      drawPile: GestureDetector(
+        key: _drawPileKey,
+        onTap: unoDrawControlEnabled(
+          busy: _busy,
+          canTake: _canTakeFromDeck(game),
+        )
+            ? () => _draw(game)
+            : null,
+        child: Stack(
+          children: [
+            Transform.translate(
+              offset: const Offset(4, -4),
+              child: UnoCardBackWidget(size: cardSize),
+            ),
+            UnoCardBackWidget(size: cardSize),
+            Positioned(
+              right: 6,
+              bottom: 5,
+              child: _CountBadge(count: game.drawCount),
+            ),
+          ],
+        ),
+      ),
+      discardPile: Container(
+        key: _discardKey,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: _colorValue(game.currentColor).withValues(alpha: 0.5),
+              blurRadius: 18,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: shownDiscard == null
+            ? SizedBox.fromSize(size: cardSize)
+            : UnoCardWidget(
+                card: shownDiscard,
+                size: cardSize,
+              ),
+      ),
+    );
+    if (tight) return field;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFF125D42).withValues(alpha: 0.92),
-                const Color(0xFF0A3E3A).withValues(alpha: 0.95),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(narrow ? 54 : 90),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.16),
-              width: 2,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black38,
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: narrow ? 22 : 48,
-            vertical: (narrow ? 15.0 : 24.0) * _fit.scale,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    key: _drawPileKey,
-                    onTap: unoDrawControlEnabled(
-                            busy: _busy,
-                            canTake: _canTakeFromDeck(game),
-                          )
-                        ? () => _draw(game)
-                        : null,
-                    child: Stack(
-                      children: [
-                        Transform.translate(
-                          offset: const Offset(4, -4),
-                          child: UnoCardBackWidget(size: cardSize),
-                        ),
-                        UnoCardBackWidget(size: cardSize),
-                        Positioned(
-                          right: 6,
-                          bottom: 5,
-                          child: _CountBadge(count: game.drawCount),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    context.l10n.unoDrawPile,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(width: narrow ? 16 : 30),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    key: _discardKey,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _colorValue(game.currentColor)
-                              .withValues(alpha: 0.5),
-                          blurRadius: 18,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: shownDiscard == null
-                        ? SizedBox.fromSize(size: cardSize)
-                        : UnoCardWidget(
-                            card: shownDiscard,
-                            size: cardSize,
-                          ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          color: _colorValue(game.currentColor),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white70),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        context.l10n.unoDiscardPile,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              if (game.pendingDraw > 0) ...[
-                SizedBox(width: narrow ? 10 : 18),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.redAccent,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    context.l10n.unoPendingDraw(game.pendingDraw),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+        child: field,
       ),
     );
   }
@@ -2117,7 +2059,8 @@ class UnoOpponentHand extends StatelessWidget {
           vertical ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: vertical ? 72 : (narrow ? 84 : 110)),
+          constraints:
+              BoxConstraints(maxWidth: vertical ? 72 : (narrow ? 84 : 110)),
           child: Text(
             name,
             maxLines: 1,
@@ -2188,7 +2131,8 @@ class UnoOpponentHand extends StatelessWidget {
               vertical: vertical ? 6 : (narrow ? 5 : 6),
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
+              color:
+                  AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
               borderRadius: BorderRadius.circular(16),
             ),
             child: body,

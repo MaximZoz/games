@@ -28,6 +28,18 @@ void main() {
     expect(GameFlyOverlay.shouldShowFlight(), isTrue);
   });
 
+  test('в сообщениях игровой звук остаётся, полёт карт — нет', () {
+    GameFlyOverlay.syncVisiblePath('/games/uno/game/g1');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isTrue);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isTrue);
+    GameFlyOverlay.syncVisiblePath('/chats/abc');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isTrue);
+    GameFlyOverlay.syncVisiblePath('/');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isFalse);
+  });
+
   testWidgets('dismissAll removes a leftover root overlay', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: Text('page'))),
