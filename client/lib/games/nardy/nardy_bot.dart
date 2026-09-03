@@ -56,21 +56,22 @@ int nardyEvaluate(NardyEngine game, int seat) {
   return score;
 }
 
-/// Один полный ход бота: бросок и все шашки.
+/// Один полный ход бота: бросок, все шашки и передача очереди.
 void nardyPlayBotTurn(NardyEngine game, math.Random rng) {
   if (game.isOver) return;
   final seat = game.turn;
   if (game.dice.isEmpty && !game.roll(rng)) return;
   for (var step = 0; step < 8; step++) {
-    if (game.isOver || game.turn != seat || game.dice.isEmpty) return;
-    final mv = nardyBotBestMove(game, rng);
-    if (mv == null) {
+    if (game.isOver || game.turn != seat) return;
+    if (game.dice.isEmpty) {
       game.endTurn();
       return;
     }
-    if (!game.applyMove(seat, mv)) {
+    final mv = nardyBotBestMove(game, rng);
+    if (mv == null || !game.applyMove(seat, mv)) {
       game.endTurn();
       return;
     }
   }
+  if (!game.isOver && game.turn == seat) game.endTurn();
 }

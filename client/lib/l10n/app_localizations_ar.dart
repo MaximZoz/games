@@ -726,6 +726,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nardySkipTurn => 'تخطَّ الدور';
 
   @override
+  String get nardyUndoMove => 'تراجع';
+
+  @override
+  String get nardyDoneTurn => 'تم';
+
+  @override
   String get nardyNoMoves => 'لا توجد نقلات — تخطَّ الدور';
 
   @override

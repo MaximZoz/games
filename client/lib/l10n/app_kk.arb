@@ -273,6 +273,8 @@
   "rulesNardyWin": "Барлық тасын бірінші алған жеңеді.",
   "nardyRoll": "Лақтыру",
   "nardySkipTurn": "Жүрісті өткізу",
+  "nardyUndoMove": "Қайтару",
+  "nardyDoneTurn": "Дайын",
   "nardyNoMoves": "Жүріс жоқ — жүрісті өткізіңіз",
   "nardyYourRoll": "Сіздің лақтыруыңыз",
   "nardyPipsShort": "Қалды:",

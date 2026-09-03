@@ -726,6 +726,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nardySkipTurn => 'Zug überspringen';
 
   @override
+  String get nardyUndoMove => 'Zurück';
+
+  @override
+  String get nardyDoneTurn => 'Fertig';
+
+  @override
   String get nardyNoMoves => 'Kein Zug möglich — überspringen';
 
   @override

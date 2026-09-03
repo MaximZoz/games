@@ -273,6 +273,8 @@
   "rulesNardyWin": "Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.",
   "nardyRoll": "Heitä",
   "nardySkipTurn": "Ohita vuoro",
+  "nardyUndoMove": "Kumoa",
+  "nardyDoneTurn": "Valmis",
   "nardyNoMoves": "Ei siirtoja — ohita vuoro",
   "nardyYourRoll": "Sinun heittosi",
   "nardyPipsShort": "Jäljellä:",

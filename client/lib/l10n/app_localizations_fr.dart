@@ -726,6 +726,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nardySkipTurn => 'Passer le tour';
 
   @override
+  String get nardyUndoMove => 'Annuler';
+
+  @override
+  String get nardyDoneTurn => 'Terminé';
+
+  @override
   String get nardyNoMoves => 'Aucun coup — passez le tour';
 
   @override

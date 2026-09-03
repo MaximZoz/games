@@ -273,6 +273,8 @@
   "rulesNardyWin": "Den som först bär av alla brickor vinner.",
   "nardyRoll": "Slå",
   "nardySkipTurn": "Hoppa över turen",
+  "nardyUndoMove": "Ångra",
+  "nardyDoneTurn": "Klar",
   "nardyNoMoves": "Inga drag — hoppa över turen",
   "nardyYourRoll": "Ditt slag",
   "nardyPipsShort": "Kvar:",

@@ -726,6 +726,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nardySkipTurn => 'Пропустити хід';
 
   @override
+  String get nardyUndoMove => 'Повернути';
+
+  @override
+  String get nardyDoneTurn => 'Готово';
+
+  @override
   String get nardyNoMoves => 'Ходів немає — пропустіть хід';
 
   @override

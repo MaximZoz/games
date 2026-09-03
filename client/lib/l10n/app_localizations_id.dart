@@ -726,6 +726,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get nardySkipTurn => 'Lewati giliran';
 
   @override
+  String get nardyUndoMove => 'Batalkan';
+
+  @override
+  String get nardyDoneTurn => 'Selesai';
+
+  @override
   String get nardyNoMoves => 'Tidak ada langkah — lewati giliran';
 
   @override

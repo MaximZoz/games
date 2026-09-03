@@ -102,22 +102,15 @@ int pokerProgress(PokerGameView state) {
   return progress;
 }
 
-/// Прогресс партии нард: снятые шашки, номер хода и конец партии.
+/// Прогресс партии нард — монотонный счётчик изменений с сервера.
 ///
-/// Пипсы обоих игроков монотонно убывают, поэтому их сумма — надёжный
-/// «часовой» даже когда номер хода совпадает (несколько шашек за ход).
+/// Позиция не годится: отмена хода возвращает шашку назад, и снимок после
+/// отмены выглядел бы «старее» отменённого.
 int nardyProgress(NardyGameView state) {
-  var progress = state.turnNo * 1000;
-  progress += (state.off.isEmpty ? 0 : state.off.reduce((a, b) => a + b)) * 50;
-  final pipsLeft = state.players.fold<int>(0, (sum, p) => sum + p.pips);
-  progress += (nardyCheckers * nardyPointsSpan * 2) - pipsLeft;
+  var progress = state.seq;
   if (state.isOver) progress += 1000000;
   return progress;
 }
-
-/// Шашек у игрока и длина дорожки — для оценки прогресса без импорта движка.
-const int nardyCheckers = 15;
-const int nardyPointsSpan = 24;
 
 bool isOlderNardy(NardyGameView incoming, NardyGameView current) {
   if (current.isOver && !incoming.isOver) return true;

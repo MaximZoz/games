@@ -726,6 +726,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nardySkipTurn => 'Pasar turno';
 
   @override
+  String get nardyUndoMove => 'Deshacer';
+
+  @override
+  String get nardyDoneTurn => 'Listo';
+
+  @override
   String get nardyNoMoves => 'Sin jugadas — pasa el turno';
 
   @override

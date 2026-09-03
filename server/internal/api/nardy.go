@@ -647,6 +647,7 @@ func (h *GamesHandler) applyNardyUserAction(
 	if action == "" {
 		action = "move"
 	}
+	seatBefore := state.Turn
 	switch action {
 	case "forfeit":
 		state.Forfeit(seat)
@@ -661,12 +662,19 @@ func (h *GamesHandler) applyNardyUserAction(
 		if err := state.ApplyMove(seat, nardy.Move{From: body.From, Die: body.Die}); err != nil {
 			return &nardyHTTPError{status: http.StatusBadRequest, msg: err.Error()}
 		}
+	case "undo":
+		if err := state.Undo(seat); err != nil {
+			return &nardyHTTPError{status: http.StatusBadRequest, msg: err.Error()}
+		}
 	case "end_turn":
 		if seat != state.Turn {
 			return &nardyHTTPError{status: http.StatusBadRequest, msg: "not your turn"}
 		}
 		if state.HasLegalMove() {
-			return &nardyHTTPError{status: http.StatusBadRequest, msg: "moves are still available"}
+			return &nardyHTTPError{
+				status: http.StatusBadRequest,
+				msg:    nardy.ErrMovesLeft.Error(),
+			}
 		}
 		state.EndTurn()
 	default:
@@ -688,7 +696,9 @@ func (h *GamesHandler) applyNardyUserAction(
 			reason = "forfeit"
 		}
 		h.onNardyGameFinished(ctx, gameID, m, state, reason)
-	} else {
+	} else if state.Turn != seatBefore {
+		// Пуш и запуск бота — только когда очередь реально сменилась:
+		// внутри своего хода игрок двигает несколько шашек.
 		h.notifyNardyTurn(gameID, state, players)
 	}
 	return nil
@@ -1113,6 +1123,36 @@ func (h *GamesHandler) nardyViewFor(
 	for i := 0; i < nardy.Points; i++ {
 		board[i] = state.Board[i]
 	}
+	// История своего хода — в координатах дорожки игрока: клиент предлагает
+	// вернуть шашку кликом на пункт, откуда она ушла.
+	currentTurn := make([]map[string]any, 0, len(state.History))
+	if seat >= 0 && seat == state.Turn {
+		for _, rec := range state.History {
+			to := rec.From + rec.Die
+			if rec.From == nardy.BarTrack {
+				to = rec.Die - 1
+			}
+			if rec.BoreOff {
+				to = nardy.OffTrack
+			}
+			currentTurn = append(currentTurn, map[string]any{
+				"from":     rec.From,
+				"to":       to,
+				"die":      rec.Die,
+				"bore_off": rec.BoreOff,
+			})
+		}
+	}
+	lastTurn := make([]map[string]any, 0, len(state.LastTurn))
+	for _, mv := range state.LastTurn {
+		lastTurn = append(lastTurn, map[string]any{
+			"from_point": mv.FromPoint,
+			"to_point":   mv.ToPoint,
+			"from_bar":   mv.FromBar,
+			"bore_off":   mv.BoreOff,
+			"hit":        mv.Hit,
+		})
+	}
 
 	over := nardyIsOver(state)
 	winnerID := ""
@@ -1132,13 +1172,20 @@ func (h *GamesHandler) nardyViewFor(
 		"rolled":         state.Rolled,
 		"turn":           state.Turn,
 		"turn_no":        state.TurnNo,
+		"seq":            state.Seq,
 		"head_moved":     state.HeadMoved,
 		"players":        playerViews,
 		"player_ids":     players,
 		"legal_moves":    legal,
 		"my_index":       seat,
 		"is_my_turn":     seat >= 0 && seat == state.Turn && !over,
-		"needs_roll":     seat >= 0 && seat == state.Turn && len(state.Dice) == 0 && !over,
+		"needs_roll": seat >= 0 && seat == state.Turn && !over &&
+			len(state.Dice) == 0 && !state.CanUndo(),
+		"can_undo":       seat >= 0 && seat == state.Turn && state.CanUndo(),
+		"turn_complete":  seat >= 0 && seat == state.Turn && state.TurnComplete(),
+		"current_turn":   currentTurn,
+		"last_turn":      lastTurn,
+		"last_turn_seat": state.LastTurnSeat,
 		"turn_time_sec":  turnTimeSec,
 		"turn_deadline":  turnDeadline,
 		"stake_bronze":   stakeBronze,

@@ -726,6 +726,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nardySkipTurn => 'Sırayı geç';
 
   @override
+  String get nardyUndoMove => 'Geri al';
+
+  @override
+  String get nardyDoneTurn => 'Bitti';
+
+  @override
   String get nardyNoMoves => 'Hamle yok — sırayı geçin';
 
   @override

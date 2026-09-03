@@ -726,6 +726,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get nardySkipTurn => 'ข้ามตา';
 
   @override
+  String get nardyUndoMove => 'ย้อนกลับ';
+
+  @override
+  String get nardyDoneTurn => 'เสร็จ';
+
+  @override
   String get nardyNoMoves => 'ไม่มีตาเดิน — ข้ามตา';
 
   @override

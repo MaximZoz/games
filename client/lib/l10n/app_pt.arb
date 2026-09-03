@@ -273,6 +273,8 @@
   "rulesNardyWin": "Ganha quem primeiro retirar todas as peças.",
   "nardyRoll": "Lançar",
   "nardySkipTurn": "Passar a vez",
+  "nardyUndoMove": "Desfazer",
+  "nardyDoneTurn": "Pronto",
   "nardyNoMoves": "Sem jogadas — passe a vez",
   "nardyYourRoll": "Seu lançamento",
   "nardyPipsShort": "Faltam:",

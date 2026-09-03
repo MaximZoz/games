@@ -273,6 +273,8 @@
   "rulesNardyWin": "Wer zuerst alle Steine abgetragen hat, gewinnt.",
   "nardyRoll": "Würfeln",
   "nardySkipTurn": "Zug überspringen",
+  "nardyUndoMove": "Zurück",
+  "nardyDoneTurn": "Fertig",
   "nardyNoMoves": "Kein Zug möglich — überspringen",
   "nardyYourRoll": "Dein Wurf",
   "nardyPipsShort": "Rest:",

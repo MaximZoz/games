@@ -273,6 +273,8 @@
   "rulesNardyWin": "מנצח מי שמוריד ראשון את כל האבנים.",
   "nardyRoll": "הטל",
   "nardySkipTurn": "דלג על התור",
+  "nardyUndoMove": "בטל",
+  "nardyDoneTurn": "סיום",
   "nardyNoMoves": "אין מהלכים — דלג על התור",
   "nardyYourRoll": "ההטלה שלך",
   "nardyPipsShort": "נותרו:",

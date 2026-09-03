@@ -726,6 +726,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get nardySkipTurn => 'Hoppa över turen';
 
   @override
+  String get nardyUndoMove => 'Ångra';
+
+  @override
+  String get nardyDoneTurn => 'Klar';
+
+  @override
   String get nardyNoMoves => 'Inga drag — hoppa över turen';
 
   @override

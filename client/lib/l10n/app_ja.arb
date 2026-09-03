@@ -273,6 +273,8 @@
   "rulesNardyWin": "先にすべての駒をベアオフした人が勝ちます。",
   "nardyRoll": "サイコロを振る",
   "nardySkipTurn": "手番をパス",
+  "nardyUndoMove": "戻す",
+  "nardyDoneTurn": "完了",
   "nardyNoMoves": "動かせません — 手番をパス",
   "nardyYourRoll": "あなたの出目",
   "nardyPipsShort": "残り:",

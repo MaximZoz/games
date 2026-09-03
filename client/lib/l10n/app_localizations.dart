@@ -1535,6 +1535,18 @@ abstract class AppLocalizations {
   /// **'Пропустить ход'**
   String get nardySkipTurn;
 
+  /// No description provided for @nardyUndoMove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуть'**
+  String get nardyUndoMove;
+
+  /// No description provided for @nardyDoneTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get nardyDoneTurn;
+
   /// No description provided for @nardyNoMoves.
   ///
   /// In ru, this message translates to:

@@ -273,6 +273,8 @@
   "rulesNardyWin": "Le premier à sortir toutes ses dames gagne.",
   "nardyRoll": "Lancer",
   "nardySkipTurn": "Passer le tour",
+  "nardyUndoMove": "Annuler",
+  "nardyDoneTurn": "Terminé",
   "nardyNoMoves": "Aucun coup — passez le tour",
   "nardyYourRoll": "Votre lancer",
   "nardyPipsShort": "Reste :",

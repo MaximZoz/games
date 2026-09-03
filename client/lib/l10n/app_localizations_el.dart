@@ -726,6 +726,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String get nardySkipTurn => 'Παράλειψη σειράς';
 
   @override
+  String get nardyUndoMove => 'Αναίρεση';
+
+  @override
+  String get nardyDoneTurn => 'Έτοιμο';
+
+  @override
   String get nardyNoMoves => 'Καμία κίνηση — παραλείψτε τη σειρά';
 
   @override

@@ -273,6 +273,8 @@
   "rulesNardyWin": "Tüm pullarını ilk kaldıran kazanır.",
   "nardyRoll": "Zar at",
   "nardySkipTurn": "Sırayı geç",
+  "nardyUndoMove": "Geri al",
+  "nardyDoneTurn": "Bitti",
   "nardyNoMoves": "Hamle yok — sırayı geçin",
   "nardyYourRoll": "Zarınız",
   "nardyPipsShort": "Kalan:",

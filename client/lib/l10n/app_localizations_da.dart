@@ -726,6 +726,12 @@ class AppLocalizationsDa extends AppLocalizations {
   String get nardySkipTurn => 'Spring turen over';
 
   @override
+  String get nardyUndoMove => 'Fortryd';
+
+  @override
+  String get nardyDoneTurn => 'Færdig';
+
+  @override
   String get nardyNoMoves => 'Ingen træk — spring turen over';
 
   @override

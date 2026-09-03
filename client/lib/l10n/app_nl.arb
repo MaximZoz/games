@@ -273,6 +273,8 @@
   "rulesNardyWin": "Wie als eerste alle schijven afspeelt, wint.",
   "nardyRoll": "Gooien",
   "nardySkipTurn": "Beurt overslaan",
+  "nardyUndoMove": "Ongedaan",
+  "nardyDoneTurn": "Klaar",
   "nardyNoMoves": "Geen zetten — sla de beurt over",
   "nardyYourRoll": "Jouw worp",
   "nardyPipsShort": "Resterend:",

@@ -726,6 +726,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get nardySkipTurn => 'דלג על התור';
 
   @override
+  String get nardyUndoMove => 'בטל';
+
+  @override
+  String get nardyDoneTurn => 'סיום';
+
+  @override
   String get nardyNoMoves => 'אין מהלכים — דלג על התור';
 
   @override

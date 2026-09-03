@@ -273,6 +273,8 @@
   "rulesNardyWin": "يفوز من يُخرج كل أحجاره أولًا.",
   "nardyRoll": "ارمِ النرد",
   "nardySkipTurn": "تخطَّ الدور",
+  "nardyUndoMove": "تراجع",
+  "nardyDoneTurn": "تم",
   "nardyNoMoves": "لا توجد نقلات — تخطَّ الدور",
   "nardyYourRoll": "رميتك",
   "nardyPipsShort": "المتبقي:",
