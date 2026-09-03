@@ -60,6 +60,29 @@ int? drawUntilTrumpAppears({
   return owner;
 }
 
+/// Какие карты ещё не сели в веер во время стартовой раздачи.
+///
+/// Пока очередь [_pendingDealCards] не пуста — прячем только её. Если очередь
+/// опустела, но слоты уже есть в локальном порядке, не подставляем всю руку
+/// с сервера: иначе посаженные карты исчезают до конца FX.
+Set<PlayingCard> durakOpeningDealPendingSet({
+  required bool concealOpeningHand,
+  required Set<PlayingCard> pendingDealCards,
+  required List<PlayingCard>? handOrder,
+  required Iterable<PlayingCard> incomingFanCards,
+  required List<PlayingCard> serverHand,
+}) {
+  if (!concealOpeningHand) return pendingDealCards;
+  if (pendingDealCards.isNotEmpty) return pendingDealCards;
+  final seated = <PlayingCard>{
+    ...?handOrder,
+    ...incomingFanCards,
+  };
+  if (seated.isEmpty) return serverHand.toSet();
+  final stillHidden = serverHand.toSet()..removeAll(seated);
+  return stillHidden;
+}
+
 /// Первый кадр ещё без раздачи: веер не берёт всю руку с сервера.
 ///
 /// Иначе в портрете (твин 380 ms) вспыхивают все карты, и только потом

@@ -957,9 +957,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Иначе clearLift и схлопывание на кадр вспыхивают картой и всем веером.
   List<PlayingCard> _orderedHand(List<PlayingCard> serverHand, Suit trump) {
     _forgetPlayedAwayIfReturning();
-    final pending = _concealOpeningHand && _pendingDealCards.isEmpty
-        ? serverHand.toSet()
-        : _pendingDealCards;
+    final pending = durakOpeningDealPendingSet(
+      concealOpeningHand: _concealOpeningHand,
+      pendingDealCards: _pendingDealCards,
+      handOrder: _handOrder,
+      incomingFanCards: _incomingFanCards,
+      serverHand: serverHand,
+    );
     return durakOrderedHandSlots(
       prevOrder:
           _concealOpeningHand && (_handOrder == null || _handOrder!.isEmpty)
@@ -3618,6 +3622,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             _firstLeadVisible = true;
             _concealOpeningHand = false;
             _pendingDealCards.clear();
+            _incomingFanCards.clear();
             _oppDealPending.clear();
             _deckCountFreeze = null;
             if (_handOrder == null || _handOrder!.isEmpty) {
