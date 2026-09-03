@@ -14,6 +14,7 @@ import (
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
 	"multigames/server/internal/i18n"
+	"multigames/server/internal/nardy"
 	"multigames/server/internal/poker"
 	"multigames/server/internal/store"
 	"multigames/server/internal/uno"
@@ -327,6 +328,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/uno/") {
 		h.serveUno(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/nardy/") {
+		h.serveNardy(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -1699,6 +1704,12 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		item.GridSize = 0
 		item.GameMode = "classic"
 	}
+	if gameType == nardyGameType {
+		mode := nardy.NormalizeMode(m["game_mode"])
+		item.Variant = mode
+		item.GridSize = 0
+		item.GameMode = mode
+	}
 	if opponentID != "" {
 		item.OpponentID = &opponentID
 	}
@@ -1886,6 +1897,10 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	} else if gameType == unoGameType {
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
+	} else if gameType == nardyGameType {
+		mode := nardy.NormalizeMode(m["game_mode"])
+		inviteData["variant"] = mode
+		inviteData["game_mode"] = mode
 	} else {
 		inviteData["variant"] = string(variant)
 		inviteData["grid_size"] = cfg.GridSize
@@ -2732,6 +2747,10 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 		} else if gt == unoGameType {
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
+		} else if gt == nardyGameType {
+			mode := nardy.NormalizeMode(m["game_mode"])
+			item["variant"] = mode
+			item["game_mode"] = mode
 		} else {
 			item["variant"] = m["variant"]
 			gs, _ := strconv.Atoi(m["grid_size"])
@@ -2830,7 +2849,8 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 		return false
 	}
 	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
-		m["game_type"] == pokerGameType || m["game_type"] == unoGameType {
+		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
+		m["game_type"] == nardyGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3833,8 +3853,9 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 		}
 		return gid
 	}
-	// Durak / Poker: участие определяется по player_ids CSV.
-	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType {
+	// Durak / Poker / Nardy: участие определяется по player_ids CSV.
+	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType ||
+		gm["game_type"] == nardyGameType {
 		players := parsePlayerIDsCSV(gm["player_ids"])
 		for _, p := range players {
 			if p == userID.String() {
@@ -4234,7 +4255,8 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 		gt = "tictactoe"
 	}
 	inGame := false
-	if gt == durakGameType || gt == pokerGameType || gt == unoGameType {
+	if gt == durakGameType || gt == pokerGameType || gt == unoGameType ||
+		gt == nardyGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4304,6 +4326,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyPokerTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == unoGameType {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == nardyGameType {
+				h.applyNardyTurnTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4425,6 +4449,27 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": unoGameType,
+					}
+				}
+			} else if m["game_type"] == nardyGameType {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := nardy.Decode(m["state"]); decodeErr == nil {
+					seat := nardySeatOf(players, userID.String())
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"game_type":  nardyGameType,
+						"is_my_turn": seat >= 0 && seat == state.Turn && !nardyIsOver(state),
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": nardyGameType,
 					}
 				}
 			} else {
