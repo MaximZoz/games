@@ -82,6 +82,15 @@ UserGameSettings gameCardSettings({
         firstMoveRestriction: firstMoveRestriction,
         maxPlayers: 2,
       );
+    case 'nardy':
+      return UserGameSettings(
+        gameType: 'nardy',
+        turnTimeSec: turnTimeSec,
+        variant: gameMode,
+        stakeBronze: stakeBronze,
+        maxPlayers: 2,
+        gameMode: gameMode,
+      );
     default:
       return UserGameSettings(
         gameType: gameType,

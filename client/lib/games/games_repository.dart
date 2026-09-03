@@ -135,6 +135,15 @@ class UserGameSettings {
     gameMode: 'classic',
   );
 
+  static const nardyDefaults = UserGameSettings(
+    gameType: 'nardy',
+    turnTimeSec: 60,
+    variant: 'short',
+    stakeBronze: 2,
+    maxPlayers: 2,
+    gameMode: 'short',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
@@ -143,6 +152,8 @@ class UserGameSettings {
         return pokerDefaults;
       case 'uno':
         return unoDefaults;
+      case 'nardy':
+        return nardyDefaults;
       default:
         return defaults;
     }
@@ -228,6 +239,18 @@ class UserGameSettings {
         gameMode: 'classic',
       );
     }
+    if (gameType == 'nardy') {
+      final mode = gameMode == 'long' ? 'long' : 'short';
+      return UserGameSettings(
+        gameType: 'nardy',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: mode,
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        maxPlayers: 2,
+        gameMode: mode,
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -267,6 +290,11 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
+    } else if (gameType == 'nardy') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
+      out['max_players'] = 2;
+      out['game_mode'] = gameMode;
     } else {
       out['variant'] = parseVariant(variant);
       out['grid_size'] = gridSize;

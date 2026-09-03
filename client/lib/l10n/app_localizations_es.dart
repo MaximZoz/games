@@ -688,6 +688,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Corto';
+
+  @override
+  String get gamesNardyModeLong => 'Largo';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — reglas';
+
+  @override
+  String get rulesNardyPlayers => 'Jugadores: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Tablero de 24 puntos, 15 fichas cada uno. Dos dados: una ficha la suma o dos fichas los valores.';
+
+  @override
+  String get rulesNardyPlayShort => 'Backgammon corto: avanzáis uno hacia el otro y podéis comer fichas solas. La comida va a la barra y debe reentrar. Cuando todas están en casa, las sacáis.';
+
+  @override
+  String get rulesNardyPlayLong => 'Backgammon largo: ambos salen de la misma cabeza y van en el mismo sentido. Solo una ficha sale de la cabeza por turno. No se come. Cuando todas están en casa, las sacáis.';
+
+  @override
+  String get rulesNardyWin => 'Gana quien primero saque todas sus fichas.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Jugadores: $players.';
   }

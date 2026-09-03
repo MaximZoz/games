@@ -27,6 +27,8 @@ class GameTypeIcon extends StatelessWidget {
         return PokerGameIcon.iconData;
       case 'uno':
         return Icons.style_rounded;
+      case 'nardy':
+        return Icons.hexagon_rounded;
       case 'tictactoe':
         return Icons.grid_3x3_rounded;
       default:

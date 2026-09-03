@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Нарды: карточка в каталоге с режимами «Короткие»/«Длинные», ставкой, временем хода и подписью «В разработке»
 - Приглашение в игру сразу видно другу и догоняется сверкой с сервером, даже если кадр сокета потерялся
 - Покер: после «Фолд» кнопки не возвращаются; повторный клик не показывает «игра уже закончена»
 - Дурак: раздача собирает веер по одной карте из полёта, без вспышки всей руки; бросок на стол не мигает кнопками и картами
@@ -59,6 +60,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Backgammon: a catalog card with Short/Long modes, stake, turn time, and an “In development” label
 - Game invites show up for the friend immediately and are reconciled from the server if a socket frame is dropped
 - Poker: Fold stays gone after a hand-ending fold; a second tap no longer shows “the game is already over”
 - Durak: the deal builds the fan one flying card at a time instead of flashing the whole hand; throws no longer flicker buttons or table cards

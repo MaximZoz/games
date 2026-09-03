@@ -688,6 +688,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesUno => '우노';
 
   @override
+  String get gamesNardy => '백개먼';
+
+  @override
+  String get gamesNardyModeShort => '숏';
+
+  @override
+  String get gamesNardyModeLong => '롱';
+
+  @override
+  String get rulesNardyTitle => '백개먼 — 규칙';
+
+  @override
+  String get rulesNardyPlayers => '플레이어: 2명.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => '24포인트 보드, 각자 15개 말. 주사위 2개: 한 말로 합 또는 두 말로 각 눈.';
+
+  @override
+  String get rulesNardyPlayShort => '숏 백개먼: 서로를 향해 가고 홀로 있는 말을 칠 수 있습니다. 맞은 말은 바로 가서 다시 들어와야 합니다. 모두 홈에 있으면 보드에서 뺍니다.';
+
+  @override
+  String get rulesNardyPlayLong => '롱 백개먼: 둘 다 같은 헤드에서 같은 방향으로 갑니다. 헤드에서는 한 턴에 말 하나만 나옵니다. 치기는 불가. 모두 홈에 있으면 뺍니다.';
+
+  @override
+  String get rulesNardyWin => '모든 말을 먼저 뺀 사람이 이깁니다.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '플레이어: $players명.';
   }

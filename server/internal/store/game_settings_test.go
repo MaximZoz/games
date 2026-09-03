@@ -26,4 +26,9 @@ func TestDefaultUserGameSettings(t *testing.T) {
 		u.GameMode != "classic" || u.Variant != "classic" {
 		t.Fatalf("uno defaults: %+v", u)
 	}
+	n := DefaultUserGameSettings(GameTypeNardy)
+	if n.GameType != GameTypeNardy || n.TurnTimeSec != 60 || n.MaxPlayers != 2 ||
+		n.GameMode != "short" || n.Variant != "short" {
+		t.Fatalf("nardy defaults: %+v", n)
+	}
 }

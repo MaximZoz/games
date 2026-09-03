@@ -47,6 +47,11 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
 	}
+	if s.GameType == store.GameTypeNardy {
+		out["max_players"] = 2
+		out["game_mode"] = s.GameMode
+		out["variant"] = s.Variant
+	}
 	return out
 }
 
@@ -66,6 +71,8 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizePokerSettings(body)
 	case store.GameTypeUno:
 		return normalizeUnoSettings(body)
+	case store.GameTypeNardy:
+		return normalizeNardySettings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -212,6 +219,32 @@ func normalizeUnoSettings(body gameSettingsBody) (store.UserGameSettings, string
 	}, ""
 }
 
+func normalizeNardySettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	mode := strings.TrimSpace(strings.ToLower(body.GameMode))
+	if mode != "long" {
+		mode = "short"
+	}
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	return store.UserGameSettings{
+		GameType:             store.GameTypeNardy,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             3,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             36,
+		MaxPlayers:           2,
+		GameMode:             mode,
+	}, ""
+}
+
 // GameSettings — GET/PUT /api/games/settings (Postgres, без Redis).
 func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := currentUserIDFromGames(r); !ok {
@@ -267,6 +300,12 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		s.GameMode = "classic"
 		s.Variant = "classic"
+	} else if gameType == store.GameTypeNardy {
+		s.MaxPlayers = 2
+		if s.GameMode != "long" {
+			s.GameMode = "short"
+		}
+		s.Variant = s.GameMode
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")

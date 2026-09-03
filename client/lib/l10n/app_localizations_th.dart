@@ -688,6 +688,38 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesUno => 'อูโน่';
 
   @override
+  String get gamesNardy => 'แบ็กแกมมอน';
+
+  @override
+  String get gamesNardyModeShort => 'สั้น';
+
+  @override
+  String get gamesNardyModeLong => 'ยาว';
+
+  @override
+  String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
+
+  @override
+  String get rulesNardyPlayers => 'ผู้เล่น: 2 คน';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String get rulesNardyIntro => 'กระดาน 24 จุด คนละ 15 ตัว ลูกเต๋า 2 ลูก: ตัวเดียวตามผลรวม หรือสองตัวตามแต้ม';
+
+  @override
+  String get rulesNardyPlayShort => 'สั้น: เดินสวนทางและตีตัวเดี่ยวได้ ตัวที่ถูกตีขึ้นบาร์แล้วต้องเข้าใหม่ เมื่อทั้งหมดอยู่บ้านให้นำออก';
+
+  @override
+  String get rulesNardyPlayLong => 'ยาว: ทั้งคู่เริ่มจากหัวเดียวกันและไปทางเดียวกัน จากหัวออกได้ไม่เกินหนึ่งตัวต่อตา ห้ามตี เมื่อทั้งหมดอยู่บ้านให้นำออก';
+
+  @override
+  String get rulesNardyWin => 'ผู้ที่นำหมากออกครบก่อนชนะ';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'ผู้เล่น: $players.';
   }

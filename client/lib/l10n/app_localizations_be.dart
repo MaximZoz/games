@@ -688,6 +688,38 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesUno => 'Уно';
 
   @override
+  String get gamesNardy => 'Нарды';
+
+  @override
+  String get gamesNardyModeShort => 'Кароткія';
+
+  @override
+  String get gamesNardyModeLong => 'Доўгія';
+
+  @override
+  String get rulesNardyTitle => 'Нарды — правілы';
+
+  @override
+  String get rulesNardyPlayers => 'Ігракі: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Рэжым: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Дошка з 24 пунктаў, у кожнага па 15 шашак. Хады па двух кубіках: можна схадзіць адной шашкай на суму або дзвюма на вочкі кубікаў.';
+
+  @override
+  String get rulesNardyPlayShort => 'Кароткія нарды: ігракі ідуць насустрач і могуць біць адзіночныя шашкі суперніка. Збітая становіцца на бар і павінна ўвайсці зноў. Калі ўсе шашкі ў доме — здымаеце іх з дошкі.';
+
+  @override
+  String get rulesNardyPlayLong => 'Доўгія нарды: абодва пачынаюць з адной галавы і ідуць у адзін бок. З галавы за ход выходзіць не больш за адну шашку. Біць шашкі нельга. Калі ўсе ў доме — здымаеце іх з дошкі.';
+
+  @override
+  String get rulesNardyWin => 'Перамагае той, хто першым здыме ўсе свае шашкі.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Гульцы: $players.';
   }

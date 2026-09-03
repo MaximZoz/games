@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Kurz",
+  "gamesNardyModeLong": "Lang",
+  "rulesNardyTitle": "Backgammon — Regeln",
+  "rulesNardyPlayers": "Spieler: 2.",
+  "rulesNardyMode": "Modus: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Brett mit 24 Punkten, je 15 Steine. Zwei Würfel: ein Stein die Summe oder zwei Steine die einzelnen Augen.",
+  "rulesNardyPlayShort": "Kurzes Backgammon: ihr zieht aufeinander zu und dürft einzelne Steine schlagen. Ein geschlagener Stein kommt auf die Bar und muss wieder einsetzen. Sind alle Steine im Haus, werdet ihr sie ab.",
+  "rulesNardyPlayLong": "Langes Backgammon: beide starten vom selben Kopf und ziehen in dieselbe Richtung. Pro Zug darf nur ein Stein den Kopf verlassen. Schlagen ist verboten. Sind alle im Haus, werdet ihr sie ab.",
+  "rulesNardyWin": "Wer zuerst alle Steine abgetragen hat, gewinnt.",
   "rulesUnoPlayers": "Spieler: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

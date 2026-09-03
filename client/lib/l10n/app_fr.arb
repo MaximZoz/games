@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Court",
+  "gamesNardyModeLong": "Long",
+  "rulesNardyTitle": "Backgammon — règles",
+  "rulesNardyPlayers": "Joueurs : 2.",
+  "rulesNardyMode": "Mode : {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Plateau de 24 flèches, 15 dames chacun. Deux dés : une dame pour la somme ou deux dames pour chaque dé.",
+  "rulesNardyPlayShort": "Backgammon court : vous avancez l’un vers l’autre et pouvez frapper les dames seules. Une dame frappée va sur la barre et doit rentrer. Quand toutes sont dans le jan intérieur, vous les sortez.",
+  "rulesNardyPlayLong": "Backgammon long : les deux partent de la même tête et vont dans le même sens. Une seule dame quitte la tête par tour. On ne frappe pas. Quand toutes sont au jan, vous les sortez.",
+  "rulesNardyWin": "Le premier à sortir toutes ses dames gagne.",
   "rulesUnoPlayers": "Joueurs : {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

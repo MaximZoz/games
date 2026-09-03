@@ -688,6 +688,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Corto';
+
+  @override
+  String get gamesNardyModeLong => 'Lungo';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — regole';
+
+  @override
+  String get rulesNardyPlayers => 'Giocatori: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Modalità: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Tavoliere da 24 punte, 15 pedine ciascuno. Due dadi: una pedina la somma o due pedine i singoli punti.';
+
+  @override
+  String get rulesNardyPlayShort => 'Backgammon corto: andate uno verso l’altro e potete colpire le pedine isolate. La pedina colpita va sulla barra e deve rientrare. Quando tutte sono in casa, le togliete.';
+
+  @override
+  String get rulesNardyPlayLong => 'Backgammon lungo: entrambi partono dalla stessa testa e vanno nello stesso senso. Esce al massimo una pedina dalla testa per turno. Non si colpisce. Quando tutte sono in casa, le togliete.';
+
+  @override
+  String get rulesNardyWin => 'Vince chi toglie per primo tutte le pedine.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Giocatori: $players.';
   }

@@ -306,6 +306,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Short",
+  "gamesNardyModeLong": "Long",
+  "rulesNardyTitle": "Backgammon — rules",
+  "rulesNardyPlayers": "Players: 2.",
+  "rulesNardyMode": "Mode: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "A 24-point board, 15 checkers each. Roll two dice: move one checker the sum or two checkers the individual pips.",
+  "rulesNardyPlayShort": "Short backgammon: you move toward each other and may hit lone opponent checkers. A hit checker goes to the bar and must re-enter. When all checkers are in your home board, bear them off.",
+  "rulesNardyPlayLong": "Long backgammon: both start from the same head and move the same way. Only one checker may leave the head per turn. Hitting is not allowed. When all checkers are in the home board, bear them off.",
+  "rulesNardyWin": "The first player to bear off all checkers wins.",
   "rulesUnoPlayers": "Players: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
