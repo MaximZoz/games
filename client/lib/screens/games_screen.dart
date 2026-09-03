@@ -14,8 +14,10 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -25,6 +27,7 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
@@ -182,7 +185,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     // Чаще: отмена/старт должны быстро убирать карточку, даже без WS.
     _lobbyRefreshTimer = Timer.periodic(
       const Duration(seconds: 3),
-      (_) => ref.invalidate(openLobbiesProvider),
+      (_) {
+        unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet());
+        unawaited(
+          ref.read(gameInvitesProvider.notifier).hydrateFromServer(
+                ref.read(gamesRepositoryProvider),
+              ),
+        );
+      },
     );
   }
 
@@ -207,7 +217,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
   void _applySelectedTab(_GamesTab tab) {
     setState(() => _selectedTab = tab);
     if (tab == _GamesTab.lobbies) {
-      ref.invalidate(openLobbiesProvider);
+      unawaited(ref.read(openLobbiesProvider.notifier).reloadQuiet());
+      unawaited(
+        ref.read(gameInvitesProvider.notifier).hydrateFromServer(
+              ref.read(gamesRepositoryProvider),
+            ),
+      );
       _startLobbyPoll();
     } else {
       _stopLobbyPoll();
@@ -321,6 +336,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         path: '/games/tictactoe/offline',
         queryParameters: qs,
       );
+      disposeAllOfflineGameSessions();
       context.go(uri.toString());
     }
 
@@ -332,7 +348,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           children: [
             if (!isOffline)
               Padding(
-                padding: EdgeInsets.all(contentPadding),
+                padding: EdgeInsets.fromLTRB(
+                  contentPadding,
+                  phoneLandscape ? 4 : 8,
+                  contentPadding,
+                  phoneLandscape ? 6 : 8,
+                ),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),
@@ -422,8 +443,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                               isDesktop: isDesktop,
                               onJoinLobby: _joinLobby,
                               onShowLobbyRules: _showLobbyRulesInfo,
-                              onRefresh: () =>
-                                  ref.invalidate(openLobbiesProvider),
+                              onRefresh: () => unawaited(
+                                ref
+                                    .read(openLobbiesProvider.notifier)
+                                    .reloadQuiet(),
+                              ),
                               onAcceptInvite: _acceptInvite,
                               onDeclineInvite: _declineInvite,
                               onShowCreatorInfo: _showCreatorInfo,
@@ -1284,13 +1308,11 @@ class _GamesPageContent extends ConsumerWidget {
 
     Widget gameCards(double maxWidth) {
       const gap = 16.0;
-      final minTile = phoneLandscape ? 260.0 : 280.0;
-      const maxTile = 360.0;
-      final cols = maxWidth < minTile * 2 + gap
-          ? 1
-          : (maxWidth / (minTile + gap)).floor().clamp(1, 3);
-      final tileWidth =
-          ((maxWidth - gap * (cols - 1)) / cols).clamp(minTile, maxTile);
+      final cols = gamesHubTileColumns(
+        maxWidth: maxWidth,
+        wide: isDesktop,
+      );
+      final tileWidth = gamesHubTileWidth(maxWidth: maxWidth, cols: cols);
       final tiles = <Widget>[
         _TictactoeGameCard(
           isCreating: isCreating,
@@ -1325,6 +1347,10 @@ class _GamesPageContent extends ConsumerWidget {
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),
+        _NardyGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
       ];
       return Align(
         alignment: Alignment.topCenter,
@@ -1341,18 +1367,24 @@ class _GamesPageContent extends ConsumerWidget {
 
     // ListView без minHeight на весь экран: иначе при скролле карточки
     // «уезжают» в пустоту и визуально пропадают.
-    return ListView(
-      primary: false,
-      physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        contentPadding,
-        isOffline ? 12 : 8,
-        contentPadding,
-        isDesktop ? 24 : 48,
-      ),
-      children: [
-        gameCards(MediaQuery.sizeOf(context).width - contentPadding * 2),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView(
+          primary: false,
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            contentPadding,
+            isOffline ? 12 : 8,
+            contentPadding,
+            isDesktop || phoneLandscape ? 24 : 48,
+          ),
+          children: [
+            gameCards(
+              (constraints.maxWidth - contentPadding * 2).clamp(0.0, 2000.0),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1392,6 +1424,7 @@ class _LobbiesPageContent extends ConsumerWidget {
     if (invites.isEmpty) return const SizedBox.shrink();
     final inviteContent = invites.map(
       (inv) => _InviteCard(
+        key: ValueKey('invite-${inv.lobbyId}'),
         inv: inv,
         onShowCreatorInfo: onShowCreatorInfo,
         onShowInviteRules: onShowInviteRules,
@@ -1412,7 +1445,7 @@ class _LobbiesPageContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        if (isDesktop)
+        if (isDesktop || isPhoneLandscape(context))
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
@@ -1461,6 +1494,8 @@ class _LobbiesPageContent extends ConsumerWidget {
         ],
         _invitesSection(context),
         lobbiesAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (lobbies) {
             // Пустое лобби — без заглушки («Лобби» / refresh).
             if (lobbies.isEmpty) {
@@ -2005,6 +2040,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
             'players': '$_players',
             'mode': _gameMode,
           };
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(path: '/games/durak/offline', queryParameters: qs).toString(),
           );
@@ -2284,7 +2320,10 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
-        onOfflinePlay: () => context.push('/games/battleship/offline'),
+        onOfflinePlay: () {
+          disposeAllOfflineGameSessions();
+          context.push('/games/battleship/offline');
+        },
         isCreating: _creating,
         isFinding: _finding,
         isDesktop: isDesktop,
@@ -2592,6 +2631,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
         offlinePlayLabel: context.l10n.gamesPlay,
         onOfflinePlay: () {
           final n = _players < 2 ? 2 : _players;
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(
               path: '/games/poker/offline',
@@ -2861,6 +2901,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
         onOfflinePlay: () {
+          disposeAllOfflineGameSessions();
           context.push(
             Uri(
               path: '/games/uno/offline',
@@ -3142,21 +3183,13 @@ class _TictactoeGameCard extends StatelessWidget {
               SizedBox(width: isDesktop ? 20 : 12),
               Expanded(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        context.l10n.gamesTicTacToe,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          // На планшете чуть компактнее — полное имя влезает.
-                          fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
-                          letterSpacing: -0.3,
-                          height: 1.15,
-                        ),
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: isMedium || isTablet(context) ? 2 : 1,
+                      child: GameCardTitle(
+                        title: context.l10n.gamesTicTacToe,
+                        isDesktop: isDesktop,
+                        isMedium: isMedium,
                       ),
                     ),
                     if (!isOffline && stakeBronze > 0) ...[
@@ -3429,6 +3462,7 @@ class _TabSegment extends StatelessWidget {
 
 class _InviteCard extends ConsumerWidget {
   const _InviteCard({
+    super.key,
     required this.inv,
     required this.onShowCreatorInfo,
     required this.onShowInviteRules,
@@ -3630,6 +3664,204 @@ class _InviteCard extends ConsumerWidget {
 
 String _inviteGameTitle(BuildContext context, String gameType) {
   return localizedGameTypeName(gameType, context.l10n);
+}
+
+/// Карточка «Нарды» — 2 игрока, короткие/длинные, время и ставка; игра в разработке.
+class _NardyGameCard extends ConsumerStatefulWidget {
+  const _NardyGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_NardyGameCard> createState() => _NardyGameCardState();
+}
+
+class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  String _gameMode = nardyModeShort;
+  bool _settingsHydrated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('nardy')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      _gameMode = nardyNormalizeMode(saved.gameMode);
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('nardy').notifier).updateLocal(
+          gameCardSettings(
+            gameType: 'nardy',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            gameMode: _gameMode,
+          ),
+        );
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    setState(() => _stakeBronze = next);
+    _persistSettings();
+  }
+
+  void _cycleGameMode() {
+    setState(() {
+      _gameMode =
+          _gameMode == nardyModeShort ? nardyModeLong : nardyModeShort;
+    });
+    _persistSettings();
+  }
+
+  void _showInDevelopment() {
+    showAppSnackBar(
+      context,
+      message: context.l10n.gamesInDevelopment,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('nardy'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+        _gameMode = nardyNormalizeMode(saved.gameMode);
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: false,
+        icon: Icons.groups_rounded,
+        label: '2',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.swap_horiz_rounded,
+        label: nardyModeLabel(_gameMode, context.l10n),
+        onTap: _cycleGameMode,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+      GameCardChip(
+        selected: false,
+        icon: Icons.construction_rounded,
+        label: context.l10n.gamesInDevelopment,
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesNardy,
+        icon: NardyGameIcon.iconData,
+        iconChild: const NardyGameIcon(size: 26, color: Colors.white),
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: widget.isOffline ? null : _cycleStake,
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: _showInDevelopment,
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: _showInDevelopment,
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: _showInDevelopment,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    );
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.rulesNardyTitle,
+      content: rulesTextLines(nardyRuleLines(
+        gameMode: _gameMode,
+        turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
+        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
 }
 
 class _InviteGameIcon extends StatelessWidget {

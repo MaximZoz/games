@@ -22,6 +22,11 @@ class _PokerOfflineScreenState extends ConsumerState<PokerOfflineScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_gameId != null) return;
+    final existing = OfflinePokerRegistry.instance.current;
+    if (existing != null) {
+      _gameId = existing.gameId;
+      return;
+    }
     final user = ref.read(authStateProvider).valueOrNull;
     final players = widget.playerCount.clamp(2, 6);
     final session = OfflinePokerSession.create(
@@ -32,15 +37,6 @@ class _PokerOfflineScreenState extends ConsumerState<PokerOfflineScreen> {
       humanAvatarValue: user?.avatarValue,
     );
     _gameId = session.gameId;
-  }
-
-  @override
-  void dispose() {
-    final id = _gameId;
-    if (id != null) {
-      OfflinePokerRegistry.instance.get(id)?.dispose();
-    }
-    super.dispose();
   }
 
   @override

@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Póker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Corto",
+  "gamesNardyModeLong": "Largo",
+  "rulesNardyTitle": "Backgammon — reglas",
+  "rulesNardyPlayers": "Jugadores: 2.",
+  "rulesNardyMode": "Modo: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Tablero de 24 puntos, 15 fichas cada uno. Dos dados: una ficha la suma o dos fichas los valores.",
+  "rulesNardyPlayShort": "Backgammon corto: avanzáis uno hacia el otro y podéis comer fichas solas. La comida va a la barra y debe reentrar. Cuando todas están en casa, las sacáis.",
+  "rulesNardyPlayLong": "Backgammon largo: ambos salen de la misma cabeza y van en el mismo sentido. Solo una ficha sale de la cabeza por turno. No se come. Cuando todas están en casa, las sacáis.",
+  "rulesNardyWin": "Gana quien primero saque todas sus fichas.",
   "rulesUnoPlayers": "Jugadores: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Usa la búsqueda para encontrar nuevos amigos",
   "friendsNothingFound": "No se encontró nada",
   "friendsEmpty": "Aún no tienes amigos",
+  "friendsSearchNoMatches": "Ningún amigo coincide con la búsqueda",
+  "friendsIncomingSearchNoMatches": "Ninguna solicitud recibida coincide",
+  "friendsOutgoingSearchNoMatches": "Ninguna solicitud enviada coincide",
   "friendsNoIncoming": "No hay solicitudes entrantes",
   "friendsNoOutgoing": "No hay solicitudes salientes",
   "friendsAlreadyFriends": "Ya sois amigos",

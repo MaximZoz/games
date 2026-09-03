@@ -118,6 +118,11 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   /// Последняя позиция пальца — чтобы после возврата/сортировки продолжить жест.
   Offset? _lastPointerGlobal;
 
+  /// Overlay только после кадра, где слот уже дырка.
+  /// Иначе на iPhone PWA/Safari лицо в веере и карта под пальцем видны вместе.
+  bool _deferLiftOverlay = false;
+  Offset? _pendingLiftFinger;
+
   double get _peekRaiseY => widget.cardSize.height * 0.30;
 
   /// Слоты не схлопываем на lift: вытащенная карта остаётся дыркой.
@@ -130,7 +135,6 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
         card: card,
         liftedCard: _liftedCard,
         peekCard: _peekCard,
-        hidePeekUnderOverlay: _hidePeekUnderOverlay,
         parentHidden: widget.hiddenCards,
       );
 
@@ -139,6 +143,29 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     _removeOverlay();
     if (_holdingNotified) widget.onHoldingChanged?.call(false);
     super.dispose();
+  }
+
+  /// Снять жест и overlay: при повороте global-координаты уже неверны.
+  void cancelActiveGesture() {
+    _gestureGen++;
+    _removeOverlay();
+    _liftedCard = null;
+    _peekCard = null;
+    _hidePeekUnderOverlay = false;
+    _deferLiftOverlay = false;
+    _pendingLiftFinger = null;
+    _liftGlobalCenter = null;
+    _pointerDown = false;
+    _dropBusy = false;
+    _docking = false;
+    _peekT = 0;
+    _upTravel = 0;
+    _panAccum = Offset.zero;
+    _lastPointerGlobal = null;
+    _setHover(null);
+    _setHolding(false);
+    _emitActiveCard(null);
+    if (mounted) setState(() {});
   }
 
   void _emitActiveCard(PlayingCard? card) {
@@ -175,7 +202,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
   }
 
   void _updateLiftVisual(Offset globalCenter) {
-    final screen = MediaQuery.sizeOf(context);
+    if (_deferLiftOverlay) return;
+    final screen = overlaySpaceSize(context);
     _liftScale = dragScaleTowardCenter(globalCenter, screen);
     _liftGlobalCenter = globalCenter;
     _overlay?.markNeedsBuild();
@@ -447,6 +475,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _peekCard = null;
       _peekT = 0;
       _hidePeekUnderOverlay = false;
+      _deferLiftOverlay = false;
+      _pendingLiftFinger = null;
       _upTravel = 0;
       _panAccum = Offset.zero;
       _dropBusy = false;
@@ -713,6 +743,24 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     setState(() => _peekT = next);
   }
 
+  /// Тест: overlay ещё не вставлен, пока слот не стал дыркой.
+  @visibleForTesting
+  bool get debugDeferLiftOverlay => _deferLiftOverlay;
+
+  /// Тест: peek → lift без жеста (overlay после кадра с дыркой).
+  @visibleForTesting
+  void debugPromotePeekToFree(PlayingCard card) {
+    final spacing = _spacingFor(max(_fanCards.length, 1));
+    final totalW = _totalWFor(spacing);
+    _peekCard = card;
+    _peekT = 1;
+    _promotePeekToFree(
+      _slotGlobalRect(card, spacing, totalW).center,
+      spacing,
+      totalW,
+    );
+  }
+
   /// Тест: карта на overlay, слот в веере без лица.
   @visibleForTesting
   void debugLiftCard(PlayingCard card) {
@@ -752,17 +800,24 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _liftedCard = card;
       _peekCard = null;
       _peekT = 0;
+      _deferLiftOverlay = true;
     });
     _upTravel = _extractPx;
     _panAccum = Offset.zero;
     _emitActiveCard(card);
     _setHolding(true);
-    // Сначала в точке подъёма, затем к пальцу — один непрерывный кадр.
     _liftScale = 1.0;
     _liftGlobalCenter = startCenter;
-    _updateLiftVisual(startCenter);
-    _updateLiftVisual(fingerGlobal);
-    widget.onDragPosition?.call(fingerGlobal);
+    _pendingLiftFinger = fingerGlobal;
+    // Сначала кадр с дыркой в веере, потом overlay. Иначе Safari
+    // оставляет слой лица в слоте — двойник под пальцем.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _liftedCard != card) return;
+      _deferLiftOverlay = false;
+      final pos = _pendingLiftFinger ?? startCenter;
+      _updateLiftVisual(pos);
+      widget.onDragPosition?.call(pos);
+    });
   }
 
   /// Свободный drag → снова «чуть выше» в веере (обратный жест).
@@ -780,6 +835,8 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       _liftedCard = null;
       _liftGlobalCenter = null;
       _liftScale = 1.0;
+      _deferLiftOverlay = false;
+      _pendingLiftFinger = null;
       _peekCard = card;
       _peekT = t;
     });
@@ -950,6 +1007,13 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
               totalW,
               arc,
             ),
+          if (_peekOverlayCard() != null)
+            _peekOverlay(
+              fanCards,
+              baseSpacing,
+              totalW,
+              arc,
+            ),
           Positioned.fill(
             child: Listener(
               behavior: HitTestBehavior.translucent,
@@ -1014,6 +1078,11 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
                         if (_globalOverFan(e.position) &&
                             _upTravel < _extractPx) {
                           _demoteFreeToPeek(e.position, baseSpacing, totalW);
+                          return;
+                        }
+                        if (_deferLiftOverlay) {
+                          _pendingLiftFinger = e.position;
+                          _liftGlobalCenter = e.position;
                           return;
                         }
                         _updateLiftVisual(e.position);
@@ -1120,6 +1189,68 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
   }
 
+  PlayingCard? _peekOverlayCard() {
+    final card = _peekCard;
+    if (card == null || _hidePeekUnderOverlay || _liftedCard != null) {
+      return null;
+    }
+    return card;
+  }
+
+  /// Лицо вытащенной карты — отдельный слой, не слот. Иначе Impeller на
+  /// iPhone PWA оставляет призрак в веере рядом с картой под пальцем.
+  Widget _peekOverlay(
+    List<PlayingCard> cards,
+    double baseSpacing,
+    double totalW,
+    double arc,
+  ) {
+    final card = _peekOverlayCard()!;
+    final i = cards.indexOf(card);
+    final n = cards.length;
+    final center = (n - 1) / 2;
+    final angle = n == 1 || arc == 0
+        ? 0.0
+        : (i < 0 ? 0.0 : (i - center) * (arc / max(n - 1, 1)));
+    final curveY = arc == 0 || i < 0
+        ? 0.0
+        : (i - center) * (i - center) * widget.cardSize.height * _curveK(n);
+    final extraY = _peekRaiseY * _peekT;
+    final left = i < 0
+        ? (totalW - widget.cardSize.width) / 2
+        : _cardLeft(i, n, baseSpacing, totalW);
+    final top = widget.invertFan ? extraY - curveY : null;
+    final bottom = widget.invertFan ? null : extraY - curveY;
+    final legal = _isLegal(card);
+    return Positioned(
+      key: fanPeekOverlayKey(card),
+      left: left,
+      top: top,
+      bottom: bottom,
+      child: Transform.scale(
+        scale: 1.0 + 0.04 * _peekT,
+        filterQuality: FilterQuality.low,
+        child: Transform.rotate(
+          angle: angle,
+          alignment:
+              widget.invertFan ? Alignment.topCenter : Alignment.bottomCenter,
+          child: widget.faceDown
+              ? CardBackWidget(size: widget.cardSize, elevated: true)
+              : PlayingCardWidget(
+                  card: card,
+                  size: widget.cardSize,
+                  highlighted: !widget.emphasizeLegal || legal,
+                  dimmed: widget.emphasizeLegal &&
+                      widget.legalCards != null &&
+                      !legal,
+                  elevated: true,
+                  animate: false,
+                ),
+        ),
+      ),
+    );
+  }
+
   Widget _positioned(
     int i,
     int n,
@@ -1164,48 +1295,54 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     final legal = _isLegal(card);
     final hintLegal = widget.emphasizeLegal && widget.legalCards != null;
     final hidden = _isHidden(card);
-    // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
-    final showHintShadow = !hidden &&
-        ((active || selected) && (!hintLegal || legal));
-
-    // Дырка без RepaintBoundary: иначе Impeller держит кэш лица в слоте.
-    final Widget faceOrHole;
+    // Дырка стоит на месте в веере. Двигать пустой слот вместе с peek
+    // нельзя: Impeller на iPhone PWA оставляет кэш лица и получается двойник.
     if (hidden) {
-      faceOrHole = SizedBox(
-        width: widget.cardSize.width,
-        height: widget.cardSize.height,
+      final restLift = -curveY;
+      return AnimatedPositioned(
+        key: fanSlotPaintKey(card: card, hidden: true),
+        duration: Duration.zero,
+        curve: kDurakLayoutCurve,
+        left: _cardLeft(i, n, baseSpacing, totalW),
+        top: widget.invertFan ? restLift : null,
+        bottom: widget.invertFan ? null : restLift,
+        child: SizedBox(
+          width: widget.cardSize.width,
+          height: widget.cardSize.height,
+        ),
       );
-    } else {
-      final face = widget.faceDown
-          ? CardBackWidget(
-              size: widget.cardSize, elevated: peeking || active)
-          : PlayingCardWidget(
-              card: card,
-              size: widget.cardSize,
-              highlighted: showHintShadow,
-              dimmed: hintLegal && !legal,
-              // Selected — только тень (мультивыбор long-press), без подъёма.
-              elevated: active || peeking || selected,
-            );
-      faceOrHole = RepaintBoundary(child: face);
     }
-
-    final child = GestureDetector(
-      onLongPress: !widget.enabled || widget.faceDown || !legal
-          ? null
-          : () => widget.onLongPress?.call(card),
-      child: faceOrHole,
-    );
+    // Подсказка — только тень у активной/выбранной; без фиолетовой обводки всех легальных.
+    final showHintShadow =
+        (active || selected) && (!hintLegal || legal);
 
     // Края веера поднимаются «от стола»: у себя вверх, у соперника к верху экрана.
     final edgeLift = -curveY;
 
     // Peek/hide — duration 0, но виджет всегда AnimatedPositioned.
     // Смена типа на Positioned на iOS оставляет призрак в старом месте.
-    final instantSlot = peeking || hidden || !widget.animateLayout;
+    final instantSlot = peeking || !widget.animateLayout;
     final left = _cardLeft(i, n, baseSpacing, totalW) + extraX;
     final top = widget.invertFan ? extraY + edgeLift : null;
     final bottom = widget.invertFan ? null : extraY + edgeLift;
+
+    final face = widget.faceDown
+        ? CardBackWidget(
+            size: widget.cardSize, elevated: peeking || active)
+        : PlayingCardWidget(
+            card: card,
+            size: widget.cardSize,
+            highlighted: showHintShadow,
+            dimmed: hintLegal && !legal,
+            // Selected — только тень (мультивыбор long-press), без подъёма.
+            elevated: active || peeking || selected,
+          );
+    final child = GestureDetector(
+      onLongPress: !widget.enabled || widget.faceDown || !legal
+          ? null
+          : () => widget.onLongPress?.call(card),
+      child: RepaintBoundary(child: face),
+    );
     final scaled = AnimatedScale(
       scale: scale,
       duration: Duration(milliseconds: instantSlot ? 0 : 280),
@@ -1219,7 +1356,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
     );
 
     return AnimatedPositioned(
-      key: fanSlotPaintKey(card: card, hidden: hidden),
+      key: fanSlotPaintKey(card: card, hidden: false),
       duration: fanSlotMoveDuration(instant: instantSlot),
       curve: kDurakLayoutCurve,
       left: left,

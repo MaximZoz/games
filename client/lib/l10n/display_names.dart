@@ -42,6 +42,8 @@ String localizedGameTypeName(String gameType, [AppLocalizations? l10n]) {
       return t.gamesPoker;
     case 'uno':
       return t.gamesUno;
+    case 'nardy':
+      return t.gamesNardy;
     case 'tictactoe':
       return t.gamesTicTacToe;
     default:

@@ -688,6 +688,38 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Pendek';
+
+  @override
+  String get gamesNardyModeLong => 'Panjang';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — aturan';
+
+  @override
+  String get rulesNardyPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Papan 24 titik, masing-masing 15 bidak. Dua dadu: satu bidak jumlah atau dua bidak mata dadu.';
+
+  @override
+  String get rulesNardyPlayShort => 'Pendek: saling mendekat dan boleh memukul bidak tunggal. Bidak yang dipukul ke bar dan harus masuk lagi. Jika semua di rumah, turunkan dari papan.';
+
+  @override
+  String get rulesNardyPlayLong => 'Panjang: keduanya mulai dari kepala yang sama dan searah. Dari kepala hanya satu bidak per giliran. Memukul tidak boleh. Jika semua di rumah, turunkan.';
+
+  @override
+  String get rulesNardyWin => 'Yang pertama menurunkan semua bidak menang.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pemain: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Anda belum punya teman';
+
+  @override
+  String get friendsSearchNoMatches => 'Tidak ada teman yang cocok dengan pencarian';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Tidak ada permintaan masuk yang cocok';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Tidak ada permintaan terkirim yang cocok';
 
   @override
   String get friendsNoIncoming => 'Tidak ada permintaan masuk';

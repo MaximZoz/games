@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Tavla",
+  "gamesNardyModeShort": "Kısa",
+  "gamesNardyModeLong": "Uzun",
+  "rulesNardyTitle": "Tavla — kurallar",
+  "rulesNardyPlayers": "Oyuncular: 2.",
+  "rulesNardyMode": "Mod: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "24 pul yeri, her birinde 15 pul. İki zar: bir pul toplam veya iki pul ayrı değerler.",
+  "rulesNardyPlayShort": "Kısa tavla: birbirinize doğru ilerlersiniz ve yalnız pulları vurabilirsiniz. Vurulan pul bara gider ve yeniden girmelidir. Hepsi evdeyken pulları kaldırırsınız.",
+  "rulesNardyPlayLong": "Uzun tavla: ikisi de aynı baştan başlar ve aynı yöne gider. Baştan turda en fazla bir pul çıkar. Vurmak yoktur. Hepsi evdeyken pulları kaldırırsınız.",
+  "rulesNardyWin": "Tüm pullarını ilk kaldıran kazanır.",
   "rulesUnoPlayers": "Oyuncular: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Yeni arkadaş bulmak için aramayı kullanın",
   "friendsNothingFound": "Sonuç bulunamadı",
   "friendsEmpty": "Henüz arkadaşınız yok",
+  "friendsSearchNoMatches": "Aramanızla eşleşen arkadaş yok",
+  "friendsIncomingSearchNoMatches": "Aramanızla eşleşen gelen istek yok",
+  "friendsOutgoingSearchNoMatches": "Aramanızla eşleşen giden istek yok",
   "friendsNoIncoming": "Gelen istek yok",
   "friendsNoOutgoing": "Giden istek yok",
   "friendsAlreadyFriends": "Zaten arkadaşsınız",

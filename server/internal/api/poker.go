@@ -843,6 +843,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	inviteeUUIDs := make([]uuid.UUID, 0, len(invitees))
@@ -938,12 +939,29 @@ func (h *GamesHandler) savePokerState(ctx context.Context, gameID string, m map[
 }
 
 func (h *GamesHandler) broadcastPokerState(gameID string, m map[string]string) {
-	humans := pokerHumans(m)
-	h.broadcast(humans, map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": pokerGameType,
-	})
+	if m == nil {
+		return
+	}
+	ctx := context.Background()
+	if h.Rdb != nil {
+		if fresh, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result(); err == nil && len(fresh) > 0 {
+			m = fresh
+		}
+	}
+	state, err := poker.Decode(m["state"])
+	if err != nil || state == nil {
+		h.broadcast(pokerHumans(m), map[string]any{
+			"type":      "game_state",
+			"game_id":   gameID,
+			"game_type": pokerGameType,
+		})
+		return
+	}
+	for _, u := range pokerHumans(m) {
+		view := h.pokerViewFor(ctx, state, u.String(), m, gameID)
+		view["type"] = "game_state"
+		h.broadcast([]uuid.UUID{u}, view)
+	}
 }
 
 // ---- Bot ----

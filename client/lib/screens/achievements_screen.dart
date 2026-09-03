@@ -10,6 +10,7 @@ import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
@@ -161,10 +162,13 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
           ),
         ),
         body: SafeArea(
+          top: false,
           child: Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+              constraints: BoxConstraints(
+                maxWidth: isPhoneLandscape(context) ? double.infinity : 520,
+              ),
               child: items.isEmpty
                   ? const SizedBox.shrink()
                   : ListView.separated(

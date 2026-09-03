@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "بوكر",
   "gamesUno": "أونو",
+  "gamesNardy": "النرد",
+  "gamesNardyModeShort": "قصيرة",
+  "gamesNardyModeLong": "طويلة",
+  "rulesNardyTitle": "النرد — القواعد",
+  "rulesNardyPlayers": "اللاعبون: 2.",
+  "rulesNardyMode": "الوضع: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "لوحة من 24 نقطة، 15 حجرًا لكل لاعب. نردان: حجر واحد للمجموع أو حجران لقيمتي النرد.",
+  "rulesNardyPlayShort": "النرد القصير: تتحركان نحو بعضكما ويمكن ضرب الحجارة المنفردة. الحجر المضروب يذهب إلى الحاجز ويجب أن يدخل من جديد. عندما تكون كل الحجارة في البيت تُخرجها.",
+  "rulesNardyPlayLong": "النرد الطويل: يبدأ الاثنان من الرأس نفسه ويسيرن في اتجاه واحد. يخرج من الرأس حجر واحد في الدور. لا يُسمح بالضرب. عندما تكون كلها في البيت تُخرجها.",
+  "rulesNardyWin": "يفوز من يُخرج كل أحجاره أولًا.",
   "rulesUnoPlayers": "اللاعبون: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "استخدم البحث للعثور على أصدقاء جدد",
   "friendsNothingFound": "لم يُعثر على شيء",
   "friendsEmpty": "ليس لديك أصدقاء بعد",
+  "friendsSearchNoMatches": "لا يوجد أصدقاء مطابقون للبحث",
+  "friendsIncomingSearchNoMatches": "لا توجد طلبات واردة مطابقة للبحث",
+  "friendsOutgoingSearchNoMatches": "لا توجد طلبات صادرة مطابقة للبحث",
   "friendsNoIncoming": "لا توجد طلبات واردة",
   "friendsNoOutgoing": "لا توجد طلبات صادرة",
   "friendsAlreadyFriends": "أنتما صديقان بالفعل",

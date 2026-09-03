@@ -81,6 +81,17 @@ class GameRegistry {
     }
     return false;
   }
+
+  /// Идёт партия (онлайн или офлайн) — без лобби. Экран партии сам рисует
+  /// AppBar, поэтому оболочка может отдать ему свою высоту.
+  bool isActiveGamePath(String path) {
+    final clean = path.split('?').first;
+    for (final g in _ordered) {
+      if (clean.startsWith('/games/${g.id}/game/')) return true;
+      if (clean == '/games/${g.id}/offline') return true;
+    }
+    return false;
+  }
 }
 
 List<GameDescriptor> _builtinGames() => [

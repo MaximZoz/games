@@ -20,11 +20,15 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/web_push_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
+import 'package:multigames_client/screens/profile_edit_back.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/brand_accent_hairline.dart';
@@ -32,6 +36,7 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_background.dart';
+import 'package:multigames_client/ui/widgets/keyboard_inset_hud.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
@@ -52,6 +57,9 @@ bool _activeGameUsable(ActiveGameItem? active) {
 /// Одноразовый bootstrap в shell (listen без fireImmediately в этой версии Riverpod).
 bool _shellDidBootstrapSession = false;
 
+/// Прошлый путь shell — чтобы поймать уход со стола в сообщения во время хода.
+String? _lastAwaySfxPath;
+
 String? _gameIdFromPath(String path) => gameIdFromGamePath(path);
 
 /// Для unit-тестов навигации таба «Игры».
@@ -62,6 +70,7 @@ String? gameIdFromPathForTest(String path) => _gameIdFromPath(path);
 
 /// Синхронный переход на вкладку «Игры» по уже известному active (без сети).
 /// Active game/lobby — всегда туда. Observation только карточкой в списке.
+/// Офлайн-партию возвращаем по [lastSessionPath], чтобы таб не сбрасывал стол.
 void _goGamesTab(
   BuildContext context,
   String currentPath,
@@ -69,65 +78,43 @@ void _goGamesTab(
   String? pinnedLiveGameId,
   String? pinnedLiveGameType,
   String? observingGameId,
+  String? lastSessionPath,
 }) {
-  final pathGameId = _gameIdFromPath(currentPath);
-  final pinned = pinnedLiveGameId?.trim() ?? '';
-  final observing = observingGameId?.trim() ?? '';
+  final dest = resolveGamesTabPath(
+    currentPath: currentPath,
+    active: active,
+    pinnedLiveGameId: pinnedLiveGameId,
+    pinnedLiveGameType: pinnedLiveGameType,
+    observingGameId: observingGameId,
+    lastSessionPath: lastSessionPath,
+  );
+  if (dest == null || dest == currentPath) return;
+  context.go(dest);
+}
 
-  // Активная партия (пин или active) — всегда в неё (с учётом gameType).
-  String? liveGameId;
-  var liveGameType = 'tictactoe';
-  if (hasBlockingActiveMatch(active)) {
-    liveGameId = active!.gameId!.trim();
-    liveGameType = normalizeGameType(active.gameType);
-  } else if (pinned.isNotEmpty) {
-    liveGameId = pinned;
-    liveGameType = normalizeGameType(
-      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
-    );
-  }
-  if (liveGameId != null && liveGameId.isNotEmpty) {
-    final dest = gamePathFor(liveGameId, gameType: liveGameType);
-    if (currentPath == dest || currentPath.startsWith('$dest/')) return;
-    context.go(dest);
+/// Тап по «Игры»: живую/офлайн партию сначала просто показываем веткой
+/// (IndexedStack), чтобы не пересоздать стол. На каталог — [context.go].
+void _openGamesBranch(
+  BuildContext context,
+  StatefulNavigationShell navigationShell,
+  int branch,
+  String currentPath,
+  String? dest,
+) {
+  if (dest == null || dest == currentPath) {
+    navigationShell.goBranch(branch);
     return;
   }
-
-  // Наблюдение на доске — в список «Игры» (карточка «Наблюдение» там же).
-  if (pathGameId != null &&
-      observing.isNotEmpty &&
-      pathGameId == observing) {
-    if (currentPath != '/games') context.go('/games');
+  if (gameRegistry.isActiveGamePath(dest)) {
+    navigationShell.goBranch(branch);
+    final now =
+        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+    if (now != dest && !gameRegistry.isActiveGamePath(now)) {
+      context.go(dest);
+    }
     return;
   }
-
-  // Уже на экране партии, active ещё грузится — не уходим на список инвайтов.
-  if (pathGameId != null) {
-    return;
-  }
-
-  if (active != null &&
-      active.type == 'lobby' &&
-      active.lobbyId != null &&
-      active.lobbyId!.isNotEmpty) {
-    final dest = lobbyPathFor(
-      active.lobbyId!,
-      gameType: normalizeGameType(active.gameType),
-    );
-    // Уже в этом лобби (с ?mode=… или без) — не уходим на список игр.
-    if (currentPath == dest || currentPath.startsWith(dest)) return;
-    context.go('$dest?mode=invite');
-    return;
-  }
-  // Пока active подгружается после lobby_updated — не сбрасывать экран лобби.
-  if (active == null &&
-      (currentPath.startsWith('/games/tictactoe/lobby/') ||
-          currentPath.startsWith('/games/durak/lobby/'))) {
-    return;
-  }
-  if (currentPath != '/games') {
-    context.go('/games');
-  }
+  context.go(dest);
 }
 
 List<_NavItem> _navItems(BuildContext context, {required bool offline}) {
@@ -198,6 +185,28 @@ Future<void> _announceAwayGameTurn(WidgetRef ref, BuildContext context) async {
   );
 }
 
+/// Уход из партии в сообщения: бейдж меню + notify, часы стола не глушим.
+void _announceLeftBoardToMessages(WidgetRef ref, String path) {
+  final prev = _lastAwaySfxPath;
+  if (prev == path) return;
+  _lastAwaySfxPath = path;
+  final active = ref.read(activeGameProvider).valueOrNull;
+  final isMyTurn = active?.type == 'game' && (active?.isMyTurn ?? false);
+  if (!GameAwaySfx.leftBoardToMessages(
+    previousPath: prev,
+    nextPath: path,
+    gameId: active?.gameId,
+  )) {
+    return;
+  }
+  GameAwaySfx.playIfNeeded(
+    path: path,
+    gameId: active?.gameId,
+    isMyTurn: isMyTurn,
+    leftBoardWhileMyTurn: true,
+  );
+}
+
 class AppShell extends ConsumerWidget {
   const AppShell({
     super.key,
@@ -210,6 +219,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
     GameFlyOverlay.syncVisiblePath(path);
+    _announceLeftBoardToMessages(ref, path);
     final gameNavigation = ref.read(gameNavigationCoordinatorProvider);
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
@@ -434,18 +444,55 @@ class AppShell extends ConsumerWidget {
     // Как и для нижней панели: Scaffold может обнулять padding — для
     // челки/status bar берём viewPadding, чтобы цвет шёл full-bleed.
     final topInset = media.viewPadding.top;
+    final toolbarHeight = shellToolbarHeight(context);
     final narrow = isNarrow(context);
     final isLandscape = media.size.width > media.size.height;
     final narrowLandscape = narrow && isLandscape;
+    // Android landscape: клавиатура забирает 70%+ высоты. Тулбар+рейл
+    // оставляют полю ввода ~60px — текст не видно. Схлопываем хром.
+    final landscapeKeyboard = narrowLandscape && media.viewInsets.bottom >= 80;
+    // Профиль: клавиатура в портрете тоже съедает низ — прячем тулбар и nav,
+    // чтобы полоска ввода оставалась на экране.
+    final profileKeyboard =
+        path == '/profile' && media.viewInsets.bottom >= 80 && narrow;
+    final profileFieldOpen = ref.watch(profileEditFieldOpenProvider);
+    final hideLandscapeProfileChrome =
+        narrowLandscape && path == '/profile' && profileFieldOpen;
     final inChatRoom = path.startsWith('/chats/');
     final onChatsList = path == '/chats';
     final onFriends = path == '/friends';
+    // Друзья и чаты: клавиатуру вычитает только оболочка — ровно один раз
+    // и не больше 60% высоты (iOS PWA умеет отдать inset больше экрана).
+    // Вложенные Scaffold'ы этих экранов идут с resizeToAvoidBottomInset:
+    // false, поэтому второго вычитания нет.
+    final shellOwnsKeyboardInset = narrow && (onFriends || onChatsList || inChatRoom);
+    final keyboardOpen = keyboardIsOpen(media.viewInsets.bottom);
+    final shellKeyboardInset = sanitizeKeyboardInset(
+      inset: media.viewInsets.bottom,
+      viewportHeight: media.size.height,
+    );
+    // Друзья и чаты: компактный хром только с открытой клавиатурой.
+    final hideInputChrome = (onFriends || onChatsList || inChatRoom) &&
+        inputHideChrome(
+          phoneLandscape: narrowLandscape,
+          keyboardInset: media.viewInsets.bottom,
+        );
+    // Партия на телефоне в альбоме: столу остаётся ~300px по высоте, а тулбар
+    // оболочки дублирует шапку самой игры. Прячем его — навигация в рейле.
+    final hideGameChromeLandscape =
+        narrowLandscape && gameRegistry.isActiveGamePath(path);
+    final hideToolbarForKeyboard = landscapeKeyboard ||
+        profileKeyboard ||
+        hideLandscapeProfileChrome ||
+        hideInputChrome ||
+        hideGameChromeLandscape;
     final onAuthScreen = path == '/login' || path == '/register';
     final toolbarLeading = ref.watch(mobileToolbarLeadingProvider);
     Future.microtask(() {
       if (!context.mounted) return;
       try {
         ref.read(currentRoutePathProvider.notifier).state = path;
+        rememberGamesSessionPath(ref, path);
         // SW глушит пуш про уже открытый чат/матч (особенно iOS PWA).
         reportPushSwActiveRoute(path);
         final shouldClearToolbar =
@@ -514,18 +561,20 @@ class AppShell extends ConsumerWidget {
       // Не пишем в browser history (Safari back не прыгает по табам).
       if (target == '/games' && isAuthorized) {
         final currentPath = path;
+        final lastSession = ref.read(lastGamesSessionPathProvider);
         if (isOffline) {
+          final dest = resolveGamesTabPath(
+            currentPath: currentPath,
+            lastSessionPath: lastSession,
+          );
           Router.neglect(context, () {
-            if (currentPath != '/games' &&
-                !currentPath.startsWith('/games/tictactoe/offline') &&
-                !currentPath.startsWith('/games/durak/offline') &&
-                !currentPath.startsWith('/games/battleship/offline') &&
-                !currentPath.startsWith('/games/poker/offline') &&
-                !currentPath.startsWith('/games/uno/offline')) {
-              context.go('/games');
-            } else {
-              navigationShell.goBranch(branch, initialLocation: true);
-            }
+            _openGamesBranch(
+              context,
+              navigationShell,
+              branch,
+              currentPath,
+              dest,
+            );
           });
           return;
         }
@@ -564,10 +613,9 @@ class AppShell extends ConsumerWidget {
         }
         final activeForNav = ref.read(activeGameProvider).valueOrNull;
         Router.neglect(context, () {
-          _goGamesTab(
-            context,
-            currentPath,
-            activeForNav ?? cachedActive,
+          final dest = resolveGamesTabPath(
+            currentPath: currentPath,
+            active: activeForNav ?? cachedActive,
             pinnedLiveGameId: pinnedLiveId.isNotEmpty
                 ? pinnedLiveId
                 : (pathIsLive ? pathGameId : null),
@@ -576,6 +624,14 @@ class AppShell extends ConsumerWidget {
                 activeForNav?.gameType ??
                 cachedActive?.gameType,
             observingGameId: observingId.isNotEmpty ? observingId : null,
+            lastSessionPath: lastSession,
+          );
+          _openGamesBranch(
+            context,
+            navigationShell,
+            branch,
+            currentPath,
+            dest,
           );
         });
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
@@ -643,6 +699,7 @@ class AppShell extends ConsumerWidget {
                     nowPath,
                     null,
                     observingGameId: obsNow,
+                    lastSessionPath: lastSession,
                   );
                 });
               }
@@ -666,6 +723,7 @@ class AppShell extends ConsumerWidget {
                 pinnedLiveGameId: pinNow.isNotEmpty ? pinNow : null,
                 pinnedLiveGameType: pinNowType,
                 observingGameId: obsNow.isNotEmpty ? obsNow : null,
+                lastSessionPath: lastSession,
               );
             });
           } catch (_) {
@@ -719,8 +777,50 @@ class AppShell extends ConsumerWidget {
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.
+    // Status bar резервирует SizedBox(shellStatusBarExtent) выше — и в
+    // альбоме партии тоже. Иначе каждый экран со своим SafeArea добавляет
+    // ту же высоту ещё раз, а рейл уезжает под часы Android.
+    //
+    // В альбоме нижнего меню нет, и вырез сбоку с home indicator снизу
+    // никто не отступает — стол игры уезжает под них. Отступаем здесь и
+    // убираем padding из MediaQuery, чтобы SafeArea экранов не сдвинули
+    // содержимое второй раз.
+    final railVisible =
+        !(landscapeKeyboard || hideLandscapeProfileChrome || hideInputChrome);
+    final landscapeSafe = landscapeContentSafeArea(
+      viewPadding: media.viewPadding,
+      phoneLandscape: narrowLandscape,
+      railVisible: railVisible,
+    );
+    // Экраны партий считают раскладку от ширины экрана (веер, анимации). В
+    // альбоме у них остаётся заметно меньше: рейл слева и вырезы по краям —
+    // отдаём им размер их собственной коробки, иначе стол уезжает вбок.
     final branchHost = AppOpaqueSurface(
-      child: RepaintBoundary(child: navigationShell),
+      child: RepaintBoundary(
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeLeft: narrowLandscape,
+          removeRight: narrowLandscape,
+          removeBottom: narrowLandscape,
+          // Padding и LayoutBuilder всегда в дереве: при повороте экрана
+          // условная обёртка пересоздала бы ветки и сбросила их состояние.
+          child: Padding(
+            padding: landscapeSafe,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final data = MediaQuery.of(context);
+                return MediaQuery(
+                  data: hideGameChromeLandscape
+                      ? data.copyWith(size: constraints.biggest)
+                      : data,
+                  child: navigationShell,
+                );
+              },
+            ),
+          ),
+        ),
+      ),
     );
 
     final shellBody = Column(
@@ -732,9 +832,22 @@ class AppShell extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: topInset),
               SizedBox(
-                height: kToolbarHeight,
+                height: shellStatusBarExtent(
+                  viewPaddingTop: topInset,
+                  // Партия в альбоме прячет тулбар, но status bar остаётся.
+                  collapseForInput:
+                      hideLandscapeProfileChrome || hideInputChrome,
+                ),
+              ),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: hideToolbarForKeyboard ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: hideToolbarForKeyboard,
+                    child: SizedBox(
+                height: toolbarHeight,
                 child: ClipRect(
                   child: Row(
                     children: [
@@ -899,6 +1012,9 @@ class AppShell extends ConsumerWidget {
                     ],
                   ),
                 ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -908,7 +1024,28 @@ class AppShell extends ConsumerWidget {
               ? SizedBox.expand(child: branchHost)
               : Row(
                   children: [
-                    NavigationRail(
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        widthFactor:
+                            (landscapeKeyboard ||
+                                    hideLandscapeProfileChrome ||
+                                    hideInputChrome)
+                                ? 0.0
+                                : 1.0,
+                        child: IgnorePointer(
+                          ignoring: landscapeKeyboard ||
+                              hideLandscapeProfileChrome ||
+                              hideInputChrome,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: landscapeRailLeadingInset(
+                                viewPadding: media.viewPadding,
+                                phoneLandscape: narrowLandscape,
+                                railVisible: railVisible,
+                              ),
+                            ),
+                            child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
                       backgroundColor: Colors.transparent,
@@ -935,6 +1072,10 @@ class AppShell extends ConsumerWidget {
                           label: Text(item.label),
                         );
                       }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: SizedBox.expand(child: branchHost),
@@ -956,13 +1097,21 @@ class AppShell extends ConsumerWidget {
     // Scaffold обнуляет padding.bottom у bottomNavigationBar — поэтому inset
     // берём из viewPadding, а не из SafeArea(padding).
     final bottomInset = media.viewPadding.bottom;
+    // Оболочка сама сдвигает контент на клавиатуру, поэтому панель под ней
+    // не должна занимать высоту — иначе между вводом и клавиатурой щель.
+    final collapseNavForKeyboard = shellOwnsKeyboardInset && keyboardOpen;
     final bottomNav = showBottomNav
         ? ClipRect(
             child: Align(
               alignment: Alignment.topCenter,
-              heightFactor: collapseBottomNav ? 0.0 : 1.0,
+              heightFactor:
+                  (collapseBottomNav || profileKeyboard || collapseNavForKeyboard)
+                      ? 0.0
+                      : 1.0,
               child: IgnorePointer(
-                ignoring: collapseBottomNav,
+                ignoring: collapseBottomNav ||
+                    profileKeyboard ||
+                    collapseNavForKeyboard,
                 child: ColoredBox(
                   color: AppColors.surfaceUnified,
                   child: Column(
@@ -1014,7 +1163,20 @@ class AppShell extends ConsumerWidget {
           child: Scaffold(
             // Тот же цвет, что чёлка и низ — без «шва» после splash.
             backgroundColor: AppColors.surfaceUnified,
-            body: shellBody,
+            resizeToAvoidBottomInset: shellOwnsKeyboardInset
+                ? false
+                : profileEditShellResizeToAvoidInset(
+                    onProfile: path == '/profile',
+                  ),
+            body: KeyboardInsetScope(
+              handled: shellOwnsKeyboardInset,
+              child: shellOwnsKeyboardInset
+                  ? Padding(
+                      padding: EdgeInsets.only(bottom: shellKeyboardInset),
+                      child: shellBody,
+                    )
+                  : shellBody,
+            ),
             bottomNavigationBar: bottomNav,
           ),
         ),
@@ -1029,12 +1191,19 @@ class AppShell extends ConsumerWidget {
           Positioned(
             left: 12,
             right: 12,
-            top: topInset + kToolbarHeight + 6,
+            top: topInset + toolbarHeight + 6,
             child: _AppUpdateBanner(
               onUpdate: () => ref.read(appUpdateProvider.notifier).applyUpdate(),
               onDismiss: () =>
                   ref.read(appUpdateProvider.notifier).dismissBanner(),
             ),
+          ),
+        if (keyboardInsetHudEnabled())
+          Positioned(
+            left: 0,
+            right: 0,
+            top: topInset,
+            child: const KeyboardInsetHud(),
           ),
       ],
     );

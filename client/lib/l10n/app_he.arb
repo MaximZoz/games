@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "פוקר",
   "gamesUno": "אונו",
+  "gamesNardy": "שש-בש",
+  "gamesNardyModeShort": "קצר",
+  "gamesNardyModeLong": "ארוך",
+  "rulesNardyTitle": "שש-בש — חוקים",
+  "rulesNardyPlayers": "שחקנים: 2.",
+  "rulesNardyMode": "מצב: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "לוח עם 24 נקודות, 15 אבנים לכל אחד. שתי קוביות: אבן אחת לסכום או שתיים לערכי הקוביות.",
+  "rulesNardyPlayShort": "שש-בש קצר: נעים זה מול זה ואפשר להכות אבנים בודדות. אבן מוכה עולה לבר וחייבת להיכנס שוב. כשכל האבנים בבית מורידים אותן.",
+  "rulesNardyPlayLong": "שש-בש ארוך: שניהם מתחילים מאותו ראש ונעים לאותו כיוון. מהראש יוצאת לכל היותר אבן אחת בתור. אסור להכות. כשכולן בבית מורידים אותן.",
+  "rulesNardyWin": "מנצח מי שמוריד ראשון את כל האבנים.",
   "rulesUnoPlayers": "שחקנים: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "השתמשו בחיפוש כדי למצוא חברים חדשים",
   "friendsNothingFound": "לא נמצא דבר",
   "friendsEmpty": "עדיין אין לכם חברים",
+  "friendsSearchNoMatches": "אין חברים שתואמים לחיפוש",
+  "friendsIncomingSearchNoMatches": "אין בקשות נכנסות שתואמות לחיפוש",
+  "friendsOutgoingSearchNoMatches": "אין בקשות יוצאות שתואמות לחיפוש",
   "friendsNoIncoming": "אין בקשות נכנסות",
   "friendsNoOutgoing": "אין בקשות יוצאות",
   "friendsAlreadyFriends": "כבר חברים",

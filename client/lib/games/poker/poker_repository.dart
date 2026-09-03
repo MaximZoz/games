@@ -236,12 +236,18 @@ class PokerGameView {
 
   /// Свой ход по индексу актёра (кнопки смотрят на [legalActions] отдельно).
   /// Не требуем non-empty legalActions — иначе при рассинхроне оба видят «ход соперника».
-  bool get isMyTurn =>
-      !isOver &&
-      !isHandOver &&
-      !iAmEliminated &&
-      myIndex >= 0 &&
-      myIndex == actingIndex;
+  bool get isMyTurn {
+    if (isOver ||
+        isHandOver ||
+        iAmEliminated ||
+        myIndex < 0 ||
+        myIndex != actingIndex) {
+      return false;
+    }
+    final self = me;
+    if (self != null && self.folded) return false;
+    return true;
+  }
 
   bool get iWon =>
       myPlace == 1 || (myPlace <= 0 && myIndex >= 0 && winners.contains(myIndex));

@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "Перемагає той, хто першим потопить увесь флот противника.",
   "gamesPoker": "Покер",
   "gamesUno": "Уно",
+  "gamesNardy": "Нарди",
+  "gamesNardyModeShort": "Короткі",
+  "gamesNardyModeLong": "Довгі",
+  "rulesNardyTitle": "Нарди — правила",
+  "rulesNardyPlayers": "Гравці: 2.",
+  "rulesNardyMode": "Режим: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Дошка з 24 пунктів, у кожного по 15 шашок. Ходи за двома кубиками: можна сходити однією шашкою на суму або двома на очки кубиків.",
+  "rulesNardyPlayShort": "Короткі нарди: гравці йдуть назустріч і можуть бити одиночні шашки суперника. Збита стає на бар і має увійти знову. Коли всі шашки в домі — знімаєте їх з дошки.",
+  "rulesNardyPlayLong": "Довгі нарди: обидва починають з однієї голови й ідуть в один бік. З голови за хід виходить не більше однієї шашки. Бити шашки не можна. Коли всі в домі — знімаєте їх з дошки.",
+  "rulesNardyWin": "Перемагає той, хто першим зніме всі свої шашки.",
   "rulesUnoPlayers": "Гравці: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Скористайтеся пошуком, щоб знайти нових друзів",
   "friendsNothingFound": "Нічого не знайдено",
   "friendsEmpty": "У вас поки немає друзів",
+  "friendsSearchNoMatches": "Немає друзів, що відповідають пошуку",
+  "friendsIncomingSearchNoMatches": "Немає вхідних заявок за запитом",
+  "friendsOutgoingSearchNoMatches": "Немає вихідних заявок за запитом",
   "friendsNoIncoming": "Немає вхідних запитів",
   "friendsNoOutgoing": "Немає вихідних запитів",
   "friendsAlreadyFriends": "Уже в друзях",

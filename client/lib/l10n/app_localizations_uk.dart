@@ -688,6 +688,38 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesUno => 'Уно';
 
   @override
+  String get gamesNardy => 'Нарди';
+
+  @override
+  String get gamesNardyModeShort => 'Короткі';
+
+  @override
+  String get gamesNardyModeLong => 'Довгі';
+
+  @override
+  String get rulesNardyTitle => 'Нарди — правила';
+
+  @override
+  String get rulesNardyPlayers => 'Гравці: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Дошка з 24 пунктів, у кожного по 15 шашок. Ходи за двома кубиками: можна сходити однією шашкою на суму або двома на очки кубиків.';
+
+  @override
+  String get rulesNardyPlayShort => 'Короткі нарди: гравці йдуть назустріч і можуть бити одиночні шашки суперника. Збита стає на бар і має увійти знову. Коли всі шашки в домі — знімаєте їх з дошки.';
+
+  @override
+  String get rulesNardyPlayLong => 'Довгі нарди: обидва починають з однієї голови й ідуть в один бік. З голови за хід виходить не більше однієї шашки. Бити шашки не можна. Коли всі в домі — знімаєте їх з дошки.';
+
+  @override
+  String get rulesNardyWin => 'Перемагає той, хто першим зніме всі свої шашки.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Гравці: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'У вас поки немає друзів';
+
+  @override
+  String get friendsSearchNoMatches => 'Немає друзів, що відповідають пошуку';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Немає вхідних заявок за запитом';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Немає вихідних заявок за запитом';
 
   @override
   String get friendsNoIncoming => 'Немає вхідних запитів';

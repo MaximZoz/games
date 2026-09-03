@@ -688,6 +688,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Short';
+
+  @override
+  String get gamesNardyModeLong => 'Long';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — rules';
+
+  @override
+  String get rulesNardyPlayers => 'Players: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'A 24-point board, 15 checkers each. Roll two dice: move one checker the sum or two checkers the individual pips.';
+
+  @override
+  String get rulesNardyPlayShort => 'Short backgammon: you move toward each other and may hit lone opponent checkers. A hit checker goes to the bar and must re-enter. When all checkers are in your home board, bear them off.';
+
+  @override
+  String get rulesNardyPlayLong => 'Long backgammon: both start from the same head and move the same way. Only one checker may leave the head per turn. Hitting is not allowed. When all checkers are in the home board, bear them off.';
+
+  @override
+  String get rulesNardyWin => 'The first player to bear off all checkers wins.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Players: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'You have no friends yet';
+
+  @override
+  String get friendsSearchNoMatches => 'No friends match your search';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'No incoming requests match your search';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'No outgoing requests match your search';
 
   @override
   String get friendsNoIncoming => 'No incoming requests';

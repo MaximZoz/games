@@ -3,11 +3,112 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Нарды: карточка в каталоге с режимами «Короткие»/«Длинные», ставкой, временем хода и подписью «В разработке»
+- Приглашение в игру сразу видно другу и догоняется сверкой с сервером, даже если кадр сокета потерялся
+- Покер: после «Фолд» кнопки не возвращаются; повторный клик не показывает «игра уже закончена»
+- Дурак: раздача собирает веер по одной карте из полёта, без вспышки всей руки; бросок на стол не мигает кнопками и картами
+- Из партии в сообщениях остаются звук стола и тик своего хода; бейдж «ваш ход» в меню по-прежнему сигналит
+- Уно в альбоме: подписи «Колода» и «Сброс» помещаются в зелёный овал, а не садятся на его край
+- Покер и другие игры: кнопку своего хода нельзя нажать дважды — повторный клик не шлёт ход и не показывает «Сейчас не ваш ход»
+- Дурак: в портрете раздача кладёт карты в веер по одной после полёта из колоды; подкид без мигания хода, кнопок и карты на столе; победа и реванш — после короткой паузы на последний отбой
+- Деплой на Fly: установка `flyctl` с повторами, без падения `setup-flyctl` на пустом логе
+- Дурак: после хода карта не вспыхивает в веере (портрет и альбом) — слот-дырка до посадки
+- Хаб игр: приглашение в лобби больше не пропадает и не вспыхивает при переключении «Игры» ↔ «Лобби»
+- Дурак: в переводном бот сразу ходит после перевода; после отбоя пауза перед битой; карта соперника на столе только после посадки
+- Дурак в альбоме: «Взять»/«Бито» правее, не накрывает карты стола
+- Дурак: карта на столе и веер только после посадки — не раньше, чем закончится полёт
+- Дурак: карта садится на стол и в веер только после полёта, не вспыхивает заранее; пустую биту не показываем
+- Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
+- Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
+- Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
+- Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
+- Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
+- Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; застрявшие полёты снимаются при возврате с вкладки, resume и если карта зависла скрытой
+- Дурак в альбоме: видно веер соперника и карту биты; раздача не зависает и не прячет рубашки
+- Дурак в альбоме: пустую биту не рисуем; козырь торчит из колоды; видно «кто ходит» и младший козырь
+- Дурак в альбоме: полёты карт больше не зависают поверх прошлого кадра (координаты от всего экрана, при повороте overlay снимается); итог — статус и «Повторить» в ряд, без обрезанного стола
+- Игры втроём и вчетвером в альбоме: в покере плашки соперников не уходят под кнопки, в уно кнопки не закрывают колоду и сброс, в дураке «Бито» не наезжает на карты стола
+- iPhone в альбоме: стол игры не заезжает под чёлку и полоску home indicator — карты, кнопки и поле видно целиком
+- Покер в альбоме: кнопки «Фолд», «Колл», «Рейз» и «Ва-банк» больше не срезаются бортиком стола
+- Игры в альбоме: стол больше не съезжает — в дураке видно всю руку и колоду, в уно колоду и сброс, в покере свои карты не наезжают на общие, в морском бое поле слева, а кнопки справа
+- Покер в альбоме: соперники сидят по бокам стола, поэтому «Пре-флоп», банк, общие карты и свои карты больше не наползают друг на друга
+- Дурак в альбоме: нижний край веера больше не срезается краем экрана
+- Уно в альбоме: стол и карты подгоняются под реальную высоту, а не ужимаются на треть
+- Профиль: полоска ввода имени, возраста и «о себе» всегда вплотную над клавиатурой — в альбоме текст больше не уезжает к верхнему краю экрана
+- Профиль: убрали клавиатуру — компактная полоска ввода тоже закрывается, а не висит одна поверх формы
+- Итоги игры: «Повторить» и «Другой соперник» по ширине текста, а не на весь экран
+- «Своя игра» в альбоме: ставка и ссылка в одну строку, друзей снова видно
+- Профиль и поиск друзей: клавиатура выезжает с первого тапа по полю, а не со второго
+- Профиль: при вводе форма остаётся на экране — полоска ввода просто стоит над клавиатурой, а не на пустом экране
+- Сообщения и друзья: клавиатура вычитается один раз, поэтому список и поле ввода больше не схлопываются в пустоту
+- Сообщения: поле ввода снова сразу над клавиатурой, сверху видны сообщения (в портрете и в альбоме); компактный ввод только с открытой клавиатурой
+- Поиск друзей: клавиатура на iPhone открывается как раньше, поле не висит внизу без клавиатуры
+- Профиль: возраст 1–111 при вводе; «О себе» в несколько строк
+- Название игры на карточке переносится на новую строку, а не обрезается многоточием
+- Карточка профиля по центру экрана; имя, возраст и «о себе» открываются как комментарий — клавиатура не перекрывает поля и не дёргается в альбоме
+- Карточки игр на телефоне в одну колонку: названия и кнопки не сжимаются
+- Поиск друзей в альбоме: текст «нет совпадений» виден над клавиатурой
+- Десктоп: смайлики снова 3×3 в колонке 720px, колёсико листает страницы
+- Меньше пустого места сверху (компактный тулбар, без двойного SafeArea); в альбоме профиль на весь экран
+- Поиск друзей: если никто не подходит под запрос — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»
+- Android landscape: при клавиатуре скрываются тулбар и рейл, в профиле видно поле ввода
+- Landscape и широкие экраны: главная, магазин, игры и смайлики — сетка карточек; профиль редактируется в две колонки
+- Дурак: на iPhone PWA карта больше не двоится при вытаскивании из веера
+- Морской бой: поле расстановки на Android больше не обрезается кнопками
 - Уно: очки после раунда, лимит 100 вдвоём и 300 при 3+ игроках, бот больше не зависает на +4
 - Галерея профиля: до 3 фото, просмотр на весь экран, «сделать основным»
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Backgammon: a catalog card with Short/Long modes, stake, turn time, and an “In development” label
+- Game invites show up for the friend immediately and are reconciled from the server if a socket frame is dropped
+- Poker: Fold stays gone after a hand-ending fold; a second tap no longer shows “the game is already over”
+- Durak: the deal builds the fan one flying card at a time instead of flashing the whole hand; throws no longer flicker buttons or table cards
+- Opening Messages from a live table keeps the game sounds and turn-clock ticks; the Games-tab “your turn” badge still alerts
+- Uno in landscape: the Draw / Discard labels stay inside the green oval instead of sitting on its rim
+- Poker and the other tables: you cannot tap your turn action twice — the second click does not send a move or show “It is not your turn”
+- Durak: in portrait the deal seats fan cards one by one after each flight from the deck; a throw no longer flickers turn chrome or the table card; win and rematch wait for a short pause after the last beat
+- Fly deploy: install `flyctl` with retries instead of a silent `setup-flyctl` crash
+- Durak: a played card no longer flashes in the fan (portrait and landscape) — the slot stays empty until the card lands
+- Games hub: a lobby invite no longer vanishes or flashes when switching between Games and Lobby
+- Durak: in transfer mode the bot replies after a transfer without switching tabs; a short pause shows the beat before discard; opponent cards land before they appear on the table
+- Durak in landscape: Take/Beat sit to the right so they no longer cover the table cards
+- Durak: a thrown or dealt card appears on the table or in the hand only after the flight lands; the empty discard pile stays hidden
+- Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
+- Turn timer: the clock keeps ticking after the low-time warning
+- Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
+- Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
+- Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
+- Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear on tab return, app resume, or a stuck hidden card
+- Durak in landscape: the opponent fan and discard pile stay visible; a stuck deal no longer hides the card backs
+- Durak in landscape: no empty discard card; the trump sticks out of the deck; who-goes-first and lowest trump stay visible
+- Durak in landscape: card flights no longer freeze over the previous frame (overlay uses the real window, and rotates dismiss leftover tickets); the result row keeps Rematch beside the status instead of a clipped table
+- Three- and four-player games in landscape: Poker keeps opponent plates above the action buttons, Uno stops the buttons from covering the draw and discard piles, and Durak keeps the Beat button off the table cards
+- iPhone in landscape: the game table keeps clear of the notch and the home indicator — cards, buttons and boards stay fully visible
+- Poker in landscape: the Fold / Call / Raise / All-in buttons are no longer clipped by the table rim
+- Games in landscape: the table no longer breaks — Durak shows the whole hand and the deck, Uno the draw and discard piles, Poker keeps hole cards off the board, and Battleship puts the grid on the left with controls on the right
+- Poker in landscape: opponents sit along the table sides, so the street label, pot, community cards and hole cards no longer overlap
+- Durak in landscape: the bottom edge of the hand fan is no longer cut off by the screen
+- Uno in landscape: the table and cards scale to the real height instead of shrinking by a third
+- Chats: the composer sits right above the keyboard again with messages visible above it (portrait and landscape); compact input only while the keyboard is open
+- Friends search: the keyboard opens on iPhone as before and the field no longer hangs at the bottom without it
+- Profile: the input strip always sits right above the keyboard, so in landscape the text no longer jumps to the top edge
+- Profile: hiding the keyboard also closes the compact input strip instead of leaving it over the form
+- Game results: Rematch and Another opponent are sized to their text instead of stretching across the screen
+- Private game lobby in landscape: stake and invite link share one row, so the friends list is visible again
+- Profile and friends search: the keyboard opens on the first tap instead of the second
+- Profile: age 1–111 while typing; About me wraps on the card
+- Game titles on hub cards wrap to the next line instead of truncating with an ellipsis
+- Profile card is centered; name, age and about open like a comment so the keyboard no longer covers fields or flickers in landscape
+- Game cards stay a single full-width column on phones so titles and buttons stay readable
+- Friends search empty text stays visible above the landscape keyboard
+- Desktop emoji shop is a 3×3 paged grid again (720px), mouse wheel pages
+- Less empty space under the status bar; landscape profile fills the screen
+- Friends search: a query with no matches shows “No friends match your search”, not an empty friends list
+- Android landscape: toolbar and rail collapse when the keyboard is open so the focused field stays visible
+- Landscape and large screens: home, shop, games and emoji grids; profile edit uses two columns
+- Durak: pulling a card from the fan on iPhone PWA no longer leaves a duplicate
+- Battleship: setup board on Android is no longer clipped by the action buttons
 - Uno: round score overlay, 100-point heads-up / 300 with 3+ players, bot no longer stalls on +4
 - Profile gallery: up to 3 photos, fullscreen view, set as primary avatar
 - Coin icon next to the stake in game rules

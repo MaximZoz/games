@@ -2,10 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show rulesLineWithStakeIcon;
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+
+/// Flutter считает «Крестики-нолики» одним словом и ставит «...» вместо
+/// переноса. Нулевой пробел после дефиса даёт точку разрыва.
+String wrapGameTitle(String title) {
+  return title.replaceAllMapped(
+    RegExp(r'[-–—‐‑‒―־]'),
+    (m) => '${m[0]}\u200b',
+  );
+}
+
+/// Название на карточке игры: перенос на новую строку, не обрезка в одну.
+class GameCardTitle extends StatelessWidget {
+  const GameCardTitle({
+    super.key,
+    required this.title,
+    this.isDesktop = false,
+    this.isMedium = false,
+  });
+
+  final String title;
+  final bool isDesktop;
+  final bool isMedium;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      wrapGameTitle(title),
+      style: theme.textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+        fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
+        letterSpacing: -0.3,
+        height: 1.15,
+      ),
+      softWrap: true,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 3,
+    );
+  }
+}
 
 /// Верхний блок карточки игры: иконка + заголовок + ставка (кликабельная) +
 /// иконка-инфо с правилами. Используется в «Крестики-нолики», «Дурак» и т.д.
@@ -74,20 +116,13 @@ class GameCardHeader extends StatelessWidget {
         SizedBox(width: isDesktop ? 20 : 12),
         Expanded(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
-                    letterSpacing: -0.3,
-                    height: 1.15,
-                  ),
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: isMedium ? 2 : 1,
+                child: GameCardTitle(
+                  title: title,
+                  isDesktop: isDesktop,
+                  isMedium: isMedium,
                 ),
               ),
               if (stakeBronze != null && stakeBronze! > 0) ...[
@@ -290,62 +325,83 @@ class GameCardActionsRow extends StatelessWidget {
         ),
       );
     }
-    return Row(
-      children: [
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: isCreating || isFinding ? null : onCreate,
-            icon: isCreating
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.add_rounded, size: 20),
-            label: Text(isCreating ? creatingLabel : createLabel),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: EdgeInsets.symmetric(vertical: _padV),
-            ),
+    Widget createButton({required bool expanded}) {
+      final button = FilledButton.icon(
+        onPressed: isCreating || isFinding ? null : onCreate,
+        icon: isCreating
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.add_rounded, size: 20),
+        label: Text(isCreating ? creatingLabel : createLabel),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accentStart,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
+          padding: EdgeInsets.symmetric(vertical: _padV),
         ),
-        SizedBox(width: isMedium ? 10 : 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: isCreating || isFinding ? null : onFind,
-            icon: isFinding
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.accentStart,
-                    ),
-                  )
-                : const Icon(Icons.search_rounded, size: 20),
-            label: Text(isFinding ? findingLabel : findLabel),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accentStart,
-              side: BorderSide(
-                color: AppColors.accentStart.withValues(alpha: 0.6),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: EdgeInsets.symmetric(vertical: _padV),
-            ),
+      );
+      return expanded ? button : Expanded(child: button);
+    }
+
+    Widget findButton({required bool expanded}) {
+      final button = OutlinedButton.icon(
+        onPressed: isCreating || isFinding ? null : onFind,
+        icon: isFinding
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              )
+            : const Icon(Icons.search_rounded, size: 20),
+        label: Text(isFinding ? findingLabel : findLabel),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accentStart,
+          side: BorderSide(
+            color: AppColors.accentStart.withValues(alpha: 0.6),
           ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: EdgeInsets.symmetric(vertical: _padV),
         ),
-      ],
+      );
+      return expanded ? button : Expanded(child: button);
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack = gamesHubStackActions(constraints.maxWidth);
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              createButton(expanded: true),
+              const SizedBox(height: 8),
+              findButton(expanded: true),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            createButton(expanded: false),
+            SizedBox(width: isMedium ? 10 : 12),
+            findButton(expanded: false),
+          ],
+        );
+      },
     );
   }
 }
@@ -415,11 +471,14 @@ class GameCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GradientCard(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = gamesHubStackActions(constraints.maxWidth);
+        return GradientCard(
       animate: false,
       padding: EdgeInsets.symmetric(
-        horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
-        vertical: isMedium ? 16 : (isDesktop ? 22 : 20),
+        horizontal: compact ? 14 : (isMedium ? 18 : (isDesktop ? 24 : 20)),
+        vertical: compact ? 14 : (isMedium ? 16 : (isDesktop ? 22 : 20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -436,6 +495,8 @@ class GameCardShell extends StatelessWidget {
           actions,
         ],
       ),
+        );
+      },
     );
   }
 }

@@ -179,6 +179,35 @@ func TestNormalizeUnoGameSettings(t *testing.T) {
 	}
 }
 
+func TestNormalizeNardyGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeNardy,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		GameMode:    "long",
+		MaxPlayers:  4,
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeNardy || s.MaxPlayers != 2 ||
+		s.GameMode != "long" || s.Variant != "long" || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeNardy,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		GameMode:    "unknown",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.GameMode != "short" || s2.MaxPlayers != 2 {
+		t.Fatalf("mode=%s players=%d", s2.GameMode, s2.MaxPlayers)
+	}
+}
+
 func TestGameSettingsToJSON(t *testing.T) {
 	m := gameSettingsToJSON(store.UserGameSettings{
 		GameType:             "tictactoe",

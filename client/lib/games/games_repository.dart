@@ -135,6 +135,15 @@ class UserGameSettings {
     gameMode: 'classic',
   );
 
+  static const nardyDefaults = UserGameSettings(
+    gameType: 'nardy',
+    turnTimeSec: 60,
+    variant: 'short',
+    stakeBronze: 2,
+    maxPlayers: 2,
+    gameMode: 'short',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
@@ -143,6 +152,8 @@ class UserGameSettings {
         return pokerDefaults;
       case 'uno':
         return unoDefaults;
+      case 'nardy':
+        return nardyDefaults;
       default:
         return defaults;
     }
@@ -228,6 +239,18 @@ class UserGameSettings {
         gameMode: 'classic',
       );
     }
+    if (gameType == 'nardy') {
+      final mode = gameMode == 'long' ? 'long' : 'short';
+      return UserGameSettings(
+        gameType: 'nardy',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: mode,
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        maxPlayers: 2,
+        gameMode: mode,
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -267,6 +290,11 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
+    } else if (gameType == 'nardy') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
+      out['max_players'] = 2;
+      out['game_mode'] = gameMode;
     } else {
       out['variant'] = parseVariant(variant);
       out['grid_size'] = gridSize;
@@ -905,6 +933,73 @@ class GameStateItem {
 
   bool get isActivePvp =>
       status == 'active' && playerUserIds.every((id) => !id.startsWith('bot:'));
+
+  int get filledCellCount =>
+      board.where((c) => c.trim().isNotEmpty).length;
+
+  /// WS крестиков часто без имён/id — оставляем их с последнего HTTP.
+  GameStateItem mergePreservingIdentity(GameStateItem incoming) {
+    String pickId(String next, String prev) =>
+        next.trim().isNotEmpty ? next : prev;
+    return GameStateItem(
+      id: pickId(incoming.id, id),
+      board: incoming.board,
+      variant: incoming.variant,
+      turn: incoming.turn,
+      winner: incoming.winner ?? winner,
+      status: incoming.status,
+      forfeit: incoming.forfeit || forfeit,
+      timeout: incoming.timeout || timeout,
+      turnTimeSec: incoming.turnTimeSec > 0 ? incoming.turnTimeSec : turnTimeSec,
+      turnDeadline: incoming.turnDeadline ?? turnDeadline,
+      gridSize: incoming.gridSize,
+      maxPlayers: incoming.maxPlayers > 0 ? incoming.maxPlayers : maxPlayers,
+      xUserId: pickId(incoming.xUserId, xUserId),
+      oUserId: pickId(incoming.oUserId, oUserId),
+      tUserId: pickId(incoming.tUserId, tUserId),
+      sUserId: pickId(incoming.sUserId, sUserId),
+      swapRule: incoming.swapRule || swapRule,
+      firstMoveRestriction: incoming.firstMoveRestriction || firstMoveRestriction,
+      canSwap: incoming.canSwap,
+      stakeBronze: incoming.stakeBronze != 0 ? incoming.stakeBronze : stakeBronze,
+      xDisplayName: incoming.xDisplayName ?? xDisplayName,
+      oDisplayName: incoming.oDisplayName ?? oDisplayName,
+      xAvatarKind: incoming.xUserId.trim().isNotEmpty
+          ? incoming.xAvatarKind
+          : xAvatarKind,
+      xAvatarValue: incoming.xAvatarValue ?? xAvatarValue,
+      xFrameColor: incoming.xFrameColor ?? xFrameColor,
+      xFrameCode: incoming.xFrameCode ?? xFrameCode,
+      oAvatarKind: incoming.oUserId.trim().isNotEmpty
+          ? incoming.oAvatarKind
+          : oAvatarKind,
+      oAvatarValue: incoming.oAvatarValue ?? oAvatarValue,
+      oFrameColor: incoming.oFrameColor ?? oFrameColor,
+      oFrameCode: incoming.oFrameCode ?? oFrameCode,
+      tDisplayName: incoming.tDisplayName ?? tDisplayName,
+      sDisplayName: incoming.sDisplayName ?? sDisplayName,
+      tAvatarKind: incoming.tUserId.trim().isNotEmpty
+          ? incoming.tAvatarKind
+          : tAvatarKind,
+      tAvatarValue: incoming.tAvatarValue ?? tAvatarValue,
+      tFrameColor: incoming.tFrameColor ?? tFrameColor,
+      tFrameCode: incoming.tFrameCode ?? tFrameCode,
+      sAvatarKind: incoming.sUserId.trim().isNotEmpty
+          ? incoming.sAvatarKind
+          : sAvatarKind,
+      sAvatarValue: incoming.sAvatarValue ?? sAvatarValue,
+      sFrameColor: incoming.sFrameColor ?? sFrameColor,
+      sFrameCode: incoming.sFrameCode ?? sFrameCode,
+      chatId: incoming.chatId ?? chatId,
+      eliminatedMarks: incoming.eliminatedMarks.isNotEmpty
+          ? incoming.eliminatedMarks
+          : eliminatedMarks,
+      winningCells: incoming.winningCells ?? winningCells,
+      nextBoard: incoming.nextBoard ?? nextBoard,
+      metaBoard: incoming.metaBoard.isNotEmpty ? incoming.metaBoard : metaBoard,
+      drawOfferBy: incoming.drawOfferBy,
+    );
+  }
 
   factory GameStateItem.fromJson(Map<String, dynamic> json) {
     final legacyGrid = (json['grid_size'] as num?)?.toInt() ?? 3;

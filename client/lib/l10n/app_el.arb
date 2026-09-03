@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Πόκερ",
   "gamesUno": "Uno",
+  "gamesNardy": "Τάβλι",
+  "gamesNardyModeShort": "Κοντό",
+  "gamesNardyModeLong": "Μακρύ",
+  "rulesNardyTitle": "Τάβλι — κανόνες",
+  "rulesNardyPlayers": "Παίκτες: 2.",
+  "rulesNardyMode": "Λειτουργία: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Ταμπλό 24 θέσεων, 15 πούλια ο καθένας. Δύο ζάρια: ένα πούλι το άθροισμα ή δύο τα μάτια.",
+  "rulesNardyPlayShort": "Κοντό τάβλι: προχωράτε αντίθετα και μπορείτε να χτυπάτε μονά πούλια. Το χτυπημένο πάει στη μπάρα και πρέπει να ξαναμπεί. Όταν όλα είναι στο σπίτι, τα βγάζετε.",
+  "rulesNardyPlayLong": "Μακρύ τάβλι: και οι δύο ξεκινούν από το ίδιο κεφάλι και πάνε προς την ίδια κατεύθυνση. Από το κεφάλι βγαίνει το πολύ ένα πούλι ανά σειρά. Δεν επιτρέπεται χτύπημα. Όταν όλα είναι στο σπίτι, τα βγάζετε.",
+  "rulesNardyWin": "Νικά όποιος βγάλει πρώτος όλα τα πούλια.",
   "rulesUnoPlayers": "Παίκτες: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Χρησιμοποιήστε την αναζήτηση για νέους φίλους",
   "friendsNothingFound": "Δεν βρέθηκε τίποτα",
   "friendsEmpty": "Δεν έχετε ακόμα φίλους",
+  "friendsSearchNoMatches": "Κανένας φίλος δεν αντιστοιχεί στην αναζήτηση",
+  "friendsIncomingSearchNoMatches": "Καμία εισερχόμενη αίτηση για την αναζήτηση",
+  "friendsOutgoingSearchNoMatches": "Καμία εξερχόμενη αίτηση για την αναζήτηση",
   "friendsNoIncoming": "Δεν υπάρχουν εισερχόμενα αιτήματα",
   "friendsNoOutgoing": "Δεν υπάρχουν εξερχόμενα αιτήματα",
   "friendsAlreadyFriends": "Ήδη φίλοι",

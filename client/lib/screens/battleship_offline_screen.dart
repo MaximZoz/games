@@ -22,18 +22,14 @@ class _BattleshipOfflineScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_gameId != null) return;
+    final existing = OfflineBattleshipRegistry.instance.current;
+    if (existing != null) {
+      _gameId = existing.gameId;
+      return;
+    }
     final me = ref.read(authStateProvider).valueOrNull?.id ?? 'local:player';
     final session = OfflineBattleshipSession.create(humanUserId: me);
     _gameId = session.gameId;
-  }
-
-  @override
-  void dispose() {
-    final id = _gameId;
-    if (id != null) {
-      OfflineBattleshipRegistry.instance.get(id)?.dispose();
-    }
-    super.dispose();
   }
 
   @override

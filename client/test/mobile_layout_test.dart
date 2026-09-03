@@ -66,6 +66,31 @@ void main() {
     expect(hasFullWidth, isTrue);
   });
 
+  testWidgets('Phone landscape profile card is vertically centered',
+      (tester) async {
+    setTablet(tester);
+    await pumpMultiGamesApp(tester);
+    await goToProfileTab(tester);
+    setPhoneLandscape(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Войдите в аккаунт'), findsOneWidget);
+    final top = tester.getTopLeft(find.text('Войдите в аккаунт')).dy;
+    // Прижатие к тулбару давало бы ~60–120; центр — ниже.
+    expect(top, greaterThan(150));
+  });
+
+  testWidgets('Phone portrait profile card is vertically centered',
+      (tester) async {
+    await openGuestProfileOnPhone(tester);
+
+    expect(find.text('Войдите в аккаунт'), findsOneWidget);
+    final top = tester.getTopLeft(find.text('Войдите в аккаунт')).dy;
+    // Прижатие к верху давало бы ~80–140 на 844px высоты.
+    expect(top, greaterThan(200));
+  });
+
   testWidgets('Phone profile guest CTA is visible without overflow',
       (tester) async {
     await openGuestProfileOnPhone(tester);

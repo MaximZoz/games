@@ -688,6 +688,38 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Narda';
+
+  @override
+  String get gamesNardyModeShort => 'Qisqa';
+
+  @override
+  String get gamesNardyModeLong => 'Uzun';
+
+  @override
+  String get rulesNardyTitle => 'Narda — qoidalar';
+
+  @override
+  String get rulesNardyPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Doskada 24 punkt, har kimda 15 tosh. Ikki zar: bitta tosh bilan yig‘indiga yoki ikkitasi bilan zarning ochkolariga yurasiz.';
+
+  @override
+  String get rulesNardyPlayShort => 'Qisqa narda: qarshi yurasiz va yolg‘iz toshlarni ura olasiz. Urilgan tosh barga chiqadi va qayta kirishi kerak. Hamma tosh uyda bo‘lsa, ularni doskadan olasiz.';
+
+  @override
+  String get rulesNardyPlayLong => 'Uzun narda: ikkalasi ham bir boshdan boshlab bir tomonga yuradi. Boshdan bir yurishda faqat bitta tosh chiqadi. Urish mumkin emas. Hammasi uyda bo‘lsa, toshlarni olasiz.';
+
+  @override
+  String get rulesNardyWin => 'Barcha toshlarini birinchi olgan g‘olib.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oʻyinchilar: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Hali do‘stlaringiz yo‘q';
+
+  @override
+  String get friendsSearchNoMatches => 'Qidiruvga mos do‘stlar yo‘q';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Qidiruvga mos kiruvchi so‘rovlar yo‘q';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Qidiruvga mos chiquvchi so‘rovlar yo‘q';
 
   @override
   String get friendsNoIncoming => 'Kiruvchi so‘rovlar yo‘q';

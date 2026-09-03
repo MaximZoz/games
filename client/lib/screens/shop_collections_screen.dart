@@ -128,18 +128,37 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 )
-              : Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: orderedSets.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) => _buildCollectionSetTile(
-                        context,
-                        orderedSets[index],
-                        bySet,
+              : DesktopTileGrid(
+                  itemCount: orderedSets.length,
+                  maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
+                  maxContentWidth: 1100,
+                  maxColumns: 3,
+                  padding: EdgeInsets.fromLTRB(
+                    isPhoneLandscape(context) ? 12 : 16,
+                    8,
+                    isPhoneLandscape(context) ? 12 : 16,
+                    24,
+                  ),
+                  itemBuilder: (context, index) => _buildCollectionSetTile(
+                    context,
+                    orderedSets[index],
+                    bySet,
+                  ),
+                  mobileBuilder: (context) => Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        itemCount: orderedSets.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, index) =>
+                            _buildCollectionSetTile(
+                          context,
+                          orderedSets[index],
+                          bySet,
+                        ),
                       ),
                     ),
                   ),
@@ -514,7 +533,7 @@ class _ShopCollectionGroupScreenState
       setDaily: setDaily,
     );
 
-    if (!isWide(context)) {
+    if (!useDesktopTiles(context)) {
       return ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         itemCount: groupItems.length + 1,

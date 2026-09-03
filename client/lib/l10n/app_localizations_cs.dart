@@ -688,6 +688,38 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Vrhcáby';
+
+  @override
+  String get gamesNardyModeShort => 'Krátké';
+
+  @override
+  String get gamesNardyModeLong => 'Dlouhé';
+
+  @override
+  String get rulesNardyTitle => 'Vrhcáby — pravidla';
+
+  @override
+  String get rulesNardyPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Deska o 24 bodech, po 15 kamenech. Dvě kostky: jeden kámen součet, nebo dva kameny jednotlivá oka.';
+
+  @override
+  String get rulesNardyPlayShort => 'Krátké vrhcáby: jdete proti sobě a můžete tlouct osamocené kameny. Trefený jde na bar a musí vstoupit znovu. Až jsou všechny v domě, sundáváte je.';
+
+  @override
+  String get rulesNardyPlayLong => 'Dlouhé vrhcáby: oba začínají z jedné hlavy a jdou stejným směrem. Z hlavy vyjde za tah nanejvýš jeden kámen. Tlouct se nesmí. Až jsou všechny v domě, sundáváte je.';
+
+  @override
+  String get rulesNardyWin => 'Vyhrává ten, kdo první sundá všechny kameny.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Hráči: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Zatím nemáte žádné přátele';
+
+  @override
+  String get friendsSearchNoMatches => 'Žádní přátelé nevyhovují hledání';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Žádné příchozí žádosti pro hledání';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Žádné odchozí žádosti pro hledání';
 
   @override
   String get friendsNoIncoming => 'Žádné příchozí žádosti';

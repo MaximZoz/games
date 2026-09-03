@@ -688,6 +688,38 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Nardy';
+
+  @override
+  String get gamesNardyModeShort => 'Krótkie';
+
+  @override
+  String get gamesNardyModeLong => 'Długie';
+
+  @override
+  String get rulesNardyTitle => 'Nardy — zasady';
+
+  @override
+  String get rulesNardyPlayers => 'Gracze: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Tryb: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Plansza z 24 pól, po 15 pionków. Dwie kości: wszystkie oczka jednym pionkiem albo każdą kością osobno.';
+
+  @override
+  String get rulesNardyPlayShort => 'Krótkie nardy: idziecie naprzeciw i możecie zbijać samotne pionki. zbity idzie na bar i musi wejść ponownie. Gdy wszystkie są w domu, zdejmujecie je.';
+
+  @override
+  String get rulesNardyPlayLong => 'Długie nardy: obaj startują z jednej głowy i idą w tę samą stronę. Z głowy w turze wychodzi najwyżej jeden pionek. Zbijać nie wolno. Gdy wszystkie są w domu, zdejmujecie je.';
+
+  @override
+  String get rulesNardyWin => 'Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Gracze: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Nie masz jeszcze znajomych';
+
+  @override
+  String get friendsSearchNoMatches => 'Brak znajomych pasujących do wyszukiwania';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Brak zaproszeń przychodzących dla zapytania';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Brak zaproszeń wychodzących dla zapytania';
 
   @override
   String get friendsNoIncoming => 'Brak przychodzących zaproszeń';

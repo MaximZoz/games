@@ -688,6 +688,38 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Lyhyt';
+
+  @override
+  String get gamesNardyModeLong => 'Pitkä';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — säännöt';
+
+  @override
+  String get rulesNardyPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Lautalla 24 pistettä, kummallakin 15 nappulaa. Kaksi noppaa: yksi nappula summaan tai kaksi nappulaa silmälukuihin.';
+
+  @override
+  String get rulesNardyPlayShort => 'Lyhyt backgammon: liikutte toisianne kohti ja voitte lyödä yksinäisiä nappuloita. Lyöty nappula menee barille ja sen on tultava uudestaan sisään. Kun kaikki ovat kotona, poistat ne laudalta.';
+
+  @override
+  String get rulesNardyPlayLong => 'Pitkä backgammon: molemmat lähtevät samasta päästä samaan suuntaan. Päästä lähtee vuorossa enintään yksi nappula. Lyöminen ei ole sallittua. Kun kaikki ovat kotona, poistat ne.';
+
+  @override
+  String get rulesNardyWin => 'Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pelaajat: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Sinulla ei ole vielä kavereita';
+
+  @override
+  String get friendsSearchNoMatches => 'Ei kavereita, jotka vastaavat hakua';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Ei hakuun sopivia saapuvia pyyntöjä';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Ei hakuun sopivia lähteneitä pyyntöjä';
 
   @override
   String get friendsNoIncoming => 'Ei saapuneita pyyntöjä';

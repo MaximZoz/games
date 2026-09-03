@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "扑克",
   "gamesUno": "乌诺",
+  "gamesNardy": "西洋双陆",
+  "gamesNardyModeShort": "短盘",
+  "gamesNardyModeLong": "长盘",
+  "rulesNardyTitle": "西洋双陆 — 规则",
+  "rulesNardyPlayers": "玩家：2 人。",
+  "rulesNardyMode": "模式：{mode}。",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "24 点棋盘，每人 15 枚棋子。两枚骰子：一枚棋子走总和，或两枚分别走点数。",
+  "rulesNardyPlayShort": "短盘：相向而行，可打对方单子。被打的棋子上栏后须重新进入。全部进入本营后即可出局。",
+  "rulesNardyPlayLong": "长盘：双方从同一头出发、同向而行。每回合最多从开头走出一枚棋。不可打子。全部进入本营后出局。",
+  "rulesNardyWin": "先将全部棋子出局者获胜。",
   "rulesUnoPlayers": "玩家：{players}。",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "使用搜索寻找新好友",
   "friendsNothingFound": "未找到结果",
   "friendsEmpty": "你还没有好友",
+  "friendsSearchNoMatches": "没有符合搜索的好友",
+  "friendsIncomingSearchNoMatches": "没有符合搜索的收到请求",
+  "friendsOutgoingSearchNoMatches": "没有符合搜索的已发请求",
   "friendsNoIncoming": "暂无收到的请求",
   "friendsNoOutgoing": "暂无发出的请求",
   "friendsAlreadyFriends": "已是好友",

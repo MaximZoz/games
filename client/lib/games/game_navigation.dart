@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
+import 'package:multigames_client/games/games_repository.dart';
 
 /// Возвращает префикс пути партии для game_type ('/games/<gt>/game/').
 String gamePathPrefixFor(String gameType) {
@@ -35,6 +36,76 @@ String? gameIdFromGamePath(String? location) =>
 /// game_type из пути партии/лобби/оффлайна, иначе null.
 String? gameTypeFromGamePath(String? location) =>
     gameRegistry.gameTypeFromPath(location);
+
+/// Куда вести вкладку «Игры». `null` — остаться на [currentPath].
+///
+/// Офлайн (`/games/<type>/offline`) и последняя живая партия важнее
+/// каталога: иначе тап по «Игры» с профиля сбрасывает стол.
+String? resolveGamesTabPath({
+  required String currentPath,
+  ActiveGameItem? active,
+  String? pinnedLiveGameId,
+  String? pinnedLiveGameType,
+  String? observingGameId,
+  String? lastSessionPath,
+}) {
+  final pathGameId = gameIdFromGamePath(currentPath);
+  final pinned = pinnedLiveGameId?.trim() ?? '';
+  final observing = observingGameId?.trim() ?? '';
+
+  String? liveGameId;
+  var liveGameType = 'tictactoe';
+  if (active != null &&
+      active.type == 'game' &&
+      (active.gameId?.trim().isNotEmpty ?? false)) {
+    liveGameId = active.gameId!.trim();
+    liveGameType = normalizeGameType(active.gameType);
+  } else if (pinned.isNotEmpty) {
+    liveGameId = pinned;
+    liveGameType = normalizeGameType(
+      pinnedLiveGameType ?? gameTypeFromGamePath(currentPath),
+    );
+  }
+  if (liveGameId != null && liveGameId.isNotEmpty) {
+    final dest = gamePathFor(liveGameId, gameType: liveGameType);
+    if (currentPath == dest || currentPath.startsWith('$dest/')) return null;
+    return dest;
+  }
+
+  if (pathGameId != null &&
+      observing.isNotEmpty &&
+      pathGameId == observing) {
+    return currentPath == '/games' ? null : '/games';
+  }
+
+  if (pathGameId != null) return null;
+  if (gameRegistry.isActiveGamePath(currentPath)) return null;
+
+  final last = lastSessionPath?.trim() ?? '';
+  if (last.isNotEmpty && gameRegistry.isActiveGamePath(last)) {
+    if (currentPath == last) return null;
+    return last;
+  }
+
+  if (active != null &&
+      active.type == 'lobby' &&
+      active.lobbyId != null &&
+      active.lobbyId!.isNotEmpty) {
+    final dest = lobbyPathFor(
+      active.lobbyId!,
+      gameType: normalizeGameType(active.gameType),
+    );
+    if (currentPath == dest || currentPath.startsWith(dest)) return null;
+    return '$dest?mode=invite';
+  }
+  if (active == null &&
+      (currentPath.startsWith('/games/tictactoe/lobby/') ||
+          currentPath.startsWith('/games/durak/lobby/'))) {
+    return null;
+  }
+  if (currentPath == '/games') return null;
+  return '/games';
+}
 
 /// Совместимая константа для legacy-кода. Новый код — [gamePathPrefixFor].
 const tictactoeGamePathPrefix = '/games/tictactoe/game/';

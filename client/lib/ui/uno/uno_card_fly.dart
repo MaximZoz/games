@@ -48,16 +48,18 @@ Future<UnoCardFlyTicket> playUnoCardFlyAnimation({
   SfxId? landSfx,
   bool playSfx = true,
 }) async {
-  if (!context.mounted ||
-      !TickerMode.of(context) ||
+  if (!context.mounted) {
+    return UnoCardFlyTicket._(null, null, null);
+  }
+  if (playSfx && GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
+  }
+  if (!TickerMode.of(context) ||
       !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return UnoCardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return UnoCardFlyTicket._(null, null, null);
-  if (playSfx) {
-    Sfx.play(launchSfx ?? SfxId.cardPlay);
-  }
 
   final controller = AnimationController(
     vsync: _UnoFlyTicker(),

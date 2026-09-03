@@ -843,6 +843,7 @@ func (h *GamesHandler) createUnoInviteLobby(
 	if _, err := pipe.Exec(ctx); err != nil {
 		return "", err
 	}
+	h.trackUserInvites(ctx, lobbyID, invitees)
 	setUserActiveLobby(ctx, h.Rdb, creatorID, lobbyID)
 	if maxPlayers > 2 {
 		if chatID, err := store.EnsureGameGroupChat(
@@ -943,11 +944,29 @@ func (h *GamesHandler) saveUnoState(
 }
 
 func (h *GamesHandler) broadcastUnoState(gameID string, m map[string]string) {
-	h.broadcast(unoHumans(m), map[string]any{
-		"type":      "game_state",
-		"game_id":   gameID,
-		"game_type": unoGameType,
-	})
+	if m == nil {
+		return
+	}
+	ctx := context.Background()
+	if h.Rdb != nil {
+		if fresh, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result(); err == nil && len(fresh) > 0 {
+			m = fresh
+		}
+	}
+	state, err := uno.Decode(m["state"])
+	if err != nil || state == nil {
+		h.broadcast(unoHumans(m), map[string]any{
+			"type":      "game_state",
+			"game_id":   gameID,
+			"game_type": unoGameType,
+		})
+		return
+	}
+	for _, u := range unoHumans(m) {
+		view := h.unoViewFor(ctx, state, u.String(), m, gameID)
+		view["type"] = "game_state"
+		h.broadcast([]uuid.UUID{u}, view)
+	}
 }
 
 func (h *GamesHandler) notifyUnoTurn(gameID string, state *uno.Game) {

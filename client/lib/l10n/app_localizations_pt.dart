@@ -688,6 +688,38 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Gamão';
+
+  @override
+  String get gamesNardyModeShort => 'Curto';
+
+  @override
+  String get gamesNardyModeLong => 'Longo';
+
+  @override
+  String get rulesNardyTitle => 'Gamão — regras';
+
+  @override
+  String get rulesNardyPlayers => 'Jogadores: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Tabuleiro com 24 casas, 15 peças cada. Dois dados: uma peça a soma ou duas peças os pontos.';
+
+  @override
+  String get rulesNardyPlayShort => 'Gamão curto: avançam um contra o outro e podem comer peças sozinhas. A comida vai à barra e deve reentrar. Quando todas estão em casa, retiram-nas.';
+
+  @override
+  String get rulesNardyPlayLong => 'Gamão longo: os dois saem da mesma cabeça e vão no mesmo sentido. Só uma peça sai da cabeça por turno. Não se come. Quando todas estão em casa, retiram-nas.';
+
+  @override
+  String get rulesNardyWin => 'Ganha quem primeiro retirar todas as peças.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Jogadores: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Você ainda não tem amigos';
+
+  @override
+  String get friendsSearchNoMatches => 'Nenhum amigo corresponde à pesquisa';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Nenhum pedido recebido corresponde';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Nenhum pedido enviado corresponde';
 
   @override
   String get friendsNoIncoming => 'Sem pedidos recebidos';

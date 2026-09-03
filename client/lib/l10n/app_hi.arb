@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "पोकर",
   "gamesUno": "ऊनो",
+  "gamesNardy": "बैकगैमन",
+  "gamesNardyModeShort": "छोटा",
+  "gamesNardyModeLong": "लंबा",
+  "rulesNardyTitle": "बैकगैमन — नियम",
+  "rulesNardyPlayers": "खिलाड़ी: 2.",
+  "rulesNardyMode": "मोड: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "24 बिंदुओं का बोर्ड, प्रत्येक के 15 मोहरे। दो पासे: एक मोहरा योग या दो मोहरे अंक।",
+  "rulesNardyPlayShort": "छोटा: एक-दूसरे की ओर चलते हैं और अकेले मोहरे मार सकते हैं। मारा गया मोहरा बार पर जाता है और फिर घुसना होता है। सब घर में हों तो उतारें।",
+  "rulesNardyPlayLong": "लंबा: दोनों एक ही सिरे से एक दिशा में चलते हैं। सिरे से एक चाल में एक ही मोहरा निकलता है। मारना मना है। सब घर में हों तो उतारें।",
+  "rulesNardyWin": "जो पहले सारे मोहरे उतार ले, वही जीते।",
   "rulesUnoPlayers": "खिलाड़ी: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "नए मित्र खोजने के लिए खोज का उपयोग करें",
   "friendsNothingFound": "कुछ नहीं मिला",
   "friendsEmpty": "आपके अभी कोई मित्र नहीं हैं",
+  "friendsSearchNoMatches": "खोज से कोई मित्र मेल नहीं खाता",
+  "friendsIncomingSearchNoMatches": "खोज से कोई आने वाला अनुरोध मेल नहीं खाता",
+  "friendsOutgoingSearchNoMatches": "खोज से कोई भेजा गया अनुरोध मेल नहीं खाता",
   "friendsNoIncoming": "कोई आने वाला अनुरोध नहीं",
   "friendsNoOutgoing": "कोई भेजा गया अनुरोध नहीं",
   "friendsAlreadyFriends": "पहले से मित्र हैं",

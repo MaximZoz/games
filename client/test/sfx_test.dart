@@ -77,6 +77,71 @@ void main() {
     );
   });
 
+  test('сообщения — список и комната, не blocked', () {
+    expect(isMessagesPath('/chats'), isTrue);
+    expect(isMessagesPath('/chats/abc'), isTrue);
+    expect(isMessagesPath('/chats/abc?from=games'), isTrue);
+    expect(isMessagesPath('/chats/blocked'), isFalse);
+    expect(isMessagesPath('/games/uno/game/g1'), isFalse);
+    expect(isMessagesPath('/'), isFalse);
+  });
+
+  test('уход со стола в сообщения — notify, на столе — нет', () {
+    expect(
+      GameAwaySfx.leftBoardToMessages(
+        previousPath: '/games/uno/game/g1',
+        nextPath: '/chats/abc',
+        gameId: 'g1',
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.leftBoardToMessages(
+        previousPath: '/games/uno/game/g1',
+        nextPath: '/chats',
+        gameId: 'g1',
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.leftBoardToMessages(
+        previousPath: '/games/uno/game/g1',
+        nextPath: '/',
+        gameId: 'g1',
+      ),
+      isFalse,
+    );
+    expect(
+      GameAwaySfx.leftBoardToMessages(
+        previousPath: null,
+        nextPath: '/chats',
+        gameId: 'g1',
+      ),
+      isFalse,
+    );
+    GameAwaySfx.reset();
+    expect(
+      GameAwaySfx.shouldPlayNotify(
+        path: '/chats',
+        gameId: 'g1',
+        becameMyTurn: false,
+        leftBoardWhileMyTurn: true,
+        now: DateTime.utc(2026, 9, 3, 12),
+      ),
+      isTrue,
+    );
+    expect(
+      GameAwaySfx.shouldPlayNotify(
+        path: '/games/uno/game/g1',
+        gameId: 'g1',
+        becameMyTurn: false,
+        leftBoardWhileMyTurn: true,
+      ),
+      isFalse,
+    );
+    GameAwaySfx.reset();
+  });
+
   test('бейдж «ваш ход» молчит на экране партии', () {
     expect(isGamePlayPath('/games/poker/game/abc'), isTrue);
     expect(isGamePlayPath('/games/poker/offline'), isTrue);
@@ -220,19 +285,20 @@ void main() {
     TurnClockSfx.reset();
   });
 
-  test('интервал тика ускоряется на 80% и 50%, на 5 с — тишина', () {
+  test('интервал тика ускоряется на 80% и 50%, последние 5 с — 500 мс', () {
     const total = 60000;
     expect(turnTickIntervalMs(remainingMs: 54000, totalMs: total), 1000);
     expect(turnTickIntervalMs(remainingMs: 48000, totalMs: total), 800);
     expect(turnTickIntervalMs(remainingMs: 30000, totalMs: total), 500);
     expect(turnTickIntervalMs(remainingMs: 12000, totalMs: total), 500);
-    expect(turnTickIntervalMs(remainingMs: 5000, totalMs: 20000), 0);
+    expect(turnTickIntervalMs(remainingMs: 5000, totalMs: 20000), 500);
+    expect(turnTickIntervalMs(remainingMs: 2500, totalMs: 20000), 500);
     expect(turnTickIntervalMs(remainingMs: 0, totalMs: total), 0);
     expect(crossedTurnFiveSeconds(previousRemainingMs: 5100, nextRemainingMs: 4900), isTrue);
     expect(crossedTurnFiveSeconds(previousRemainingMs: 4000, nextRemainingMs: 3000), isFalse);
   });
 
-  test('последние 5 секунд — один сигнал, без града тиков', () {
+  test('последние 5 секунд — сигнал, затем тики продолжаются', () {
     TurnClockSfx.reset();
     final played = <SfxId>[];
     TurnClockSfx.debugOnPlay = played.add;
@@ -258,12 +324,30 @@ void main() {
     TurnClockSfx.sync(
       isMyTurn: true,
       remainingSeconds: 4,
+      remainingMs: 4500,
+      turnTimeSec: 20,
+      clockVisible: true,
+      now: t0.add(const Duration(milliseconds: 3500)),
+    );
+    expect(played, [SfxId.yourTurn, SfxId.yourTurn, SfxId.tick]);
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 4,
       remainingMs: 4200,
       turnTimeSec: 20,
       clockVisible: true,
-      now: t0.add(const Duration(milliseconds: 3220)),
+      now: t0.add(const Duration(milliseconds: 3700)),
     );
-    expect(played, [SfxId.yourTurn, SfxId.yourTurn]);
+    expect(played, [SfxId.yourTurn, SfxId.yourTurn, SfxId.tick]);
+    TurnClockSfx.sync(
+      isMyTurn: true,
+      remainingSeconds: 3,
+      remainingMs: 4000,
+      turnTimeSec: 20,
+      clockVisible: true,
+      now: t0.add(const Duration(milliseconds: 4000)),
+    );
+    expect(played, [SfxId.yourTurn, SfxId.yourTurn, SfxId.tick, SfxId.tick]);
     TurnClockSfx.reset();
   });
 

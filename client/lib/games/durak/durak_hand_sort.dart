@@ -60,6 +60,64 @@ int? drawUntilTrumpAppears({
   return owner;
 }
 
+/// Какие карты ещё не сели в веер во время стартовой раздачи.
+///
+/// Пока очередь [_pendingDealCards] не пуста — прячем только её. Если очередь
+/// опустела, но слоты уже есть в локальном порядке, не подставляем всю руку
+/// с сервера: иначе посаженные карты исчезают до конца FX.
+Set<PlayingCard> durakOpeningDealPendingSet({
+  required bool concealOpeningHand,
+  required Set<PlayingCard> pendingDealCards,
+  required List<PlayingCard>? handOrder,
+  required Iterable<PlayingCard> incomingFanCards,
+  required List<PlayingCard> serverHand,
+}) {
+  if (!concealOpeningHand) return pendingDealCards;
+  if (pendingDealCards.isNotEmpty) return pendingDealCards;
+  final seated = <PlayingCard>{
+    ...?handOrder,
+    ...incomingFanCards,
+  };
+  if (seated.isEmpty) return serverHand.toSet();
+  final stillHidden = serverHand.toSet()..removeAll(seated);
+  return stillHidden;
+}
+
+/// Первый кадр ещё без раздачи: веер не берёт всю руку с сервера.
+///
+/// Иначе в портрете (твин 380 ms) вспыхивают все карты, и только потом
+/// летит колода.
+bool durakOpeningDealConcealsFan({
+  required bool prevDeckUninitialized,
+  required bool shouldAnimateOpening,
+}) =>
+    prevDeckUninitialized && shouldAnimateOpening;
+
+/// Слот в веере до полёта: карта уже в порядке, лицо прячет hidden.
+///
+/// Иначе foldCardIn целится в центр пустого веера, а вся рука вспыхивает
+/// в onHandoff — веер «пропал и появился».
+List<PlayingCard> durakReserveDealFanSlot({
+  required List<PlayingCard> seated,
+  required PlayingCard incoming,
+  int Function(PlayingCard a, PlayingCard b)? compare,
+}) {
+  final next = [
+    for (final c in seated)
+      if (c != incoming) c,
+    incoming,
+  ];
+  if (compare != null) next.sort(compare);
+  return next;
+}
+
+/// После одной карты стартовой раздачи freeze веера не отпускаем.
+bool durakKeepFanFreezeAfterDealBatch({
+  required bool openingDeal,
+  required bool manageBusy,
+}) =>
+    openingDeal || !manageBusy;
+
 /// Свежая партия: руки полные (6+ добор козыря), стол пуст — крутить раздачу.
 bool shouldAnimateDurakOpeningDeal({
   required bool isOver,
@@ -89,4 +147,139 @@ bool shouldAnimateDurakOpeningDeal({
   if (myHandLen != handCounts[myIndex]) return false;
   final expectedDeck = deckSize - total;
   return deckCount == expectedDeck && expectedDeck >= 0;
+}
+
+/// Карта ушла своим ходом — в веере её нет, пока не вернётся взятием.
+///
+/// Взятие/добор ([incomingToFan]) — наоборот, слот держим.
+bool durakCardLeftHandForPlay({
+  required bool markedPlayedAway,
+  required bool optimisticAttack,
+  required bool flyingToTable,
+  required bool flyingFromHand,
+  required bool incomingToFan,
+  required bool inHandOrder,
+}) {
+  if (incomingToFan) return false;
+  if (markedPlayedAway || optimisticAttack || flyingToTable) return true;
+  // Полёт из руки: дырка, только если слота в order уже нет (ход).
+  // Взятие держит карту в order — лицо прячет hiddenCards.
+  return flyingFromHand && !inHandOrder;
+}
+
+/// Сыгранные карты не забываем, пока они снова не сядут в веер.
+/// Иначе кадр со старой рукой снова вспыхнет лицом после хода.
+Set<PlayingCard> durakRetainPlayedAway({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> incomingFanCards,
+  required Iterable<PlayingCard> pendingDealCards,
+}) {
+  return {
+    for (final c in playedAway)
+      if (!incomingFanCards.contains(c) && !pendingDealCards.contains(c)) c,
+  };
+}
+
+/// Карты, которые нельзя снова класть в веер из снимка сервера.
+Set<PlayingCard> durakCardsGoneFromFan({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> optimisticAttacks,
+  required Iterable<PlayingCard> flyingToTable,
+  required Iterable<PlayingCard> flyingFromHand,
+  required Iterable<PlayingCard> incomingFanCards,
+  Iterable<PlayingCard>? handOrder,
+}) {
+  final incoming = incomingFanCards.toSet();
+  final inFan = handOrder?.toSet();
+  return {
+    for (final c in playedAway)
+      if (!incoming.contains(c)) c,
+    ...optimisticAttacks,
+    ...flyingToTable,
+    for (final c in flyingFromHand)
+      if (!incoming.contains(c) && (inFan == null || !inFan.contains(c))) c,
+  };
+}
+
+/// Дырки веера: слот есть, лица нет (ход ещё летит / взятие садится).
+Set<PlayingCard> durakFanHoleCards({
+  required Iterable<PlayingCard> playedAway,
+  required Iterable<PlayingCard> flyingFromHand,
+  required Iterable<PlayingCard> incomingFanCards,
+}) {
+  return {
+    ...playedAway,
+    ...flyingFromHand,
+    ...incomingFanCards,
+  };
+}
+
+/// Слот остаётся в веере как дырка, пока карта в локальном порядке.
+bool durakFanKeepsHoleSlot({
+  required bool inLocalOrder,
+  required bool incomingToFan,
+  required bool markedPlayedAway,
+  required bool flyingFromHand,
+}) {
+  if (incomingToFan) return true;
+  if (!inLocalOrder) return false;
+  return markedPlayedAway || flyingFromHand;
+}
+
+/// Порядок веера: дырки своего хода не выкидываем, с сервера их не дописываем.
+List<PlayingCard> durakOrderedHandSlots({
+  required List<PlayingCard>? prevOrder,
+  required List<PlayingCard> serverHand,
+  required Set<PlayingCard> pendingDeal,
+  required Set<PlayingCard> leavingHand,
+  required Set<PlayingCard> holeCards,
+  int Function(PlayingCard a, PlayingCard b)? compareNew,
+}) {
+  if (prevOrder == null) {
+    return [
+      for (final c in serverHand)
+        if (!leavingHand.contains(c) && !pendingDeal.contains(c)) c,
+    ];
+  }
+  final remain = serverHand.toSet()..removeAll(leavingHand);
+  final out = <PlayingCard>[];
+  for (final c in prevOrder) {
+    if (pendingDeal.contains(c)) continue;
+    if (remain.remove(c)) {
+      out.add(c);
+    } else if (holeCards.contains(c)) {
+      out.add(c);
+    }
+  }
+  if (remain.isEmpty) return out;
+  final added = [
+    for (final c in remain)
+      if (!pendingDeal.contains(c)) c,
+  ];
+  if (compareNew != null) {
+    added.sort(compareNew);
+  }
+  out.addAll(added);
+  return out;
+}
+
+/// После своего хода: дырку в prev оставляем, с сервера уходящую не дописываем.
+List<PlayingCard> durakMergeHandOrderAfterMove({
+  required List<PlayingCard> prevOrder,
+  required List<PlayingCard> serverHand,
+  required Set<PlayingCard> pendingDeal,
+  required Set<PlayingCard> leavingHand,
+}) {
+  final handSet = serverHand.toSet();
+  final next = <PlayingCard>[
+    for (final c in prevOrder)
+      if (!pendingDeal.contains(c) &&
+          (handSet.contains(c) || leavingHand.contains(c)))
+        c,
+  ];
+  for (final c in serverHand) {
+    if (pendingDeal.contains(c) || leavingHand.contains(c)) continue;
+    if (!next.contains(c)) next.add(c);
+  }
+  return next;
 }

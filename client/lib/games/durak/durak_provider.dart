@@ -6,85 +6,95 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart' show GamesException;
+import 'package:multigames_client/games/live_game_sync.dart';
 
 final durakRepositoryProvider = Provider<DurakRepository>((ref) {
   return DurakRepository(authRepository: ref.watch(authRepositoryProvider));
 });
 
-bool _isTransientGamesError(Object e) {
-  if (e is GamesException) {
-    if (e.statusCode == 502 || e.statusCode == 503) return true;
-    final key = e.errorKey.toLowerCase();
-    final msg = e.message.toLowerCase();
-    return key.contains('temporarily unavailable') ||
-        msg.contains('temporarily unavailable') ||
-        msg.contains('временно недоступно') ||
-        msg.contains('попробуйте позже');
-  }
-  final s = e.toString().toLowerCase();
-  return s.contains('temporarily unavailable') ||
-      s.contains('socket') ||
-      s.contains('connection');
-}
+/// Кэш view конкретной партии: полный WS сразу, HTTP — сверка.
+final durakGameProvider = AsyncNotifierProvider.autoDispose
+    .family<DurakGameNotifier, DurakGameView, String>(
+  DurakGameNotifier.new,
+);
 
-/// Кэш view конкретной партии, с обновлением по WS `game_state`.
-final durakGameProvider = FutureProvider.autoDispose
-    .family<DurakGameView, String>((ref, gameId) async {
-  // Офлайн: локальная сессия + боты, тот же DurakGameView.
-  if (OfflineDurakRegistry.instance.isOffline(gameId)) {
-    final session = OfflineDurakRegistry.instance.get(gameId);
-    if (session == null) {
-      throw GamesException(404, 'offline game not found');
-    }
-    var alive = true;
-    void onChanged() {
-      Future.microtask(() {
-        if (alive) ref.invalidateSelf();
-      });
-    }
-    session.addListener(onChanged);
-    ref.onDispose(() {
-      alive = false;
-      session.removeListener(onChanged);
-    });
-    session.ensureStarted();
-    return session.view;
-  }
+class DurakGameNotifier
+    extends AutoDisposeFamilyAsyncNotifier<DurakGameView, String> {
+  bool _httpInFlight = false;
+  int _httpGen = 0;
 
-  final repo = ref.watch(durakRepositoryProvider);
-  final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
-    realtimeEventsProvider,
-    (_, next) {
-      final data = next.valueOrNull;
-      if (data == null) return;
-      final type = data['type']?.toString() ?? '';
-      final gid = data['game_id']?.toString();
-      if (type == 'realtime_connected' ||
-          ((type == 'game_state' || type == 'game_started') && gid == gameId)) {
-        ref.invalidateSelf();
+  @override
+  Future<DurakGameView> build(String arg) async {
+    if (OfflineDurakRegistry.instance.isOffline(arg)) {
+      final session = OfflineDurakRegistry.instance.get(arg);
+      if (session == null) {
+        throw GamesException(404, 'offline game not found');
       }
-    },
-  );
-  ref.onDispose(sub.close);
-  final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(poll.cancel);
+      var alive = true;
+      void onChanged() {
+        Future.microtask(() {
+          if (alive) state = AsyncData(session.view);
+        });
+      }
 
-  // Деплой/краткий 503: не отдаём ошибку сразу — иначе экран залипает
-  // на красном «temporarily unavailable» у обоих игроков.
-  Object? lastError;
-  for (var attempt = 0; attempt < 4; attempt++) {
+      session.addListener(onChanged);
+      ref.onDispose(() {
+        alive = false;
+        session.removeListener(onChanged);
+      });
+      session.ensureStarted();
+      return session.view;
+    }
+
+    listenLiveGameSync(
+      ref: ref,
+      gameId: arg,
+      hasFullView: hasFullDurakView,
+      onFullState: applyWs,
+      onReconcile: () => unawaited(reconcile()),
+    );
+    return _fetchPreferringLive();
+  }
+
+  void applyWs(Map<String, dynamic> data) {
     try {
-      return await repo.getGame(gameId);
-    } catch (e) {
-      lastError = e;
-      if (!_isTransientGamesError(e) || attempt == 3) rethrow;
-      await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+      _commit(DurakGameView.fromJson(data));
+    } catch (_) {
+      unawaited(reconcile());
     }
   }
-  Error.throwWithStackTrace(lastError!, StackTrace.current);
-});
+
+  Future<void> reconcile() async {
+    if (OfflineDurakRegistry.instance.isOffline(arg) || _httpInFlight) return;
+    _httpInFlight = true;
+    final gen = ++_httpGen;
+    try {
+      final fetched = await ref.read(durakRepositoryProvider).getGame(arg);
+      if (gen != _httpGen) return;
+      _commit(fetched);
+    } catch (_) {
+    } finally {
+      _httpInFlight = false;
+    }
+  }
+
+  Future<DurakGameView> _fetchPreferringLive() async {
+    final fetched = await fetchGameWithRetry(
+      () => ref.read(durakRepositoryProvider).getGame(arg),
+    );
+    final current = state.valueOrNull;
+    if (current != null && isOlderDurak(fetched, current)) {
+      return current;
+    }
+    return fetched;
+  }
+
+  void _commit(DurakGameView incoming) {
+    final current = state.valueOrNull;
+    if (current != null && isOlderDurak(incoming, current)) return;
+    state = AsyncData(incoming);
+  }
+}
 
 /// Детальный view лобби.
 final durakLobbyProvider =
@@ -103,7 +113,8 @@ final durakLobbyProvider =
 });
 
 /// Открытые лобби Durak.
-final durakOpenLobbiesProvider = FutureProvider.autoDispose<List<DurakLobbyView>>((ref) async {
+final durakOpenLobbiesProvider =
+    FutureProvider.autoDispose<List<DurakLobbyView>>((ref) async {
   final repo = ref.watch(durakRepositoryProvider);
   return repo.listLobbies();
 });

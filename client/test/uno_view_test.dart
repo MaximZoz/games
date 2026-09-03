@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
+import 'package:multigames_client/games/uno/uno_center_table_style.dart';
 import 'package:multigames_client/games/uno/uno_seats.dart';
 
 void main() {
@@ -179,6 +180,50 @@ void main() {
     expect(
       unoOpponentSeatOrder(myIndex: 1, playerCount: 3, direction: -1),
       [0, 2],
+    );
+  });
+
+  test('в альбоме соперники делятся по боковым колонкам, сверху никого', () {
+    expect(unoLandscapeSideColumns(const []), [[], []]);
+    expect(unoLandscapeSideColumns(const [1]), [
+      [1],
+      <int>[],
+    ]);
+    expect(unoLandscapeSideColumns(const [1, 2]), [
+      [1],
+      [2],
+    ]);
+    // Трое: двое слева, один справа — верхнего места нет.
+    expect(unoLandscapeSideColumns(const [1, 2, 3]), [
+      [1, 2],
+      [3],
+    ]);
+    // Порядок мест сохраняется: колонки — это разрез исходного списка.
+    final seats = unoOpponentSeatOrder(
+      myIndex: 0,
+      playerCount: 4,
+      direction: 1,
+    );
+    final columns = unoLandscapeSideColumns(seats);
+    expect([...columns[0], ...columns[1]], seats);
+    expect(columns[0].length - columns[1].length, inInclusiveRange(0, 1));
+  });
+
+  test('альбом: овал ниже и с запасом под Колода/Сброс', () {
+    final land = UnoCenterTableStyle.of(
+      narrow: true,
+      phoneLandscape: true,
+    );
+    final port = UnoCenterTableStyle.of(
+      narrow: true,
+      phoneLandscape: false,
+    );
+    expect(land.borderRadius, lessThan(port.borderRadius));
+    expect(land.padding.bottom, greaterThan(land.padding.top));
+    expect(land.minHeight, lessThanOrEqualTo(150));
+    expect(
+      land.minHeight,
+      greaterThan(land.cardSize.height + land.labelLineHeight),
     );
   });
 

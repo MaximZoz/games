@@ -688,6 +688,38 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Tavla';
+
+  @override
+  String get gamesNardyModeShort => 'Kısa';
+
+  @override
+  String get gamesNardyModeLong => 'Uzun';
+
+  @override
+  String get rulesNardyTitle => 'Tavla — kurallar';
+
+  @override
+  String get rulesNardyPlayers => 'Oyuncular: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => '24 pul yeri, her birinde 15 pul. İki zar: bir pul toplam veya iki pul ayrı değerler.';
+
+  @override
+  String get rulesNardyPlayShort => 'Kısa tavla: birbirinize doğru ilerlersiniz ve yalnız pulları vurabilirsiniz. Vurulan pul bara gider ve yeniden girmelidir. Hepsi evdeyken pulları kaldırırsınız.';
+
+  @override
+  String get rulesNardyPlayLong => 'Uzun tavla: ikisi de aynı baştan başlar ve aynı yöne gider. Baştan turda en fazla bir pul çıkar. Vurmak yoktur. Hepsi evdeyken pulları kaldırırsınız.';
+
+  @override
+  String get rulesNardyWin => 'Tüm pullarını ilk kaldıran kazanır.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oyuncular: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Henüz arkadaşınız yok';
+
+  @override
+  String get friendsSearchNoMatches => 'Aramanızla eşleşen arkadaş yok';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Aramanızla eşleşen gelen istek yok';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Aramanızla eşleşen giden istek yok';
 
   @override
   String get friendsNoIncoming => 'Gelen istek yok';

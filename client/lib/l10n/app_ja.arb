@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "ポーカー",
   "gamesUno": "ウノ",
+  "gamesNardy": "バックギャモン",
+  "gamesNardyModeShort": "ショート",
+  "gamesNardyModeLong": "ロング",
+  "rulesNardyTitle": "バックギャモン — ルール",
+  "rulesNardyPlayers": "プレイヤー: 2人。",
+  "rulesNardyMode": "モード: {mode}。",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "24ポイントの盤、各自15個の駒。サイコロ2つ: 1個で合計、または2個で各目。",
+  "rulesNardyPlayShort": "ショート: 向かい合って進み、単独の駒を打てます。打たれた駒はバーに出て再入場します。すべてホームに入ったらベアオフします。",
+  "rulesNardyPlayLong": "ロング: 同じヘッドから同じ方向へ進みます。ヘッドからは1ターンに1個だけ出ます。打撃は不可。すべてホームに入ったらベアオフします。",
+  "rulesNardyWin": "先にすべての駒をベアオフした人が勝ちます。",
   "rulesUnoPlayers": "プレイヤー: {players}人。",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "検索で新しいフレンドを見つけましょう",
   "friendsNothingFound": "見つかりませんでした",
   "friendsEmpty": "まだフレンドがいません",
+  "friendsSearchNoMatches": "検索に一致するフレンドはいません",
+  "friendsIncomingSearchNoMatches": "検索に一致する受信リクエストはありません",
+  "friendsOutgoingSearchNoMatches": "検索に一致する送信リクエストはありません",
   "friendsNoIncoming": "受信リクエストはありません",
   "friendsNoOutgoing": "送信リクエストはありません",
   "friendsAlreadyFriends": "すでにフレンドです",

@@ -12,7 +12,9 @@ import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_navigation.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_stake.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
@@ -61,11 +63,13 @@ class TicTacToeGameScreen extends ConsumerStatefulWidget {
 class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   bool _isMakingMove = false;
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   String? _rematchLobbyId;
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
+
   /// Участники прошлой партии, ответившие на реванш (join или decline).
   final Set<String> _rematchRespondedIds = <String>{};
   bool _isFindingGame = false;
@@ -80,11 +84,14 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   final GlobalKey _winRewardKey = GlobalKey();
   bool _balanceGainPlayed = false;
+
   /// Чип «−N» при проигрыше — только после анимации списания.
   bool _lossChipRevealed = false;
+
   /// Повторный вход из «Наблюдение» — без анимации/refresh монет.
   bool _openedAsObserver = false;
   bool _openModeCaptured = false;
+
   /// chat_id из GetGame — MakeMove раньше мог не вернуть его (иконка мигала).
   String? _stickyGroupChatId;
 
@@ -173,9 +180,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       final knownGame = ref.read(gameStateOverrideProvider(widget.gameId)) ??
           ref.read(gameStateProvider(widget.gameId)).valueOrNull;
       final myMark = knownGame?.markForUser(meId);
-      final eliminatedNow = myMark != null &&
-          knownGame != null &&
-          knownGame.isEliminated(myMark);
+      final eliminatedNow =
+          myMark != null && knownGame != null && knownGame.isEliminated(myMark);
       final gameOver = knownGame != null && knownGame.status != 'active';
       final observing =
           ref.read(observationGameProvider)?.gameId == widget.gameId;
@@ -220,8 +226,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         _turnLockTicks = 0;
       }
       final override = ref.read(gameStateOverrideProvider(widget.gameId));
-      final game = override ??
-          ref.read(gameStateProvider(widget.gameId)).valueOrNull;
+      final game =
+          override ?? ref.read(gameStateProvider(widget.gameId)).valueOrNull;
       if (game != null && !game.isActivePvp && !_waitingForBotMove) return;
       final deadline = game?.turnDeadline;
       if (deadline != null &&
@@ -230,8 +236,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.read(gameStateOverrideProvider(widget.gameId).notifier).state =
             null;
       }
-      ref.invalidate(gameStateProvider(widget.gameId));
-      unawaited(ref.read(activeGameProvider.notifier).refresh());
+      unawaited(
+          ref.read(gameStateProvider(widget.gameId).notifier).reconcile());
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) refreshChatsList(ref, force: true);
@@ -242,15 +248,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       realtimeEventsProvider,
       (_, next) {
         final type = next.valueOrNull?['type']?.toString() ?? '';
-        if (type == 'game_state' &&
-            next.valueOrNull?['game_id'] == widget.gameId &&
-            !_waitingForBotMove) {
-          // Не сбрасываем override сразу: иначе на время refetch снова
-          // показывается старый AsyncValue («Ваш ход» после своего хода).
-          // Listener gameStateProvider сбросит override, когда данные не хуже.
-          ref.invalidate(gameStateProvider(widget.gameId));
-          unawaited(ref.read(activeGameProvider.notifier).refresh());
-        }
         if (type == 'lobby_updated' && _rematchLobbyId != null) {
           final lobbyId = next.valueOrNull?['lobby_id']?.toString();
           final gameId = next.valueOrNull?['game_id']?.toString();
@@ -427,8 +424,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           if (!mounted) return;
           _waitingForBotMove = false;
           ref
-              .read(
-                  gameStateInvalidateBlockedProvider(widget.gameId).notifier)
+              .read(gameStateInvalidateBlockedProvider(widget.gameId).notifier)
               .state = false;
           // Возможно открыли durak-id на экране крестиков.
           final obs = ref.read(observationGameProvider);
@@ -507,7 +503,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          toolbarHeight: kToolbarHeight,
+          toolbarHeight: gameToolbarHeight(context),
           leadingWidth: 48,
           leading: IconButton(
             padding: EdgeInsets.zero,
@@ -604,11 +600,10 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       ? game.stakeBronze
                       : 0;
               final settledReward = iWonEarly ? netProfit : 0;
-              final settledLost = (!iWonEarly &&
-                      !isDraw &&
-                      game.stakeBronze > 0)
-                  ? game.stakeBronze
-                  : 0;
+              final settledLost =
+                  (!iWonEarly && !isDraw && game.stakeBronze > 0)
+                      ? game.stakeBronze
+                      : 0;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
                 // Партия окончена — снять active/observation/пин, иначе
@@ -631,8 +626,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
             } else {
               _prevGameStatus = game.status;
             }
-            final eliminatedNow =
-                myMark != null && game.isEliminated(myMark);
+            final eliminatedNow = myMark != null && game.isEliminated(myMark);
             // Пин/observation — только после кадра (не в build).
             if (!isOver && !eliminatedNow) {
               final alreadyPinned =
@@ -640,14 +634,12 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               if (!alreadyPinned) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
-                  final g =
-                      ref.read(gameStateOverrideProvider(widget.gameId)) ??
-                          ref
-                              .read(gameStateProvider(widget.gameId))
-                              .valueOrNull;
+                  final g = ref
+                          .read(gameStateOverrideProvider(widget.gameId)) ??
+                      ref.read(gameStateProvider(widget.gameId)).valueOrNull;
                   if (g == null || g.status != 'active') return;
-                  final mark = g.markForUser(
-                      ref.read(authStateProvider).valueOrNull?.id);
+                  final mark = g
+                      .markForUser(ref.read(authStateProvider).valueOrNull?.id);
                   if (mark != null && g.isEliminated(mark)) return;
                   pinBlockingGame(ref, widget.gameId);
                 });
@@ -690,10 +682,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               if (game.status.endsWith('_won')) {
                 final iWon = iWonEarly;
                 if (isMultiGame) {
-                  final winnerName = game.playerMeta(game.winner ?? '')
-                          ?.displayName
-                          ?.trim() ??
-                      opponentName;
+                  final winnerName =
+                      game.playerMeta(game.winner ?? '')?.displayName?.trim() ??
+                          opponentName;
                   statusText = iWon
                       ? context.l10n.gameYouWon
                       : game.stakeBronze > 0
@@ -709,7 +700,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                       : (game.forfeit
                           ? context.l10n.gameYouForfeitOpponentWon(opponentName)
                           : game.timeout
-                              ? context.l10n.gameOpponentWonTimeout(opponentName)
+                              ? context.l10n
+                                  .gameOpponentWonTimeout(opponentName)
                               : game.stakeBronze > 0
                                   ? context.l10n.gameYouLost
                                   : context.l10n.gameOpponentWon(opponentName));
@@ -846,8 +838,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 frameCode: opponentFrameCode,
                 frameColor: opponentFrameColor,
                 isBot: opponentId.startsWith('bot:'),
-                friendsSnapshot:
-                    ref.watch(friendsSnapshotProvider).valueOrNull,
+                friendsSnapshot: ref.watch(friendsSnapshotProvider).valueOrNull,
                 messageUnread: messageUnread,
                 onInfoTap: () => _showOpponentInfo(
                   context,
@@ -895,14 +886,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                     if (isOver) ...[
                       SizedBox(height: verticalSpacing * 0.8),
                       if (OfflineTttRegistry.instance.isOffline(widget.gameId))
-                        FilledButton.icon(
-                          onPressed:
-                              _isRematching ? null : () => _rematch(context),
-                          icon: const Icon(Icons.replay_rounded, size: 18),
-                          label: Text(context.l10n.offlinePlayAgain),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.accentStart,
-                            foregroundColor: Colors.white,
+                        Center(
+                          child: FilledButton.icon(
+                            onPressed:
+                                _isRematching ? null : () => _rematch(context),
+                            icon: const Icon(Icons.replay_rounded, size: 18),
+                            label: Text(context.l10n.offlinePlayAgain),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.accentStart,
+                              foregroundColor: Colors.white,
+                            ),
                           ),
                         )
                       else
@@ -1353,9 +1346,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         final active = ref.read(activeGameProvider).valueOrNull;
         final gid = active?.gameId?.trim() ?? '';
         // Только НОВАЯ партия — не редирект в экран, с которого принимали.
-        if (active?.type == 'game' &&
-            gid.isNotEmpty &&
-            gid != widget.gameId) {
+        if (active?.type == 'game' && gid.isNotEmpty && gid != widget.gameId) {
           context.go('/games/tictactoe/game/$gid');
           return;
         }
@@ -1555,8 +1546,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final isOver = game?.status != 'active';
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final mark = game?.markForUser(me);
-    final eliminated =
-        mark != null && game != null && game.isEliminated(mark);
+    final eliminated = mark != null && game != null && game.isEliminated(mark);
     unawaited(handleGameScreenClose(
       context: context,
       isActive: !isOver,
@@ -1573,6 +1563,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         } else {
           _clearSessionForFinishedGame();
         }
+        leaveGamesSession(ref);
         context.go('/games');
         if (rematchLobbyId != null) {
           unawaited(
@@ -1594,8 +1585,8 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         clearBlockingGamePin(ref, ifGameId: gameId);
         final g = ref.read(gameStateOverrideProvider(gameId)) ??
             ref.read(gameStateProvider(gameId)).valueOrNull;
-        final multi = (g?.maxPlayers ?? 0) > 2 ||
-            (g?.playerUserIds.length ?? 0) > 2;
+        final multi =
+            (g?.maxPlayers ?? 0) > 2 || (g?.playerUserIds.length ?? 0) > 2;
         if (multi && g?.status == 'active') {
           // Multi: observation, пока партия не закончится.
           enterGameObservation(ref, gameId, gameType: 'tictactoe');
@@ -1605,6 +1596,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
               .read(activeGameProvider.notifier)
               .clearObservationLocal(ifGameId: gameId);
         }
+        leaveGamesSession(ref);
         context.go('/games');
         unawaited(ref.read(activeGameProvider.notifier).refresh());
       },
@@ -1783,15 +1775,17 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
   }
 
   Future<void> _makeMove(int cell) async {
+    if (_isMakingMove || !_turnAction.tryAcquire()) return;
+    _isMakingMove = true;
     Sfx.play(SfxId.place);
-    setState(() => _isMakingMove = true);
+    setState(() {});
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final offline = OfflineTttRegistry.instance.isOffline(widget.gameId);
       final response = await repo.makeMove(widget.gameId, cell);
       if (!mounted) return;
-      final isBotGame = offline ||
-          response.playerUserIds.any((id) => id.startsWith('bot:'));
+      final isBotGame =
+          offline || response.playerUserIds.any((id) => id.startsWith('bot:'));
       // Для бота: сразу блокируем invalidate, чтобы realtime/другие события не сбросили ход
       if (isBotGame) {
         _waitingForBotMove = true;
@@ -1847,8 +1841,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
         ref.invalidate(activeGameProvider);
       }
     } catch (e) {
-      if (mounted) _redirectToGamesOnError();
+      if (mounted && !isStaleNotYourTurnError(e)) _redirectToGamesOnError();
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _isMakingMove = false);
     }
   }
@@ -1940,6 +1935,7 @@ class _RematchSection extends StatelessWidget {
   final bool isRematching;
   final bool isAcceptingRematch;
   final bool isFindingGame;
+
   /// Все соперники прошлой партии (для multi — несколько).
   final List<String> peerIds;
   final List<GameInvite> invites;
@@ -2225,9 +2221,7 @@ class _MultiOpponentsCard extends StatelessWidget {
           player: player,
           eliminated: game.isEliminated(player.mark) || responded,
           compact: true,
-          onTap: onPlayerTap == null
-              ? null
-              : () => onPlayerTap!(player, login),
+          onTap: onPlayerTap == null ? null : () => onPlayerTap!(player, login),
         ),
       );
     }
@@ -2650,6 +2644,7 @@ class _GameBoardState extends State<_GameBoard>
   }
 
   void _handleMove(int cell) {
+    if (widget.isMakingMove) return;
     // После хода сразу возвращаем доску в кадр.
     _snapToFit(animate: true);
     widget.onMove(cell);
@@ -2709,9 +2704,7 @@ class _GameBoardState extends State<_GameBoard>
                 padding: EdgeInsets.all(
                   compact
                       ? (gridSize >= 10 ? 4.0 : 6.0)
-                      : (gridSize >= 10
-                          ? 6.0
-                          : (boardSize > 280 ? 12.0 : 8.0)),
+                      : (gridSize >= 10 ? 6.0 : (boardSize > 280 ? 12.0 : 8.0)),
                 ),
                 child: _WinningLineOverlay(
                   winningCells: game.effectiveWinningCells,
@@ -2765,8 +2758,9 @@ class _GameBoardState extends State<_GameBoard>
                                   game.nextBoard != null &&
                                   game.nextBoard == sub,
                               isClosedBoard: meta.isNotEmpty,
-                              onTap:
-                                  cellCanTap ? () => _handleMove(cellIndex) : null,
+                              onTap: cellCanTap
+                                  ? () => _handleMove(cellIndex)
+                                  : null,
                               pulse: cellCanTap ? pulseController : null,
                             ),
                           );
@@ -3227,8 +3221,8 @@ class _AnimatedGameCell extends StatelessWidget {
               ? AnimatedBuilder(
                   animation: pulse!,
                   builder: (context, _) {
-                    final alpha = 0.2 +
-                        0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
+                    final alpha =
+                        0.2 + 0.12 * (0.5 + 0.5 * (pulse!.value * 2 - 1).abs());
                     return Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),

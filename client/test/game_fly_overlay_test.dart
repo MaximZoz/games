@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
 void main() {
@@ -25,6 +26,18 @@ void main() {
     GameFlyOverlay.syncVisiblePath('/chats');
     expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
     expect(GameFlyOverlay.shouldShowFlight(), isTrue);
+  });
+
+  test('в сообщениях игровой звук остаётся, полёт карт — нет', () {
+    GameFlyOverlay.syncVisiblePath('/games/uno/game/g1');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isTrue);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isTrue);
+    GameFlyOverlay.syncVisiblePath('/chats/abc');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isTrue);
+    GameFlyOverlay.syncVisiblePath('/');
+    expect(GameFlyOverlay.shouldShowFlight(gameOnly: true), isFalse);
+    expect(GameFlyOverlay.shouldPlayGameSfx(), isFalse);
   });
 
   testWidgets('dismissAll removes a leftover root overlay', (tester) async {
@@ -89,5 +102,59 @@ void main() {
     await tester.pump();
     expect(find.text('once'), findsNothing);
     expect(GameFlyOverlay.debugActiveCount, 0);
+  });
+
+  testWidgets('overlaySpaceSize берёт корневой overlay, не коробку вкладки',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 500,
+            height: 200,
+            child: Text('box'),
+          ),
+        ),
+      ),
+    );
+    final ctx = tester.element(find.text('box'));
+    final space = overlaySpaceSize(ctx);
+    expect(space.width, greaterThanOrEqualTo(800));
+    expect(space.height, greaterThanOrEqualTo(360));
+  });
+
+  testWidgets('CardFlyTicket.dismissAll снимает зависший полёт', (tester) async {
+    CardFlyTicket.debugReset();
+    GameFlyOverlay.debugReset();
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: Text('page'))),
+    );
+    final overlay = Overlay.of(
+      tester.element(find.text('page')),
+      rootOverlay: true,
+    );
+    final entry = GameFlyOverlay.insert(
+      overlay,
+      (_) => const Positioned(left: 8, top: 8, child: Text('stuck-fly')),
+    );
+    CardFlyTicket.debugAttach(entry);
+    await tester.pump();
+    expect(find.text('stuck-fly'), findsOneWidget);
+    expect(CardFlyTicket.debugLiveCount, 1);
+
+    CardFlyTicket.dismissAll();
+    await tester.pump();
+    expect(find.text('stuck-fly'), findsNothing);
+    expect(CardFlyTicket.debugLiveCount, 0);
+  });
+
+  testWidgets('awaitDurakFrame завершается по таймауту кадра', (tester) async {
+    final future = awaitDurakFrame();
+    await tester.pump(const Duration(milliseconds: 100));
+    await future;
   });
 }

@@ -32,7 +32,7 @@ class DesktopTileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isWide(context)) {
+    if (!useDesktopTiles(context)) {
       return mobileBuilder(context);
     }
 

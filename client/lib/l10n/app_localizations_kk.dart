@@ -688,6 +688,38 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesUno => 'Уно';
 
   @override
+  String get gamesNardy => 'Нарды';
+
+  @override
+  String get gamesNardyModeShort => 'Қысқа';
+
+  @override
+  String get gamesNardyModeLong => 'Ұзын';
+
+  @override
+  String get rulesNardyTitle => 'Нарды — ережелер';
+
+  @override
+  String get rulesNardyPlayers => 'Ойыншылар: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Тақтада 24 пункт, әркімде 15 тас. Екі сүйек бойынша жүресіз: бір таспен қосындыға немесе екеуімен ұпайларға.';
+
+  @override
+  String get rulesNardyPlayShort => 'Қысқа нарды: қарсы жүресіз және жалғыз тастарды ұра аласыз. Ұрылған тас барға шығады да қайта кіруі керек. Барлық тас үйде болғанда оларды тақтадан аласыз.';
+
+  @override
+  String get rulesNardyPlayLong => 'Ұзын нарды: екеуі де бір бастан бастап бір бағытта жүреді. Бастан бір жүрісте бір ғана тас шығады. Ұруға болмайды. Барлығы үйде болғанда тастарды аласыз.';
+
+  @override
+  String get rulesNardyWin => 'Барлық тасын бірінші алған жеңеді.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Ойыншылар: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Әзірге достарыңыз жоқ';
+
+  @override
+  String get friendsSearchNoMatches => 'Іздеуге сәйкес достар жоқ';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Іздеуге сәйкес кіріс өтінімдер жоқ';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Іздеуге сәйкес шығыс өтінімдер жоқ';
 
   @override
   String get friendsNoIncoming => 'Кіріс өтінім жоқ';

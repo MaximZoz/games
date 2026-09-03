@@ -688,6 +688,38 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Kort';
+
+  @override
+  String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — regler';
+
+  @override
+  String get rulesNardyPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Brett med 24 punkter, 15 brikker hver. To terninger: én brik summen eller to brikker øynene.';
+
+  @override
+  String get rulesNardyPlayShort => 'Kort backgammon: dere går mot hverandre og kan slå ensomme brikker. En slått brikke går på barren og må inn igjen. Når alle er i hjemmet, tar dere dem av.';
+
+  @override
+  String get rulesNardyPlayLong => 'Langt backgammon: begge starter fra samme hode og går samme vei. Høyst én brikke forlater hodet per trekk. Slag er ikke tillatt. Når alle er i hjemmet, tar dere dem av.';
+
+  @override
+  String get rulesNardyWin => 'Den som først tar av alle brikker, vinner.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spillere: $players.';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'Du har ingen venner ennå';
+
+  @override
+  String get friendsSearchNoMatches => 'Ingen venner samsvarer med søket';
+
+  @override
+  String get friendsIncomingSearchNoMatches => 'Ingen innkommende forespørsler samsvarer med søket';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => 'Ingen utgående forespørsler samsvarer med søket';
 
   @override
   String get friendsNoIncoming => 'Ingen innkommende forespørsler';

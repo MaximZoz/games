@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/durak/card.dart';
+import 'package:multigames_client/games/durak/durak_fx_layout.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 
 /// Колода: рубашки наполовину за левым краем + козырь лицом вправо.
@@ -17,6 +18,7 @@ class DurakDeckPile extends StatelessWidget {
     required this.cardSize,
     this.trumpSuit,
     this.showTrumpFace = true,
+    this.peekOffEdge = true,
   });
 
   final int deckCount;
@@ -29,17 +31,29 @@ class DurakDeckPile extends StatelessWidget {
   /// false — пока идёт раздача, козырь ещё не вытащили под колоду.
   final bool showTrumpFace;
 
+  /// false — вся колода в кадре (альбом: иначе рубашка режется рейлом).
+  final bool peekOffEdge;
+
   Suit get _suit => trumpSuit ?? trumpCard.suit;
 
   @override
   Widget build(BuildContext context) {
-    // Половина рубашки за краем — колода не «длинная».
-    final hide = cardSize.width * 0.48;
+    // Портрет: половина рубашки за краем, козырь торчит вправо.
+    // Альбом: стопка в кадре, козырь всё равно сдвинут вправо — иначе
+    // лицо прячется под рубашками и виден только обрезок.
+    final hide = peekOffEdge ? cardSize.width * 0.48 : 0.0;
     final stackN = deckCount <= 1
         ? 0
         : math.min(deckCount, showTrumpFace ? 5 : 6);
     final showTrump = showTrumpFace && deckCount >= 1;
-    final layoutW = cardSize.width * 0.55 + cardSize.height * 0.82;
+    final layoutW = durakDeckPileWidth(
+      cardSize: cardSize,
+      peekOffEdge: peekOffEdge,
+    );
+    final trumpLeft = durakDeckTrumpLeft(
+      cardSize: cardSize,
+      peekOffEdge: peekOffEdge,
+    );
     final h = math.max(cardSize.height + 12, cardSize.width + 16);
     final badgeSize = math.min(cardSize.width, cardSize.height) * 0.34;
 
@@ -54,7 +68,7 @@ class DurakDeckPile extends StatelessWidget {
         children: [
           if (showTrump)
             Positioned(
-              left: cardSize.width * 0.22,
+              left: trumpLeft,
               top: (h - cardSize.width) / 2,
               child: Transform.rotate(
                 angle: -math.pi / 2,
@@ -130,17 +144,22 @@ class DurakBitoPile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peekW = peek ? cardSize.width * 0.62 : cardSize.width * 1.35;
-    final areaH = cardSize.height * (peek ? 1.12 : 1.25);
+    final draw = Size(
+      math.max(cardSize.width, peek ? 36.0 : 48.0),
+      math.max(cardSize.height, peek ? 52.0 : 68.0),
+    );
+    final peekW = peek ? draw.width * 0.62 : draw.width * 1.45;
+    final areaH = draw.height * (peek ? 1.12 : 1.28);
     if (count <= 0) {
-      return SizedBox(width: peekW, height: areaH);
+      // Пустая бита не занимает слот и не рисует «карту 0».
+      return const SizedBox.shrink();
     }
 
     if (count == 1) {
       final card = Transform.rotate(
         angle: 0.18,
         child: CardBackWidget(
-          size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+          size: Size(draw.width * 0.92, draw.height * 0.92),
           elevated: true,
         ),
       );
@@ -162,7 +181,7 @@ class DurakBitoPile extends StatelessWidget {
     }
 
     final shown = math.min(count, 14);
-    final areaW = cardSize.width * (1.15 + 0.4 * (shown / 14));
+    final areaW = draw.width * (1.15 + 0.4 * (shown / 14));
 
     final pile = SizedBox(
       width: areaW,
@@ -177,6 +196,7 @@ class DurakBitoPile extends StatelessWidget {
               shown: shown,
               areaW: areaW,
               areaH: areaH,
+              card: draw,
             ),
         ],
       ),
@@ -200,21 +220,22 @@ class DurakBitoPile extends StatelessWidget {
     required int shown,
     required double areaW,
     required double areaH,
+    required Size card,
   }) {
     final rng = math.Random(9001 + index * 9973);
     final angle = (rng.nextDouble() - 0.5) * 1.2;
-    final dx = (rng.nextDouble() - 0.5) * (areaW - cardSize.width) * 0.7;
-    final dy = (rng.nextDouble() - 0.5) * (areaH - cardSize.height) * 0.65;
+    final dx = (rng.nextDouble() - 0.5) * (areaW - card.width) * 0.7;
+    final dy = (rng.nextDouble() - 0.5) * (areaH - card.height) * 0.65;
     final lift = index / math.max(shown, 1);
     return Positioned(
-      left: areaW / 2 - cardSize.width / 2 + dx,
-      top: areaH / 2 - cardSize.height / 2 + dy - lift * 3,
+      left: areaW / 2 - card.width / 2 + dx,
+      top: areaH / 2 - card.height / 2 + dy - lift * 3,
       child: Transform.rotate(
         angle: angle,
         child: Opacity(
           opacity: 0.92,
           child: CardBackWidget(
-            size: Size(cardSize.width * 0.92, cardSize.height * 0.92),
+            size: Size(card.width * 0.92, card.height * 0.92),
             elevated: index == shown - 1,
           ),
         ),

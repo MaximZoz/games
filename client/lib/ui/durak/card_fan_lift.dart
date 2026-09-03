@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:multigames_client/games/durak/card.dart';
 
-/// Пока карта на overlay, слот в веере остаётся, но лицо скрыто.
-/// Иначе на iOS/Impeller остаётся «призрак» вытащенной карты.
+/// Пока карта на overlay или вытаскивается, слот в веере без лица.
+/// Иначе на iOS/Impeller (PWA) остаётся «призрак» рядом с копией под пальцем.
 bool fanSlotHidesFace({
   required PlayingCard card,
   PlayingCard? liftedCard,
   PlayingCard? peekCard,
-  bool hidePeekUnderOverlay = false,
   Set<PlayingCard>? parentHidden,
 }) {
   if (liftedCard != null && card == liftedCard) return true;
-  if (hidePeekUnderOverlay && peekCard != null && card == peekCard) {
-    return true;
-  }
+  if (peekCard != null && card == peekCard) return true;
   return parentHidden?.contains(card) == true;
 }
 
@@ -25,6 +22,13 @@ Key fanSlotPaintKey({
 }) {
   return ValueKey<String>(
     'fan-slot-${card.rank.value}-${card.suit.name}-${hidden ? 'h' : 'v'}',
+  );
+}
+
+/// Отдельный слой лица при вытаскивании — не слот веера.
+Key fanPeekOverlayKey(PlayingCard card) {
+  return ValueKey<String>(
+    'fan-peek-${card.rank.value}-${card.suit.name}',
   );
 }
 

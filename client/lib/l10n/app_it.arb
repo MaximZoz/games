@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Corto",
+  "gamesNardyModeLong": "Lungo",
+  "rulesNardyTitle": "Backgammon — regole",
+  "rulesNardyPlayers": "Giocatori: 2.",
+  "rulesNardyMode": "Modalità: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Tavoliere da 24 punte, 15 pedine ciascuno. Due dadi: una pedina la somma o due pedine i singoli punti.",
+  "rulesNardyPlayShort": "Backgammon corto: andate uno verso l’altro e potete colpire le pedine isolate. La pedina colpita va sulla barra e deve rientrare. Quando tutte sono in casa, le togliete.",
+  "rulesNardyPlayLong": "Backgammon lungo: entrambi partono dalla stessa testa e vanno nello stesso senso. Esce al massimo una pedina dalla testa per turno. Non si colpisce. Quando tutte sono in casa, le togliete.",
+  "rulesNardyWin": "Vince chi toglie per primo tutte le pedine.",
   "rulesUnoPlayers": "Giocatori: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Usa la ricerca per trovare nuovi amici",
   "friendsNothingFound": "Nessun risultato",
   "friendsEmpty": "Non hai ancora amici",
+  "friendsSearchNoMatches": "Nessun amico corrisponde alla ricerca",
+  "friendsIncomingSearchNoMatches": "Nessuna richiesta in arrivo corrisponde",
+  "friendsOutgoingSearchNoMatches": "Nessuna richiesta inviata corrisponde",
   "friendsNoIncoming": "Nessuna richiesta in arrivo",
   "friendsNoOutgoing": "Nessuna richiesta in uscita",
   "friendsAlreadyFriends": "Già amici",

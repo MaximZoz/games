@@ -24,4 +24,25 @@ void main() {
     expect(text.softWrap, isFalse);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('О себе в просмотре — несколько строк', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 120,
+            child: AboutOneLineText(
+              text: 'Привет я основатель узу геймс и это длинный текст',
+              maxLines: 8,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final text = tester.widget<Text>(find.byType(Text));
+    expect(text.maxLines, 8);
+    expect(text.softWrap, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

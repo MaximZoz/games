@@ -17,7 +17,42 @@ enum PokerOppHolePlacement {
 
 /// Якоря соперников на кромке фетра.
 /// 6-max: два слева и два справа (низ + верх), центр свободен под борд.
-List<Alignment> pokerOpponentSeatAnchors(int n) {
+///
+/// [landscape] — телефон в альбоме: фетр широкий и низкий, по вертикали центр
+/// целиком уходит под борд и свои карты. Место сверху занимать нечем, поэтому
+/// соперники встают на боковые кромки, а карты им кладём внутрь стола.
+List<Alignment> pokerOpponentSeatAnchors(int n, {bool landscape = false}) {
+  if (landscape) {
+    switch (n) {
+      case 0:
+        return const [];
+      case 1:
+        return const [Alignment(-1.0, -0.6)];
+      case 2:
+        return const [Alignment(-1.0, -0.85), Alignment(1.0, -0.85)];
+      case 3:
+        return const [
+          Alignment(-1.0, 0.7),
+          Alignment(-1.0, -0.95),
+          Alignment(1.0, -0.95),
+        ];
+      case 4:
+        return const [
+          Alignment(-1.0, 0.7),
+          Alignment(-1.0, -0.95),
+          Alignment(1.0, -0.95),
+          Alignment(1.0, 0.7),
+        ];
+      default:
+        return const [
+          Alignment(-1.0, 0.9),
+          Alignment(-1.0, -0.05),
+          Alignment(-1.0, -0.95),
+          Alignment(1.0, -0.95),
+          Alignment(1.0, 0.9),
+        ];
+    }
+  }
   switch (n) {
     case 0:
       return const [];
@@ -50,7 +85,18 @@ List<Alignment> pokerOpponentSeatAnchors(int n) {
 }
 
 /// Низ — карты над профилем; верх — под профилем; середина боков — к центру.
-PokerOppHolePlacement pokerOppHolePlacement(Alignment align) {
+///
+/// [sideways] — места стоят на боковых кромках (альбом): карты уходят вбок,
+/// иначе колонка «профиль + карты» не влезает в низкий фетр по высоте.
+PokerOppHolePlacement pokerOppHolePlacement(
+  Alignment align, {
+  bool sideways = false,
+}) {
+  if (sideways && align.x.abs() > 0.5) {
+    return align.x < 0
+        ? PokerOppHolePlacement.inwardRight
+        : PokerOppHolePlacement.inwardLeft;
+  }
   if (align.y > 0.15) return PokerOppHolePlacement.above;
   if (align.y < -0.15) return PokerOppHolePlacement.below;
   if (align.x < -0.05) return PokerOppHolePlacement.inwardRight;
@@ -74,8 +120,9 @@ Offset pokerOppHoleOffset({
   required double cardsWidth,
   required double cardsHeight,
   double gap = 4,
+  bool sideways = false,
 }) {
-  switch (pokerOppHolePlacement(align)) {
+  switch (pokerOppHolePlacement(align, sideways: sideways)) {
     case PokerOppHolePlacement.above:
       return Offset((plateWidth - cardsWidth) / 2, -cardsHeight - gap);
     case PokerOppHolePlacement.below:

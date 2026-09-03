@@ -70,6 +70,21 @@ void main() {
       expect(cell, lessThan(16));
     });
 
+    test('после двух рядов кнопок 10×10 всё ещё влезает', () {
+      const available = 400.0;
+      const buttons = 120.0;
+      final cell = fitBattleshipCellSize(
+        maxWidth: 360,
+        maxHeight: available - buttons,
+        minCell: 11,
+      );
+      const gap = 2.0;
+      final board =
+          cell * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+      expect(board, lessThanOrEqualTo(available - buttons + 0.01));
+      expect(cell, greaterThanOrEqualTo(11));
+    });
+
     test('не раздувает клетку выше maxCell', () {
       final cell = fitBattleshipCellSize(
         maxWidth: 800,
@@ -77,6 +92,21 @@ void main() {
         maxCell: 40,
       );
       expect(cell, 40);
+    });
+
+    test('после двух строк кнопок 10×10 влезает в остаток Android', () {
+      // 640 логических: appbar, status, nav, соперник, фаза, таймер, padding.
+      const boardH = 640.0 - 56 - 24 - 48 - 72 - 16 - 40 - 12 - 8 - 112;
+      final cell = fitBattleshipCellSize(
+        maxWidth: 344,
+        maxHeight: boardH,
+        maxCell: 36,
+      );
+      const gap = 2.0;
+      final side =
+          cell * kBattleshipBoardSize + gap * (kBattleshipBoardSize - 1);
+      expect(side, lessThanOrEqualTo(boardH + 0.01));
+      expect(cell, greaterThanOrEqualTo(11));
     });
   });
 

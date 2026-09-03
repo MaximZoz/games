@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 
@@ -27,6 +28,8 @@ class GameTypeIcon extends StatelessWidget {
         return PokerGameIcon.iconData;
       case 'uno':
         return Icons.style_rounded;
+      case 'nardy':
+        return NardyGameIcon.iconData;
       case 'tictactoe':
         return Icons.grid_3x3_rounded;
       default:
@@ -43,6 +46,8 @@ class GameTypeIcon extends StatelessWidget {
         return PokerGameIcon(size: size, color: color);
       case 'uno':
         return UnoGameIcon(size: size);
+      case 'nardy':
+        return NardyGameIcon(size: size, color: color);
       default:
         return Icon(iconDataOf(gameType), size: size, color: color);
     }

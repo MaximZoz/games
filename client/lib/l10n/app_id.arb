@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Pendek",
+  "gamesNardyModeLong": "Panjang",
+  "rulesNardyTitle": "Backgammon — aturan",
+  "rulesNardyPlayers": "Pemain: 2.",
+  "rulesNardyMode": "Mode: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Papan 24 titik, masing-masing 15 bidak. Dua dadu: satu bidak jumlah atau dua bidak mata dadu.",
+  "rulesNardyPlayShort": "Pendek: saling mendekat dan boleh memukul bidak tunggal. Bidak yang dipukul ke bar dan harus masuk lagi. Jika semua di rumah, turunkan dari papan.",
+  "rulesNardyPlayLong": "Panjang: keduanya mulai dari kepala yang sama dan searah. Dari kepala hanya satu bidak per giliran. Memukul tidak boleh. Jika semua di rumah, turunkan.",
+  "rulesNardyWin": "Yang pertama menurunkan semua bidak menang.",
   "rulesUnoPlayers": "Pemain: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Gunakan pencarian untuk menemukan teman baru",
   "friendsNothingFound": "Tidak ditemukan",
   "friendsEmpty": "Anda belum punya teman",
+  "friendsSearchNoMatches": "Tidak ada teman yang cocok dengan pencarian",
+  "friendsIncomingSearchNoMatches": "Tidak ada permintaan masuk yang cocok",
+  "friendsOutgoingSearchNoMatches": "Tidak ada permintaan terkirim yang cocok",
   "friendsNoIncoming": "Tidak ada permintaan masuk",
   "friendsNoOutgoing": "Tidak ada permintaan keluar",
   "friendsAlreadyFriends": "Sudah berteman",

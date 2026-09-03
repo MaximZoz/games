@@ -315,6 +315,19 @@ bool isGamePlayPath(String path) {
   return segs.length >= 4 && segs[2] == 'game';
 }
 
+/// Список сообщений или комната, не «Заблокированные».
+bool isMessagesPath(String path) {
+  final segs = path
+      .split('?')
+      .first
+      .split('/')
+      .where((part) => part.isNotEmpty)
+      .toList();
+  if (segs.isEmpty || segs[0] != 'chats') return false;
+  if (segs.length == 1) return true;
+  return segs[1] != 'blocked';
+}
+
 /// Бейдж «ваш ход» в шелле не дублирует звук, если уже открыта партия.
 abstract final class MyTurnBadgeSfx {
   static bool isOnGameBoard(String path) => isGamePlayPath(path);
@@ -372,10 +385,11 @@ abstract final class GameAwaySfx {
     required String path,
     required String? gameId,
     required bool becameMyTurn,
+    bool leftBoardWhileMyTurn = false,
     DateTime? now,
   }) {
-    if (!becameMyTurn) return false;
     if (isWatchingBoard(path, gameId)) return false;
+    if (!becameMyTurn && !leftBoardWhileMyTurn) return false;
     final at = now ?? DateTime.now();
     if (_lastPlayAt != null && at.difference(_lastPlayAt!) < debounce) {
       return false;
@@ -384,16 +398,31 @@ abstract final class GameAwaySfx {
     return true;
   }
 
+  /// Ушли со стола в сообщения, партия ещё жива в IndexedStack.
+  static bool leftBoardToMessages({
+    required String? previousPath,
+    required String nextPath,
+    required String? gameId,
+  }) {
+    final prev = (previousPath ?? '').trim();
+    if (prev.isEmpty) return false;
+    if (!isWatchingBoard(prev, gameId)) return false;
+    if (isWatchingBoard(nextPath, gameId)) return false;
+    return isMessagesPath(nextPath);
+  }
+
   static void playIfNeeded({
     required String path,
     required String? gameId,
     required bool isMyTurn,
+    bool leftBoardWhileMyTurn = false,
   }) {
     final became = noteMyTurn(isMyTurn: isMyTurn, gameId: gameId);
     if (!shouldPlayNotify(
       path: path,
       gameId: gameId,
       becameMyTurn: became,
+      leftBoardWhileMyTurn: leftBoardWhileMyTurn && isMyTurn,
     )) {
       return;
     }
@@ -401,7 +430,7 @@ abstract final class GameAwaySfx {
   }
 }
 
-/// Осталось ≤5 с — тики молчат, один сигнал «ваш ход».
+/// Осталось ≤5 с — один сигнал «ваш ход», тики после него продолжаются.
 @visibleForTesting
 bool crossedTurnFiveSeconds({
   required int previousRemainingMs,
@@ -412,13 +441,14 @@ bool crossedTurnFiveSeconds({
       nextRemainingMs > 0;
 }
 
-/// Интервал тика: 80% → 800 мс, 50%/20% → 500 мс. Последние 5 с — без тиков.
+/// Интервал тика: 80% → 800 мс, 50%/20% и последние 5 с → 500 мс.
 @visibleForTesting
 int turnTickIntervalMs({
   required int remainingMs,
   required int totalMs,
 }) {
-  if (remainingMs <= 0 || remainingMs <= 5000) return 0;
+  if (remainingMs <= 0) return 0;
+  if (remainingMs <= 5000) return 500;
   if (totalMs > 0) {
     if (remainingMs * 2 <= totalMs) return 500;
     if (remainingMs * 5 <= totalMs * 4) return 800;
@@ -506,6 +536,8 @@ abstract final class TurnClockSfx {
           )) {
         _play(SfxId.yourTurn);
         _haptic(HapticKind.timerMark);
+        // Не играть тик в том же кадре, что предупреждение.
+        _lastTickAt = at;
       }
       _lastRemainingMs = leftMs;
       if (shouldBuzzTurnSecond(
@@ -519,7 +551,6 @@ abstract final class TurnClockSfx {
       _lastRemainingMs = leftMs;
     }
     if (!clockVisible || !hasTimer || remainingSeconds <= 0) return;
-    if (leftMs <= 5000) return;
     final interval = turnTickIntervalMs(remainingMs: leftMs, totalMs: totalMs);
     if (interval <= 0) return;
     if (_lastTickAt != null &&

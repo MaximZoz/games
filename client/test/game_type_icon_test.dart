@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
+import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 
@@ -17,6 +18,7 @@ void main() {
       );
       expect(GameTypeIcon.iconDataOf('poker'), PokerGameIcon.iconData);
       expect(GameTypeIcon.iconDataOf('uno'), Icons.style_rounded);
+      expect(GameTypeIcon.iconDataOf('nardy'), NardyGameIcon.iconData);
     });
 
     test('unknown type falls back to gamepad', () {
@@ -62,6 +64,12 @@ void main() {
                 lost: 4,
                 drawn: 0,
               ),
+              GameTypeScoreChip(
+                gameType: 'nardy',
+                won: 1,
+                lost: 0,
+                drawn: 0,
+              ),
             ],
           ),
         ),
@@ -73,6 +81,7 @@ void main() {
     expect(find.byIcon(Icons.directions_boat_filled_rounded), findsOneWidget);
     expect(find.byType(PokerGameIcon), findsOneWidget);
     expect(find.byType(UnoGameIcon), findsOneWidget);
+    expect(find.byType(NardyGameIcon), findsOneWidget);
     expect(find.byIcon(Icons.casino_rounded), findsNothing);
     expect(find.byIcon(Icons.sports_esports_rounded), findsNothing);
     expect(find.byIcon(Icons.sailing_rounded), findsNothing);

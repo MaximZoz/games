@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "โป๊กเกอร์",
   "gamesUno": "อูโน่",
+  "gamesNardy": "แบ็กแกมมอน",
+  "gamesNardyModeShort": "สั้น",
+  "gamesNardyModeLong": "ยาว",
+  "rulesNardyTitle": "แบ็กแกมมอน — กติกา",
+  "rulesNardyPlayers": "ผู้เล่น: 2 คน",
+  "rulesNardyMode": "โหมด: {mode}",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "กระดาน 24 จุด คนละ 15 ตัว ลูกเต๋า 2 ลูก: ตัวเดียวตามผลรวม หรือสองตัวตามแต้ม",
+  "rulesNardyPlayShort": "สั้น: เดินสวนทางและตีตัวเดี่ยวได้ ตัวที่ถูกตีขึ้นบาร์แล้วต้องเข้าใหม่ เมื่อทั้งหมดอยู่บ้านให้นำออก",
+  "rulesNardyPlayLong": "ยาว: ทั้งคู่เริ่มจากหัวเดียวกันและไปทางเดียวกัน จากหัวออกได้ไม่เกินหนึ่งตัวต่อตา ห้ามตี เมื่อทั้งหมดอยู่บ้านให้นำออก",
+  "rulesNardyWin": "ผู้ที่นำหมากออกครบก่อนชนะ",
   "rulesUnoPlayers": "ผู้เล่น: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "ใช้การค้นหาเพื่อหาเพื่อนใหม่",
   "friendsNothingFound": "ไม่พบผลลัพธ์",
   "friendsEmpty": "คุณยังไม่มีเพื่อน",
+  "friendsSearchNoMatches": "ไม่มีเพื่อนที่ตรงกับการค้นหา",
+  "friendsIncomingSearchNoMatches": "ไม่มีคำขอเข้าที่ตรงกับการค้นหา",
+  "friendsOutgoingSearchNoMatches": "ไม่มีคำขอออกที่ตรงกับการค้นหา",
   "friendsNoIncoming": "ไม่มีคำขอเข้า",
   "friendsNoOutgoing": "ไม่มีคำขอออก",
   "friendsAlreadyFriends": "เป็นเพื่อนกันแล้ว",

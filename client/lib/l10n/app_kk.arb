@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "Қарсы флотты толығымен батырған бірінші ойыншы жеңеді.",
   "gamesPoker": "Покер",
   "gamesUno": "Уно",
+  "gamesNardy": "Нарды",
+  "gamesNardyModeShort": "Қысқа",
+  "gamesNardyModeLong": "Ұзын",
+  "rulesNardyTitle": "Нарды — ережелер",
+  "rulesNardyPlayers": "Ойыншылар: 2.",
+  "rulesNardyMode": "Режим: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Тақтада 24 пункт, әркімде 15 тас. Екі сүйек бойынша жүресіз: бір таспен қосындыға немесе екеуімен ұпайларға.",
+  "rulesNardyPlayShort": "Қысқа нарды: қарсы жүресіз және жалғыз тастарды ұра аласыз. Ұрылған тас барға шығады да қайта кіруі керек. Барлық тас үйде болғанда оларды тақтадан аласыз.",
+  "rulesNardyPlayLong": "Ұзын нарды: екеуі де бір бастан бастап бір бағытта жүреді. Бастан бір жүрісте бір ғана тас шығады. Ұруға болмайды. Барлығы үйде болғанда тастарды аласыз.",
+  "rulesNardyWin": "Барлық тасын бірінші алған жеңеді.",
   "rulesUnoPlayers": "Ойыншылар: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Жаңа достар табу үшін іздеуді пайдаланыңыз",
   "friendsNothingFound": "Ештеңе табылмады",
   "friendsEmpty": "Әзірге достарыңыз жоқ",
+  "friendsSearchNoMatches": "Іздеуге сәйкес достар жоқ",
+  "friendsIncomingSearchNoMatches": "Іздеуге сәйкес кіріс өтінімдер жоқ",
+  "friendsOutgoingSearchNoMatches": "Іздеуге сәйкес шығыс өтінімдер жоқ",
   "friendsNoIncoming": "Кіріс өтінім жоқ",
   "friendsNoOutgoing": "Шығыс өтінім жоқ",
   "friendsAlreadyFriends": "Қазірдің өзінде доссыз",

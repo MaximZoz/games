@@ -16,10 +16,56 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
+import 'package:multigames_client/core/soft_keyboard.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+
+/// Пустой список друзей/заявок: без запроса — «список пуст», при поиске — «ничего не найдено».
+@visibleForTesting
+String friendsListEmptyText({
+  required String query,
+  required String emptyList,
+  required String nothingFound,
+}) {
+  return query.trim().isEmpty ? emptyList : nothingFound;
+}
+
+/// В альбоме и при клавиатуре нет места на отступ 80 — текст уезжает за край.
+@visibleForTesting
+EdgeInsets friendsEmptyStatusPadding({
+  required bool phoneLandscape,
+  required double keyboardInset,
+}) {
+  if (phoneLandscape || keyboardInset > 0) {
+    return const EdgeInsets.fromLTRB(16, 8, 16, 8);
+  }
+  return const EdgeInsets.fromLTRB(16, 80, 16, 16);
+}
+
+/// Табы с бейджами съедают высоту над клавиатурой: в альбоме её почти нет,
+/// в портрете без них видно больше результатов поиска.
+@visibleForTesting
+bool friendsHideTabsForKeyboard({
+  required bool landscape,
+  required double keyboardInset,
+}) {
+  return keyboardInset >= 80;
+}
+
+/// Цвет числа на табе: входящие — красный, поиск — зелёный, иначе акцент.
+@visibleForTesting
+Color friendsTabCountColor({
+  required bool incoming,
+  required bool findFriend,
+  required int count,
+}) {
+  if (incoming && count > 0) return Colors.red.shade600;
+  if (findFriend) return Colors.green.shade700;
+  return AppColors.accentStart;
+}
 
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
@@ -417,8 +463,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     });
 
     if (_isSearchExpanded) {
+      // Поле уже смонтировано (свёрнутая панель) — фокус тем же жестом,
+      // иначе браузер не считает открытие клавиатуры пользовательским.
+      openSoftKeyboard(_searchFocusNode);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _searchFocusNode.requestFocus();
+        if (mounted) openSoftKeyboard(_searchFocusNode);
       });
       if (_searchController.text.trim().isNotEmpty) {
         _scheduleSearch(immediate: true, forceRun: true);
@@ -801,6 +850,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     });
   }
 
+  Widget _friendsStatusPane(Widget child) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final phoneLandscape = isPhoneLandscape(context);
+    final pad = friendsEmptyStatusPadding(
+      phoneLandscape: phoneLandscape,
+      keyboardInset: keyboardInset,
+    );
+    final tight = phoneLandscape || keyboardInset > 0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bodyHeight = constraints.maxHeight.isFinite
+            ? (constraints.maxHeight - pad.vertical).clamp(32.0, 4000.0)
+            : 80.0;
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics()),
+          padding: pad,
+          children: [
+            if (tight)
+              SizedBox(
+                height: bodyHeight,
+                child: Center(child: child),
+              )
+            else
+              Center(child: child),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildAdaptiveList<T>({
     required List<T> items,
     required Widget Function(T item) itemBuilder,
@@ -808,18 +888,16 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     required _FriendsTabKind tab,
   }) {
     if (items.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              emptyText,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
+      return _friendsStatusPane(
+        Text(
+          emptyText,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.25,
           ),
-        ],
+        ),
       );
     }
 
@@ -853,7 +931,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           final itemWidth =
               (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
             physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()),
             child: Align(
@@ -937,7 +1015,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         _sortedAndFilteredFriends(snapshot.friends, presence, searchQuery);
     return _buildAdaptiveList<FriendItem>(
       items: items,
-      emptyText: l10n.friendsEmpty,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsEmpty,
+        nothingFound: l10n.friendsSearchNoMatches,
+      ),
       tab: _FriendsTabKind.friends,
       itemBuilder: (item) {
         final key = 'remove_${item.user.id}';
@@ -991,7 +1073,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.incoming, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoIncoming,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoIncoming,
+        nothingFound: l10n.friendsIncomingSearchNoMatches,
+      ),
       tab: _FriendsTabKind.incoming,
       itemBuilder: (item) {
         final acceptKey = 'accept_${item.requestId}';
@@ -1046,7 +1132,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final items = _filteredRequests(snapshot.outgoing, searchQuery);
     return _buildAdaptiveList<FriendRequestItem>(
       items: items,
-      emptyText: l10n.friendsNoOutgoing,
+      emptyText: friendsListEmptyText(
+        query: searchQuery,
+        emptyList: l10n.friendsNoOutgoing,
+        nothingFound: l10n.friendsOutgoingSearchNoMatches,
+      ),
       tab: _FriendsTabKind.outgoing,
       itemBuilder: (item) {
         final cancelKey = 'cancel_${item.requestId}';
@@ -1350,8 +1440,43 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildSearchPanel() {
     final focused = _searchFocusNode.hasFocus;
+    final phoneLand = isPhoneLandscape(context);
+    final tight = phoneLand || MediaQuery.viewInsetsOf(context).bottom > 0;
+    final showCollapse = focused;
+    final showClear = _searchController.text.isNotEmpty;
+    Widget? suffix;
+    if (showClear || showCollapse) {
+      suffix = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showClear)
+            IconButton(
+              tooltip: context.l10n.commonClear,
+              onPressed: () {
+                _searchDebounce?.cancel();
+                _searchRevision++;
+                _searchController.clear();
+                setState(() {
+                  _searchResults = const [];
+                  _isSearching = false;
+                  _isSearchLoadingMore = false;
+                  _searchHasMore = false;
+                });
+                openSoftKeyboard(_searchFocusNode);
+              },
+              icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
+            ),
+          if (showCollapse)
+            IconButton(
+              tooltip: context.l10n.friendsCollapseSearch,
+              onPressed: _toggleSearch,
+              icon: const Icon(Icons.search_off_rounded),
+            ),
+        ],
+      );
+    }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
@@ -1379,34 +1504,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           smartQuotesType: SmartQuotesType.disabled,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
+          maxLines: 1,
           decoration: InputDecoration(
             hintText: context.l10n.friendsSearchHint,
             prefixIcon: const Icon(Icons.search_rounded),
-            // Красный крестик без собственной рамки.
-            suffixIcon: _searchController.text.isEmpty
+            suffixIcon: suffix,
+            suffixIconConstraints: suffix == null
                 ? null
-                : IconButton(
-                    tooltip: context.l10n.commonClear,
-                    onPressed: () {
-                      _searchDebounce?.cancel();
-                      _searchRevision++;
-                      _searchController.clear();
-                      setState(() {
-                        _searchResults = const [];
-                        _isSearching = false;
-                        _isSearchLoadingMore = false;
-                        _searchHasMore = false;
-                      });
-                      _searchFocusNode.requestFocus();
-                    },
-                    icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
-                  ),
+                : const BoxConstraints(minWidth: 48, minHeight: 40),
             filled: false,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: tight ? 8 : 12,
+            ),
           ),
           onChanged: _onSearchTextChanged,
           onSubmitted: (_) => _scheduleSearch(immediate: true),
@@ -1419,53 +1532,37 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final l10n = context.l10n;
     final query = _searchController.text.trim();
     if (query.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              l10n.friendsSearchPrompt,
-              style: const TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
+      return _friendsStatusPane(
+        Text(
+          l10n.friendsSearchPrompt,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
       );
     }
     if (_isSearching) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: const [
-          Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accentStart,
-              ),
-            ),
+      return _friendsStatusPane(
+        const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accentStart,
           ),
-        ],
+        ),
       );
     }
     if (_searchResults.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: ClampingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 80),
-        children: [
-          Center(
-            child: Text(
-              l10n.friendsNothingFound,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
+      return _friendsStatusPane(
+        Text(
+          l10n.friendsNothingFound,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.25,
           ),
-        ],
+        ),
       );
     }
     final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
@@ -1625,7 +1722,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       _isSearchLoadingMore = false;
                       _searchHasMore = false;
                     });
-                    _searchFocusNode.requestFocus();
+                    openSoftKeyboard(_searchFocusNode);
                   },
                   icon: Icon(Icons.close_rounded,
                       size: 20, color: Colors.red.shade600),
@@ -1700,16 +1797,56 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final count = _tabCount(tab, snapshot, totalUsersCount);
     final isIncoming = tab == _FriendsTabKind.incoming;
     final isFindFriend = tab == _FriendsTabKind.findFriend;
-    final countColor = (isIncoming && (count ?? 0) > 0)
-        ? Colors.red.shade600
-        : isFindFriend
-            ? Colors.green.shade700
-            : AppColors.accentStart;
+    final countColor = friendsTabCountColor(
+      incoming: isIncoming,
+      findFriend: isFindFriend,
+      count: count ?? 0,
+    );
     final countStyle = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: countColor,
     );
+    if (isPhoneLandscape(context)) {
+      if (count == null) {
+        return Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        );
+      }
+      final countChild = isFindFriend
+          ? _AnimatedCountText(
+              value: count,
+              style: countStyle,
+              animateFromZeroOnce: true,
+            )
+          : Text('$count', style: countStyle);
+      // Плашка как в портрете: иначе акцент на выбранном табе сливается с подписью.
+      final countBadge = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: AppColors.accentSoft,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: countChild,
+      );
+      return Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: '$title '),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: countBadge,
+            ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      );
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1795,6 +1932,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _applyIncomingDeepLinkIfNeeded();
     final compact = MediaQuery.sizeOf(context).width < 430;
     final wide = isWide(context);
+    final hideTabs = friendsHideTabsForKeyboard(
+      landscape: MediaQuery.sizeOf(context).width >
+          MediaQuery.sizeOf(context).height,
+      keyboardInset: MediaQuery.viewInsetsOf(context).bottom,
+    );
     final path = ref.watch(currentRoutePathProvider);
     if (!wide && path == '/friends') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1816,25 +1958,34 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Клавиатуру уже вычел AppShell — иначе поиск и список без высоты.
+      resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (wide)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                 child: _buildWideHeader(),
               ),
             if (!wide)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: AnimatedSwitcher(
-                  duration: AppDurations.short,
-                  child: _isSearchExpanded
-                      ? _buildSearchPanel()
-                      : const SizedBox(
-                          key: ValueKey('friends-search-collapsed'),
-                        ),
+                padding: const EdgeInsets.only(top: 2),
+                // Поле поиска всегда в дереве, свёрнутое — просто нулевой
+                // высоты. Иначе оно создаётся вместе с панелью, фокус уходит
+                // в новый элемент на следующем кадре и клавиатура не выезжает
+                // с первого тапа.
+                child: ClipRect(
+                  child: AnimatedAlign(
+                    duration: AppDurations.short,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isSearchExpanded ? 1.0 : 0.0,
+                    child: IgnorePointer(
+                      ignoring: !_isSearchExpanded,
+                      child: _buildSearchPanel(),
+                    ),
+                  ),
                 ),
               ),
             Expanded(
@@ -1844,6 +1995,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   child: Column(
                     key: const ValueKey('friends-tabs'),
                     children: [
+                      if (!hideTabs)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: TabBar(

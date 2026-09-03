@@ -1463,6 +1463,66 @@ abstract class AppLocalizations {
   /// **'Уно'**
   String get gamesUno;
 
+  /// No description provided for @gamesNardy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нарды'**
+  String get gamesNardy;
+
+  /// No description provided for @gamesNardyModeShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Короткие'**
+  String get gamesNardyModeShort;
+
+  /// No description provided for @gamesNardyModeLong.
+  ///
+  /// In ru, this message translates to:
+  /// **'Длинные'**
+  String get gamesNardyModeLong;
+
+  /// No description provided for @rulesNardyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нарды — правила'**
+  String get rulesNardyTitle;
+
+  /// No description provided for @rulesNardyPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesNardyPlayers;
+
+  /// No description provided for @rulesNardyMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesNardyMode(String mode);
+
+  /// No description provided for @rulesNardyIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска из 24 пунктов, у каждого по 15 шашек. Ходы по двум кубикам: можно сходить одной шашкой на сумму или двумя на очки кубиков.'**
+  String get rulesNardyIntro;
+
+  /// No description provided for @rulesNardyPlayShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Короткие нарды: игроки идут навстречу и могут бить одиночные шашки соперника. Сбитая встаёт на бар и должна войти снова. Когда все шашки в доме — снимаете их с доски.'**
+  String get rulesNardyPlayShort;
+
+  /// No description provided for @rulesNardyPlayLong.
+  ///
+  /// In ru, this message translates to:
+  /// **'Длинные нарды: оба начинают с одной головы и идут в одну сторону. С головы за ход выходит не больше одной шашки. Бить шашки нельзя. Когда все в доме — снимаете их с доски.'**
+  String get rulesNardyPlayLong;
+
+  /// No description provided for @rulesNardyWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает тот, кто первым снимет все свои шашки.'**
+  String get rulesNardyWin;
+
   /// No description provided for @rulesUnoPlayers.
   ///
   /// In ru, this message translates to:
@@ -2698,6 +2758,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'У вас пока нет друзей'**
   String get friendsEmpty;
+
+  /// No description provided for @friendsSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет друзей, удовлетворяющих поиску'**
+  String get friendsSearchNoMatches;
+
+  /// No description provided for @friendsIncomingSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет входящих заявок по запросу'**
+  String get friendsIncomingSearchNoMatches;
+
+  /// No description provided for @friendsOutgoingSearchNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет исходящих заявок по запросу'**
+  String get friendsOutgoingSearchNoMatches;
 
   /// No description provided for @friendsNoIncoming.
   ///

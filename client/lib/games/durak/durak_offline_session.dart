@@ -29,7 +29,7 @@ class OfflineDurakSession extends ChangeNotifier {
   static const int me = 0;
   static const Duration botDelay = Duration(milliseconds: 650);
   static const Duration botHoldRetry = Duration(milliseconds: 400);
-  static const Duration bitoRevealDelay = Duration(milliseconds: 1000);
+  static const Duration bitoRevealDelay = Duration(milliseconds: 1400);
   static const Duration takeRevealDelay = Duration(milliseconds: 1000);
 
   /// Как [OpeningDealGrace] на сервере — боты не ходят во время стартовой раздачи.
@@ -483,6 +483,7 @@ class OfflineDurakSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
     _botTimer?.cancel();
     _revealTimer?.cancel();
@@ -520,7 +521,18 @@ class OfflineDurakRegistry {
 
   OfflineDurakSession? get(String gameId) => _sessions[gameId];
 
+  OfflineDurakSession? get current =>
+      _sessions.isEmpty ? null : _sessions.values.last;
+
   void remove(String gameId) => _sessions.remove(gameId);
+
+  void disposeAll() {
+    final list = List<OfflineDurakSession>.of(_sessions.values);
+    _sessions.clear();
+    for (final s in list) {
+      s.dispose();
+    }
+  }
 
   bool isOffline(String gameId) => gameId.startsWith('offline:durak:');
 }

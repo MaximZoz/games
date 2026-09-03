@@ -9,6 +9,7 @@ import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/live_game_sync.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -65,6 +66,19 @@ class GameInvite {
 
   bool get isUno => gameType == 'uno';
 
+  /// Тот же инвайт на экране — не пересоздавать карточку (иначе мигает).
+  bool sameVisibleCard(GameInvite other) =>
+      lobbyId == other.lobbyId &&
+      creatorId == other.creatorId &&
+      creatorName == other.creatorName &&
+      gameType == other.gameType &&
+      stakeBronze == other.stakeBronze &&
+      turnTimeSec == other.turnTimeSec &&
+      variant == other.variant &&
+      maxPlayers == other.maxPlayers &&
+      deckSize == other.deckSize &&
+      durakMode == other.durakMode;
+
   /// Подпись режима для карточки приглашения.
   /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
   String get modeLabel {
@@ -84,16 +98,61 @@ class GameInvite {
   }
 }
 
+/// Список приглашений визуально тот же — не трогать state.
+bool gameInviteListsVisuallySame(List<GameInvite> a, List<GameInvite> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!a[i].sameVisibleCard(b[i])) return false;
+  }
+  return true;
+}
+
+/// Сверка с сервером, если WS-кадр приглашения потерялся.
+const Duration kGameInvitesReconcileInterval = Duration(seconds: 5);
+
+/// Карточка с WS не стирается сразу, если GET ещё пустой (гонка / SCAN).
+const Duration kGameInviteHydrateGrace = Duration(seconds: 20);
+
+/// Сервер — база; локальные инвайты держим, если пришли во время GET
+/// или ещё в grace-окне после WS.
+List<GameInvite> mergeHydratedGameInvites({
+  required List<GameInvite> snapshot,
+  required List<GameInvite> current,
+  required List<GameInvite> fromServer,
+  required Map<String, DateTime> localSeenAt,
+  required DateTime now,
+  Duration grace = kGameInviteHydrateGrace,
+}) {
+  final next = List<GameInvite>.of(fromServer);
+  final serverIds = {for (final inv in next) inv.lobbyId};
+  for (final inv in current) {
+    if (serverIds.contains(inv.lobbyId)) continue;
+    final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
+    if (!wasKnown) {
+      next.add(inv);
+      continue;
+    }
+    final seen = localSeenAt[inv.lobbyId];
+    if (seen != null && now.difference(seen) < grace) {
+      next.add(inv);
+    }
+  }
+  return next;
+}
+
 final gameInvitesProvider =
     StateNotifierProvider<GameInvitesNotifier, List<GameInvite>>((ref) {
   final notifier = GameInvitesNotifier();
 
-  // После логина / rebuild — восстановить карточки приглашений с сервера.
-  final user = ref.watch(authStateProvider).valueOrNull;
-  if (user != null) {
+  // Только смена user id (логин/выход). refresh() баланса не должен
+  // создавать новый notifier — иначе карточка «Вас пригласили» мигает.
+  final userId = ref.watch(authStateProvider.select((s) => s.valueOrNull?.id));
+  if (userId != null) {
     unawaited(
       notifier.hydrateFromServer(ref.read(gamesRepositoryProvider)),
     );
+    notifier.startPolling(() => ref.read(gamesRepositoryProvider));
   }
 
   ref.listen<AsyncValue<Map<String, dynamic>>>(
@@ -182,22 +241,39 @@ final gameInvitesProvider =
 class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
   GameInvitesNotifier() : super(const []);
 
+  final Map<String, DateTime> _localSeenAt = {};
+  Timer? _poll;
+
+  void startPolling(GamesRepository Function() repo) {
+    _poll?.cancel();
+    _poll = Timer.periodic(kGameInvitesReconcileInterval, (_) {
+      unawaited(hydrateFromServer(repo()));
+    });
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
   void add(GameInvite invite) {
+    _localSeenAt[invite.lobbyId] = DateTime.now();
     if (state.any((i) => i.lobbyId == invite.lobbyId)) return;
     state = [...state, invite];
   }
 
   /// Подтянуть приглашения с сервера (reconnect / F5) — пока лобби ждёт.
   /// Сервер — источник истины для уже известных карточек; WS-инвайты,
-  /// пришедшие во время запроса, сохраняем.
+  /// пришедшие во время запроса или в grace-окне, сохраняем.
   Future<void> hydrateFromServer(GamesRepository repo) async {
     try {
       final snapshot = List<GameInvite>.of(state);
       final raw = await repo.listPendingInvites();
-      final next = <GameInvite>[];
+      final fromServer = <GameInvite>[];
       for (final m in raw) {
         final lobbyId = m['lobby_id']?.toString() ?? '';
-        if (lobbyId.isEmpty || next.any((i) => i.lobbyId == lobbyId)) {
+        if (lobbyId.isEmpty || fromServer.any((i) => i.lobbyId == lobbyId)) {
           continue;
         }
         final gameType = m['game_type']?.toString() ?? 'tictactoe';
@@ -207,7 +283,7 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
             ? variantFromLegacyGrid(legacyGrid)
             : parseVariant(rawVariant);
         final cfg = configForVariant(variant);
-        next.add(GameInvite(
+        fromServer.add(GameInvite(
           lobbyId: lobbyId,
           creatorId: m['creator_id']?.toString() ?? '',
           creatorName: localizeDisplayName(m['creator_name']?.toString()),
@@ -225,23 +301,33 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
           durakMode: m['game_mode']?.toString() ?? 'podkidnoi',
         ));
       }
-      final serverIds = next.map((i) => i.lobbyId).toSet();
-      // Инвайты, пришедшие по WS пока шёл GET — не затирать.
-      for (final inv in state) {
-        final wasKnown = snapshot.any((s) => s.lobbyId == inv.lobbyId);
-        if (!wasKnown && !serverIds.contains(inv.lobbyId)) {
-          next.add(inv);
-        }
+      final now = DateTime.now();
+      for (final inv in fromServer) {
+        _localSeenAt.putIfAbsent(inv.lobbyId, () => now);
       }
+      final next = mergeHydratedGameInvites(
+        snapshot: snapshot,
+        current: state,
+        fromServer: fromServer,
+        localSeenAt: _localSeenAt,
+        now: now,
+      );
+      if (gameInviteListsVisuallySame(state, next)) return;
       state = next;
     } catch (_) {}
   }
 
   void remove(String lobbyId) {
+    _localSeenAt.remove(lobbyId);
     state = state.where((i) => i.lobbyId != lobbyId).toList();
   }
 
   void removeByCreatorId(String creatorId) {
+    for (final inv in state) {
+      if (inv.creatorId == creatorId) {
+        _localSeenAt.remove(inv.lobbyId);
+      }
+    }
     state = state.where((i) => i.creatorId != creatorId).toList();
   }
 
@@ -254,12 +340,18 @@ class GameInvitesNotifier extends StateNotifier<List<GameInvite>> {
       return;
     }
     final creatorId = match.first.creatorId;
+    for (final inv in state) {
+      if (inv.lobbyId == lobbyId || inv.creatorId == creatorId) {
+        _localSeenAt.remove(inv.lobbyId);
+      }
+    }
     state = state
         .where((i) => i.lobbyId != lobbyId && i.creatorId != creatorId)
         .toList();
   }
 
   void clear() {
+    _localSeenAt.clear();
     state = [];
   }
 }
@@ -271,8 +363,9 @@ final openLobbiesProvider =
 class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
   @override
   Future<List<LobbyItem>> build() async {
-    final user = ref.watch(authStateProvider).valueOrNull;
-    if (user == null) return [];
+    final userId =
+        ref.watch(authStateProvider.select((s) => s.valueOrNull?.id));
+    if (userId == null) return [];
 
     final repo = ref.read(gamesRepositoryProvider);
     final lobbies = await repo.listLobbies();
@@ -285,12 +378,29 @@ class OpenLobbiesNotifier extends AutoDisposeAsyncNotifier<List<LobbyItem>> {
         if (type == 'lobby_updated' ||
             type == 'game_started' ||
             type == 'lobbies_changed') {
-          ref.invalidate(openLobbiesProvider);
+          unawaited(reloadQuiet());
         }
       },
     );
 
     return lobbies;
+  }
+
+  /// Обновить список, не сбрасывая его в loading — иначе карточки мигают.
+  Future<void> reloadQuiet() async {
+    final userId = ref.read(authStateProvider).valueOrNull?.id;
+    if (userId == null) {
+      state = const AsyncData([]);
+      return;
+    }
+    try {
+      final lobbies = await ref.read(gamesRepositoryProvider).listLobbies();
+      state = AsyncData(lobbies);
+    } catch (e, st) {
+      if (!state.hasValue) {
+        state = AsyncError(e, st);
+      }
+    }
   }
 
   /// Сразу убрать карточку (вход / отмена / старт), не дожидаясь refetch.
@@ -312,18 +422,27 @@ final lobbyDetailProvider =
   },
 );
 
-final gameStateProvider =
-    FutureProvider.autoDispose.family<GameStateItem, String>(
-  (ref, gameId) async {
-    if (OfflineTttRegistry.instance.isOffline(gameId)) {
-      final session = OfflineTttRegistry.instance.get(gameId);
+final gameStateProvider = AsyncNotifierProvider.autoDispose
+    .family<GameStateNotifier, GameStateItem, String>(
+  GameStateNotifier.new,
+);
+
+class GameStateNotifier
+    extends AutoDisposeFamilyAsyncNotifier<GameStateItem, String> {
+  bool _httpInFlight = false;
+  int _httpGen = 0;
+
+  @override
+  Future<GameStateItem> build(String arg) async {
+    if (OfflineTttRegistry.instance.isOffline(arg)) {
+      final session = OfflineTttRegistry.instance.get(arg);
       if (session == null) {
         throw GamesException(404, 'offline game not found');
       }
       var alive = true;
       void onChanged() {
         Future.microtask(() {
-          if (alive) ref.invalidateSelf();
+          if (alive) state = AsyncData(session.view);
         });
       }
 
@@ -334,32 +453,61 @@ final gameStateProvider =
       });
       return session.view;
     }
-    final repo = ref.read(gamesRepositoryProvider);
-    final sub = ref.listen<AsyncValue<Map<String, dynamic>>>(
-      realtimeEventsProvider,
-      (_, next) {
-        final data = next.valueOrNull;
-        if (data == null) return;
-        final type = data['type']?.toString() ?? '';
-        final gid = data['game_id']?.toString();
-        if (type == 'realtime_connected' ||
-            ((type == 'game_state' || type == 'game_started') &&
-                gid == gameId)) {
-          if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
-            ref.invalidateSelf();
-          }
-        }
-      },
+
+    listenLiveGameSync(
+      ref: ref,
+      gameId: arg,
+      hasFullView: hasFullTictactoeView,
+      onFullState: applyWs,
+      onReconcile: () => unawaited(reconcile()),
     );
-    ref.onDispose(sub.close);
-    // Poll не блокируем: иначе пропущенный WS = «зависший» ход.
-    final poll = Stream<void>.periodic(const Duration(milliseconds: 800)).listen((_) {
-      ref.invalidateSelf();
-    });
-    ref.onDispose(poll.cancel);
-    return repo.getGame(gameId);
-  },
-);
+    return _fetchPreferringLive();
+  }
+
+  void applyWs(Map<String, dynamic> data) {
+    try {
+      final parsed = GameStateItem.fromJson(data);
+      _commit(parsed);
+    } catch (_) {
+      unawaited(reconcile());
+    }
+  }
+
+  Future<void> reconcile() async {
+    if (OfflineTttRegistry.instance.isOffline(arg) || _httpInFlight) return;
+    _httpInFlight = true;
+    final gen = ++_httpGen;
+    try {
+      final fetched = await ref.read(gamesRepositoryProvider).getGame(arg);
+      if (gen != _httpGen) return;
+      _commit(fetched);
+    } catch (_) {
+      // Оставляем то, что уже на экране.
+    } finally {
+      _httpInFlight = false;
+    }
+  }
+
+  Future<GameStateItem> _fetchPreferringLive() async {
+    final fetched = await fetchGameWithRetry(
+      () => ref.read(gamesRepositoryProvider).getGame(arg),
+    );
+    final current = state.valueOrNull;
+    if (current != null && isOlderTictactoe(fetched, current)) {
+      return current;
+    }
+    if (current != null) return current.mergePreservingIdentity(fetched);
+    return fetched;
+  }
+
+  void _commit(GameStateItem incoming) {
+    final current = state.valueOrNull;
+    final merged =
+        current == null ? incoming : current.mergePreservingIdentity(incoming);
+    if (current != null && isOlderTictactoe(merged, current)) return;
+    state = AsyncData(merged);
+  }
+}
 
 /// Временное состояние после makeMove для немедленного отображения победы/ничьей
 /// (до завершения refetch). Сбрасывается при получении свежих данных из gameStateProvider.
@@ -422,13 +570,16 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
         final data = next.valueOrNull;
         if (data == null) return;
         final type = data['type']?.toString() ?? '';
-        if (type == 'game_state' || type == 'game_started') {
+        if (type == 'game_started') {
           unawaited(ref.read(activeGameProvider.notifier).refresh());
-          final gameId = data['game_id']?.toString();
-          if (gameId != null && gameId.isNotEmpty) {
-            if (!ref.read(gameStateInvalidateBlockedProvider(gameId))) {
-              ref.invalidate(gameStateProvider(gameId));
-            }
+          return;
+        }
+        if (type == 'game_state') {
+          final status = data['status']?.toString() ?? '';
+          if (status == 'over' ||
+              status == 'draw' ||
+              status.endsWith('_won')) {
+            unawaited(ref.read(activeGameProvider.notifier).refresh());
           }
           return;
         }

@@ -21,6 +21,11 @@ class _UnoOfflineScreenState extends ConsumerState<UnoOfflineScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_gameId != null) return;
+    final existing = OfflineUnoRegistry.instance.current;
+    if (existing != null) {
+      _gameId = existing.gameId;
+      return;
+    }
     final user = ref.read(authStateProvider).valueOrNull;
     final session = OfflineUnoSession.create(
       humanUserId: user?.id ?? 'local:player',
@@ -30,15 +35,6 @@ class _UnoOfflineScreenState extends ConsumerState<UnoOfflineScreen> {
       humanAvatarValue: user?.avatarValue,
     );
     _gameId = session.gameId;
-  }
-
-  @override
-  void dispose() {
-    final gameId = _gameId;
-    if (gameId != null) {
-      OfflineUnoRegistry.instance.get(gameId)?.dispose();
-    }
-    super.dispose();
   }
 
   @override

@@ -9,6 +9,22 @@ import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 
+export 'package:multigames_client/ui/durak/overlay_space.dart';
+
+/// Кадр для посадки FX. Без таймаута `endOfFrame` висит, если никто
+/// не заказал frame — раздача тогда не заканчивается, веер остаётся скрытым.
+Future<void> awaitDurakFrame({
+  Duration timeout = const Duration(milliseconds: 80),
+}) async {
+  final binding = WidgetsBinding.instance;
+  binding.scheduleFrame();
+  try {
+    await binding.endOfFrame.timeout(timeout);
+  } on TimeoutException {
+    // кадра нет — не держим полёт
+  }
+}
+
 /// Общая кривая полёта: мягкий разгон и длинное торможение без «щелчка» в конце.
 const Curve kDurakFlyCurve = Curves.easeOutQuint;
 
@@ -17,15 +33,45 @@ const Curve kDurakLayoutCurve = Curves.easeInOutCubic;
 
 /// Билет на полёт: после [done] при [keepAtEnd] карта остаётся, пока не [dismiss].
 class CardFlyTicket {
-  CardFlyTicket._(this._entry, this._controller, this._curved);
+  CardFlyTicket._(this._entry, this._controller, this._curved) {
+    if (_entry != null || _controller != null) {
+      _live.add(this);
+    }
+  }
+
+  static final List<CardFlyTicket> _live = <CardFlyTicket>[];
+
   final OverlayEntry? _entry;
   final AnimationController? _controller;
   final CurvedAnimation? _curved;
   bool _dismissed = false;
 
+  /// Сколько билетов ещё держат overlay/контроллер — для тестов.
+  static int get debugLiveCount => _live.length;
+
+  /// Снять все незакрытые полёты (поворот, конец партии, watchdog).
+  static void dismissAll() {
+    if (_live.isEmpty) return;
+    final copy = List<CardFlyTicket>.of(_live);
+    _live.clear();
+    for (final ticket in copy) {
+      ticket.dismiss();
+    }
+  }
+
+  @visibleForTesting
+  static void debugReset() {
+    dismissAll();
+  }
+
+  @visibleForTesting
+  static CardFlyTicket debugAttach(OverlayEntry entry) =>
+      CardFlyTicket._(entry, null, null);
+
   void dismiss() {
     if (_dismissed) return;
     _dismissed = true;
+    _live.remove(this);
     GameFlyOverlay.remove(_entry);
     _curved?.dispose();
     _controller?.dispose();
@@ -55,17 +101,19 @@ Future<CardFlyTicket> playCardFlyAnimation({
   bool keepAtEnd = false,
   bool playSfx = true,
 }) async {
-  // Не играть поверх чатов/других вкладок shell (IndexedStack держит партию).
-  if (!context.mounted ||
-      !TickerMode.of(context) ||
+  // Картинку полёта не кладём поверх чата; звук партии в сообщениях оставляем.
+  if (!context.mounted) {
+    return CardFlyTicket._(null, null, null);
+  }
+  if (playSfx && GameFlyOverlay.shouldPlayGameSfx(context: context)) {
+    Sfx.play(launchSfx ?? SfxId.cardPlay);
+  }
+  if (!TickerMode.of(context) ||
       !GameFlyOverlay.shouldShowFlight(context: context, gameOnly: true)) {
     return CardFlyTicket._(null, null, null);
   }
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return CardFlyTicket._(null, null, null);
-  if (playSfx) {
-    Sfx.play(launchSfx ?? SfxId.cardPlay);
-  }
 
   final completer = Completer<void>();
   final controller = AnimationController(vsync: _FlyTicker(), duration: duration);
@@ -127,9 +175,10 @@ Future<CardFlyTicket> playCardFlyAnimation({
     gameOnly: true,
   );
   try {
-    await controller.forward();
+    SchedulerBinding.instance.scheduleFrame();
+    await controller.forward().timeout(duration + const Duration(milliseconds: 480));
   } catch (_) {
-    // ignore dispose races
+    // timeout / dispose: не оставляем await навсегда — иначе виснет вся раздача
   }
   if (landSfx != null) Sfx.play(landSfx);
   if (!keepAtEnd) {

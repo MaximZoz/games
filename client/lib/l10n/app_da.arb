@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Kort",
+  "gamesNardyModeLong": "Lang",
+  "rulesNardyTitle": "Backgammon — regler",
+  "rulesNardyPlayers": "Spillere: 2.",
+  "rulesNardyMode": "Tilstand: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Bræt med 24 punkter, 15 brikker hver. To terninger: én brik summen eller to brikker øjnene.",
+  "rulesNardyPlayShort": "Kort backgammon: I går mod hinanden og må slå ensomme brikker. En slået brik går på barren og skal ind igen. Når alle er i hjemmet, tager I dem af.",
+  "rulesNardyPlayLong": "Langt backgammon: begge starter fra samme hoved og går samme vej. Højst én brik forlader hovedet pr. tur. Slag er ikke tilladt. Når alle er i hjemmet, tager I dem af.",
+  "rulesNardyWin": "Den, der først tager alle brikker af, vinder.",
   "rulesUnoPlayers": "Spillere: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -493,6 +510,9 @@
   "friendsSearchPrompt": "Brug søgning til at finde nye venner",
   "friendsNothingFound": "Intet fundet",
   "friendsEmpty": "Du har ingen venner endnu",
+  "friendsSearchNoMatches": "Ingen venner matcher søgningen",
+  "friendsIncomingSearchNoMatches": "Ingen indgående anmodninger matcher søgningen",
+  "friendsOutgoingSearchNoMatches": "Ingen udgående anmodninger matcher søgningen",
   "friendsNoIncoming": "Ingen indgående anmodninger",
   "friendsNoOutgoing": "Ingen udgående anmodninger",
   "friendsAlreadyFriends": "Allerede venner",

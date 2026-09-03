@@ -22,7 +22,18 @@ const (
 	battleshipPhaseBattle = "battle"
 	battleshipStatusOver  = "over"
 	battleshipSetupSec    = 60 // расстановка по умолчанию — 1 минута
+	battleshipBotDelay    = 700 * time.Millisecond
+	battleshipBotHitDelay = 1100 * time.Millisecond
 )
+
+// battleshipBotActDelay — пауза перед выстрелом бота, чтобы игрок успел
+// увидеть свой ход. Повтор после попадания чуть длиннее.
+func battleshipBotActDelay(continueAfterHit bool) time.Duration {
+	if continueAfterHit {
+		return battleshipBotHitDelay
+	}
+	return battleshipBotDelay
+}
 
 func battleshipMatchmakeKey(turnTimeSec, stakeBronze int) string {
 	return "battleship:matchmake:" + strconv.Itoa(turnTimeSec) + ":" + strconv.Itoa(stakeBronze)
@@ -882,7 +893,7 @@ func (h *GamesHandler) maybeBattleshipBotAct(ctx context.Context, gameID string,
 		return
 	}
 	key := "game:" + gameID
-	// Setup: бот уже ready при старте; если нет — доставить.
+	// Setup: бот уже ready при старте; если нет — доставить сразу.
 	if m["phase"] == battleshipPhaseSetup {
 		changed := false
 		for _, side := range []string{"p1", "p2"} {
@@ -906,34 +917,73 @@ func (h *GamesHandler) maybeBattleshipBotAct(ctx context.Context, gameID string,
 	if m["phase"] != battleshipPhaseBattle || m["status"] != gameStatusActive {
 		return
 	}
-	// Бот может ходить несколько раз подряд при попаданиях.
-	for step := 0; step < 25; step++ {
-		turn := m["turn"]
-		if !isBot(turn) {
-			return
-		}
-		side := battleshipSide(m, turn)
-		if side == "" {
-			return
-		}
-		opp := battleshipOpponentSide(side)
-		oppShips, err := battleship.ParseShipsJSON(m[opp+"_ships"])
-		if err != nil {
-			return
-		}
-		myShots, _ := battleship.ParseShotsJSON(m[side+"_shots"])
-		cell, err := battleship.BotPickShot(oppShips, myShots, rand.New(rand.NewSource(time.Now().UnixNano()+int64(step))))
-		if err != nil {
-			return
-		}
-		if err := h.applyBattleshipShot(ctx, gameID, m, side, cell, "normal"); err != nil {
-			return
-		}
-		m, _ = h.Rdb.HGetAll(ctx, key).Result()
-		if m["status"] != gameStatusActive {
-			return
-		}
+	if !isBot(m["turn"]) {
+		return
 	}
+	// Выстрелы бота — после паузы и отдельным broadcast, чтобы клиент
+	// успел показать ход игрока (как в уно/покере).
+	h.scheduleBattleshipBotAct(gameID)
+}
+
+func (h *GamesHandler) scheduleBattleshipBotAct(gameID string) {
+	if h.Rdb == nil {
+		return
+	}
+	go func() {
+		ctx := context.Background()
+		schedKey := "battleship_bot_sched:" + gameID
+		ok, err := h.Rdb.SetNX(ctx, schedKey, "1", 30*time.Second).Result()
+		if err != nil || !ok {
+			return
+		}
+		defer h.Rdb.Del(ctx, schedKey)
+
+		continueAfterHit := false
+		for step := 0; step < 25; step++ {
+			time.Sleep(battleshipBotActDelay(continueAfterHit))
+			lockKey := "battleship_bot_lock:" + gameID
+			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+			if !locked {
+				return
+			}
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["status"] != gameStatusActive ||
+				m["phase"] != battleshipPhaseBattle || !isBot(m["turn"]) {
+				h.Rdb.Del(ctx, lockKey)
+				return
+			}
+			side := battleshipSide(m, m["turn"])
+			if side == "" {
+				h.Rdb.Del(ctx, lockKey)
+				return
+			}
+			opp := battleshipOpponentSide(side)
+			oppShips, err := battleship.ParseShipsJSON(m[opp+"_ships"])
+			if err != nil {
+				h.Rdb.Del(ctx, lockKey)
+				return
+			}
+			myShots, _ := battleship.ParseShotsJSON(m[side+"_shots"])
+			cell, err := battleship.BotPickShot(oppShips, myShots, rand.New(rand.NewSource(time.Now().UnixNano()+int64(step))))
+			if err != nil {
+				h.Rdb.Del(ctx, lockKey)
+				return
+			}
+			if err := h.applyBattleshipShot(ctx, gameID, m, side, cell, "normal"); err != nil {
+				h.Rdb.Del(ctx, lockKey)
+				return
+			}
+			m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			h.Rdb.Del(ctx, lockKey)
+			if m["status"] != gameStatusActive {
+				return
+			}
+			if m["last_shot_hit"] != "true" || !isBot(m["turn"]) {
+				return
+			}
+			continueAfterHit = true
+		}
+	}()
 }
 
 func (h *GamesHandler) ForfeitBattleshipGame(w http.ResponseWriter, r *http.Request, gameID string) {
@@ -1137,6 +1187,7 @@ func (h *GamesHandler) BattleshipRematch(w http.ResponseWriter, r *http.Request)
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	h.trackUserInvites(ctx, lobbyID, []string{oppID})
 	setUserActiveLobby(ctx, h.Rdb, userID, lobbyID)
 
 	creator, _ := store.GetUserByID(ctx, h.Pool, userID)

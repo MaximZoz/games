@@ -118,6 +118,17 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Check Play targetSdk
+        working-directory: client
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Play с 31.08.2026 отклоняет AAB с targetSdk < 36.
+          if ! grep -Eq 'targetSdk[[:space:]]*=[[:space:]]*36' android/app/build.gradle.kts; then
+            echo "::error::targetSdk должен быть 36 — иначе Play: Target SDK of artifact is too low"
+            exit 1
+          fi
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

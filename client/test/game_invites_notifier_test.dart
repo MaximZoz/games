@@ -52,4 +52,58 @@ void main() {
     n.resolveJoined('L1');
     expect(n.state.map((e) => e.lobbyId), ['L2']);
   });
+
+  test('sameVisibleCard / lists: одинаковые инвайты не считаем новыми', () {
+    final a = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
+    final b = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
+    final c = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Bob');
+    expect(a.sameVisibleCard(b), isTrue);
+    expect(a.sameVisibleCard(c), isFalse);
+    expect(gameInviteListsVisuallySame([a], [b]), isTrue);
+    expect(gameInviteListsVisuallySame([a], [c]), isFalse);
+    expect(gameInviteListsVisuallySame([a], []), isFalse);
+  });
+
+  test('hydrate не стирает свежий WS-инвайт, если GET пустой', () {
+    final ws = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
+    final now = DateTime(2026, 9, 3, 14, 0, 0);
+    final merged = mergeHydratedGameInvites(
+      snapshot: [ws],
+      current: [ws],
+      fromServer: const [],
+      localSeenAt: {'L1': now.subtract(const Duration(seconds: 2))},
+      now: now,
+    );
+    expect(merged.map((e) => e.lobbyId), ['L1']);
+  });
+
+  test('hydrate оставляет инвайт, пришедший во время GET', () {
+    final before = invite(lobbyId: 'L1', creatorId: 'c1');
+    final during = invite(lobbyId: 'L2', creatorId: 'c2', name: 'B');
+    final now = DateTime(2026, 9, 3, 14, 0, 0);
+    final merged = mergeHydratedGameInvites(
+      snapshot: [before],
+      current: [before, during],
+      fromServer: const [],
+      localSeenAt: {
+        'L1': now.subtract(const Duration(minutes: 2)),
+        'L2': now,
+      },
+      now: now,
+    );
+    expect(merged.map((e) => e.lobbyId), ['L2']);
+  });
+
+  test('hydrate после grace убирает карточку, которой нет на сервере', () {
+    final old = invite(lobbyId: 'L1', creatorId: 'c1');
+    final now = DateTime(2026, 9, 3, 14, 0, 0);
+    final merged = mergeHydratedGameInvites(
+      snapshot: [old],
+      current: [old],
+      fromServer: const [],
+      localSeenAt: {'L1': now.subtract(const Duration(minutes: 2))},
+      now: now,
+    );
+    expect(merged, isEmpty);
+  });
 }

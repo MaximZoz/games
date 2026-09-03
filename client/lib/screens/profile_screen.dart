@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
@@ -16,8 +17,11 @@ import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/pick_image_web.dart';
 import 'package:multigames_client/screens/profile_avatar_storage.dart';
 import 'package:multigames_client/screens/profile_about_line.dart';
+import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
+import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
+import 'package:multigames_client/ui/keyboard_inset.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
@@ -296,43 +300,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     final phoneLandscape = isPhoneLandscape(context);
-    // Landscape на телефоне — шире; portrait/десктоп без изменений.
-    final profileMaxWidth = phoneLandscape ? 640.0 : 400.0;
+    // Portrait — узкая колонка; landscape заполняет ширину экрана.
+    final profileMaxWidth = phoneLandscape ? double.infinity : 400.0;
 
     Widget scrollableBody(Widget child) {
       final framed = Align(
-        alignment: Alignment.topCenter,
+        alignment: Alignment.center,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: profileMaxWidth),
           child: child,
         ),
       );
-      // На телефоне — карточка по центру экрана (если помещается).
+      // Карточка по центру оставшейся площади (и по вертикали).
       if (mobile) {
         return LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                phoneLandscape ? 10 : 16,
-                8,
-                phoneLandscape ? 10 : 16,
-                24,
+                phoneLandscape ? 8 : 12,
+                phoneLandscape ? 4 : 6,
+                phoneLandscape ? 8 : 12,
+                phoneLandscape ? 8 : 16,
               ),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics(),
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - 32,
+                  minHeight: constraints.maxHeight -
+                      (phoneLandscape ? 12 : 22),
                 ),
-                child: Center(child: framed),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: framed,
+                ),
               ),
             );
           },
         );
       }
       return ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
         children: [framed],
       );
     }
@@ -347,11 +355,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       child: Scaffold(
       backgroundColor: Colors.transparent,
-      // Web/iOS Safari: resize от клавиатуры сбрасывает фокус TextField.
-      // На нативе при редактировании поднимаем форму, чтобы «Сохранить» не
-      // уезжала за клавиатуру и влезала на коротких экранах.
-      resizeToAvoidBottomInset: _isEditing && !kIsWeb,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
+        // В альбоме с открытым полем щель только у верха экрана — без top inset.
+        top: !(ref.watch(profileEditFieldOpenProvider) &&
+            isPhoneLandscape(context)),
+        // Клавиатура перекрывает home indicator — не добавляем нижний inset.
+        bottom: MediaQuery.viewInsetsOf(context).bottom < 80,
         child: ref.watch(authStateProvider).when(
               data: (user) {
                 if (user == null) {
@@ -398,28 +408,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       focusAboutOnOpen: _focusAboutOnEdit,
                       editBackTick: _editBackTick,
                     );
-                    // Landscape на телефоне — форма прокручивается (иначе обрезается).
+                    // Landscape: две колонки на всю высоту, без внешней прокрутки.
                     if (phoneLandscape) {
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
-                            physics: const AlwaysScrollableScrollPhysics(
-                              parent: ClampingScrollPhysics(),
-                            ),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight - 14,
-                                maxWidth: profileMaxWidth,
-                              ),
-                              child: editForm,
-                            ),
-                          );
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+                        child: SizedBox.expand(child: editForm),
                       );
                     }
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                       child: SizedBox.expand(child: editForm),
                     );
                   }
@@ -447,6 +444,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     content = Listener(
                       onPointerDown: _onTapOutsideCard,
                       child: content,
+                    );
+                  }
+                  // Landscape: карточка на всю оставшуюся площадь экрана.
+                  if (phoneLandscape) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+                      child: SizedBox.expand(child: content),
                     );
                   }
                   // Важно: при полном заполнении (о себе + коллекции + чипы)
@@ -643,19 +647,15 @@ class _ProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phoneLandscape = isPhoneLandscape(context);
-    final cardMaxWidth = phoneLandscape ? 640.0 : 460.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: cardMaxWidth),
-            child: AnimatedBorderBox(
+    final cardMaxWidth = phoneLandscape ? double.infinity : 460.0;
+    final card = AnimatedBorderBox(
               key: cardKey,
+              expand: phoneLandscape,
               padding: EdgeInsets.symmetric(
-                horizontal: phoneLandscape ? 16 : 18,
-                vertical: MediaQuery.sizeOf(context).height < 700 ? 16 : 22,
+                horizontal: phoneLandscape ? 14 : 18,
+                vertical: phoneLandscape
+                    ? 12
+                    : (MediaQuery.sizeOf(context).height < 700 ? 16 : 22),
               ),
               child: AnimatedSwitcher(
                 duration: AppDurations.medium,
@@ -697,7 +697,21 @@ class _ProfileContent extends StatelessWidget {
                         onEditAbout: () => onStartEdit(focusAbout: true),
                       ),
               ),
-            ),
+    );
+    if (phoneLandscape) {
+      return SizedBox.expand(
+        key: const ValueKey('profile-landscape-card'),
+        child: card,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: cardMaxWidth),
+            child: card,
           ),
         ),
       ],
@@ -780,144 +794,197 @@ class _ProfileView extends ConsumerWidget {
             ),
           );
 
+    final phoneLandscape = isPhoneLandscape(context);
+    final identity = <Widget>[
+      TappableProfileAvatar(
+        userId: user.id,
+        canManage: true,
+        avatarKind: profileExtra.avatarKind.name,
+        avatarValue: profileExtra.avatarValue,
+        letter: _avatarLetter,
+        child: avatar,
+      ),
+      SizedBox(height: gapAfterAvatar),
+      Text(
+        _displayTitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+        textAlign: TextAlign.center,
+      ),
+      if (user.displayName?.trim().isNotEmpty == true) ...[
+        const SizedBox(height: 2),
+        Text(
+          user.email,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+      if (profileExtra.age != null ||
+          (profileExtra.gender != null &&
+              profileExtra.gender!.isNotEmpty)) ...[
+        SizedBox(height: gapSection),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (profileExtra.age != null)
+              _ProfileInfoChip(
+                icon: Icons.cake_outlined,
+                label: context.l10n.profileAgeYears(profileExtra.age!),
+              ),
+            if (profileExtra.gender != null &&
+                profileExtra.gender!.isNotEmpty)
+              _ProfileInfoChip(
+                icon: isFemaleGender(profileExtra.gender)
+                    ? Icons.female_rounded
+                    : Icons.male_rounded,
+                label: localizeGender(profileExtra.gender, context.l10n),
+              ),
+          ],
+        ),
+      ],
+    ];
+
+    final hasAbout =
+        profileExtra.about != null && profileExtra.about!.trim().isNotEmpty;
+    final aboutBlock = hasAbout
+        ? Material(
+            color: AppColors.accentSoft.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: onEditAbout ?? onEdit,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 48),
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: AboutOneLineText(
+                  text: profileExtra.about!.trim(),
+                  maxLines: 8,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ),
+          )
+        : null;
+
+    final collectionsBlock = Builder(
+      builder: (context) {
+        final inv = ref.watch(inventoryListProvider).valueOrNull ??
+            const <InventoryItem>[];
+        final collections = inv
+            .where((e) =>
+                e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+            .toList();
+        if (collections.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!phoneLandscape) SizedBox(height: gapSection + 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                context.l10n.profileCollections,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            CollectionShowcaseGrid(items: collections),
+          ],
+        );
+      },
+    );
+
+    final editButton = OutlinedButton.icon(
+      onPressed: onEdit,
+      icon: const Icon(Icons.edit_outlined, size: 18),
+      label: Text(
+        context.l10n.profileEdit,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.accentStart,
+        padding: EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: shortScreen ? 11 : 13,
+        ),
+        side: BorderSide(
+          color: AppColors.accentStart.withValues(alpha: 0.6),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+
+    if (phoneLandscape) {
+      return Row(
+        key: const ValueKey('profile-view-landscape'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: identity,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 7,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (aboutBlock != null) ...[
+                  aboutBlock,
+                  SizedBox(height: gapSection),
+                ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: collectionsBlock,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: editButton,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-            TappableProfileAvatar(
-              userId: user.id,
-              canManage: true,
-              avatarKind: profileExtra.avatarKind.name,
-              avatarValue: profileExtra.avatarValue,
-              letter: _avatarLetter,
-              child: avatar,
-            ),
-            SizedBox(height: gapAfterAvatar),
-            Text(
-              _displayTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (user.displayName?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 2),
-              Text(
-                user.email,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            if (profileExtra.age != null ||
-                (profileExtra.gender != null &&
-                    profileExtra.gender!.isNotEmpty)) ...[
-              SizedBox(height: gapSection),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (profileExtra.age != null)
-                    _ProfileInfoChip(
-                      icon: Icons.cake_outlined,
-                      label: context.l10n.profileAgeYears(profileExtra.age!),
-                    ),
-                  if (profileExtra.gender != null &&
-                      profileExtra.gender!.isNotEmpty)
-                    _ProfileInfoChip(
-                      icon: isFemaleGender(profileExtra.gender)
-                          ? Icons.female_rounded
-                          : Icons.male_rounded,
-                      label: localizeGender(profileExtra.gender, context.l10n),
-                    ),
-                ],
-              ),
-            ],
-            if (profileExtra.about != null &&
-                profileExtra.about!.trim().isNotEmpty) ...[
-              SizedBox(height: gapSection),
-              Material(
-                color: AppColors.accentSoft.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: onEditAbout ?? onEdit,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    constraints: const BoxConstraints(minHeight: 48),
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                    child: AboutOneLineText(
-                      text: profileExtra.about!.trim(),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        height: 1.25,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            Builder(
-              builder: (context) {
-                final inv = ref.watch(inventoryListProvider).valueOrNull ??
-                    const <InventoryItem>[];
-                final collections =
-                    inv
-                        .where((e) =>
-                            e.kind == 'collection' &&
-                            !isRetiredCollectionItem(e.code))
-                        .toList();
-                if (collections.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  children: [
-                    SizedBox(height: gapSection + 2),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        context.l10n.profileCollections,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    CollectionShowcaseGrid(items: collections),
-                  ],
-                );
-              },
-            ),
-            SizedBox(height: shortScreen ? 16 : 20),
-            OutlinedButton.icon(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(
-                context.l10n.profileEdit,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.accentStart,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: shortScreen ? 11 : 13,
-                ),
-                side: BorderSide(
-                  color: AppColors.accentStart.withValues(alpha: 0.6),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
+        ...identity,
+        if (aboutBlock != null) ...[
+          SizedBox(height: gapSection),
+          aboutBlock,
+        ],
+        collectionsBlock,
+        SizedBox(height: shortScreen ? 16 : 20),
+        editButton,
       ],
     );
   }
@@ -988,10 +1055,11 @@ class _ProfileEditForm extends ConsumerStatefulWidget {
   ConsumerState<_ProfileEditForm> createState() => _ProfileEditFormState();
 }
 
-/// Только цифры, макс. 3 (возраст 1–111).
+/// Только цифры, макс. 3, не больше 111.
 final _ageFormatters = [
   FilteringTextInputFormatter.digitsOnly,
   LengthLimitingTextInputFormatter(3),
+  const ProfileAgeRangeFormatter(),
 ];
 
 /// Без управляющих символов и обратного слэша, макс. 100 (о себе).
@@ -1006,13 +1074,14 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   bool _galleryDirty = false;
   String? _initialGallerySignature;
   String _gallerySignature = '';
-  bool _aboutTypingActive = false;
+  ProfileEditField _activeField = ProfileEditField.none;
   String? _ageError;
   String? _saveError;
   DateTime? _lastLatinOnlyToastAt;
   late String _lastAboutText;
   late TextEditingController _ageController;
   late TextEditingController _aboutController;
+  late FocusNode _ageFocus;
   late FocusNode _aboutFocus;
   late String? _gender;
   late AvatarKind _avatarKind;
@@ -1029,7 +1098,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _initialDisplayName = widget.displayNameController.text;
     _initialExtra = widget.profileExtra;
     widget.displayNameController.addListener(_onFieldsChanged);
-    widget.focusNode.addListener(_onSiblingFocus);
+    widget.focusNode.addListener(_onNameFocusChanged);
     _ageController = TextEditingController(
       text: widget.profileExtra.age?.toString() ?? '',
     );
@@ -1037,20 +1106,25 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       text: widget.profileExtra.about ?? '',
     );
     _lastAboutText = _aboutController.text;
+    _ageFocus = FocusNode();
     _aboutFocus = FocusNode();
+    _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
-    _ageController.addListener(_onFieldsChanged);
+    _ageController.addListener(_onAgeTextChanged);
     _aboutController.addListener(_onAboutTextChanged);
     _gender = widget.profileExtra.gender;
     _avatarKind = widget.profileExtra.avatarKind;
     _avatarValue = widget.profileExtra.avatarValue;
     _showStatsToOthers = widget.profileExtra.showStatsToOthers;
     if (widget.focusAboutOnOpen) {
-      _aboutTypingActive = true;
+      _activeField = ProfileEditField.about;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _aboutFocus.requestFocus();
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncFieldOpenProvider();
+    });
   }
 
   @override
@@ -1062,50 +1136,155 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     }
   }
 
-  bool get _aboutIsOpen => _aboutFocus.hasFocus || _aboutTypingActive;
+  bool get _fieldIsOpen => profileEditFieldActive(_activeField);
 
-  void _leaveAboutField() {
-    _aboutFocus.unfocus();
-    if (_aboutTypingActive && mounted) {
-      setState(() => _aboutTypingActive = false);
+  static const List<ProfileEditField> _stripFieldOrder = [
+    ProfileEditField.name,
+    ProfileEditField.age,
+    ProfileEditField.about,
+  ];
+
+  /// Полоска ввода переезжает между слотами (низ в портрете, верх в альбоме,
+  /// offstage при закрытом поле) — с GlobalKey элемент и связь с IME живут,
+  /// клавиатура не падает при переносе.
+  final GlobalKey _stripSlotKey = GlobalKey(debugLabel: 'profile-edit-strip');
+
+  /// Клавиатура успела появиться под открытым полем? Пока нет — полоску не
+  /// закрываем: на телефоне IME выезжает не в том же кадре, а на десктопе
+  /// его нет вовсе.
+  bool _keyboardWasOpenForStrip = false;
+  Timer? _stripKeyboardGrace;
+
+  /// Клавиатуру убрали (тап в пустое место, кнопка «свернуть») — компактной
+  /// полоски ввода без клавиатуры быть не должно, возвращаем обычную форму.
+  void _trackStripKeyboard({
+    required bool fieldTyping,
+    required bool keyboardOpen,
+  }) {
+    if (!fieldTyping) {
+      _keyboardWasOpenForStrip = false;
+      _stripKeyboardGrace?.cancel();
+      _stripKeyboardGrace = null;
+      return;
     }
-  }
-
-  void _openAboutField() {
-    setState(() => _aboutTypingActive = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _aboutFocus.requestFocus();
+    if (keyboardOpen) {
+      _keyboardWasOpenForStrip = true;
+      _stripKeyboardGrace?.cancel();
+      _stripKeyboardGrace = null;
+      return;
+    }
+    final leave = profileEditShouldLeaveFieldOnKeyboardHidden(
+      fieldTypingActive: fieldTyping,
+      keyboardWasOpen: _keyboardWasOpenForStrip,
+      keyboardOpen: keyboardOpen,
+    );
+    if (!leave || _stripKeyboardGrace != null) return;
+    // Небольшая пауза: при переключении между полями inset на мгновение
+    // обнуляется, закрывать полоску в этот момент нельзя.
+    _stripKeyboardGrace = Timer(const Duration(milliseconds: 250), () {
+      _stripKeyboardGrace = null;
+      if (!mounted || !_fieldIsOpen) return;
+      if (keyboardIsOpen(MediaQuery.viewInsetsOf(context).bottom)) return;
+      _leaveActiveField();
     });
   }
 
+  void _leaveActiveField() {
+    _keyboardWasOpenForStrip = false;
+    _stripKeyboardGrace?.cancel();
+    _stripKeyboardGrace = null;
+    widget.focusNode.unfocus();
+    _ageFocus.unfocus();
+    _aboutFocus.unfocus();
+    if (_activeField != ProfileEditField.none && mounted) {
+      setState(() => _activeField = ProfileEditField.none);
+    }
+    _syncFieldOpenProvider();
+  }
+
+  void _syncFieldOpenProvider() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final next = _fieldIsOpen;
+      if (ref.read(profileEditFieldOpenProvider) != next) {
+        ref.read(profileEditFieldOpenProvider.notifier).state = next;
+      }
+    });
+  }
+
+  void _requestFieldFocus(ProfileEditField field) {
+    if (!mounted) return;
+    switch (field) {
+      case ProfileEditField.name:
+        openSoftKeyboard(widget.focusNode);
+      case ProfileEditField.age:
+        openSoftKeyboard(_ageFocus);
+      case ProfileEditField.about:
+        openSoftKeyboard(_aboutFocus);
+      case ProfileEditField.none:
+        break;
+    }
+  }
+
+  void _openField(ProfileEditField field) {
+    if (_isSaving || field == ProfileEditField.none) return;
+    // Фокус — до setState: поле уже в дереве (offstage-полоска), поэтому
+    // клавиатура выезжает тем же жестом, без «полоска есть, IME нет».
+    _requestFieldFocus(field);
+    if (_activeField != field) {
+      setState(() => _activeField = field);
+    }
+    _syncFieldOpenProvider();
+    // Повтор после кадра: в альбоме IME иногда не открывается с первого раза.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestFieldFocus(field);
+    });
+  }
+
+  void _openAboutField() => _openField(ProfileEditField.about);
+
   void _onEmptyEditorTap() {
-    if (shouldUnfocusAboutOnEmptyTap(aboutFocused: _aboutIsOpen)) {
-      _leaveAboutField();
+    if (shouldUnfocusFieldOnEmptyTap(fieldFocused: _fieldIsOpen)) {
+      _leaveActiveField();
     }
   }
 
   bool _handleEditBack() {
-    final action = profileEditBackAction(aboutFocused: _aboutIsOpen);
+    final action = profileEditBackAction(fieldFocused: _fieldIsOpen);
     if (action == ProfileEditBackAction.stayInEditor) {
-      _leaveAboutField();
+      _leaveActiveField();
       return true;
     }
     widget.onCancel();
     return true;
   }
 
-  void _onSiblingFocus() {
-    if (!mounted) return;
-    if (widget.focusNode.hasFocus && _aboutTypingActive) {
-      _leaveAboutField();
+  void _syncActiveField(ProfileEditField field) {
+    if (!mounted || !widget.compact) return;
+    if (shouldClearFieldOpenOnFocusLost()) return;
+    if (_activeField != field) {
+      setState(() => _activeField = field);
     }
+    _syncFieldOpenProvider();
+  }
+
+  void _onNameFocusChanged() {
+    if (widget.focusNode.hasFocus) _syncActiveField(ProfileEditField.name);
+  }
+
+  void _onAgeFocusChanged() {
+    if (_ageFocus.hasFocus) _syncActiveField(ProfileEditField.age);
   }
 
   void _onAboutFocusChanged() {
     if (!mounted) return;
-    // Web Back сначала снимает фокус — не закрываем «О себе» по blur.
-    if (_aboutFocus.hasFocus && !_aboutTypingActive) {
-      setState(() => _aboutTypingActive = true);
+    // Web Back сначала снимает фокус — не закрываем поле по blur.
+    if (_aboutFocus.hasFocus) {
+      if (widget.compact) {
+        _syncActiveField(ProfileEditField.about);
+      } else if (_activeField != ProfileEditField.about) {
+        setState(() => _activeField = ProfileEditField.about);
+      }
     }
   }
 
@@ -1121,9 +1300,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       _initialExtra ?? widget.profileExtra;
 
   void _onFieldsChanged() => setState(() {
-        _ageError = null;
         _saveError = null;
       });
+
+  void _onAgeTextChanged() {
+    if (!mounted) return;
+    setState(() {
+      _ageError = profileAgeIsInvalid(_ageController.text)
+          ? context.l10n.profileAgeInvalid
+          : null;
+      _saveError = null;
+    });
+  }
 
   /// Только латиница, макс. 10 символов (логин).
   List<TextInputFormatter> get _displayNameFormatters => [
@@ -1204,11 +1392,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   @override
   void dispose() {
+    _stripKeyboardGrace?.cancel();
+    try {
+      ref.read(profileEditFieldOpenProvider.notifier).state = false;
+    } catch (_) {}
     widget.displayNameController.removeListener(_onFieldsChanged);
-    widget.focusNode.removeListener(_onSiblingFocus);
-    _ageController.removeListener(_onFieldsChanged);
+    widget.focusNode.removeListener(_onNameFocusChanged);
+    _ageController.removeListener(_onAgeTextChanged);
     _aboutController.removeListener(_onAboutTextChanged);
+    _ageFocus.removeListener(_onAgeFocusChanged);
     _aboutFocus.removeListener(_onAboutFocusChanged);
+    _ageFocus.dispose();
     _aboutFocus.dispose();
     _ageController.dispose();
     _aboutController.dispose();
@@ -1513,6 +1707,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     const SizedBox(height: 2),
                     AboutOneLineText(
                       text: empty ? context.l10n.profileAboutHint : text,
+                      maxLines: 8,
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.25,
@@ -1531,38 +1726,238 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
   }
 
-  Widget _buildAboutEditorField({Key? key}) {
+  Widget _buildAboutEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+    bool autofocus = true,
+  }) {
+    final strip = landscapeStrip;
     return TextFormField(
       key: key,
+      autofocus: autofocus,
       controller: _aboutController,
       focusNode: _aboutFocus,
       inputFormatters: _aboutFormatters,
-      textAlignVertical: TextAlignVertical.top,
-      maxLines: 5,
-      minLines: 3,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : (strip ? profileEditStripMaxLines() : 5),
+      minLines: (expand && !strip) ? null : 1,
       maxLength: 100,
+      keyboardType: strip ? TextInputType.text : TextInputType.multiline,
+      textInputAction: strip ? TextInputAction.done : TextInputAction.newline,
+      enableIMEPersonalizedLearning: false,
       textCapitalization: TextCapitalization.sentences,
-      scrollPadding: const EdgeInsets.only(bottom: 120),
+      scrollPadding: const EdgeInsets.only(bottom: 24),
       style: const TextStyle(
         fontSize: 16,
         height: 1.3,
       ),
       decoration: InputDecoration(
-        labelText: context.l10n.commonAboutMe,
+        labelText: strip ? null : context.l10n.commonAboutMe,
         hintText: context.l10n.profileAboutHint,
-        alignLabelWithHint: true,
+        alignLabelWithHint: !strip,
+        isDense: strip,
         filled: true,
         fillColor: AppColors.surfaceCard,
-        contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
-        prefixIcon: const Icon(Icons.info_outline_rounded),
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.info_outline_rounded),
         counterText: '',
+      ),
+      onFieldSubmitted: strip ? (_) => _leaveActiveField() : null,
+    );
+  }
+
+  Widget _buildNameEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+    bool autofocus = true,
+  }) {
+    final strip = landscapeStrip;
+    return TextFormField(
+      key: key,
+      autofocus: autofocus,
+      controller: widget.displayNameController,
+      focusNode: widget.focusNode,
+      inputFormatters: _displayNameFormatters,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : profileEditStripMaxLines(),
+      minLines: (expand && !strip) ? null : 1,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.done,
+      enableIMEPersonalizedLearning: false,
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      enableSuggestions: false,
+      scrollPadding: const EdgeInsets.only(bottom: 24),
+      style: const TextStyle(
+        fontSize: 16,
+        height: 1.3,
+      ),
+      decoration: InputDecoration(
+        labelText: strip ? null : context.l10n.registerNameLabel,
+        hintText: context.l10n.profileNameHint,
+        alignLabelWithHint: !strip,
+        isDense: strip,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.person_outline_rounded),
+      ),
+      onFieldSubmitted: (_) => _leaveActiveField(),
+    );
+  }
+
+  Widget _buildAgeEditorField({
+    Key? key,
+    bool expand = false,
+    bool landscapeStrip = false,
+    bool autofocus = true,
+  }) {
+    final strip = landscapeStrip;
+    return TextFormField(
+      key: key,
+      autofocus: autofocus,
+      controller: _ageController,
+      focusNode: _ageFocus,
+      inputFormatters: _ageFormatters,
+      textAlignVertical:
+          strip ? TextAlignVertical.center : TextAlignVertical.top,
+      expands: expand && !strip,
+      maxLines: (expand && !strip) ? null : profileEditStripMaxLines(),
+      minLines: (expand && !strip) ? null : 1,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
+      enableIMEPersonalizedLearning: false,
+      scrollPadding: const EdgeInsets.only(bottom: 24),
+      style: const TextStyle(
+        fontSize: 16,
+        height: 1.3,
+      ),
+      decoration: InputDecoration(
+        labelText: strip ? null : context.l10n.profileAge,
+        hintText: context.l10n.profileAgeHint,
+        alignLabelWithHint: !strip,
+        isDense: strip,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        contentPadding: strip
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+            : const EdgeInsets.fromLTRB(12, 16, 12, 16),
+        prefixIcon: strip ? null : const Icon(Icons.cake_outlined),
+        errorText: _ageError,
+      ),
+      onFieldSubmitted: (_) => _leaveActiveField(),
+    );
+  }
+
+  /// Все три поля висят в дереве одновременно: браузер открывает клавиатуру
+  /// только когда фокус приходит в уже смонтированный ввод прямо из жеста.
+  /// Если создавать поле вместе с полоской, фокус попадает в новый элемент
+  /// на следующем кадре — жест уже «просрочен», и IME не выезжает.
+  Widget _buildStripEditors() {
+    final index = _stripFieldOrder.indexOf(_activeField);
+    return IndexedStack(
+      index: index < 0 ? 0 : index,
+      alignment: Alignment.center,
+      children: [
+        _buildNameEditorField(
+          key: const ValueKey('strip_display_name'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+        _buildAgeEditorField(
+          key: const ValueKey('strip_age'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+        _buildAboutEditorField(
+          key: const ValueKey('strip_about'),
+          landscapeStrip: true,
+          autofocus: false,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKeyboardInputStrip(BuildContext context, {bool compact = false}) {
+    return Material(
+      color: AppColors.surfaceCard,
+      elevation: 6,
+      shadowColor: Colors.black54,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(2, compact ? 2 : 4, 8, compact ? 2 : 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              tooltip: context.l10n.commonBack,
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: compact ? 36 : 40,
+                minHeight: compact ? 36 : 40,
+              ),
+              onPressed: _isSaving ? null : _handleEditBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: AppColors.textPrimary,
+            ),
+            Expanded(child: _buildStripEditors()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldPreview({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required String text,
+    required ProfileEditField field,
+    String? errorText,
+  }) {
+    return Material(
+      key: key,
+      color: AppColors.surfaceCard,
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      child: InkWell(
+        onTap: _isSaving ? null : () => _openField(field),
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon),
+            errorText: errorText,
+          ),
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.25,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildCompactSaveButton() {
     return AppButton(
-      onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+      onPressed: (_isSaving || !_hasChanges || _ageError != null)
+          ? null
+          : _submit,
       label: context.l10n.commonSave,
       isLoading: _isSaving,
       expanded: true,
@@ -1573,34 +1968,24 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextFormField(
+        _buildFieldPreview(
           key: const ValueKey('compact_display_name'),
-          controller: widget.displayNameController,
-          focusNode: widget.focusNode,
-          inputFormatters: _displayNameFormatters,
-          decoration: InputDecoration(
-            labelText: context.l10n.registerNameLabel,
-            prefixIcon: const Icon(Icons.person_outline_rounded),
-          ),
-          textCapitalization: TextCapitalization.none,
-          autocorrect: false,
-          enableSuggestions: false,
-          onFieldSubmitted: (_) => _submit(),
+          icon: Icons.person_outline_rounded,
+          label: context.l10n.registerNameLabel,
+          text: widget.displayNameController.text.trim(),
+          field: ProfileEditField.name,
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: _buildFieldPreview(
                 key: const ValueKey('compact_age'),
-                controller: _ageController,
-                inputFormatters: _ageFormatters,
-                decoration: InputDecoration(
-                  labelText: context.l10n.profileAge,
-                  prefixIcon: const Icon(Icons.cake_outlined),
-                  errorText: _ageError,
-                ),
-                keyboardType: TextInputType.number,
+                icon: Icons.cake_outlined,
+                label: context.l10n.profileAge,
+                text: _ageController.text.trim(),
+                field: ProfileEditField.age,
+                errorText: _ageError,
               ),
             ),
             const SizedBox(width: 12),
@@ -1628,26 +2013,34 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildCompactEditor(BuildContext context) {
-    // Поднимаем «О себе» сразу при фокусе (клавиатура открыта).
-    final aboutTypingMode = _aboutTypingActive;
-    // В phone landscape родитель уже SingleChildScrollView — Expanded там
-    // ломает скролл и кнопка «Сохранить» уезжает «в бесконечность».
+    final fieldTyping = _fieldIsOpen;
     final phoneLand = isPhoneLandscape(context);
+    final layout = profileEditCompactLayout(
+      phoneLandscape: phoneLand,
+      fieldTypingActive: fieldTyping,
+    );
+    // На web resizeToAvoidBottomInset выключен — поднимаем поле над клавиатурой.
+    // На нативе Scaffold уже съел inset, здесь будет 0.
+    final keyboardPad = sanitizeKeyboardInset(
+      inset: MediaQuery.viewInsetsOf(context).bottom,
+      viewportHeight: MediaQuery.sizeOf(context).height,
+    );
+    _trackStripKeyboard(
+      fieldTyping: fieldTyping,
+      keyboardOpen: keyboardIsOpen(MediaQuery.viewInsetsOf(context).bottom),
+    );
+    // Портрет: поле открыто, но форма остаётся на экране — иначе над полоской
+    // ввода пустота и непонятно, что вообще редактируешь.
+    final keepFormBehindStrip = profileEditKeepFormWithStrip(
+      phoneLandscape: phoneLand,
+      fieldTypingActive: fieldTyping,
+    );
 
-    final Widget aboutField;
-    if (aboutTypingMode) {
-      final editor = _buildAboutEditorField(
-        key: const ValueKey('compact_about'),
-      );
-      aboutField = phoneLand
-          ? SizedBox(height: 148, width: double.infinity, child: editor)
-          : editor;
-    } else {
-      aboutField = _buildAboutPreview(key: const ValueKey('compact_about_preview'));
-    }
+    final aboutField =
+        _buildAboutPreview(key: const ValueKey('compact_about_preview'));
 
     final avatarAndMeta = Visibility(
-      visible: !aboutTypingMode,
+      visible: !fieldTyping || keepFormBehindStrip,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -1717,7 +2110,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     );
 
     final galleryAndPhoto = Visibility(
-      visible: !aboutTypingMode,
+      visible: !fieldTyping || keepFormBehindStrip,
       maintainState: true,
       maintainAnimation: true,
       maintainSize: false,
@@ -1762,34 +2155,99 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       ),
     );
 
-    // Portrait: поля скроллятся, «Сохранить» всегда внизу экрана.
-    // Landscape: родитель уже скроллит всю форму целиком.
+    // Portrait: поля скроллятся, «Сохранить» внизу.
+    // Landscape: две колонки. Активное поле — на весь экран (как «О себе»),
+    // переключение только по тапу, не по viewInsets — иначе iPhone теряет фокус.
+    final strip = KeyedSubtree(
+      key: _stripSlotKey,
+      child: _buildKeyboardInputStrip(context, compact: phoneLand),
+    );
+
     final Widget form;
-    if (phoneLand) {
-      form = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildCompactHeader(context),
-          SizedBox(height: aboutTypingMode ? 10 : 16),
-          avatarAndMeta,
-          aboutField,
-          galleryAndPhoto,
-          if (!aboutTypingMode) ...[
-            SizedBox(height: phoneLand ? 10 : 16),
-            _buildCompactSaveButton(),
+    switch (layout) {
+      case ProfileEditCompactLayout.singleField:
+        final scrollableForm = SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              avatarAndMeta,
+              aboutField,
+              galleryAndPhoto,
+            ],
+          ),
+        );
+        // И в портрете, и в альбоме: форма сверху в остатке высоты, полоска
+        // ввода — вплотную над клавиатурой. В альбоме от формы остаётся
+        // узкая полоса, но текст стоит там, где его ждёшь: у клавиатуры.
+        form = Padding(
+          padding: EdgeInsets.only(
+            top: phoneLand ? MediaQuery.viewPaddingOf(context).top : 0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!phoneLand) ...[
+                _buildCompactHeader(context),
+                const SizedBox(height: 12),
+              ],
+              Expanded(child: scrollableForm),
+              SizedBox(height: phoneLand ? 4 : 8),
+              Padding(
+                padding: EdgeInsets.only(bottom: keyboardPad),
+                child: strip,
+              ),
+            ],
+          ),
+        );
+      case ProfileEditCompactLayout.landscapeColumns:
+        form = Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(right: 8),
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildCompactHeader(context),
+                    const SizedBox(height: 12),
+                    avatarAndMeta,
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(left: 8),
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          aboutField,
+                          galleryAndPhoto,
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCompactSaveButton(),
+                ],
+              ),
+            ),
           ],
-        ],
-      );
-    } else {
-      form = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildCompactHeader(context),
-          SizedBox(height: aboutTypingMode ? 10 : 16),
-          if (aboutTypingMode)
-            Expanded(child: aboutField)
-          else
+        );
+      case ProfileEditCompactLayout.portraitForm:
+        form = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCompactHeader(context),
+            const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
@@ -1803,13 +2261,27 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ),
               ),
             ),
-          if (!aboutTypingMode) ...[
             const SizedBox(height: 12),
             _buildCompactSaveButton(),
           ],
-        ],
-      );
+        );
     }
+    // Поле закрыто — полоска всё равно в дереве (offstage), иначе первый тап
+    // по превью создаёт ввод только на следующем кадре и клавиатура не выезжает.
+    final editor = fieldTyping
+        ? form
+        : Stack(
+            children: [
+              Positioned.fill(child: form),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Offstage(child: strip),
+              ),
+            ],
+          );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1821,8 +2293,10 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         opaqueEdge: false,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
+          // Тап в пустое место закрывает и клавиатуру, и полоску ввода —
+          // раньше полоска оставалась висеть уже без клавиатуры.
           onTap: _onEmptyEditorTap,
-          child: form,
+          child: editor,
         ),
       ),
     );
@@ -1960,7 +2434,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 const SizedBox(height: 16),
                 _buildShowStatsCheckbox(),
                 const SizedBox(height: 12),
-                _aboutTypingActive
+                _activeField == ProfileEditField.about
                     ? _buildAboutEditorField()
                     : _buildAboutPreview(),
                 const SizedBox(height: 20),
@@ -2070,7 +2544,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ],
                 const SizedBox(height: 24),
                 AppButton(
-                  onPressed: (_isSaving || !_hasChanges) ? null : _submit,
+                  onPressed: (_isSaving || !_hasChanges || _ageError != null)
+                      ? null
+                      : _submit,
                   label: context.l10n.commonSave,
                   isLoading: _isSaving,
                   expanded: true,

@@ -688,6 +688,38 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesUno => 'ウノ';
 
   @override
+  String get gamesNardy => 'バックギャモン';
+
+  @override
+  String get gamesNardyModeShort => 'ショート';
+
+  @override
+  String get gamesNardyModeLong => 'ロング';
+
+  @override
+  String get rulesNardyTitle => 'バックギャモン — ルール';
+
+  @override
+  String get rulesNardyPlayers => 'プレイヤー: 2人。';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'モード: $mode。';
+  }
+
+  @override
+  String get rulesNardyIntro => '24ポイントの盤、各自15個の駒。サイコロ2つ: 1個で合計、または2個で各目。';
+
+  @override
+  String get rulesNardyPlayShort => 'ショート: 向かい合って進み、単独の駒を打てます。打たれた駒はバーに出て再入場します。すべてホームに入ったらベアオフします。';
+
+  @override
+  String get rulesNardyPlayLong => 'ロング: 同じヘッドから同じ方向へ進みます。ヘッドからは1ターンに1個だけ出ます。打撃は不可。すべてホームに入ったらベアオフします。';
+
+  @override
+  String get rulesNardyWin => '先にすべての駒をベアオフした人が勝ちます。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'プレイヤー: $players人。';
   }
@@ -1350,6 +1382,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get friendsEmpty => 'まだフレンドがいません';
+
+  @override
+  String get friendsSearchNoMatches => '検索に一致するフレンドはいません';
+
+  @override
+  String get friendsIncomingSearchNoMatches => '検索に一致する受信リクエストはありません';
+
+  @override
+  String get friendsOutgoingSearchNoMatches => '検索に一致する送信リクエストはありません';
 
   @override
   String get friendsNoIncoming => '受信リクエストはありません';
