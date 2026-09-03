@@ -974,23 +974,17 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: showGroupChat ? 96 : 48,
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                onPressed: _onClosePressed,
-              ),
-              if (showGroupChat)
-                GameIconWithBadge(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  tooltip: context.l10n.chatGroupTooltip,
-                  badge: groupUnread,
-                  onPressed: () => _openGroupChat(game),
-                ),
-            ],
+          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
+          leading: buildGameAppBarLeading(
+            onClose: _onClosePressed,
+            extra: showGroupChat
+                ? GameIconWithBadge(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    tooltip: context.l10n.chatGroupTooltip,
+                    badge: groupUnread,
+                    onPressed: () => _openGroupChat(game),
+                  )
+                : null,
           ),
           title: Text(context.l10n.gamesPoker),
           centerTitle: true,

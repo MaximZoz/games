@@ -83,8 +83,10 @@ class _NardyDiceRowState extends State<NardyDiceRow>
   @override
   Widget build(BuildContext context) {
     if (widget.rolled.isEmpty) return const SizedBox.shrink();
-    final left = List<int>.of(widget.remaining);
-    final used = [for (final die in widget.rolled) !left.remove(die)];
+    final faces = nardyDiceFaces(widget.rolled);
+    final used = nardyDiceUsed(widget.rolled, widget.remaining);
+    final movesLeft = widget.remaining.length;
+    final isDouble = nardyIsDoubleRoll(widget.rolled);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -93,16 +95,21 @@ class _NardyDiceRowState extends State<NardyDiceRow>
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (var i = 0; i < widget.rolled.length; i++) ...[
+            for (var i = 0; i < faces.length; i++) ...[
               if (i > 0) SizedBox(width: widget.size * 0.18),
               _AnimatedDie(
-                value: widget.rolled[i],
+                value: faces[i],
                 used: used[i] && !rolling,
                 size: widget.size,
-                progress: rolling ? _dieProgress(t, i) : 1,
+                progress: rolling ? _dieProgress(t, i, faces.length) : 1,
                 rng: _rng,
                 highlight: widget.highlight,
               ),
+            ],
+            // Дубль играется четырьмя ходами, но кубиков на столе всё равно два.
+            if (isDouble && movesLeft > 0 && !rolling) ...[
+              SizedBox(width: widget.size * 0.22),
+              _MovesLeftBadge(count: movesLeft, size: widget.size),
             ],
           ],
         );
@@ -111,12 +118,64 @@ class _NardyDiceRowState extends State<NardyDiceRow>
   }
 
   /// Кубики останавливаются по очереди — бросок выглядит живее.
-  double _dieProgress(double t, int index) {
-    final count = math.max(widget.rolled.length, 1);
-    // Последний кубик замирает вместе с концом анимации, первый — раньше.
-    final end = 0.55 + 0.45 * ((index + 1) / count);
+  double _dieProgress(double t, int index, int count) {
+    final end = 0.55 + 0.45 * ((index + 1) / math.max(count, 1));
     if (end <= 0) return 1;
     return (t / end).clamp(0.0, 1.0);
+  }
+}
+
+/// Бросок дубля: движок раскладывает его на четыре хода одним значением.
+bool nardyIsDoubleRoll(List<int> rolled) =>
+    rolled.length > 2 && rolled.toSet().length == 1;
+
+/// Грани на столе — всегда два кубика, даже когда ходов четыре.
+List<int> nardyDiceFaces(List<int> rolled) {
+  if (rolled.isEmpty) return const [];
+  if (nardyIsDoubleRoll(rolled)) return [rolled.first, rolled.first];
+  return rolled.length <= 2 ? List<int>.of(rolled) : rolled.sublist(0, 2);
+}
+
+/// Какие из двух кубиков уже отыграны.
+List<bool> nardyDiceUsed(List<int> rolled, List<int> remaining) {
+  final faces = nardyDiceFaces(rolled);
+  if (faces.isEmpty) return const [];
+  if (nardyIsDoubleRoll(rolled)) {
+    final left = remaining.length;
+    // Гасим по одному кубику на каждую пару сыгранных ходов.
+    return [left < 1, left < 3];
+  }
+  final left = List<int>.of(remaining);
+  return [for (final face in faces) !left.remove(face)];
+}
+
+class _MovesLeftBadge extends StatelessWidget {
+  const _MovesLeftBadge({required this.count, required this.size});
+
+  final int count;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size * 0.2,
+        vertical: size * 0.1,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.accentStart.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(size * 0.24),
+        border: Border.all(color: AppColors.accentStart, width: 1.2),
+      ),
+      child: Text(
+        '×$count',
+        style: TextStyle(
+          fontSize: size * 0.4,
+          fontWeight: FontWeight.w900,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
   }
 }
 

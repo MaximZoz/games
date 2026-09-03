@@ -1132,13 +1132,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: 48,
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            icon: const Icon(Icons.close_rounded),
-            onPressed: _onClosePressed,
-          ),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(onClose: _onClosePressed),
           title: Text(context.l10n.gamesBattleship),
           centerTitle: true,
           actions: [
