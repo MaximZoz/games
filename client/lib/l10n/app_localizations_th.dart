@@ -720,6 +720,30 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesNardyWin => 'ผู้ที่นำหมากออกครบก่อนชนะ';
 
   @override
+  String get nardyRoll => 'ทอยลูกเต๋า';
+
+  @override
+  String get nardySkipTurn => 'ข้ามตา';
+
+  @override
+  String get nardyNoMoves => 'ไม่มีตาเดิน — ข้ามตา';
+
+  @override
+  String get nardyYourRoll => 'การทอยของคุณ';
+
+  @override
+  String get nardyPipsShort => 'เหลือ:';
+
+  @override
+  String get nardyYouWonMars => 'คุณชนะ — แกมมอน!';
+
+  @override
+  String get nardyYouLostMars => 'แพ้ — แกมมอน';
+
+  @override
+  String get rulesNardyOfflineBot => 'ออฟไลน์: เล่นกับบอท';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'ผู้เล่น: $players.';
   }

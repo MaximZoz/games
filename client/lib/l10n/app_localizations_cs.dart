@@ -720,6 +720,30 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesNardyWin => 'Vyhrává ten, kdo první sundá všechny kameny.';
 
   @override
+  String get nardyRoll => 'Hodit';
+
+  @override
+  String get nardySkipTurn => 'Přeskočit tah';
+
+  @override
+  String get nardyNoMoves => 'Žádné tahy — přeskočte tah';
+
+  @override
+  String get nardyYourRoll => 'Váš hod';
+
+  @override
+  String get nardyPipsShort => 'Zbývá:';
+
+  @override
+  String get nardyYouWonMars => 'Vyhráli jste — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Prohra — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: hra proti botovi.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Hráči: $players.';
   }

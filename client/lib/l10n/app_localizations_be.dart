@@ -720,6 +720,30 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesNardyWin => 'Перамагае той, хто першым здыме ўсе свае шашкі.';
 
   @override
+  String get nardyRoll => 'Кінуць';
+
+  @override
+  String get nardySkipTurn => 'Прапусціць ход';
+
+  @override
+  String get nardyNoMoves => 'Хадоў няма — прапусціце ход';
+
+  @override
+  String get nardyYourRoll => 'Ваш кідок';
+
+  @override
+  String get nardyPipsShort => 'Засталося:';
+
+  @override
+  String get nardyYouWonMars => 'Вы выйгралі — марс!';
+
+  @override
+  String get nardyYouLostMars => 'Паражэнне — марс';
+
+  @override
+  String get rulesNardyOfflineBot => 'Афлайн: партыя супраць бота.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Гульцы: $players.';
   }

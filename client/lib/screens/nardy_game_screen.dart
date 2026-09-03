@@ -1,0 +1,815 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/friends/friends_provider.dart';
+import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
+import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/games_repository.dart'
+    show ActiveGameItem, GamesException;
+import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
+import 'package:multigames_client/games/nardy/nardy_board_widget.dart';
+import 'package:multigames_client/games/nardy/nardy_engine.dart';
+import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
+import 'package:multigames_client/games/nardy/nardy_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_repository.dart';
+import 'package:multigames_client/games/nardy/nardy_rules.dart';
+import 'package:multigames_client/games/offline_session_hold.dart';
+import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/app_theme.dart';
+import 'package:multigames_client/ui/responsive.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
+import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
+import 'package:multigames_client/ui/widgets/swipe_back.dart';
+import 'package:multigames_client/ui/widgets/ui_kit.dart';
+import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
+import 'package:multigames_client/utils/user_error.dart';
+
+class NardyGameScreen extends ConsumerStatefulWidget {
+  const NardyGameScreen({super.key, required this.gameId});
+
+  final String gameId;
+
+  @override
+  ConsumerState<NardyGameScreen> createState() => _NardyGameScreenState();
+}
+
+class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
+  final GlobalKey _rewardKey = GlobalKey();
+
+  int? _selectedTrack;
+  bool _busy = false;
+  bool _isRematching = false;
+  bool _isAcceptingRematch = false;
+  bool _isFindingGame = false;
+  bool _rematchDeclined = false;
+  bool _iDeclinedRematch = false;
+  String? _rematchLobbyId;
+
+  bool get _isOffline =>
+      OfflineNardyRegistry.instance.isOffline(widget.gameId);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_isOffline) {
+        rememberGamesSessionPath(ref, '/games/nardy/offline');
+        return;
+      }
+      final known = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+      if (known != null && known.isOver) {
+        _clearSessionForFinishedGame();
+      } else {
+        pinBlockingGame(ref, widget.gameId, gameType: 'nardy');
+        final prev = ref.read(activeGameProvider).valueOrNull;
+        if (prev?.gameId != widget.gameId) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: widget.gameId,
+                  lobbyId: prev?.lobbyId,
+                  gameType: 'nardy',
+                ),
+              );
+        }
+      }
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
+    });
+  }
+
+  @override
+  void dispose() {
+    _turnAction.release();
+    super.dispose();
+  }
+
+  void _clearSessionForFinishedGame() {
+    clearBlockingGamePin(ref, ifGameId: widget.gameId);
+    final prev = ref.read(activeGameProvider).valueOrNull;
+    if (prev?.gameId == widget.gameId) {
+      ref.read(activeGameProvider.notifier).clearLocal();
+    }
+  }
+
+  NardyRepository get _repo => ref.read(nardyRepositoryProvider);
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy || !_turnAction.tryAcquire()) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+      if (!mounted) return;
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      if (!isStaleNotYourTurnError(e) && !isStaleGameOverError(e)) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } finally {
+      _turnAction.release();
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _roll() => _run(() => _repo.roll(widget.gameId));
+
+  Future<void> _skipTurn() => _run(() => _repo.endTurn(widget.gameId));
+
+  Future<void> _applyMove(NardyMove mv) async {
+    setState(() => _selectedTrack = null);
+    await _run(() => _repo.move(widget.gameId, mv));
+  }
+
+  void _onTrackTap(NardyGameView game, int track) {
+    if (_busy || !game.isMyTurn || game.dice.isEmpty) return;
+    final selected = _selectedTrack;
+    if (selected != null) {
+      final mv = _moveTo(game, selected, track);
+      if (mv != null) {
+        unawaited(_applyMove(mv));
+        return;
+      }
+    }
+    if (!game.movableTracks.contains(track)) {
+      setState(() => _selectedTrack = null);
+      return;
+    }
+    final dice = game.diceFrom(track);
+    // Единственный кубик — ходим сразу, без второго касания.
+    if (dice.length == 1) {
+      unawaited(_applyMove(NardyMove(track, dice.first)));
+      return;
+    }
+    setState(() => _selectedTrack = track);
+  }
+
+  void _onBarTap(NardyGameView game) {
+    if (_busy || !game.isMyTurn || game.dice.isEmpty) return;
+    if (!game.movableTracks.contains(nardyBarTrack)) return;
+    final dice = game.diceFrom(nardyBarTrack);
+    if (dice.length == 1) {
+      unawaited(_applyMove(NardyMove(nardyBarTrack, dice.first)));
+      return;
+    }
+    setState(() => _selectedTrack = nardyBarTrack);
+  }
+
+  void _onBearOffTap(NardyGameView game) {
+    final selected = _selectedTrack;
+    if (selected == null || selected == nardyBarTrack) return;
+    final die = _bearOffDie(game, selected);
+    if (die == null) return;
+    unawaited(_applyMove(NardyMove(selected, die)));
+  }
+
+  /// Кубик, которым выбранная шашка встаёт на [track]; `null` — нельзя.
+  NardyMove? _moveTo(NardyGameView game, int from, int track) {
+    for (final die in game.diceFrom(from)) {
+      if (nardyDestinationTrack(from, die) == track &&
+          !nardyIsBearOff(from, die)) {
+        return NardyMove(from, die);
+      }
+    }
+    return null;
+  }
+
+  int? _bearOffDie(NardyGameView game, int from) {
+    for (final die in game.diceFrom(from)) {
+      if (nardyIsBearOff(from, die)) return die;
+    }
+    return null;
+  }
+
+  Set<int> _targetsFor(NardyGameView game) {
+    final from = _selectedTrack;
+    if (from == null) return const {};
+    return {
+      for (final die in game.diceFrom(from))
+        if (!nardyIsBearOff(from, die)) nardyDestinationTrack(from, die),
+    };
+  }
+
+  String _statusText(NardyGameView game) {
+    final l10n = context.l10n;
+    if (game.isOver) {
+      if (game.myIndex < 0) return l10n.gameOverNeutral;
+      if (game.iWon) {
+        if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
+        if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
+        return game.isMars ? l10n.nardyYouWonMars : l10n.gameYouWon;
+      }
+      if (game.isTimeout) return l10n.gameYouLost;
+      return game.isMars ? l10n.nardyYouLostMars : l10n.gameYouLost;
+    }
+    if (game.isMyTurn) {
+      if (game.needsRoll) return l10n.nardyYourRoll;
+      if (game.legalMoves.isEmpty) return l10n.nardyNoMoves;
+      return l10n.gamesMyTurn;
+    }
+    return l10n.gamesOpponentTurn;
+  }
+
+  List<String> _peerIds(NardyGameView game, String? me) => [
+        for (final id in game.playerIds)
+          if (id.isNotEmpty && id != me) id,
+      ];
+
+  Future<void> _confirmSurrender() async {
+    final game = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.isOver) return;
+    final ok = await confirmGameActionDialog(
+      context: context,
+      title: context.l10n.gameSurrenderTitle,
+      message: context.l10n.gameSurrenderConfirm,
+      cancelLabel: context.l10n.gameStay,
+      confirmLabel: context.l10n.gameSurrender,
+    );
+    if (!ok || !mounted) return;
+    unawaited(() async {
+      try {
+        clearBlockingGamePin(ref, ifGameId: widget.gameId);
+        await _repo.forfeit(widget.gameId);
+      } catch (_) {}
+      if (!mounted) return;
+      ref.invalidate(nardyGameProvider(widget.gameId));
+      unawaited(ref.read(activeGameProvider.notifier).refresh());
+    }());
+  }
+
+  Future<void> _onClosePressed() async {
+    final game = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+    await handleGameScreenClose(
+      context: context,
+      isActive: game != null && !game.isOver,
+      canLeaveFreely: _isOffline,
+      onLeaveFinished: () async {
+        if (!mounted) return;
+        _navigateToGames();
+      },
+      onForfeitAndLeave: () async {
+        if (!mounted) return;
+        try {
+          clearBlockingGamePin(ref, ifGameId: widget.gameId);
+          await _repo.forfeit(widget.gameId);
+        } catch (_) {}
+        if (!mounted) return;
+        _navigateToGames();
+        unawaited(ref.read(activeGameProvider.notifier).refresh());
+      },
+    );
+  }
+
+  void _navigateToGames() {
+    if (_isOffline) {
+      leaveGamesSession(ref);
+      OfflineNardyRegistry.instance.get(widget.gameId)?.dispose();
+      context.go('/games');
+      return;
+    }
+    leaveGamesSession(ref);
+    final rematchLobbyId = _rematchLobbyId;
+    _rematchLobbyId = null;
+    _clearSessionForFinishedGame();
+    context.go('/games');
+    if (rematchLobbyId != null) {
+      unawaited(_repo.leaveLobby(rematchLobbyId).catchError((_) {}));
+    }
+  }
+
+  Future<void> _rematch() async {
+    setState(() => _isRematching = true);
+    try {
+      if (_isOffline) {
+        OfflineNardyRegistry.instance.get(widget.gameId)?.restart();
+        ref.invalidate(nardyGameProvider(widget.gameId));
+        if (mounted) {
+          setState(() {
+            _isRematching = false;
+            _selectedTrack = null;
+          });
+        }
+        return;
+      }
+      final lobbyId = await _repo.rematch(widget.gameId);
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'lobby',
+              lobbyId: lobbyId,
+              gameType: 'nardy',
+            ),
+          );
+      setState(() {
+        _rematchLobbyId = lobbyId;
+        _rematchDeclined = false;
+        _iDeclinedRematch = false;
+        _isRematching = false;
+      });
+      context.go('/games/nardy/lobby/$lobbyId?mode=invite');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isRematching = false);
+        context.go('/games');
+      }
+    }
+  }
+
+  Future<void> _acceptRematch(String lobbyId) async {
+    if (_isAcceptingRematch) return;
+    setState(() => _isAcceptingRematch = true);
+    ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+    try {
+      final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
+      if (own != null) {
+        setState(() => _rematchLobbyId = null);
+        try {
+          await _repo.leaveLobby(own);
+        } catch (_) {}
+        if (!mounted) return;
+      }
+      final result = await _repo.joinLobby(lobbyId);
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      final gameId = result.gameId ?? '';
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId,
+                gameType: 'nardy',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'nardy');
+        context.go('/games/nardy/game/$gameId');
+      } else {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'nardy',
+              ),
+            );
+        context.go('/games/nardy/lobby/$lobbyId?mode=invite');
+      }
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isAcceptingRematch = false);
+    }
+  }
+
+  Future<void> _declineRematch(String lobbyId) async {
+    ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+    try {
+      await _repo.declineLobby(lobbyId);
+    } catch (_) {}
+    if (mounted) setState(() => _iDeclinedRematch = true);
+  }
+
+  Future<void> _cancelRematchWait() async {
+    final lobbyId = _rematchLobbyId;
+    if (lobbyId == null) return;
+    setState(() => _rematchLobbyId = null);
+    try {
+      await _repo.leaveLobby(lobbyId);
+    } catch (_) {}
+  }
+
+  Future<void> _findGame() async {
+    setState(() => _isFindingGame = true);
+    try {
+      final rematchId = _rematchLobbyId;
+      if (rematchId != null) {
+        setState(() => _rematchLobbyId = null);
+        unawaited(_repo.leaveLobby(rematchId).catchError((_) {}));
+      }
+      final game = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+      final created = await _repo.createLobby(
+        mode: 'matchmake',
+        gameMode: game?.gameMode ?? nardyModeShort,
+        turnTimeSec: game?.turnTimeSec ?? 0,
+        stakeBronze: game?.stakeBronze ?? 2,
+      );
+      if (!mounted) return;
+      clearBlockingGamePin(ref);
+      final gameId = created.gameId ?? '';
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: created.lobbyId,
+                gameType: 'nardy',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'nardy');
+        context.go('/games/nardy/game/$gameId');
+        return;
+      }
+      ref.read(activeGameProvider.notifier).setLocal(
+            ActiveGameItem(
+              type: 'lobby',
+              lobbyId: created.lobbyId,
+              gameType: 'nardy',
+            ),
+          );
+      context.go('/games/nardy/lobby/${created.lobbyId}?mode=matchmake');
+    } catch (_) {
+      if (mounted) context.go('/games');
+    } finally {
+      if (mounted) setState(() => _isFindingGame = false);
+    }
+  }
+
+  Future<void> _openChat(String userId, String displayName) async {
+    try {
+      final chatId = await ref.read(chatsRepositoryProvider).startChat(userId);
+      if (!mounted || chatId.isEmpty) return;
+      context.push(
+        Uri(
+          path: '/chats/$chatId',
+          queryParameters: {
+            'name': displayName,
+            'from': 'games',
+            'game': '/games/nardy/game/${widget.gameId}',
+          },
+        ).toString(),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      context.push(
+        Uri(
+          path: '/chats',
+          queryParameters: {
+            'peer': userId,
+            'game': '/games/nardy/game/${widget.gameId}',
+          },
+        ).toString(),
+      );
+    }
+  }
+
+  Future<void> _addFriend(String userId, {String? requestId}) async {
+    final repo = ref.read(friendsRepositoryProvider);
+    try {
+      if (requestId != null) {
+        await repo.acceptRequest(requestId);
+      } else {
+        await repo.sendRequest(userId);
+      }
+      if (!mounted) return;
+      ref.invalidate(friendsSnapshotProvider);
+      showAppSnackBar(
+        context,
+        message: requestId != null
+            ? context.l10n.friendsAcceptRequest
+            : context.l10n.friendsRequestSent,
+        kind: AppSnackKind.success,
+      );
+    } catch (_) {}
+  }
+
+  Widget _buildOpponentCard(NardyGameView game, String? me) {
+    final peers = _peerIds(game, me);
+    if (peers.isEmpty) return const SizedBox.shrink();
+    final oppId = peers.first;
+    final opp = game.opponent;
+    final isBot = oppId.startsWith('bot:');
+    final name = (opp?.displayName.trim().isNotEmpty ?? false)
+        ? opp!.displayName.trim()
+        : (isBot ? context.l10n.gameBot : context.l10n.gameOpponent);
+    final chats = ref.watch(chatsListProvider).valueOrNull;
+    var unread = 0;
+    if (chats != null) {
+      for (final c in chats) {
+        if (c.user.id == oppId) unread += c.unreadCount;
+      }
+    }
+    final friends = ref.watch(friendsSnapshotProvider).valueOrNull;
+    final isFriend = friends?.friends.any((f) => f.user.id == oppId) == true;
+    final outgoing =
+        friends?.outgoing.where((r) => r.user.id == oppId).toList() ?? const [];
+    final incoming =
+        friends?.incoming.where((r) => r.user.id == oppId).toList() ?? const [];
+    final hasOutgoing = outgoing.isNotEmpty;
+    final hasIncoming = incoming.isNotEmpty;
+    final compact = MediaQuery.sizeOf(context).width < 420;
+
+    return GameOpponentCard(
+      displayName: name,
+      avatarKind: opp?.avatarKind ?? 'letter',
+      avatarValue: opp?.avatarValue,
+      frameCode: opp?.frameCode,
+      frameColor: opp?.frameColor,
+      isBot: isBot,
+      messageUnread: unread,
+      infoTooltip: context.l10n.userInfoTitle,
+      messageTooltip: context.l10n.gameWriteMessage,
+      compact: compact,
+      maxWidth: 320,
+      showAddFriend: !isBot && !isFriend,
+      addFriendEnabled: !hasOutgoing,
+      addFriendBadge: hasIncoming ? 1 : 0,
+      addFriendTooltip: hasIncoming
+          ? context.l10n.friendsAcceptRequest
+          : (hasOutgoing
+              ? context.l10n.friendsRequestSent
+              : context.l10n.friendsAdd),
+      onAddFriendTap: () => unawaited(_addFriend(
+        oppId,
+        requestId: hasIncoming ? incoming.first.requestId : null,
+      )),
+      onInfoTap: () => unawaited(showUserProfileDialog(
+        context: context,
+        ref: ref,
+        userId: oppId,
+        displayName: name,
+        avatarKind: opp?.avatarKind ?? 'letter',
+        avatarValue: opp?.avatarValue,
+        frameCode: opp?.frameCode,
+        frameColor: opp?.frameColor,
+        messageFrom: 'games',
+        messageReturnPath: '/games/nardy/game/${widget.gameId}',
+      )),
+      onMessageTap: isBot ? null : () => unawaited(_openChat(oppId, name)),
+      trailing: [
+        if (opp != null)
+          _PipsChip(label: context.l10n.nardyPipsShort, value: opp.pips),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gameAsync = ref.watch(nardyGameProvider(widget.gameId));
+    var me = ref.watch(authStateProvider).valueOrNull?.id;
+    if (_isOffline && (me == null || me.isEmpty)) {
+      me = OfflineNardyRegistry.instance.get(widget.gameId)?.humanUserId;
+    }
+    final narrow = isNarrow(context);
+
+    return SwipeBackScope(
+      onBack: _onClosePressed,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NardyGameIcon(
+                size: narrow ? 20 : 22,
+                color: AppColors.accentStart,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.gamesNardy,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              tooltip: context.l10n.gamesRulesTitle,
+              icon: const Icon(Icons.rule_rounded),
+              onPressed: () {
+                final game = gameAsync.valueOrNull;
+                showGameRulesDialog(
+                  context: context,
+                  title: context.l10n.rulesNardyTitle,
+                  content: rulesTextLines(nardyRuleLines(
+                    gameMode: game?.gameMode ?? nardyModeShort,
+                    turnTimeSec: game?.turnTimeSec ?? 0,
+                    stakeBronze: game?.stakeBronze ?? 0,
+                    l10n: context.l10n,
+                  )),
+                  closeLabel: context.l10n.commonClose,
+                );
+              },
+            ),
+            IconButton(
+              tooltip: context.l10n.gameLeave,
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => unawaited(_onClosePressed()),
+            ),
+          ],
+        ),
+        body: GradientBackground(
+          child: SafeArea(
+            child: gameAsync.when(
+              skipLoadingOnReload: true,
+              skipLoadingOnRefresh: true,
+              data: (game) => _buildGame(game, me, narrow),
+              loading: () => const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentStart,
+                ),
+              ),
+              error: (e, _) => Center(
+                child: Text(
+                  formatUserError(e, fallback: context.l10n.commonGenericError),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGame(NardyGameView game, String? me, bool narrow) {
+    final myTurn = game.isMyTurn && !game.isOver;
+    final selected = _selectedTrack;
+    final canBearOff =
+        selected != null && selected != nardyBarTrack &&
+            _bearOffDie(game, selected) != null;
+    final pad = narrow ? 12.0 : 20.0;
+
+    final board = NardyBoard(
+      game: game,
+      selectedTrack: selected,
+      targetTracks: _targetsFor(game),
+      canBearOff: canBearOff,
+      onTrackTap: (track) => _onTrackTap(game, track),
+      onBarTap: () => _onBarTap(game),
+      onBearOffTap: () => _onBearOffTap(game),
+    );
+
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(pad, 4, pad, pad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildOpponentCard(game, me),
+              const SizedBox(height: 8),
+              board,
+              const SizedBox(height: 10),
+              _buildControls(game, myTurn),
+              const SizedBox(height: 8),
+              GameStatusWithReward(
+                statusText: _statusText(game),
+                showReward: game.isOver && game.stakeBronze > 0,
+                rewardBronze:
+                    game.iWon ? game.stakeBronze : -game.stakeBronze,
+                rewardKey: _rewardKey,
+                wrap: true,
+              ),
+              if (!game.isOver &&
+                  game.turnTimeSec > 0 &&
+                  game.turnDeadline > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: GameTurnCountdown(
+                    key: ValueKey('${game.turn}_${game.turnDeadline}'),
+                    turnDeadline: game.turnDeadline,
+                    isMyTurn: myTurn,
+                    turnTimeSec: game.turnTimeSec,
+                    onExpired: () =>
+                        ref.invalidate(nardyGameProvider(widget.gameId)),
+                    labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+                  ),
+                ),
+              if (game.isOver) ...[
+                const SizedBox(height: 12),
+                if (_isOffline)
+                  FilledButton.icon(
+                    onPressed:
+                        _isRematching ? null : () => unawaited(_rematch()),
+                    icon: const Icon(Icons.replay_rounded, size: 18),
+                    label: Text(context.l10n.offlinePlayAgain),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accentStart,
+                      foregroundColor: Colors.white,
+                    ),
+                  )
+                else
+                  GameRematchSection(
+                    rematchLobbyId: _rematchLobbyId,
+                    rematchDeclined: _rematchDeclined,
+                    iDeclinedRematch: _iDeclinedRematch,
+                    isRematching: _isRematching,
+                    isAcceptingRematch: _isAcceptingRematch,
+                    isFindingGame: _isFindingGame,
+                    peerIds: _peerIds(game, me),
+                    invites: ref.watch(gameInvitesProvider),
+                    onRematch: () => unawaited(_rematch()),
+                    onAccept: (id) => unawaited(_acceptRematch(id)),
+                    onDecline: (id) => unawaited(_declineRematch(id)),
+                    onCancelWait: () => unawaited(_cancelRematchWait()),
+                    onFindGame: () => unawaited(_findGame()),
+                    compact: true,
+                  ),
+              ],
+            ],
+          ),
+        ),
+        MyTurnAlert.stackLeaf(isMyTurn: myTurn),
+        if (!game.isOver)
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: GameActionsOverlay(
+              canDraw: false,
+              iOfferedDraw: false,
+              opponentOfferedDraw: false,
+              onSurrender: () => unawaited(_confirmSurrender()),
+              onDraw: () {},
+              surrenderTooltip: context.l10n.gameSurrender,
+              drawTooltip: context.l10n.gameOfferDraw,
+              acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+              drawOfferedTooltip: context.l10n.gameDrawOffered,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildControls(NardyGameView game, bool myTurn) {
+    final l10n = context.l10n;
+    final myPips = game.me?.pips ?? 0;
+    return Wrap(
+      spacing: 10,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        NardyDiceRow(rolled: game.rolled, remaining: game.dice),
+        if (myTurn && game.needsRoll)
+          FilledButton.icon(
+            onPressed: _busy ? null : () => unawaited(_roll()),
+            icon: const Icon(Icons.casino_rounded, size: 18),
+            label: Text(l10n.nardyRoll),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentStart,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        if (myTurn && !game.needsRoll && game.legalMoves.isEmpty)
+          FilledButton.icon(
+            onPressed: _busy ? null : () => unawaited(_skipTurn()),
+            icon: const Icon(Icons.skip_next_rounded, size: 18),
+            label: Text(l10n.nardySkipTurn),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentEnd,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        _PipsChip(label: l10n.nardyPipsShort, value: myPips, mine: true),
+      ],
+    );
+  }
+}
+
+class _PipsChip extends StatelessWidget {
+  const _PipsChip({
+    required this.label,
+    required this.value,
+    this.mine = false,
+  });
+
+  final String label;
+  final int value;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: (mine ? AppColors.accentStart : Colors.white24)
+              .withValues(alpha: 0.5),
+        ),
+      ),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}

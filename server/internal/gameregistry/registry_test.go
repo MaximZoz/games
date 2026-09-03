@@ -10,7 +10,7 @@ func TestDefaultRegistry(t *testing.T) {
 	r := Default()
 	if !r.Has(store.GameTypeTicTacToe) || !r.Has(store.GameTypeDurak) ||
 		!r.Has(store.GameTypeBattleship) || !r.Has(store.GameTypePoker) ||
-		!r.Has(store.GameTypeUno) {
+		!r.Has(store.GameTypeUno) || !r.Has(store.GameTypeNardy) {
 		t.Fatalf("expected all built-in games, got %v", r.IDs())
 	}
 	ttt := r.MustGet(store.GameTypeTicTacToe)
@@ -43,6 +43,23 @@ func TestDefaultRegistry(t *testing.T) {
 	if defaults.MaxPlayers != 2 || defaults.TurnTimeSec != 60 ||
 		defaults.GameMode != "classic" || defaults.Variant != "classic" {
 		t.Fatalf("uno defaults: %+v", defaults)
+	}
+	nardy := r.MustGet(store.GameTypeNardy)
+	if !nardy.SupportsOffline() || !nardy.SupportsDrawOffer(2) {
+		t.Fatalf("nardy policies offline=%v draw2=%v",
+			nardy.SupportsOffline(), nardy.SupportsDrawOffer(2))
+	}
+	nardyModes := nardy.Modes()
+	if len(nardyModes) != 2 || nardyModes[0].ID != "short" || nardyModes[1].ID != "long" {
+		t.Fatalf("nardy modes: %+v", nardyModes)
+	}
+	for _, mode := range nardyModes {
+		if mode.MinPlayers != 2 || mode.MaxPlayers != 2 {
+			t.Fatalf("nardy mode %q must be strictly 1x1: %+v", mode.ID, mode)
+		}
+	}
+	if r.Normalize("nardy") != store.GameTypeNardy {
+		t.Fatalf("normalize nardy")
 	}
 	if r.Normalize("unknown") != store.GameTypeTicTacToe {
 		t.Fatalf("normalize unknown")

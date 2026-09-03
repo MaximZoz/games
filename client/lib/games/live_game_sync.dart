@@ -5,6 +5,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 
@@ -36,6 +37,9 @@ bool hasFullUnoView(Map<String, dynamic> data) {
 
 bool hasFullPokerView(Map<String, dynamic> data) =>
     data['players'] is List && data.containsKey('street');
+
+bool hasFullNardyView(Map<String, dynamic> data) =>
+    data['board'] is List && (data['board'] as List).length == 24;
 
 int tictactoeProgress(GameStateItem state) {
   var progress = state.filledCellCount;
@@ -96,6 +100,29 @@ int pokerProgress(PokerGameView state) {
   if (state.isHandOver) progress += 5;
   if (state.isTableOver || state.isOver) progress += 100000;
   return progress;
+}
+
+/// Прогресс партии нард: снятые шашки, номер хода и конец партии.
+///
+/// Пипсы обоих игроков монотонно убывают, поэтому их сумма — надёжный
+/// «часовой» даже когда номер хода совпадает (несколько шашек за ход).
+int nardyProgress(NardyGameView state) {
+  var progress = state.turnNo * 1000;
+  progress += (state.off.isEmpty ? 0 : state.off.reduce((a, b) => a + b)) * 50;
+  final pipsLeft = state.players.fold<int>(0, (sum, p) => sum + p.pips);
+  progress += (nardyCheckers * nardyPointsSpan * 2) - pipsLeft;
+  if (state.isOver) progress += 1000000;
+  return progress;
+}
+
+/// Шашек у игрока и длина дорожки — для оценки прогресса без импорта движка.
+const int nardyCheckers = 15;
+const int nardyPointsSpan = 24;
+
+bool isOlderNardy(NardyGameView incoming, NardyGameView current) {
+  if (current.isOver && !incoming.isOver) return true;
+  if (incoming.isOver && !current.isOver) return false;
+  return nardyProgress(incoming) < nardyProgress(current);
 }
 
 /// Старый HTTP/переупорядоченный кадр не должен откатить уже показанный ход.

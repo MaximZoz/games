@@ -720,6 +720,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesNardyWin => '모든 말을 먼저 뺀 사람이 이깁니다.';
 
   @override
+  String get nardyRoll => '주사위 굴리기';
+
+  @override
+  String get nardySkipTurn => '차례 넘기기';
+
+  @override
+  String get nardyNoMoves => '둘 수 없음 — 차례를 넘기세요';
+
+  @override
+  String get nardyYourRoll => '당신의 주사위';
+
+  @override
+  String get nardyPipsShort => '남음:';
+
+  @override
+  String get nardyYouWonMars => '승리 — 개먼!';
+
+  @override
+  String get nardyYouLostMars => '패배 — 개먼';
+
+  @override
+  String get rulesNardyOfflineBot => '오프라인: 봇과의 대국.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '플레이어: $players명.';
   }

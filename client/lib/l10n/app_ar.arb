@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "النرد القصير: تتحركان نحو بعضكما ويمكن ضرب الحجارة المنفردة. الحجر المضروب يذهب إلى الحاجز ويجب أن يدخل من جديد. عندما تكون كل الحجارة في البيت تُخرجها.",
   "rulesNardyPlayLong": "النرد الطويل: يبدأ الاثنان من الرأس نفسه ويسيرن في اتجاه واحد. يخرج من الرأس حجر واحد في الدور. لا يُسمح بالضرب. عندما تكون كلها في البيت تُخرجها.",
   "rulesNardyWin": "يفوز من يُخرج كل أحجاره أولًا.",
+  "nardyRoll": "ارمِ النرد",
+  "nardySkipTurn": "تخطَّ الدور",
+  "nardyNoMoves": "لا توجد نقلات — تخطَّ الدور",
+  "nardyYourRoll": "رميتك",
+  "nardyPipsShort": "المتبقي:",
+  "nardyYouWonMars": "فزت — مارس!",
+  "nardyYouLostMars": "خسارة — مارس",
+  "rulesNardyOfflineBot": "دون اتصال: مباراة ضد البوت.",
   "rulesUnoPlayers": "اللاعبون: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

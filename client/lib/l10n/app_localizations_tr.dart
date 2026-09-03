@@ -720,6 +720,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesNardyWin => 'Tüm pullarını ilk kaldıran kazanır.';
 
   @override
+  String get nardyRoll => 'Zar at';
+
+  @override
+  String get nardySkipTurn => 'Sırayı geç';
+
+  @override
+  String get nardyNoMoves => 'Hamle yok — sırayı geçin';
+
+  @override
+  String get nardyYourRoll => 'Zarınız';
+
+  @override
+  String get nardyPipsShort => 'Kalan:';
+
+  @override
+  String get nardyYouWonMars => 'Kazandınız — mars!';
+
+  @override
+  String get nardyYouLostMars => 'Kaybettiniz — mars';
+
+  @override
+  String get rulesNardyOfflineBot => 'Çevrimdışı: bota karşı oyun.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oyuncular: $players.';
   }

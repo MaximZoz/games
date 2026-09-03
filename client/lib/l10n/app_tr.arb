@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Kısa tavla: birbirinize doğru ilerlersiniz ve yalnız pulları vurabilirsiniz. Vurulan pul bara gider ve yeniden girmelidir. Hepsi evdeyken pulları kaldırırsınız.",
   "rulesNardyPlayLong": "Uzun tavla: ikisi de aynı baştan başlar ve aynı yöne gider. Baştan turda en fazla bir pul çıkar. Vurmak yoktur. Hepsi evdeyken pulları kaldırırsınız.",
   "rulesNardyWin": "Tüm pullarını ilk kaldıran kazanır.",
+  "nardyRoll": "Zar at",
+  "nardySkipTurn": "Sırayı geç",
+  "nardyNoMoves": "Hamle yok — sırayı geçin",
+  "nardyYourRoll": "Zarınız",
+  "nardyPipsShort": "Kalan:",
+  "nardyYouWonMars": "Kazandınız — mars!",
+  "nardyYouLostMars": "Kaybettiniz — mars",
+  "rulesNardyOfflineBot": "Çevrimdışı: bota karşı oyun.",
   "rulesUnoPlayers": "Oyuncular: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

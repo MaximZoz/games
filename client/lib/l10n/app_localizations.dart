@@ -1523,6 +1523,54 @@ abstract class AppLocalizations {
   /// **'Побеждает тот, кто первым снимет все свои шашки.'**
   String get rulesNardyWin;
 
+  /// No description provided for @nardyRoll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бросить'**
+  String get nardyRoll;
+
+  /// No description provided for @nardySkipTurn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить ход'**
+  String get nardySkipTurn;
+
+  /// No description provided for @nardyNoMoves.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ходов нет — пропустите ход'**
+  String get nardyNoMoves;
+
+  /// No description provided for @nardyYourRoll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш бросок'**
+  String get nardyYourRoll;
+
+  /// No description provided for @nardyPipsShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осталось:'**
+  String get nardyPipsShort;
+
+  /// No description provided for @nardyYouWonMars.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выиграли — марс!'**
+  String get nardyYouWonMars;
+
+  /// No description provided for @nardyYouLostMars.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поражение — марс'**
+  String get nardyYouLostMars;
+
+  /// No description provided for @rulesNardyOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesNardyOfflineBot;
+
   /// No description provided for @rulesUnoPlayers.
   ///
   /// In ru, this message translates to:

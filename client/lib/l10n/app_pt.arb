@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Gamão curto: avançam um contra o outro e podem comer peças sozinhas. A comida vai à barra e deve reentrar. Quando todas estão em casa, retiram-nas.",
   "rulesNardyPlayLong": "Gamão longo: os dois saem da mesma cabeça e vão no mesmo sentido. Só uma peça sai da cabeça por turno. Não se come. Quando todas estão em casa, retiram-nas.",
   "rulesNardyWin": "Ganha quem primeiro retirar todas as peças.",
+  "nardyRoll": "Lançar",
+  "nardySkipTurn": "Passar a vez",
+  "nardyNoMoves": "Sem jogadas — passe a vez",
+  "nardyYourRoll": "Seu lançamento",
+  "nardyPipsShort": "Faltam:",
+  "nardyYouWonMars": "Você venceu — gammon!",
+  "nardyYouLostMars": "Derrota — gammon",
+  "rulesNardyOfflineBot": "Offline: partida contra o bot.",
   "rulesUnoPlayers": "Jogadores: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

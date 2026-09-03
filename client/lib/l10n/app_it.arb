@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Backgammon corto: andate uno verso l’altro e potete colpire le pedine isolate. La pedina colpita va sulla barra e deve rientrare. Quando tutte sono in casa, le togliete.",
   "rulesNardyPlayLong": "Backgammon lungo: entrambi partono dalla stessa testa e vanno nello stesso senso. Esce al massimo una pedina dalla testa per turno. Non si colpisce. Quando tutte sono in casa, le togliete.",
   "rulesNardyWin": "Vince chi toglie per primo tutte le pedine.",
+  "nardyRoll": "Lancia",
+  "nardySkipTurn": "Salta il turno",
+  "nardyNoMoves": "Nessuna mossa — salta il turno",
+  "nardyYourRoll": "Il tuo lancio",
+  "nardyPipsShort": "Restano:",
+  "nardyYouWonMars": "Hai vinto — gammon!",
+  "nardyYouLostMars": "Sconfitta — gammon",
+  "rulesNardyOfflineBot": "Offline: partita contro il bot.",
   "rulesUnoPlayers": "Giocatori: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

@@ -720,6 +720,30 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesNardyWin => 'जो पहले सारे मोहरे उतार ले, वही जीते।';
 
   @override
+  String get nardyRoll => 'पासा फेंकें';
+
+  @override
+  String get nardySkipTurn => 'बारी छोड़ें';
+
+  @override
+  String get nardyNoMoves => 'कोई चाल नहीं — बारी छोड़ें';
+
+  @override
+  String get nardyYourRoll => 'आपका पासा';
+
+  @override
+  String get nardyPipsShort => 'शेष:';
+
+  @override
+  String get nardyYouWonMars => 'आप जीते — गैमन!';
+
+  @override
+  String get nardyYouLostMars => 'हार — गैमन';
+
+  @override
+  String get rulesNardyOfflineBot => 'ऑफ़लाइन: बॉट के साथ खेल।';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'खिलाड़ी: $players.';
   }

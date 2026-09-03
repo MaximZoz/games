@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Kort backgammon: dere går mot hverandre og kan slå ensomme brikker. En slått brikke går på barren og må inn igjen. Når alle er i hjemmet, tar dere dem av.",
   "rulesNardyPlayLong": "Langt backgammon: begge starter fra samme hode og går samme vei. Høyst én brikke forlater hodet per trekk. Slag er ikke tillatt. Når alle er i hjemmet, tar dere dem av.",
   "rulesNardyWin": "Den som først tar av alle brikker, vinner.",
+  "nardyRoll": "Kast",
+  "nardySkipTurn": "Hopp over turen",
+  "nardyNoMoves": "Ingen trekk — hopp over turen",
+  "nardyYourRoll": "Ditt kast",
+  "nardyPipsShort": "Igjen:",
+  "nardyYouWonMars": "Du vant — gammon!",
+  "nardyYouLostMars": "Tap — gammon",
+  "rulesNardyOfflineBot": "Offline: parti mot boten.",
   "rulesUnoPlayers": "Spillere: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

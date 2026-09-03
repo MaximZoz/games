@@ -720,6 +720,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesNardyWin => 'Ai gỡ hết quân trước sẽ thắng.';
 
   @override
+  String get nardyRoll => 'Gieo xúc xắc';
+
+  @override
+  String get nardySkipTurn => 'Bỏ lượt';
+
+  @override
+  String get nardyNoMoves => 'Không có nước đi — bỏ lượt';
+
+  @override
+  String get nardyYourRoll => 'Lượt gieo của bạn';
+
+  @override
+  String get nardyPipsShort => 'Còn lại:';
+
+  @override
+  String get nardyYouWonMars => 'Bạn thắng — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Thua — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Ngoại tuyến: chơi với bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Người chơi: $players.';
   }

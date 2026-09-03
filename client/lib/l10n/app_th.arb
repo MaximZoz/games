@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "สั้น: เดินสวนทางและตีตัวเดี่ยวได้ ตัวที่ถูกตีขึ้นบาร์แล้วต้องเข้าใหม่ เมื่อทั้งหมดอยู่บ้านให้นำออก",
   "rulesNardyPlayLong": "ยาว: ทั้งคู่เริ่มจากหัวเดียวกันและไปทางเดียวกัน จากหัวออกได้ไม่เกินหนึ่งตัวต่อตา ห้ามตี เมื่อทั้งหมดอยู่บ้านให้นำออก",
   "rulesNardyWin": "ผู้ที่นำหมากออกครบก่อนชนะ",
+  "nardyRoll": "ทอยลูกเต๋า",
+  "nardySkipTurn": "ข้ามตา",
+  "nardyNoMoves": "ไม่มีตาเดิน — ข้ามตา",
+  "nardyYourRoll": "การทอยของคุณ",
+  "nardyPipsShort": "เหลือ:",
+  "nardyYouWonMars": "คุณชนะ — แกมมอน!",
+  "nardyYouLostMars": "แพ้ — แกมมอน",
+  "rulesNardyOfflineBot": "ออฟไลน์: เล่นกับบอท",
   "rulesUnoPlayers": "ผู้เล่น: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

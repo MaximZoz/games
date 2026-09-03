@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "ショート: 向かい合って進み、単独の駒を打てます。打たれた駒はバーに出て再入場します。すべてホームに入ったらベアオフします。",
   "rulesNardyPlayLong": "ロング: 同じヘッドから同じ方向へ進みます。ヘッドからは1ターンに1個だけ出ます。打撃は不可。すべてホームに入ったらベアオフします。",
   "rulesNardyWin": "先にすべての駒をベアオフした人が勝ちます。",
+  "nardyRoll": "サイコロを振る",
+  "nardySkipTurn": "手番をパス",
+  "nardyNoMoves": "動かせません — 手番をパス",
+  "nardyYourRoll": "あなたの出目",
+  "nardyPipsShort": "残り:",
+  "nardyYouWonMars": "勝利 — ギャモン！",
+  "nardyYouLostMars": "敗北 — ギャモン",
+  "rulesNardyOfflineBot": "オフライン: ボットとの対戦。",
   "rulesUnoPlayers": "プレイヤー: {players}人。",
   "@rulesUnoPlayers": {
     "placeholders": {

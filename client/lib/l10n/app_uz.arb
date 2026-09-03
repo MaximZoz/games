@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Qisqa narda: qarshi yurasiz va yolg‘iz toshlarni ura olasiz. Urilgan tosh barga chiqadi va qayta kirishi kerak. Hamma tosh uyda bo‘lsa, ularni doskadan olasiz.",
   "rulesNardyPlayLong": "Uzun narda: ikkalasi ham bir boshdan boshlab bir tomonga yuradi. Boshdan bir yurishda faqat bitta tosh chiqadi. Urish mumkin emas. Hammasi uyda bo‘lsa, toshlarni olasiz.",
   "rulesNardyWin": "Barcha toshlarini birinchi olgan g‘olib.",
+  "nardyRoll": "Tashlash",
+  "nardySkipTurn": "Yurishni o‘tkazish",
+  "nardyNoMoves": "Yurish yo‘q — yurishni o‘tkazing",
+  "nardyYourRoll": "Sizning tashlashingiz",
+  "nardyPipsShort": "Qoldi:",
+  "nardyYouWonMars": "Siz yutdingiz — mars!",
+  "nardyYouLostMars": "Mag‘lubiyat — mars",
+  "rulesNardyOfflineBot": "Oflayn: bot bilan o‘yin.",
   "rulesUnoPlayers": "Oʻyinchilar: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

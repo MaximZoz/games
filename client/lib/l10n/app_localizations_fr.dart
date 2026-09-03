@@ -720,6 +720,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesNardyWin => 'Le premier à sortir toutes ses dames gagne.';
 
   @override
+  String get nardyRoll => 'Lancer';
+
+  @override
+  String get nardySkipTurn => 'Passer le tour';
+
+  @override
+  String get nardyNoMoves => 'Aucun coup — passez le tour';
+
+  @override
+  String get nardyYourRoll => 'Votre lancer';
+
+  @override
+  String get nardyPipsShort => 'Reste :';
+
+  @override
+  String get nardyYouWonMars => 'Vous gagnez — gammon !';
+
+  @override
+  String get nardyYouLostMars => 'Défaite — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Hors ligne : partie contre le bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Joueurs : $players.';
   }

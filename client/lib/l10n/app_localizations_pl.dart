@@ -720,6 +720,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesNardyWin => 'Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.';
 
   @override
+  String get nardyRoll => 'Rzuć';
+
+  @override
+  String get nardySkipTurn => 'Pomiń turę';
+
+  @override
+  String get nardyNoMoves => 'Brak ruchów — pomiń turę';
+
+  @override
+  String get nardyYourRoll => 'Twój rzut';
+
+  @override
+  String get nardyPipsShort => 'Zostało:';
+
+  @override
+  String get nardyYouWonMars => 'Wygrana — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Porażka — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: gra z botem.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Gracze: $players.';
   }
