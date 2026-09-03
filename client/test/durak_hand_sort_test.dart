@@ -157,6 +157,53 @@ void main() {
       );
     });
 
+    test('во время раздачи посаженные карты остаются при пустом pending', () {
+      const six = PlayingCard(Rank.six, Suit.clubs);
+      const seven = PlayingCard(Rank.seven, Suit.diamonds);
+      const eight = PlayingCard(Rank.eight, Suit.hearts);
+      expect(
+        durakOpeningDealPendingSet(
+          concealOpeningHand: true,
+          pendingDealCards: const {},
+          handOrder: const [six, seven],
+          incomingFanCards: const [],
+          serverHand: const [six, seven, eight],
+        ),
+        {eight},
+      );
+      expect(
+        durakOrderedHandSlots(
+          prevOrder: const [six, seven],
+          serverHand: const [six, seven, eight],
+          pendingDeal: durakOpeningDealPendingSet(
+            concealOpeningHand: true,
+            pendingDealCards: const {},
+            handOrder: const [six, seven],
+            incomingFanCards: const [],
+            serverHand: const [six, seven, eight],
+          ),
+          leavingHand: const {},
+          holeCards: const {},
+        ),
+        const [six, seven],
+      );
+    });
+
+    test('первый кадр раздачи прячет всю руку', () {
+      const six = PlayingCard(Rank.six, Suit.clubs);
+      const ace = PlayingCard(Rank.ace, Suit.spades);
+      expect(
+        durakOpeningDealPendingSet(
+          concealOpeningHand: true,
+          pendingDealCards: const {},
+          handOrder: const [],
+          incomingFanCards: const [],
+          serverHand: const [six, ace],
+        ),
+        {six, ace},
+      );
+    });
+
     test('pending раздачи не даёт дописать руку в пустой order', () {
       const six = PlayingCard(Rank.six, Suit.clubs);
       const ace = PlayingCard(Rank.ace, Suit.spades);

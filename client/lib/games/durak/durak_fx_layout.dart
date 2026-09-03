@@ -327,6 +327,12 @@ bool durakVisualLooksStuck({
     hidingTable ||
     remoteFlightActive;
 
+/// Мини-карта младшего козыря в баннере «кто ходит».
+///
+/// В альбоме не показываем: достаточно надписи и анимации вытягивания
+/// из веера. В портрете мини-карта тоже не нужна — там баннер только текст.
+bool durakFirstLeadShowsBannerCard({required bool compact}) => false;
+
 /// В альбоме snap раньше: застрявший кадр сразу режет колоду и кнопку.
 /// Раздача живёт дольше 2 с — не режем её одним тиком.
 int durakStuckSnapTicks({
