@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -16,11 +18,14 @@ class DurakGameIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Icon(
-      iconData,
-      size: size,
-      color: color,
-      fill: 1,
+    return Transform.rotate(
+      angle: math.pi,
+      child: Icon(
+        iconData,
+        size: size,
+        color: color,
+        fill: 1,
+      ),
     );
   }
 }

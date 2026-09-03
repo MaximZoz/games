@@ -27,6 +27,7 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
@@ -3821,7 +3822,8 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
       isMedium: isMedium,
       header: GameCardHeader(
         title: context.l10n.gamesNardy,
-        icon: Icons.hexagon_rounded,
+        icon: NardyGameIcon.iconData,
+        iconChild: const NardyGameIcon(size: 26, color: Colors.white),
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
