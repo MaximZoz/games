@@ -720,6 +720,30 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesNardyWin => 'Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.';
 
   @override
+  String get nardyRoll => 'Heitä';
+
+  @override
+  String get nardySkipTurn => 'Ohita vuoro';
+
+  @override
+  String get nardyNoMoves => 'Ei siirtoja — ohita vuoro';
+
+  @override
+  String get nardyYourRoll => 'Sinun heittosi';
+
+  @override
+  String get nardyPipsShort => 'Jäljellä:';
+
+  @override
+  String get nardyYouWonMars => 'Voitit — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Tappio — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: peli bottia vastaan.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pelaajat: $players.';
   }

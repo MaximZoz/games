@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "短盘：相向而行，可打对方单子。被打的棋子上栏后须重新进入。全部进入本营后即可出局。",
   "rulesNardyPlayLong": "长盘：双方从同一头出发、同向而行。每回合最多从开头走出一枚棋。不可打子。全部进入本营后出局。",
   "rulesNardyWin": "先将全部棋子出局者获胜。",
+  "nardyRoll": "掷骰",
+  "nardySkipTurn": "跳过回合",
+  "nardyNoMoves": "无棋可走 — 跳过回合",
+  "nardyYourRoll": "你的掷骰",
+  "nardyPipsShort": "剩余：",
+  "nardyYouWonMars": "你赢了 — 双倍胜！",
+  "nardyYouLostMars": "失败 — 双倍负",
+  "rulesNardyOfflineBot": "离线：与机器人对战。",
   "rulesUnoPlayers": "玩家：{players}。",
   "@rulesUnoPlayers": {
     "placeholders": {

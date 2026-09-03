@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Pendek: saling mendekat dan boleh memukul bidak tunggal. Bidak yang dipukul ke bar dan harus masuk lagi. Jika semua di rumah, turunkan dari papan.",
   "rulesNardyPlayLong": "Panjang: keduanya mulai dari kepala yang sama dan searah. Dari kepala hanya satu bidak per giliran. Memukul tidak boleh. Jika semua di rumah, turunkan.",
   "rulesNardyWin": "Yang pertama menurunkan semua bidak menang.",
+  "nardyRoll": "Lempar dadu",
+  "nardySkipTurn": "Lewati giliran",
+  "nardyNoMoves": "Tidak ada langkah — lewati giliran",
+  "nardyYourRoll": "Lemparan Anda",
+  "nardyPipsShort": "Sisa:",
+  "nardyYouWonMars": "Anda menang — gammon!",
+  "nardyYouLostMars": "Kalah — gammon",
+  "rulesNardyOfflineBot": "Offline: bermain melawan bot.",
   "rulesUnoPlayers": "Pemain: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

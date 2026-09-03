@@ -720,6 +720,30 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesNardyWin => 'Yang pertama menurunkan semua bidak menang.';
 
   @override
+  String get nardyRoll => 'Lempar dadu';
+
+  @override
+  String get nardySkipTurn => 'Lewati giliran';
+
+  @override
+  String get nardyNoMoves => 'Tidak ada langkah — lewati giliran';
+
+  @override
+  String get nardyYourRoll => 'Lemparan Anda';
+
+  @override
+  String get nardyPipsShort => 'Sisa:';
+
+  @override
+  String get nardyYouWonMars => 'Anda menang — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Kalah — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: bermain melawan bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pemain: $players.';
   }

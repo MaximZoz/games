@@ -720,6 +720,30 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesNardyWin => 'Барлық тасын бірінші алған жеңеді.';
 
   @override
+  String get nardyRoll => 'Лақтыру';
+
+  @override
+  String get nardySkipTurn => 'Жүрісті өткізу';
+
+  @override
+  String get nardyNoMoves => 'Жүріс жоқ — жүрісті өткізіңіз';
+
+  @override
+  String get nardyYourRoll => 'Сіздің лақтыруыңыз';
+
+  @override
+  String get nardyPipsShort => 'Қалды:';
+
+  @override
+  String get nardyYouWonMars => 'Сіз жеңдіңіз — марс!';
+
+  @override
+  String get nardyYouLostMars => 'Жеңіліс — марс';
+
+  @override
+  String get rulesNardyOfflineBot => 'Офлайн: ботпен ойын.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Ойыншылар: $players.';
   }

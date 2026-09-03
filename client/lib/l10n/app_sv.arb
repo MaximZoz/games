@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Kort backgammon: ni går mot varandra och får slå ensamma brickor. En slagen bricka hamnar på barren och måste in igen. När alla är i hemmet bär ni av dem.",
   "rulesNardyPlayLong": "Långt backgammon: båda startar från samma huvud och går åt samma håll. Högst en bricka lämnar huvudet per drag. Slag är inte tillåtet. När alla är i hemmet bär ni av dem.",
   "rulesNardyWin": "Den som först bär av alla brickor vinner.",
+  "nardyRoll": "Slå",
+  "nardySkipTurn": "Hoppa över turen",
+  "nardyNoMoves": "Inga drag — hoppa över turen",
+  "nardyYourRoll": "Ditt slag",
+  "nardyPipsShort": "Kvar:",
+  "nardyYouWonMars": "Du vann — gammon!",
+  "nardyYouLostMars": "Förlust — gammon",
+  "rulesNardyOfflineBot": "Offline: parti mot boten.",
   "rulesUnoPlayers": "Spelare: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Backgammon court : vous avancez l’un vers l’autre et pouvez frapper les dames seules. Une dame frappée va sur la barre et doit rentrer. Quand toutes sont dans le jan intérieur, vous les sortez.",
   "rulesNardyPlayLong": "Backgammon long : les deux partent de la même tête et vont dans le même sens. Une seule dame quitte la tête par tour. On ne frappe pas. Quand toutes sont au jan, vous les sortez.",
   "rulesNardyWin": "Le premier à sortir toutes ses dames gagne.",
+  "nardyRoll": "Lancer",
+  "nardySkipTurn": "Passer le tour",
+  "nardyNoMoves": "Aucun coup — passez le tour",
+  "nardyYourRoll": "Votre lancer",
+  "nardyPipsShort": "Reste :",
+  "nardyYouWonMars": "Vous gagnez — gammon !",
+  "nardyYouLostMars": "Défaite — gammon",
+  "rulesNardyOfflineBot": "Hors ligne : partie contre le bot.",
   "rulesUnoPlayers": "Joueurs : {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

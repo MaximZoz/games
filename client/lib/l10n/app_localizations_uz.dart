@@ -720,6 +720,30 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesNardyWin => 'Barcha toshlarini birinchi olgan g‘olib.';
 
   @override
+  String get nardyRoll => 'Tashlash';
+
+  @override
+  String get nardySkipTurn => 'Yurishni o‘tkazish';
+
+  @override
+  String get nardyNoMoves => 'Yurish yo‘q — yurishni o‘tkazing';
+
+  @override
+  String get nardyYourRoll => 'Sizning tashlashingiz';
+
+  @override
+  String get nardyPipsShort => 'Qoldi:';
+
+  @override
+  String get nardyYouWonMars => 'Siz yutdingiz — mars!';
+
+  @override
+  String get nardyYouLostMars => 'Mag‘lubiyat — mars';
+
+  @override
+  String get rulesNardyOfflineBot => 'Oflayn: bot bilan o‘yin.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oʻyinchilar: $players.';
   }

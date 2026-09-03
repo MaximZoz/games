@@ -720,6 +720,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesNardyWin => 'Ganha quem primeiro retirar todas as peças.';
 
   @override
+  String get nardyRoll => 'Lançar';
+
+  @override
+  String get nardySkipTurn => 'Passar a vez';
+
+  @override
+  String get nardyNoMoves => 'Sem jogadas — passe a vez';
+
+  @override
+  String get nardyYourRoll => 'Seu lançamento';
+
+  @override
+  String get nardyPipsShort => 'Faltam:';
+
+  @override
+  String get nardyYouWonMars => 'Você venceu — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Derrota — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: partida contra o bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Jogadores: $players.';
   }

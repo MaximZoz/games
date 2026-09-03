@@ -14,6 +14,7 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
@@ -3685,6 +3686,8 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
   int _stakeBronze = 2;
   String _gameMode = nardyModeShort;
   bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
 
   @override
   void initState() {
@@ -3744,10 +3747,71 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
     _persistSettings();
   }
 
-  void _showInDevelopment() {
-    showAppSnackBar(
-      context,
-      message: context.l10n.gamesInDevelopment,
+  Future<void> _create(String mode) async {
+    if (_creating || _finding) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final result = await ref.read(nardyRepositoryProvider).createLobby(
+            mode: mode,
+            gameMode: _gameMode,
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+          );
+      if (!mounted) return;
+      final gameId = result.gameId?.trim() ?? '';
+      final lobbyId = result.lobbyId.trim();
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'nardy',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'nardy');
+        context.push('/games/nardy/game/$gameId');
+      } else if (lobbyId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'nardy',
+              ),
+            );
+        context.push('/games/nardy/lobby/$lobbyId?mode=$mode');
+      } else {
+        throw GamesException(503, context.l10n.commonTryLater);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _playOffline() {
+    disposeAllOfflineGameSessions();
+    context.push(
+      Uri(
+        path: '/games/nardy/offline',
+        queryParameters: {'mode': _gameMode},
+      ).toString(),
     );
   }
 
@@ -3803,19 +3867,12 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
           selected: true,
           icon: Icons.timer_outlined,
           label: formatTurnTime(_turnTimeSec),
-          onTap: _cycleTurnTime,
+          onTap: _creating || _finding ? null : _cycleTurnTime,
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
-      GameCardChip(
-        selected: false,
-        icon: Icons.construction_rounded,
-        label: context.l10n.gamesInDevelopment,
-        onTap: null,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
     ];
+    final busy = _creating || _finding;
 
     return GameCardShell(
       isDesktop: isDesktop,
@@ -3827,8 +3884,9 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline ? null : _cycleStake,
-        onInfoTap: () => _showRules(context),
+        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -3836,13 +3894,15 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
       actions: GameCardActionsRow(
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
-        onCreate: _showInDevelopment,
+        isCreating: _creating,
+        onCreate: () => _create('invite'),
         findLabel: context.l10n.gamesFindMatch,
         findingLabel: context.l10n.commonSearching,
-        onFind: _showInDevelopment,
+        isFinding: _finding,
+        onFind: () => _create('matchmake'),
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
-        onOfflinePlay: _showInDevelopment,
+        onOfflinePlay: _playOffline,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -3857,6 +3917,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         gameMode: _gameMode,
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
         stakeBronze: widget.isOffline ? 0 : _stakeBronze,
+        offline: widget.isOffline,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,

@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Kurzes Backgammon: ihr zieht aufeinander zu und dürft einzelne Steine schlagen. Ein geschlagener Stein kommt auf die Bar und muss wieder einsetzen. Sind alle Steine im Haus, werdet ihr sie ab.",
   "rulesNardyPlayLong": "Langes Backgammon: beide starten vom selben Kopf und ziehen in dieselbe Richtung. Pro Zug darf nur ein Stein den Kopf verlassen. Schlagen ist verboten. Sind alle im Haus, werdet ihr sie ab.",
   "rulesNardyWin": "Wer zuerst alle Steine abgetragen hat, gewinnt.",
+  "nardyRoll": "Würfeln",
+  "nardySkipTurn": "Zug überspringen",
+  "nardyNoMoves": "Kein Zug möglich — überspringen",
+  "nardyYourRoll": "Dein Wurf",
+  "nardyPipsShort": "Rest:",
+  "nardyYouWonMars": "Gewonnen — Gammon!",
+  "nardyYouLostMars": "Verloren — Gammon",
+  "rulesNardyOfflineBot": "Offline: Partie gegen den Bot.",
   "rulesUnoPlayers": "Spieler: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

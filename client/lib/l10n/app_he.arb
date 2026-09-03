@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "שש-בש קצר: נעים זה מול זה ואפשר להכות אבנים בודדות. אבן מוכה עולה לבר וחייבת להיכנס שוב. כשכל האבנים בבית מורידים אותן.",
   "rulesNardyPlayLong": "שש-בש ארוך: שניהם מתחילים מאותו ראש ונעים לאותו כיוון. מהראש יוצאת לכל היותר אבן אחת בתור. אסור להכות. כשכולן בבית מורידים אותן.",
   "rulesNardyWin": "מנצח מי שמוריד ראשון את כל האבנים.",
+  "nardyRoll": "הטל",
+  "nardySkipTurn": "דלג על התור",
+  "nardyNoMoves": "אין מהלכים — דלג על התור",
+  "nardyYourRoll": "ההטלה שלך",
+  "nardyPipsShort": "נותרו:",
+  "nardyYouWonMars": "ניצחת — מארס!",
+  "nardyYouLostMars": "הפסד — מארס",
+  "rulesNardyOfflineBot": "לא מקוון: משחק מול הבוט.",
   "rulesUnoPlayers": "שחקנים: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

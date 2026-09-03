@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "숏 백개먼: 서로를 향해 가고 홀로 있는 말을 칠 수 있습니다. 맞은 말은 바로 가서 다시 들어와야 합니다. 모두 홈에 있으면 보드에서 뺍니다.",
   "rulesNardyPlayLong": "롱 백개먼: 둘 다 같은 헤드에서 같은 방향으로 갑니다. 헤드에서는 한 턴에 말 하나만 나옵니다. 치기는 불가. 모두 홈에 있으면 뺍니다.",
   "rulesNardyWin": "모든 말을 먼저 뺀 사람이 이깁니다.",
+  "nardyRoll": "주사위 굴리기",
+  "nardySkipTurn": "차례 넘기기",
+  "nardyNoMoves": "둘 수 없음 — 차례를 넘기세요",
+  "nardyYourRoll": "당신의 주사위",
+  "nardyPipsShort": "남음:",
+  "nardyYouWonMars": "승리 — 개먼!",
+  "nardyYouLostMars": "패배 — 개먼",
+  "rulesNardyOfflineBot": "오프라인: 봇과의 대국.",
   "rulesUnoPlayers": "플레이어: {players}명.",
   "@rulesUnoPlayers": {
     "placeholders": {

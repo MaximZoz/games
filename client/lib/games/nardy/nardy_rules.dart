@@ -25,6 +25,7 @@ List<String> nardyRuleLines({
   required String gameMode,
   required int turnTimeSec,
   required int stakeBronze,
+  bool offline = false,
   AppLocalizations? l10n,
 }) {
   final t = l10n ?? LocaleService.l10n;
@@ -39,5 +40,6 @@ List<String> nardyRuleLines({
     t.rulesNardyIntro,
     mode == nardyModeLong ? t.rulesNardyPlayLong : t.rulesNardyPlayShort,
     t.rulesNardyWin,
+    if (offline) t.rulesNardyOfflineBot,
   ];
 }

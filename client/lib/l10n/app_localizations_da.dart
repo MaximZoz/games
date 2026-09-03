@@ -720,6 +720,30 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesNardyWin => 'Den, der først tager alle brikker af, vinder.';
 
   @override
+  String get nardyRoll => 'Slå';
+
+  @override
+  String get nardySkipTurn => 'Spring turen over';
+
+  @override
+  String get nardyNoMoves => 'Ingen træk — spring turen over';
+
+  @override
+  String get nardyYourRoll => 'Dit slag';
+
+  @override
+  String get nardyPipsShort => 'Tilbage:';
+
+  @override
+  String get nardyYouWonMars => 'Du vandt — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Nederlag — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: parti mod botten.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spillere: $players.';
   }

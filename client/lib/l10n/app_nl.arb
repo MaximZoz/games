@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Kort backgammon: jullie trekken naar elkaar toe en mogen enkele schijven slaan. Een geslagen schijf gaat naar de bar en moet opnieuw binnenkomen. Als alle schijven thuis zijn, sla je ze af.",
   "rulesNardyPlayLong": "Lang backgammon: beiden starten vanaf dezelfde kop en gaan dezelfde kant op. Per beurt mag maar één schijf de kop verlaten. Slaan mag niet. Als alle schijven thuis zijn, sla je ze af.",
   "rulesNardyWin": "Wie als eerste alle schijven afspeelt, wint.",
+  "nardyRoll": "Gooien",
+  "nardySkipTurn": "Beurt overslaan",
+  "nardyNoMoves": "Geen zetten — sla de beurt over",
+  "nardyYourRoll": "Jouw worp",
+  "nardyPipsShort": "Resterend:",
+  "nardyYouWonMars": "Gewonnen — gammon!",
+  "nardyYouLostMars": "Verloren — gammon",
+  "rulesNardyOfflineBot": "Offline: partij tegen de bot.",
   "rulesUnoPlayers": "Spelers: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

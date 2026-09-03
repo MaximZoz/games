@@ -3,6 +3,8 @@ import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
+import 'package:multigames_client/games/nardy/nardy_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
@@ -26,6 +28,7 @@ class GameSessionApi {
       _ref.read(battleshipRepositoryProvider);
   PokerRepository get _poker => _ref.read(pokerRepositoryProvider);
   UnoRepository get _uno => _ref.read(unoRepositoryProvider);
+  NardyRepository get _nardy => _ref.read(nardyRepositoryProvider);
 
   Future<void> leaveLobby(String lobbyId, {required String gameType}) async {
     final gt = gameRegistry.normalizeId(gameType);
@@ -43,6 +46,10 @@ class GameSessionApi {
     }
     if (gt == 'uno') {
       await _uno.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'nardy') {
+      await _nardy.leaveLobby(lobbyId);
       return;
     }
     await _ttt.leaveLobby(lobbyId);
@@ -68,6 +75,10 @@ class GameSessionApi {
       await _uno.forfeit(gameId);
       return;
     }
+    if (gt == 'nardy') {
+      await _nardy.forfeit(gameId);
+      return;
+    }
     await _ttt.forfeitGame(gameId);
   }
 
@@ -77,8 +88,8 @@ class GameSessionApi {
       await _durak.offerDraw(gameId);
       return;
     }
-    if (gt == 'battleship') {
-      // Морской бой не поддерживает ничью.
+    if (gt == 'battleship' || gt == 'nardy') {
+      // Морской бой и нарды не поддерживают ничью.
       return;
     }
     await _ttt.offerDraw(gameId);
@@ -90,7 +101,7 @@ class GameSessionApi {
       await _durak.acceptDraw(gameId);
       return;
     }
-    if (gt == 'battleship') {
+    if (gt == 'battleship' || gt == 'nardy') {
       return;
     }
     await _ttt.acceptDraw(gameId);
@@ -109,6 +120,10 @@ class GameSessionApi {
     try {
       await _uno.getGame(gameId);
       return 'uno';
+    } catch (_) {}
+    try {
+      await _nardy.getGame(gameId);
+      return 'nardy';
     } catch (_) {}
     try {
       await _durak.getGame(gameId);

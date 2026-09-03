@@ -720,6 +720,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesNardyWin => '先にすべての駒をベアオフした人が勝ちます。';
 
   @override
+  String get nardyRoll => 'サイコロを振る';
+
+  @override
+  String get nardySkipTurn => '手番をパス';
+
+  @override
+  String get nardyNoMoves => '動かせません — 手番をパス';
+
+  @override
+  String get nardyYourRoll => 'あなたの出目';
+
+  @override
+  String get nardyPipsShort => '残り:';
+
+  @override
+  String get nardyYouWonMars => '勝利 — ギャモン！';
+
+  @override
+  String get nardyYouLostMars => '敗北 — ギャモン';
+
+  @override
+  String get rulesNardyOfflineBot => 'オフライン: ボットとの対戦。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'プレイヤー: $players人。';
   }

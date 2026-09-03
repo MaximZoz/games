@@ -720,6 +720,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesNardyWin => 'يفوز من يُخرج كل أحجاره أولًا.';
 
   @override
+  String get nardyRoll => 'ارمِ النرد';
+
+  @override
+  String get nardySkipTurn => 'تخطَّ الدور';
+
+  @override
+  String get nardyNoMoves => 'لا توجد نقلات — تخطَّ الدور';
+
+  @override
+  String get nardyYourRoll => 'رميتك';
+
+  @override
+  String get nardyPipsShort => 'المتبقي:';
+
+  @override
+  String get nardyYouWonMars => 'فزت — مارس!';
+
+  @override
+  String get nardyYouLostMars => 'خسارة — مارس';
+
+  @override
+  String get rulesNardyOfflineBot => 'دون اتصال: مباراة ضد البوت.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'اللاعبون: $players.';
   }

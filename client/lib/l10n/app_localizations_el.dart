@@ -720,6 +720,30 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesNardyWin => 'Νικά όποιος βγάλει πρώτος όλα τα πούλια.';
 
   @override
+  String get nardyRoll => 'Ρίξε';
+
+  @override
+  String get nardySkipTurn => 'Παράλειψη σειράς';
+
+  @override
+  String get nardyNoMoves => 'Καμία κίνηση — παραλείψτε τη σειρά';
+
+  @override
+  String get nardyYourRoll => 'Η ζαριά σας';
+
+  @override
+  String get nardyPipsShort => 'Απομένουν:';
+
+  @override
+  String get nardyYouWonMars => 'Κερδίσατε — μαρς!';
+
+  @override
+  String get nardyYouLostMars => 'Ήττα — μαρς';
+
+  @override
+  String get rulesNardyOfflineBot => 'Εκτός σύνδεσης: παιχνίδι με το bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Παίκτες: $players.';
   }

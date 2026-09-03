@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "Backgammon corto: avanzáis uno hacia el otro y podéis comer fichas solas. La comida va a la barra y debe reentrar. Cuando todas están en casa, las sacáis.",
   "rulesNardyPlayLong": "Backgammon largo: ambos salen de la misma cabeza y van en el mismo sentido. Solo una ficha sale de la cabeza por turno. No se come. Cuando todas están en casa, las sacáis.",
   "rulesNardyWin": "Gana quien primero saque todas sus fichas.",
+  "nardyRoll": "Tirar",
+  "nardySkipTurn": "Pasar turno",
+  "nardyNoMoves": "Sin jugadas — pasa el turno",
+  "nardyYourRoll": "Tu tirada",
+  "nardyPipsShort": "Quedan:",
+  "nardyYouWonMars": "¡Ganaste — gammon!",
+  "nardyYouLostMars": "Derrota — gammon",
+  "rulesNardyOfflineBot": "Sin conexión: partida contra el bot.",
   "rulesUnoPlayers": "Jugadores: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

@@ -271,6 +271,14 @@
   "rulesNardyPlayShort": "छोटा: एक-दूसरे की ओर चलते हैं और अकेले मोहरे मार सकते हैं। मारा गया मोहरा बार पर जाता है और फिर घुसना होता है। सब घर में हों तो उतारें।",
   "rulesNardyPlayLong": "लंबा: दोनों एक ही सिरे से एक दिशा में चलते हैं। सिरे से एक चाल में एक ही मोहरा निकलता है। मारना मना है। सब घर में हों तो उतारें।",
   "rulesNardyWin": "जो पहले सारे मोहरे उतार ले, वही जीते।",
+  "nardyRoll": "पासा फेंकें",
+  "nardySkipTurn": "बारी छोड़ें",
+  "nardyNoMoves": "कोई चाल नहीं — बारी छोड़ें",
+  "nardyYourRoll": "आपका पासा",
+  "nardyPipsShort": "शेष:",
+  "nardyYouWonMars": "आप जीते — गैमन!",
+  "nardyYouLostMars": "हार — गैमन",
+  "rulesNardyOfflineBot": "ऑफ़लाइन: बॉट के साथ खेल।",
   "rulesUnoPlayers": "खिलाड़ी: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

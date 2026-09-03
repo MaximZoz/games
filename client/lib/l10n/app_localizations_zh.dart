@@ -720,6 +720,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesNardyWin => '先将全部棋子出局者获胜。';
 
   @override
+  String get nardyRoll => '掷骰';
+
+  @override
+  String get nardySkipTurn => '跳过回合';
+
+  @override
+  String get nardyNoMoves => '无棋可走 — 跳过回合';
+
+  @override
+  String get nardyYourRoll => '你的掷骰';
+
+  @override
+  String get nardyPipsShort => '剩余：';
+
+  @override
+  String get nardyYouWonMars => '你赢了 — 双倍胜！';
+
+  @override
+  String get nardyYouLostMars => '失败 — 双倍负';
+
+  @override
+  String get rulesNardyOfflineBot => '离线：与机器人对战。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '玩家：$players。';
   }

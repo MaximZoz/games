@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/framework/battleship_game.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
 import 'package:multigames_client/games/framework/durak_game.dart';
+import 'package:multigames_client/games/framework/nardy_game.dart';
 import 'package:multigames_client/games/framework/poker_game.dart';
 import 'package:multigames_client/games/framework/tictactoe_game.dart';
 import 'package:multigames_client/games/framework/uno_game.dart';
@@ -100,6 +101,7 @@ List<GameDescriptor> _builtinGames() => [
       BattleshipGame(),
       UnoGame(),
       PokerGame(),
+      NardyGame(),
     ];
 
 /// Глобальный реестр (без зависимостей Riverpod — удобно в навигации).

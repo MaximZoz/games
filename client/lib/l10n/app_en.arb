@@ -323,6 +323,14 @@
   "rulesNardyPlayShort": "Short backgammon: you move toward each other and may hit lone opponent checkers. A hit checker goes to the bar and must re-enter. When all checkers are in your home board, bear them off.",
   "rulesNardyPlayLong": "Long backgammon: both start from the same head and move the same way. Only one checker may leave the head per turn. Hitting is not allowed. When all checkers are in the home board, bear them off.",
   "rulesNardyWin": "The first player to bear off all checkers wins.",
+  "nardyRoll": "Roll",
+  "nardySkipTurn": "Skip turn",
+  "nardyNoMoves": "No moves — skip the turn",
+  "nardyYourRoll": "Your roll",
+  "nardyPipsShort": "Left:",
+  "nardyYouWonMars": "You won — gammon!",
+  "nardyYouLostMars": "You lost — gammon",
+  "rulesNardyOfflineBot": "Offline: a game against the bot.",
   "rulesUnoPlayers": "Players: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
