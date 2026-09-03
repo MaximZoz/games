@@ -887,45 +887,23 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   /// Порядок веера: сохраняем локальную сортировку между синками сервера.
+  ///
+  /// Свой ход до посадки — дырка в том же слоте (лицо в hiddenCards).
+  /// Иначе clearLift и схлопывание на кадр вспыхивают картой и всем веером.
   List<PlayingCard> _orderedHand(List<PlayingCard> serverHand, Suit trump) {
     _forgetPlayedAwayIfReturning();
-    final gone = _locallyGoneFromHand;
-    final pending = _pendingDealCards;
-    if (_handOrder == null) {
-      return [
-        for (final c in serverHand)
-          if (!gone.contains(c) &&
-              durakDealCardInFanLayout(pendingDeal: pending.contains(c)))
-            c,
-      ];
-    }
-    final remain = serverHand.toSet()..removeAll(gone);
-    final out = <PlayingCard>[];
-    for (final c in _handOrder!) {
-      if (!durakDealCardInFanLayout(pendingDeal: pending.contains(c))) {
-        continue;
-      }
-      if (gone.contains(c)) continue;
-      if (remain.remove(c)) {
-        out.add(c);
-      } else if (_incomingFanCards.contains(c)) {
-        // Взятие: ещё нет на сервере — слот/лицо держим локально.
-        out.add(c);
-      }
-    }
-    if (remain.isNotEmpty) {
-      // Добор из колоды не вспыхивает в веере до полёта.
-      final added = remain
-          .where(
-            (c) =>
-                !gone.contains(c) &&
-                durakDealCardInFanLayout(pendingDeal: pending.contains(c)),
-          )
-          .toList()
-        ..sort((a, b) => _compareHandCards(a, b, trump));
-      out.addAll(added);
-    }
-    return out;
+    return durakOrderedHandSlots(
+      prevOrder: _handOrder,
+      serverHand: serverHand,
+      pendingDeal: _pendingDealCards,
+      leavingHand: _locallyGoneFromHand,
+      holeCards: durakFanHoleCards(
+        playedAway: _playedAwayCards,
+        flyingFromHand: _flyingFromHand,
+        incomingFanCards: _incomingFanCards,
+      ),
+      compareNew: (a, b) => _compareHandCards(a, b, trump),
+    );
   }
 
   void _sortHandInFan(
@@ -1428,8 +1406,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             : serverHandLen)
         .clamp(1, 52);
 
-    // Сразу убрать из веера (схлопывание уже на lift). Без «дырки» —
-    // иначе после clearLift веер снова растянется до посадки.
+    // Слот остаётся дыркой до посадки: лицо прячет hiddenCards.
+    // Если убрать карту сразу, clearLift и твин веера вспыхивают лицом.
     setState(() {
       _activeCard = null;
       _selected.clear();
@@ -1444,7 +1422,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _optimisticAttacks.addAll(cards);
         _flyingToTable.addAll(cards);
       }
-      _removeFromHandOrder(cards, view);
       if (_frozenFanCardSize == null) {
         final lay = _handFanVisualLayout(
           nBefore,
@@ -1618,15 +1595,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             _syncHandOrderFromServer(v);
           }
           setState(() {
-            if (doDefend) {
-              _removeFromHandOrder(cards, v ?? view);
-            }
+            _removeFromHandOrder(cards, v ?? view);
             for (final c in cards) {
               _optimisticAttacks.remove(c);
             }
             _optimisticDefends.clear();
             _dragGlobal = null;
-            _suppressFanLayoutAnim = false;
+            _suppressFanLayoutAnim = true;
           });
           _syncOfflineFxHold();
           _releaseFanLayoutSnap();
@@ -1639,9 +1614,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
               _optimisticAttacks.remove(c);
             }
             _optimisticDefends.clear();
-            if (doTransfer && _handOrder != null) {
-              _handOrder = [..._handOrder!, ...cards];
-            }
+            _restoreToHandOrder(cards);
             _unmarkPlayedAway(cards);
             _dragGlobal = null;
             _suppressFanLayoutAnim = false;
@@ -1670,6 +1643,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     }());
 
     return true;
+  }
+
+  /// Вернуть карты в веер после ошибки хода — без дубля, если слот ещё дырка.
+  void _restoreToHandOrder(Iterable<PlayingCard> cards) {
+    if (_handOrder == null) return;
+    final have = _handOrder!.toSet();
+    _handOrder = [
+      ..._handOrder!,
+      for (final c in cards)
+        if (!have.contains(c)) c,
+    ];
   }
 
   /// Убрать карты из локального порядка веера (создаёт порядок, если его ещё нет).
@@ -1758,13 +1742,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 : cards.length))
         .clamp(1, 52);
 
-    // Сразу убрать из веера (схлопывание уже на lift при вытаскивании).
-    // Pending-слот на столе (opacity 0 под fly).
+    // Слот-дырка до посадки (как отбой). Pending на столе под fly.
     setState(() {
       _activeCard = null;
       _selected.clear();
       _dragGlobal = null;
-      _removeFromHandOrder(cards, view);
       _flyingFromHand.addAll(cards);
       _markPlayedAway(cards);
       _optimisticAttacks.addAll(cards);
@@ -1862,6 +1844,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         if (mounted) {
           setState(() {
             _flyingToTable.removeAll(cards);
+            _removeFromHandOrder(cards, view);
           });
         }
         await commitFuture;
@@ -1957,6 +1940,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         }
         _flyingToTable.removeAll(cards);
         _flyingFromHand.removeAll(cards);
+        if (v != null) _removeFromHandOrder(cards, v);
       });
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -1968,9 +1952,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         _flyingToTable.removeAll(cards);
         _flyingFromHand.removeAll(cards);
         _unmarkPlayedAway(cards);
-        if (_handOrder != null) {
-          _handOrder = [..._handOrder!, ...cards];
-        }
+        _restoreToHandOrder(cards);
       });
       _releaseFanLayoutSnap();
     }

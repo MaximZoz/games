@@ -475,6 +475,44 @@ void main() {
       expect(next, const [aceSpades, kingHearts]);
     });
 
+    test('до посадки дырка остаётся в том же месте веера', () {
+      expect(
+        durakFanKeepsHoleSlot(
+          inLocalOrder: true,
+          incomingToFan: false,
+          markedPlayedAway: true,
+          flyingFromHand: true,
+        ),
+        isTrue,
+      );
+      final holes = durakOrderedHandSlots(
+        prevOrder: const [sixClubs, aceSpades, kingHearts],
+        serverHand: const [aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+        holeCards: {sixClubs},
+      );
+      expect(holes, const [sixClubs, aceSpades, kingHearts]);
+      final kept = durakMergeHandOrderAfterMove(
+        prevOrder: const [sixClubs, aceSpades, kingHearts],
+        serverHand: const [aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+      );
+      expect(kept, const [sixClubs, aceSpades, kingHearts]);
+    });
+
+    test('после посадки устаревший снимок не возвращает карту в слоты', () {
+      final slots = durakOrderedHandSlots(
+        prevOrder: const [aceSpades, kingHearts],
+        serverHand: const [sixClubs, aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+        holeCards: {sixClubs},
+      );
+      expect(slots, const [aceSpades, kingHearts]);
+    });
+
     test('после хода карта gone, даже если снова попала в order', () {
       final gone = durakCardsGoneFromFan(
         playedAway: const [sixClubs],

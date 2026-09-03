@@ -158,4 +158,35 @@ void main() {
     expect(peeked.where((w) => w.card == queenClubs), hasLength(1));
     expect(find.byKey(fanPeekOverlayKey(tenDiamonds)), findsOneWidget);
   });
+
+  testWidgets('после броска слот остаётся дыркой — лицо не вспыхивает', (tester) async {
+    final key = GlobalKey<CardFanState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CardFan(
+            key: key,
+            cards: const [tenDiamonds, queenClubs],
+            cardSize: const Size(72, 100),
+            animateLayout: false,
+            hiddenCards: {tenDiamonds},
+          ),
+        ),
+      ),
+    );
+    key.currentState!.debugLiftCard(tenDiamonds);
+    await tester.pump();
+    expect(find.byType(PlayingCardWidget), findsOneWidget);
+
+    key.currentState!.cancelActiveGesture();
+    await tester.pump();
+
+    expect(find.byType(PlayingCardWidget), findsOneWidget);
+    expect(
+      tester.widget<PlayingCardWidget>(find.byType(PlayingCardWidget)).card,
+      queenClubs,
+    );
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: true)), findsOneWidget);
+    expect(find.byKey(fanSlotPaintKey(card: tenDiamonds, hidden: false)), findsNothing);
+  });
 }

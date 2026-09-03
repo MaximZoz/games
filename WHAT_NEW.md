@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Дурак в альбоме: после хода карта больше не вспыхивает в веере — как в портрете
+- Дурак: после хода карта не вспыхивает в веере (портрет и альбом) — слот-дырка до посадки
 - Хаб игр: приглашение в лобби больше не пропадает и не вспыхивает при переключении «Игры» ↔ «Лобби»
 - Дурак: в переводном бот сразу ходит после перевода; после отбоя пауза перед битой; карта соперника на столе только после посадки
 - Дурак в альбоме: «Взять»/«Бито» правее, не накрывает карты стола
@@ -51,7 +51,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Durak in landscape: a played card no longer flashes back in the fan — same as portrait
+- Durak: a played card no longer flashes in the fan (portrait and landscape) — the slot stays empty until the card lands
 - Games hub: a lobby invite no longer vanishes or flashes when switching between Games and Lobby
 - Durak: in transfer mode the bot replies after a transfer without switching tabs; a short pause shows the beat before discard; opponent cards land before they appear on the table
 - Durak in landscape: Take/Beat sit to the right so they no longer cover the table cards
