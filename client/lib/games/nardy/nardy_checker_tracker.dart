@@ -30,29 +30,38 @@ class NardyCheckerSpot {
 /// `AnimatedPositioned` не понимает, какая шашка куда поехала, и вместо
 /// движения получается мгновенная перерисовка стопок.
 class NardyCheckerTracker {
-  final Map<int, Map<int, int>> _trackById = {0: {}, 1: {}};
+  /// Прошлое место каждой шашки: id → (пункт, номер в стопке).
+  final Map<int, Map<int, (int, int)>> _placeById = {0: {}, 1: {}};
 
   /// Пересчитать расстановку для места [seat] по текущему состоянию.
   List<NardyCheckerSpot> spotsFor(NardyGameView game, int seat) {
     final spots = _rawSpots(game, seat);
-    final previous = _trackById[seat] ?? <int, int>{};
+    final previous = _placeById[seat] ?? <int, (int, int)>{};
     final assigned = List<int?>.filled(spots.length, null);
     final freeIds = <int>{};
     for (var i = 0; i < spots.length; i++) {
       freeIds.add(i);
     }
 
-    // Сначала оставляем шашки на своих пунктах — тогда «поехавшей» окажется
-    // ровно та, что действительно сходила.
+    // Шашки, оставшиеся на своём пункте, сохраняют и пункт, и порядок в
+    // стопке: иначе при уходе одной шашки «переезжает» вся стопка.
     final byTrack = <int, List<int>>{};
-    previous.forEach((id, track) {
-      if (id < spots.length) byTrack.putIfAbsent(track, () => []).add(id);
+    previous.forEach((id, place) {
+      if (id < spots.length) byTrack.putIfAbsent(place.$1, () => []).add(id);
     });
+    for (final ids in byTrack.values) {
+      ids.sort((a, b) => previous[a]!.$2.compareTo(previous[b]!.$2));
+    }
+    final taken = <int, int>{};
     for (var i = 0; i < spots.length; i++) {
-      final candidates = byTrack[spots[i].$1];
-      if (candidates == null || candidates.isEmpty) continue;
-      final id = candidates.removeLast();
+      final (track, _, _) = spots[i];
+      final candidates = byTrack[track];
+      if (candidates == null) continue;
+      final position = taken[track] ?? 0;
+      if (position >= candidates.length) continue;
+      final id = candidates[position];
       if (!freeIds.remove(id)) continue;
+      taken[track] = position + 1;
       assigned[i] = id;
     }
     final leftovers = freeIds.toList()..sort();
@@ -63,11 +72,11 @@ class NardyCheckerTracker {
     }
 
     final result = <NardyCheckerSpot>[];
-    final nextTracks = <int, int>{};
+    final nextPlaces = <int, (int, int)>{};
     for (var i = 0; i < spots.length; i++) {
       final id = assigned[i]!;
       final (track, index, stackSize) = spots[i];
-      nextTracks[id] = track;
+      nextPlaces[id] = (track, index);
       result.add(NardyCheckerSpot(
         id: id,
         track: track,
@@ -75,14 +84,14 @@ class NardyCheckerTracker {
         stackSize: stackSize,
       ));
     }
-    _trackById[seat] = nextTracks;
+    _placeById[seat] = nextPlaces;
     return result;
   }
 
   /// Сбросить привязку — новая партия начинается с чистой доски.
   void reset() {
-    _trackById[0] = {};
-    _trackById[1] = {};
+    _placeById[0] = {};
+    _placeById[1] = {};
   }
 
   /// Все места шашек как (пункт, номер в стопке, размер стопки).

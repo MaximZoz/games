@@ -39,7 +39,7 @@ class NardyDiceRow extends StatefulWidget {
 
 class _NardyDiceRowState extends State<NardyDiceRow>
     with SingleTickerProviderStateMixin {
-  static const Duration _rollDuration = Duration(milliseconds: 620);
+  static const Duration _rollDuration = Duration(milliseconds: 900);
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
@@ -52,6 +52,13 @@ class _NardyDiceRowState extends State<NardyDiceRow>
   void initState() {
     super.initState();
     _seenRollKey = widget.rollKey;
+    // Первый бросок партии приходит уже сделанным — всё равно прокручиваем,
+    // иначе кубики просто возникают на экране.
+    if (widget.rolled.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _controller.forward(from: 0);
+      });
+    }
   }
 
   @override
@@ -105,11 +112,11 @@ class _NardyDiceRowState extends State<NardyDiceRow>
 
   /// Кубики останавливаются по очереди — бросок выглядит живее.
   double _dieProgress(double t, int index) {
-    final count = widget.rolled.length;
-    final start = index * (0.25 / math.max(count, 1));
-    final span = 1 - start;
-    if (span <= 0) return 1;
-    return ((t - start) / span).clamp(0.0, 1.0);
+    final count = math.max(widget.rolled.length, 1);
+    // Последний кубик замирает вместе с концом анимации, первый — раньше.
+    final end = 0.55 + 0.45 * ((index + 1) / count);
+    if (end <= 0) return 1;
+    return (t / end).clamp(0.0, 1.0);
   }
 }
 
@@ -138,10 +145,10 @@ class _AnimatedDie extends StatelessWidget {
     // Пока крутится — быстро меняем грань, к концу замедляемся.
     final shown = settled
         ? value
-        : 1 + ((progress * 26).floor() * 7 + value) % 6;
-    final tilt = settled ? 0.0 : math.sin(progress * math.pi * 5) * 0.28;
-    final lift = settled ? 0.0 : -math.sin(progress * math.pi) * size * 0.35;
-    final scale = settled ? 1.0 : 0.86 + 0.14 * progress;
+        : 1 + ((progress * 30).floor() * 7 + value) % 6;
+    final tilt = settled ? 0.0 : math.sin(progress * math.pi * 4) * (1 - progress) * 1.6;
+    final lift = settled ? 0.0 : -math.sin(progress * math.pi) * size * 0.7;
+    final scale = settled ? 1.0 : 0.78 + 0.22 * progress;
 
     return Transform.translate(
       offset: Offset(0, lift),

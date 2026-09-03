@@ -22,7 +22,7 @@ if [ -z "$TOKEN" ]; then
   # Почтовик не настроен — код подтверждения пишется в лог сервера.
   CODE=""
   for _ in $(seq 1 20); do
-    CODE=$(grep -F "verification code for $EMAIL" "$SERVER_LOG" 2>/dev/null |
+    CODE=$(grep -aF "verification code for $EMAIL" "$SERVER_LOG" 2>/dev/null |
       tail -1 | sed -E 's/.*: ([0-9]{4,8}).*/\1/')
     [ -n "$CODE" ] && break
     sleep 0.5

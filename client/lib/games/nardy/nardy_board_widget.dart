@@ -56,7 +56,7 @@ class NardyBoard extends StatelessWidget {
   final VoidCallback onBarTap;
   final VoidCallback onBearOffTap;
 
-  static const Duration moveDuration = Duration(milliseconds: 320);
+  static const Duration moveDuration = Duration(milliseconds: 420);
 
   bool get _showBar => !game.isLong;
 

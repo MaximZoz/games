@@ -19,7 +19,7 @@ register() {
   token=$(printf '%s' "$reg" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("access_token",""))')
   if [ -z "$token" ]; then
     for _ in $(seq 1 20); do
-      code=$(grep -F "verification code for $email" "$SERVER_LOG" 2>/dev/null |
+      code=$(grep -aF "verification code for $email" "$SERVER_LOG" 2>/dev/null |
         tail -1 | sed -E 's/.*: ([0-9]{4,8}).*/\1/')
       [ -n "${code:-}" ] && break
       sleep 0.5

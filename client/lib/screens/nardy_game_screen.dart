@@ -324,6 +324,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     setState(() => _isRematching = true);
     try {
       if (_isOffline) {
+        _tracker.reset();
         OfflineNardyRegistry.instance.get(widget.gameId)?.restart();
         ref.invalidate(nardyGameProvider(widget.gameId));
         if (mounted) {
