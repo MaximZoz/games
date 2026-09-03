@@ -73,7 +73,34 @@ jobs:
         run: |
           test -f "${{ steps.target.outputs.config }}"
 
-      - uses: superfly/flyctl-actions/setup-flyctl@v1
+      # Не setup-flyctl@v1: экшен с version=latest иногда падает за <1с
+      # без лога (после #431, SHA тот же, что у зелёного деплоя #430).
+      - name: Install flyctl
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="0.4.97"
+          URL="https://github.com/superfly/flyctl/releases/download/v${VERSION}/flyctl_${VERSION}_Linux_x86_64.tar.gz"
+          dest="$HOME/.fly/bin"
+          mkdir -p "$dest"
+          for attempt in 1 2 3; do
+            tmp="$(mktemp -d)"
+            if curl -fL --retry 3 --retry-delay 2 --max-time 120 \
+                -o "$tmp/flyctl.tgz" "$URL" \
+              && tar -xzf "$tmp/flyctl.tgz" -C "$tmp" \
+              && test -x "$tmp/flyctl"; then
+              mv "$tmp/flyctl" "$dest/flyctl"
+              echo "$dest" >> "$GITHUB_PATH"
+              "$dest/flyctl" version
+              rm -rf "$tmp"
+              exit 0
+            fi
+            echo "Установка flyctl не удалась (попытка $attempt)"
+            rm -rf "$tmp"
+            sleep $((attempt * 4))
+          done
+          echo "Не удалось скачать flyctl ${VERSION} с ${URL}"
+          exit 1
 
       - name: Deploy to Fly
         env:
