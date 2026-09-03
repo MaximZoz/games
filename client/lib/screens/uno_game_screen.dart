@@ -11,6 +11,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
+import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
@@ -54,6 +55,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   final GlobalKey _rewardKey = GlobalKey();
 
   bool _busy = false;
+  final GameTurnActionLock _turnAction = GameTurnActionLock();
   bool _dealing = false;
   bool _dealAnimated = false;
   bool _colorDialogOpen = false;
@@ -100,6 +102,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         _busyStuckTicks++;
         if (_busyStuckTicks >= 3) {
           _busyStuckTicks = 0;
+          _turnAction.release();
           setState(() => _busy = false);
           if (!_isOffline) ref.invalidate(unoGameProvider(widget.gameId));
         }
@@ -305,7 +308,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final to = _rectOf(_handKey);
     if (from == null || to == null || !mounted) {
       if (mounted) {
-        setState(() => _pendingDrawnIds.removeAll(cards.map((card) => card.id)));
+        setState(
+            () => _pendingDrawnIds.removeAll(cards.map((card) => card.id)));
       }
       return;
     }
@@ -621,7 +625,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       }
       return;
     }
-    setState(() => _busy = true);
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    setState(() {});
     _lastLocalActor = game.viewerUserId ?? game.me?.id;
     try {
       UnoColor? color;
@@ -697,6 +703,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         });
       } catch (_) {}
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -708,7 +715,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     )) {
       return;
     }
-    setState(() => _busy = true);
+    if (!_turnAction.tryAcquire()) return;
+    _busy = true;
+    setState(() {});
     _lastLocalDrawActor = before.me?.id;
     final from = _rectOf(_drawPileKey);
     try {
@@ -767,6 +776,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } finally {
+      _turnAction.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -779,8 +789,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     bool manageBusy = true,
   }) async {
     if (manageBusy) {
-      if (_busy) return;
-      setState(() => _busy = true);
+      if (!_turnAction.tryAcquire()) return;
+      _busy = true;
+      setState(() {});
     }
     if (type == UnoActionType.chooseColor ||
         type == UnoActionType.challengeUno ||
@@ -799,8 +810,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         ref.invalidate(unoGameProvider(widget.gameId));
       }
     } on GamesException catch (error) {
-      if (mounted &&
-          !(type == UnoActionType.draw && isStaleUnoDrawError(error))) {
+      if (mounted && !isStaleNotYourTurnError(error)) {
         showAppSnackBar(
           context,
           message: formatUserError(error),
@@ -808,7 +818,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && !isStaleNotYourTurnError(error)) {
         showAppSnackBar(
           context,
           message: formatUserError(error),
@@ -816,7 +826,10 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         );
       }
     } finally {
-      if (manageBusy && mounted) setState(() => _busy = false);
+      if (manageBusy) {
+        _turnAction.release();
+        if (mounted) setState(() => _busy = false);
+      }
     }
   }
 
@@ -1687,9 +1700,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                   GestureDetector(
                     key: _drawPileKey,
                     onTap: unoDrawControlEnabled(
-                            busy: _busy,
-                            canTake: _canTakeFromDeck(game),
-                          )
+                      busy: _busy,
+                      canTake: _canTakeFromDeck(game),
+                    )
                         ? () => _draw(game)
                         : null,
                     child: Stack(
@@ -2117,7 +2130,8 @@ class UnoOpponentHand extends StatelessWidget {
           vertical ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: vertical ? 72 : (narrow ? 84 : 110)),
+          constraints:
+              BoxConstraints(maxWidth: vertical ? 72 : (narrow ? 84 : 110)),
           child: Text(
             name,
             maxLines: 1,
@@ -2188,7 +2202,8 @@ class UnoOpponentHand extends StatelessWidget {
               vertical: vertical ? 6 : (narrow ? 5 : 6),
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
+              color:
+                  AppColors.surfaceCard.withValues(alpha: left ? 0.45 : 0.88),
               borderRadius: BorderRadius.circular(16),
             ),
             child: body,
