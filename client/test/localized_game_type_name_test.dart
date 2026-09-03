@@ -18,6 +18,8 @@ void main() {
     expect(localizedGameTypeName('durak', t), t.gamesDurak);
     expect(localizedGameTypeName('poker', t), t.gamesPoker);
     expect(localizedGameTypeName('battleship', t), t.gamesBattleship);
+    expect(localizedGameTypeName('nardy', t), t.gamesNardy);
+    expect(localizedGameTypeName('nardy', t), isNot(t.gamesTicTacToe));
   });
 
   test('заголовок группового чата Уно локализуется', () {

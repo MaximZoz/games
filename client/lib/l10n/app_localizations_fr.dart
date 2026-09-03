@@ -688,6 +688,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Court';
+
+  @override
+  String get gamesNardyModeLong => 'Long';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — règles';
+
+  @override
+  String get rulesNardyPlayers => 'Joueurs : 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Mode : $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Plateau de 24 flèches, 15 dames chacun. Deux dés : une dame pour la somme ou deux dames pour chaque dé.';
+
+  @override
+  String get rulesNardyPlayShort => 'Backgammon court : vous avancez l’un vers l’autre et pouvez frapper les dames seules. Une dame frappée va sur la barre et doit rentrer. Quand toutes sont dans le jan intérieur, vous les sortez.';
+
+  @override
+  String get rulesNardyPlayLong => 'Backgammon long : les deux partent de la même tête et vont dans le même sens. Une seule dame quitte la tête par tour. On ne frappe pas. Quand toutes sont au jan, vous les sortez.';
+
+  @override
+  String get rulesNardyWin => 'Le premier à sortir toutes ses dames gagne.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Joueurs : $players.';
   }

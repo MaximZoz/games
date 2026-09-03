@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Pokeri",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Lyhyt",
+  "gamesNardyModeLong": "Pitkä",
+  "rulesNardyTitle": "Backgammon — säännöt",
+  "rulesNardyPlayers": "Pelaajat: 2.",
+  "rulesNardyMode": "Tila: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Lautalla 24 pistettä, kummallakin 15 nappulaa. Kaksi noppaa: yksi nappula summaan tai kaksi nappulaa silmälukuihin.",
+  "rulesNardyPlayShort": "Lyhyt backgammon: liikutte toisianne kohti ja voitte lyödä yksinäisiä nappuloita. Lyöty nappula menee barille ja sen on tultava uudestaan sisään. Kun kaikki ovat kotona, poistat ne laudalta.",
+  "rulesNardyPlayLong": "Pitkä backgammon: molemmat lähtevät samasta päästä samaan suuntaan. Päästä lähtee vuorossa enintään yksi nappula. Lyöminen ei ole sallittua. Kun kaikki ovat kotona, poistat ne.",
+  "rulesNardyWin": "Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.",
   "rulesUnoPlayers": "Pelaajat: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

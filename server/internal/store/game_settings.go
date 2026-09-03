@@ -15,6 +15,7 @@ const (
 	GameTypeBattleship = "battleship"
 	GameTypePoker      = "poker"
 	GameTypeUno        = "uno"
+	GameTypeNardy      = "nardy"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -27,10 +28,10 @@ type UserGameSettings struct {
 	FirstMoveRestriction bool
 	StakeBronze          int
 	// Дурак (для tictactoe — дефолты, клиент игнорит).
-	DeckSize    int
-	MaxPlayers  int
-	GameMode    string
-	UpdatedAt   time.Time
+	DeckSize   int
+	MaxPlayers int
+	GameMode   string
+	UpdatedAt  time.Time
 }
 
 func DefaultUserGameSettings(gameType string) UserGameSettings {
@@ -71,6 +72,12 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.MaxPlayers = 2
 		s.GameMode = "classic"
 		s.Variant = "classic"
+	}
+	if gameType == GameTypeNardy {
+		s.TurnTimeSec = 60
+		s.MaxPlayers = 2
+		s.GameMode = "short"
+		s.Variant = "short"
 	}
 	return s
 }

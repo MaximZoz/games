@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Kort",
+  "gamesNardyModeLong": "Lang",
+  "rulesNardyTitle": "Backgammon — regels",
+  "rulesNardyPlayers": "Spelers: 2.",
+  "rulesNardyMode": "Modus: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Bord met 24 punten, ieder 15 schijven. Twee dobbelstenen: één schijf de som of twee schijven de ogen.",
+  "rulesNardyPlayShort": "Kort backgammon: jullie trekken naar elkaar toe en mogen enkele schijven slaan. Een geslagen schijf gaat naar de bar en moet opnieuw binnenkomen. Als alle schijven thuis zijn, sla je ze af.",
+  "rulesNardyPlayLong": "Lang backgammon: beiden starten vanaf dezelfde kop en gaan dezelfde kant op. Per beurt mag maar één schijf de kop verlaten. Slaan mag niet. Als alle schijven thuis zijn, sla je ze af.",
+  "rulesNardyWin": "Wie als eerste alle schijven afspeelt, wint.",
   "rulesUnoPlayers": "Spelers: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

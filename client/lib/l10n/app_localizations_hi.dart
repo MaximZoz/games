@@ -688,6 +688,38 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesUno => 'ऊनो';
 
   @override
+  String get gamesNardy => 'बैकगैमन';
+
+  @override
+  String get gamesNardyModeShort => 'छोटा';
+
+  @override
+  String get gamesNardyModeLong => 'लंबा';
+
+  @override
+  String get rulesNardyTitle => 'बैकगैमन — नियम';
+
+  @override
+  String get rulesNardyPlayers => 'खिलाड़ी: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'मोड: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => '24 बिंदुओं का बोर्ड, प्रत्येक के 15 मोहरे। दो पासे: एक मोहरा योग या दो मोहरे अंक।';
+
+  @override
+  String get rulesNardyPlayShort => 'छोटा: एक-दूसरे की ओर चलते हैं और अकेले मोहरे मार सकते हैं। मारा गया मोहरा बार पर जाता है और फिर घुसना होता है। सब घर में हों तो उतारें।';
+
+  @override
+  String get rulesNardyPlayLong => 'लंबा: दोनों एक ही सिरे से एक दिशा में चलते हैं। सिरे से एक चाल में एक ही मोहरा निकलता है। मारना मना है। सब घर में हों तो उतारें।';
+
+  @override
+  String get rulesNardyWin => 'जो पहले सारे मोहरे उतार ले, वही जीते।';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'खिलाड़ी: $players.';
   }

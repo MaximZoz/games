@@ -688,6 +688,38 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesUno => 'אונו';
 
   @override
+  String get gamesNardy => 'שש-בש';
+
+  @override
+  String get gamesNardyModeShort => 'קצר';
+
+  @override
+  String get gamesNardyModeLong => 'ארוך';
+
+  @override
+  String get rulesNardyTitle => 'שש-בש — חוקים';
+
+  @override
+  String get rulesNardyPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'לוח עם 24 נקודות, 15 אבנים לכל אחד. שתי קוביות: אבן אחת לסכום או שתיים לערכי הקוביות.';
+
+  @override
+  String get rulesNardyPlayShort => 'שש-בש קצר: נעים זה מול זה ואפשר להכות אבנים בודדות. אבן מוכה עולה לבר וחייבת להיכנס שוב. כשכל האבנים בבית מורידים אותן.';
+
+  @override
+  String get rulesNardyPlayLong => 'שש-בש ארוך: שניהם מתחילים מאותו ראש ונעים לאותו כיוון. מהראש יוצאת לכל היותר אבן אחת בתור. אסור להכות. כשכולן בבית מורידים אותן.';
+
+  @override
+  String get rulesNardyWin => 'מנצח מי שמוריד ראשון את כל האבנים.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'שחקנים: $players.';
   }

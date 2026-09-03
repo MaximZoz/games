@@ -14,6 +14,7 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
@@ -1342,6 +1343,10 @@ class _GamesPageContent extends ConsumerWidget {
           stakeOptionsList: stakeOptionsList,
         ),
         _UnoGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _NardyGameCard(
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),
@@ -3658,6 +3663,203 @@ class _InviteCard extends ConsumerWidget {
 
 String _inviteGameTitle(BuildContext context, String gameType) {
   return localizedGameTypeName(gameType, context.l10n);
+}
+
+/// Карточка «Нарды» — 2 игрока, короткие/длинные, время и ставка; игра в разработке.
+class _NardyGameCard extends ConsumerStatefulWidget {
+  const _NardyGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_NardyGameCard> createState() => _NardyGameCardState();
+}
+
+class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  String _gameMode = nardyModeShort;
+  bool _settingsHydrated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('nardy')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      _gameMode = nardyNormalizeMode(saved.gameMode);
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('nardy').notifier).updateLocal(
+          gameCardSettings(
+            gameType: 'nardy',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            gameMode: _gameMode,
+          ),
+        );
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    setState(() => _stakeBronze = next);
+    _persistSettings();
+  }
+
+  void _cycleGameMode() {
+    setState(() {
+      _gameMode =
+          _gameMode == nardyModeShort ? nardyModeLong : nardyModeShort;
+    });
+    _persistSettings();
+  }
+
+  void _showInDevelopment() {
+    showAppSnackBar(
+      context,
+      message: context.l10n.gamesInDevelopment,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('nardy'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+        _gameMode = nardyNormalizeMode(saved.gameMode);
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: false,
+        icon: Icons.groups_rounded,
+        label: '2',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.swap_horiz_rounded,
+        label: nardyModeLabel(_gameMode, context.l10n),
+        onTap: _cycleGameMode,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+      GameCardChip(
+        selected: false,
+        icon: Icons.construction_rounded,
+        label: context.l10n.gamesInDevelopment,
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesNardy,
+        icon: Icons.hexagon_rounded,
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: widget.isOffline ? null : _cycleStake,
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: _showInDevelopment,
+        findLabel: context.l10n.gamesFindMatch,
+        findingLabel: context.l10n.commonSearching,
+        onFind: _showInDevelopment,
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: _showInDevelopment,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    );
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      title: context.l10n.rulesNardyTitle,
+      content: rulesTextLines(nardyRuleLines(
+        gameMode: _gameMode,
+        turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
+        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
 }
 
 class _InviteGameIcon extends StatelessWidget {

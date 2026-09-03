@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Vrhcáby",
+  "gamesNardyModeShort": "Krátké",
+  "gamesNardyModeLong": "Dlouhé",
+  "rulesNardyTitle": "Vrhcáby — pravidla",
+  "rulesNardyPlayers": "Hráči: 2.",
+  "rulesNardyMode": "Režim: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Deska o 24 bodech, po 15 kamenech. Dvě kostky: jeden kámen součet, nebo dva kameny jednotlivá oka.",
+  "rulesNardyPlayShort": "Krátké vrhcáby: jdete proti sobě a můžete tlouct osamocené kameny. Trefený jde na bar a musí vstoupit znovu. Až jsou všechny v domě, sundáváte je.",
+  "rulesNardyPlayLong": "Dlouhé vrhcáby: oba začínají z jedné hlavy a jdou stejným směrem. Z hlavy vyjde za tah nanejvýš jeden kámen. Tlouct se nesmí. Až jsou všechny v domě, sundáváte je.",
+  "rulesNardyWin": "Vyhrává ten, kdo první sundá všechny kameny.",
   "rulesUnoPlayers": "Hráči: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

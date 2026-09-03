@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Narda",
+  "gamesNardyModeShort": "Qisqa",
+  "gamesNardyModeLong": "Uzun",
+  "rulesNardyTitle": "Narda — qoidalar",
+  "rulesNardyPlayers": "O‘yinchilar: 2.",
+  "rulesNardyMode": "Rejim: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Doskada 24 punkt, har kimda 15 tosh. Ikki zar: bitta tosh bilan yig‘indiga yoki ikkitasi bilan zarning ochkolariga yurasiz.",
+  "rulesNardyPlayShort": "Qisqa narda: qarshi yurasiz va yolg‘iz toshlarni ura olasiz. Urilgan tosh barga chiqadi va qayta kirishi kerak. Hamma tosh uyda bo‘lsa, ularni doskadan olasiz.",
+  "rulesNardyPlayLong": "Uzun narda: ikkalasi ham bir boshdan boshlab bir tomonga yuradi. Boshdan bir yurishda faqat bitta tosh chiqadi. Urish mumkin emas. Hammasi uyda bo‘lsa, toshlarni olasiz.",
+  "rulesNardyWin": "Barcha toshlarini birinchi olgan g‘olib.",
   "rulesUnoPlayers": "Oʻyinchilar: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

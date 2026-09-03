@@ -688,6 +688,38 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Τάβλι';
+
+  @override
+  String get gamesNardyModeShort => 'Κοντό';
+
+  @override
+  String get gamesNardyModeLong => 'Μακρύ';
+
+  @override
+  String get rulesNardyTitle => 'Τάβλι — κανόνες';
+
+  @override
+  String get rulesNardyPlayers => 'Παίκτες: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Ταμπλό 24 θέσεων, 15 πούλια ο καθένας. Δύο ζάρια: ένα πούλι το άθροισμα ή δύο τα μάτια.';
+
+  @override
+  String get rulesNardyPlayShort => 'Κοντό τάβλι: προχωράτε αντίθετα και μπορείτε να χτυπάτε μονά πούλια. Το χτυπημένο πάει στη μπάρα και πρέπει να ξαναμπεί. Όταν όλα είναι στο σπίτι, τα βγάζετε.';
+
+  @override
+  String get rulesNardyPlayLong => 'Μακρύ τάβλι: και οι δύο ξεκινούν από το ίδιο κεφάλι και πάνε προς την ίδια κατεύθυνση. Από το κεφάλι βγαίνει το πολύ ένα πούλι ανά σειρά. Δεν επιτρέπεται χτύπημα. Όταν όλα είναι στο σπίτι, τα βγάζετε.';
+
+  @override
+  String get rulesNardyWin => 'Νικά όποιος βγάλει πρώτος όλα τα πούλια.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Παίκτες: $players.';
   }

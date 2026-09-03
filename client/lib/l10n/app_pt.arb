@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Pôquer",
   "gamesUno": "Uno",
+  "gamesNardy": "Gamão",
+  "gamesNardyModeShort": "Curto",
+  "gamesNardyModeLong": "Longo",
+  "rulesNardyTitle": "Gamão — regras",
+  "rulesNardyPlayers": "Jogadores: 2.",
+  "rulesNardyMode": "Modo: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Tabuleiro com 24 casas, 15 peças cada. Dois dados: uma peça a soma ou duas peças os pontos.",
+  "rulesNardyPlayShort": "Gamão curto: avançam um contra o outro e podem comer peças sozinhas. A comida vai à barra e deve reentrar. Quando todas estão em casa, retiram-nas.",
+  "rulesNardyPlayLong": "Gamão longo: os dois saem da mesma cabeça e vão no mesmo sentido. Só uma peça sai da cabeça por turno. Não se come. Quando todas estão em casa, retiram-nas.",
+  "rulesNardyWin": "Ganha quem primeiro retirar todas as peças.",
   "rulesUnoPlayers": "Jogadores: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

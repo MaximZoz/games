@@ -688,6 +688,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Kurz';
+
+  @override
+  String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — Regeln';
+
+  @override
+  String get rulesNardyPlayers => 'Spieler: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Brett mit 24 Punkten, je 15 Steine. Zwei Würfel: ein Stein die Summe oder zwei Steine die einzelnen Augen.';
+
+  @override
+  String get rulesNardyPlayShort => 'Kurzes Backgammon: ihr zieht aufeinander zu und dürft einzelne Steine schlagen. Ein geschlagener Stein kommt auf die Bar und muss wieder einsetzen. Sind alle Steine im Haus, werdet ihr sie ab.';
+
+  @override
+  String get rulesNardyPlayLong => 'Langes Backgammon: beide starten vom selben Kopf und ziehen in dieselbe Richtung. Pro Zug darf nur ein Stein den Kopf verlassen. Schlagen ist verboten. Sind alle im Haus, werdet ihr sie ab.';
+
+  @override
+  String get rulesNardyWin => 'Wer zuerst alle Steine abgetragen hat, gewinnt.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spieler: $players.';
   }

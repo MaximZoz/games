@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Backgammon",
+  "gamesNardyModeShort": "Kort",
+  "gamesNardyModeLong": "Lång",
+  "rulesNardyTitle": "Backgammon — regler",
+  "rulesNardyPlayers": "Spelare: 2.",
+  "rulesNardyMode": "Läge: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Bräde med 24 punkter, 15 brickor var. Två tärningar: en bricka summan eller två brickor ögonen.",
+  "rulesNardyPlayShort": "Kort backgammon: ni går mot varandra och får slå ensamma brickor. En slagen bricka hamnar på barren och måste in igen. När alla är i hemmet bär ni av dem.",
+  "rulesNardyPlayLong": "Långt backgammon: båda startar från samma huvud och går åt samma håll. Högst en bricka lämnar huvudet per drag. Slag är inte tillåtet. När alla är i hemmet bär ni av dem.",
+  "rulesNardyWin": "Den som först bär av alla brickor vinner.",
   "rulesUnoPlayers": "Spelare: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

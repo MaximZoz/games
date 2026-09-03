@@ -688,6 +688,38 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Kort';
+
+  @override
+  String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get rulesNardyTitle => 'Backgammon — regler';
+
+  @override
+  String get rulesNardyPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Tilstand: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Bræt med 24 punkter, 15 brikker hver. To terninger: én brik summen eller to brikker øjnene.';
+
+  @override
+  String get rulesNardyPlayShort => 'Kort backgammon: I går mod hinanden og må slå ensomme brikker. En slået brik går på barren og skal ind igen. Når alle er i hjemmet, tager I dem af.';
+
+  @override
+  String get rulesNardyPlayLong => 'Langt backgammon: begge starter fra samme hoved og går samme vej. Højst én brik forlader hovedet pr. tur. Slag er ikke tilladt. Når alle er i hjemmet, tager I dem af.';
+
+  @override
+  String get rulesNardyWin => 'Den, der først tager alle brikker af, vinder.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spillere: $players.';
   }

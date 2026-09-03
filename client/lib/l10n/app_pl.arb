@@ -254,6 +254,23 @@
   "rulesBattleshipWin": "The first to sink the entire enemy fleet wins.",
   "gamesPoker": "Poker",
   "gamesUno": "Uno",
+  "gamesNardy": "Nardy",
+  "gamesNardyModeShort": "Krótkie",
+  "gamesNardyModeLong": "Długie",
+  "rulesNardyTitle": "Nardy — zasady",
+  "rulesNardyPlayers": "Gracze: 2.",
+  "rulesNardyMode": "Tryb: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "Plansza z 24 pól, po 15 pionków. Dwie kości: wszystkie oczka jednym pionkiem albo każdą kością osobno.",
+  "rulesNardyPlayShort": "Krótkie nardy: idziecie naprzeciw i możecie zbijać samotne pionki. zbity idzie na bar i musi wejść ponownie. Gdy wszystkie są w domu, zdejmujecie je.",
+  "rulesNardyPlayLong": "Długie nardy: obaj startują z jednej głowy i idą w tę samą stronę. Z głowy w turze wychodzi najwyżej jeden pionek. Zbijać nie wolno. Gdy wszystkie są w domu, zdejmujecie je.",
+  "rulesNardyWin": "Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.",
   "rulesUnoPlayers": "Gracze: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

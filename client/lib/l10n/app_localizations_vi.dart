@@ -688,6 +688,38 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesUno => 'Uno';
 
   @override
+  String get gamesNardy => 'Cờ Backgammon';
+
+  @override
+  String get gamesNardyModeShort => 'Ngắn';
+
+  @override
+  String get gamesNardyModeLong => 'Dài';
+
+  @override
+  String get rulesNardyTitle => 'Cờ Backgammon — luật';
+
+  @override
+  String get rulesNardyPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'Bàn 24 ô, mỗi bên 15 quân. Hai xúc xắc: một quân tổng hoặc hai quân từng nút.';
+
+  @override
+  String get rulesNardyPlayShort => 'Cờ ngắn: đi ngược chiều và có thể ăn quân đơn. Quân bị ăn lên bar và phải vào lại. Khi tất cả về nhà thì gỡ chúng.';
+
+  @override
+  String get rulesNardyPlayLong => 'Cờ dài: cả hai xuất phát cùng một đầu và cùng chiều. Mỗi lượt chỉ một quân rời đầu. Không được ăn. Khi tất cả về nhà thì gỡ chúng.';
+
+  @override
+  String get rulesNardyWin => 'Ai gỡ hết quân trước sẽ thắng.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Người chơi: $players.';
   }

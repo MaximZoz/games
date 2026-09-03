@@ -688,6 +688,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesUno => 'أونو';
 
   @override
+  String get gamesNardy => 'النرد';
+
+  @override
+  String get gamesNardyModeShort => 'قصيرة';
+
+  @override
+  String get gamesNardyModeLong => 'طويلة';
+
+  @override
+  String get rulesNardyTitle => 'النرد — القواعد';
+
+  @override
+  String get rulesNardyPlayers => 'اللاعبون: 2.';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String get rulesNardyIntro => 'لوحة من 24 نقطة، 15 حجرًا لكل لاعب. نردان: حجر واحد للمجموع أو حجران لقيمتي النرد.';
+
+  @override
+  String get rulesNardyPlayShort => 'النرد القصير: تتحركان نحو بعضكما ويمكن ضرب الحجارة المنفردة. الحجر المضروب يذهب إلى الحاجز ويجب أن يدخل من جديد. عندما تكون كل الحجارة في البيت تُخرجها.';
+
+  @override
+  String get rulesNardyPlayLong => 'النرد الطويل: يبدأ الاثنان من الرأس نفسه ويسيرن في اتجاه واحد. يخرج من الرأس حجر واحد في الدور. لا يُسمح بالضرب. عندما تكون كلها في البيت تُخرجها.';
+
+  @override
+  String get rulesNardyWin => 'يفوز من يُخرج كل أحجاره أولًا.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'اللاعبون: $players.';
   }

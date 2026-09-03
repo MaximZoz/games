@@ -688,6 +688,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesUno => '乌诺';
 
   @override
+  String get gamesNardy => '西洋双陆';
+
+  @override
+  String get gamesNardyModeShort => '短盘';
+
+  @override
+  String get gamesNardyModeLong => '长盘';
+
+  @override
+  String get rulesNardyTitle => '西洋双陆 — 规则';
+
+  @override
+  String get rulesNardyPlayers => '玩家：2 人。';
+
+  @override
+  String rulesNardyMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String get rulesNardyIntro => '24 点棋盘，每人 15 枚棋子。两枚骰子：一枚棋子走总和，或两枚分别走点数。';
+
+  @override
+  String get rulesNardyPlayShort => '短盘：相向而行，可打对方单子。被打的棋子上栏后须重新进入。全部进入本营后即可出局。';
+
+  @override
+  String get rulesNardyPlayLong => '长盘：双方从同一头出发、同向而行。每回合最多从开头走出一枚棋。不可打子。全部进入本营后出局。';
+
+  @override
+  String get rulesNardyWin => '先将全部棋子出局者获胜。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '玩家：$players。';
   }
