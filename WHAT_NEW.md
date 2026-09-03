@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак: раздача собирает веер по одной карте из полёта, без вспышки всей руки; бросок на стол не мигает кнопками и картами
 - Из партии в сообщениях остаются звук стола и тик своего хода; бейдж «ваш ход» в меню по-прежнему сигналит
 - Уно в альбоме: подписи «Колода» и «Сброс» помещаются в зелёный овал, а не садятся на его край
 - Покер и другие игры: кнопку своего хода нельзя нажать дважды — повторный клик не шлёт ход и не показывает «Сейчас не ваш ход»
@@ -56,6 +57,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak: the deal builds the fan one flying card at a time instead of flashing the whole hand; throws no longer flicker buttons or table cards
 - Opening Messages from a live table keeps the game sounds and turn-clock ticks; the Games-tab “your turn” badge still alerts
 - Uno in landscape: the Draw / Discard labels stay inside the green oval instead of sitting on its rim
 - Poker and the other tables: you cannot tap your turn action twice — the second click does not send a move or show “It is not your turn”

@@ -225,8 +225,8 @@ void main() {
       );
       expect(fly.width, greaterThanOrEqualTo(36));
       expect(fly.height, greaterThanOrEqualTo(50));
-      expect(durakDealFlyDuration(compact: true).inMilliseconds, 220);
-      expect(durakDealFlyDuration(compact: false).inMilliseconds, 160);
+      expect(durakDealFlyDuration(compact: true).inMilliseconds, 260);
+      expect(durakDealFlyDuration(compact: false).inMilliseconds, 240);
     });
 
     test('запас стола под кнопку в альбоме', () {
@@ -346,8 +346,28 @@ void main() {
         ),
         isTrue,
       );
-      expect(durakStuckSnapTicks(compact: true), 1);
+      expect(durakStuckSnapTicks(compact: true), 2);
       expect(durakStuckSnapTicks(compact: false), 3);
+      expect(durakStuckSnapTicks(compact: true, openingDeal: true), 5);
+      expect(
+        durakActionChromeVisible(
+          liveCanShow: true,
+          holdingFanCard: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakActionChromeVisible(
+          liveCanShow: true,
+          holdingFanCard: true,
+        ),
+        isFalse,
+      );
+      expect(durakRevealTableBeforeDismissOverlay(tableCardVisible: true), isTrue);
+      expect(
+        durakRevealTableBeforeDismissOverlay(tableCardVisible: false),
+        isFalse,
+      );
     });
 
     test('добор не в веере, пока карта pending — даже во время полёта', () {
