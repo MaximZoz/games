@@ -423,4 +423,138 @@ void main() {
       expect(notifiedEmpty, isTrue);
     });
   });
+
+  group('durak played-away fan', () {
+    const sixClubs = PlayingCard(Rank.six, Suit.clubs);
+    const aceSpades = PlayingCard(Rank.ace, Suit.spades);
+    const kingHearts = PlayingCard(Rank.king, Suit.hearts);
+
+    test('ход убирает карту из веера, взятие — нет', () {
+      expect(
+        durakCardLeftHandForPlay(
+          markedPlayedAway: true,
+          optimisticAttack: false,
+          flyingToTable: false,
+          flyingFromHand: true,
+          incomingToFan: false,
+          inHandOrder: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakCardLeftHandForPlay(
+          markedPlayedAway: false,
+          optimisticAttack: false,
+          flyingToTable: false,
+          flyingFromHand: true,
+          incomingToFan: false,
+          inHandOrder: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakCardLeftHandForPlay(
+          markedPlayedAway: true,
+          optimisticAttack: false,
+          flyingToTable: false,
+          flyingFromHand: false,
+          incomingToFan: true,
+          inHandOrder: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('устаревшая рука сервера не возвращает сыгранную карту в order', () {
+      final next = durakMergeHandOrderAfterMove(
+        prevOrder: const [aceSpades, kingHearts],
+        serverHand: const [sixClubs, aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+      );
+      expect(next, const [aceSpades, kingHearts]);
+    });
+
+    test('до посадки дырка остаётся в том же месте веера', () {
+      expect(
+        durakFanKeepsHoleSlot(
+          inLocalOrder: true,
+          incomingToFan: false,
+          markedPlayedAway: true,
+          flyingFromHand: true,
+        ),
+        isTrue,
+      );
+      final holes = durakOrderedHandSlots(
+        prevOrder: const [sixClubs, aceSpades, kingHearts],
+        serverHand: const [aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+        holeCards: {sixClubs},
+      );
+      expect(holes, const [sixClubs, aceSpades, kingHearts]);
+      final kept = durakMergeHandOrderAfterMove(
+        prevOrder: const [sixClubs, aceSpades, kingHearts],
+        serverHand: const [aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+      );
+      expect(kept, const [sixClubs, aceSpades, kingHearts]);
+    });
+
+    test('после посадки устаревший снимок не возвращает карту в слоты', () {
+      final slots = durakOrderedHandSlots(
+        prevOrder: const [aceSpades, kingHearts],
+        serverHand: const [sixClubs, aceSpades, kingHearts],
+        pendingDeal: const {},
+        leavingHand: {sixClubs},
+        holeCards: {sixClubs},
+      );
+      expect(slots, const [aceSpades, kingHearts]);
+    });
+
+    test('после хода карта gone, даже если снова попала в order', () {
+      final gone = durakCardsGoneFromFan(
+        playedAway: const [sixClubs],
+        optimisticAttacks: const [],
+        flyingToTable: const [],
+        flyingFromHand: const [],
+        incomingFanCards: const [],
+        handOrder: const [sixClubs, aceSpades],
+      );
+      expect(gone, contains(sixClubs));
+      expect(gone, isNot(contains(aceSpades)));
+    });
+
+    test('взятие: полёт из руки при слоте в order — не gone', () {
+      final gone = durakCardsGoneFromFan(
+        playedAway: const [],
+        optimisticAttacks: const [],
+        flyingToTable: const [],
+        flyingFromHand: const [sixClubs],
+        incomingFanCards: const [sixClubs],
+        handOrder: const [sixClubs, aceSpades],
+      );
+      expect(gone, isEmpty);
+    });
+
+    test('сыгранную не забываем, пока не сядет обратно в веер', () {
+      expect(
+        durakRetainPlayedAway(
+          playedAway: const [sixClubs, aceSpades],
+          incomingFanCards: const [],
+          pendingDealCards: const [],
+        ),
+        {sixClubs, aceSpades},
+      );
+      expect(
+        durakRetainPlayedAway(
+          playedAway: const [sixClubs, aceSpades],
+          incomingFanCards: const [sixClubs],
+          pendingDealCards: const [],
+        ),
+        {aceSpades},
+      );
+    });
+  });
 }

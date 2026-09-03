@@ -42,6 +42,44 @@ void main() {
         isTrue,
       );
     });
+
+    test('поворот — ширина и высота поменялись местами', () {
+      expect(
+        overlaySpaceLooksRotated(const Size(390, 844), const Size(844, 390)),
+        isTrue,
+      );
+      expect(
+        overlaySpaceLooksRotated(const Size(800, 360), const Size(800, 240)),
+        isFalse,
+      );
+    });
+
+    test('во время хода джиттер рейла не snap, поворот — snap', () {
+      expect(
+        durakShouldSnapOverlaySpace(
+          previous: const Size(800, 360),
+          next: const Size(800, 240),
+          playInFlight: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldSnapOverlaySpace(
+          previous: const Size(390, 844),
+          next: const Size(844, 390),
+          playInFlight: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShouldSnapOverlaySpace(
+          previous: const Size(800, 360),
+          next: const Size(800, 240),
+          playInFlight: false,
+        ),
+        isTrue,
+      );
+    });
   });
 
   group('durakFinishedChrome', () {
