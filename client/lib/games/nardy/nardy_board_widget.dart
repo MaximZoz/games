@@ -233,28 +233,36 @@ class _NardyBoardState extends State<NardyBoard> {
     required bool mine,
   }) {
     final spots = widget.tracker.spotsFor(game, seat);
-    final diameter = geometry.checkerSize;
     return [
       for (final spot in spots)
         if (!_hiddenWhileDragging(spot, mine: mine))
-          AnimatedPositioned(
-            key: ValueKey('nardy-checker-$seat-${spot.id}'),
-            duration: NardyBoard.moveDuration,
-            curve: Curves.easeOutCubic,
-            left: _centerOf(geometry, spot, mine: mine).dx - diameter / 2,
-            top: _centerOf(geometry, spot, mine: mine).dy - diameter / 2,
-            width: diameter,
-            height: diameter,
-            child: IgnorePointer(
-              child: _Checker(
-                mine: mine,
-                diameter: diameter,
-                label: _stackLabel(spot),
-                dimmed: spot.isOff,
+          () {
+            final diameter = _diameterOf(geometry, spot);
+            final center = _centerOf(geometry, spot, mine: mine);
+            return AnimatedPositioned(
+              key: ValueKey('nardy-checker-$seat-${spot.id}'),
+              duration: NardyBoard.moveDuration,
+              curve: Curves.easeOutCubic,
+              left: center.dx - diameter / 2,
+              top: center.dy - diameter / 2,
+              width: diameter,
+              height: diameter,
+              child: IgnorePointer(
+                child: _Checker(
+                  mine: mine,
+                  diameter: diameter,
+                  dimmed: spot.isOff,
+                ),
               ),
-            ),
-          ),
+            );
+          }(),
     ];
+  }
+
+  /// Шашки в высокой стопке мельче: так в пункт влезают все, без числа сверху.
+  double _diameterOf(NardyBoardGeometry geometry, NardyCheckerSpot spot) {
+    if (spot.onBar || spot.isOff) return geometry.checkerSize;
+    return geometry.stackCheckerSize(spot.stackSize);
   }
 
   /// Верхняя шашка стопки едет за пальцем — из стопки её убираем.
@@ -286,13 +294,6 @@ class _NardyBoardState extends State<NardyBoard> {
     final point = nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
     final track = nardyBoardToTrack(game.gameMode, game.myIndex, point);
     return track < 0 ? oppTrack : track;
-  }
-
-  String? _stackLabel(NardyCheckerSpot spot) {
-    if (spot.isOff || spot.onBar) return null;
-    final visible = NardyBoardGeometry.visibleInStack(spot.stackSize);
-    if (spot.stackSize <= visible) return null;
-    return spot.index == visible - 1 ? '${spot.stackSize}' : null;
   }
 
   List<Widget> _buildTrayLabels(
@@ -484,13 +485,11 @@ class _Checker extends StatelessWidget {
   const _Checker({
     required this.mine,
     required this.diameter,
-    this.label,
     this.dimmed = false,
   });
 
   final bool mine;
   final double diameter;
-  final String? label;
   final bool dimmed;
 
   @override
@@ -499,8 +498,7 @@ class _Checker extends StatelessWidget {
     final edge = mine ? _kMyCheckerEdge : _kOppCheckerEdge;
     return Opacity(
       opacity: dimmed ? 0.85 : 1,
-      child: Container(
-        alignment: Alignment.center,
+      child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -522,16 +520,6 @@ class _Checker extends StatelessWidget {
             ),
           ],
         ),
-        child: label == null
-            ? null
-            : Text(
-                label!,
-                style: TextStyle(
-                  fontSize: diameter * 0.44,
-                  fontWeight: FontWeight.w900,
-                  color: mine ? _kOppCheckerEdge : Colors.white,
-                ),
-              ),
       ),
     );
   }

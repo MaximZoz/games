@@ -97,11 +97,15 @@ void main() {
     final after = positions();
     // Ключи те же — значит Flutter не пересоздал шашки, а поедет анимацией.
     expect(after.keys.toSet(), before.keys.toSet());
-    final moved = [
+    // На другой пункт уезжает ровно одна шашка. Остальные остаются в своей
+    // колонке: стопка лишь переукладывается по высоте, когда шашек стало
+    // меньше, — по вертикали они смещаются, но столбец не меняют.
+    final changedColumn = [
       for (final entry in after.entries)
-        if ((entry.value - before[entry.key]!).distance > 1) entry.key,
+        if ((entry.value.dx - before[entry.key]!.dx).abs() > 1) entry.key,
     ];
-    expect(moved, hasLength(1), reason: 'поехать должна ровно одна шашка');
+    expect(changedColumn, hasLength(1),
+        reason: 'на другой пункт должна уехать ровно одна шашка');
 
     // Анимация действительно идёт: к середине шашка ещё в пути.
     await tester.pump(const Duration(milliseconds: 120));
