@@ -13,6 +13,8 @@ class FramedButton extends StatelessWidget {
     this.danger = false,
     this.padding,
     this.minHeight = 44,
+    this.fontSize = 14,
+    this.iconSize = 20,
   });
 
   final String label;
@@ -23,6 +25,8 @@ class FramedButton extends StatelessWidget {
   final bool danger;
   final EdgeInsetsGeometry? padding;
   final double minHeight;
+  final double fontSize;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -51,18 +55,22 @@ class FramedButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 20, color: fg),
-                      const SizedBox(width: 8),
+                      Icon(icon, size: iconSize, color: fg),
+                      SizedBox(width: iconSize < 18 ? 4 : 8),
                     ],
                     Flexible(
-                      child: Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: fg,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          softWrap: false,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: fg,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
