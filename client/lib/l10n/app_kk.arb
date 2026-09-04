@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Бүгінгі сыйлық қолжетімді",
   "coinsLoginStreak": "Күнделікті кіру сериясы",
   "coinsFriendReward": "Дос сыйлығы",
+  "coinsTasks": "Тапсырмалар",
+  "coinsTasksSubtitle": "Профиль, достар және ойын марапаттары",
+  "coinsTasksRewards": "Алынатын марапаттар бар",
   "coinsFriendRewardHint": "Сілтемеңіз арқылы тіркелу үшін +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

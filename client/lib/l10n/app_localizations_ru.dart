@@ -1655,6 +1655,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get coinsFriendReward => 'Монеты за друга';
 
   @override
+  String get coinsTasks => 'Задания';
+
+  @override
+  String get coinsTasksSubtitle => 'Награды за профиль, друзей и игры';
+
+  @override
+  String get coinsTasksRewards => 'Есть награды к получению';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount за регистрацию по ссылке';
   }

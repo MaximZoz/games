@@ -1655,6 +1655,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coinsFriendReward => '친구 보상';
 
   @override
+  String get coinsTasks => '과제';
+
+  @override
+  String get coinsTasksSubtitle => '프로필, 친구, 게임 보상';
+
+  @override
+  String get coinsTasksRewards => '받을 수 있는 보상이 있습니다';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '내 링크로 가입 시 +$amount';
   }

@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Dagens belöning tillgänglig",
   "coinsLoginStreak": "Daglig inloggningsstreak",
   "coinsFriendReward": "Vänbelöning",
+  "coinsTasks": "Uppgifter",
+  "coinsTasksSubtitle": "Belöningar för profil, vänner och matcher",
+  "coinsTasksRewards": "Belöningar att hämta",
   "coinsFriendRewardHint": "+{amount} för registrering via din länk",
   "@coinsFriendRewardHint": {
     "placeholders": {

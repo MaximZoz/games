@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "مكافأة اليوم متاحة",
   "coinsLoginStreak": "سلسلة تسجيل الدخول اليومية",
   "coinsFriendReward": "مكافأة الصديق",
+  "coinsTasks": "المهام",
+  "coinsTasksSubtitle": "مكافآت الملف الشخصي والأصدقاء والألعاب",
+  "coinsTasksRewards": "هناك مكافآت جاهزة للاستلام",
   "coinsFriendRewardHint": "+{amount} للتسجيل عبر رابطك",
   "@coinsFriendRewardHint": {
     "placeholders": {

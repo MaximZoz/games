@@ -3281,6 +3281,24 @@ abstract class AppLocalizations {
   /// **'Монеты за друга'**
   String get coinsFriendReward;
 
+  /// No description provided for @coinsTasks.
+  ///
+  /// In ru, this message translates to:
+  /// **'Задания'**
+  String get coinsTasks;
+
+  /// No description provided for @coinsTasksSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Награды за профиль, друзей и игры'**
+  String get coinsTasksSubtitle;
+
+  /// No description provided for @coinsTasksRewards.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть награды к получению'**
+  String get coinsTasksRewards;
+
   /// No description provided for @coinsFriendRewardHint.
   ///
   /// In ru, this message translates to:

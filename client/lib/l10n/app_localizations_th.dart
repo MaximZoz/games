@@ -1655,6 +1655,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get coinsFriendReward => 'รางวัลเพื่อน';
 
   @override
+  String get coinsTasks => 'ภารกิจ';
+
+  @override
+  String get coinsTasksSubtitle => 'รางวัลสำหรับโปรไฟล์ เพื่อน และเกม';
+
+  @override
+  String get coinsTasksRewards => 'มีรางวัลพร้อมรับ';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount สำหรับการสมัครผ่านลิงก์ของคุณ';
   }

@@ -445,6 +445,8 @@ class AppShell extends ConsumerWidget {
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
     final achievementsUnclaimed =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final tasksUnclaimed =
+        ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncomeAvailable =
         ref.watch(collectionIncomeAvailableProvider);
     final unreadGiftedCollections =
@@ -452,6 +454,7 @@ class AppShell extends ConsumerWidget {
     // На «Главной» суммируем daily + достижения + доход + подарки коллекций.
     final homeBadgeCount = dailyRewardCount +
         achievementsUnclaimed +
+        tasksUnclaimed +
         (collectionIncomeAvailable ? 1 : 0) +
         unreadGiftedCollections;
     final media = MediaQuery.of(context);

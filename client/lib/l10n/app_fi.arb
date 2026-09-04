@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Päivän palkinto saatavilla",
   "coinsLoginStreak": "Päivittäinen kirjautumisputki",
   "coinsFriendReward": "Kaveripalkinto",
+  "coinsTasks": "Tehtävät",
+  "coinsTasksSubtitle": "Palkinnot profiilista, kavereista ja peleistä",
+  "coinsTasksRewards": "Noudettavissa olevia palkintoja",
   "coinsFriendRewardHint": "+{amount} rekisteröitymisestä linkkisi kautta",
   "@coinsFriendRewardHint": {
     "placeholders": {

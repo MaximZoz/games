@@ -1655,6 +1655,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get coinsFriendReward => 'Arkadaş ödülü';
 
   @override
+  String get coinsTasks => 'Görevler';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, arkadaş ve oyun ödülleri';
+
+  @override
+  String get coinsTasksRewards => 'Alınabilir ödüller var';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Bağlantınızla kayıt için +$amount';
   }

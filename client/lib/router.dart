@@ -368,6 +368,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         pageBuilder: (_, state) =>
                             _noTransitionPage(state, const CoinsFriendScreen()),
                       ),
+                      GoRoute(
+                        path: 'tasks',
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state,
+                          const AchievementsScreen(asTasks: true),
+                        ),
+                      ),
                     ],
                   ),
                 ],

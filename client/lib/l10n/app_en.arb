@@ -679,6 +679,9 @@
   "coinsLoginAvailableToday": "Today's reward available",
   "coinsLoginStreak": "Daily login streak",
   "coinsFriendReward": "Friend reward",
+  "coinsTasks": "Tasks",
+  "coinsTasksSubtitle": "Rewards for profile, friends and games",
+  "coinsTasksRewards": "Rewards available to claim",
   "coinsFriendRewardHint": "+{amount} for signing up via your link",
   "@coinsFriendRewardHint": {
     "placeholders": {

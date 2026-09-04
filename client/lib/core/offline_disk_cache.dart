@@ -19,6 +19,7 @@ class OfflineDiskCache {
   static final Map<String, InventoryCapabilities> _memCapabilities = {};
   static final Map<String, UserGameSettings> _memGameSettings = {};
   static final Map<String, List<AchievementItem>> _memAchievements = {};
+  static final Map<String, List<AchievementItem>> _memTasks = {};
   static final Map<String, CollectionIncomeInfo> _memCollectionIncome = {};
   static final Map<String, DailyRewardStatus> _memDailyReward = {};
 
@@ -186,35 +187,82 @@ class OfflineDiskCache {
     String userId,
     List<AchievementItem> items,
   ) async {
-    _memAchievements[userId] = List<AchievementItem>.from(items);
+    final frames = filterAchievementItems(items);
+    _memAchievements[userId] = List<AchievementItem>.from(frames);
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         _k(userId, 'achievements'),
-        jsonEncode(items.map((e) => e.toJson()).toList()),
+        jsonEncode(frames.map((e) => e.toJson()).toList()),
       );
     } catch (_) {}
+  }
+
+  static List<AchievementItem>? _decodeRewardList(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    final list = jsonDecode(raw);
+    if (list is! List) return null;
+    return list
+        .whereType<Map>()
+        .map((e) => AchievementItem.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
   }
 
   static Future<List<AchievementItem>?> loadAchievements(String userId) async {
     final mem = _memAchievements[userId];
     if (mem != null && mem.isNotEmpty) {
-      return List<AchievementItem>.from(mem);
+      return filterAchievementItems(mem);
     }
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_k(userId, 'achievements'));
-      if (raw == null || raw.isEmpty) return mem;
-      final list = jsonDecode(raw);
-      if (list is! List) return mem;
-      final loaded = list
-          .whereType<Map>()
-          .map((e) => AchievementItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-      if (loaded.isNotEmpty) _memAchievements[userId] = loaded;
-      return loaded;
+      final loaded = _decodeRewardList(prefs.getString(_k(userId, 'achievements')));
+      if (loaded == null) {
+        return mem == null ? null : filterAchievementItems(mem);
+      }
+      final frames = filterAchievementItems(loaded);
+      if (frames.isNotEmpty) _memAchievements[userId] = frames;
+      return frames;
     } catch (_) {
-      return mem;
+      return mem == null ? null : filterAchievementItems(mem);
+    }
+  }
+
+  static Future<void> saveTasks(
+    String userId,
+    List<AchievementItem> items,
+  ) async {
+    final tasks = filterTaskItems(items);
+    _memTasks[userId] = List<AchievementItem>.from(tasks);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _k(userId, 'tasks'),
+        jsonEncode(tasks.map((e) => e.toJson()).toList()),
+      );
+    } catch (_) {}
+  }
+
+  static Future<List<AchievementItem>?> loadTasks(String userId) async {
+    final mem = _memTasks[userId];
+    if (mem != null && mem.isNotEmpty) {
+      return filterTaskItems(mem);
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final loaded = _decodeRewardList(prefs.getString(_k(userId, 'tasks')));
+      if (loaded != null) {
+        final tasks = filterTaskItems(loaded);
+        if (tasks.isNotEmpty) _memTasks[userId] = tasks;
+        return tasks;
+      }
+      // Старый кэш держал задания вместе с достижениями.
+      final legacy = _decodeRewardList(prefs.getString(_k(userId, 'achievements')));
+      if (legacy == null) return mem;
+      final extracted = filterTaskItems(legacy);
+      if (extracted.isNotEmpty) _memTasks[userId] = extracted;
+      return extracted.isEmpty ? mem : extracted;
+    } catch (_) {
+      return mem == null ? null : filterTaskItems(mem);
     }
   }
 

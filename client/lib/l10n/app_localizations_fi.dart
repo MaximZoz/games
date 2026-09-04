@@ -1655,6 +1655,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get coinsFriendReward => 'Kaveripalkinto';
 
   @override
+  String get coinsTasks => 'Tehtävät';
+
+  @override
+  String get coinsTasksSubtitle => 'Palkinnot profiilista, kavereista ja peleistä';
+
+  @override
+  String get coinsTasksRewards => 'Noudettavissa olevia palkintoja';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount rekisteröitymisestä linkkisi kautta';
   }

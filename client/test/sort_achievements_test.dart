@@ -47,4 +47,25 @@ void main() {
     expect(sorted.first.status, 'unlocked');
     expect(sorted.last.status, 'weird');
   });
+
+  test('task codes leave achievements and stay in tasks', () {
+    final mixed = [
+      item('profile_complete', 'unlocked'),
+      item('wins_bronze_10', 'locked'),
+      item('games_10', 'claimed'),
+      item('friends_5', 'locked'),
+      item('wins_gold_10', 'unlocked'),
+    ];
+    expect(filterAchievementItems(mixed).map((e) => e.code), [
+      'wins_bronze_10',
+      'wins_gold_10',
+    ]);
+    expect(filterTaskItems(mixed).map((e) => e.code), [
+      'profile_complete',
+      'games_10',
+      'friends_5',
+    ]);
+    expect(isTaskAchievementCode('friends_5'), isTrue);
+    expect(isTaskAchievementCode('wins_silver_10'), isFalse);
+  });
 }

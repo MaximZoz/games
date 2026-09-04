@@ -1655,6 +1655,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get coinsFriendReward => 'Ricompensa amico';
 
   @override
+  String get coinsTasks => 'Missioni';
+
+  @override
+  String get coinsTasksSubtitle => 'Ricompense per profilo, amici e partite';
+
+  @override
+  String get coinsTasksRewards => 'Ricompense da riscattare';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount per la registrazione tramite il tuo link';
   }

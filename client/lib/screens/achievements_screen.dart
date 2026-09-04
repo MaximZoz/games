@@ -18,7 +18,10 @@ import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class AchievementsScreen extends ConsumerStatefulWidget {
-  const AchievementsScreen({super.key});
+  const AchievementsScreen({super.key, this.asTasks = false});
+
+  /// Экран заданий внутри «Монет» — тот же UI, другой каталог.
+  final bool asTasks;
 
   @override
   ConsumerState<AchievementsScreen> createState() => _AchievementsScreenState();
@@ -38,7 +41,9 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     // Сразу рисуем кэш, сортировку обновляем фоном без спиннера.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final cached = ref.read(achievementsListProvider).valueOrNull;
+      final cached = widget.asTasks
+          ? ref.read(tasksListProvider).valueOrNull
+          : ref.read(achievementsListProvider).valueOrNull;
       if (cached != null && cached.isNotEmpty) {
         setState(() => _items = sortAchievements(cached));
       }
@@ -48,12 +53,18 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
 
   Future<void> _reloadSilent() async {
     try {
-      final items = await ref.read(achievementsRepositoryProvider).list();
+      final repo = ref.read(achievementsRepositoryProvider);
+      final items =
+          widget.asTasks ? await repo.listTasks() : await repo.list();
       if (!mounted) return;
       final sorted = sortAchievements(items);
       setState(() => _items = sorted);
       // Обновляем кэш провайдера без loading-состояния.
-      ref.invalidate(achievementsUnclaimedCountProvider);
+      if (widget.asTasks) {
+        ref.invalidate(tasksUnclaimedCountProvider);
+      } else {
+        ref.invalidate(achievementsUnclaimedCountProvider);
+      }
     } catch (_) {
       // Оставляем то, что уже на экране.
     }
@@ -103,13 +114,19 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
             .read(authStateProvider.notifier)
             .applyBalance(result.balanceBronze);
       }
-      ref.invalidate(achievementsUnclaimedCountProvider);
+      if (widget.asTasks) {
+        ref.invalidate(tasksUnclaimedCountProvider);
+      } else {
+        ref.invalidate(achievementsUnclaimedCountProvider);
+      }
       ref.invalidate(inventoryCapabilitiesProvider);
       ref.invalidate(inventoryListProvider);
       // Тихо подтянуть актуальный список в кэш (без спиннера на UI).
       unawaited(() async {
         try {
-          final fresh = await ref.read(achievementsRepositoryProvider).list();
+          final repo = ref.read(achievementsRepositoryProvider);
+          final fresh =
+              widget.asTasks ? await repo.listTasks() : await repo.list();
           // Не дергаем invalidate list — иначе FutureProvider уйдёт в loading.
           if (mounted) {
             setState(() => _items = sortAchievements(fresh));
@@ -135,7 +152,9 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     void goBack() => context.pop();
 
     // Подхватываем кэш провайдера, если локальный список ещё пуст.
-    final cached = ref.watch(achievementsListProvider).valueOrNull;
+    final cached = widget.asTasks
+        ? ref.watch(tasksListProvider).valueOrNull
+        : ref.watch(achievementsListProvider).valueOrNull;
     final items = _items.isNotEmpty
         ? _items
         : (cached != null ? sortAchievements(cached) : const <AchievementItem>[]);
@@ -154,7 +173,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
             tooltip: l10n.commonBack,
           ),
           title: Text(
-            l10n.homeAchievements,
+            widget.asTasks ? l10n.coinsTasks : l10n.homeAchievements,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,

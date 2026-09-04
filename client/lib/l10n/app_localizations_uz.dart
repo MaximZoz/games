@@ -1655,6 +1655,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String get coinsFriendReward => 'Do‘st mukofoti';
 
   @override
+  String get coinsTasks => 'Vazifalar';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, do‘stlar va o‘yin mukofotlari';
+
+  @override
+  String get coinsTasksRewards => 'Olish uchun mukofotlar bor';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Havolangiz orqali ro‘yxatdan o‘tish uchun +$amount';
   }

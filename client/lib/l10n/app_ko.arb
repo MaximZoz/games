@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "오늘의 보상 수령 가능",
   "coinsLoginStreak": "일일 로그인 연속",
   "coinsFriendReward": "친구 보상",
+  "coinsTasks": "과제",
+  "coinsTasksSubtitle": "프로필, 친구, 게임 보상",
+  "coinsTasksRewards": "받을 수 있는 보상이 있습니다",
   "coinsFriendRewardHint": "내 링크로 가입 시 +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

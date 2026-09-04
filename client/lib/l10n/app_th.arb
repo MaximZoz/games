@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "รางวัลวันนี้พร้อมรับ",
   "coinsLoginStreak": "เข้าสู่ระบบต่อเนื่องรายวัน",
   "coinsFriendReward": "รางวัลเพื่อน",
+  "coinsTasks": "ภารกิจ",
+  "coinsTasksSubtitle": "รางวัลสำหรับโปรไฟล์ เพื่อน และเกม",
+  "coinsTasksRewards": "มีรางวัลพร้อมรับ",
   "coinsFriendRewardHint": "+{amount} สำหรับการสมัครผ่านลิงก์ของคุณ",
   "@coinsFriendRewardHint": {
     "placeholders": {

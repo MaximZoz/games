@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Dagens belønning er tilgjengelig",
   "coinsLoginStreak": "Daglig innloggingsrekke",
   "coinsFriendReward": "Vennebelønning",
+  "coinsTasks": "Oppgaver",
+  "coinsTasksSubtitle": "Belønninger for profil, venner og spill",
+  "coinsTasksRewards": "Belønninger klare til å hentes",
   "coinsFriendRewardHint": "+{amount} for registrering via lenken din",
   "@coinsFriendRewardHint": {
     "placeholders": {

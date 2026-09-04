@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "今日の報酬を受け取れます",
   "coinsLoginStreak": "毎日ログイン連続記録",
   "coinsFriendReward": "フレンド報酬",
+  "coinsTasks": "クエスト",
+  "coinsTasksSubtitle": "プロフィール・フレンド・対局の報酬",
+  "coinsTasksRewards": "受け取れる報酬があります",
   "coinsFriendRewardHint": "あなたのリンクからの登録で +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

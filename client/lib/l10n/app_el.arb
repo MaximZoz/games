@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Η σημερινή ανταμοιβή είναι διαθέσιμη",
   "coinsLoginStreak": "Καθημερινή σειρά συνδέσεων",
   "coinsFriendReward": "Ανταμοιβή φίλου",
+  "coinsTasks": "Αποστολές",
+  "coinsTasksSubtitle": "Ανταμοιβές για προφίλ, φίλους και παιχνίδια",
+  "coinsTasksRewards": "Διαθέσιμες ανταμοιβές προς διεκδίκηση",
   "coinsFriendRewardHint": "+{amount} για εγγραφή μέσω του συνδέσμου σας",
   "@coinsFriendRewardHint": {
     "placeholders": {

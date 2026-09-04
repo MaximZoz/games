@@ -36,16 +36,18 @@ final achievementsListProvider =
   final offline = ref.watch(isOfflineProvider);
   if (offline) {
     final cached = await OfflineDiskCache.loadAchievements(auth.id);
-    return sortAchievements(cached ?? const []);
+    return sortAchievements(filterAchievementItems(cached ?? const []));
   }
   try {
     final items = await ref.watch(achievementsRepositoryProvider).list();
-    final sorted = sortAchievements(items);
+    final sorted = sortAchievements(filterAchievementItems(items));
     await OfflineDiskCache.saveAchievements(auth.id, sorted);
     return sorted;
   } catch (_) {
     final cached = await OfflineDiskCache.loadAchievements(auth.id);
-    if (cached != null) return sortAchievements(cached);
+    if (cached != null) {
+      return sortAchievements(filterAchievementItems(cached));
+    }
     rethrow;
   }
 });
@@ -58,12 +60,52 @@ final achievementsUnclaimedCountProvider =
   if (offline) {
     final cached = await OfflineDiskCache.loadAchievements(auth.id);
     if (cached == null) return 0;
-    return cached.where((e) => e.isUnlocked).length;
+    return filterAchievementItems(cached).where((e) => e.isUnlocked).length;
   }
   try {
     return await ref.watch(achievementsRepositoryProvider).unclaimedCount();
   } catch (_) {
     final cached = await OfflineDiskCache.loadAchievements(auth.id);
+    if (cached != null) {
+      return filterAchievementItems(cached).where((e) => e.isUnlocked).length;
+    }
+    rethrow;
+  }
+});
+
+final tasksListProvider = FutureProvider<List<AchievementItem>>((ref) async {
+  final auth = ref.watch(authStateProvider).valueOrNull;
+  if (auth == null) return const [];
+  final offline = ref.watch(isOfflineProvider);
+  if (offline) {
+    final cached = await OfflineDiskCache.loadTasks(auth.id);
+    return sortAchievements(cached ?? const []);
+  }
+  try {
+    final items = await ref.watch(achievementsRepositoryProvider).listTasks();
+    final sorted = sortAchievements(items);
+    await OfflineDiskCache.saveTasks(auth.id, sorted);
+    return sorted;
+  } catch (_) {
+    final cached = await OfflineDiskCache.loadTasks(auth.id);
+    if (cached != null) return sortAchievements(cached);
+    rethrow;
+  }
+});
+
+final tasksUnclaimedCountProvider = FutureProvider<int>((ref) async {
+  final auth = ref.watch(authStateProvider).valueOrNull;
+  if (auth == null) return 0;
+  final offline = ref.watch(isOfflineProvider);
+  if (offline) {
+    final cached = await OfflineDiskCache.loadTasks(auth.id);
+    if (cached == null) return 0;
+    return cached.where((e) => e.isUnlocked).length;
+  }
+  try {
+    return await ref.watch(achievementsRepositoryProvider).unclaimedTasksCount();
+  } catch (_) {
+    final cached = await OfflineDiskCache.loadTasks(auth.id);
     if (cached != null) {
       return cached.where((e) => e.isUnlocked).length;
     }

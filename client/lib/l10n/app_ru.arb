@@ -824,6 +824,9 @@
   "coinsLoginAvailableToday": "Доступна награда за сегодня",
   "coinsLoginStreak": "Ежедневная серия входов",
   "coinsFriendReward": "Монеты за друга",
+  "coinsTasks": "Задания",
+  "coinsTasksSubtitle": "Награды за профиль, друзей и игры",
+  "coinsTasksRewards": "Есть награды к получению",
   "coinsFriendRewardHint": "+{amount} за регистрацию по ссылке",
   "@coinsFriendRewardHint": {
     "placeholders": {

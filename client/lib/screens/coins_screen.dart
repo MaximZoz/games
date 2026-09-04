@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/referral_link.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -9,7 +10,7 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
-/// Хаб «Монеты»: две группы, как карточки на главной.
+/// Хаб «Монеты»: вход, друг и задания.
 class CoinsScreen extends ConsumerWidget {
   const CoinsScreen({super.key});
 
@@ -18,6 +19,8 @@ class CoinsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final rewardAvailable =
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
+    final tasksUnclaimed =
+        ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     void goBack() => context.pop();
 
     return SwipeBackScope(
@@ -70,6 +73,16 @@ class CoinsScreen extends ConsumerWidget {
                         formatRewardBronze(referralBonusBronze),
                       ),
                       onTap: () => context.push('/coins/friend'),
+                    ),
+                    const SizedBox(height: 12),
+                    HomeActionCard(
+                      icon: Icons.task_alt_rounded,
+                      title: l10n.coinsTasks,
+                      subtitle: tasksUnclaimed > 0
+                          ? l10n.coinsTasksRewards
+                          : l10n.coinsTasksSubtitle,
+                      badgeCount: tasksUnclaimed,
+                      onTap: () => context.push('/coins/tasks'),
                     ),
                   ],
                 ),

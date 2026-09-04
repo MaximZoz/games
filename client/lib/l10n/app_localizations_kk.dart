@@ -1655,6 +1655,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String get coinsFriendReward => 'Дос сыйлығы';
 
   @override
+  String get coinsTasks => 'Тапсырмалар';
+
+  @override
+  String get coinsTasksSubtitle => 'Профиль, достар және ойын марапаттары';
+
+  @override
+  String get coinsTasksRewards => 'Алынатын марапаттар бар';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Сілтемеңіз арқылы тіркелу үшін +$amount';
   }
