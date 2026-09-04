@@ -74,6 +74,10 @@ const double chatsSidebarSwipeThreshold = 48;
 Color chatsSidebarDividerColor() =>
     AppColors.accentSoft.withValues(alpha: 0.6);
 
+/// Фон списка диалогов на десктопе — тот же, что полоса и тогл.
+@visibleForTesting
+Color chatsSidebarPanelColor() => chatsSidebarDividerColor();
+
 /// Линия проходит через центр тогла и касается его заливки.
 @visibleForTesting
 double chatsSidebarLineLeft(double panelWidth) {
@@ -146,6 +150,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
     final panelWidth =
         sidebarCollapsed ? _sidebarCollapsedWidth : _sidebarExpandedWidth;
     final dividerColor = chatsSidebarDividerColor();
+    final panelColor = chatsSidebarPanelColor();
     final lineLeft = chatsSidebarLineLeft(panelWidth);
 
     return Scaffold(
@@ -174,7 +179,7 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
                           duration: const Duration(milliseconds: 200),
                           curve: Curves.easeInOut,
                           width: panelWidth,
-                          color: Colors.transparent,
+                          color: panelColor,
                           child: ClipRect(
                             child: ChatsScreen(
                               inSplitView: true,

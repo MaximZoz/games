@@ -50,6 +50,7 @@ void main() {
       const toggleRight = toggleLeft + chatsSidebarToggleWidth;
       final lineLeft = chatsSidebarLineLeft(panelWidth);
       expect(chatsSidebarDividerColor(), AppColors.accentSoft.withValues(alpha: 0.6));
+      expect(chatsSidebarPanelColor(), chatsSidebarDividerColor());
       expect(lineLeft, greaterThanOrEqualTo(toggleLeft));
       expect(lineLeft + chatsSidebarLineWidth, lessThanOrEqualTo(toggleRight));
     });
