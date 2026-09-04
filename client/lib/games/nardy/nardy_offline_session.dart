@@ -26,7 +26,8 @@ class OfflineNardySession extends ChangeNotifier {
   final String humanUserId;
   final String gameMode;
 
-  static const Duration botDelay = Duration(milliseconds: 650);
+  /// Пауза между шагами бота: бросок и каждая шашка видны отдельно.
+  static const Duration botStepDelay = Duration(milliseconds: 750);
 
   final Random _rng = Random();
   Timer? _botTimer;
@@ -172,21 +173,33 @@ class OfflineNardySession extends ChangeNotifier {
   void _maybeScheduleBot() {
     _botTimer?.cancel();
     if (_disposed || _engine.isOver || _engine.turn != 1) return;
-    _botTimer = Timer(botDelay, () {
-      if (_disposed || _engine.isOver || _engine.turn != 1) return;
-      nardyPlayBotTurn(_engine, _rng);
-      notifyListeners();
-      _maybeScheduleBot();
-    });
+    _botTimer = Timer(botStepDelay, _runBotStep);
   }
 
-  /// Доиграть ход бота немедленно (тесты — без ожидания таймера).
+  void _runBotStep() {
+    if (_disposed || _engine.isOver || _engine.turn != 1) return;
+    nardyPlayBotStep(_engine, _rng);
+    notifyListeners();
+    _maybeScheduleBot();
+  }
+
+  /// Доиграть ход бота немедленно (тесты — без ожидания таймеров).
   @visibleForTesting
   void debugRunBotTurn() {
     _botTimer?.cancel();
     if (_engine.isOver || _engine.turn != 1) return;
     nardyPlayBotTurn(_engine, _rng);
     notifyListeners();
+  }
+
+  /// Один шаг бота без таймера (тесты).
+  @visibleForTesting
+  bool debugRunBotStep() {
+    _botTimer?.cancel();
+    if (_engine.isOver || _engine.turn != 1) return true;
+    final done = nardyPlayBotStep(_engine, _rng);
+    notifyListeners();
+    return done;
   }
 
   @override

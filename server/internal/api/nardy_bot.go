@@ -10,42 +10,48 @@ import (
 	"github.com/google/uuid"
 )
 
-// scheduleNardyBotAct доигрывает ход бота: бросок и все шашки по одной.
+// scheduleNardyBotAct доигрывает ход бота по шагам: бросок, затем шашки
+// по одной. Каждый шаг уходит клиенту отдельным кадром, иначе весь ход
+// соперника происходит мгновенно и его не видно.
 func (h *GamesHandler) scheduleNardyBotAct(gameID string) {
 	if h.Rdb == nil {
 		return
 	}
+	// Один «бегун» на партию. Клиент дёргает GET часто, и раньше каждый
+	// запрос поднимал свою горутину: они снимали замок по очереди и весь ход
+	// бота проскакивал за один кадр.
+	ctx := context.Background()
+	runKey := nardyBotRunKey(gameID)
+	locked, err := h.Rdb.SetNX(ctx, runKey, "1", nardyBotRunTTL).Result()
+	if err != nil || !locked {
+		return
+	}
 	go func() {
-		for {
-			time.Sleep(nardyBotDelay)
+		defer h.Rdb.Del(context.Background(), runKey)
+		// Шагов за ход не больше пяти (бросок + 4 шашки), лимит — страховка.
+		for step := 0; step < 24; step++ {
+			time.Sleep(nardyBotStepDelay)
 			ctx := context.Background()
-			lockKey := "nardy_bot_lock:" + gameID
-			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
-			if !locked {
-				return
-			}
+			h.Rdb.Expire(ctx, runKey, nardyBotRunTTL)
 			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
 			if err != nil || len(m) == 0 || m["game_type"] != nardyGameType ||
 				m["status"] != gameStatusActive {
-				h.Rdb.Del(ctx, lockKey)
 				return
 			}
 			state, err := nardy.Decode(m["state"])
 			players := parsePlayerIDsCSV(m["player_ids"])
 			if err != nil || !nardyCurrentPlayerIsBot(state, players) {
-				h.Rdb.Del(ctx, lockKey)
 				return
 			}
-			nardyPlayBotTurn(state)
+			turnDone := nardy.PlayBotStep(state, nardyRNG())
 			h.saveNardyState(ctx, gameID, m, state)
 			h.broadcastNardyState(gameID, m)
-			over := nardyIsOver(state)
-			if over {
+			if nardyIsOver(state) {
 				h.onNardyGameFinished(ctx, gameID, m, state, "normal")
-			}
-			h.Rdb.Del(ctx, lockKey)
-			if over {
 				return
+			}
+			if !turnDone {
+				continue
 			}
 			if !nardyCurrentPlayerIsBot(state, players) {
 				h.notifyNardyTurn(gameID, state, players)
@@ -55,10 +61,8 @@ func (h *GamesHandler) scheduleNardyBotAct(gameID string) {
 	}()
 }
 
-// nardyPlayBotTurn играет ровно один ход бота целиком.
-func nardyPlayBotTurn(state *nardy.Game) {
-	nardy.PlayBotTurn(state, nardyRNG())
-}
+// nardyBotRunKey — замок «бот сейчас доигрывает ход в этой партии».
+func nardyBotRunKey(gameID string) string { return "nardy_bot_run:" + gameID }
 
 // applyNardyTurnTimeout — просроченный ход засчитывается как поражение.
 func (h *GamesHandler) applyNardyTurnTimeout(
