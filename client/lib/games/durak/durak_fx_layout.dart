@@ -23,10 +23,70 @@ DurakFinishedChrome durakFinishedChrome({
   return DurakFinishedChrome.stacked;
 }
 
-/// В альбоме не гоняем 380 ms твины зоны веера: при смене размера они
-/// тянут карты из старых слотов и накладываются на новый кадр.
-Duration durakLayoutTweenDuration({required bool compact}) =>
-    compact ? Duration.zero : const Duration(milliseconds: 380);
+/// В альбоме твин короче: там перестановки заметнее и 380 ms уже «плывут».
+///
+/// Раньше в альбоме твина не было вовсе, и веер схлопывался рывком. Кадры
+/// после поворота сбрасываются ключом [durakLayoutTweenKey], поэтому старая
+/// геометрия больше не тянется в новый кадр.
+Duration durakLayoutTweenDuration({required bool compact}) => Duration(
+      milliseconds: compact ? 220 : 340,
+    );
+
+/// Ключ твинов раскладки: меняется при повороте/смене размера окна.
+///
+/// Смена ключа пересоздаёт [TweenAnimationBuilder], и новый размер встаёт
+/// сразу — без проезда из геометрии прошлой ориентации.
+String durakLayoutTweenKey(Size screen) {
+  final w = (screen.width / 40).round();
+  final h = (screen.height / 40).round();
+  return '$w x $h';
+}
+
+/// Масштаб карты веера от числа карт — непрерывная кривая.
+///
+/// Ступеньки «7 → 8 карт» роняли размер сразу на 10%, и веер схлопывался
+/// рывком. Между узлами интерполируем, поэтому каждая новая карта сжимает
+/// веер чуть-чуть.
+double durakFanScaleFor(int n) => _interpolate(n, _fanScaleNodes);
+
+/// Минимальный шаг между картами в долях ширины карты — тоже непрерывно.
+double durakFanMinSpacingFrac(int n) => _interpolate(n, _fanSpacingNodes);
+
+const List<(int, double)> _fanScaleNodes = [
+  (6, 1.0),
+  (9, 0.90),
+  (12, 0.80),
+  (16, 0.70),
+  (20, 0.60),
+  (26, 0.50),
+  (34, 0.40),
+];
+
+const List<(int, double)> _fanSpacingNodes = [
+  (5, 0.42),
+  (7, 0.32),
+  (9, 0.22),
+  (12, 0.16),
+  (15, 0.12),
+  (19, 0.10),
+  (23, 0.08),
+  (29, 0.06),
+  (34, 0.05),
+];
+
+double _interpolate(int n, List<(int, double)> nodes) {
+  if (n <= nodes.first.$1) return nodes.first.$2;
+  if (n >= nodes.last.$1) return nodes.last.$2;
+  for (var i = 0; i < nodes.length - 1; i++) {
+    final (x0, y0) = nodes[i];
+    final (x1, y1) = nodes[i + 1];
+    if (n <= x1) {
+      final t = (n - x0) / (x1 - x0);
+      return y0 + (y1 - y0) * t;
+    }
+  }
+  return nodes.last.$2;
+}
 
 /// Низ кнопки «Бито»/«Взять» от низа стола. В альбоме — целиком над веером.
 double durakActionButtonBottom({
