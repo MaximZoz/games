@@ -2028,7 +2028,7 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	for _, uid := range humans {
 		_ = store.IncrementGamesFinished(ctx, h.Pool, uid)
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-		notifyAchievementUnlocks(h.Push, uid, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 	}
 	if m["draw"] != "1" && state.LoserIndex >= 0 && state.LoserIndex < len(state.PlayerIDs) {
 		for i, pid := range state.PlayerIDs {
@@ -2038,7 +2038,7 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 			if u, err := uuid.Parse(pid); err == nil {
 				_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 				unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-				notifyAchievementUnlocks(h.Push, u, unlocked)
+				notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 			}
 		}
 	}

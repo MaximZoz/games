@@ -405,8 +405,8 @@ func (h *FriendsHandler) AcceptRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	unlockedSender, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, senderID)
 	unlockedReceiver, _ := store.EvaluateAndUnlock(r.Context(), h.Pool, receiverID)
-	notifyAchievementUnlocks(h.Push, senderID, unlockedSender)
-	notifyAchievementUnlocks(h.Push, receiverID, unlockedReceiver)
+	notifyAchievementUnlocks(h.Hub, h.Push, senderID, unlockedSender)
+	notifyAchievementUnlocks(h.Hub, h.Push, receiverID, unlockedReceiver)
 	h.publishFriendsUpdated(senderID, receiverID)
 	w.WriteHeader(http.StatusNoContent)
 }

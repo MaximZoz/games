@@ -238,6 +238,8 @@ class AppShell extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     final isOffline = ref.watch(isOfflineProvider);
+    // Бейджи заданий/достижений — сразу после выполнения, без захода в раздел.
+    ref.watch(rewardBadgesRealtimeSyncProvider);
     // Очередь покупок: при выходе в онлайн — flush + тосты результата.
     ref.watch(pendingPurchasesProvider);
     ref.listen<PendingPurchaseFlushNotice?>(

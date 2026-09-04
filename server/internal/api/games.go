@@ -3981,7 +3981,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 		if u, err := uuid.Parse(uid); err == nil {
 			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	// Multi: лобби завершается вместе с партией → удаляем групповой чат.
@@ -4021,7 +4021,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			if u, err := uuid.Parse(wid); err == nil {
 				_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 				unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-				notifyAchievementUnlocks(h.Push, u, unlocked)
+				notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 			}
 		}
 	}
@@ -4155,7 +4155,7 @@ func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID strin
 		return
 	}
 	unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-	notifyAchievementUnlocks(h.Push, uid, unlocked)
+	notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 }
 
 func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {
@@ -4171,7 +4171,7 @@ func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID 
 			continue
 		}
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-		notifyAchievementUnlocks(h.Push, uid, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 	}
 }
 

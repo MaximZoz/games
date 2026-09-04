@@ -1338,7 +1338,7 @@ func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, 
 	for _, uid := range humans {
 		_ = store.IncrementGamesFinished(ctx, h.Pool, uid)
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-		notifyAchievementUnlocks(h.Push, uid, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 	}
 	for _, wid := range state.WinnerUserIDs {
 		if isBot(wid) {
@@ -1347,7 +1347,7 @@ func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, 
 		if u, err := uuid.Parse(wid); err == nil {
 			_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	h.recordPokerGameResult(ctx, gameID, m, state, stakeBronze, finishReason)

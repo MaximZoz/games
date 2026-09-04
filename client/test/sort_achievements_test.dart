@@ -48,6 +48,14 @@ void main() {
     expect(sorted.last.status, 'weird');
   });
 
+  test('isRewardBadgeRealtimeEvent refreshes on unlock and friends', () {
+    expect(isRewardBadgeRealtimeEvent('achievements_updated'), isTrue);
+    expect(isRewardBadgeRealtimeEvent('friends_updated'), isTrue);
+    expect(isRewardBadgeRealtimeEvent('realtime_connected'), isTrue);
+    expect(isRewardBadgeRealtimeEvent('chat_message'), isFalse);
+    expect(isRewardBadgeRealtimeEvent(''), isFalse);
+  });
+
   test('task codes leave achievements and stay in tasks', () {
     final mixed = [
       item('profile_complete', 'unlocked'),
