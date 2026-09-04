@@ -545,3 +545,113 @@ func TestForfeitGivesWinToOpponent(t *testing.T) {
 		t.Fatalf("dice must be cleared after forfeit")
 	}
 }
+
+// Длинные нарды: шесть своих пунктов подряд запирают соперника наглухо.
+// Такой ряд разрешён только тогда, когда его уже обошла чужая шашка.
+
+func TestLongSixPrimeBlockedWhenOpponentIsBehind(t *testing.T) {
+	g := NewGame(ModeLong)
+	g.Board = [Points]int{}
+	// Пять подряд уже стоят; шестая шашка достраивает ряд.
+	for t2 := 6; t2 <= 10; t2++ {
+		g.setTrack(0, t2, 2)
+	}
+	g.setTrack(0, 8, 3)
+	g.setTrack(0, 5, 1)
+	// Соперник целиком позади ряда — обойти его нечем.
+	g.setTrack(1, 0, Checkers)
+	if err := g.RollWith(6, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	for _, mv := range g.LegalMoves() {
+		if mv.From == 5 && mv.From+mv.Die == 11 {
+			t.Fatalf("move building a sealed prime must be illegal: %+v", mv)
+		}
+	}
+	if err := g.ApplyMove(0, Move{From: 5, Die: 6}); err == nil {
+		t.Fatal("apply must reject a move that seals a six prime")
+	}
+}
+
+func TestLongSixPrimeAllowedWhenOpponentPassed(t *testing.T) {
+	g := NewGame(ModeLong)
+	g.Board = [Points]int{}
+	for t2 := 6; t2 <= 10; t2++ {
+		g.setTrack(0, t2, 2)
+	}
+	g.setTrack(0, 5, 1)
+	// Одна чужая шашка уже прошла ряд — блок больше не глухой.
+	g.setTrack(1, 0, Checkers-1)
+	g.setTrack(1, 20, 1)
+	if err := g.RollWith(6, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	found := false
+	for _, mv := range g.LegalMoves() {
+		if mv.From == 5 && mv.Die == 6 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("prime is legal once an opponent checker is ahead of it")
+	}
+}
+
+func TestLongFivePrimeIsAllowed(t *testing.T) {
+	g := NewGame(ModeLong)
+	g.Board = [Points]int{}
+	for t2 := 6; t2 <= 9; t2++ {
+		g.setTrack(0, t2, 2)
+	}
+	g.setTrack(0, 5, 1)
+	g.setTrack(1, 0, Checkers)
+	if err := g.RollWith(5, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	found := false
+	for _, mv := range g.LegalMoves() {
+		if mv.From == 5 && mv.Die == 5 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("five points in a row must stay legal")
+	}
+}
+
+func TestShortModeKeepsPrimesLegal(t *testing.T) {
+	g := NewGame(ModeShort)
+	g.Board = [Points]int{}
+	for t2 := 6; t2 <= 10; t2++ {
+		g.setTrack(0, t2, 2)
+	}
+	g.setTrack(0, 5, 1)
+	g.setTrack(1, 0, Checkers)
+	if err := g.RollWith(6, 3); err != nil {
+		t.Fatalf("roll: %v", err)
+	}
+	found := false
+	for _, mv := range g.LegalMoves() {
+		if mv.From == 5 && mv.Die == 6 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("short backgammon allows a six prime")
+	}
+}
+
+func TestSealedPrimeIgnoresOpponentBornOff(t *testing.T) {
+	g := NewGame(ModeLong)
+	g.Board = [Points]int{}
+	for t2 := 5; t2 <= 10; t2++ {
+		g.setTrack(0, t2, 2)
+	}
+	g.setTrack(1, 0, Checkers-1)
+	if HasSealedPrime(ModeLong, 0, g.Board, 0) != true {
+		t.Fatal("six in a row with the opponent behind must be sealed")
+	}
+	if HasSealedPrime(ModeLong, 0, g.Board, 1) {
+		t.Fatal("a borne-off checker already passed the prime")
+	}
+}

@@ -15,6 +15,55 @@ const int nardyHomeStart = 18;
 /// Псевдо-индекс дорожки для шашки на баре (короткие нарды).
 const int nardyBarTrack = -1;
 
+/// Длина заблокированного ряда в длинных нардах.
+///
+/// Шесть своих пунктов подряд запирают соперника наглухо, поэтому такой ряд
+/// разрешён, только если хотя бы одна его шашка уже прошла блок.
+const int nardyPrimeLimit = 6;
+
+/// У [seat] есть ряд из [nardyPrimeLimit] занятых пунктов подряд, который не
+/// обошла ни одна шашка соперника.
+///
+/// Считаем в координатах дорожки соперника: он идёт 0 → 23, поэтому «прошла»
+/// значит стоит дальше конца ряда либо уже снята с доски.
+bool nardyHasSealedPrime({
+  required String mode,
+  required int seat,
+  required List<int> board,
+  required int opponentOff,
+}) {
+  if (nardyNormalizeMode(mode) != nardyModeLong) return false;
+  if (opponentOff > 0) return false;
+  final opp = nardyOpponent(seat);
+  final mine = List<bool>.filled(nardyPoints, false);
+  final theirs = List<bool>.filled(nardyPoints, false);
+  for (var t = 0; t < nardyPoints; t++) {
+    final p = nardyTrackToBoard(mode, opp, t);
+    if (p < 0 || p >= board.length) continue;
+    final v = board[p];
+    mine[t] = seat == 0 ? v > 0 : v < 0;
+    theirs[t] = seat == 0 ? v < 0 : v > 0;
+  }
+  var run = 0;
+  for (var t = 0; t < nardyPoints; t++) {
+    if (!mine[t]) {
+      run = 0;
+      continue;
+    }
+    run++;
+    if (run < nardyPrimeLimit) continue;
+    var ahead = false;
+    for (var k = t + 1; k < nardyPoints; k++) {
+      if (theirs[k]) {
+        ahead = true;
+        break;
+      }
+    }
+    if (!ahead) return true;
+  }
+  return false;
+}
+
 /// Ход: с какого пункта дорожки и каким кубиком.
 class NardyMove {
   const NardyMove(this.from, this.die);
@@ -409,7 +458,9 @@ class NardyEngine {
     if (countAt(seat, from) == 0) return false;
     if (from == 0 && _headLimitReached) return false;
     final to = from + die;
-    if (to < nardyPoints) return canLand(seat, to);
+    if (to < nardyPoints) {
+      return canLand(seat, to) && !_buildsSealedPrime(seat, from, to);
+    }
     if (!home) return false;
     if (to == nardyPoints) return true;
     // Перебор: снимать можно только с самого дальнего занятого пункта.
@@ -417,6 +468,23 @@ class NardyEngine {
       if (countAt(seat, t) > 0) return false;
     }
     return true;
+  }
+
+  /// Ход достраивает запертый ряд из [nardyPrimeLimit] пунктов.
+  bool _buildsSealedPrime(int seat, int from, int to) {
+    if (!isLong) return false;
+    final fromPoint = nardyTrackToBoard(mode, seat, from);
+    final toPoint = nardyTrackToBoard(mode, seat, to);
+    if (fromPoint < 0 || toPoint < 0) return false;
+    final board = List<int>.of(_board);
+    board[fromPoint] += seat == 0 ? -1 : 1;
+    board[toPoint] += seat == 0 ? 1 : -1;
+    return nardyHasSealedPrime(
+      mode: mode,
+      seat: seat,
+      board: board,
+      opponentOff: _off[nardyOpponent(seat)],
+    );
   }
 
   bool get hasLegalMove => legalMoves().isNotEmpty;

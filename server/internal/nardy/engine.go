@@ -29,6 +29,11 @@ const (
 	BarTrack = -1
 	// OffTrack — индекс «снята с доски».
 	OffTrack = Points
+	// PrimeLimit — длина заблокированного ряда в длинных нардах.
+	//
+	// Шесть своих пунктов подряд запирают соперника наглухо, поэтому такой
+	// ряд разрешён, только если хотя бы одна его шашка уже прошла блок.
+	PrimeLimit = 6
 )
 
 var (
@@ -343,7 +348,7 @@ func (g *Game) moveAllowed(seat, from, die int, allHome bool) bool {
 	}
 	to := from + die
 	if to < Points {
-		return g.CanLand(seat, to)
+		return g.CanLand(seat, to) && !g.buildsSealedPrime(seat, from, to)
 	}
 	if !allHome {
 		return false
@@ -358,6 +363,81 @@ func (g *Game) moveAllowed(seat, from, die int, allHome bool) bool {
 		}
 	}
 	return true
+}
+
+// buildsSealedPrime — ход достраивает запертый ряд из [PrimeLimit] пунктов.
+//
+// Только длинные нарды: в коротких «прайм» — обычный приём игры.
+func (g *Game) buildsSealedPrime(seat, from, to int) bool {
+	if !g.IsLong() {
+		return false
+	}
+	fromPoint := TrackToBoard(g.Mode, seat, from)
+	toPoint := TrackToBoard(g.Mode, seat, to)
+	if fromPoint < 0 || toPoint < 0 {
+		return false
+	}
+	board := g.Board
+	if seat == 0 {
+		board[fromPoint]--
+		board[toPoint]++
+	} else {
+		board[fromPoint]++
+		board[toPoint]--
+	}
+	return HasSealedPrime(g.Mode, seat, board, g.Off[Opponent(seat)])
+}
+
+// HasSealedPrime — у [seat] есть ряд из [PrimeLimit] занятых пунктов подряд,
+// который не обошла ни одна шашка соперника.
+//
+// Считаем в координатах дорожки соперника: он идёт 0 → 23, поэтому «прошла»
+// значит стоит дальше конца ряда либо уже снята с доски.
+func HasSealedPrime(mode string, seat int, board [Points]int, oppOff int) bool {
+	if NormalizeMode(mode) != ModeLong {
+		return false
+	}
+	if oppOff > 0 {
+		return false
+	}
+	opp := Opponent(seat)
+	var mine, theirs [Points]bool
+	for t := 0; t < Points; t++ {
+		p := TrackToBoard(mode, opp, t)
+		if p < 0 {
+			continue
+		}
+		v := board[p]
+		if seat == 0 {
+			mine[t] = v > 0
+			theirs[t] = v < 0
+		} else {
+			mine[t] = v < 0
+			theirs[t] = v > 0
+		}
+	}
+	run := 0
+	for t := 0; t < Points; t++ {
+		if !mine[t] {
+			run = 0
+			continue
+		}
+		run++
+		if run < PrimeLimit {
+			continue
+		}
+		ahead := false
+		for k := t + 1; k < Points; k++ {
+			if theirs[k] {
+				ahead = true
+				break
+			}
+		}
+		if !ahead {
+			return true
+		}
+	}
+	return false
 }
 
 // HasLegalMove — есть ли хоть один ход.
