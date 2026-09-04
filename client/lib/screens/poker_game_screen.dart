@@ -966,8 +966,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             return 0;
           }));
 
-    return SwipeBackScope(
-      enabled: true,
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,

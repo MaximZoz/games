@@ -727,6 +727,43 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
+    if (inv.gameType == 'nardy') {
+      try {
+        final res = await ref.read(nardyRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'nardy',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'nardy');
+          if (context.mounted) {
+            context.go('/games/nardy/game/$gameId');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'nardy',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/nardy/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -834,6 +871,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         l10n: context.l10n,
       ));
     }
+    if (inv.isNardy) {
+      return rulesTextLines(nardyRuleLines(
+        gameMode: inv.durakMode,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -929,6 +974,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         await ref.read(pokerRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'uno') {
         await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'nardy') {
+        await ref.read(nardyRepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -1114,6 +1161,55 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                 ),
               );
           context.go('/games/uno/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (error) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(error)
+              ? finishCurrentGameMessage
+              : formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          showAppSnackBar(
+            context,
+            message: formatUserError(error),
+            kind: AppSnackKind.error,
+          );
+        }
+      }
+      return;
+    }
+    if (gameType == 'nardy') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res = await ref.read(nardyRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'nardy',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'nardy');
+          context.go('/games/nardy/game/$gameId');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'nardy',
+                ),
+              );
+          context.go('/games/nardy/lobby/$lobbyId?mode=invite');
         }
       } on GamesException catch (error) {
         if (!context.mounted) return;
@@ -3595,6 +3691,8 @@ class _InviteCard extends ConsumerWidget {
                                       ? Icons.grid_on_rounded
                                       : inv.isDurak
                                           ? Icons.swap_horiz_rounded
+                                          : inv.isNardy
+                                              ? Icons.swap_horiz_rounded
                                           : Icons.extension_rounded,
                                   size: iconSz,
                                   color: AppColors.textSecondary,

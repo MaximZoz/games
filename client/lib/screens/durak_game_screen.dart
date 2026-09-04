@@ -5018,11 +5018,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       return 0;
     }();
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       bottomInset: swipeBottomExclude,
       child: Scaffold(
         backgroundColor: Colors.transparent,

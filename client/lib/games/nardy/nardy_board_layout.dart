@@ -99,26 +99,41 @@ class NardyBoardGeometry {
     return Rect.fromLTWH(x, y, columnWidth, pointHeight);
   }
 
+  /// Минимальная видимая полоска шашки в стопке (доля диаметра).
+  ///
+  /// Стопку не обрезаем числом: шашки должны пересчитываться глазами, поэтому
+  /// высокие стопки ужимаем нахлёстом, а при нехватке места — и размером.
+  static const double _minOverlap = 0.3;
+
+  /// Свободная высота пункта под стопку.
+  double get _stackSpan => pointHeight - 2;
+
+  /// Диаметр шашки в стопке: если не влезает даже с нахлёстом — уменьшаем.
+  double stackCheckerSize(int stackSize) {
+    final base = checkerSize;
+    if (stackSize <= 1) return base;
+    final slots = 1 + (stackSize - 1) * _minOverlap;
+    if (base * slots <= _stackSpan) return base;
+    return _stackSpan / slots;
+  }
+
+  /// Шаг между центрами соседних шашек стопки.
+  double stackStep(int stackSize) {
+    if (stackSize <= 1) return 0;
+    final diameter = stackCheckerSize(stackSize);
+    final spread = (_stackSpan - diameter) / (stackSize - 1);
+    return spread.clamp(diameter * _minOverlap, diameter * 0.88);
+  }
+
   /// Центр шашки с номером [index] в стопке на пункте [track].
   Offset checkerCenter(int track, int index, int stackSize) {
     final rect = trackRect(track);
     final top = NardyBoardLayout.isTopRow(track);
-    final radius = checkerSize / 2;
-    final shown = stackSize > _maxVisible ? _maxVisible : stackSize;
-    final available = pointHeight - checkerSize - 2;
-    final step = shown <= 1
-        ? 0.0
-        : (available / (shown - 1)).clamp(0.0, checkerSize * 0.88);
-    final capped = index >= shown ? shown - 1 : index;
-    final offset = capped * step;
+    final radius = stackCheckerSize(stackSize) / 2;
+    final offset = index * stackStep(stackSize);
     final dy = top ? radius + 1 + offset : pointHeight - radius - 1 - offset;
     return Offset(rect.left + rect.width / 2, rect.top + dy);
   }
-
-  /// Сколько шашек рисуем в стопке, остальные — числом на верхней.
-  static const int _maxVisible = 5;
-  static int visibleInStack(int count) =>
-      count > _maxVisible ? _maxVisible : count;
 
   /// Прямоугольник центрального бара.
   Rect get barRect => Rect.fromLTWH(

@@ -3,7 +3,6 @@ import 'package:multigames_client/games/nardy/nardy_board_layout.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
-import 'package:multigames_client/ui/app_theme.dart';
 
 const Color _kBoardBg = Color(0xFF241C3B);
 const Color _kBoardFrame = Color(0xFF3B2F63);
@@ -20,7 +19,9 @@ const Color _kOppCheckerEdge = Color(0xFFC2560E);
 
 const Color _kSelected = Color(0xFF56E39F);
 const Color _kTarget = Color(0xFF56E39F);
-const Color _kLastMove = Color(0xFF6EC6FF);
+
+/// Куда вернётся шашка при отмене хода.
+const Color _kUndoTarget = Color(0xFFFFC46B);
 
 /// Доска нард глазами игрока с плавным переездом шашек.
 class NardyBoard extends StatefulWidget {
@@ -88,28 +89,12 @@ class _NardyBoardState extends State<NardyBoard> {
 
   bool get _showBar => !game.isLong;
 
-  /// Пункты дорожки, затронутые прошлым ходом соперника.
-  Set<int> get _lastMoveTracks {
-    if (game.myIndex < 0 || game.lastTurnSeat < 0) return const {};
-    if (game.lastTurnSeat == game.myIndex) return const {};
-    final out = <int>{};
-    for (final mv in game.lastTurn) {
-      for (final point in [mv.fromPoint, mv.toPoint]) {
-        if (point < 0) continue;
-        final track = nardyBoardToTrack(game.gameMode, game.myIndex, point);
-        if (track >= 0) out.add(track);
-      }
-    }
-    return out;
-  }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         final geometry = NardyBoardGeometry(size: size, showBar: _showBar);
-        final lastMove = _lastMoveTracks;
         final mySeat = game.myIndex < 0 ? 0 : game.myIndex;
         final oppSeat = game.myIndex < 0 ? 1 : game.opponentIndex;
         final diameter = geometry.checkerSize;
@@ -144,7 +129,6 @@ class _NardyBoardState extends State<NardyBoard> {
                       geometry: geometry,
                       selectedTrack: widget.selectedTrack,
                       targetTracks: widget.targetTracks,
-                      lastMoveTracks: lastMove,
                       undoTracks: widget.undoTracks,
                       canBearOff: widget.canBearOff,
                       showBar: _showBar,
@@ -249,28 +233,36 @@ class _NardyBoardState extends State<NardyBoard> {
     required bool mine,
   }) {
     final spots = widget.tracker.spotsFor(game, seat);
-    final diameter = geometry.checkerSize;
     return [
       for (final spot in spots)
         if (!_hiddenWhileDragging(spot, mine: mine))
-          AnimatedPositioned(
-            key: ValueKey('nardy-checker-$seat-${spot.id}'),
-            duration: NardyBoard.moveDuration,
-            curve: Curves.easeOutCubic,
-            left: _centerOf(geometry, spot, mine: mine).dx - diameter / 2,
-            top: _centerOf(geometry, spot, mine: mine).dy - diameter / 2,
-            width: diameter,
-            height: diameter,
-            child: IgnorePointer(
-              child: _Checker(
-                mine: mine,
-                diameter: diameter,
-                label: _stackLabel(spot),
-                dimmed: spot.isOff,
+          () {
+            final diameter = _diameterOf(geometry, spot);
+            final center = _centerOf(geometry, spot, mine: mine);
+            return AnimatedPositioned(
+              key: ValueKey('nardy-checker-$seat-${spot.id}'),
+              duration: NardyBoard.moveDuration,
+              curve: Curves.easeOutCubic,
+              left: center.dx - diameter / 2,
+              top: center.dy - diameter / 2,
+              width: diameter,
+              height: diameter,
+              child: IgnorePointer(
+                child: _Checker(
+                  mine: mine,
+                  diameter: diameter,
+                  dimmed: spot.isOff,
+                ),
               ),
-            ),
-          ),
+            );
+          }(),
     ];
+  }
+
+  /// Шашки в высокой стопке мельче: так в пункт влезают все, без числа сверху.
+  double _diameterOf(NardyBoardGeometry geometry, NardyCheckerSpot spot) {
+    if (spot.onBar || spot.isOff) return geometry.checkerSize;
+    return geometry.stackCheckerSize(spot.stackSize);
   }
 
   /// Верхняя шашка стопки едет за пальцем — из стопки её убираем.
@@ -302,13 +294,6 @@ class _NardyBoardState extends State<NardyBoard> {
     final point = nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
     final track = nardyBoardToTrack(game.gameMode, game.myIndex, point);
     return track < 0 ? oppTrack : track;
-  }
-
-  String? _stackLabel(NardyCheckerSpot spot) {
-    if (spot.isOff || spot.onBar) return null;
-    final visible = NardyBoardGeometry.visibleInStack(spot.stackSize);
-    if (spot.stackSize <= visible) return null;
-    return spot.index == visible - 1 ? '${spot.stackSize}' : null;
   }
 
   List<Widget> _buildTrayLabels(
@@ -362,7 +347,6 @@ class _BoardPainter extends CustomPainter {
     required this.geometry,
     required this.selectedTrack,
     required this.targetTracks,
-    required this.lastMoveTracks,
     required this.undoTracks,
     required this.canBearOff,
     required this.showBar,
@@ -371,7 +355,6 @@ class _BoardPainter extends CustomPainter {
   final NardyBoardGeometry geometry;
   final int? selectedTrack;
   final Set<int> targetTracks;
-  final Set<int> lastMoveTracks;
   final Set<int> undoTracks;
   final bool canBearOff;
   final bool showBar;
@@ -397,7 +380,7 @@ class _BoardPainter extends CustomPainter {
     if (targetTracks.contains(track)) {
       fill = Color.alphaBlend(_kTarget.withValues(alpha: 0.5), fill);
     } else if (undoTracks.contains(track)) {
-      fill = Color.alphaBlend(_kLastMove.withValues(alpha: 0.3), fill);
+      fill = Color.alphaBlend(_kUndoTarget.withValues(alpha: 0.34), fill);
     }
 
     final inset = rect.width * 0.06;
@@ -417,13 +400,13 @@ class _BoardPainter extends CustomPainter {
     }
     canvas.drawPath(path, Paint()..color = fill);
 
-    if (lastMoveTracks.contains(track)) {
+    if (undoTracks.contains(track)) {
       canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
-          ..color = _kLastMove,
+          ..color = _kUndoTarget,
       );
     }
     if (selectedTrack == track) {
@@ -491,7 +474,6 @@ class _BoardPainter extends CustomPainter {
       old.canBearOff != canBearOff ||
       old.showBar != showBar ||
       !setEquals(old.targetTracks, targetTracks) ||
-      !setEquals(old.lastMoveTracks, lastMoveTracks) ||
       !setEquals(old.undoTracks, undoTracks) ||
       old.geometry.size != geometry.size;
 
@@ -503,13 +485,11 @@ class _Checker extends StatelessWidget {
   const _Checker({
     required this.mine,
     required this.diameter,
-    this.label,
     this.dimmed = false,
   });
 
   final bool mine;
   final double diameter;
-  final String? label;
   final bool dimmed;
 
   @override
@@ -518,8 +498,7 @@ class _Checker extends StatelessWidget {
     final edge = mine ? _kMyCheckerEdge : _kOppCheckerEdge;
     return Opacity(
       opacity: dimmed ? 0.85 : 1,
-      child: Container(
-        alignment: Alignment.center,
+      child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -541,88 +520,126 @@ class _Checker extends StatelessWidget {
             ),
           ],
         ),
-        child: label == null
-            ? null
-            : Text(
-                label!,
-                style: TextStyle(
-                  fontSize: diameter * 0.44,
-                  fontWeight: FontWeight.w900,
-                  color: mine ? _kOppCheckerEdge : Colors.white,
-                ),
-              ),
       ),
     );
   }
 }
 
-/// Полоска «сколько шашек в доме и снято» под доской.
-class NardyProgressBar extends StatelessWidget {
-  const NardyProgressBar({
+/// Доля полосы, которую занимает игрок с [myPips] очками до финиша.
+///
+/// Меньше очков — ближе к победе, поэтому и полоса длиннее.
+double nardyPipsShare({required int myPips, required int oppPips}) {
+  final total = myPips + oppPips;
+  if (total <= 0) return 0.5;
+  // Края всегда видны: иначе у почти проигравшего пропадает и цвет, и цифра.
+  return (oppPips / total).clamp(0.12, 0.88);
+}
+
+/// Одна полоса «сколько осталось пройти» на двоих, во всю ширину доски.
+class NardyPipsBar extends StatelessWidget {
+  const NardyPipsBar({
     super.key,
-    required this.label,
-    required this.pips,
-    required this.off,
-    required this.mine,
+    required this.myPips,
+    required this.oppPips,
+    required this.myTurn,
+    required this.isOver,
+    this.height = 26,
+  });
+
+  final int myPips;
+  final int oppPips;
+  final bool myTurn;
+  final bool isOver;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final share = nardyPipsShare(myPips: myPips, oppPips: oppPips);
+    final radius = BorderRadius.circular(height / 2);
+    return SizedBox(
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          border: Border.all(color: Colors.white12),
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Row(
+            children: [
+              Expanded(
+                flex: (share * 1000).round(),
+                child: _Segment(
+                  value: myPips,
+                  color: _kMyChecker,
+                  edge: _kMyCheckerEdge,
+                  textColor: _kOppCheckerEdge,
+                  alignment: Alignment.centerLeft,
+                  active: myTurn && !isOver,
+                ),
+              ),
+              Expanded(
+                flex: ((1 - share) * 1000).round(),
+                child: _Segment(
+                  value: oppPips,
+                  color: _kOppChecker,
+                  edge: _kOppCheckerEdge,
+                  textColor: Colors.white,
+                  alignment: Alignment.centerRight,
+                  active: !myTurn && !isOver,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Segment extends StatelessWidget {
+  const _Segment({
+    required this.value,
+    required this.color,
+    required this.edge,
+    required this.textColor,
+    required this.alignment,
     required this.active,
   });
 
-  final String label;
-  final int pips;
-  final int off;
-  final bool mine;
+  final int value;
+  final Color color;
+  final Color edge;
+  final Color textColor;
+  final Alignment alignment;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
-    final color = mine ? _kMyChecker : _kOppChecker;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: active ? AppColors.accentStart : Colors.white12,
-          width: active ? 1.6 : 1,
+        gradient: LinearGradient(
+          colors: [color, edge],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-              border: Border.all(
-                color: mine ? _kMyCheckerEdge : _kOppCheckerEdge,
-              ),
+      child: Opacity(
+        opacity: active ? 1 : 0.82,
+        child: FittedBox(
+          child: Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: textColor,
             ),
           ),
-          const SizedBox(width: 6),
-          Text(
-            '$label $pips',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          if (off > 0) ...[
-            const SizedBox(width: 6),
-            Icon(Icons.outbound_rounded, size: 12, color: color),
-            const SizedBox(width: 2),
-            Text(
-              '$off',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

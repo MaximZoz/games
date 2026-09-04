@@ -1121,12 +1121,8 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _maybeRevealRemoteShot(game, me);
     });
 
-    return SwipeBackScope(
-      enabled: true,
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

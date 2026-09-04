@@ -158,6 +158,69 @@ void main() {
     });
   });
 
+  group('высокая стопка', () {
+    /// Экраны от узкого телефона до планшета.
+    final geometries = [
+      NardyBoardGeometry(size: const Size(330, 232), showBar: true),
+      NardyBoardGeometry(size: const Size(520, 366), showBar: false),
+      NardyBoardGeometry(size: const Size(900, 634), showBar: true),
+    ];
+
+    for (final geometry in geometries) {
+      final label = '${geometry.size.width.toInt()}x'
+          '${geometry.size.height.toInt()}';
+
+      test('$label: видны все шашки, включая шестую', () {
+        for (final count in [2, 5, 6, 8, 10, 15]) {
+          final centers = [
+            for (var i = 0; i < count; i++)
+              geometry.checkerCenter(3, i, count).dy,
+          ];
+          // Ни одна шашка не прячется за другой — стопку можно пересчитать.
+          expect(centers.toSet(), hasLength(count),
+              reason: '$label, стопка $count: шашки слиплись');
+          final step = geometry.stackStep(count);
+          expect(step, greaterThan(0),
+              reason: '$label, стопка $count: нулевой шаг');
+        }
+      });
+
+      test('$label: стопка любой высоты помещается в пункт', () {
+        for (final count in [2, 6, 10, 15]) {
+          final rect = geometry.trackRect(3);
+          final diameter = geometry.stackCheckerSize(count);
+          for (var i = 0; i < count; i++) {
+            final center = geometry.checkerCenter(3, i, count);
+            expect(center.dy - diameter / 2, greaterThanOrEqualTo(rect.top - 1),
+                reason: '$label, стопка $count: шашка $i вылезла сверху');
+            expect(center.dy + diameter / 2, lessThanOrEqualTo(rect.bottom + 1),
+                reason: '$label, стопка $count: шашка $i вылезла снизу');
+          }
+        }
+      });
+
+      test('$label: чем выше стопка, тем плотнее и мельче шашки', () {
+        expect(geometry.stackStep(15),
+            lessThanOrEqualTo(geometry.stackStep(6)));
+        expect(geometry.stackCheckerSize(15),
+            lessThanOrEqualTo(geometry.stackCheckerSize(6)));
+        // Низкая стопка рисуется шашками обычного размера.
+        expect(geometry.stackCheckerSize(2), geometry.checkerSize);
+      });
+    }
+
+    test('нижний ряд наращивает стопку вверх, верхний — вниз', () {
+      final geometry =
+          NardyBoardGeometry(size: const Size(640, 450), showBar: true);
+      final top = NardyBoardLayout.topRow.first;
+      final bottom = NardyBoardLayout.bottomRow.first;
+      expect(geometry.checkerCenter(top, 5, 6).dy,
+          greaterThan(geometry.checkerCenter(top, 0, 6).dy));
+      expect(geometry.checkerCenter(bottom, 5, 6).dy,
+          lessThan(geometry.checkerCenter(bottom, 0, 6).dy));
+    });
+  });
+
   test('доска вписывается в экран с сохранением пропорций', () {
     final wide = nardyFitBoard(const Size(1000, 300));
     expect(wide.height, closeTo(300, 0.01));

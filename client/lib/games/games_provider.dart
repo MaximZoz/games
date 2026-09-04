@@ -10,6 +10,7 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
+import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -66,6 +67,8 @@ class GameInvite {
 
   bool get isUno => gameType == 'uno';
 
+  bool get isNardy => gameType == 'nardy';
+
   /// Тот же инвайт на экране — не пересоздавать карточку (иначе мигает).
   bool sameVisibleCard(GameInvite other) =>
       lobbyId == other.lobbyId &&
@@ -93,6 +96,9 @@ class GameInvite {
     }
     if (isUno) {
       return '';
+    }
+    if (isNardy) {
+      return nardyModeLabel(durakMode);
     }
     return variantLabel(variant);
   }
