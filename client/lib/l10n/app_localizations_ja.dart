@@ -720,6 +720,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesNardyWin => '先にすべての駒をベアオフした人が勝ちます。';
 
   @override
+  String get rulesNardySixPrime => '相手の駒が一つも通過していないうちは、6 か所を連続で封鎖できません。';
+
+  @override
   String get nardyRoll => 'サイコロを振る';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '送信済み';
+
+  @override
+  String get lobbySearchShort => '検索';
+
+  @override
+  String get lobbyInviteDeclinedShort => '辞退';
 
   @override
   String get lobbyInvitesSentWaiting => '招待を送信しました。返信を待っています。';

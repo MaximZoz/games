@@ -1523,6 +1523,12 @@ abstract class AppLocalizations {
   /// **'Побеждает тот, кто первым снимет все свои шашки.'**
   String get rulesNardyWin;
 
+  /// No description provided for @rulesNardySixPrime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шесть своих пунктов подряд запирать нельзя, пока их не обошла хотя бы одна шашка соперника.'**
+  String get rulesNardySixPrime;
+
   /// No description provided for @nardyRoll.
   ///
   /// In ru, this message translates to:
@@ -3940,6 +3946,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Отправлено'**
   String get lobbyInviteSentShort;
+
+  /// No description provided for @lobbySearchShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск'**
+  String get lobbySearchShort;
+
+  /// No description provided for @lobbyInviteDeclinedShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отказ'**
+  String get lobbyInviteDeclinedShort;
 
   /// No description provided for @lobbyInvitesSentWaiting.
   ///

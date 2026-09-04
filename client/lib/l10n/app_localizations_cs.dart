@@ -720,6 +720,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesNardyWin => 'Vyhrává ten, kdo první sundá všechny kameny.';
 
   @override
+  String get rulesNardySixPrime => 'Šest polí za sebou nesmíš uzavřít, dokud je nemine alespoň jeden soupeřův kámen.';
+
+  @override
   String get nardyRoll => 'Hodit';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Odesláno';
+
+  @override
+  String get lobbySearchShort => 'Hledat';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Odmítnuto';
 
   @override
   String get lobbyInvitesSentWaiting => 'Pozvánky odeslány. Čekejte na odpověď.';

@@ -720,6 +720,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesNardyWin => '모든 말을 먼저 뺀 사람이 이깁니다.';
 
   @override
+  String get rulesNardySixPrime => '상대 말이 하나도 지나가지 않은 상태에서는 여섯 칸을 연속으로 막을 수 없습니다.';
+
+  @override
   String get nardyRoll => '주사위 굴리기';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '보냄';
+
+  @override
+  String get lobbySearchShort => '검색';
+
+  @override
+  String get lobbyInviteDeclinedShort => '거절함';
 
   @override
   String get lobbyInvitesSentWaiting => '초대가 전송되었습니다. 응답을 기다리는 중.';

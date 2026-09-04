@@ -720,6 +720,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesNardyWin => 'ผู้ที่นำหมากออกครบก่อนชนะ';
 
   @override
+  String get rulesNardySixPrime => 'ห้ามปิดหกช่องติดกันจนกว่าหมากของคู่แข่งอย่างน้อยหนึ่งตัวจะผ่านไปแล้ว';
+
+  @override
   String get nardyRoll => 'ทอยลูกเต๋า';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'ส่งแล้ว';
+
+  @override
+  String get lobbySearchShort => 'ค้นหา';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'ปฏิเสธ';
 
   @override
   String get lobbyInvitesSentWaiting => 'ส่งคำเชิญแล้ว รอการตอบกลับ';

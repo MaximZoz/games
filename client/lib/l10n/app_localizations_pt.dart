@@ -720,6 +720,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesNardyWin => 'Ganha quem primeiro retirar todas as peças.';
 
   @override
+  String get rulesNardySixPrime => 'Não é permitido fechar seis pontos seguidos enquanto nenhuma peça adversária os tiver passado.';
+
+  @override
   String get nardyRoll => 'Lançar';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Enviado';
+
+  @override
+  String get lobbySearchShort => 'Buscar';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Recusado';
 
   @override
   String get lobbyInvitesSentWaiting => 'Convites enviados. A aguardar resposta.';

@@ -720,6 +720,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesNardyWin => 'Barcha toshlarini birinchi olgan g‘olib.';
 
   @override
+  String get rulesNardySixPrime => 'Raqibning birorta toshi o‘tmaguncha, ketma-ket oltita punktni yopib bo‘lmaydi.';
+
+  @override
   String get nardyRoll => 'Tashlash';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Yuborildi';
+
+  @override
+  String get lobbySearchShort => 'Qidiruv';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Rad etildi';
 
   @override
   String get lobbyInvitesSentWaiting => 'Takliflar yuborildi. Javob kutilmoqda.';

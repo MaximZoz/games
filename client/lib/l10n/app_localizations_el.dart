@@ -720,6 +720,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesNardyWin => 'Νικά όποιος βγάλει πρώτος όλα τα πούλια.';
 
   @override
+  String get rulesNardySixPrime => 'Δεν μπορείτε να κλείσετε έξι συνεχόμενα σημεία όσο κανένα πούλι του αντιπάλου δεν τα έχει προσπεράσει.';
+
+  @override
   String get nardyRoll => 'Ρίξε';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Εστάλη';
+
+  @override
+  String get lobbySearchShort => 'Αναζήτηση';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Απορρίφθηκε';
 
   @override
   String get lobbyInvitesSentWaiting => 'Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.';

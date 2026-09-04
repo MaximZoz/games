@@ -720,6 +720,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesNardyWin => 'Yang pertama menurunkan semua bidak menang.';
 
   @override
+  String get rulesNardySixPrime => 'Anda tidak boleh menutup enam titik berturut-turut selama belum ada bidak lawan yang melewatinya.';
+
+  @override
   String get nardyRoll => 'Lempar dadu';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Terkirim';
+
+  @override
+  String get lobbySearchShort => 'Cari';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Ditolak';
 
   @override
   String get lobbyInvitesSentWaiting => 'Undangan terkirim. Menunggu respons.';

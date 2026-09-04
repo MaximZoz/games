@@ -720,6 +720,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesNardyWin => 'Wie als eerste alle schijven afspeelt, wint.';
 
   @override
+  String get rulesNardySixPrime => 'Je mag pas zes punten op rij sluiten als minstens één schijf van de tegenstander erlangs is.';
+
+  @override
   String get nardyRoll => 'Gooien';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Verzonden';
+
+  @override
+  String get lobbySearchShort => 'Zoeken';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Geweigerd';
 
   @override
   String get lobbyInvitesSentWaiting => 'Uitnodigingen verzonden. Wachten op antwoord.';

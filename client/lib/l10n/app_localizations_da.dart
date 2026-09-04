@@ -720,6 +720,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesNardyWin => 'Den, der først tager alle brikker af, vinder.';
 
   @override
+  String get rulesNardySixPrime => 'Du må ikke lukke seks felter i træk, før mindst én af modstanderens brikker er kommet forbi.';
+
+  @override
   String get nardyRoll => 'Slå';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Sendt';
+
+  @override
+  String get lobbySearchShort => 'Søg';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Afvist';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invitationer sendt. Venter på svar.';
