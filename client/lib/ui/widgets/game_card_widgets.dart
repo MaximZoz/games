@@ -159,7 +159,9 @@ class GameCardHeader extends StatelessWidget {
               ],
               if (onInfoTap != null)
                 IconButton(
-                  onPressed: busy ? null : onInfoTap,
+                  // Не отключать при busy: IconButton с onPressed == null
+                  // уходит в disabled и анимирует цвет — иконка «моргает».
+                  onPressed: onInfoTap,
                   icon: const Icon(
                     Icons.info_outline_rounded,
                     size: 22,
