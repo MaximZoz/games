@@ -6,6 +6,7 @@ import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 /// Flutter считает «Крестики-нолики» одним словом и ставит «...» вместо
@@ -307,41 +308,30 @@ class GameCardActionsRow extends StatelessWidget {
   /// Обе кнопки одной высоты — иначе ряд «прыгает» по базовой линии.
   double get _height => isDesktop ? 50 : 46;
 
-  static const double _radius = 14;
-
-  static const TextStyle _labelStyle = TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.1,
-  );
-
   @override
   Widget build(BuildContext context) {
     if (offline) {
       return SizedBox(
         height: _height,
-        child: FilledButton.icon(
+        child: FramedButton(
           onPressed: onOfflinePlay,
-          icon: const Icon(Icons.play_arrow_rounded, size: 20),
-          label: Text(offlinePlayLabel ?? context.l10n.gamesPlay),
-          style: _primaryStyle(),
+          icon: Icons.play_arrow_rounded,
+          label: offlinePlayLabel ?? context.l10n.gamesPlay,
+          expanded: true,
+          minHeight: _height,
         ),
       );
     }
     Widget createButton({required bool expanded}) {
       final button = SizedBox(
         height: _height,
-        child: FilledButton.icon(
+        child: FramedButton(
           onPressed: isCreating || isFinding ? null : onCreate,
-          icon: isCreating
-              ? const _ActionSpinner(color: Colors.white)
-              : const Icon(Icons.add_rounded, size: 20),
-          label: Text(
-            isCreating ? creatingLabel : createLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          style: _primaryStyle(),
+          icon: Icons.add_rounded,
+          label: isCreating ? creatingLabel : createLabel,
+          loading: isCreating,
+          expanded: true,
+          minHeight: _height,
         ),
       );
       return expanded ? button : Expanded(child: button);
@@ -350,17 +340,13 @@ class GameCardActionsRow extends StatelessWidget {
     Widget findButton({required bool expanded}) {
       final button = SizedBox(
         height: _height,
-        child: FilledButton.icon(
+        child: FramedButton(
           onPressed: isCreating || isFinding ? null : onFind,
-          icon: isFinding
-              ? const _ActionSpinner(color: AppColors.accentStart)
-              : const Icon(Icons.search_rounded, size: 20),
-          label: Text(
-            isFinding ? findingLabel : findLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          style: _secondaryStyle(),
+          icon: Icons.search_rounded,
+          label: isFinding ? findingLabel : findLabel,
+          loading: isFinding,
+          expanded: true,
+          minHeight: _height,
         ),
       );
       return expanded ? button : Expanded(child: button);
@@ -387,51 +373,6 @@ class GameCardActionsRow extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  ButtonStyle _primaryStyle() => FilledButton.styleFrom(
-        backgroundColor: AppColors.accentStart,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.45),
-        disabledForegroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        textStyle: _labelStyle,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-        ),
-      );
-
-  /// Вторая кнопка — мягкая заливка вместо тонкого контура: в ряду с filled
-  /// контур выглядел «недорисованным».
-  ButtonStyle _secondaryStyle() => FilledButton.styleFrom(
-        backgroundColor: AppColors.accentSoft,
-        foregroundColor: AppColors.accentStart,
-        disabledBackgroundColor: AppColors.accentSoft.withValues(alpha: 0.6),
-        disabledForegroundColor: AppColors.accentStart.withValues(alpha: 0.6),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        textStyle: _labelStyle,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-        ),
-      );
-}
-
-class _ActionSpinner extends StatelessWidget {
-  const _ActionSpinner({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 18,
-      height: 18,
-      child: CircularProgressIndicator(strokeWidth: 2, color: color),
     );
   }
 }

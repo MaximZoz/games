@@ -189,6 +189,16 @@ void main() {
         ),
         isFalse,
       );
+      expect(durakSeatedTablePairInLayout(seated: true), isTrue);
+      expect(durakSeatedTablePairInLayout(seated: false), isFalse);
+      expect(
+        durakSeatedTableSlotOpacity(seated: true, inFlight: true),
+        1,
+      );
+      expect(
+        durakSeatedTableSlotOpacity(seated: false, inFlight: true),
+        0,
+      );
     });
 
     test('запас снизу не съедает высоту одной пары', () {

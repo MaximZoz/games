@@ -47,6 +47,19 @@ class AppGradients {
       stops: const [0.0, 1.0],
     );
   }
+
+  /// Рамка текстовых кнопок: индиго → фиолет → голубой.
+  static const LinearGradient buttonBorder = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.accentStart,
+      AppColors.accentEnd,
+      Color(0xFF93C5FD),
+      AppColors.accentStart,
+    ],
+    stops: [0.0, 0.38, 0.72, 1.0],
+  );
 }
 
 /// Радиусы и отступы.
