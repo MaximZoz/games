@@ -160,7 +160,6 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   void _showRules(UnoLobbyView lobby) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: lobby.maxPlayers,
         turnTimeSec: lobby.turnTimeSec,
@@ -215,7 +214,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(

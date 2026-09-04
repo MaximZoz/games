@@ -239,7 +239,7 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(
@@ -253,7 +253,6 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesNardyTitle,
                   content: rulesTextLines(nardyRuleLines(
                     gameMode: lobby.gameMode,
                     turnTimeSec: lobby.turnTimeSec,

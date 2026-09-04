@@ -304,78 +304,63 @@ class GameCardActionsRow extends StatelessWidget {
   final bool isDesktop;
   final bool isMedium;
 
-  double get _padV => isMedium ? 12 : (isDesktop ? 14 : 12);
+  /// Обе кнопки одной высоты — иначе ряд «прыгает» по базовой линии.
+  double get _height => isDesktop ? 50 : 46;
+
+  static const double _radius = 14;
+
+  static const TextStyle _labelStyle = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+  );
 
   @override
   Widget build(BuildContext context) {
     if (offline) {
-      return FilledButton.icon(
-        onPressed: onOfflinePlay,
-        icon: const Icon(Icons.play_arrow_rounded, size: 22),
-        label: Text(offlinePlayLabel ?? context.l10n.gamesPlay),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
+      return SizedBox(
+        height: _height,
+        child: FilledButton.icon(
+          onPressed: onOfflinePlay,
+          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+          label: Text(offlinePlayLabel ?? context.l10n.gamesPlay),
+          style: _primaryStyle(),
         ),
       );
     }
     Widget createButton({required bool expanded}) {
-      final button = FilledButton.icon(
-        onPressed: isCreating || isFinding ? null : onCreate,
-        icon: isCreating
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.add_rounded, size: 20),
-        label: Text(isCreating ? creatingLabel : createLabel),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      final button = SizedBox(
+        height: _height,
+        child: FilledButton.icon(
+          onPressed: isCreating || isFinding ? null : onCreate,
+          icon: isCreating
+              ? const _ActionSpinner(color: Colors.white)
+              : const Icon(Icons.add_rounded, size: 20),
+          label: Text(
+            isCreating ? creatingLabel : createLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
+          style: _primaryStyle(),
         ),
       );
       return expanded ? button : Expanded(child: button);
     }
 
     Widget findButton({required bool expanded}) {
-      final button = OutlinedButton.icon(
-        onPressed: isCreating || isFinding ? null : onFind,
-        icon: isFinding
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
-                ),
-              )
-            : const Icon(Icons.search_rounded, size: 20),
-        label: Text(isFinding ? findingLabel : findLabel),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.accentStart,
-          side: BorderSide(
-            color: AppColors.accentStart.withValues(alpha: 0.6),
+      final button = SizedBox(
+        height: _height,
+        child: FilledButton.icon(
+          onPressed: isCreating || isFinding ? null : onFind,
+          icon: isFinding
+              ? const _ActionSpinner(color: AppColors.accentStart)
+              : const Icon(Icons.search_rounded, size: 20),
+          label: Text(
+            isFinding ? findingLabel : findLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
+          style: _secondaryStyle(),
         ),
       );
       return expanded ? button : Expanded(child: button);
@@ -389,7 +374,7 @@ class GameCardActionsRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               createButton(expanded: true),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               findButton(expanded: true),
             ],
           );
@@ -397,21 +382,64 @@ class GameCardActionsRow extends StatelessWidget {
         return Row(
           children: [
             createButton(expanded: false),
-            SizedBox(width: isMedium ? 10 : 12),
+            const SizedBox(width: 10),
             findButton(expanded: false),
           ],
         );
       },
     );
   }
+
+  ButtonStyle _primaryStyle() => FilledButton.styleFrom(
+        backgroundColor: AppColors.accentStart,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.45),
+        disabledForegroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        textStyle: _labelStyle,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_radius),
+        ),
+      );
+
+  /// Вторая кнопка — мягкая заливка вместо тонкого контура: в ряду с filled
+  /// контур выглядел «недорисованным».
+  ButtonStyle _secondaryStyle() => FilledButton.styleFrom(
+        backgroundColor: AppColors.accentSoft,
+        foregroundColor: AppColors.accentStart,
+        disabledBackgroundColor: AppColors.accentSoft.withValues(alpha: 0.6),
+        disabledForegroundColor: AppColors.accentStart.withValues(alpha: 0.6),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        textStyle: _labelStyle,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_radius),
+        ),
+      );
 }
 
-/// Открывает единый диалог правил игры. Единый вид: заголовок, произвольный
-/// widget-контент (например [buildTictactoeRulesTextWidget] или список
-/// строк), кнопка «Закрыть».
+class _ActionSpinner extends StatelessWidget {
+  const _ActionSpinner({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 18,
+      child: CircularProgressIndicator(strokeWidth: 2, color: color),
+    );
+  }
+}
+
+/// Открывает единый диалог правил. Заголовок всегда [gamesRulesTitle] —
+/// карточки и экраны игр не задают свой.
 Future<void> showGameRulesDialog({
   required BuildContext context,
-  required String title,
   required Widget content,
   String? closeLabel,
 }) {
@@ -419,7 +447,7 @@ Future<void> showGameRulesDialog({
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(title),
+      title: Text(context.l10n.gamesRulesTitle),
       content: SingleChildScrollView(child: content),
       actions: [
         TextButton(

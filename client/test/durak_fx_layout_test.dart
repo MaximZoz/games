@@ -116,11 +116,13 @@ void main() {
   });
 
   group('durakLayoutTweenDuration', () {
-    test('в альбоме твины мгновенные', () {
-      expect(durakLayoutTweenDuration(compact: true), Duration.zero);
+    test('в альбоме твин короче портретного, но не нулевой', () {
+      final compact = durakLayoutTweenDuration(compact: true);
+      // Нулевой твин схлопывал веер рывком — теперь короткий, но живой.
+      expect(compact, greaterThan(Duration.zero));
       expect(
-        durakLayoutTweenDuration(compact: false),
-        const Duration(milliseconds: 380),
+        durakLayoutTweenDuration(compact: false).inMilliseconds,
+        greaterThan(compact.inMilliseconds),
       );
     });
   });

@@ -245,7 +245,7 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(
@@ -259,7 +259,6 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesBattleshipTitle,
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: lobby.turnTimeSec,
                     stakeBronze: lobby.stakeBronze,

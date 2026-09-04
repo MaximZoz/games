@@ -746,23 +746,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// (шаг пересчитывается так, чтобы веер снова растянулся от края до края).
   ({Size cardSize, double spacing}) _fitHandFan(int n, double maxWidth) {
     if (n <= 0) return (cardSize: _handCardSize, spacing: 0);
-    var size = _handCardSize;
-    // Раньше и сильнее уменьшаем карты — 10–12 уже заметно плотнее.
-    if (n > 28) {
-      size = Size(_handCardSize.width * 0.40, _handCardSize.height * 0.40);
-    } else if (n > 22) {
-      size = Size(_handCardSize.width * 0.48, _handCardSize.height * 0.48);
-    } else if (n > 18) {
-      size = Size(_handCardSize.width * 0.56, _handCardSize.height * 0.56);
-    } else if (n > 14) {
-      size = Size(_handCardSize.width * 0.66, _handCardSize.height * 0.66);
-    } else if (n > 11) {
-      size = Size(_handCardSize.width * 0.74, _handCardSize.height * 0.74);
-    } else if (n > 9) {
-      size = Size(_handCardSize.width * 0.82, _handCardSize.height * 0.82);
-    } else if (n > 7) {
-      size = Size(_handCardSize.width * 0.90, _handCardSize.height * 0.90);
-    }
+    // Непрерывная кривая вместо ступенек: одна новая карта сжимает веер
+    // чуть-чуть, а не роняет размер сразу на 10%.
+    final scale = durakFanScaleFor(n);
+    var size = Size(_handCardSize.width * scale, _handCardSize.height * scale);
 
     const fanPad = 4.0;
     final usable = (maxWidth - fanPad).clamp(72.0, maxWidth);
@@ -770,16 +757,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     /// Минимальный шаг (доля ширины карты), чтобы полоска оставалась читаемой.
     double minSpacing(Size s) {
       if (n <= 1) return 0;
-      final w = s.width;
-      if (n > 28) return w * 0.05;
-      if (n > 22) return w * 0.06;
-      if (n > 18) return w * 0.08;
-      if (n > 14) return w * 0.10;
-      if (n > 11) return w * 0.12;
-      if (n > 9) return w * 0.16;
-      if (n > 7) return w * 0.22;
-      if (n > 5) return w * 0.32;
-      return w * 0.42;
+      return s.width * durakFanMinSpacingFrac(n);
     }
 
     for (var step = 0; step < 28; step++) {
@@ -806,14 +784,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (n <= 0) {
       return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
-    if (n <= 3) {
-      final spacing = n <= 1 ? 0.0 : _handCardSize.width * 0.62;
-      return (
-        cardSize: _handCardSize,
-        spacing: spacing,
-        fillWidth: false,
-      );
+    if (n == 1) {
+      return (cardSize: _handCardSize, spacing: 0, fillWidth: false);
     }
+    // 2–3 карты раньше шли мимо общей формулы, и переход «4 → 3» прыгал
+    // на полный размер. Теперь та же кривая, просто шаг пошире.
     final fitted = _fitHandFan(n, maxWidth);
     return (
       cardSize: fitted.cardSize,
@@ -4487,7 +4462,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   void _showRules(DurakGameView view) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(durakRuleLines(
         mode: view.mode,
         players: view.playerIds.length,
@@ -5311,6 +5285,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       phoneLandscape: isPhoneLandscape(context),
     );
     final layoutTween = durakLayoutTweenDuration(compact: _fit.compact);
+    final layoutTweenKey = durakLayoutTweenKey(MediaQuery.sizeOf(context));
 
     Widget statusBlock({double? fontSize}) {
       return GameStatusWithReward(
@@ -5464,7 +5439,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 ),
               ),
               // Высота зоны, tuck и размер карт — плавно, без рывка экрана.
+              // Ключ по размеру окна: после поворота твины начинают с новой
+              // геометрии, а не едут из раскладки прошлой ориентации.
               TweenAnimationBuilder<double>(
+                key: ValueKey('durak-fan-$layoutTweenKey'),
                 tween: Tween(end: fanZoneH),
                 duration: layoutTween,
                 curve: kDurakLayoutCurve,
@@ -5609,6 +5587,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ),
           // Кнопка чуть выше веера; позиция плавно следует за размером карт.
           TweenAnimationBuilder<double>(
+            key: ValueKey('durak-action-$layoutTweenKey'),
             tween: Tween(end: actionBtnBottom),
             duration: layoutTween,
             curve: kDurakLayoutCurve,
@@ -5625,7 +5604,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       durakActionButtonAlignX(compact: landscapeBtn),
                       0,
                     ),
-                    child: durakActionChromeVisible(
+                    // «Бито»/«Взять» раньше просто моргали в слоте: появление
+                    // и смена подписи шли за один кадр.
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      child: durakActionChromeVisible(
                             liveCanShow: showActionOrReveal,
                             holdingFanCard: _holdingFanCard,
                           )
@@ -5662,7 +5647,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                         ? _pass
                                         : (showDone ? _confirmTakeDone : _bito),
                               )
-                        : const SizedBox.shrink(),
+                          : const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               );

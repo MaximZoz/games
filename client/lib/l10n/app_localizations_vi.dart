@@ -2055,6 +2055,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lobbySearchShort => 'Tìm';
 
   @override
+  String get lobbySearchPlayers => 'Tìm người chơi';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Đã từ chối';
 
   @override

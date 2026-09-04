@@ -2055,6 +2055,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lobbySearchShort => 'بحث';
 
   @override
+  String get lobbySearchPlayers => 'البحث عن لاعبين';
+
+  @override
   String get lobbyInviteDeclinedShort => 'مرفوض';
 
   @override

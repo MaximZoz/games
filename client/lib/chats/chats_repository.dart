@@ -720,3 +720,27 @@ ChatUserItem? chatRoomPeerUser({
   if ((actingAsUserId ?? '').trim().isNotEmpty) return overridePeer;
   return listPeer;
 }
+
+/// Собеседник пишет на другом языке — переписка требует перевода.
+bool chatNeedsTranslation({String? peerLanguage, required String myLanguage}) {
+  final peer = (peerLanguage ?? '').trim().toLowerCase();
+  if (peer.isEmpty) return false;
+  return peer != myLanguage.trim().toLowerCase();
+}
+
+/// Включён ли автоперевод в этой переписке.
+///
+/// [stored] — выбор пользователя для этого чата (null — ещё не трогал).
+/// По умолчанию перевод включён у иностранца: иначе первое сообщение
+/// приходится читать на чужом языке и лезть за кнопкой.
+bool chatAutoTranslateEnabled({
+  required bool? stored,
+  String? peerLanguage,
+  required String myLanguage,
+}) {
+  if (stored != null) return stored;
+  return chatNeedsTranslation(
+    peerLanguage: peerLanguage,
+    myLanguage: myLanguage,
+  );
+}

@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "Ensimmäinen siirto ei voi olla keskelle",
   "lobbyInviteSentShort": "Lähetetty",
   "lobbySearchShort": "Haku",
+  "lobbySearchPlayers": "Etsi pelaajia",
   "lobbyInviteDeclinedShort": "Hylätty",
   "lobbyInvitesSentWaiting": "Kutsut lähetetty. Odotetaan vastausta.",
   "lobbyLinkCopiedHint": "Liitä se chattiin tai viestiin kaverille",

@@ -61,7 +61,6 @@ void main() {
               body: TextButton(
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(
                     unoRuleLines(
                       players: 2,

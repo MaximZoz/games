@@ -38,6 +38,39 @@ void main() {
       expect(session.observation?.gameId, 'old-game');
     });
 
+    test('applyActiveGameTurnFromEvent updates only this game', () {
+      final current = ActiveGameItem(
+        type: 'game',
+        gameId: 'nardy-1',
+        isMyTurn: false,
+        gameType: 'nardy',
+      );
+      expect(
+        applyActiveGameTurnFromEvent(current, {
+          'type': 'game_state',
+          'game_id': 'nardy-1',
+          'is_my_turn': true,
+        })?.isMyTurn,
+        isTrue,
+      );
+      expect(
+        applyActiveGameTurnFromEvent(current, {
+          'type': 'game_state',
+          'game_id': 'other',
+          'is_my_turn': true,
+        }),
+        isNull,
+      );
+      expect(
+        applyActiveGameTurnFromEvent(current, {
+          'type': 'game_state',
+          'game_id': 'nardy-1',
+          'is_my_turn': false,
+        }),
+        isNull,
+      );
+    });
+
     test('ignores empty observation game_id', () {
       final session = ActiveSessionResult.fromJson({
         'type': 'lobby',

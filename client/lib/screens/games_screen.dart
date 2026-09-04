@@ -2126,7 +2126,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
         onCreate: () => _create('invite'),
-        findLabel: context.l10n.gamesFindMatch,
+        findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
@@ -2153,7 +2153,6 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(durakRuleLines(
         mode: _gameMode,
         players: _players,
@@ -2412,7 +2411,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
         onCreate: () => _create('invite'),
-        findLabel: context.l10n.gamesFindMatch,
+        findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
@@ -2432,7 +2431,6 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.rulesBattleshipTitle,
       content: rulesTextLines(battleshipRuleLines(
         turnTimeSec: _turnTimeSec,
         stakeBronze: _stakeBronze,
@@ -2637,7 +2635,6 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(pokerRuleLines(
         players: _players < 2 ? 2 : _players,
         turnTimeSec: _turnTimeSec,
@@ -2721,7 +2718,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
         onCreate: () => _create('invite'),
-        findLabel: context.l10n.gamesFindMatch,
+        findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
@@ -2907,7 +2904,6 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: _players,
         turnTimeSec: _turnTimeSec,
@@ -2992,7 +2988,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
         onCreate: () => _create('invite'),
-        findLabel: context.l10n.gamesFindMatch,
+        findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
         onFind: () => _create('matchmake'),
         offline: widget.isOffline,
@@ -3232,7 +3228,6 @@ class _TictactoeGameCard extends StatelessWidget {
   void _showRulesInfo(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: _buildRulesWidget(),
       closeLabel: context.l10n.commonClose,
     );
@@ -3369,7 +3364,7 @@ class _TictactoeGameCard extends StatelessWidget {
             createLabel: context.l10n.gamesCreate,
             creatingLabel: context.l10n.commonCreating,
             onCreate: onCreateGame,
-            findLabel: context.l10n.gamesFindMatch,
+            findLabel: context.l10n.lobbySearchPlayers,
             findingLabel: context.l10n.commonSearching,
             onFind: onFindGame,
             offline: isOffline,
@@ -3994,7 +3989,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         creatingLabel: context.l10n.commonCreating,
         isCreating: _creating,
         onCreate: () => _create('invite'),
-        findLabel: context.l10n.gamesFindMatch,
+        findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
         isFinding: _finding,
         onFind: () => _create('matchmake'),
@@ -4010,7 +4005,6 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.rulesNardyTitle,
       content: rulesTextLines(nardyRuleLines(
         gameMode: _gameMode,
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,

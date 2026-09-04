@@ -46,12 +46,10 @@ class _NardyDiceRowState extends State<NardyDiceRow>
     duration: _rollDuration,
   );
   final math.Random _rng = math.Random();
-  Object? _seenRollKey;
 
   @override
   void initState() {
     super.initState();
-    _seenRollKey = widget.rollKey;
     // Первый бросок партии приходит уже сделанным — всё равно прокручиваем,
     // иначе кубики просто возникают на экране.
     if (widget.rolled.isNotEmpty) {
@@ -64,12 +62,8 @@ class _NardyDiceRowState extends State<NardyDiceRow>
   @override
   void didUpdateWidget(covariant NardyDiceRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.rolled.isEmpty) {
-      _seenRollKey = widget.rollKey;
-      return;
-    }
-    if (widget.rollKey != _seenRollKey) {
-      _seenRollKey = widget.rollKey;
+    if (widget.rolled.isEmpty) return;
+    if (nardyIsNewRoll(oldWidget.rolled, widget.rolled)) {
       _controller.forward(from: 0);
     }
   }
@@ -123,6 +117,19 @@ class _NardyDiceRowState extends State<NardyDiceRow>
     if (end <= 0) return 1;
     return (t / end).clamp(0.0, 1.0);
   }
+}
+
+/// Новый бросок, а не смена хода с теми же кубиками на столе.
+///
+/// После «Готово» сервер оставляет [rolled] до броска соперника и только
+/// увеличивает turnNo — это не второй бросок.
+bool nardyIsNewRoll(List<int> previous, List<int> next) {
+  if (next.isEmpty) return false;
+  if (previous.length != next.length) return true;
+  for (var i = 0; i < next.length; i++) {
+    if (previous[i] != next[i]) return true;
+  }
+  return false;
 }
 
 /// Бросок дубля: движок раскладывает его на четыре хода одним значением.

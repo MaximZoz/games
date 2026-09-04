@@ -2055,6 +2055,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get lobbySearchShort => 'Zoeken';
 
   @override
+  String get lobbySearchPlayers => 'Spelers zoeken';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Geweigerd';
 
   @override

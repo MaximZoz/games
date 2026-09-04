@@ -247,14 +247,14 @@ void main() {
 
     await tester.pumpWidget(wrap(false));
     await tester.pump();
-    expect(find.text('Поиск'), findsOneWidget);
-    await tester.tap(find.text('Поиск'));
+    expect(find.text('Поиск игроков'), findsOneWidget);
+    await tester.tap(find.text('Поиск игроков'));
     expect(started, 1);
 
     await tester.pumpWidget(wrap(true));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.tap(find.text('Поиск'));
+    await tester.tap(find.text('Поиск игроков'));
     expect(started, 1);
   });
 

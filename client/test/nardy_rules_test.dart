@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 
 import 'test_locale.dart';
 
@@ -40,5 +41,41 @@ void main() {
     );
     expect(long, contains(t.rulesNardyPlayLong));
     expect(long, contains(t.rulesNoTimeLimit));
+  });
+
+  testWidgets('диалог правил нард использует общий заголовок', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: TextButton(
+                onPressed: () => showGameRulesDialog(
+                  context: context,
+                  content: rulesTextLines(
+                    nardyRuleLines(
+                      gameMode: nardyModeLong,
+                      turnTimeSec: 600,
+                      stakeBronze: 2,
+                      l10n: context.l10n,
+                    ),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Правила игры'), findsOneWidget);
+    expect(find.text('Нарды — правила'), findsNothing);
+    expect(find.textContaining('Игроки: 2.'), findsOneWidget);
   });
 }

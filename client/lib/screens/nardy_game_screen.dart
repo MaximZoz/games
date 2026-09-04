@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
@@ -58,6 +59,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   String? _rematchLobbyId;
   String _autoRollKey = '';
   NardyGameView? _optimisticGame;
+  Timer? _rematchPollTimer;
+  ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
 
   bool get _isOffline =>
       OfflineNardyRegistry.instance.isOffline(widget.gameId);
@@ -65,6 +68,27 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   @override
   void initState() {
     super.initState();
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) {
@@ -94,6 +118,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   @override
   void dispose() {
+    _rematchPollTimer?.cancel();
+    _realtimeSubscription?.close();
     _turnAction.release();
     super.dispose();
   }
@@ -379,6 +405,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     leaveGamesSession(ref);
     final rematchLobbyId = _rematchLobbyId;
     _rematchLobbyId = null;
+    _rematchPollTimer?.cancel();
     _clearSessionForFinishedGame();
     context.go('/games');
     if (rematchLobbyId != null) {
@@ -417,7 +444,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/nardy/lobby/$lobbyId?mode=invite');
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -433,6 +460,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     try {
       final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
       if (own != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         try {
           await _repo.leaveLobby(own);
@@ -479,9 +507,46 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     if (mounted) setState(() => _iDeclinedRematch = true);
   }
 
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby = await _repo.getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'nardy',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'nardy');
+    ref.invalidate(nardyGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/nardy/game/$gameId');
+  }
+
   Future<void> _cancelRematchWait() async {
     final lobbyId = _rematchLobbyId;
     if (lobbyId == null) return;
+    _rematchPollTimer?.cancel();
     setState(() => _rematchLobbyId = null);
     try {
       await _repo.leaveLobby(lobbyId);
@@ -493,6 +558,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     try {
       final rematchId = _rematchLobbyId;
       if (rematchId != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         unawaited(_repo.leaveLobby(rematchId).catchError((_) {}));
       }
@@ -717,7 +783,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             surrenderTooltip: context.l10n.gameSurrender,
             onShowRules: () => showGameRulesDialog(
               context: context,
-              title: context.l10n.rulesNardyTitle,
               content: rulesTextLines(nardyRuleLines(
                 gameMode: game?.gameMode ?? nardyModeShort,
                 turnTimeSec: game?.turnTimeSec ?? 0,

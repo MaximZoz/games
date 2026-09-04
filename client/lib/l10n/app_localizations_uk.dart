@@ -2055,6 +2055,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lobbySearchShort => 'Пошук';
 
   @override
+  String get lobbySearchPlayers => 'Пошук гравців';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Відмова';
 
   @override

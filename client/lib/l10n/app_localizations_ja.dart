@@ -2055,6 +2055,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lobbySearchShort => '検索';
 
   @override
+  String get lobbySearchPlayers => 'プレイヤーを探す';
+
+  @override
   String get lobbyInviteDeclinedShort => '辞退';
 
   @override

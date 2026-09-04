@@ -3953,6 +3953,12 @@ abstract class AppLocalizations {
   /// **'Поиск'**
   String get lobbySearchShort;
 
+  /// No description provided for @lobbySearchPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск игроков'**
+  String get lobbySearchPlayers;
+
   /// No description provided for @lobbyInviteDeclinedShort.
   ///
   /// In ru, this message translates to:

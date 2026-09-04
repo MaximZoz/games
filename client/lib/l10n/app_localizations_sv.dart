@@ -2055,6 +2055,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get lobbySearchShort => 'Sök';
 
   @override
+  String get lobbySearchPlayers => 'Sök spelare';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Avböjt';
 
   @override

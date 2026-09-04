@@ -2055,6 +2055,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get lobbySearchShort => 'Αναζήτηση';
 
   @override
+  String get lobbySearchPlayers => 'Αναζήτηση παικτών';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Απορρίφθηκε';
 
   @override

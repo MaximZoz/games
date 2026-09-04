@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -193,6 +194,27 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _busyStuckTicks = 0;
       }
     });
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) return;
@@ -953,7 +975,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/battleship/lobby/$lobbyId?mode=invite');
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -1006,6 +1028,44 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     } finally {
       if (mounted) setState(() => _isAcceptingRematch = false);
     }
+  }
+
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby = await ref
+            .read(battleshipRepositoryProvider)
+            .getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'battleship',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'battleship');
+    ref.invalidate(battleshipGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/battleship/game/$gameId');
   }
 
   Future<void> _declineRematch(String lobbyId) async {
@@ -1140,7 +1200,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesBattleshipTitle,
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: game?.turnTimeSec ?? 0,
                     stakeBronze: game?.stakeBronze ?? 2,

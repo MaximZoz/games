@@ -2055,6 +2055,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lobbySearchShort => '검색';
 
   @override
+  String get lobbySearchPlayers => '플레이어 찾기';
+
+  @override
   String get lobbyInviteDeclinedShort => '거절함';
 
   @override

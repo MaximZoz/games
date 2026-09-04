@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "ตาแรกห้ามลงกลาง",
   "lobbyInviteSentShort": "ส่งแล้ว",
   "lobbySearchShort": "ค้นหา",
+  "lobbySearchPlayers": "ค้นหาผู้เล่น",
   "lobbyInviteDeclinedShort": "ปฏิเสธ",
   "lobbyInvitesSentWaiting": "ส่งคำเชิญแล้ว รอการตอบกลับ",
   "lobbyLinkCopiedHint": "วางในแชทหรือข้อความถึงเพื่อน",

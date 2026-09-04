@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -66,6 +67,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
+  Timer? _rematchPollTimer;
+  ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   bool _prevOver = false;
   bool _balanceGainPlayed = false;
   bool _lossChipRevealed = false;
@@ -104,6 +107,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   @override
   void dispose() {
     _disposed = true;
+    _rematchPollTimer?.cancel();
+    _realtimeSubscription?.close();
     _busyWatchdog?.cancel();
     GameFlyOverlay.dismissAll();
     for (final c in _chipControllers) {
@@ -168,6 +173,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted || _disposed) return;
@@ -775,13 +801,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               gameType: 'poker',
             ),
           );
+      final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
       setState(() {
         _rematchLobbyId = lobbyId;
         _rematchDeclined = false;
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/poker/lobby/$lobbyId?mode=invite');
+      if (!rematchStayOnGameScreen(playerCount: game?.players.length ?? 2)) {
+        if (!mounted) return;
+        context.go('/games/poker/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -797,6 +829,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     try {
       final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
       if (own != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         try {
           await ref.read(pokerRepositoryProvider).leaveLobby(own);
@@ -834,6 +867,43 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     }
   }
 
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby =
+            await ref.read(pokerRepositoryProvider).getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'poker',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'poker');
+    ref.invalidate(pokerGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/poker/game/$gameId');
+  }
+
   Future<void> _declineRematch(String lobbyId) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
@@ -844,6 +914,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _cancelRematchWait() async {
     if (_rematchLobbyId == null) return;
+    _rematchPollTimer?.cancel();
     final lobbyId = _rematchLobbyId!;
     setState(() => _rematchLobbyId = null);
     try {
@@ -856,6 +927,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     try {
       final rematchId = _rematchLobbyId;
       if (rematchId != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         unawaited(
           ref
@@ -1003,7 +1075,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(pokerRuleLines(
                     players: game?.playerIds.length ?? 2,
                     turnTimeSec: game?.turnTimeSec ?? 0,

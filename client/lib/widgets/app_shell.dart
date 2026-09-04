@@ -171,17 +171,31 @@ class _NavItem {
   final String label;
 }
 
-/// После WS хода GetActive успевает обновить is_my_turn — звук, если не за столом.
-Future<void> _announceAwayGameTurn(WidgetRef ref, BuildContext context) async {
+/// После WS хода подставляем is_my_turn из кадра и звучим, если не за столом.
+Future<void> _announceAwayGameTurn(
+  WidgetRef ref,
+  BuildContext context,
+  Map<String, dynamic> event,
+) async {
+  final hinted = applyActiveGameTurnFromEvent(
+    ref.read(activeGameProvider).valueOrNull,
+    event,
+  );
+  if (hinted != null) {
+    ref.read(activeGameProvider.notifier).setLocal(hinted);
+  }
   await Future<void>.delayed(const Duration(milliseconds: 150));
   if (!context.mounted) return;
   final active = ref.read(activeGameProvider).valueOrNull;
   final path =
       GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+  final eventTurn = event['is_my_turn'] == true;
   GameAwaySfx.playIfNeeded(
     path: path,
-    gameId: active?.gameId,
-    isMyTurn: active?.type == 'game' && (active?.isMyTurn ?? false),
+    gameId: event['game_id']?.toString() ?? active?.gameId,
+    isMyTurn: event.containsKey('is_my_turn')
+        ? eventTurn
+        : active?.type == 'game' && (active?.isMyTurn ?? false),
   );
 }
 
@@ -370,7 +384,7 @@ class AppShell extends ConsumerWidget {
             }
           }
           if (type == 'game_state' || type == 'game_started') {
-            unawaited(_announceAwayGameTurn(ref, context));
+            unawaited(_announceAwayGameTurn(ref, context, event));
           }
           if (type == 'daily_reward_available' ||
               type == 'daily_reward_claimed') {

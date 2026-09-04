@@ -1033,6 +1033,7 @@
   "gamesNoCenterHint": "First move cannot be center",
   "lobbyInviteSentShort": "Sent",
   "lobbySearchShort": "Search",
+  "lobbySearchPlayers": "Find players",
   "lobbyInviteDeclinedShort": "Declined",
   "lobbyInvitesSentWaiting": "Invites sent. Waiting for a response.",
   "lobbyLinkCopiedHint": "Paste it in a chat or message to a friend",

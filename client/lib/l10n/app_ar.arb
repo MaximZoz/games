@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "الحركة الأولى لا يمكن أن تكون في الوسط",
   "lobbyInviteSentShort": "تم الإرسال",
   "lobbySearchShort": "بحث",
+  "lobbySearchPlayers": "البحث عن لاعبين",
   "lobbyInviteDeclinedShort": "مرفوض",
   "lobbyInvitesSentWaiting": "تم إرسال الدعوات. بانتظار الرد.",
   "lobbyLinkCopiedHint": "الصقه في محادثة أو رسالة لصديق",

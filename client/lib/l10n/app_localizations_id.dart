@@ -2055,6 +2055,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get lobbySearchShort => 'Cari';
 
   @override
+  String get lobbySearchPlayers => 'Cari pemain';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Ditolak';
 
   @override

@@ -1184,6 +1184,10 @@ func (h *GamesHandler) nardyViewFor(
 	}
 
 	over := nardyIsOver(state)
+	status := gameStatusActive
+	if over {
+		status = nardyStatusOver
+	}
 	winnerID := ""
 	if state.Winner >= 0 && state.Winner < len(players) {
 		winnerID = players[state.Winner]
@@ -1218,6 +1222,7 @@ func (h *GamesHandler) nardyViewFor(
 		"turn_time_sec":  turnTimeSec,
 		"turn_deadline":  turnDeadline,
 		"stake_bronze":   stakeBronze,
+		"status":         status,
 		"is_over":        over,
 		"winner_index":   state.Winner,
 		"winner_user_id": winnerID,

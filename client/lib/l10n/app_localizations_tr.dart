@@ -2055,6 +2055,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lobbySearchShort => 'Ara';
 
   @override
+  String get lobbySearchPlayers => 'Oyuncu ara';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Reddedildi';
 
   @override

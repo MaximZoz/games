@@ -58,6 +58,33 @@ void main() {
       );
     });
 
+    test('find-game waiting uses the shared lobby layout', () {
+      expect(
+        tictactoeLobbyShowsWaitingLayout(
+          isLobbyMember: true,
+          waitingInvite: false,
+          waitingMatchmake: true,
+        ),
+        isTrue,
+      );
+      expect(
+        tictactoeLobbyShowsWaitingLayout(
+          isLobbyMember: true,
+          waitingInvite: true,
+          waitingMatchmake: false,
+        ),
+        isTrue,
+      );
+      expect(
+        tictactoeLobbyShowsWaitingLayout(
+          isLobbyMember: false,
+          waitingInvite: false,
+          waitingMatchmake: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('does not default to Лобби without mode or status', () {
       expect(tictactoeLobbyAppBarTitle(), isEmpty);
     });

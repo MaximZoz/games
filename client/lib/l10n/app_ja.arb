@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "初手は中央に置けません",
   "lobbyInviteSentShort": "送信済み",
   "lobbySearchShort": "検索",
+  "lobbySearchPlayers": "プレイヤーを探す",
   "lobbyInviteDeclinedShort": "辞退",
   "lobbyInvitesSentWaiting": "招待を送信しました。返信を待っています。",
   "lobbyLinkCopiedHint": "チャットやフレンドへのメッセージに貼り付けてください",

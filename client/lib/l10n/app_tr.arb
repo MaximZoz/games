@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "İlk hamle ortada olamaz",
   "lobbyInviteSentShort": "Gönderildi",
   "lobbySearchShort": "Ara",
+  "lobbySearchPlayers": "Oyuncu ara",
   "lobbyInviteDeclinedShort": "Reddedildi",
   "lobbyInvitesSentWaiting": "Davetler gönderildi. Yanıt bekleniyor.",
   "lobbyLinkCopiedHint": "Bir sohbete veya arkadaş mesajına yapıştırın",
