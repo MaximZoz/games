@@ -125,4 +125,45 @@ void main() {
 
     expect(nardyMoveTargetsFor(view, 0), isEmpty);
   });
+
+  test('оптимистичный снимок сразу меняет доску и сохраняет дедлайн', () {
+    final engine = NardyEngine.newGame(nardyModeShort)
+      ..debugSetPosition(
+        tracksForSeat0: {0: 1},
+        tracksForSeat1: {0: 1},
+      )
+      ..rollWith(4, 2);
+    final view = _viewFrom(engine);
+    final optimistic = nardyViewAfterMoves(view, [const NardyMove(0, 4)]);
+
+    expect(optimistic.seq, view.seq + 1);
+    expect(optimistic.board, isNot(view.board));
+    expect(optimistic.myCountAt(0), 0);
+    expect(optimistic.myCountAt(4), 1);
+    expect(optimistic.dice, [2]);
+    expect(optimistic.canUndo, isTrue);
+    expect(optimistic.currentTurn.single.from, 0);
+    expect(optimistic.currentTurn.single.to, 4);
+    // Микродействие того же хода не должно менять таймер.
+    expect(optimistic.turnDeadline, view.turnDeadline);
+  });
+
+  test('оптимистичный снимок цепочки применяет несколько ходов сразу', () {
+    final engine = NardyEngine.newGame(nardyModeShort)
+      ..debugSetPosition(
+        tracksForSeat0: {0: 1},
+        tracksForSeat1: {0: 1},
+      )
+      ..rollWith(4, 4);
+    final view = _viewFrom(engine);
+    final optimistic = nardyViewAfterMoves(view, [
+      const NardyMove(0, 4),
+      const NardyMove(4, 4),
+      const NardyMove(8, 4),
+    ]);
+
+    expect(optimistic.myCountAt(12), 1);
+    expect(optimistic.dice, [4]);
+    expect(optimistic.currentTurn.map((m) => m.to), [4, 8, 12]);
+  });
 }

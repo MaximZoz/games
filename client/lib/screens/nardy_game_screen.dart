@@ -57,6 +57,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
   String _autoRollKey = '';
+  NardyGameView? _optimisticGame;
 
   bool get _isOffline =>
       OfflineNardyRegistry.instance.isOffline(widget.gameId);
@@ -159,9 +160,24 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Future<void> _applyMoves(List<NardyMove> moves) async {
     if (moves.isEmpty) return;
-    setState(() => _selectedTrack = null);
-    await _run(() async {
+    if (_busy || !_turnAction.tryAcquire()) return;
+    final base = _optimisticGame ??
+        ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+    if (base == null) {
+      _turnAction.release();
+      return;
+    }
+    setState(() {
+      _selectedTrack = null;
+      _busy = true;
+    });
+    try {
       for (var i = 0; i < moves.length; i++) {
+        final current = _optimisticGame ??
+            ref.read(nardyGameProvider(widget.gameId)).valueOrNull ??
+            base;
+        final optimistic = nardyViewAfterMoves(current, [moves[i]]);
+        setState(() => _optimisticGame = optimistic);
         await _repo.move(widget.gameId, moves[i]);
         if (i + 1 < moves.length) {
           await Future<void>.delayed(
@@ -169,7 +185,19 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           );
         }
       }
-    });
+      if (!mounted) return;
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      setState(() => _optimisticGame = null);
+      if (!isStaleNotYourTurnError(e) && !isStaleGameOverError(e)) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } finally {
+      _turnAction.release();
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _onTrackTap(NardyGameView game, int track) {
@@ -633,6 +661,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       final before = previous?.valueOrNull;
       final after = next.valueOrNull;
       if (after == null) return;
+      final optimistic = _optimisticGame;
+      if (optimistic != null &&
+          optimistic.id == after.id &&
+          (after.seq >= optimistic.seq || after.isOver)) {
+        setState(() => _optimisticGame = null);
+      }
       for (final cue in nardySfxCues(before, after)) {
         switch (cue) {
           case NardySfxCue.roll:
@@ -645,7 +679,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       }
     });
 
-    final game = gameAsync.valueOrNull;
+    final rawGame = gameAsync.valueOrNull;
+    final game = _optimisticGame?.id == rawGame?.id ? _optimisticGame : rawGame;
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
@@ -700,7 +735,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             child: gameAsync.when(
               skipLoadingOnReload: true,
               skipLoadingOnRefresh: true,
-              data: (game) => _buildGame(game, me),
+              data: (game) => _buildGame(
+                _optimisticGame?.id == game.id ? _optimisticGame! : game,
+                me,
+              ),
               loading: () => const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,

@@ -43,6 +43,100 @@ Map<int, NardyMoveTarget> nardyMoveTargetsFor(
   return out;
 }
 
+/// Оптимистичный снимок после локально выбранных ходов.
+///
+/// Нужен, чтобы анимация шашки стартовала сразу после клика по цели, а не
+/// после HTTP/WS-подтверждения. Сервер всё равно остаётся источником истины:
+/// как только придёт свежий снимок с `seq`, экран заменит оптимистичный view.
+NardyGameView nardyViewAfterMoves(
+  NardyGameView view,
+  List<NardyMove> moves,
+) {
+  if (moves.isEmpty || !view.isMyTurn || view.myIndex < 0) return view;
+  final engine = NardyEngine.fromSnapshot(
+    mode: view.gameMode,
+    board: view.board,
+    bar: view.bar,
+    off: view.off,
+    turn: view.myIndex,
+    dice: view.dice,
+    rolled: view.rolled,
+    headMoved: view.headMoved,
+    turnNo: view.turnNo,
+    winner: view.winnerIndex,
+    winKind: view.winKind,
+    seq: view.seq,
+  );
+  final played = <NardyPlayedMove>[];
+  for (final mv in moves) {
+    final destination = _destinationOf(mv);
+    if (!engine.applyMove(view.myIndex, mv)) return view;
+    played.add(NardyPlayedMove(
+      from: mv.from,
+      to: destination >= nardyPoints ? nardyPoints : destination,
+      die: mv.die,
+      boreOff: destination >= nardyPoints,
+    ));
+  }
+  final currentTurn = [...view.currentTurn, ...played];
+  return NardyGameView(
+    id: view.id,
+    lobbyId: view.lobbyId,
+    gameMode: view.gameMode,
+    board: engine.board,
+    bar: engine.bar,
+    off: engine.off,
+    dice: engine.dice,
+    rolled: engine.rolled,
+    turn: engine.turn,
+    turnNo: engine.turnNo,
+    seq: view.seq + played.length,
+    headMoved: engine.headMoved,
+    players: [
+      for (final player in view.players)
+        if (player.seat >= 0 && player.seat < 2)
+          NardyPlayerView(
+            userId: player.userId,
+            seat: player.seat,
+            displayName: player.displayName,
+            off: engine.off[player.seat],
+            bar: engine.bar[player.seat],
+            pips: engine.pips(player.seat),
+            isBot: player.isBot,
+            avatarKind: player.avatarKind,
+            avatarValue: player.avatarValue,
+            frameCode: player.frameCode,
+            frameColor: player.frameColor,
+          )
+        else
+          player,
+    ],
+    playerIds: view.playerIds,
+    legalMoves: engine.turn == view.myIndex ? engine.legalMoves() : const [],
+    myIndex: view.myIndex,
+    isMyTurn: engine.turn == view.myIndex && !engine.isOver,
+    needsRoll: engine.turn == view.myIndex &&
+        !engine.isOver &&
+        engine.dice.isEmpty &&
+        currentTurn.isEmpty,
+    canUndo: currentTurn.isNotEmpty && !engine.isOver,
+    turnComplete:
+        engine.turn == view.myIndex && !engine.isOver && engine.dice.isEmpty,
+    currentTurn: currentTurn,
+    lastTurn: view.lastTurn,
+    lastTurnSeat: view.lastTurnSeat,
+    turnTimeSec: view.turnTimeSec,
+    turnDeadline: view.turnDeadline,
+    stakeBronze: view.stakeBronze,
+    isOver: engine.isOver,
+    winnerIndex: engine.winner,
+    winnerUserId: view.winnerUserId,
+    winKind: engine.winKind,
+    isForfeit: view.isForfeit,
+    isTimeout: view.isTimeout,
+  );
+}
+
 void _collectTargets(
   NardyEngine engine,
   int from,
