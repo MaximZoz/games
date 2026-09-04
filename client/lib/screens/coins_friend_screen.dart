@@ -201,9 +201,7 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                         ? l10n.commonCopied
                                         : l10n.coinsCopyLink,
                                   ),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.accentStart,
-                                    foregroundColor: Colors.white,
+                                  style: AppButtonStyles.of(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 14,

@@ -558,7 +558,6 @@ Future<bool> confirmLeaveLobbyDialog({
         ),
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
           child: Text(leaveLabel),
         ),
       ],

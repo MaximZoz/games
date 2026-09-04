@@ -7059,7 +7059,7 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentStart.withValues(alpha: glow),
+                color: AppColors.buttonBorder.withValues(alpha: glow),
                 blurRadius: 14 + 8 * t,
                 spreadRadius: 0.5,
               ),

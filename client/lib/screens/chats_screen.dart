@@ -829,9 +829,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
-            style: destructive
-                ? FilledButton.styleFrom(backgroundColor: Colors.red.shade700)
-                : null,
+            style: AppButtonStyles.of(
+              foregroundColor:
+                  destructive ? Colors.red.shade800 : AppColors.textPrimary,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(confirmText),
           ),

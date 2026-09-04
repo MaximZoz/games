@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Текстовая кнопка: пилюля, иконка слева, градиентная рамка.
-///
-/// Единый вид для действий в играх и общем интерфейсе — как «Редактировать»
-/// в профиле, но с градиентным контуром вместо сплошной линии.
+/// Текстовая кнопка: светлый фон, лавандовая рамка, чёрный текст.
 class FramedButton extends StatelessWidget {
   const FramedButton({
     super.key,
@@ -27,14 +24,12 @@ class FramedButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final double minHeight;
 
-  static const double _borderWidth = 2;
-
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !loading;
-    final borderRadius = BorderRadius.circular(999);
-    final innerRadius = BorderRadius.circular(999);
-    final contentColor = danger ? Colors.red.shade800 : AppColors.accentStart;
+    final radius = BorderRadius.circular(AppRadius.button);
+    final fg = danger ? Colors.red.shade800 : AppColors.textPrimary;
+    final border = danger ? Colors.red.shade400 : AppColors.buttonBorder;
     final child = ConstrainedBox(
       constraints: BoxConstraints(minHeight: minHeight),
       child: Padding(
@@ -48,7 +43,7 @@ class FramedButton extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: contentColor,
+                    color: fg,
                   ),
                 )
               : Row(
@@ -56,7 +51,7 @@ class FramedButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 20, color: contentColor),
+                      Icon(icon, size: 20, color: fg),
                       const SizedBox(width: 8),
                     ],
                     Flexible(
@@ -65,9 +60,9 @@ class FramedButton extends StatelessWidget {
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: contentColor,
+                          color: fg,
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -79,28 +74,16 @@ class FramedButton extends StatelessWidget {
 
     final button = Opacity(
       opacity: enabled ? 1 : 0.55,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: danger ? null : AppGradients.buttonBorder,
-          color: danger ? Colors.red.shade300 : null,
-          borderRadius: borderRadius,
+      child: Material(
+        color: AppColors.buttonFill,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: border),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(_borderWidth),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: innerRadius,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: enabled ? onPressed : null,
-                borderRadius: innerRadius,
-                child: child,
-              ),
-            ),
-          ),
+        child: InkWell(
+          onTap: enabled ? onPressed : null,
+          borderRadius: radius,
+          child: child,
         ),
       ),
     );

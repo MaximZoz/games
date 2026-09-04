@@ -427,9 +427,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                       onPressed: _isJoining
                                           ? null
                                           : () => _joinViaLink(context),
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.accentStart,
-                                        foregroundColor: Colors.white,
+                                      style: AppButtonStyles.of(
                                         minimumSize: const Size.fromHeight(48),
                                       ),
                                       child: _isJoining
@@ -438,7 +436,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                                               height: 22,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                color: Colors.white,
+                                                color: AppColors.textPrimary,
                                               ),
                                             )
                                           : Text(context.l10n.lobbyEnterGame),

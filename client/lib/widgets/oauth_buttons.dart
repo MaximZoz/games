@@ -138,17 +138,12 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
                   height: 48,
                   width: double.infinity,
                   child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
+                    style: AppButtonStyles.of(
                       minimumSize: const Size(double.infinity, 48),
                       maximumSize: const Size(double.infinity, 48),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
-                      side: const BorderSide(color: AppColors.accentSoft),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
                     ),
                     onPressed: _busyProvider != null
                         ? null

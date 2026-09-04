@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 
 void main() {
@@ -54,5 +55,30 @@ void main() {
     );
     final size = tester.getSize(find.byType(FramedButton));
     expect(size.width, 320);
+  });
+
+  testWidgets('FramedButton: светлый фон, лавандовая рамка, чёрный текст',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FramedButton(
+            label: 'Сохранить',
+            onPressed: () {},
+          ),
+        ),
+      ),
+    );
+    final material = tester.widget<Material>(
+      find.descendant(
+        of: find.byType(FramedButton),
+        matching: find.byType(Material),
+      ),
+    );
+    expect(material.color, AppColors.buttonFill);
+    final shape = material.shape! as RoundedRectangleBorder;
+    expect(shape.side.color, AppColors.buttonBorder);
+    final text = tester.widget<Text>(find.text('Сохранить'));
+    expect(text.style?.color, AppColors.textPrimary);
   });
 }

@@ -654,7 +654,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(l10n.friendsRemoveConfirmAction),
           ),

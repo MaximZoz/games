@@ -1799,7 +1799,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
   }
 
-  ButtonStyle _unoActionStyle({Color? background, Color? foreground}) {
+  ButtonStyle _unoActionStyle() {
     final compact = isWide(context);
     final padding = compact
         ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
@@ -1809,22 +1809,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final tap = compact
         ? MaterialTapTargetSize.shrinkWrap
         : MaterialTapTargetSize.padded;
-    if (background != null) {
-      return FilledButton.styleFrom(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        visualDensity: density,
-        tapTargetSize: tap,
-        padding: padding,
-        minimumSize: minimum,
-      );
-    }
-    return OutlinedButton.styleFrom(
-      foregroundColor: foreground ?? AppColors.accentStart,
-      visualDensity: density,
-      tapTargetSize: tap,
+    return AppButtonStyles.of(
       padding: padding,
       minimumSize: minimum,
+      visualDensity: density,
+      tapTargetSize: tap,
     );
   }
 
@@ -1842,10 +1831,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return _constrainActions(
         FilledButton.icon(
           onPressed: _busy ? null : () => _move(UnoActionType.nextRound),
-          style: _unoActionStyle(
-            background: AppColors.accentStart,
-            foreground: Colors.white,
-          ),
+          style: _unoActionStyle(),
           icon: const Icon(Icons.skip_next_rounded),
           label: Text(context.l10n.unoRoundContinue),
         ),
@@ -1856,10 +1842,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         _isOffline
             ? FilledButton.icon(
                 onPressed: _restartOffline,
-                style: _unoActionStyle(
-                  background: AppColors.accentStart,
-                  foreground: Colors.white,
-                ),
+                style: _unoActionStyle(),
                 icon: const Icon(Icons.refresh_rounded),
                 label: Text(context.l10n.offlinePlayAgain),
               )
@@ -1884,10 +1867,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final challengeTarget = _unoChallengeTarget(game);
     final canDraw = _canTakeFromDeck(game) && !game.canChallengeWd4;
     final canCallUno = game.unoCallReady;
-    final filled = _unoActionStyle(
-      background: AppColors.accentStart,
-      foreground: Colors.white,
-    );
+    final filled = _unoActionStyle();
     final outlined = _unoActionStyle();
     return SizedBox(
       height: isWide(context) ? 40 : (_fit.compact ? 42 : 48),
@@ -1916,10 +1896,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             if (canCallUno)
               FilledButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.callUno),
-                style: _unoActionStyle(
-                  background: const Color(0xFFE53935),
-                  foreground: Colors.white,
-                ),
+                style: _unoActionStyle(),
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),

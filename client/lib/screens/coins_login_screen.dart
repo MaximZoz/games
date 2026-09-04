@@ -209,12 +209,7 @@ class _LoginRewardsBody extends StatelessWidget {
         label: Text(
           status.available ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
         ),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor:
-              AppColors.accentStart.withValues(alpha: 0.45),
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.75),
+        style: AppButtonStyles.of(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
