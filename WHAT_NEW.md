@@ -3,6 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Нарды: после «Готово» соперник больше не бросает кубики дважды
+- Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
+- Крестики-нолики: «Найти игру» использует тот же экран ожидания, что и другие игры
+- Реванш 1×1: после «Повторить» остаётесь на экране партии — как в крестиках и дураке
 - Дурак: веер в руке сжимается плавно, без рывка; в альбоме вернулась анимация раскладки, «Бито»/«Взять» больше не моргает
 - Игры: кнопка «Поиск игроков» вместо «Найти игру» — и в карточках, и в шапке лобби
 - Карточки игр: кнопки одной высоты и с мягкой заливкой у второй, без тонкого контура
@@ -71,6 +75,10 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Backgammon: ending a turn no longer makes the opponent appear to roll twice
+- Backgammon: if you are in messages or another tab, your turn now notifies you like the other games
+- Tic-tac-toe: Find game uses the same waiting layout as the other games
+- 1v1 rematch: Repeat keeps you on the finished board, like tic-tac-toe and durak
 - Durak: the hand fan shrinks smoothly instead of snapping; landscape got its layout animation back and Beat/Take no longer blinks
 - Games: the button now reads Find players, both on game cards and in the lobby header
 - Game cards: both buttons share one height, and the secondary one has a soft fill instead of a thin outline
