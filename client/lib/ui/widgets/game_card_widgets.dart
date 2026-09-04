@@ -264,12 +264,11 @@ class GameCardChip extends StatelessWidget {
   }
 }
 
-/// Ряд кнопок «Создать игру» / «Найти игру». Визуально идентичен
-/// tictactoe-карточке: filled фиолетовая + outlined с той же геометрией,
-/// иконки 20, размер vpadding зависит от ширины экрана. Loading заменяет
-/// иконку на spinner и текст на «Создание…» / «Поиск…».
+/// Ряд кнопок «Создать игру» / «Найти игру».
 ///
-/// В offline-режиме показывается ОДНА широкая кнопка «Играть» (как у tictactoe).
+/// Всегда одна линия: на узкой карточке уменьшаются отступ и кегль.
+/// Loading заменяет иконку на spinner и текст на «Создание…» / «Поиск…».
+/// В offline-режиме — одна широкая кнопка «Играть».
 class GameCardActionsRow extends StatelessWidget {
   const GameCardActionsRow({
     super.key,
@@ -322,54 +321,58 @@ class GameCardActionsRow extends StatelessWidget {
         ),
       );
     }
-    Widget createButton({required bool expanded}) {
-      final button = SizedBox(
-        height: _height,
-        child: FramedButton(
-          onPressed: isCreating || isFinding ? null : onCreate,
-          icon: Icons.add_rounded,
-          label: isCreating ? creatingLabel : createLabel,
-          loading: isCreating,
-          expanded: true,
-          minHeight: _height,
-        ),
-      );
-      return expanded ? button : Expanded(child: button);
-    }
-
-    Widget findButton({required bool expanded}) {
-      final button = SizedBox(
-        height: _height,
-        child: FramedButton(
-          onPressed: isCreating || isFinding ? null : onFind,
-          icon: Icons.search_rounded,
-          label: isFinding ? findingLabel : findLabel,
-          loading: isFinding,
-          expanded: true,
-          minHeight: _height,
-        ),
-      );
-      return expanded ? button : Expanded(child: button);
-    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stack = gamesHubStackActions(constraints.maxWidth);
-        if (stack) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              createButton(expanded: true),
-              const SizedBox(height: 10),
-              findButton(expanded: true),
-            ],
+        final width = constraints.maxWidth;
+        final veryTight = width < 300;
+        final tight = width < 360;
+        final height = veryTight ? 42.0 : (tight ? 44.0 : _height);
+        final padH = veryTight ? 6.0 : (tight ? 8.0 : 12.0);
+        final fontSize = veryTight ? 11.5 : (tight ? 12.5 : 13.5);
+        final iconSize = veryTight ? 16.0 : (tight ? 17.0 : 18.0);
+        final gap = veryTight ? 6.0 : (tight ? 8.0 : 10.0);
+        final padding = EdgeInsets.symmetric(horizontal: padH, vertical: 8);
+
+        Widget action({
+          required IconData icon,
+          required String label,
+          required VoidCallback? onPressed,
+          required bool loading,
+        }) {
+          return Expanded(
+            child: SizedBox(
+              height: height,
+              child: FramedButton(
+                onPressed: onPressed,
+                icon: icon,
+                label: label,
+                loading: loading,
+                expanded: true,
+                minHeight: height,
+                padding: padding,
+                fontSize: fontSize,
+                iconSize: iconSize,
+              ),
+            ),
           );
         }
+
         return Row(
           children: [
-            createButton(expanded: false),
-            const SizedBox(width: 10),
-            findButton(expanded: false),
+            action(
+              icon: Icons.add_rounded,
+              label: isCreating ? creatingLabel : createLabel,
+              onPressed: isCreating || isFinding ? null : onCreate,
+              loading: isCreating,
+            ),
+            SizedBox(width: gap),
+            action(
+              icon: Icons.search_rounded,
+              label: isFinding ? findingLabel : findLabel,
+              onPressed: isCreating || isFinding ? null : onFind,
+              loading: isFinding,
+            ),
           ],
         );
       },
