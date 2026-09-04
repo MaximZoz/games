@@ -12,6 +12,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
@@ -20,7 +21,6 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
-import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -188,7 +188,6 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
   Widget build(BuildContext context) {
     final lobbyAsync = ref.watch(nardyLobbyProvider(widget.lobbyId));
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final narrow = isNarrow(context);
 
     ref.listen(realtimeEventsProvider, (_, next) {
       final data = next.valueOrNull;
@@ -223,21 +222,13 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: _leaving ? null : _confirmLeave,
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NardyGameIcon(
-                size: narrow ? 20 : 22,
-                color: AppColors.accentStart,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesNardy,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.nardy,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
           centerTitle: false,
           actions: [

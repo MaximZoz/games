@@ -114,6 +114,48 @@ void main() {
         '/games',
       );
     });
+
+    test('активное matchmake-лобби открывает Лобби, не свою игру', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/profile',
+          active: ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'lob-1',
+            gameType: 'durak',
+            mode: 'matchmake',
+          ),
+        ),
+        '/games/durak/lobby/lob-1?mode=matchmake',
+      );
+    });
+
+    test('lobbyScreenPath ставит mode в query', () {
+      expect(
+        lobbyScreenPath('abc', gameType: 'uno', mode: 'matchmake'),
+        '/games/uno/lobby/abc?mode=matchmake',
+      );
+      expect(
+        lobbyScreenPath('abc', gameType: 'uno', mode: 'invite'),
+        '/games/uno/lobby/abc?mode=invite',
+      );
+      expect(lobbyScreenPath('abc', gameType: 'uno'), '/games/uno/lobby/abc');
+    });
+
+    test('активное invite-лобби открывает Свою игру', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/profile',
+          active: ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'lob-2',
+            gameType: 'nardy',
+            mode: 'invite',
+          ),
+        ),
+        '/games/nardy/lobby/lob-2?mode=invite',
+      );
+    });
   });
 
   group('nextRememberedGamesSessionPath', () {

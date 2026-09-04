@@ -15,6 +15,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -192,7 +193,6 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
   Widget build(BuildContext context) {
     final lobbyAsync = ref.watch(battleshipLobbyProvider(widget.lobbyId));
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final narrow = isNarrow(context);
 
     ref.listen(realtimeEventsProvider, (_, next) {
       final data = next.valueOrNull;
@@ -228,22 +228,13 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: _leaving ? null : _confirmLeave,
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.directions_boat_filled_rounded,
-                size: narrow ? 20 : 22,
-                color: AppColors.accentStart,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesBattleship,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.battleship,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
           centerTitle: false,
           actions: [

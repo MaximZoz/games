@@ -141,7 +141,11 @@ void goToActiveSession(BuildContext context, ActiveGameItem active) {
     return;
   }
   if (hasActiveLobby(active)) {
-    context.go('${lobbyPathFor(active.lobbyId!.trim(), gameType: gt)}?mode=invite');
+    context.go(lobbyScreenPath(
+      active.lobbyId!.trim(),
+      gameType: gt,
+      mode: active.mode,
+    ));
   }
 }
 

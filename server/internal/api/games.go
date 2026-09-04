@@ -4634,6 +4634,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 							"type":      "lobby",
 							"lobby_id":  lobbyID,
 							"game_type": gt,
+							"mode":      strings.TrimSpace(m["mode"]),
 						}
 					}
 				}

@@ -13,6 +13,7 @@ import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/lobby_game_navigation.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -22,7 +23,6 @@ import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
-import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 
 class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
@@ -44,12 +44,7 @@ class TicTacToeLobbyScreen extends ConsumerStatefulWidget {
       _TicTacToeLobbyScreenState();
 }
 
-/// Заголовок AppBar экрана лобби.
-///
-/// Пока деталь лобби не загружена, опираемся на [initialMode] из query
-/// (`?mode=invite|matchmake`), чтобы не показывать «Лобби» для своей игры.
-/// Ссылки из чата ([fromInviteLink]) — не «Своя игра»: это вход гостя.
-/// Открытый multi-поиск: status=waiting_invite + mode=matchmake → «Лобби».
+/// Заголовок AppBar экрана лобби крестиков — делегирует в общий [lobbyAppBarTitle].
 String tictactoeLobbyAppBarTitle({
   String? status,
   String? initialMode,
@@ -57,22 +52,13 @@ String tictactoeLobbyAppBarTitle({
   bool fromInviteLink = false,
   bool isLobbyMember = false,
 }) {
-  final l10n = LocaleService.l10n;
-  final mode = (lobbyMode != null && lobbyMode.trim().isNotEmpty)
-      ? lobbyMode.trim()
-      : (initialMode ?? '');
-  if (status == 'waiting_matchmake') return l10n.lobbyMatchmake;
-  if (status == 'waiting_invite') {
-    // «Найти игру» (открытый поиск) — Лобби, не «Своя игра».
-    if (mode == 'matchmake') return l10n.lobbyMatchmake;
-    // Уже в составе — «Своя игра», а не «Войти в игру».
-    if (isLobbyMember || !fromInviteLink) return l10n.lobbyPrivateGame;
-    return l10n.lobbyEnterGame;
-  }
-  if (fromInviteLink && !isLobbyMember) return l10n.lobbyEnterGame;
-  if (mode == 'matchmake') return l10n.lobbyMatchmake;
-  if (mode == 'invite') return l10n.lobbyPrivateGame;
-  return '';
+  return lobbyAppBarTitle(
+    status: status,
+    initialMode: initialMode,
+    lobbyMode: lobbyMode,
+    fromInviteLink: fromInviteLink,
+    isLobbyMember: isLobbyMember,
+  );
 }
 
 /// Иконка крестиков-ноликов в AppBar лобби / своей игры.
@@ -194,6 +180,7 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
               onPressed: _isLeaving ? null : () => _confirmLeaveLobby(context),
               icon: const Icon(Icons.arrow_back_rounded),
             ),
+            titleSpacing: 8,
             title: Builder(
               builder: (context) {
                 final lobby = lobbyAsync.valueOrNull;
@@ -204,35 +191,20 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                         lobby.playerIds.contains(uid) ||
                         lobby.players.any((p) => p.id == uid) ||
                         lobby.opponentId == uid);
-                final title = tictactoeLobbyAppBarTitle(
-                  status: lobby?.status,
-                  initialMode: widget.initialMode,
-                  lobbyMode: lobby?.mode,
-                  fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
-                          true ||
-                      (lobby != null &&
-                          currentUser != null &&
-                          lobby.creatorId != currentUser.id &&
-                          lobby.mode != 'matchmake'),
-                  isLobbyMember: member,
-                );
-                if (title.isEmpty) return const SizedBox.shrink();
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      tictactoeLobbyAppBarIcon,
-                      size: 22,
-                      color: AppColors.accentStart,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                return GameLobbyAppBarTitle(
+                  gameType: LobbyGameKind.tictactoe,
+                  title: tictactoeLobbyAppBarTitle(
+                    status: lobby?.status,
+                    initialMode: widget.initialMode,
+                    lobbyMode: lobby?.mode,
+                    fromInviteLink: widget.fromMessageId?.trim().isNotEmpty ==
+                            true ||
+                        (lobby != null &&
+                            currentUser != null &&
+                            lobby.creatorId != currentUser.id &&
+                            lobby.mode != 'matchmake'),
+                    isLobbyMember: member,
+                  ),
                 );
               },
             ),

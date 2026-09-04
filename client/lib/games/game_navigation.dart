@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 
 /// Возвращает префикс пути партии для game_type ('/games/<gt>/game/').
 String gamePathPrefixFor(String gameType) {
@@ -27,6 +28,18 @@ String gamePathFor(String gameId, {String gameType = 'tictactoe'}) {
 /// Путь к лобби: `/games/<type>/lobby/<id>`.
 String lobbyPathFor(String lobbyId, {String gameType = 'tictactoe'}) {
   return gameRegistry.lobbyPath(lobbyId, gameType: gameType);
+}
+
+/// Экран лобби с query `mode`, чтобы шапка сразу была «Своя игра» / «Лобби».
+String lobbyScreenPath(
+  String lobbyId, {
+  String gameType = 'tictactoe',
+  String? mode,
+}) {
+  final path = lobbyPathFor(lobbyId, gameType: gameType);
+  final normalized = normalizeLobbyMode(mode);
+  if (normalized.isEmpty) return path;
+  return '$path?mode=$normalized';
 }
 
 /// gameId из `/games/<type>/game/:id`.
@@ -96,7 +109,11 @@ String? resolveGamesTabPath({
       gameType: normalizeGameType(active.gameType),
     );
     if (currentPath == dest || currentPath.startsWith(dest)) return null;
-    return '$dest?mode=invite';
+    return lobbyScreenPath(
+      active.lobbyId!,
+      gameType: normalizeGameType(active.gameType),
+      mode: active.mode,
+    );
   }
   if (active == null &&
       (currentPath.startsWith('/games/tictactoe/lobby/') ||
