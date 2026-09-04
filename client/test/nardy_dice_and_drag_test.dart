@@ -68,6 +68,13 @@ void main() {
       expect(nardyDiceUsed(const [3, 5], const []), [true, true]);
     });
 
+    test('смена хода с теми же кубиками — не новый бросок', () {
+      expect(nardyIsNewRoll(const [3, 5], const [3, 5]), isFalse);
+      expect(nardyIsNewRoll(const [3, 5], const [4, 1]), isTrue);
+      expect(nardyIsNewRoll(const [], const [2, 6]), isTrue);
+      expect(nardyIsNewRoll(const [2, 6], const []), isFalse);
+    });
+
     test('дубль гасит кубик за каждые два хода', () {
       const roll = [6, 6, 6, 6];
       expect(nardyDiceUsed(roll, const [6, 6, 6, 6]), [false, false]);
@@ -107,6 +114,13 @@ void main() {
       final rolled = NardyEngine.newGame(nardyModeLong)..rollWith(4, 2);
       final after = _view(rolled, turnNo: 1);
       expect(nardySfxCues(before, after), contains(NardySfxCue.roll));
+    });
+
+    test('Готово с теми же кубиками не звучит как второй бросок', () {
+      final rolled = NardyEngine.newGame(nardyModeLong)..rollWith(4, 2);
+      final before = _view(rolled, turnNo: 1);
+      final after = _view(rolled, turnNo: 2);
+      expect(nardySfxCues(before, after), isNot(contains(NardySfxCue.roll)));
     });
 
     test('переезд шашки даёт звук хода', () {

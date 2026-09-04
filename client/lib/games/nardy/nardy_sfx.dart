@@ -43,8 +43,8 @@ bool _sameRoll(NardyGameView a, NardyGameView b) {
   for (var i = 0; i < a.rolled.length; i++) {
     if (a.rolled[i] != b.rolled[i]) return false;
   }
-  // Один и тот же набор граней в новом ходу — это всё-таки новый бросок.
-  return a.turnNo == b.turnNo;
+  // turnNo растёт и на «Готово»: те же грани — не новый бросок.
+  return true;
 }
 
 bool _sameBoard(List<int> a, List<int> b) {
