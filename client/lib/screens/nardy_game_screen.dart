@@ -632,7 +632,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     });
 
     final game = gameAsync.valueOrNull;
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -724,38 +724,46 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
   }
 
-  /// Доска занимает всю доступную высоту, остальное — компактные полосы.
+  /// Доска занимает всю доступную высоту, полоса «осталось» — её ширину.
   Widget _buildBoard(NardyGameView game) {
     final selected = _selectedTrack;
     final canBearOff = selected != null &&
         selected != nardyBarTrack &&
         _bearOffDie(game, selected) != null;
+    const barHeight = 26.0;
+    const barGap = 6.0;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = nardyFitBoard(
-          Size(constraints.maxWidth, constraints.maxHeight),
-        );
+        final size = nardyFitBoard(Size(
+          constraints.maxWidth,
+          constraints.maxHeight - barHeight - barGap,
+        ));
         if (size.isEmpty) return const SizedBox.shrink();
-        return Center(
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: NardyBoard(
-              game: game,
-              tracker: _tracker,
-              selectedTrack: selected,
-              targetTracks: _targetsFor(game),
-              canBearOff: canBearOff,
-              undoTracks: _undoTargets(game),
-              onTrackTap: (track) => _onTrackTap(game, track),
-              onBarTap: () => _onBarTap(game),
-              onBearOffTap: () => _onBearOffTap(game),
-              canDragFrom: (track) => _canDragFrom(game, track),
-              onDragStart: (track) => setState(() => _selectedTrack = track),
-              onDragEnd: (track) => _onDropOn(game, track),
-              dragCancel: () => setState(() => _selectedTrack = null),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildPipsBar(game, size.width),
+            const SizedBox(height: barGap),
+            SizedBox(
+              width: size.width,
+              height: size.height,
+              child: NardyBoard(
+                game: game,
+                tracker: _tracker,
+                selectedTrack: selected,
+                targetTracks: _targetsFor(game),
+                canBearOff: canBearOff,
+                undoTracks: _undoTargets(game),
+                onTrackTap: (track) => _onTrackTap(game, track),
+                onBarTap: () => _onBarTap(game),
+                onBearOffTap: () => _onBearOffTap(game),
+                canDragFrom: (track) => _canDragFrom(game, track),
+                onDragStart: (track) => setState(() => _selectedTrack = track),
+                onDragEnd: (track) => _onDropOn(game, track),
+                dragCancel: () => setState(() => _selectedTrack = null),
+              ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -764,7 +772,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   Widget _buildPortrait(NardyGameView game, String? me, bool myTurn) {
     return Column(
       children: [
-        _buildOpponentRow(game, me, compact: true),
+        _buildOpponentRow(game, me),
         const SizedBox(height: 6),
         Expanded(child: _buildBoard(game)),
         const SizedBox(height: 6),
@@ -792,7 +800,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpponentRow(game, me, compact: true),
+                _buildOpponentRow(game, me),
                 const SizedBox(height: 8),
                 _buildStatusLine(game, myTurn),
                 const SizedBox(height: 8),
@@ -809,42 +817,22 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     );
   }
 
-  Widget _buildOpponentRow(
-    NardyGameView game,
-    String? me, {
-    required bool compact,
-  }) {
-    final opp = game.opponent;
+  Widget _buildOpponentRow(NardyGameView game, String? me) =>
+      _buildOpponentCard(game, me);
+
+  /// Полоса «осталось» на двоих — по ширине доски.
+  Widget _buildPipsBar(NardyGameView game, double width) {
     final mine = game.me;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildOpponentCard(game, me),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          alignment: WrapAlignment.center,
-          children: [
-            if (opp != null)
-              NardyProgressBar(
-                label: context.l10n.nardyPipsShort,
-                pips: opp.pips,
-                off: opp.off,
-                mine: false,
-                active: !game.isMyTurn && !game.isOver,
-              ),
-            if (mine != null)
-              NardyProgressBar(
-                label: context.l10n.nardyPipsShort,
-                pips: mine.pips,
-                off: mine.off,
-                mine: true,
-                active: game.isMyTurn && !game.isOver,
-              ),
-          ],
-        ),
-      ],
+    final opp = game.opponent;
+    if (mine == null || opp == null) return const SizedBox.shrink();
+    return SizedBox(
+      width: width,
+      child: NardyPipsBar(
+        myPips: mine.pips,
+        oppPips: opp.pips,
+        myTurn: game.isMyTurn,
+        isOver: game.isOver,
+      ),
     );
   }
 

@@ -22,6 +22,21 @@ class SwipeBackScope extends StatefulWidget {
     this.opaqueEdge = true,
   });
 
+  /// Игровой экран: узкая прозрачная полоса и длинный свайп.
+  ///
+  /// Поле занимает весь экран, и широкая opaque-полоса у левого края съедала
+  /// тапы по фишкам и картам — вплоть до случайного выхода из партии.
+  const SwipeBackScope.gameBoard({
+    super.key,
+    required this.onBack,
+    required this.child,
+    this.enabled = true,
+    this.topInset,
+    this.bottomInset = 0,
+  })  : edgeWidth = 16,
+        triggerDistance = 44,
+        opaqueEdge = false;
+
   final VoidCallback onBack;
   final Widget child;
   final bool enabled;

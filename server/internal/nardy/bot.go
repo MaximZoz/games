@@ -5,7 +5,46 @@ import "math/rand"
 // BotID — идентификатор бота нард.
 const BotID = "bot:nardy"
 
-// PlayBotTurn доигрывает ход бота целиком: бросок, все шашки, передача хода.
+// PlayBotStep делает ровно одно действие бота: бросок, одну шашку или
+// закрытие хода. `true` — ход бота на этом закончился.
+//
+// По шагам, а не целиком: клиент должен увидеть бросок и каждую шашку
+// отдельно, иначе весь ход соперника схлопывается в один кадр.
+func PlayBotStep(g *Game, rng *rand.Rand) bool {
+	if g == nil || g.Winner >= 0 {
+		return true
+	}
+	if rng == nil {
+		rng = rand.New(rand.NewSource(1))
+	}
+	seat := g.Turn
+	if len(g.Dice) == 0 {
+		// Кубики отыграны — остаётся закрыть ход отдельным шагом, чтобы
+		// последняя шашка успела доехать на экране.
+		if len(g.History) > 0 {
+			g.EndTurn()
+			return true
+		}
+		if err := g.Roll(rng); err != nil {
+			g.EndTurn()
+			return true
+		}
+		// Ходов может не быть — тогда Roll уже передал очередь.
+		return g.Winner >= 0 || g.Turn != seat
+	}
+	mv, ok := BotBestMove(g, rng)
+	if !ok {
+		g.EndTurn()
+		return true
+	}
+	if err := g.ApplyMove(seat, mv); err != nil {
+		g.EndTurn()
+		return true
+	}
+	return g.Winner >= 0
+}
+
+// PlayBotTurn доигрывает ход бота целиком (тесты и офлайн-догон).
 func PlayBotTurn(g *Game, rng *rand.Rand) {
 	if g == nil || g.Winner >= 0 {
 		return
@@ -13,33 +52,11 @@ func PlayBotTurn(g *Game, rng *rand.Rand) {
 	if rng == nil {
 		rng = rand.New(rand.NewSource(1))
 	}
-	seat := g.Turn
-	if len(g.Dice) == 0 {
-		if err := g.Roll(rng); err != nil {
+	// Каждый шаг снимает кубик или закрывает ход; лимит — страховка.
+	for step := 0; step < 10; step++ {
+		if PlayBotStep(g, rng) {
 			return
 		}
-	}
-	// Каждый ход снимает кубик, поэтому цикл конечен; лимит — страховка.
-	for step := 0; step < 8; step++ {
-		if g.Winner >= 0 || g.Turn != seat {
-			return
-		}
-		if len(g.Dice) == 0 {
-			g.EndTurn()
-			return
-		}
-		mv, ok := BotBestMove(g, rng)
-		if !ok {
-			g.EndTurn()
-			return
-		}
-		if err := g.ApplyMove(seat, mv); err != nil {
-			g.EndTurn()
-			return
-		}
-	}
-	if g.Winner < 0 && g.Turn == seat {
-		g.EndTurn()
 	}
 }
 

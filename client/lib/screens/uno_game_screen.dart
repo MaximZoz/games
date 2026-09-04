@@ -1237,11 +1237,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     // Нижняя зона (веер) исключена — полоса свайпа/крестика не перехватывает
     // крайнюю левую карту, как в дураке.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       onBack: _onClose,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       bottomInset: swipeBottomExclude,
       child: Scaffold(
         backgroundColor: Colors.transparent,

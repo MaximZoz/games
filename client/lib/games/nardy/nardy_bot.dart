@@ -56,22 +56,38 @@ int nardyEvaluate(NardyEngine game, int seat) {
   return score;
 }
 
-/// Один полный ход бота: бросок, все шашки и передача очереди.
-void nardyPlayBotTurn(NardyEngine game, math.Random rng) {
-  if (game.isOver) return;
+/// Одно действие бота: бросок, одна шашка или закрытие хода.
+///
+/// По шагам, а не целиком: иначе весь ход соперника происходит в одном кадре
+/// и на экране его не видно.
+bool nardyPlayBotStep(NardyEngine game, math.Random rng) {
+  if (game.isOver) return true;
   final seat = game.turn;
-  if (game.dice.isEmpty && !game.roll(rng)) return;
-  for (var step = 0; step < 8; step++) {
-    if (game.isOver || game.turn != seat) return;
-    if (game.dice.isEmpty) {
+  if (game.dice.isEmpty) {
+    // Кубики отыграны — ход закрываем отдельным шагом, чтобы последняя
+    // шашка успела доехать.
+    if (game.canUndo) {
       game.endTurn();
-      return;
+      return true;
     }
-    final mv = nardyBotBestMove(game, rng);
-    if (mv == null || !game.applyMove(seat, mv)) {
+    if (!game.roll(rng)) {
       game.endTurn();
-      return;
+      return true;
     }
+    // Ходов может не быть — тогда бросок уже передал очередь.
+    return game.isOver || game.turn != seat;
   }
-  if (!game.isOver && game.turn == seat) game.endTurn();
+  final mv = nardyBotBestMove(game, rng);
+  if (mv == null || !game.applyMove(seat, mv)) {
+    game.endTurn();
+    return true;
+  }
+  return game.isOver;
+}
+
+/// Полный ход бота — для тестов и догона состояния.
+void nardyPlayBotTurn(NardyEngine game, math.Random rng) {
+  for (var step = 0; step < 10; step++) {
+    if (nardyPlayBotStep(game, rng)) return;
+  }
 }

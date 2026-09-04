@@ -493,12 +493,9 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final topPad = MediaQuery.paddingOf(context).top;
     // Доска у левого края: свайп вправо не должен жать крестик выхода
     // (как веер в дураке исключён из полосы свайпа).
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       enabled: false,
       onBack: goBack,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

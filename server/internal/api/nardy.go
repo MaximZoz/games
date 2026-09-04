@@ -20,7 +20,8 @@ const (
 	nardyGameType   = "nardy"
 	nardyBotID      = nardy.BotID
 	nardyStatusOver = "over"
-	nardyBotDelay   = 750 * time.Millisecond
+	// Пауза между шагами бота: бросок и каждая шашка видны отдельно.
+	nardyBotStepDelay = 800 * time.Millisecond
 	nardyMaxPlayers = 2
 )
 

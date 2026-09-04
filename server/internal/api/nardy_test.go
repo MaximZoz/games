@@ -68,7 +68,7 @@ func TestNardyBotPlaysWholeTurn(t *testing.T) {
 	state := nardy.NewGame(nardy.ModeLong)
 	state.Turn = 1
 	before := state.TurnNo
-	nardyPlayBotTurn(state)
+	nardy.PlayBotTurn(state, nardyRNG())
 	if state.Turn == 1 && !nardyIsOver(state) {
 		t.Fatalf("bot must finish its turn, turn=%d dice=%v", state.Turn, state.Dice)
 	}
@@ -77,14 +77,21 @@ func TestNardyBotPlaysWholeTurn(t *testing.T) {
 	}
 }
 
-func TestNardyBotTurnRollsWhenDiceEmpty(t *testing.T) {
+func TestNardyBotFirstStepIsOnlyTheRoll(t *testing.T) {
 	state := nardy.NewGame(nardy.ModeShort)
 	if len(state.Dice) != 0 {
 		t.Fatalf("fresh game must wait for a roll, dice=%v", state.Dice)
 	}
-	nardyPlayBotTurn(state)
+	// Первый шаг — только бросок: клиент должен увидеть кубики до ходов.
+	done := nardy.PlayBotStep(state, nardyRNG())
 	if len(state.Rolled) == 0 {
-		t.Fatal("bot turn must roll the dice")
+		t.Fatal("first bot step must roll the dice")
+	}
+	if done && state.Turn == 0 && len(state.Dice) > 0 {
+		t.Fatal("roll with legal moves must not end the turn")
+	}
+	if len(state.History) != 0 {
+		t.Fatalf("no checker may move on the roll step: %+v", state.History)
 	}
 }
 
