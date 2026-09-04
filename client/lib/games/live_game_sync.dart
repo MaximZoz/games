@@ -5,6 +5,7 @@ import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/poker/poker_repository.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 
@@ -36,6 +37,9 @@ bool hasFullUnoView(Map<String, dynamic> data) {
 
 bool hasFullPokerView(Map<String, dynamic> data) =>
     data['players'] is List && data.containsKey('street');
+
+bool hasFullNardyView(Map<String, dynamic> data) =>
+    data['board'] is List && (data['board'] as List).length == 24;
 
 int tictactoeProgress(GameStateItem state) {
   var progress = state.filledCellCount;
@@ -96,6 +100,22 @@ int pokerProgress(PokerGameView state) {
   if (state.isHandOver) progress += 5;
   if (state.isTableOver || state.isOver) progress += 100000;
   return progress;
+}
+
+/// Прогресс партии нард — монотонный счётчик изменений с сервера.
+///
+/// Позиция не годится: отмена хода возвращает шашку назад, и снимок после
+/// отмены выглядел бы «старее» отменённого.
+int nardyProgress(NardyGameView state) {
+  var progress = state.seq;
+  if (state.isOver) progress += 1000000;
+  return progress;
+}
+
+bool isOlderNardy(NardyGameView incoming, NardyGameView current) {
+  if (current.isOver && !incoming.isOver) return true;
+  if (incoming.isOver && !current.isOver) return false;
+  return nardyProgress(incoming) < nardyProgress(current);
 }
 
 /// Старый HTTP/переупорядоченный кадр не должен откатить уже показанный ход.

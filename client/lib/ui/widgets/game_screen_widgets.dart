@@ -15,6 +15,7 @@ import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
@@ -1538,6 +1539,52 @@ class GameStatusLine extends StatelessWidget {
 
 /// Действия в AppBar экрана партии — общий набор для всех игр.
 /// Кнопки показываются только если передан соответствующий колбэк.
+/// Крестик выхода из партии — один и тот же во всех играх.
+///
+/// Держим его отдельным виджетом, чтобы новая игра не изобретала свой размер
+/// и отступы: иначе кнопка съезжает и налезает на игровое поле.
+class GameCloseButton extends StatelessWidget {
+  const GameCloseButton({super.key, required this.onPressed, this.tooltip});
+
+  final VoidCallback? onPressed;
+  final String? tooltip;
+
+  /// Ширина `leading` под один крестик.
+  static const double width = 48;
+
+  /// Ширина `leading`, когда рядом стоит ещё одна кнопка (групповой чат).
+  static const double widthWithExtra = 96;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      icon: const Icon(Icons.close_rounded),
+      tooltip: tooltip ?? MaterialLocalizations.of(context).closeButtonTooltip,
+      onPressed: onPressed,
+    );
+  }
+}
+
+/// `leading` игрового AppBar: крестик и, при необходимости, соседняя кнопка.
+Widget buildGameAppBarLeading({
+  required VoidCallback? onClose,
+  String? closeTooltip,
+  Widget? extra,
+}) {
+  final close = GameCloseButton(onPressed: onClose, tooltip: closeTooltip);
+  if (extra == null) return close;
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [close, extra],
+  );
+}
+
+/// Ширина `leading` под крестик игрового AppBar.
+double gameAppBarLeadingWidth({bool withExtra = false}) =>
+    withExtra ? GameCloseButton.widthWithExtra : GameCloseButton.width;
+
 List<Widget> buildGameAppBarActions({
   required BuildContext context,
   VoidCallback? onSurrender,
@@ -1592,14 +1639,13 @@ Future<bool> confirmGameActionDialog({
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(
+        FramedButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(cancelLabel),
+          label: cancelLabel,
         ),
-        FilledButton(
+        FramedButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
-          child: Text(confirmLabel),
+          label: confirmLabel,
         ),
       ],
     ),
@@ -1986,28 +2032,17 @@ class GameRematchSection extends StatelessWidget {
                 spacing: compact ? 10 : 12,
                 runSpacing: 8,
                 children: [
-                  OutlinedButton(
+                  FramedButton(
                     onPressed: () => onDecline(rematchOffer.lobbyId),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color: AppColors.textSecondary.withValues(alpha: 0.45),
-                      ),
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
-                    ),
-                    child: Text(context.l10n.commonDecline),
+                    label: context.l10n.commonDecline,
+                    padding: btnPad,
+                    danger: true,
                   ),
-                  FilledButton(
+                  FramedButton(
                     onPressed: () => onAccept(rematchOffer.lobbyId),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
-                      padding: btnPad,
-                      minimumSize: const Size(0, 44),
-                    ),
-                    child: Text(context.l10n.commonAccept),
+                    icon: Icons.check_rounded,
+                    label: context.l10n.commonAccept,
+                    padding: btnPad,
                   ),
                 ],
               ),
@@ -2058,9 +2093,9 @@ class GameRematchSection extends StatelessWidget {
           ),
           if (onCancelWait != null) ...[
             SizedBox(height: compact ? 8 : 12),
-            TextButton(
+            FramedButton(
               onPressed: onCancelWait,
-              child: Text(context.l10n.commonCancel),
+              label: context.l10n.commonCancel,
             ),
           ],
         ],
@@ -2073,49 +2108,23 @@ class GameRematchSection extends StatelessWidget {
     final btnPadding = compact
         ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
         : const EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-    final iconSize = compact ? 18.0 : 20.0;
-    final spinnerSize = compact ? 16.0 : 18.0;
-    final rematch = FilledButton.icon(
+    final rematch = FramedButton(
       onPressed: isRematching ? null : onRematch,
-      icon: isRematching
-          ? SizedBox(
-              width: spinnerSize,
-              height: spinnerSize,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : Icon(Icons.replay_rounded, size: iconSize),
-      label: Text(isRematching
+      icon: Icons.replay_rounded,
+      label: isRematching
           ? context.l10n.commonCreating
-          : context.l10n.gameRematch),
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accentStart,
-        foregroundColor: Colors.white,
-        padding: btnPadding,
-        minimumSize: const Size(0, 44),
-      ),
+          : context.l10n.gameRematch,
+      loading: isRematching,
+      padding: btnPadding,
     );
-    final other = OutlinedButton.icon(
+    final other = FramedButton(
       onPressed: isFindingGame ? null : onFindGame,
-      icon: isFindingGame
-          ? SizedBox(
-              width: spinnerSize,
-              height: spinnerSize,
-              child: const CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(Icons.search_rounded, size: iconSize),
-      label: Text(isFindingGame
+      icon: Icons.search_rounded,
+      label: isFindingGame
           ? context.l10n.commonSearching
-          : context.l10n.gameOtherOpponent),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
-        backgroundColor: Colors.white,
-        side: const BorderSide(color: AppColors.accentStart),
-        padding: btnPadding,
-        minimumSize: const Size(0, 44),
-      ),
+          : context.l10n.gameOtherOpponent,
+      loading: isFindingGame,
+      padding: btnPadding,
     );
     // Телефон в альбоме: две кнопки в ряд, а не портретная колонка по центру.
     final landscape = isPhoneLandscape(context);

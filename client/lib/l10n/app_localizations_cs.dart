@@ -720,6 +720,45 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesNardyWin => 'Vyhrává ten, kdo první sundá všechny kameny.';
 
   @override
+  String get rulesNardySixPrime => 'Šest polí za sebou nesmíš uzavřít, dokud je nemine alespoň jeden soupeřův kámen.';
+
+  @override
+  String get nardyRoll => 'Hodit';
+
+  @override
+  String get nardySkipTurn => 'Přeskočit tah';
+
+  @override
+  String get nardyUndoMove => 'Vrátit';
+
+  @override
+  String get nardyDoneTurn => 'Hotovo';
+
+  @override
+  String get nardyAutoConfirm => 'Automaticky';
+
+  @override
+  String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
+
+  @override
+  String get nardyNoMoves => 'Žádné tahy';
+
+  @override
+  String get nardyYourRoll => 'Váš hod';
+
+  @override
+  String get nardyPipsShort => 'Zbývá:';
+
+  @override
+  String get nardyYouWonMars => 'Vyhráli jste — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Prohra — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: hra proti botovi.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Hráči: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get coinsFriendReward => 'Odměna za přítele';
 
   @override
+  String get coinsTasks => 'Úkoly';
+
+  @override
+  String get coinsTasksSubtitle => 'Odměny za profil, přátele a hry';
+
+  @override
+  String get coinsTasksRewards => 'Dostupné odměny k vyzvednutí';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount za registraci přes váš odkaz';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Odesláno';
+
+  @override
+  String get lobbySearchShort => 'Hledat';
+
+  @override
+  String get lobbySearchPlayers => 'Hledat hráče';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Odmítnuto';
 
   @override
   String get lobbyInvitesSentWaiting => 'Pozvánky odeslány. Čekejte na odpověď.';

@@ -358,10 +358,7 @@ class SettingsScreen extends ConsumerWidget {
                             ref.read(appUpdateProvider.notifier).applyUpdate(),
                         icon: const Icon(Icons.system_update_alt_rounded, size: 18),
                         label: Text(l10n.appUpdateOk),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.accentStart,
-                          foregroundColor: Colors.white,
-                        ),
+                        style: AppButtonStyles.of(),
                       ),
                     ),
                     if (appUpdate.whatsNew.trim().isNotEmpty) ...[

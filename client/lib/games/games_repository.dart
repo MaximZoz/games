@@ -603,6 +603,15 @@ class LobbyPlayer {
   }
 }
 
+/// Приглашённые из ответа лобби — показываем и тех, кого нет в друзьях.
+List<LobbyPlayer> parseLobbyInvited(dynamic raw) {
+  if (raw is! List) return const [];
+  return raw
+      .whereType<Map>()
+      .map((e) => LobbyPlayer.fromJson(e.cast<String, dynamic>()))
+      .toList();
+}
+
 class LobbyItem {
   final String id;
   final String creatorId;
@@ -621,6 +630,9 @@ class LobbyItem {
   final int playersCount;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final String? chatId;
   final bool swapRule;
   final bool firstMoveRestriction;
@@ -641,6 +653,17 @@ class LobbyItem {
 
   bool get isUno => gameType == 'uno';
 
+  bool get isNardy => gameType == 'nardy';
+
+  /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
+  String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(
+        gameType: gameType,
+        variant: variant,
+        gameMode: gameMode,
+        deckSize: deckSize,
+        l10n: l10n,
+      );
+
   LobbyItem({
     required this.id,
     required this.creatorId,
@@ -657,6 +680,7 @@ class LobbyItem {
     int? playersCount,
     List<String>? playerIds,
     List<LobbyPlayer>? players,
+    List<LobbyPlayer>? invited,
     this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
@@ -667,6 +691,7 @@ class LobbyItem {
   })  : gridSize = gridSize ?? gridSizeForVariant(variant),
         maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
         players = players ?? const [],
+        invited = invited ?? const [],
         playerIds = playerIds ?? const [],
         playersCount =
             playersCount ?? (players?.length ?? playerIds?.length ?? 1),
@@ -698,6 +723,7 @@ class LobbyItem {
           (players.isNotEmpty ? players.length : playerIds.length),
       playerIds: playerIds,
       players: players,
+      invited: _parseLobbyPlayers(json['invited']),
       chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
@@ -1229,12 +1255,16 @@ class ActiveGameItem {
   /// в лобби/партию. Default 'tictactoe' сохраняет обратную совместимость.
   final String gameType;
 
+  /// `invite` — «Своя игра»; `matchmake` — «Лобби». Пусто, пока неизвестно.
+  final String mode;
+
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
     this.gameType = 'tictactoe',
+    this.mode = '',
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -1246,8 +1276,50 @@ class ActiveGameItem {
       gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
           ? (json['game_type'] as String).trim()
           : 'tictactoe',
+      mode: (json['mode'] as String?)?.trim() ?? '',
     );
   }
+
+  ActiveGameItem copyWith({
+    String? type,
+    String? gameId,
+    String? lobbyId,
+    bool? isMyTurn,
+    String? gameType,
+    String? mode,
+  }) {
+    return ActiveGameItem(
+      type: type ?? this.type,
+      gameId: gameId ?? this.gameId,
+      lobbyId: lobbyId ?? this.lobbyId,
+      isMyTurn: isMyTurn ?? this.isMyTurn,
+      gameType: gameType ?? this.gameType,
+      mode: mode ?? this.mode,
+    );
+  }
+}
+
+/// Обновить `is_my_turn` из WS `game_state` / `game_started`.
+///
+/// GetActive не дергается на каждый ход — без этого бейдж «ваш ход» и звук
+/// с вкладки сообщений остаются на старом значении. `null` — кадр не про
+/// эту партию или ход не изменился.
+ActiveGameItem? applyActiveGameTurnFromEvent(
+  ActiveGameItem? current,
+  Map<String, dynamic> event,
+) {
+  if (current == null || current.type != 'game') return null;
+  final type = event['type']?.toString() ?? '';
+  if (type != 'game_state' && type != 'game_started') return null;
+  if (!event.containsKey('is_my_turn')) return null;
+  final gameId = event['game_id']?.toString().trim() ?? '';
+  final currentId = current.gameId?.trim() ?? '';
+  if (gameId.isNotEmpty && currentId.isNotEmpty && gameId != currentId) {
+    return null;
+  }
+  final isMyTurn = event['is_my_turn'] == true;
+  if (current.isMyTurn == isMyTurn) return null;
+  return current.copyWith(isMyTurn: isMyTurn);
 }
 
 /// Наблюдение за multi-партией после выбывания (пока лобби/партия жива).
@@ -1769,6 +1841,20 @@ class GamesRepository {
         },
         body: jsonEncode({'friend_user_id': friendUserId}),
         operation: 'GamesRepository.cancelLobbyInvite',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startLobbyMatchmake(String lobbyId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/tictactoe/lobby/$lobbyId/matchmake'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.startLobbyMatchmake',
       ),
     );
     if (response.statusCode != 200) {

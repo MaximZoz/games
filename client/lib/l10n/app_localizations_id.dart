@@ -720,6 +720,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesNardyWin => 'Yang pertama menurunkan semua bidak menang.';
 
   @override
+  String get rulesNardySixPrime => 'Anda tidak boleh menutup enam titik berturut-turut selama belum ada bidak lawan yang melewatinya.';
+
+  @override
+  String get nardyRoll => 'Lempar dadu';
+
+  @override
+  String get nardySkipTurn => 'Lewati giliran';
+
+  @override
+  String get nardyUndoMove => 'Batalkan';
+
+  @override
+  String get nardyDoneTurn => 'Selesai';
+
+  @override
+  String get nardyAutoConfirm => 'Konfirmasi otomatis';
+
+  @override
+  String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
+
+  @override
+  String get nardyNoMoves => 'Tidak ada langkah';
+
+  @override
+  String get nardyYourRoll => 'Lemparan Anda';
+
+  @override
+  String get nardyPipsShort => 'Sisa:';
+
+  @override
+  String get nardyYouWonMars => 'Anda menang — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Kalah — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: bermain melawan bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pemain: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get coinsFriendReward => 'Hadiah teman';
 
   @override
+  String get coinsTasks => 'Tugas';
+
+  @override
+  String get coinsTasksSubtitle => 'Hadiah untuk profil, teman, dan permainan';
+
+  @override
+  String get coinsTasksRewards => 'Ada hadiah yang bisa diklaim';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount untuk pendaftaran lewat tautan Anda';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Terkirim';
+
+  @override
+  String get lobbySearchShort => 'Cari';
+
+  @override
+  String get lobbySearchPlayers => 'Cari pemain';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Ditolak';
 
   @override
   String get lobbyInvitesSentWaiting => 'Undangan terkirim. Menunggu respons.';

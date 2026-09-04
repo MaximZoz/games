@@ -20,22 +20,7 @@ type claimAchievementBody struct {
 	Code string `json:"code"`
 }
 
-// GET /api/achievements
-func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-	userID, ok := GetUserID(r.Context())
-	if !ok {
-		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
-		return
-	}
-	items, err := store.ListAchievements(r.Context(), h.Pool, userID)
-	if err != nil {
-		WriteErr(w, r, http.StatusInternalServerError, "server error")
-		return
-	}
+func writeRewardItems(w http.ResponseWriter, r *http.Request, items []store.AchievementItem, key string) {
 	lang := i18n.LangFromRequest(r)
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
@@ -69,7 +54,32 @@ func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")
-	_ = json.NewEncoder(w).Encode(map[string]any{"achievements": out})
+	_ = json.NewEncoder(w).Encode(map[string]any{key: out})
+}
+
+func writeUnclaimedCount(w http.ResponseWriter, r *http.Request, n int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	_ = json.NewEncoder(w).Encode(map[string]int{"count": n})
+}
+
+// GET /api/achievements
+func (h *AchievementsHandler) List(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	items, err := store.ListAchievements(r.Context(), h.Pool, userID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	writeRewardItems(w, r, items, "achievements")
 }
 
 // GET /api/achievements/unclaimed-count
@@ -88,9 +98,50 @@ func (h *AchievementsHandler) UnclaimedCount(w http.ResponseWriter, r *http.Requ
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store, no-cache")
-	_ = json.NewEncoder(w).Encode(map[string]int{"count": n})
+	writeUnclaimedCount(w, r, n)
+}
+
+// GET /api/tasks
+func (h *AchievementsHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	items, err := store.ListTasks(r.Context(), h.Pool, userID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	writeRewardItems(w, r, items, "tasks")
+}
+
+// GET /api/tasks/unclaimed-count
+func (h *AchievementsHandler) UnclaimedTasksCount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	n, err := store.CountUnclaimedTasks(r.Context(), h.Pool, userID)
+	if err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+	writeUnclaimedCount(w, r, n)
+}
+
+// POST /api/tasks/claim  {"code":"..."}
+func (h *AchievementsHandler) ClaimTask(w http.ResponseWriter, r *http.Request) {
+	h.Claim(w, r)
 }
 
 // POST /api/achievements/claim  {"code":"..."}

@@ -66,6 +66,8 @@ func (h *GamesHandler) serveUno(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "matchmake" && r.Method == http.MethodPost:
+			h.StartLobbyMatchmake(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
 			h.CancelInvite(w, r, lobbyID)
 		default:
@@ -1034,7 +1036,7 @@ func (h *GamesHandler) onUnoGameFinished(
 	for _, userID := range humans {
 		_ = store.IncrementGamesFinished(ctx, h.Pool, userID)
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, userID)
-		notifyAchievementUnlocks(h.Push, userID, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, userID, unlocked)
 	}
 	for _, winnerID := range state.WinnerUserIDs {
 		if isBot(winnerID) {
@@ -1043,7 +1045,7 @@ func (h *GamesHandler) onUnoGameFinished(
 		if userID, err := uuid.Parse(winnerID); err == nil {
 			_ = store.IncrementWinsByStake(ctx, h.Pool, userID, stakeBronze)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, userID)
-			notifyAchievementUnlocks(h.Push, userID, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, userID, unlocked)
 		}
 	}
 	h.recordUnoGameResult(ctx, gameID, m, state, stakeBronze, finishReason)

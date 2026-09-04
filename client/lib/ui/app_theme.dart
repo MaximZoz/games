@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Цвета приложения: один светлый фон, белый в рамках/кнопках, чёрный текст.
+/// Цвета приложения: один светлый фон, белые карточки, чёрный текст.
 class AppColors {
   AppColors._();
 
@@ -14,6 +14,10 @@ class AppColors {
   static const Color accentStart = Color(0xFF6366F1);
   static const Color accentEnd = Color(0xFF8B5CF6);
   static const Color accentSoft = Color(0xFFE0E7FF);
+
+  /// Текстовые кнопки и чипы: заливка цветом фона приложения, лавандовая рамка.
+  static const Color buttonFill = surfaceUnified;
+  static const Color buttonBorder = Color(0xFFB3B3E6);
 
   /// Цвета для переливающегося градиента фона/тулбара.
   static const List<Color> shimmerColors = [
@@ -33,6 +37,81 @@ class AppColors {
   ];
 }
 
+/// Единый вид текстовых кнопок: фон приложения, лавандовая рамка, чёрный текст.
+class AppButtonStyles {
+  AppButtonStyles._();
+
+  static const TextStyle label = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+    decoration: TextDecoration.none,
+  );
+
+  static RoundedRectangleBorder shape([double radius = AppRadius.button]) =>
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius));
+
+  static ButtonStyle of({
+    EdgeInsetsGeometry? padding,
+    Size? minimumSize,
+    Size? maximumSize,
+    OutlinedBorder? shape,
+    VisualDensity? visualDensity,
+    MaterialTapTargetSize? tapTargetSize,
+    AlignmentGeometry? alignment,
+    TextStyle? textStyle,
+    Color? foregroundColor,
+    double? radius,
+  }) {
+    final fg = foregroundColor ?? AppColors.textPrimary;
+    return ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.buttonFill.withValues(alpha: 0.65);
+        }
+        return AppColors.buttonFill;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return fg.withValues(alpha: 0.45);
+        }
+        return fg;
+      }),
+      overlayColor: WidgetStatePropertyAll(
+        AppColors.buttonBorder.withValues(alpha: 0.18),
+      ),
+      elevation: const WidgetStatePropertyAll(0),
+      shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      padding: WidgetStatePropertyAll(
+        padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      ),
+      minimumSize: minimumSize == null
+          ? null
+          : WidgetStatePropertyAll(minimumSize),
+      maximumSize: maximumSize == null
+          ? null
+          : WidgetStatePropertyAll(maximumSize),
+      visualDensity: visualDensity,
+      tapTargetSize: tapTargetSize,
+      alignment: alignment,
+      textStyle: WidgetStatePropertyAll(textStyle ?? label),
+      iconColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return fg.withValues(alpha: 0.45);
+        }
+        return fg;
+      }),
+      side: const WidgetStatePropertyAll(
+        BorderSide(color: AppColors.buttonBorder),
+      ),
+      shape: WidgetStatePropertyAll(
+        shape ?? AppButtonStyles.shape(radius ?? AppRadius.button),
+      ),
+    );
+  }
+}
+
 /// Градиенты (для анимированного бордера и т.п.).
 class AppGradients {
   AppGradients._();
@@ -47,6 +126,19 @@ class AppGradients {
       stops: const [0.0, 1.0],
     );
   }
+
+  /// Рамка текстовых кнопок: индиго → фиолет → голубой.
+  static const LinearGradient buttonBorder = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.accentStart,
+      AppColors.accentEnd,
+      Color(0xFF93C5FD),
+      AppColors.accentStart,
+    ],
+    stops: [0.0, 0.38, 0.72, 1.0],
+  );
 }
 
 /// Радиусы и отступы.
@@ -55,7 +147,7 @@ class AppRadius {
 
   static const double card = 20;
   static const double input = 12;
-  static const double button = 12;
+  static const double button = 14;
   static const double badge = 8;
 }
 

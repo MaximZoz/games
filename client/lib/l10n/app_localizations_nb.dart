@@ -720,6 +720,45 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesNardyWin => 'Den som først tar av alle brikker, vinner.';
 
   @override
+  String get rulesNardySixPrime => 'Du kan ikke stenge seks punkter på rad før minst én av motstanderens brikker har passert dem.';
+
+  @override
+  String get nardyRoll => 'Kast';
+
+  @override
+  String get nardySkipTurn => 'Hopp over turen';
+
+  @override
+  String get nardyUndoMove => 'Angre';
+
+  @override
+  String get nardyDoneTurn => 'Ferdig';
+
+  @override
+  String get nardyAutoConfirm => 'Autobekreft';
+
+  @override
+  String get nardyAutoConfirmHint => 'Etter alle trekk går turen automatisk videre';
+
+  @override
+  String get nardyNoMoves => 'Ingen trekk';
+
+  @override
+  String get nardyYourRoll => 'Ditt kast';
+
+  @override
+  String get nardyPipsShort => 'Igjen:';
+
+  @override
+  String get nardyYouWonMars => 'Du vant — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Tap — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: parti mot boten.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spillere: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsNb extends AppLocalizations {
   String get coinsFriendReward => 'Vennebelønning';
 
   @override
+  String get coinsTasks => 'Oppgaver';
+
+  @override
+  String get coinsTasksSubtitle => 'Belønninger for profil, venner og spill';
+
+  @override
+  String get coinsTasksRewards => 'Belønninger klare til å hentes';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount for registrering via lenken din';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Sendt';
+
+  @override
+  String get lobbySearchShort => 'Søk';
+
+  @override
+  String get lobbySearchPlayers => 'Finn spillere';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Avslått';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invitasjoner sendt. Venter på svar.';

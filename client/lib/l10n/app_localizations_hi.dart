@@ -720,6 +720,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesNardyWin => 'जो पहले सारे मोहरे उतार ले, वही जीते।';
 
   @override
+  String get rulesNardySixPrime => 'जब तक विरोधी की कोई गोटी उन्हें पार न कर ले, लगातार छह बिंदु बंद नहीं किए जा सकते।';
+
+  @override
+  String get nardyRoll => 'पासा फेंकें';
+
+  @override
+  String get nardySkipTurn => 'बारी छोड़ें';
+
+  @override
+  String get nardyUndoMove => 'वापस लें';
+
+  @override
+  String get nardyDoneTurn => 'हो गया';
+
+  @override
+  String get nardyAutoConfirm => 'स्वतः पुष्टि';
+
+  @override
+  String get nardyAutoConfirmHint => 'सभी चालों के बाद बारी अपने आप चली जाएगी';
+
+  @override
+  String get nardyNoMoves => 'कोई चाल नहीं';
+
+  @override
+  String get nardyYourRoll => 'आपका पासा';
+
+  @override
+  String get nardyPipsShort => 'शेष:';
+
+  @override
+  String get nardyYouWonMars => 'आप जीते — गैमन!';
+
+  @override
+  String get nardyYouLostMars => 'हार — गैमन';
+
+  @override
+  String get rulesNardyOfflineBot => 'ऑफ़लाइन: बॉट के साथ खेल।';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'खिलाड़ी: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get coinsFriendReward => 'मित्र इनाम';
 
   @override
+  String get coinsTasks => 'कार्य';
+
+  @override
+  String get coinsTasksSubtitle => 'प्रोफ़ाइल, मित्रों और खेलों के इनाम';
+
+  @override
+  String get coinsTasksRewards => 'दावा करने योग्य इनाम उपलब्ध';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'आपके लिंक से रजिस्टर करने पर +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'भेजा गया';
+
+  @override
+  String get lobbySearchShort => 'खोज';
+
+  @override
+  String get lobbySearchPlayers => 'खिलाड़ी खोजें';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'अस्वीकृत';
 
   @override
   String get lobbyInvitesSentWaiting => 'निमंत्रण भेजे गए। उत्तर की प्रतीक्षा।';

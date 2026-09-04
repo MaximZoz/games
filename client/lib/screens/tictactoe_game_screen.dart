@@ -493,27 +493,16 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final topPad = MediaQuery.paddingOf(context).top;
     // Доска у левого края: свайп вправо не должен жать крестик выхода
     // (как веер в дураке исключён из полосы свайпа).
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       enabled: false,
       onBack: goBack,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: 48,
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 44,
-              minHeight: 44,
-            ),
-            onPressed: goBack,
-            icon: const Icon(Icons.close_rounded),
-          ),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(onClose: goBack),
           title: Text(context.l10n.gamesTicTacToe),
           actions: [
             // Multi: «сдаться» в AppBar, чтобы не налезала на блок чата/игроков.
@@ -892,10 +881,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                                 _isRematching ? null : () => _rematch(context),
                             icon: const Icon(Icons.replay_rounded, size: 18),
                             label: Text(context.l10n.offlinePlayAgain),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.accentStart,
-                              foregroundColor: Colors.white,
-                            ),
+                            style: AppButtonStyles.of(),
                           ),
                         )
                       else
@@ -1099,9 +1085,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
             child: Text(context.l10n.gameSurrender),
           ),
         ],
@@ -1150,9 +1133,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
             child: Text(l10n.gameOfferDraw),
           ),
         ],
@@ -1194,9 +1174,6 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
             child: Text(l10n.gameDraw),
           ),
         ],
@@ -1995,10 +1972,6 @@ class _RematchSection extends StatelessWidget {
               SizedBox(width: compact ? 8 : 12),
               FilledButton(
                 onPressed: () => onAccept(rematchOffer.lobbyId),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentStart,
-                  foregroundColor: Colors.white,
-                ),
                 child: Text(context.l10n.commonAccept),
               ),
             ],
@@ -2104,18 +2077,14 @@ class _RematchSection extends StatelessWidget {
                   height: compact ? 16 : 18,
                   child: const CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 )
               : Icon(Icons.replay_rounded, size: compact ? 18 : 20),
           label: Text(isRematching
               ? context.l10n.commonCreating
               : context.l10n.gameRematch),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            foregroundColor: Colors.white,
-            padding: btnPadding,
-          ),
+          style: AppButtonStyles.of(padding: btnPadding),
         ),
         OutlinedButton.icon(
           onPressed: isFindingGame ? null : onFindGame,
@@ -2129,11 +2098,7 @@ class _RematchSection extends StatelessWidget {
           label: Text(isFindingGame
               ? context.l10n.commonSearching
               : context.l10n.gameOtherOpponent),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentStart,
-            side: BorderSide(color: AppColors.accentStart),
-            padding: btnPadding,
-          ),
+          style: AppButtonStyles.of(padding: btnPadding),
         ),
       ],
     );

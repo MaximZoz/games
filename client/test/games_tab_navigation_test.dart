@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
@@ -63,6 +64,56 @@ void main() {
       expect(gamesHubTileColumns(maxWidth: 1100, wide: true), greaterThan(1));
       expect(gamesHubTileWidth(maxWidth: 1100, cols: 3), lessThan(400.1));
     });
+
+    test('три строки названия — две колонки вместо трёх', () {
+      const style = TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        height: 1.15,
+        letterSpacing: -0.3,
+      );
+      expect(gamesHubTileColumns(maxWidth: 860, wide: true), 3);
+      expect(
+        gamesHubTileColumns(
+          maxWidth: 860,
+          wide: true,
+          titles: const ['Крестики-нолики'],
+          isDesktop: true,
+          titleStyle: style,
+        ),
+        2,
+      );
+      expect(
+        gameTitleLineCount(
+          title: 'Крестики-нолики',
+          style: style,
+          maxWidth: gamesHubTitleMaxWidth(
+            tileWidth: gamesHubTileWidth(maxWidth: 860, cols: 3),
+            isDesktop: true,
+            isMedium: false,
+          ),
+        ),
+        greaterThanOrEqualTo(3),
+      );
+    });
+
+    test('короткие названия остаются в трёх колонках', () {
+      expect(
+        gamesHubTileColumns(
+          maxWidth: 1100,
+          wide: true,
+          titles: const ['Дурак', 'Уно', 'Покер'],
+          isDesktop: true,
+          titleStyle: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+            letterSpacing: -0.3,
+          ),
+        ),
+        3,
+      );
+    });
   });
 
   group('resolveGamesTabPath', () {
@@ -112,6 +163,48 @@ void main() {
       expect(
         resolveGamesTabPath(currentPath: '/profile'),
         '/games',
+      );
+    });
+
+    test('активное matchmake-лобби открывает Лобби, не свою игру', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/profile',
+          active: ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'lob-1',
+            gameType: 'durak',
+            mode: 'matchmake',
+          ),
+        ),
+        '/games/durak/lobby/lob-1?mode=matchmake',
+      );
+    });
+
+    test('lobbyScreenPath ставит mode в query', () {
+      expect(
+        lobbyScreenPath('abc', gameType: 'uno', mode: 'matchmake'),
+        '/games/uno/lobby/abc?mode=matchmake',
+      );
+      expect(
+        lobbyScreenPath('abc', gameType: 'uno', mode: 'invite'),
+        '/games/uno/lobby/abc?mode=invite',
+      );
+      expect(lobbyScreenPath('abc', gameType: 'uno'), '/games/uno/lobby/abc');
+    });
+
+    test('активное invite-лобби открывает Свою игру', () {
+      expect(
+        resolveGamesTabPath(
+          currentPath: '/profile',
+          active: ActiveGameItem(
+            type: 'lobby',
+            lobbyId: 'lob-2',
+            gameType: 'nardy',
+            mode: 'invite',
+          ),
+        ),
+        '/games/nardy/lobby/lob-2?mode=invite',
       );
     });
   });

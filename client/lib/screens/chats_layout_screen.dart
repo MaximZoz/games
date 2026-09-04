@@ -55,6 +55,47 @@ class ChatsLayoutScreen extends ConsumerWidget {
 const double _sidebarExpandedWidth = 360;
 const double _sidebarCollapsedWidth = 72;
 
+@visibleForTesting
+const double chatsSidebarToggleWidth = 20;
+
+@visibleForTesting
+const double chatsSidebarToggleHeight = 36;
+
+@visibleForTesting
+const double chatsSidebarToggleLeftInset = 14;
+
+@visibleForTesting
+const double chatsSidebarLineWidth = 2;
+
+@visibleForTesting
+const double chatsSidebarSwipeThreshold = 48;
+
+@visibleForTesting
+Color chatsSidebarDividerColor() =>
+    AppColors.accentSoft.withValues(alpha: 0.6);
+
+/// Фон списка диалогов на десктопе — тот же, что полоса и тогл.
+@visibleForTesting
+Color chatsSidebarPanelColor() => chatsSidebarDividerColor();
+
+/// Линия проходит через центр тогла и касается его заливки.
+@visibleForTesting
+double chatsSidebarLineLeft(double panelWidth) {
+  final toggleCenter =
+      panelWidth - chatsSidebarToggleLeftInset + chatsSidebarToggleWidth / 2;
+  return toggleCenter - chatsSidebarLineWidth / 2;
+}
+
+@visibleForTesting
+bool chatsSidebarSwipeShouldToggle({
+  required bool collapsed,
+  required double dx,
+  double threshold = chatsSidebarSwipeThreshold,
+}) {
+  if (dx.abs() < threshold) return false;
+  return collapsed ? dx > 0 : dx < 0;
+}
+
 class _DesktopChatsLayout extends ConsumerStatefulWidget {
   const _DesktopChatsLayout({
     this.chatId,
@@ -75,11 +116,42 @@ class _DesktopChatsLayout extends ConsumerStatefulWidget {
 }
 
 class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
+  double _swipeDx = 0;
+  bool _swipeTriggered = false;
+
+  void _resetSwipe() {
+    _swipeDx = 0;
+    _swipeTriggered = false;
+  }
+
+  void _toggleSidebar() {
+    final collapsed = ref.read(chatsSidebarCollapsedProvider);
+    ref.read(chatsSidebarCollapsedProvider.notifier).state = !collapsed;
+  }
+
+  void _onSwipeStart(DragStartDetails _) => _resetSwipe();
+
+  void _onSwipeUpdate(DragUpdateDetails details) {
+    if (_swipeTriggered) return;
+    _swipeDx += details.delta.dx;
+    final collapsed = ref.read(chatsSidebarCollapsedProvider);
+    if (chatsSidebarSwipeShouldToggle(collapsed: collapsed, dx: _swipeDx)) {
+      _swipeTriggered = true;
+      _toggleSidebar();
+    }
+  }
+
+  void _onSwipeEnd(DragEndDetails _) => _resetSwipe();
+
   @override
   Widget build(BuildContext context) {
     final sidebarCollapsed = ref.watch(chatsSidebarCollapsedProvider);
     final showChatList = !widget.fromFriends && !widget.fromGames;
-    final panelWidth = sidebarCollapsed ? _sidebarCollapsedWidth : _sidebarExpandedWidth;
+    final panelWidth =
+        sidebarCollapsed ? _sidebarCollapsedWidth : _sidebarExpandedWidth;
+    final dividerColor = chatsSidebarDividerColor();
+    final panelColor = chatsSidebarPanelColor();
+    final lineLeft = chatsSidebarLineLeft(panelWidth);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -90,67 +162,76 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
             if (showChatList)
               SizedBox(
                 width: panelWidth + 32,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: panelWidth,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragStart: _onSwipeStart,
+                  onHorizontalDragUpdate: _onSwipeUpdate,
+                  onHorizontalDragEnd: _onSwipeEnd,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
                         width: panelWidth,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          border: Border(
-                            right: BorderSide(
-                              color: AppColors.accentSoft.withValues(alpha: 0.4),
-                              width: 1,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeInOut,
+                          width: panelWidth,
+                          color: panelColor,
+                          child: ClipRect(
+                            child: ChatsScreen(
+                              inSplitView: true,
+                              sidebarCompact: sidebarCollapsed,
                             ),
                           ),
                         ),
-                        child: ClipRect(
-                          child: ChatsScreen(
-                            inSplitView: true,
-                            sidebarCompact: sidebarCollapsed,
-                          ),
-                        ),
                       ),
-                    ),
-                    Positioned(
-                      left: panelWidth - 14,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: Material(
-                          color: AppColors.accentSoft.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(10),
-                          elevation: 1,
-                          child: InkWell(
+                      Positioned(
+                        left: lineLeft,
+                        top: 0,
+                        bottom: 0,
+                        width: chatsSidebarLineWidth,
+                        child: ColoredBox(color: dividerColor),
+                      ),
+                      Positioned(
+                        left: panelWidth - chatsSidebarToggleLeftInset,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: Material(
+                            color: dividerColor,
                             borderRadius: BorderRadius.circular(10),
-                            onTap: () => ref.read(chatsSidebarCollapsedProvider.notifier).state = !sidebarCollapsed,
-                            child: Tooltip(
-                              message: sidebarCollapsed ? context.l10n.chatsExpandPanel : context.l10n.chatsCollapsePanel,
-                              child: Container(
-                                width: 20,
-                                height: 36,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  sidebarCollapsed
-                                    ? Icons.chevron_right_rounded
-                                    : Icons.chevron_left_rounded,
-                                  color: AppColors.textPrimary.withValues(alpha: 0.9),
-                                  size: 18,
+                            elevation: 1,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: _toggleSidebar,
+                              child: Tooltip(
+                                message: sidebarCollapsed
+                                    ? context.l10n.chatsExpandPanel
+                                    : context.l10n.chatsCollapsePanel,
+                                child: SizedBox(
+                                  width: chatsSidebarToggleWidth,
+                                  height: chatsSidebarToggleHeight,
+                                  child: Center(
+                                    child: Icon(
+                                      sidebarCollapsed
+                                          ? Icons.chevron_right_rounded
+                                          : Icons.chevron_left_rounded,
+                                      color: AppColors.textPrimary
+                                          .withValues(alpha: 0.9),
+                                      size: 18,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             Expanded(
@@ -163,7 +244,9 @@ class _DesktopChatsLayoutState extends ConsumerState<_DesktopChatsLayout> {
                         fromFriends: widget.fromFriends,
                         fromGames: widget.fromGames,
                         gameReturnPath: widget.gameReturnPath,
-                        inSplitView: (widget.fromFriends || widget.fromGames) ? false : true,
+                        inSplitView: (widget.fromFriends || widget.fromGames)
+                            ? false
+                            : true,
                       ),
                     )
                   : _buildEmptyState(context),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Иконка «Нарды» — миниатюрная доска с треугольниками и шашками.
+/// Иконка «Нарды» — доска с крупными пунктами и стопкой шашек.
+///
+/// На 24–26 px мелкие детали сливаются, поэтому на доске всего шесть пунктов
+/// и две шашки: силуэт читается даже в чипе.
 class NardyGameIcon extends StatelessWidget {
   const NardyGameIcon({
     super.key,
@@ -12,7 +15,7 @@ class NardyGameIcon extends StatelessWidget {
   final Color? color;
 
   /// Запасной [IconData] для мест, где нужен только символ.
-  static const IconData iconData = Icons.view_module_rounded;
+  static const IconData iconData = Icons.casino_rounded;
 
   @override
   Widget build(BuildContext context) {
@@ -31,120 +34,124 @@ class _NardyGameIconPainter extends CustomPainter {
 
   final Color color;
 
+  /// Пунктов вдоль края. Больше четырёх — на 24 px сливается в полоску.
+  static const int _pointsPerSide = 4;
+
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.shortestSide;
-    final boardW = s * 0.86;
-    final boardH = s * 0.62;
+    final strokeW = s * 0.085;
+    final boardW = s * 0.92;
+    final boardH = s * 0.78;
     final left = (size.width - boardW) / 2;
     final top = (size.height - boardH) / 2;
     final board = RRect.fromRectAndRadius(
       Rect.fromLTWH(left, top, boardW, boardH),
-      Radius.circular(s * 0.06),
+      Radius.circular(s * 0.14),
     );
 
-    final fill = Paint()..color = color.withValues(alpha: 0.18);
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.045
-      ..color = color.withValues(alpha: 0.95);
-    canvas.drawRRect(board, fill);
-    canvas.drawRRect(board, stroke);
+    // Слой нужен, чтобы «вырез» под шашками стирал только саму иконку.
+    canvas.saveLayer(Offset.zero & size, Paint());
+    canvas.drawRRect(board, Paint()..color = color.withValues(alpha: 0.14));
 
-    final barW = s * 0.05;
-    final barLeft = left + boardW / 2 - barW / 2;
-    canvas.drawRect(
-      Rect.fromLTWH(barLeft, top, barW, boardH),
-      Paint()..color = color.withValues(alpha: 0.55),
+    // Пункты рисуем внутри рамки, иначе острые углы лезут на скругления.
+    final innerLeft = left + strokeW;
+    final innerTop = top + strokeW;
+    final innerW = boardW - strokeW * 2;
+    final innerH = boardH - strokeW * 2;
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(innerLeft, innerTop, innerW, innerH),
+        Radius.circular(s * 0.09),
+      ),
     );
 
-    const pointsPerSide = 6;
-    final pointW = boardW / pointsPerSide;
-    final halfH = boardH / 2;
-
-    void drawTriangle({
-      required double x,
-      required double y,
-      required double w,
-      required double h,
-      required bool pointsDown,
-      required double alpha,
-    }) {
-      final path = Path();
-      if (pointsDown) {
-        path
-          ..moveTo(x, y)
-          ..lineTo(x + w, y)
-          ..lineTo(x + w / 2, y + h)
-          ..close();
-      } else {
-        path
-          ..moveTo(x, y + h)
-          ..lineTo(x + w, y + h)
-          ..lineTo(x + w / 2, y)
-          ..close();
-      }
-      canvas.drawPath(path, Paint()..color = color.withValues(alpha: alpha));
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = s * 0.02
-          ..color = color.withValues(alpha: 0.35),
-      );
-    }
-
-    for (var i = 0; i < pointsPerSide; i++) {
-      final x = left + i * pointW;
-      final light = i.isEven;
-      drawTriangle(
+    final pointW = innerW / _pointsPerSide;
+    final pointH = innerH * 0.46;
+    for (var i = 0; i < _pointsPerSide; i++) {
+      final x = innerLeft + i * pointW;
+      final strong = i.isEven;
+      _drawPoint(
+        canvas,
         x: x,
-        y: top,
+        y: innerTop,
         w: pointW,
-        h: halfH,
-        pointsDown: true,
-        alpha: light ? 0.92 : 0.42,
+        h: pointH,
+        down: true,
+        alpha: strong ? 0.95 : 0.4,
       );
-      drawTriangle(
+      _drawPoint(
+        canvas,
         x: x,
-        y: top + halfH,
+        y: innerTop + innerH - pointH,
         w: pointW,
-        h: halfH,
-        pointsDown: false,
-        alpha: light ? 0.42 : 0.92,
+        h: pointH,
+        down: false,
+        alpha: strong ? 0.4 : 0.95,
       );
     }
+    canvas.restore();
 
-    void drawChecker(Offset center, {required bool filled}) {
-      final radius = s * 0.055;
-      if (filled) {
-        canvas.drawCircle(center, radius, Paint()..color = color);
-      } else {
-        canvas.drawCircle(
-          center,
-          radius,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = s * 0.035
-            ..color = color,
-        );
-        canvas.drawCircle(
-          center,
-          radius * 0.55,
-          Paint()..color = color.withValues(alpha: 0.25),
-        );
-      }
+    canvas.drawRRect(
+      board,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeJoin = StrokeJoin.round
+        ..color = color,
+    );
+
+    // Стопка шашек в углу — как на настоящей доске. По центру они смотрелись
+    // как объектив, а не как нарды.
+    final checkerR = s * 0.085;
+    final checkerX = innerLeft + pointW * 0.5;
+    final checkerY = innerTop + innerH - checkerR - s * 0.02;
+    _drawChecker(canvas, Offset(checkerX, checkerY), checkerR, s);
+    _drawChecker(
+      canvas,
+      Offset(checkerX, checkerY - checkerR * 1.85),
+      checkerR,
+      s,
+    );
+    canvas.restore();
+  }
+
+  void _drawPoint(
+    Canvas canvas, {
+    required double x,
+    required double y,
+    required double w,
+    required double h,
+    required bool down,
+    required double alpha,
+  }) {
+    final inset = w * 0.08;
+    final path = Path();
+    if (down) {
+      path
+        ..moveTo(x + inset, y)
+        ..lineTo(x + w - inset, y)
+        ..lineTo(x + w / 2, y + h)
+        ..close();
+    } else {
+      path
+        ..moveTo(x + inset, y + h)
+        ..lineTo(x + w - inset, y + h)
+        ..lineTo(x + w / 2, y)
+        ..close();
     }
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: alpha));
+  }
 
-    final baseX = left + pointW * 1.5;
-    final baseY = top + boardH - halfH * 0.22;
-    drawChecker(Offset(baseX, baseY), filled: true);
-    drawChecker(Offset(baseX, baseY - s * 0.11), filled: true);
-
-    final topX = left + pointW * 4.5;
-    final topY = top + halfH * 0.24;
-    drawChecker(Offset(topX, topY), filled: false);
-    drawChecker(Offset(topX, topY + s * 0.11), filled: false);
+  /// Шашка с «вырезом» по контуру: кольцо отделяет её от пунктов под ней.
+  void _drawChecker(Canvas canvas, Offset center, double radius, double s) {
+    canvas.drawCircle(
+      center,
+      radius + s * 0.035,
+      Paint()..blendMode = BlendMode.clear,
+    );
+    canvas.drawCircle(center, radius, Paint()..color = color);
   }
 
   @override

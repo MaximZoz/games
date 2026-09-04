@@ -720,6 +720,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesNardyWin => '모든 말을 먼저 뺀 사람이 이깁니다.';
 
   @override
+  String get rulesNardySixPrime => '상대 말이 하나도 지나가지 않은 상태에서는 여섯 칸을 연속으로 막을 수 없습니다.';
+
+  @override
+  String get nardyRoll => '주사위 굴리기';
+
+  @override
+  String get nardySkipTurn => '차례 넘기기';
+
+  @override
+  String get nardyUndoMove => '되돌리기';
+
+  @override
+  String get nardyDoneTurn => '완료';
+
+  @override
+  String get nardyAutoConfirm => '자동 확인';
+
+  @override
+  String get nardyAutoConfirmHint => '모든 수를 두면 차례가 자동으로 넘어갑니다';
+
+  @override
+  String get nardyNoMoves => '둘 수 없음';
+
+  @override
+  String get nardyYourRoll => '당신의 주사위';
+
+  @override
+  String get nardyPipsShort => '남음:';
+
+  @override
+  String get nardyYouWonMars => '승리 — 개먼!';
+
+  @override
+  String get nardyYouLostMars => '패배 — 개먼';
+
+  @override
+  String get rulesNardyOfflineBot => '오프라인: 봇과의 대국.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '플레이어: $players명.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coinsFriendReward => '친구 보상';
 
   @override
+  String get coinsTasks => '과제';
+
+  @override
+  String get coinsTasksSubtitle => '프로필, 친구, 게임 보상';
+
+  @override
+  String get coinsTasksRewards => '받을 수 있는 보상이 있습니다';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '내 링크로 가입 시 +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '보냄';
+
+  @override
+  String get lobbySearchShort => '검색';
+
+  @override
+  String get lobbySearchPlayers => '플레이어 찾기';
+
+  @override
+  String get lobbyInviteDeclinedShort => '거절함';
 
   @override
   String get lobbyInvitesSentWaiting => '초대가 전송되었습니다. 응답을 기다리는 중.';

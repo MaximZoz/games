@@ -6,6 +6,7 @@ import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 /// Flutter считает «Крестики-нолики» одним словом и ставит «...» вместо
@@ -158,7 +159,9 @@ class GameCardHeader extends StatelessWidget {
               ],
               if (onInfoTap != null)
                 IconButton(
-                  onPressed: busy ? null : onInfoTap,
+                  // Не отключать при busy: IconButton с onPressed == null
+                  // уходит в disabled и анимирует цвет — иконка «моргает».
+                  onPressed: onInfoTap,
                   icon: const Icon(
                     Icons.info_outline_rounded,
                     size: 22,
@@ -227,9 +230,7 @@ class GameCardChip extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.accentSoft.withValues(alpha: 0.6)
-                : AppColors.textSecondary.withValues(alpha: 0.12),
+            color: AppColors.buttonFill,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: selected
@@ -263,12 +264,11 @@ class GameCardChip extends StatelessWidget {
   }
 }
 
-/// Ряд кнопок «Создать игру» / «Найти игру». Визуально идентичен
-/// tictactoe-карточке: filled фиолетовая + outlined с той же геометрией,
-/// иконки 20, размер vpadding зависит от ширины экрана. Loading заменяет
-/// иконку на spinner и текст на «Создание…» / «Поиск…».
+/// Ряд кнопок «Создать игру» / «Найти игру».
 ///
-/// В offline-режиме показывается ОДНА широкая кнопка «Играть» (как у tictactoe).
+/// Всегда одна линия: на узкой карточке уменьшаются отступ и кегль.
+/// Loading заменяет иконку на spinner и текст на «Создание…» / «Поиск…».
+/// В offline-режиме — одна широкая кнопка «Играть».
 class GameCardActionsRow extends StatelessWidget {
   const GameCardActionsRow({
     super.key,
@@ -304,101 +304,75 @@ class GameCardActionsRow extends StatelessWidget {
   final bool isDesktop;
   final bool isMedium;
 
-  double get _padV => isMedium ? 12 : (isDesktop ? 14 : 12);
+  /// Обе кнопки одной высоты — иначе ряд «прыгает» по базовой линии.
+  double get _height => isDesktop ? 50 : 46;
 
   @override
   Widget build(BuildContext context) {
     if (offline) {
-      return FilledButton.icon(
-        onPressed: onOfflinePlay,
-        icon: const Icon(Icons.play_arrow_rounded, size: 22),
-        label: Text(offlinePlayLabel ?? context.l10n.gamesPlay),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
+      return SizedBox(
+        height: _height,
+        child: FramedButton(
+          onPressed: onOfflinePlay,
+          icon: Icons.play_arrow_rounded,
+          label: offlinePlayLabel ?? context.l10n.gamesPlay,
+          expanded: true,
+          minHeight: _height,
         ),
       );
-    }
-    Widget createButton({required bool expanded}) {
-      final button = FilledButton.icon(
-        onPressed: isCreating || isFinding ? null : onCreate,
-        icon: isCreating
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.add_rounded, size: 20),
-        label: Text(isCreating ? creatingLabel : createLabel),
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
-        ),
-      );
-      return expanded ? button : Expanded(child: button);
-    }
-
-    Widget findButton({required bool expanded}) {
-      final button = OutlinedButton.icon(
-        onPressed: isCreating || isFinding ? null : onFind,
-        icon: isFinding
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentStart,
-                ),
-              )
-            : const Icon(Icons.search_rounded, size: 20),
-        label: Text(isFinding ? findingLabel : findLabel),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.accentStart,
-          side: BorderSide(
-            color: AppColors.accentStart.withValues(alpha: 0.6),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.symmetric(vertical: _padV),
-        ),
-      );
-      return expanded ? button : Expanded(child: button);
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stack = gamesHubStackActions(constraints.maxWidth);
-        if (stack) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              createButton(expanded: true),
-              const SizedBox(height: 8),
-              findButton(expanded: true),
-            ],
+        final width = constraints.maxWidth;
+        final veryTight = width < 300;
+        final tight = width < 360;
+        final height = veryTight ? 42.0 : (tight ? 44.0 : _height);
+        final padH = veryTight ? 6.0 : (tight ? 8.0 : 12.0);
+        final fontSize = veryTight ? 11.5 : (tight ? 12.5 : 13.5);
+        final iconSize = veryTight ? 16.0 : (tight ? 17.0 : 18.0);
+        final gap = veryTight ? 6.0 : (tight ? 8.0 : 10.0);
+        final padding = EdgeInsets.symmetric(horizontal: padH, vertical: 8);
+
+        Widget action({
+          required IconData icon,
+          required String label,
+          required VoidCallback? onPressed,
+          required bool loading,
+        }) {
+          return Expanded(
+            child: SizedBox(
+              height: height,
+              child: FramedButton(
+                onPressed: onPressed,
+                icon: icon,
+                label: label,
+                loading: loading,
+                expanded: true,
+                minHeight: height,
+                padding: padding,
+                fontSize: fontSize,
+                iconSize: iconSize,
+              ),
+            ),
           );
         }
+
         return Row(
           children: [
-            createButton(expanded: false),
-            SizedBox(width: isMedium ? 10 : 12),
-            findButton(expanded: false),
+            action(
+              icon: Icons.add_rounded,
+              label: isCreating ? creatingLabel : createLabel,
+              onPressed: isCreating || isFinding ? null : onCreate,
+              loading: isCreating,
+            ),
+            SizedBox(width: gap),
+            action(
+              icon: Icons.search_rounded,
+              label: isFinding ? findingLabel : findLabel,
+              onPressed: isCreating || isFinding ? null : onFind,
+              loading: isFinding,
+            ),
           ],
         );
       },
@@ -406,12 +380,10 @@ class GameCardActionsRow extends StatelessWidget {
   }
 }
 
-/// Открывает единый диалог правил игры. Единый вид: заголовок, произвольный
-/// widget-контент (например [buildTictactoeRulesTextWidget] или список
-/// строк), кнопка «Закрыть».
+/// Открывает единый диалог правил. Заголовок всегда [gamesRulesTitle] —
+/// карточки и экраны игр не задают свой.
 Future<void> showGameRulesDialog({
   required BuildContext context,
-  required String title,
   required Widget content,
   String? closeLabel,
 }) {
@@ -419,7 +391,7 @@ Future<void> showGameRulesDialog({
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(title),
+      title: Text(context.l10n.gamesRulesTitle),
       content: SingleChildScrollView(child: content),
       actions: [
         TextButton(

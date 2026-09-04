@@ -720,6 +720,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesNardyWin => 'يفوز من يُخرج كل أحجاره أولًا.';
 
   @override
+  String get rulesNardySixPrime => 'لا يمكنك إغلاق ست نقاط متتالية ما لم يتجاوزها حجر واحد للخصم على الأقل.';
+
+  @override
+  String get nardyRoll => 'ارمِ النرد';
+
+  @override
+  String get nardySkipTurn => 'تخطَّ الدور';
+
+  @override
+  String get nardyUndoMove => 'تراجع';
+
+  @override
+  String get nardyDoneTurn => 'تم';
+
+  @override
+  String get nardyAutoConfirm => 'تأكيد تلقائي';
+
+  @override
+  String get nardyAutoConfirmHint => 'تمرير الدور تلقائياً بعد كل النقلات';
+
+  @override
+  String get nardyNoMoves => 'لا توجد نقلات';
+
+  @override
+  String get nardyYourRoll => 'رميتك';
+
+  @override
+  String get nardyPipsShort => 'المتبقي:';
+
+  @override
+  String get nardyYouWonMars => 'فزت — مارس!';
+
+  @override
+  String get nardyYouLostMars => 'خسارة — مارس';
+
+  @override
+  String get rulesNardyOfflineBot => 'دون اتصال: مباراة ضد البوت.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'اللاعبون: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get coinsFriendReward => 'مكافأة الصديق';
 
   @override
+  String get coinsTasks => 'المهام';
+
+  @override
+  String get coinsTasksSubtitle => 'مكافآت الملف الشخصي والأصدقاء والألعاب';
+
+  @override
+  String get coinsTasksRewards => 'هناك مكافآت جاهزة للاستلام';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount للتسجيل عبر رابطك';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'تم الإرسال';
+
+  @override
+  String get lobbySearchShort => 'بحث';
+
+  @override
+  String get lobbySearchPlayers => 'البحث عن لاعبين';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'مرفوض';
 
   @override
   String get lobbyInvitesSentWaiting => 'تم إرسال الدعوات. بانتظار الرد.';

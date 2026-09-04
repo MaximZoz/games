@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -66,6 +67,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   bool _isFindingGame = false;
+  Timer? _rematchPollTimer;
+  ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   bool _prevOver = false;
   bool _balanceGainPlayed = false;
   bool _lossChipRevealed = false;
@@ -104,6 +107,8 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   @override
   void dispose() {
     _disposed = true;
+    _rematchPollTimer?.cancel();
+    _realtimeSubscription?.close();
     _busyWatchdog?.cancel();
     GameFlyOverlay.dismissAll();
     for (final c in _chipControllers) {
@@ -168,6 +173,27 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   void _initializeProviderBindings() {
     if (_providerBindingsInitialized) return;
     _providerBindingsInitialized = true;
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted || _disposed) return;
@@ -775,13 +801,19 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
               gameType: 'poker',
             ),
           );
+      final game = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
       setState(() {
         _rematchLobbyId = lobbyId;
         _rematchDeclined = false;
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/poker/lobby/$lobbyId?mode=invite');
+      if (!rematchStayOnGameScreen(playerCount: game?.players.length ?? 2)) {
+        if (!mounted) return;
+        context.go('/games/poker/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -797,6 +829,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     try {
       final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
       if (own != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         try {
           await ref.read(pokerRepositoryProvider).leaveLobby(own);
@@ -834,6 +867,43 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     }
   }
 
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby =
+            await ref.read(pokerRepositoryProvider).getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'poker',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'poker');
+    ref.invalidate(pokerGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/poker/game/$gameId');
+  }
+
   Future<void> _declineRematch(String lobbyId) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
@@ -844,6 +914,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
 
   Future<void> _cancelRematchWait() async {
     if (_rematchLobbyId == null) return;
+    _rematchPollTimer?.cancel();
     final lobbyId = _rematchLobbyId!;
     setState(() => _rematchLobbyId = null);
     try {
@@ -856,6 +927,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     try {
       final rematchId = _rematchLobbyId;
       if (rematchId != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         unawaited(
           ref
@@ -966,31 +1038,24 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             return 0;
           }));
 
-    return SwipeBackScope(
-      enabled: true,
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: showGroupChat ? 96 : 48,
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                onPressed: _onClosePressed,
-              ),
-              if (showGroupChat)
-                GameIconWithBadge(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  tooltip: context.l10n.chatGroupTooltip,
-                  badge: groupUnread,
-                  onPressed: () => _openGroupChat(game),
-                ),
-            ],
+          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
+          leading: buildGameAppBarLeading(
+            onClose: _onClosePressed,
+            extra: showGroupChat
+                ? GameIconWithBadge(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    tooltip: context.l10n.chatGroupTooltip,
+                    badge: groupUnread,
+                    onPressed: () => _openGroupChat(game),
+                  )
+                : null,
           ),
           title: Text(context.l10n.gamesPoker),
           centerTitle: true,
@@ -1010,7 +1075,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(pokerRuleLines(
                     players: game?.playerIds.length ?? 2,
                     turnTimeSec: game?.turnTimeSec ?? 0,
@@ -1110,39 +1174,45 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 heroBottom: showEndDialog ? 12.0 : heroLift,
               ),
             ),
+            // Итог — панелью снизу, без затемнения: плашки соперников видно
+            // и после партии, по ним можно открыть профиль, чат и «в друзья».
             if (showEndDialog)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.42),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        narrow ? 16 : 28,
-                        24,
-                        narrow ? 16 : 28,
-                        bottomPad + 8,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      narrow ? 12 : 24,
+                      0,
+                      narrow ? 12 : 24,
+                      bottomPad + 8,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 360,
+                        maxHeight: constraints.maxHeight * 0.56,
                       ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        child: GradientCard(
-                          animate: false,
-                          margin: EdgeInsets.zero,
-                          padding: EdgeInsets.fromLTRB(
-                            narrow ? 16 : 20,
-                            18,
-                            narrow ? 16 : 20,
-                            16,
-                          ),
-                          // Статус + награда + реванш — одно окно; в альбоме
-                          // высоты мало, поэтому окно ещё и скроллится.
-                          child: SingleChildScrollView(
-                            child: _buildEndDialog(
-                              game,
-                              status: status,
-                              showReward: showReward,
-                              rewardBronze: rewardBronze,
-                              narrow: narrow,
-                            ),
+                      child: GradientCard(
+                        animate: false,
+                        margin: EdgeInsets.zero,
+                        padding: EdgeInsets.fromLTRB(
+                          narrow ? 16 : 20,
+                          18,
+                          narrow ? 16 : 20,
+                          16,
+                        ),
+                        // Статус + награда + реванш — одно окно; в альбоме
+                        // высоты мало, поэтому окно ещё и скроллится.
+                        child: SingleChildScrollView(
+                          child: _buildEndDialog(
+                            game,
+                            status: status,
+                            showReward: showReward,
+                            rewardBronze: rewardBronze,
+                            narrow: narrow,
                           ),
                         ),
                       ),

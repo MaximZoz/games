@@ -720,6 +720,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesNardyWin => '先にすべての駒をベアオフした人が勝ちます。';
 
   @override
+  String get rulesNardySixPrime => '相手の駒が一つも通過していないうちは、6 か所を連続で封鎖できません。';
+
+  @override
+  String get nardyRoll => 'サイコロを振る';
+
+  @override
+  String get nardySkipTurn => '手番をパス';
+
+  @override
+  String get nardyUndoMove => '戻す';
+
+  @override
+  String get nardyDoneTurn => '完了';
+
+  @override
+  String get nardyAutoConfirm => '自動確定';
+
+  @override
+  String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
+
+  @override
+  String get nardyNoMoves => '動かせません';
+
+  @override
+  String get nardyYourRoll => 'あなたの出目';
+
+  @override
+  String get nardyPipsShort => '残り:';
+
+  @override
+  String get nardyYouWonMars => '勝利 — ギャモン！';
+
+  @override
+  String get nardyYouLostMars => '敗北 — ギャモン';
+
+  @override
+  String get rulesNardyOfflineBot => 'オフライン: ボットとの対戦。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'プレイヤー: $players人。';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get coinsFriendReward => 'フレンド報酬';
 
   @override
+  String get coinsTasks => 'クエスト';
+
+  @override
+  String get coinsTasksSubtitle => 'プロフィール・フレンド・対局の報酬';
+
+  @override
+  String get coinsTasksRewards => '受け取れる報酬があります';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'あなたのリンクからの登録で +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '送信済み';
+
+  @override
+  String get lobbySearchShort => '検索';
+
+  @override
+  String get lobbySearchPlayers => 'プレイヤーを探す';
+
+  @override
+  String get lobbyInviteDeclinedShort => '辞退';
 
   @override
   String get lobbyInvitesSentWaiting => '招待を送信しました。返信を待っています。';

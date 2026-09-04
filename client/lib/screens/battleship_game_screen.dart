@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
@@ -46,6 +47,7 @@ const Color _kSunkFrame = Color(0xFF212121);
 const Color _kSunkShipMine = Color(0xFFE53935);
 const Color _kSunkFrameMine = Color(0xFFB71C1C);
 const Duration _kShotRevealDelay = Duration(milliseconds: 280);
+const Duration _kBotFieldHoldDelay = Duration(seconds: 1);
 
 class BattleshipGameScreen extends ConsumerStatefulWidget {
   const BattleshipGameScreen({super.key, required this.gameId});
@@ -193,6 +195,27 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _busyStuckTicks = 0;
       }
     });
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isOffline) return;
@@ -267,6 +290,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     required bool hit,
     required bool onMyBoard,
     bool sunk = false,
+    Duration hold = _kShotRevealDelay,
   }) async {
     if (!mounted) return;
     _fxInProgress = true;
@@ -283,7 +307,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     _hitPulse
       ..stop()
       ..forward(from: 0);
-    await Future<void>.delayed(_kShotRevealDelay);
+    await Future<void>.delayed(hold);
     if (!mounted) return;
     setState(() {
       _pulseHitCell = null;
@@ -303,11 +327,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       return;
     }
     _lastFxKey = key;
+    final vsBot = _isOffline || game.hasBotOpponent;
     unawaited(_playShotReveal(
       cell: game.lastShot,
       hit: game.lastShotHit,
       onMyBoard: true,
       sunk: game.mySunkShips.any((ship) => ship.contains(game.lastShot)),
+      hold: vsBot ? _kBotFieldHoldDelay : _kShotRevealDelay,
     ));
   }
 
@@ -648,9 +674,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         if (view.isOver && !_hideTimers) {
           _hideTimers = true;
         }
-        // Промах / конец — сразу смена хода, без удержания поля на FX.
+        // Против бота: после промаха не переключаем поле, пока бот
+        // не выстрелит и клиент не удержит его ход секунду.
         if (!keepAttacking) {
-          _fxShowMineBoard = null;
+          _fxShowMineBoard =
+              (view.hasBotOpponent || _isOffline) ? false : null;
         }
       });
       _playLocalShotFx(
@@ -953,7 +981,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/battleship/lobby/$lobbyId?mode=invite');
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -1006,6 +1034,44 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     } finally {
       if (mounted) setState(() => _isAcceptingRematch = false);
     }
+  }
+
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby = await ref
+            .read(battleshipRepositoryProvider)
+            .getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'battleship',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'battleship');
+    ref.invalidate(battleshipGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/battleship/game/$gameId');
   }
 
   Future<void> _declineRematch(String lobbyId) async {
@@ -1121,24 +1187,15 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       _maybeRevealRemoteShot(game, me);
     });
 
-    return SwipeBackScope(
-      enabled: true,
+    return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: 48,
-          leading: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            icon: const Icon(Icons.close_rounded),
-            onPressed: _onClosePressed,
-          ),
+          leadingWidth: gameAppBarLeadingWidth(),
+          leading: buildGameAppBarLeading(onClose: _onClosePressed),
           title: Text(context.l10n.gamesBattleship),
           centerTitle: true,
           actions: [
@@ -1149,7 +1206,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesBattleshipTitle,
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: game?.turnTimeSec ?? 0,
                     stakeBronze: game?.stakeBronze ?? 2,
@@ -1199,7 +1255,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         ),
                         child: Column(
                           children: [
-                            if (!isOver) _buildOpponentCard(game, me),
+                            // Плашка соперника нужна и после партии: с неё
+                            // открываются чат и «добавить в друзья».
+                            _buildOpponentCard(game, me),
                             if (!isOver)
                               Text(
                                 game.isSetup
@@ -1267,10 +1325,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                   : () => unawaited(_rematch()),
                               icon: const Icon(Icons.replay_rounded, size: 18),
                               label: Text(context.l10n.offlinePlayAgain),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accentStart,
-                                foregroundColor: Colors.white,
-                              ),
+                              style: AppButtonStyles.of(),
                             ),
                           )
                         else
@@ -1547,16 +1602,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           width: double.infinity,
           child: FilledButton(
             onPressed: _busy ? null : () => unawaited(_confirmPlace()),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
+            style: AppButtonStyles.of(),
             child: _busy
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   )
                 : Text(context.l10n.gamesBattleshipConfirmPlace),
@@ -1569,7 +1622,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Widget _buildBattle(BattleshipGameView game, String? me, bool narrow) {
     final myTurn = game.isTurnOf(me);
     // Одно поле: мой ход / конец — поле соперника; ход соперника — моё.
-    // Во время FX удерживаем поле, куда пришёл выстрел, ещё 1с.
+    // Против бота: своё поле показываем только после хода бота и паузы 1 с.
     final showMyBoard = _fxShowMineBoard ?? (!game.isOver && !myTurn);
     final pulseCell = _pulseHitCell;
 

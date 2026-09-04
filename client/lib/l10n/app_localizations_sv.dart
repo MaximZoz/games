@@ -720,6 +720,45 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesNardyWin => 'Den som först bär av alla brickor vinner.';
 
   @override
+  String get rulesNardySixPrime => 'Du får inte stänga sex punkter i rad förrän minst en av motståndarens brickor har passerat dem.';
+
+  @override
+  String get nardyRoll => 'Slå';
+
+  @override
+  String get nardySkipTurn => 'Hoppa över turen';
+
+  @override
+  String get nardyUndoMove => 'Ångra';
+
+  @override
+  String get nardyDoneTurn => 'Klar';
+
+  @override
+  String get nardyAutoConfirm => 'Autobekräfta';
+
+  @override
+  String get nardyAutoConfirmHint => 'Efter alla drag går turen vidare automatiskt';
+
+  @override
+  String get nardyNoMoves => 'Inga drag';
+
+  @override
+  String get nardyYourRoll => 'Ditt slag';
+
+  @override
+  String get nardyPipsShort => 'Kvar:';
+
+  @override
+  String get nardyYouWonMars => 'Du vann — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Förlust — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: parti mot boten.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spelare: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get coinsFriendReward => 'Vänbelöning';
 
   @override
+  String get coinsTasks => 'Uppgifter';
+
+  @override
+  String get coinsTasksSubtitle => 'Belöningar för profil, vänner och matcher';
+
+  @override
+  String get coinsTasksRewards => 'Belöningar att hämta';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount för registrering via din länk';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Skickat';
+
+  @override
+  String get lobbySearchShort => 'Sök';
+
+  @override
+  String get lobbySearchPlayers => 'Sök spelare';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Avböjt';
 
   @override
   String get lobbyInvitesSentWaiting => 'Inbjudningar skickade. Väntar på svar.';

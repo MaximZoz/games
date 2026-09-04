@@ -720,6 +720,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesNardyWin => 'Wer zuerst alle Steine abgetragen hat, gewinnt.';
 
   @override
+  String get rulesNardySixPrime => 'Sechs Punkte in Folge darfst du erst sperren, wenn mindestens ein gegnerischer Stein daran vorbei ist.';
+
+  @override
+  String get nardyRoll => 'Würfeln';
+
+  @override
+  String get nardySkipTurn => 'Zug überspringen';
+
+  @override
+  String get nardyUndoMove => 'Zurück';
+
+  @override
+  String get nardyDoneTurn => 'Fertig';
+
+  @override
+  String get nardyAutoConfirm => 'Auto-Bestätigung';
+
+  @override
+  String get nardyAutoConfirmHint => 'Zug nach allen Zügen automatisch übergeben';
+
+  @override
+  String get nardyNoMoves => 'Kein Zug möglich';
+
+  @override
+  String get nardyYourRoll => 'Dein Wurf';
+
+  @override
+  String get nardyPipsShort => 'Rest:';
+
+  @override
+  String get nardyYouWonMars => 'Gewonnen — Gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Verloren — Gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: Partie gegen den Bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spieler: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coinsFriendReward => 'Freundesbelohnung';
 
   @override
+  String get coinsTasks => 'Aufgaben';
+
+  @override
+  String get coinsTasksSubtitle => 'Belohnungen für Profil, Freunde und Spiele';
+
+  @override
+  String get coinsTasksRewards => 'Belohnungen zum Abholen';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount für die Registrierung über Ihren Link';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Gesendet';
+
+  @override
+  String get lobbySearchShort => 'Suche';
+
+  @override
+  String get lobbySearchPlayers => 'Spieler suchen';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Abgelehnt';
 
   @override
   String get lobbyInvitesSentWaiting => 'Einladungen gesendet. Warte auf Antwort.';

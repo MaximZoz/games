@@ -720,6 +720,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesNardyWin => 'Tüm pullarını ilk kaldıran kazanır.';
 
   @override
+  String get rulesNardySixPrime => 'Rakibin hiçbir pulu geçmeden art arda altı haneyi kapatamazsınız.';
+
+  @override
+  String get nardyRoll => 'Zar at';
+
+  @override
+  String get nardySkipTurn => 'Sırayı geç';
+
+  @override
+  String get nardyUndoMove => 'Geri al';
+
+  @override
+  String get nardyDoneTurn => 'Bitti';
+
+  @override
+  String get nardyAutoConfirm => 'Otomatik onay';
+
+  @override
+  String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
+
+  @override
+  String get nardyNoMoves => 'Hamle yok';
+
+  @override
+  String get nardyYourRoll => 'Zarınız';
+
+  @override
+  String get nardyPipsShort => 'Kalan:';
+
+  @override
+  String get nardyYouWonMars => 'Kazandınız — mars!';
+
+  @override
+  String get nardyYouLostMars => 'Kaybettiniz — mars';
+
+  @override
+  String get rulesNardyOfflineBot => 'Çevrimdışı: bota karşı oyun.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oyuncular: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get coinsFriendReward => 'Arkadaş ödülü';
 
   @override
+  String get coinsTasks => 'Görevler';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, arkadaş ve oyun ödülleri';
+
+  @override
+  String get coinsTasksRewards => 'Alınabilir ödüller var';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Bağlantınızla kayıt için +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Gönderildi';
+
+  @override
+  String get lobbySearchShort => 'Ara';
+
+  @override
+  String get lobbySearchPlayers => 'Oyuncu ara';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Reddedildi';
 
   @override
   String get lobbyInvitesSentWaiting => 'Davetler gönderildi. Yanıt bekleniyor.';

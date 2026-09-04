@@ -1,5 +1,10 @@
+import 'dart:ui' show Locale;
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_provider.dart';
+import 'package:multigames_client/games/nardy/nardy_rules.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 GameInvite invite({
   required String lobbyId,
@@ -15,6 +20,12 @@ GameInvite invite({
 }
 
 void main() {
+  setUp(() {
+    LocaleService.setLocale(const Locale('ru'));
+  });
+
+  AppLocalizations l10n() => lookupAppLocalizations(const Locale('ru'));
+
   test('GameInvitesNotifier add dedupes by lobbyId', () {
     final n = GameInvitesNotifier();
     n.add(invite(lobbyId: 'L1', creatorId: 'c1'));
@@ -62,6 +73,41 @@ void main() {
     expect(gameInviteListsVisuallySame([a], [b]), isTrue);
     expect(gameInviteListsVisuallySame([a], [c]), isFalse);
     expect(gameInviteListsVisuallySame([a], []), isFalse);
+  });
+
+  test('nardy invite shows short/long mode instead of classic', () {
+    final short = GameInvite(
+      lobbyId: 'N1',
+      creatorId: 'c1',
+      creatorName: 'Ann',
+      gameType: 'nardy',
+      durakMode: nardyModeShort,
+    );
+    final long = GameInvite(
+      lobbyId: 'N2',
+      creatorId: 'c2',
+      creatorName: 'Bob',
+      gameType: 'nardy',
+      durakMode: nardyModeLong,
+    );
+
+    expect(short.isNardy, isTrue);
+    expect(short.modeLabel, l10n().gamesNardyModeShort);
+    expect(long.modeLabel, l10n().gamesNardyModeLong);
+    expect(short.modeLabel, isNot(l10n().gamesVariantClassic));
+    expect(long.modeLabel, isNot(l10n().gamesVariantClassic));
+  });
+
+  test('uno invite has no classic mode chip', () {
+    final uno = GameInvite(
+      lobbyId: 'U1',
+      creatorId: 'c1',
+      creatorName: 'Ann',
+      gameType: 'uno',
+      variant: 'classic',
+    );
+    expect(uno.modeLabel, isEmpty);
+    expect(uno.modeLabel, isNot(l10n().gamesVariantClassic));
   });
 
   test('hydrate не стирает свежий WS-инвайт, если GET пустой', () {

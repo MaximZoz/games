@@ -3,7 +3,31 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Нарды: карточка в каталоге с режимами «Короткие»/«Длинные», ставкой, временем хода и подписью «В разработке»
+- Морской бой с ботом: после вашего хода пауза 1 с, после хода бота ещё 1 с — и только тогда меняется поле
+- Задания (полная анкета, 5 друзей, 10 игр) переехали из достижений в «Монеты»
+- Нарды: чекбокс «Автоподтверждение» только на своём ходе, на ходе соперника его нет
+- Шапка лобби везде одинаковая: «Своя игра» или «Лобби», текст всегда помещается; вход из списка лобби сразу открывает «Лобби», а не свою игру
+- Игровой чат больше не остаётся без игры: чат лобби удаляется, если партия уже окончена
+- Дурак: добор соперника сначала летит из колоды, а не вспыхивает всей рукой
+- Дурак: при переводе карта, которая уже на столе, не моргает
+- Текстовые кнопки — светлый фон, лавандовая рамка и чёрный текст; в покере кнопки хода как были
+- Правила игр: во всех карточках один заголовок «Правила игры», в том числе у нард
+- Нарды: после «Готово» соперник больше не бросает кубики дважды
+- Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
+- Крестики-нолики: «Найти игру» использует тот же экран ожидания, что и другие игры
+- Реванш 1×1: после «Повторить» остаётесь на экране партии — как в крестиках и дураке
+- Дурак: веер в руке сжимается плавно, без рывка; в альбоме вернулась анимация раскладки, «Бито»/«Взять» больше не моргает
+- Игры: кнопка «Поиск игроков» вместо «Найти игру» — и в карточках, и в шапке лобби
+- Карточки игр: «Создать игру» и «Поиск игроков» всегда в один ряд; на узкой карточке меньше отступ и текст
+- Нарды: иконка стала понятнее — доска с крупными пунктами и стопкой шашек
+- Сообщения: автоперевод включён сразу, если собеседник пишет на другом языке
+- Длинные нарды: нельзя запирать шесть пунктов подряд, пока их не обошла ни одна шашка соперника
+- Нарды в портрете: «Повторить» и «Другой соперник» после партии больше не обрезаются
+- Лобби: «Поиск» стоит рядом с правилами — в своей игре им можно открыть поиск соперника, и она попадает в общий список лобби
+- Своя игра: приглашённый виден в списке, даже если его нет в друзьях; после отказа кнопка пишет «Отказ», а не «Отправлено»
+- Покер, уно и морской бой: итог партии больше не закрывает игроков — можно посмотреть соперника, написать ему и добавить в друзья
+- Нарды: полноценная игра — короткие и длинные, лобби, поиск соперника, бот, отмена хода, ставки и статистика
+- Вибрация «ваш ход» на Android теперь ощущается
 - Приглашение в игру сразу видно другу и догоняется сверкой с сервером, даже если кадр сокета потерялся
 - Покер: после «Фолд» кнопки не возвращаются; повторный клик не показывает «игра уже закончена»
 - Дурак: раздача собирает веер по одной карте из полёта, без вспышки всей руки; бросок на стол не мигает кнопками и картами
@@ -21,7 +45,7 @@
 - Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
 - Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
 - Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
-- Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
+- Морской бой с ботом: после вашего хода пауза 1 с, после хода бота ещё 1 с — затем смена поля
 - Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
 - Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; застрявшие полёты снимаются при возврате с вкладки, resume и если карта зависла скрытой
 - Дурак в альбоме: видно веер соперника и карту биты; раздача не зависает и не прячет рубашки
@@ -60,7 +84,30 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Backgammon: a catalog card with Short/Long modes, stake, turn time, and an “In development” label
+- Battleship vs bot: a 1 s pause after your shot, then another 1 s after the bot shoots — only then does the board switch
+- Tasks (complete profile, 5 friends, 10 games) moved from Achievements into Coins
+- Backgammon: the Auto-confirm checkbox is only shown on your turn
+- Lobby header is the same everywhere: “Private game” or “Lobby”, and the title always fits; joining from the lobby list opens Lobby directly
+- Game chat no longer outlives the match: a lobby chat is removed when the game is already over
+- Durak: opponent draw cards fly from the deck instead of flashing the whole fan first
+- Durak: transferring a card no longer blinks the card already on the table
+- Text buttons use a pill with a gradient frame, like Edit on the profile
+- Game rules: every card uses the same “Game rules” title, including Backgammon
+- Backgammon: ending a turn no longer makes the opponent appear to roll twice
+- Backgammon: if you are in messages or another tab, your turn now notifies you like the other games
+- Tic-tac-toe: Find game uses the same waiting layout as the other games
+- 1v1 rematch: Repeat keeps you on the finished board, like tic-tac-toe and durak
+- Durak: the hand fan shrinks smoothly instead of snapping; landscape got its layout animation back and Beat/Take no longer blinks
+- Games: the button now reads Find players, both on game cards and in the lobby header
+- Game cards: both buttons share one height, and the secondary one has a soft fill instead of a thin outline
+- Backgammon: a clearer icon — a board with large points and a stack of checkers
+- Chats: auto-translate is on from the start when the other person writes in another language
+- Long backgammon: you may not seal six points in a row until an opposing checker has passed them
+- Backgammon in portrait: Rematch and Another opponent are no longer clipped after the game
+- Lobby: Search sits next to the rules — a private game can open matchmaking from there and joins the public lobby list
+- Private game: an invited player is listed even when they are not your friend, and a declined invite now reads “Declined” instead of “Sent”
+- Poker, Uno and Battleship: the end-of-game panel no longer covers the players, so you can still open their profile, message them or add them as a friend
+- “Your turn” vibration now actually fires on Android
 - Game invites show up for the friend immediately and are reconciled from the server if a socket frame is dropped
 - Poker: Fold stays gone after a hand-ending fold; a second tap no longer shows “the game is already over”
 - Durak: the deal builds the fan one flying card at a time instead of flashing the whole hand; throws no longer flicker buttons or table cards
@@ -77,7 +124,7 @@
 - Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
 - Turn timer: the clock keeps ticking after the low-time warning
 - Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
-- Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
+- Battleship vs bot: a 1 s pause after your shot and another 1 s after the bot, then the board switches
 - Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
 - Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear on tab return, app resume, or a stuck hidden card
 - Durak in landscape: the opponent fan and discard pile stay visible; a stuck deal no longer hides the card backs

@@ -9,7 +9,7 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, LobbyPlayer;
+    show GamesException, LobbyPlayer, parseLobbyInvited;
 
 /// Модель карты в JSON API. Ранг [2..14], масть — одна буква H/D/C/S.
 class DurakApiCard {
@@ -420,6 +420,7 @@ class DurakLobbyView {
     required this.stakeBronze,
     required this.playerIds,
     required this.players,
+    this.invited = const [],
     required this.chatId,
     this.gameId,
   });
@@ -437,6 +438,9 @@ class DurakLobbyView {
 
   /// Мета участников (аватар/имя) — как в крестиках-ноликах.
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final String? chatId;
   final String? gameId;
 
@@ -458,6 +462,7 @@ class DurakLobbyView {
               LobbyPlayer(id: id, displayName: 'Player'),
           ];
     return DurakLobbyView(
+      invited: parseLobbyInvited(json['invited']),
       id: (json['id'] ?? json['lobby_id'] ?? '').toString(),
       creatorId: (json['creator_id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
@@ -679,6 +684,16 @@ class DurakRepository {
           },
           body: jsonEncode({'friend_user_id': friendUserId}),
           operation: 'DurakRepository.inviteFriend',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startMatchmake(String lobbyId) async {
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/durak/lobby/$lobbyId/matchmake'),
+          headers: {'Authorization': 'Bearer $token'},
+          operation: 'DurakRepository.startMatchmake',
         ));
     if (r.statusCode != 200) _fail(r);
   }

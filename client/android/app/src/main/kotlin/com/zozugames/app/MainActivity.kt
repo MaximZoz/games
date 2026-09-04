@@ -33,20 +33,22 @@ class MainActivity : FlutterActivity() {
                         }
                         n.coerceIn(0, 400).toLong()
                     }.toLongArray()
-                    vibratePattern(pattern)
-                    result.success(null)
+                    // Возвращаем реальный результат: на телефоне без мотора
+                    // Dart должен успеть уйти в HapticFeedback-фолбэк.
+                    result.success(vibratePattern(pattern))
                 } catch (e: Throwable) {
                     result.error("vibrate", e.message, null)
                 }
             }
     }
 
-    private fun vibratePattern(times: LongArray) {
-        val vibrator = defaultVibrator() ?: return
-        if (!vibrator.hasVibrator()) return
-        try {
+    private fun vibratePattern(times: LongArray): Boolean {
+        val vibrator = defaultVibrator() ?: return false
+        if (!vibrator.hasVibrator()) return false
+        if (times.isEmpty() || times.sum() <= 0L) return false
+        return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val effect = VibrationEffect.createWaveform(times, -1)
+                val effect = waveformEffect(vibrator, times)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val attrs = VibrationAttributes.Builder()
                         .setUsage(VibrationAttributes.USAGE_NOTIFICATION)
@@ -60,9 +62,24 @@ class MainActivity : FlutterActivity() {
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(times, -1)
             }
+            true
         } catch (_: Throwable) {
             // OEM без мотора / запрет системы — не роняем Activity.
+            false
         }
+    }
+
+    /// Короткий импульс «ваш ход» на LRA почти не чувствуется при амплитуде
+    /// по умолчанию — где можно, выдаём максимальную силу.
+    private fun waveformEffect(vibrator: Vibrator, times: LongArray): VibrationEffect {
+        if (!vibrator.hasAmplitudeControl()) {
+            return VibrationEffect.createWaveform(times, -1)
+        }
+        val amplitudes = IntArray(times.size) { index ->
+            // Чётные шаги паттерна — паузы, нечётные — вибрация.
+            if (index % 2 == 0) 0 else MAX_AMPLITUDE
+        }
+        return VibrationEffect.createWaveform(times, amplitudes, -1)
     }
 
     private fun defaultVibrator(): Vibrator? {
@@ -84,5 +101,6 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL = "zozu/haptics"
+        private const val MAX_AMPLITUDE = 255
     }
 }

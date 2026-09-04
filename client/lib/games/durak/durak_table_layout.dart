@@ -107,6 +107,21 @@ bool durakTableAttackSlotInFlight({
 }) =>
     localFlying || remoteFlying;
 
+/// Карта, которая уже лежала на столе, не должна пропадать из вёрстки.
+///
+/// Новая атака (перевод, подкид) прячется, пока летит overlay. Уже сидящая
+/// пара остаётся на месте — иначе при переводе «старая» карта моргает.
+bool durakSeatedTablePairInLayout({required bool seated}) => seated;
+
+/// Opacity слота: севшая карта всегда видна, летящая — только в overlay.
+double durakSeatedTableSlotOpacity({
+  required bool seated,
+  required bool inFlight,
+}) {
+  if (seated) return 1;
+  return inFlight ? 0 : 0;
+}
+
 /// Защиту не рисуем, пока свой отбой или remote-полёт ещё на overlay.
 bool durakTableDefenseHiddenDuringFlight({
   required bool localDefendLock,

@@ -610,11 +610,40 @@ void main() {
     TurnClockSfx.reset();
   });
 
-  test('паттерн мотора: notify двойной, ход и таймер короткие', () {
+  test('паттерн мотора: notify и ход двойные, таймер короткий', () {
     expect(hapticPatternMs(HapticKind.notify), [0, 50, 40, 50]);
-    expect(hapticPatternMs(HapticKind.yourTurn), [0, 55]);
+    expect(hapticPatternMs(HapticKind.yourTurn), [0, 90, 60, 120]);
     expect(hapticPatternMs(HapticKind.timerMark), [0, 70]);
     expect(hapticPatternMs(HapticKind.timerSecond), [0, 30]);
+  });
+
+  test('импульс «ваш ход» ощутимее одиночных 55 мс', () {
+    int totalMs(HapticKind kind) {
+      final pattern = hapticPatternMs(kind);
+      var sum = 0;
+      for (var i = 1; i < pattern.length; i += 2) {
+        sum += pattern[i];
+      }
+      return sum;
+    }
+
+    expect(totalMs(HapticKind.yourTurn), greaterThan(55));
+    expect(totalMs(HapticKind.yourTurn),
+        greaterThanOrEqualTo(totalMs(HapticKind.notify)));
+  });
+
+  test('мотор не отработал — уходим в HapticFeedback', () async {
+    addTearDown(Haptics.reset);
+    final fallbacks = <HapticKind>[];
+    HapticsController.debugOnFallback = fallbacks.add;
+
+    HapticsController.debugAndroidVibrate = (_) async => true;
+    await HapticsController().impactForTest(HapticKind.yourTurn);
+    expect(fallbacks, isEmpty);
+
+    HapticsController.debugAndroidVibrate = (_) async => false;
+    await HapticsController().impactForTest(HapticKind.yourTurn);
+    expect(fallbacks, [HapticKind.yourTurn]);
   });
 
   test('включение вибрации сбрасывает debounce', () {

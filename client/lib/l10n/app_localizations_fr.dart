@@ -720,6 +720,45 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesNardyWin => 'Le premier à sortir toutes ses dames gagne.';
 
   @override
+  String get rulesNardySixPrime => 'Vous ne pouvez pas verrouiller six cases d’affilée tant qu’aucun pion adverse ne les a dépassées.';
+
+  @override
+  String get nardyRoll => 'Lancer';
+
+  @override
+  String get nardySkipTurn => 'Passer le tour';
+
+  @override
+  String get nardyUndoMove => 'Annuler';
+
+  @override
+  String get nardyDoneTurn => 'Terminé';
+
+  @override
+  String get nardyAutoConfirm => 'Auto-confirmation';
+
+  @override
+  String get nardyAutoConfirmHint => 'Passe le tour automatiquement après tous les coups';
+
+  @override
+  String get nardyNoMoves => 'Aucun coup';
+
+  @override
+  String get nardyYourRoll => 'Votre lancer';
+
+  @override
+  String get nardyPipsShort => 'Reste :';
+
+  @override
+  String get nardyYouWonMars => 'Vous gagnez — gammon !';
+
+  @override
+  String get nardyYouLostMars => 'Défaite — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Hors ligne : partie contre le bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Joueurs : $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get coinsFriendReward => 'Récompense ami';
 
   @override
+  String get coinsTasks => 'Missions';
+
+  @override
+  String get coinsTasksSubtitle => 'Récompenses pour le profil, les amis et les parties';
+
+  @override
+  String get coinsTasksRewards => 'Récompenses à réclamer';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount pour une inscription via votre lien';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Envoyé';
+
+  @override
+  String get lobbySearchShort => 'Recherche';
+
+  @override
+  String get lobbySearchPlayers => 'Chercher des joueurs';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Refusé';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invitations envoyées. En attente de réponse.';

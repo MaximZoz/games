@@ -15,6 +15,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -45,6 +46,24 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
   final Set<String> _inviting = {};
   final Set<String> _cancelling = {};
   bool _leaving = false;
+  bool _startingSearch = false;
+
+  /// Открыть свою игру для поиска: лобби становится публичным.
+  Future<void> _startSearch() async {
+    if (_startingSearch) return;
+    setState(() => _startingSearch = true);
+    try {
+      await ref.read(battleshipRepositoryProvider).startMatchmake(widget.lobbyId);
+      if (!mounted) return;
+      ref.invalidate(battleshipLobbyProvider(widget.lobbyId));
+      ref.invalidate(openLobbiesProvider);
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    } finally {
+      if (mounted) setState(() => _startingSearch = false);
+    }
+  }
   bool _linkCopied = false;
   Timer? _linkTimer;
 
@@ -174,7 +193,6 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
   Widget build(BuildContext context) {
     final lobbyAsync = ref.watch(battleshipLobbyProvider(widget.lobbyId));
     final friendsAsync = ref.watch(friendsSnapshotProvider);
-    final narrow = isNarrow(context);
 
     ref.listen(realtimeEventsProvider, (_, next) {
       final data = next.valueOrNull;
@@ -210,32 +228,28 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: _leaving ? null : _confirmLeave,
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.directions_boat_filled_rounded,
-                size: narrow ? 20 : 22,
-                color: AppColors.accentStart,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesBattleship,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.battleship,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
+            if (lobby != null)
+              LobbySearchAction(
+                searching: isMatchmake,
+                busy: _startingSearch,
+                onStart: () => unawaited(_startSearch()),
+              ),
             if (lobby != null)
               IconButton(
                 tooltip: context.l10n.gamesRulesTitle,
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesBattleshipTitle,
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: lobby.turnTimeSec,
                     stakeBronze: lobby.stakeBronze,
@@ -299,9 +313,6 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
       stakeLabel: context.l10n.shopStakes,
       friendsCount: friendsCount,
       padding: EdgeInsets.all(pad),
-      searchBanner: isMatchmake
-          ? LobbySearchBanner(label: context.l10n.lobbySearchingOpponent)
-          : null,
       shareLinkCard: LobbyShareLinkCard(
         title: context.l10n.lobbyCopyLink,
         hint: _linkCopied
@@ -311,9 +322,13 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
         onTap: () => _copyLink(lobby.id),
       ),
       friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        pendingInvites: lobby.invited,
         friendsAsync: friendsAsync,
         excludeUserIds: memberIds,
-        invitedIds: _invited,
+        invitedIds: {
+          ..._invited,
+          for (final guest in lobby.invited) guest.id,
+        },
         invitingIds: _inviting,
         cancellingIds: _cancelling,
         declinedIds: _declined,

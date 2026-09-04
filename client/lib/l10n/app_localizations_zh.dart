@@ -720,6 +720,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesNardyWin => '先将全部棋子出局者获胜。';
 
   @override
+  String get rulesNardySixPrime => '在对手没有任何棋子越过之前，不能连续封锁六个点。';
+
+  @override
+  String get nardyRoll => '掷骰';
+
+  @override
+  String get nardySkipTurn => '跳过回合';
+
+  @override
+  String get nardyUndoMove => '撤销';
+
+  @override
+  String get nardyDoneTurn => '完成';
+
+  @override
+  String get nardyAutoConfirm => '自动确认';
+
+  @override
+  String get nardyAutoConfirmHint => '走完所有步后自动把回合交给对手';
+
+  @override
+  String get nardyNoMoves => '无棋可走';
+
+  @override
+  String get nardyYourRoll => '你的掷骰';
+
+  @override
+  String get nardyPipsShort => '剩余：';
+
+  @override
+  String get nardyYouWonMars => '你赢了 — 双倍胜！';
+
+  @override
+  String get nardyYouLostMars => '失败 — 双倍负';
+
+  @override
+  String get rulesNardyOfflineBot => '离线：与机器人对战。';
+
+  @override
   String rulesUnoPlayers(int players) {
     return '玩家：$players。';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get coinsFriendReward => '好友奖励';
 
   @override
+  String get coinsTasks => '任务';
+
+  @override
+  String get coinsTasksSubtitle => '资料、好友和对局奖励';
+
+  @override
+  String get coinsTasksRewards => '有可领取的奖励';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '通过您的链接注册可获得 +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '已发送';
+
+  @override
+  String get lobbySearchShort => '搜索';
+
+  @override
+  String get lobbySearchPlayers => '寻找玩家';
+
+  @override
+  String get lobbyInviteDeclinedShort => '已拒绝';
 
   @override
   String get lobbyInvitesSentWaiting => '邀请已发送。等待回复。';

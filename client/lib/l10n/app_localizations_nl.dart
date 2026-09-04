@@ -720,6 +720,45 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesNardyWin => 'Wie als eerste alle schijven afspeelt, wint.';
 
   @override
+  String get rulesNardySixPrime => 'Je mag pas zes punten op rij sluiten als minstens één schijf van de tegenstander erlangs is.';
+
+  @override
+  String get nardyRoll => 'Gooien';
+
+  @override
+  String get nardySkipTurn => 'Beurt overslaan';
+
+  @override
+  String get nardyUndoMove => 'Ongedaan';
+
+  @override
+  String get nardyDoneTurn => 'Klaar';
+
+  @override
+  String get nardyAutoConfirm => 'Auto-bevestigen';
+
+  @override
+  String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
+
+  @override
+  String get nardyNoMoves => 'Geen zetten';
+
+  @override
+  String get nardyYourRoll => 'Jouw worp';
+
+  @override
+  String get nardyPipsShort => 'Resterend:';
+
+  @override
+  String get nardyYouWonMars => 'Gewonnen — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Verloren — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: partij tegen de bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Spelers: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get coinsFriendReward => 'Vriendenbeloning';
 
   @override
+  String get coinsTasks => 'Taken';
+
+  @override
+  String get coinsTasksSubtitle => 'Beloningen voor profiel, vrienden en games';
+
+  @override
+  String get coinsTasksRewards => 'Beloningen klaar om te claimen';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount voor registratie via jouw link';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Verzonden';
+
+  @override
+  String get lobbySearchShort => 'Zoeken';
+
+  @override
+  String get lobbySearchPlayers => 'Spelers zoeken';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Geweigerd';
 
   @override
   String get lobbyInvitesSentWaiting => 'Uitnodigingen verzonden. Wachten op antwoord.';

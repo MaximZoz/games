@@ -21,7 +21,8 @@ List<int> hapticPatternMs(HapticKind kind) {
     case HapticKind.notify:
       return const [0, 50, 40, 50];
     case HapticKind.yourTurn:
-      return const [0, 55];
+      // Одиночные 55 мс на LRA почти не ощущаются — даём двойной импульс.
+      return const [0, 90, 60, 120];
     case HapticKind.timerMark:
       return const [0, 70];
     case HapticKind.timerSecond:
@@ -41,6 +42,7 @@ abstract final class Haptics {
     instance.reset();
     HapticsController.debugOnPlay = null;
     HapticsController.debugAndroidVibrate = null;
+    HapticsController.debugOnFallback = null;
   }
 }
 
@@ -69,6 +71,13 @@ class HapticsController {
 
   @visibleForTesting
   static Future<bool> Function(List<int> pattern)? debugAndroidVibrate;
+
+  /// Вызывается, когда нативный мотор не отработал и идёт [HapticFeedback].
+  @visibleForTesting
+  static void Function(HapticKind kind)? debugOnFallback;
+
+  @visibleForTesting
+  Future<void> impactForTest(HapticKind kind) => _impact(kind);
 
   bool get _inWidgetTest {
     try {
@@ -117,6 +126,7 @@ class HapticsController {
     final pattern = hapticPatternMs(kind);
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       if (await _androidVibrate(pattern)) return;
+      debugOnFallback?.call(kind);
       await HapticFeedback.vibrate();
       return;
     }
@@ -131,12 +141,19 @@ class HapticsController {
     }
   }
 
+  /// `true` — мотор действительно отработал; иначе нужен фолбэк.
+  ///
+  /// Раньше канал всегда отвечал успехом, и на телефонах без мотора
+  /// (или когда система отклонила эффект) фолбэк не срабатывал.
   Future<bool> _androidVibrate(List<int> pattern) async {
     final injected = debugAndroidVibrate;
     if (injected != null) return injected(pattern);
     try {
-      await androidChannel.invokeMethod<void>('vibrate', {'pattern': pattern});
-      return true;
+      final ok = await androidChannel.invokeMethod<bool>(
+        'vibrate',
+        {'pattern': pattern},
+      );
+      return ok ?? false;
     } catch (_) {
       return false;
     }

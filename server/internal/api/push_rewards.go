@@ -9,8 +9,34 @@ import (
 	"github.com/google/uuid"
 )
 
-func notifyAchievementUnlocks(push *WebPushSender, userID uuid.UUID, unlocked []store.AchievementDef) {
-	if push == nil || !push.CanNotify() || len(unlocked) == 0 {
+func achievementsUpdatedPayload(unlocked []store.AchievementDef) map[string]any {
+	codes := make([]string, len(unlocked))
+	hasTask := false
+	hasAchievement := false
+	for i, def := range unlocked {
+		codes[i] = def.Code
+		if store.IsTaskCode(def.Code) {
+			hasTask = true
+		} else {
+			hasAchievement = true
+		}
+	}
+	return map[string]any{
+		"type":         "achievements_updated",
+		"unlocked":     codes,
+		"tasks":        hasTask,
+		"achievements": hasAchievement,
+	}
+}
+
+func notifyAchievementUnlocks(hub *RealtimeHub, push *WebPushSender, userID uuid.UUID, unlocked []store.AchievementDef) {
+	if len(unlocked) == 0 {
+		return
+	}
+	if hub != nil {
+		hub.PublishToUsers([]uuid.UUID{userID}, achievementsUpdatedPayload(unlocked))
+	}
+	if push == nil || !push.CanNotify() {
 		return
 	}
 	// Push has no Accept-Language; default RU (primary audience), body uses localized title.
@@ -23,10 +49,14 @@ func notifyAchievementUnlocks(push *WebPushSender, userID uuid.UUID, unlocked []
 		if body == "" {
 			body = i18n.Content(lang, "push.new_achievement")
 		}
+		url := "/achievements"
+		if store.IsTaskCode(def.Code) {
+			url = "/coins/tasks"
+		}
 		push.NotifyUsers([]uuid.UUID{userID}, store.WebPushCategoryRewards, PushPayload{
 			Title: i18n.Content(lang, "push.new_achievement"),
 			Body:  body,
-			URL:   "/achievements",
+			URL:   url,
 			Tag:   "achievement_" + def.Code,
 		})
 	}

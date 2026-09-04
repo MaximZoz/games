@@ -720,6 +720,45 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesNardyWin => 'Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.';
 
   @override
+  String get rulesNardySixPrime => 'Kuutta peräkkäistä pistettä ei saa sulkea ennen kuin vähintään yksi vastustajan nappula on ohittanut ne.';
+
+  @override
+  String get nardyRoll => 'Heitä';
+
+  @override
+  String get nardySkipTurn => 'Ohita vuoro';
+
+  @override
+  String get nardyUndoMove => 'Kumoa';
+
+  @override
+  String get nardyDoneTurn => 'Valmis';
+
+  @override
+  String get nardyAutoConfirm => 'Autovahvistus';
+
+  @override
+  String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
+
+  @override
+  String get nardyNoMoves => 'Ei siirtoja';
+
+  @override
+  String get nardyYourRoll => 'Sinun heittosi';
+
+  @override
+  String get nardyPipsShort => 'Jäljellä:';
+
+  @override
+  String get nardyYouWonMars => 'Voitit — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Tappio — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: peli bottia vastaan.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Pelaajat: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get coinsFriendReward => 'Kaveripalkinto';
 
   @override
+  String get coinsTasks => 'Tehtävät';
+
+  @override
+  String get coinsTasksSubtitle => 'Palkinnot profiilista, kavereista ja peleistä';
+
+  @override
+  String get coinsTasksRewards => 'Noudettavissa olevia palkintoja';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount rekisteröitymisestä linkkisi kautta';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Lähetetty';
+
+  @override
+  String get lobbySearchShort => 'Haku';
+
+  @override
+  String get lobbySearchPlayers => 'Etsi pelaajia';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Hylätty';
 
   @override
   String get lobbyInvitesSentWaiting => 'Kutsut lähetetty. Odotetaan vastausta.';

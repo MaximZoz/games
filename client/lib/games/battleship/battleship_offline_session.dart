@@ -120,8 +120,8 @@ class OfflineBattleshipSession extends ChangeNotifier {
   final String gameId;
   final String humanUserId;
 
-  static const Duration botDelay = Duration(milliseconds: 700);
-  static const Duration botHitContinueDelay = Duration(milliseconds: 1100);
+  static const Duration botDelay = Duration(seconds: 1);
+  static const Duration botHitContinueDelay = Duration(seconds: 1);
 
   final Random _rng = Random();
   Timer? _botTimer;

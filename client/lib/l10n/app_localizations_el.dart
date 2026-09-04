@@ -720,6 +720,45 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesNardyWin => 'Νικά όποιος βγάλει πρώτος όλα τα πούλια.';
 
   @override
+  String get rulesNardySixPrime => 'Δεν μπορείτε να κλείσετε έξι συνεχόμενα σημεία όσο κανένα πούλι του αντιπάλου δεν τα έχει προσπεράσει.';
+
+  @override
+  String get nardyRoll => 'Ρίξε';
+
+  @override
+  String get nardySkipTurn => 'Παράλειψη σειράς';
+
+  @override
+  String get nardyUndoMove => 'Αναίρεση';
+
+  @override
+  String get nardyDoneTurn => 'Έτοιμο';
+
+  @override
+  String get nardyAutoConfirm => 'Αυτόματη επιβεβαίωση';
+
+  @override
+  String get nardyAutoConfirmHint => 'Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα';
+
+  @override
+  String get nardyNoMoves => 'Καμία κίνηση';
+
+  @override
+  String get nardyYourRoll => 'Η ζαριά σας';
+
+  @override
+  String get nardyPipsShort => 'Απομένουν:';
+
+  @override
+  String get nardyYouWonMars => 'Κερδίσατε — μαρς!';
+
+  @override
+  String get nardyYouLostMars => 'Ήττα — μαρς';
+
+  @override
+  String get rulesNardyOfflineBot => 'Εκτός σύνδεσης: παιχνίδι με το bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Παίκτες: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get coinsFriendReward => 'Ανταμοιβή φίλου';
 
   @override
+  String get coinsTasks => 'Αποστολές';
+
+  @override
+  String get coinsTasksSubtitle => 'Ανταμοιβές για προφίλ, φίλους και παιχνίδια';
+
+  @override
+  String get coinsTasksRewards => 'Διαθέσιμες ανταμοιβές προς διεκδίκηση';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount για εγγραφή μέσω του συνδέσμου σας';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Εστάλη';
+
+  @override
+  String get lobbySearchShort => 'Αναζήτηση';
+
+  @override
+  String get lobbySearchPlayers => 'Αναζήτηση παικτών';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Απορρίφθηκε';
 
   @override
   String get lobbyInvitesSentWaiting => 'Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.';

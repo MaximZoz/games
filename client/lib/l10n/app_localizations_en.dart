@@ -720,6 +720,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesNardyWin => 'The first player to bear off all checkers wins.';
 
   @override
+  String get rulesNardySixPrime => 'You may not seal six points in a row until at least one opposing checker has passed them.';
+
+  @override
+  String get nardyRoll => 'Roll';
+
+  @override
+  String get nardySkipTurn => 'Skip turn';
+
+  @override
+  String get nardyUndoMove => 'Undo';
+
+  @override
+  String get nardyDoneTurn => 'Done';
+
+  @override
+  String get nardyAutoConfirm => 'Auto-confirm';
+
+  @override
+  String get nardyAutoConfirmHint => 'Pass the turn automatically after all moves';
+
+  @override
+  String get nardyNoMoves => 'No moves';
+
+  @override
+  String get nardyYourRoll => 'Your roll';
+
+  @override
+  String get nardyPipsShort => 'Left:';
+
+  @override
+  String get nardyYouWonMars => 'You won — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'You lost — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: a game against the bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Players: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coinsFriendReward => 'Friend reward';
 
   @override
+  String get coinsTasks => 'Tasks';
+
+  @override
+  String get coinsTasksSubtitle => 'Rewards for profile, friends and games';
+
+  @override
+  String get coinsTasksRewards => 'Rewards available to claim';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount for signing up via your link';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Sent';
+
+  @override
+  String get lobbySearchShort => 'Search';
+
+  @override
+  String get lobbySearchPlayers => 'Find players';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Declined';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invites sent. Waiting for a response.';

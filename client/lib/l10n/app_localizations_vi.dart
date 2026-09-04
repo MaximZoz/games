@@ -720,6 +720,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesNardyWin => 'Ai gỡ hết quân trước sẽ thắng.';
 
   @override
+  String get rulesNardySixPrime => 'Bạn không được khóa sáu điểm liên tiếp khi chưa có quân nào của đối thủ vượt qua.';
+
+  @override
+  String get nardyRoll => 'Gieo xúc xắc';
+
+  @override
+  String get nardySkipTurn => 'Bỏ lượt';
+
+  @override
+  String get nardyUndoMove => 'Hoàn tác';
+
+  @override
+  String get nardyDoneTurn => 'Xong';
+
+  @override
+  String get nardyAutoConfirm => 'Tự xác nhận';
+
+  @override
+  String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
+
+  @override
+  String get nardyNoMoves => 'Không có nước đi';
+
+  @override
+  String get nardyYourRoll => 'Lượt gieo của bạn';
+
+  @override
+  String get nardyPipsShort => 'Còn lại:';
+
+  @override
+  String get nardyYouWonMars => 'Bạn thắng — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Thua — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Ngoại tuyến: chơi với bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Người chơi: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coinsFriendReward => 'Thưởng bạn bè';
 
   @override
+  String get coinsTasks => 'Nhiệm vụ';
+
+  @override
+  String get coinsTasksSubtitle => 'Phần thưởng cho hồ sơ, bạn bè và trận đấu';
+
+  @override
+  String get coinsTasksRewards => 'Có phần thưởng để nhận';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount khi đăng ký qua liên kết của bạn';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Đã gửi';
+
+  @override
+  String get lobbySearchShort => 'Tìm';
+
+  @override
+  String get lobbySearchPlayers => 'Tìm người chơi';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Đã từ chối';
 
   @override
   String get lobbyInvitesSentWaiting => 'Đã gửi lời mời. Đang chờ phản hồi.';

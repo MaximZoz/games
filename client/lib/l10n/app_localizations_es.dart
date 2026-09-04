@@ -720,6 +720,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesNardyWin => 'Gana quien primero saque todas sus fichas.';
 
   @override
+  String get rulesNardySixPrime => 'No puedes cerrar seis casillas seguidas mientras ninguna ficha rival las haya pasado.';
+
+  @override
+  String get nardyRoll => 'Tirar';
+
+  @override
+  String get nardySkipTurn => 'Pasar turno';
+
+  @override
+  String get nardyUndoMove => 'Deshacer';
+
+  @override
+  String get nardyDoneTurn => 'Listo';
+
+  @override
+  String get nardyAutoConfirm => 'Autoconfirmar';
+
+  @override
+  String get nardyAutoConfirmHint => 'Pasa el turno automáticamente tras todos los movimientos';
+
+  @override
+  String get nardyNoMoves => 'Sin jugadas';
+
+  @override
+  String get nardyYourRoll => 'Tu tirada';
+
+  @override
+  String get nardyPipsShort => 'Quedan:';
+
+  @override
+  String get nardyYouWonMars => '¡Ganaste — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Derrota — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Sin conexión: partida contra el bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Jugadores: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coinsFriendReward => 'Recompensa por amigo';
 
   @override
+  String get coinsTasks => 'Tareas';
+
+  @override
+  String get coinsTasksSubtitle => 'Recompensas por perfil, amigos y partidas';
+
+  @override
+  String get coinsTasksRewards => 'Recompensas disponibles para reclamar';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount por registrarse con tu enlace';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Enviado';
+
+  @override
+  String get lobbySearchShort => 'Buscar';
+
+  @override
+  String get lobbySearchPlayers => 'Buscar jugadores';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Rechazado';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invitaciones enviadas. Esperando respuesta.';

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/poker_game_screen.dart';
 import 'package:multigames_client/screens/poker_lobby_screen.dart';
 import 'package:multigames_client/screens/poker_offline_screen.dart';
@@ -8,6 +9,9 @@ import 'package:multigames_client/screens/poker_offline_screen.dart';
 class PokerGame extends GameDescriptor {
   @override
   String get id => 'poker';
+
+  @override
+  String localizedName(AppLocalizations l10n) => l10n.gamesPoker;
 
   @override
   int get sortOrder => 40;

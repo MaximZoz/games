@@ -720,6 +720,45 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesNardyWin => 'Barcha toshlarini birinchi olgan g‘olib.';
 
   @override
+  String get rulesNardySixPrime => 'Raqibning birorta toshi o‘tmaguncha, ketma-ket oltita punktni yopib bo‘lmaydi.';
+
+  @override
+  String get nardyRoll => 'Tashlash';
+
+  @override
+  String get nardySkipTurn => 'Yurishni o‘tkazish';
+
+  @override
+  String get nardyUndoMove => 'Qaytarish';
+
+  @override
+  String get nardyDoneTurn => 'Tayyor';
+
+  @override
+  String get nardyAutoConfirm => 'Avtotasdiqlash';
+
+  @override
+  String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
+
+  @override
+  String get nardyNoMoves => 'Yurish yo‘q';
+
+  @override
+  String get nardyYourRoll => 'Sizning tashlashingiz';
+
+  @override
+  String get nardyPipsShort => 'Qoldi:';
+
+  @override
+  String get nardyYouWonMars => 'Siz yutdingiz — mars!';
+
+  @override
+  String get nardyYouLostMars => 'Mag‘lubiyat — mars';
+
+  @override
+  String get rulesNardyOfflineBot => 'Oflayn: bot bilan o‘yin.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Oʻyinchilar: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String get coinsFriendReward => 'Do‘st mukofoti';
 
   @override
+  String get coinsTasks => 'Vazifalar';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, do‘stlar va o‘yin mukofotlari';
+
+  @override
+  String get coinsTasksRewards => 'Olish uchun mukofotlar bor';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Havolangiz orqali ro‘yxatdan o‘tish uchun +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Yuborildi';
+
+  @override
+  String get lobbySearchShort => 'Qidiruv';
+
+  @override
+  String get lobbySearchPlayers => 'O‘yinchi qidirish';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Rad etildi';
 
   @override
   String get lobbyInvitesSentWaiting => 'Takliflar yuborildi. Javob kutilmoqda.';

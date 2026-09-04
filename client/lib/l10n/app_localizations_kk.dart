@@ -720,6 +720,45 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesNardyWin => 'Барлық тасын бірінші алған жеңеді.';
 
   @override
+  String get rulesNardySixPrime => 'Қарсыластың бірде-бір тасы өтпейінше, қатарынан алты пунктті бекітуге болмайды.';
+
+  @override
+  String get nardyRoll => 'Лақтыру';
+
+  @override
+  String get nardySkipTurn => 'Жүрісті өткізу';
+
+  @override
+  String get nardyUndoMove => 'Қайтару';
+
+  @override
+  String get nardyDoneTurn => 'Дайын';
+
+  @override
+  String get nardyAutoConfirm => 'Авторастау';
+
+  @override
+  String get nardyAutoConfirmHint => 'Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді';
+
+  @override
+  String get nardyNoMoves => 'Жүріс жоқ';
+
+  @override
+  String get nardyYourRoll => 'Сіздің лақтыруыңыз';
+
+  @override
+  String get nardyPipsShort => 'Қалды:';
+
+  @override
+  String get nardyYouWonMars => 'Сіз жеңдіңіз — марс!';
+
+  @override
+  String get nardyYouLostMars => 'Жеңіліс — марс';
+
+  @override
+  String get rulesNardyOfflineBot => 'Офлайн: ботпен ойын.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Ойыншылар: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String get coinsFriendReward => 'Дос сыйлығы';
 
   @override
+  String get coinsTasks => 'Тапсырмалар';
+
+  @override
+  String get coinsTasksSubtitle => 'Профиль, достар және ойын марапаттары';
+
+  @override
+  String get coinsTasksRewards => 'Алынатын марапаттар бар';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'Сілтемеңіз арқылы тіркелу үшін +$amount';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Жіберілді';
+
+  @override
+  String get lobbySearchShort => 'Іздеу';
+
+  @override
+  String get lobbySearchPlayers => 'Ойыншы іздеу';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Бас тарту';
 
   @override
   String get lobbyInvitesSentWaiting => 'Шақырулар жіберілді. Жауап күтілуде.';

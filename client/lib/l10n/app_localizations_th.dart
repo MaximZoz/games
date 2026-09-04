@@ -720,6 +720,45 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesNardyWin => 'ผู้ที่นำหมากออกครบก่อนชนะ';
 
   @override
+  String get rulesNardySixPrime => 'ห้ามปิดหกช่องติดกันจนกว่าหมากของคู่แข่งอย่างน้อยหนึ่งตัวจะผ่านไปแล้ว';
+
+  @override
+  String get nardyRoll => 'ทอยลูกเต๋า';
+
+  @override
+  String get nardySkipTurn => 'ข้ามตา';
+
+  @override
+  String get nardyUndoMove => 'ย้อนกลับ';
+
+  @override
+  String get nardyDoneTurn => 'เสร็จ';
+
+  @override
+  String get nardyAutoConfirm => 'ยืนยันอัตโนมัติ';
+
+  @override
+  String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
+
+  @override
+  String get nardyNoMoves => 'ไม่มีตาเดิน';
+
+  @override
+  String get nardyYourRoll => 'การทอยของคุณ';
+
+  @override
+  String get nardyPipsShort => 'เหลือ:';
+
+  @override
+  String get nardyYouWonMars => 'คุณชนะ — แกมมอน!';
+
+  @override
+  String get nardyYouLostMars => 'แพ้ — แกมมอน';
+
+  @override
+  String get rulesNardyOfflineBot => 'ออฟไลน์: เล่นกับบอท';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'ผู้เล่น: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get coinsFriendReward => 'รางวัลเพื่อน';
 
   @override
+  String get coinsTasks => 'ภารกิจ';
+
+  @override
+  String get coinsTasksSubtitle => 'รางวัลสำหรับโปรไฟล์ เพื่อน และเกม';
+
+  @override
+  String get coinsTasksRewards => 'มีรางวัลพร้อมรับ';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount สำหรับการสมัครผ่านลิงก์ของคุณ';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'ส่งแล้ว';
+
+  @override
+  String get lobbySearchShort => 'ค้นหา';
+
+  @override
+  String get lobbySearchPlayers => 'ค้นหาผู้เล่น';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'ปฏิเสธ';
 
   @override
   String get lobbyInvitesSentWaiting => 'ส่งคำเชิญแล้ว รอการตอบกลับ';

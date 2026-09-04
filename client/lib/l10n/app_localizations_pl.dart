@@ -720,6 +720,45 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesNardyWin => 'Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.';
 
   @override
+  String get rulesNardySixPrime => 'Nie możesz zamknąć sześciu pól z rzędu, dopóki nie minie ich żaden pionek przeciwnika.';
+
+  @override
+  String get nardyRoll => 'Rzuć';
+
+  @override
+  String get nardySkipTurn => 'Pomiń turę';
+
+  @override
+  String get nardyUndoMove => 'Cofnij';
+
+  @override
+  String get nardyDoneTurn => 'Gotowe';
+
+  @override
+  String get nardyAutoConfirm => 'Autopotwierdzenie';
+
+  @override
+  String get nardyAutoConfirmHint => 'Po wszystkich ruchach tura przechodzi automatycznie';
+
+  @override
+  String get nardyNoMoves => 'Brak ruchów';
+
+  @override
+  String get nardyYourRoll => 'Twój rzut';
+
+  @override
+  String get nardyPipsShort => 'Zostało:';
+
+  @override
+  String get nardyYouWonMars => 'Wygrana — gammon!';
+
+  @override
+  String get nardyYouLostMars => 'Porażka — gammon';
+
+  @override
+  String get rulesNardyOfflineBot => 'Offline: gra z botem.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Gracze: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get coinsFriendReward => 'Nagroda za znajomego';
 
   @override
+  String get coinsTasks => 'Zadania';
+
+  @override
+  String get coinsTasksSubtitle => 'Nagrody za profil, znajomych i gry';
+
+  @override
+  String get coinsTasksRewards => 'Dostępne nagrody do odebrania';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount za rejestrację przez Twój link';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Wysłano';
+
+  @override
+  String get lobbySearchShort => 'Szukaj';
+
+  @override
+  String get lobbySearchPlayers => 'Szukaj graczy';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Odrzucono';
 
   @override
   String get lobbyInvitesSentWaiting => 'Zaproszenia wysłane. Czekaj na odpowiedź.';

@@ -92,6 +92,81 @@ void main() {
     });
   });
 
+  group('friendsDesktopGridLayout', () {
+    test('на десктопе карточки поиска того же размера, что у друзей', () {
+      final layout = friendsDesktopGridLayout(
+        viewportWidth: 1400,
+        phoneLandscape: false,
+        tablet: false,
+      );
+      expect(layout.crossAxisCount, 3);
+      expect(layout.contentWidth, friendsDesktopMaxContentWidth);
+      expect(layout.itemWidth, lessThanOrEqualTo(320));
+      expect(layout.itemWidth, greaterThan(280));
+    });
+
+    test('на планшете не больше трёх колонок', () {
+      final layout = friendsDesktopGridLayout(
+        viewportWidth: 900,
+        phoneLandscape: false,
+        tablet: true,
+      );
+      expect(layout.crossAxisCount, inInclusiveRange(1, 3));
+      expect(layout.itemWidth, lessThan(400));
+    });
+  });
+
+  group('friendsLoaderIsVisible', () {
+    const viewport = Size(1280, 800);
+
+    test('лоадер внизу видимой области — грузим следующую страницу', () {
+      expect(
+        friendsLoaderIsVisible(
+          loaderGlobalRect: const Rect.fromLTWH(600, 720, 22, 22),
+          viewportSize: viewport,
+        ),
+        isTrue,
+      );
+      expect(
+        friendsShouldLoadNextPage(
+          hasMore: true,
+          loading: false,
+          loaderVisible: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('лоадер ниже экрана — не грузим', () {
+      expect(
+        friendsLoaderIsVisible(
+          loaderGlobalRect: const Rect.fromLTWH(600, 920, 22, 22),
+          viewportSize: viewport,
+        ),
+        isFalse,
+      );
+      expect(
+        friendsShouldLoadNextPage(
+          hasMore: true,
+          loading: false,
+          loaderVisible: false,
+        ),
+        isFalse,
+      );
+    });
+
+    test('пока уже грузим — повторно не запускаем', () {
+      expect(
+        friendsShouldLoadNextPage(
+          hasMore: true,
+          loading: true,
+          loaderVisible: true,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('friendsTabCountColor', () {
     test('друзья — акцент, поиск — зелёный, входящие — красный', () {
       expect(

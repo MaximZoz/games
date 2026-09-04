@@ -7,7 +7,7 @@ import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, LobbyPlayer;
+    show GamesException, LobbyPlayer, parseLobbyInvited;
 
 /// Результат создания лобби / мгновенного матча.
 class BattleshipCreateResult {
@@ -31,6 +31,7 @@ class BattleshipLobbyView {
     required this.creatorId,
     required this.playerIds,
     required this.players,
+    this.invited = const [],
     required this.turnTimeSec,
     required this.stakeBronze,
     this.gameId,
@@ -43,6 +44,9 @@ class BattleshipLobbyView {
   final String creatorId;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final int turnTimeSec;
   final int stakeBronze;
   final String? gameId;
@@ -60,6 +64,7 @@ class BattleshipLobbyView {
         ? (json['player_ids'] as List).map((e) => e.toString()).toList()
         : players.map((p) => p.id).toList();
     return BattleshipLobbyView(
+      invited: parseLobbyInvited(json['invited']),
       id: (json['lobby_id'] ?? json['id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       mode: (json['mode'] ?? 'invite').toString(),
@@ -522,6 +527,18 @@ class BattleshipRepository {
         Uri.parse('$apiBaseUrl/api/games/battleship/lobby/$lobbyId/decline'),
         headers: {'Authorization': 'Bearer $token'},
         operation: 'BattleshipRepository.declineLobby',
+      ),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startMatchmake(String lobbyId) async {
+    final res = await _sendAuth(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/battleship/lobby/$lobbyId/matchmake'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'BattleshipRepository.startMatchmake',
       ),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);

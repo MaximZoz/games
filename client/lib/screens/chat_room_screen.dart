@@ -167,6 +167,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   /// Автоперевод входящих сообщений (локальный переключатель на чат).
   bool _autoTranslate = false;
+
+  /// Выбор пользователя для этого чата; null — ещё не трогал переключатель.
+  bool? _autoTranslatePref;
   final Map<String, String> _translations = <String, String>{};
   bool _translateInFlight = false;
   String? _peerLanguageHint;
@@ -221,6 +224,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _messageIDs.clear();
       _translations.clear();
       _autoTranslate = false;
+      _autoTranslatePref = null;
       _peerLanguageHint = null;
       unawaited(_restoreAutoTranslatePref());
       _loadMessages(initial: true);
@@ -233,14 +237,32 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Future<void> _restoreAutoTranslatePref() async {
     final prefs = await SharedPreferences.getInstance();
-    final enabled = prefs.getBool(_autoTranslatePrefsKey) ?? false;
+    final stored = prefs.getBool(_autoTranslatePrefsKey);
     if (!mounted) return;
-    setState(() => _autoTranslate = enabled);
+    _autoTranslatePref = stored;
+    _applyAutoTranslateDefault();
+  }
+
+  /// Свести переключатель с языком собеседника: у иностранца перевод сразу
+  /// включён, пока пользователь сам его не выключил.
+  void _applyAutoTranslateDefault() {
+    if (!mounted) return;
+    final enabled = chatAutoTranslateEnabled(
+      stored: _autoTranslatePref,
+      peerLanguage: _peerLanguageHint,
+      myLanguage: effectiveAppLocale(ref.read(appLocaleProvider)).languageCode,
+    );
+    if (enabled == _autoTranslate) return;
+    setState(() {
+      _autoTranslate = enabled;
+      if (!enabled) _translations.clear();
+    });
     if (enabled) unawaited(_ensureTranslations());
   }
 
   Future<void> _setAutoTranslate(bool enabled) async {
     setState(() {
+      _autoTranslatePref = enabled;
       _autoTranslate = enabled;
       if (!enabled) _translations.clear();
     });
@@ -475,9 +497,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               child: Text(context.l10n.commonCancel),
             ),
             FilledButton(
-              style: destructive
-                  ? FilledButton.styleFrom(backgroundColor: Colors.red.shade700)
-                  : null,
+              style: AppButtonStyles.of(
+                foregroundColor:
+                    destructive ? Colors.red.shade800 : AppColors.textPrimary,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),
             ),
@@ -2060,6 +2083,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
     final achievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final tasks = ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncome =
         ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
     final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
@@ -2069,6 +2093,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         gameInvites +
         dailyReward +
         achievements +
+        tasks +
         collectionIncome +
         gifted;
   }
@@ -2528,6 +2553,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final peerLang = (peerUser?.preferredLanguage ?? '').trim();
     if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
       _peerLanguageHint = peerLang;
+      // Язык собеседника приходит уже после открытия чата — только сейчас
+      // видно, нужен ли перевод по умолчанию.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _applyAutoTranslateDefault(),
+      );
     }
     final title = _chatTitle(currentChat, routeTitle);
     final peerPresence = currentChat?.isGroup == true || peerUser == null
@@ -4403,15 +4433,10 @@ class _ChatCoinsCreditCardState extends ConsumerState<_ChatCoinsCreditCard> {
                 FilledButton(
                   key: _claimKey,
                   onPressed: _claiming ? null : () => _claim(credit),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                    foregroundColor: Colors.white,
+                  style: AppButtonStyles.of(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _claiming

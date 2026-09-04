@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -70,6 +71,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
+  Timer? _rematchPollTimer;
+  ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
   String? _optimisticTopId;
   String? _lastLocalActor;
   String? _lastLocalDrawActor;
@@ -97,6 +100,27 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     super.didChangeDependencies();
     if (_bindingsInitialized) return;
     _bindingsInitialized = true;
+    _realtimeSubscription = ref.listenManual(
+      realtimeEventsProvider,
+      (_, next) {
+        final event = next.valueOrNull;
+        if (event == null) return;
+        final update = rematchRealtimeUpdate(
+          event: event,
+          rematchLobbyId: _rematchLobbyId,
+        );
+        if (update == null || !mounted) return;
+        if ((update.startedGameId ?? '').isNotEmpty) {
+          _openRematchGame(update.startedGameId!);
+        } else if (update.declined) {
+          _rematchPollTimer?.cancel();
+          setState(() {
+            _rematchLobbyId = null;
+            _rematchDeclined = true;
+          });
+        }
+      },
+    );
     _busyWatchdog?.cancel();
     _busyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
@@ -134,6 +158,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   @override
   void dispose() {
     _unoCatchTimer?.cancel();
+    _rematchPollTimer?.cancel();
+    _realtimeSubscription?.close();
     _busyWatchdog?.cancel();
     GameFlyOverlay.dismissAll();
     super.dispose();
@@ -1040,13 +1066,19 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               gameType: 'uno',
             ),
           );
+      final game = ref.read(unoGameProvider(widget.gameId)).valueOrNull;
       setState(() {
         _rematchLobbyId = lobbyId;
         _rematchDeclined = false;
         _iDeclinedRematch = false;
         _isRematching = false;
       });
-      context.go('/games/uno/lobby/$lobbyId?mode=invite');
+      if (!rematchStayOnGameScreen(playerCount: game?.players.length ?? 2)) {
+        if (!mounted) return;
+        context.go('/games/uno/lobby/$lobbyId?mode=invite');
+        return;
+      }
+      _startRematchPoll();
     } catch (_) {
       if (mounted) {
         setState(() => _isRematching = false);
@@ -1062,6 +1094,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     try {
       final own = rematchLobbyToLeave(_rematchLobbyId, lobbyId);
       if (own != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         try {
           await ref.read(unoRepositoryProvider).leaveLobby(own);
@@ -1099,6 +1132,43 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     }
   }
 
+  void _startRematchPoll() {
+    _rematchPollTimer?.cancel();
+    if (_rematchLobbyId == null) return;
+    _rematchPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_rematchLobbyId == null || !mounted) return;
+      ref.invalidate(activeGameProvider);
+      try {
+        final lobby =
+            await ref.read(unoRepositoryProvider).getLobby(_rematchLobbyId!);
+        if (!mounted) return;
+        final gameId = lobby.gameId ?? '';
+        if (gameId.isNotEmpty) _openRematchGame(gameId);
+      } on GamesException catch (e) {
+        if (e.statusCode == 404 && mounted) {
+          _rematchPollTimer?.cancel();
+          setState(() => _rematchLobbyId = null);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _openRematchGame(String gameId) {
+    _rematchPollTimer?.cancel();
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'game',
+            gameId: gameId,
+            lobbyId: _rematchLobbyId,
+            gameType: 'uno',
+          ),
+        );
+    pinBlockingGame(ref, gameId, gameType: 'uno');
+    ref.invalidate(unoGameProvider(gameId));
+    if (!mounted) return;
+    context.go('/games/uno/game/$gameId');
+  }
+
   Future<void> _declineRematch(String lobbyId) async {
     ref.read(gameInvitesProvider.notifier).remove(lobbyId);
     try {
@@ -1109,6 +1179,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Future<void> _cancelRematchWait() async {
     if (_rematchLobbyId == null) return;
+    _rematchPollTimer?.cancel();
     final lobbyId = _rematchLobbyId!;
     setState(() => _rematchLobbyId = null);
     try {
@@ -1121,6 +1192,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     try {
       final rematchId = _rematchLobbyId;
       if (rematchId != null) {
+        _rematchPollTimer?.cancel();
         setState(() => _rematchLobbyId = null);
         unawaited(
           ref
@@ -1200,7 +1272,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   void _showRules(UnoGameView? game) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: game?.players.length ?? 2,
         turnTimeSec: game?.turnTimeSec ?? 0,
@@ -1237,34 +1308,26 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     // Нижняя зона (веер) исключена — полоса свайпа/крестика не перехватывает
     // крайнюю левую карту, как в дураке.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
-    return SwipeBackScope(
+    return SwipeBackScope.gameBoard(
       onBack: _onClose,
-      opaqueEdge: false,
-      edgeWidth: 16,
-      triggerDistance: 44,
       bottomInset: swipeBottomExclude,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: showGroupChat ? 96 : 48,
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: context.l10n.commonBack,
-                onPressed: _onClose,
-                icon: const Icon(Icons.close_rounded),
-              ),
-              if (game != null && showGroupChat)
-                GameIconWithBadge(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  tooltip: context.l10n.chatGroupTooltip,
-                  badge: groupUnread,
-                  onPressed: () => _openGroupChat(game),
-                ),
-            ],
+          leadingWidth: gameAppBarLeadingWidth(withExtra: showGroupChat),
+          leading: buildGameAppBarLeading(
+            onClose: _onClose,
+            closeTooltip: context.l10n.commonBack,
+            extra: game != null && showGroupChat
+                ? GameIconWithBadge(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    tooltip: context.l10n.chatGroupTooltip,
+                    badge: groupUnread,
+                    onPressed: () => _openGroupChat(game),
+                  )
+                : null,
           ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1386,6 +1449,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           Positioned.fill(
             child: _UnoRoundScoreOverlay(
               game: game,
+              // Партия закончилась — итог панелью снизу, без затемнения:
+              // видно, с кем играл, и можно открыть его профиль.
+              anchorBottom: game.isOver,
               nameOf: (player, index) => _playerName(player, index),
               onContinue: _busy
                   ? null
@@ -1733,7 +1799,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     );
   }
 
-  ButtonStyle _unoActionStyle({Color? background, Color? foreground}) {
+  ButtonStyle _unoActionStyle() {
     final compact = isWide(context);
     final padding = compact
         ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
@@ -1743,22 +1809,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final tap = compact
         ? MaterialTapTargetSize.shrinkWrap
         : MaterialTapTargetSize.padded;
-    if (background != null) {
-      return FilledButton.styleFrom(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        visualDensity: density,
-        tapTargetSize: tap,
-        padding: padding,
-        minimumSize: minimum,
-      );
-    }
-    return OutlinedButton.styleFrom(
-      foregroundColor: foreground ?? AppColors.accentStart,
-      visualDensity: density,
-      tapTargetSize: tap,
+    return AppButtonStyles.of(
       padding: padding,
       minimumSize: minimum,
+      visualDensity: density,
+      tapTargetSize: tap,
     );
   }
 
@@ -1776,10 +1831,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
       return _constrainActions(
         FilledButton.icon(
           onPressed: _busy ? null : () => _move(UnoActionType.nextRound),
-          style: _unoActionStyle(
-            background: AppColors.accentStart,
-            foreground: Colors.white,
-          ),
+          style: _unoActionStyle(),
           icon: const Icon(Icons.skip_next_rounded),
           label: Text(context.l10n.unoRoundContinue),
         ),
@@ -1790,10 +1842,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
         _isOffline
             ? FilledButton.icon(
                 onPressed: _restartOffline,
-                style: _unoActionStyle(
-                  background: AppColors.accentStart,
-                  foreground: Colors.white,
-                ),
+                style: _unoActionStyle(),
                 icon: const Icon(Icons.refresh_rounded),
                 label: Text(context.l10n.offlinePlayAgain),
               )
@@ -1818,10 +1867,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final challengeTarget = _unoChallengeTarget(game);
     final canDraw = _canTakeFromDeck(game) && !game.canChallengeWd4;
     final canCallUno = game.unoCallReady;
-    final filled = _unoActionStyle(
-      background: AppColors.accentStart,
-      foreground: Colors.white,
-    );
+    final filled = _unoActionStyle();
     final outlined = _unoActionStyle();
     return SizedBox(
       height: isWide(context) ? 40 : (_fit.compact ? 42 : 48),
@@ -1850,10 +1896,7 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
             if (canCallUno)
               FilledButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.callUno),
-                style: _unoActionStyle(
-                  background: const Color(0xFFE53935),
-                  foreground: Colors.white,
-                ),
+                style: _unoActionStyle(),
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),
@@ -2148,11 +2191,15 @@ class _UnoRoundScoreOverlay extends StatelessWidget {
     required this.game,
     required this.nameOf,
     this.onContinue,
+    this.anchorBottom = false,
   });
 
   final UnoGameView game;
   final String Function(UnoPlayerView player, int index) nameOf;
   final VoidCallback? onContinue;
+
+  /// Панель снизу без затемнения — плашки игроков остаются видимыми.
+  final bool anchorBottom;
 
   @override
   Widget build(BuildContext context) {
@@ -2165,12 +2212,17 @@ class _UnoRoundScoreOverlay extends StatelessWidget {
         ? nameOf(game.players[winnerIndex], winnerIndex)
         : l10n.commonPlayer;
     return Material(
-      color: Colors.black.withValues(alpha: 0.55),
-      child: Center(
+      color: anchorBottom
+          ? Colors.transparent
+          : Colors.black.withValues(alpha: 0.55),
+      child: Align(
+        alignment:
+            anchorBottom ? Alignment.bottomCenter : Alignment.center,
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: narrow ? 340 : 420,
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            maxHeight: MediaQuery.sizeOf(context).height *
+                (anchorBottom ? 0.6 : 0.85),
           ),
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),

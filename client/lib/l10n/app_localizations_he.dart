@@ -720,6 +720,45 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesNardyWin => 'מנצח מי שמוריד ראשון את כל האבנים.';
 
   @override
+  String get rulesNardySixPrime => 'אי אפשר לחסום שש נקודות ברצף כל עוד אף כלי של היריב לא עבר אותן.';
+
+  @override
+  String get nardyRoll => 'הטל';
+
+  @override
+  String get nardySkipTurn => 'דלג על התור';
+
+  @override
+  String get nardyUndoMove => 'בטל';
+
+  @override
+  String get nardyDoneTurn => 'סיום';
+
+  @override
+  String get nardyAutoConfirm => 'אישור אוטומטי';
+
+  @override
+  String get nardyAutoConfirmHint => 'לאחר כל המהלכים התור עובר ליריב';
+
+  @override
+  String get nardyNoMoves => 'אין מהלכים';
+
+  @override
+  String get nardyYourRoll => 'ההטלה שלך';
+
+  @override
+  String get nardyPipsShort => 'נותרו:';
+
+  @override
+  String get nardyYouWonMars => 'ניצחת — מארס!';
+
+  @override
+  String get nardyYouLostMars => 'הפסד — מארס';
+
+  @override
+  String get rulesNardyOfflineBot => 'לא מקוון: משחק מול הבוט.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'שחקנים: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get coinsFriendReward => 'פרס חבר';
 
   @override
+  String get coinsTasks => 'משימות';
+
+  @override
+  String get coinsTasksSubtitle => 'פרסים על פרופיל, חברים ומשחקים';
+
+  @override
+  String get coinsTasksRewards => 'יש פרסים לקבלה';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount על הרשמה דרך הקישור שלך';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'נשלח';
+
+  @override
+  String get lobbySearchShort => 'חיפוש';
+
+  @override
+  String get lobbySearchPlayers => 'חיפוש שחקנים';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'נדחה';
 
   @override
   String get lobbyInvitesSentWaiting => 'ההזמנות נשלחו. ממתינים לתשובה.';

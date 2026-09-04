@@ -720,6 +720,45 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rulesNardyWin => 'Перемагає той, хто першим зніме всі свої шашки.';
 
   @override
+  String get rulesNardySixPrime => 'Шість своїх пунктів поспіль замикати не можна, доки їх не обійшла жодна шашка суперника.';
+
+  @override
+  String get nardyRoll => 'Кинути';
+
+  @override
+  String get nardySkipTurn => 'Пропустити хід';
+
+  @override
+  String get nardyUndoMove => 'Повернути';
+
+  @override
+  String get nardyDoneTurn => 'Готово';
+
+  @override
+  String get nardyAutoConfirm => 'Автопідтвердження';
+
+  @override
+  String get nardyAutoConfirmHint => 'Після всіх ходів хід одразу перейде супернику';
+
+  @override
+  String get nardyNoMoves => 'Ходів немає';
+
+  @override
+  String get nardyYourRoll => 'Ваш кидок';
+
+  @override
+  String get nardyPipsShort => 'Залишилось:';
+
+  @override
+  String get nardyYouWonMars => 'Ви виграли — марс!';
+
+  @override
+  String get nardyYouLostMars => 'Поразка — марс';
+
+  @override
+  String get rulesNardyOfflineBot => 'Офлайн: партія проти бота.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Гравці: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get coinsFriendReward => 'Монети за друга';
 
   @override
+  String get coinsTasks => 'Завдання';
+
+  @override
+  String get coinsTasksSubtitle => 'Нагороди за профіль, друзів і ігри';
+
+  @override
+  String get coinsTasksRewards => 'Є нагороди для отримання';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount за реєстрацію за посиланням';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Надіслано';
+
+  @override
+  String get lobbySearchShort => 'Пошук';
+
+  @override
+  String get lobbySearchPlayers => 'Пошук гравців';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Відмова';
 
   @override
   String get lobbyInvitesSentWaiting => 'Запрошення надіслано. Очікуйте відповіді.';

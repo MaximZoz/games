@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
+import 'package:multigames_client/games/games_repository.dart' show LobbyPlayer;
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 
@@ -117,6 +118,144 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('player1'));
     expect(tappedId, 'online-1');
+  });
+
+  testWidgets('приглашённый не из друзей виден в списке', (tester) async {
+    String? cancelled;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          presenceMapProvider.overrideWith((ref) => Stream.value(const {})),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: LobbyFriendsInviteCard(
+              friendsAsync: AsyncValue.data(_snapshot()),
+              excludeUserIds: const {},
+              invitedIds: const {},
+              invitingIds: const {},
+              cancellingIds: const {},
+              listStorageKey: 'test-lobby-guest',
+              expand: false,
+              onInvite: (_) {},
+              onCancel: (id) => cancelled = id,
+              pendingInvites: [
+                LobbyPlayer(id: 'guest-1', displayName: 'rival'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('rival'), findsOneWidget);
+    expect(find.text('Отправлено'), findsOneWidget);
+
+    await tester.tap(find.text('Отмена'));
+    expect(cancelled, 'guest-1');
+  });
+
+  testWidgets('друг уже в списке — гостевой строки нет', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          presenceMapProvider.overrideWith((ref) => Stream.value(const {})),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: LobbyFriendsInviteCard(
+              friendsAsync: AsyncValue.data(_snapshot()),
+              excludeUserIds: const {},
+              invitedIds: const {'online-1'},
+              invitingIds: const {},
+              cancellingIds: const {},
+              listStorageKey: 'test-lobby-dup',
+              expand: false,
+              onInvite: (_) {},
+              onCancel: (_) {},
+              pendingInvites: [
+                LobbyPlayer(id: 'online-1', displayName: 'player1'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('player1'), findsOneWidget);
+    expect(find.text('Отмена'), findsOneWidget);
+  });
+
+  testWidgets('отказ друга показывает «Отказ», а не «Отправлено»',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          presenceMapProvider.overrideWith((ref) => Stream.value(const {})),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: LobbyFriendsInviteCard(
+              friendsAsync: AsyncValue.data(_snapshot()),
+              excludeUserIds: const {},
+              invitedIds: const {},
+              invitingIds: const {},
+              cancellingIds: const {},
+              declinedIds: const {'online-1'},
+              listStorageKey: 'test-lobby-declined',
+              expand: false,
+              onInvite: (_) {},
+              onCancel: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Отказ'), findsOneWidget);
+    expect(find.text('Отправлено'), findsNothing);
+  });
+
+  testWidgets('«Поиск» в шапке: кнопка зовёт поиск, во время поиска заблокирована',
+      (tester) async {
+    var started = 0;
+    Widget wrap(bool searching) => MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Center(
+              child: LobbySearchAction(
+                searching: searching,
+                onStart: () => started++,
+              ),
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(wrap(false));
+    await tester.pump();
+    expect(find.text('Поиск игроков'), findsOneWidget);
+    await tester.tap(find.text('Поиск игроков'));
+    expect(started, 1);
+
+    await tester.pumpWidget(wrap(true));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.tap(find.text('Поиск игроков'));
+    expect(started, 1);
   });
 
   testWidgets('invite buttons stay compact on desktop', (tester) async {

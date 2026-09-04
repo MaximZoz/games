@@ -720,6 +720,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rulesNardyWin => 'Побеждает тот, кто первым снимет все свои шашки.';
 
   @override
+  String get rulesNardySixPrime => 'Шесть своих пунктов подряд запирать нельзя, пока их не обошла хотя бы одна шашка соперника.';
+
+  @override
+  String get nardyRoll => 'Бросить';
+
+  @override
+  String get nardySkipTurn => 'Пропустить ход';
+
+  @override
+  String get nardyUndoMove => 'Вернуть';
+
+  @override
+  String get nardyDoneTurn => 'Готово';
+
+  @override
+  String get nardyAutoConfirm => 'Автоподтверждение';
+
+  @override
+  String get nardyAutoConfirmHint => 'После всех ходов сразу передать ход сопернику';
+
+  @override
+  String get nardyNoMoves => 'Ходов нет';
+
+  @override
+  String get nardyYourRoll => 'Ваш бросок';
+
+  @override
+  String get nardyPipsShort => 'Осталось:';
+
+  @override
+  String get nardyYouWonMars => 'Вы выиграли — марс!';
+
+  @override
+  String get nardyYouLostMars => 'Поражение — марс';
+
+  @override
+  String get rulesNardyOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Игроки: $players.';
   }
@@ -1616,6 +1655,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get coinsFriendReward => 'Монеты за друга';
 
   @override
+  String get coinsTasks => 'Задания';
+
+  @override
+  String get coinsTasksSubtitle => 'Награды за профиль, друзей и игры';
+
+  @override
+  String get coinsTasksRewards => 'Есть награды к получению';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount за регистрацию по ссылке';
   }
@@ -2017,6 +2065,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Отправлено';
+
+  @override
+  String get lobbySearchShort => 'Поиск';
+
+  @override
+  String get lobbySearchPlayers => 'Поиск игроков';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Отказ';
 
   @override
   String get lobbyInvitesSentWaiting => 'Приглашения отправлены. Ожидайте ответа.';

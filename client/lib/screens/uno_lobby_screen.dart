@@ -13,6 +13,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException, LobbyPlayer;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
@@ -23,7 +24,6 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -47,6 +47,24 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   final Set<String> _cancelling = {};
   final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
+  bool _startingSearch = false;
+
+  /// Открыть свою игру для поиска: лобби становится публичным.
+  Future<void> _startSearch() async {
+    if (_startingSearch) return;
+    setState(() => _startingSearch = true);
+    try {
+      await ref.read(unoRepositoryProvider).startMatchmake(widget.lobbyId);
+      if (!mounted) return;
+      ref.invalidate(unoLobbyProvider(widget.lobbyId));
+      ref.invalidate(openLobbiesProvider);
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    } finally {
+      if (mounted) setState(() => _startingSearch = false);
+    }
+  }
   bool _linkCopied = false;
   Timer? _copyTimer;
 
@@ -142,7 +160,6 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   void _showRules(UnoLobbyView lobby) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: lobby.maxPlayers,
         turnTimeSec: lobby.turnTimeSec,
@@ -185,20 +202,22 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
             onPressed: _leaving ? null : _confirmLeave,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const UnoGameIcon(size: 22),
-              const SizedBox(width: 8),
-              Text(
-                matchmaking
-                    ? context.l10n.gamesLobbyTab
-                    : context.l10n.lobbyPrivateGame,
-              ),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.uno,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
+            if (lobby != null)
+              LobbySearchAction(
+                searching: matchmaking,
+                busy: _startingSearch,
+                onStart: () => unawaited(_startSearch()),
+              ),
             if (lobby != null)
               IconButton(
                 tooltip: context.l10n.gamesRulesTitle,
@@ -243,9 +262,6 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
       friendsCount: friendsCount,
       maxWidth: isNarrow(context) ? 480 : 560,
       padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
-      searchBanner: lobby.mode == 'matchmake'
-          ? LobbySearchBanner(label: context.l10n.lobbySearchingOpponent)
-          : null,
       multiPlayersCard: _buildMultiPlayersCard(lobby),
       shareLinkCard: LobbyShareLinkCard(
         title: context.l10n.lobbyCopyLink,
@@ -256,9 +272,13 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
         onTap: _copyLink,
       ),
       friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        pendingInvites: lobby.invited,
         friendsAsync: friendsAsync,
         excludeUserIds: memberIds,
-        invitedIds: _invited,
+        invitedIds: {
+          ..._invited,
+          for (final guest in lobby.invited) guest.id,
+        },
         invitingIds: _inviting,
         cancellingIds: _cancelling,
         listStorageKey: 'uno-lobby-friends',
