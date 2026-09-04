@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/screens/chats_layout_screen.dart';
 import 'package:multigames_client/screens/chats_screen.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 
 void main() {
   group('chatsNewChatUseCompactStrip', () {
@@ -37,6 +39,41 @@ void main() {
           keyboardInset: 350,
         ),
         72,
+      );
+    });
+  });
+
+  group('chats sidebar divider / swipe', () {
+    test('линия того же цвета, что заливка тогла, и касается кнопки', () {
+      const panelWidth = 72.0;
+      const toggleLeft = panelWidth - chatsSidebarToggleLeftInset;
+      const toggleRight = toggleLeft + chatsSidebarToggleWidth;
+      final lineLeft = chatsSidebarLineLeft(panelWidth);
+      expect(chatsSidebarDividerColor(), AppColors.accentSoft.withValues(alpha: 0.6));
+      expect(lineLeft, greaterThanOrEqualTo(toggleLeft));
+      expect(lineLeft + chatsSidebarLineWidth, lessThanOrEqualTo(toggleRight));
+    });
+
+    test('свайп влево сворачивает, вправо разворачивает', () {
+      expect(
+        chatsSidebarSwipeShouldToggle(collapsed: false, dx: -48),
+        isTrue,
+      );
+      expect(
+        chatsSidebarSwipeShouldToggle(collapsed: false, dx: 48),
+        isFalse,
+      );
+      expect(
+        chatsSidebarSwipeShouldToggle(collapsed: true, dx: 48),
+        isTrue,
+      );
+      expect(
+        chatsSidebarSwipeShouldToggle(collapsed: true, dx: -48),
+        isFalse,
+      );
+      expect(
+        chatsSidebarSwipeShouldToggle(collapsed: false, dx: -20),
+        isFalse,
       );
     });
   });

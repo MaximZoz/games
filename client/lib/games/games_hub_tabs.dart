@@ -1,16 +1,88 @@
+import 'package:flutter/material.dart';
+import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+
 /// Анимация TabBarView «Игры ↔ Лобби» — короче дефолтных 300 мс Flutter.
 const Duration gamesLobbyTabAnimation = Duration(milliseconds: 150);
 
+/// Сколько строк займёт название игры при данной ширине заголовка.
+int gameTitleLineCount({
+  required String title,
+  required TextStyle style,
+  required double maxWidth,
+}) {
+  if (maxWidth <= 0) return 1;
+  final painter = TextPainter(
+    text: TextSpan(text: wrapGameTitle(title), style: style),
+    textDirection: TextDirection.ltr,
+    maxLines: 8,
+  )..layout(maxWidth: maxWidth);
+  final lines = painter.computeLineMetrics().length;
+  painter.dispose();
+  return lines < 1 ? 1 : lines;
+}
+
+/// Ширина текста названия внутри карточки хаба (иконка, ставка, «i»).
+double gamesHubTitleMaxWidth({
+  required double tileWidth,
+  required bool isDesktop,
+  required bool isMedium,
+}) {
+  final padH = isMedium ? 18.0 : (isDesktop ? 24.0 : 20.0);
+  final icon = isDesktop ? 52.0 : 44.0;
+  final iconGap = isDesktop ? 20.0 : 12.0;
+  const infoButton = 32.0;
+  const stakeBlock = 48.0;
+  final stakeGap = isMedium ? 8.0 : (isDesktop ? 16.0 : 12.0);
+  return (tileWidth - padH * 2 - icon - iconGap - infoButton - stakeBlock - stakeGap)
+      .clamp(0.0, tileWidth);
+}
+
+TextStyle gamesHubTitleStyle({
+  required bool isDesktop,
+  required bool isMedium,
+  TextStyle? base,
+}) {
+  return (base ?? const TextStyle()).copyWith(
+    fontWeight: FontWeight.w700,
+    fontSize: isMedium ? 18 : (isDesktop ? 20 : 18),
+    height: 1.15,
+    letterSpacing: -0.3,
+  );
+}
+
 /// Колонки карточек хаба: на телефоне всегда одна, иначе кнопки сжимаются.
+/// Если при 3 колонках название уходит в 3 строки — оставляем 2 колонки.
 int gamesHubTileColumns({
   required double maxWidth,
   required bool wide,
+  List<String> titles = const [],
+  TextStyle? titleStyle,
+  bool isDesktop = true,
+  bool isMedium = false,
 }) {
   if (!wide) return 1;
   const gap = 16.0;
   const minTile = 260.0;
   if (maxWidth < minTile * 2 + gap) return 1;
-  return (maxWidth / (minTile + gap)).floor().clamp(1, 3);
+  var cols = (maxWidth / (minTile + gap)).floor().clamp(1, 3);
+  if (cols >= 3 && titles.isNotEmpty) {
+    final tileW = gamesHubTileWidth(maxWidth: maxWidth, cols: 3);
+    final titleW = gamesHubTitleMaxWidth(
+      tileWidth: tileW,
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+    );
+    final style = titleStyle ??
+        gamesHubTitleStyle(isDesktop: isDesktop, isMedium: isMedium);
+    final wrapsToThree = titles.any(
+      (title) =>
+          gameTitleLineCount(title: title, style: style, maxWidth: titleW) >= 3,
+    );
+    if (wrapsToThree) {
+      cols = 2;
+    }
+  }
+  return cols;
 }
 
 /// Ширина карточки: одна колонка занимает всю доступную ширину.

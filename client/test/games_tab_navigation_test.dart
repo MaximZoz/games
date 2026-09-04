@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
@@ -62,6 +63,56 @@ void main() {
     test('на широком экране несколько колонок', () {
       expect(gamesHubTileColumns(maxWidth: 1100, wide: true), greaterThan(1));
       expect(gamesHubTileWidth(maxWidth: 1100, cols: 3), lessThan(400.1));
+    });
+
+    test('три строки названия — две колонки вместо трёх', () {
+      const style = TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        height: 1.15,
+        letterSpacing: -0.3,
+      );
+      expect(gamesHubTileColumns(maxWidth: 860, wide: true), 3);
+      expect(
+        gamesHubTileColumns(
+          maxWidth: 860,
+          wide: true,
+          titles: const ['Крестики-нолики'],
+          isDesktop: true,
+          titleStyle: style,
+        ),
+        2,
+      );
+      expect(
+        gameTitleLineCount(
+          title: 'Крестики-нолики',
+          style: style,
+          maxWidth: gamesHubTitleMaxWidth(
+            tileWidth: gamesHubTileWidth(maxWidth: 860, cols: 3),
+            isDesktop: true,
+            isMedium: false,
+          ),
+        ),
+        greaterThanOrEqualTo(3),
+      );
+    });
+
+    test('короткие названия остаются в трёх колонках', () {
+      expect(
+        gamesHubTileColumns(
+          maxWidth: 1100,
+          wide: true,
+          titles: const ['Дурак', 'Уно', 'Покер'],
+          isDesktop: true,
+          titleStyle: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+            letterSpacing: -0.3,
+          ),
+        ),
+        3,
+      );
     });
   });
 
