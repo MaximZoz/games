@@ -328,6 +328,8 @@
   "nardySkipTurn": "Skip turn",
   "nardyUndoMove": "Undo",
   "nardyDoneTurn": "Done",
+  "nardyAutoConfirm": "Auto-confirm",
+  "nardyAutoConfirmHint": "Pass the turn automatically after all moves",
   "nardyNoMoves": "No moves",
   "nardyYourRoll": "Your roll",
   "nardyPipsShort": "Left:",

@@ -735,6 +735,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get nardyDoneTurn => 'Hotovo';
 
   @override
+  String get nardyAutoConfirm => 'Automaticky';
+
+  @override
+  String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
+
+  @override
   String get nardyNoMoves => 'Žádné tahy';
 
   @override

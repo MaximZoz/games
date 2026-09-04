@@ -276,6 +276,8 @@
   "nardySkipTurn": "手番をパス",
   "nardyUndoMove": "戻す",
   "nardyDoneTurn": "完了",
+  "nardyAutoConfirm": "自動確定",
+  "nardyAutoConfirmHint": "すべての手のあと、自動で相手の番になります",
   "nardyNoMoves": "動かせません",
   "nardyYourRoll": "あなたの出目",
   "nardyPipsShort": "残り:",

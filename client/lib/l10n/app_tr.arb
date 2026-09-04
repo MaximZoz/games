@@ -276,6 +276,8 @@
   "nardySkipTurn": "Sırayı geç",
   "nardyUndoMove": "Geri al",
   "nardyDoneTurn": "Bitti",
+  "nardyAutoConfirm": "Otomatik onay",
+  "nardyAutoConfirmHint": "Tüm hamlelerden sonra sıra otomatik geçer",
   "nardyNoMoves": "Hamle yok",
   "nardyYourRoll": "Zarınız",
   "nardyPipsShort": "Kalan:",

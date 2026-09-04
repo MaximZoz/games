@@ -735,6 +735,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nardyDoneTurn => 'हो गया';
 
   @override
+  String get nardyAutoConfirm => 'स्वतः पुष्टि';
+
+  @override
+  String get nardyAutoConfirmHint => 'सभी चालों के बाद बारी अपने आप चली जाएगी';
+
+  @override
   String get nardyNoMoves => 'कोई चाल नहीं';
 
   @override

@@ -735,6 +735,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nardyDoneTurn => 'Klaar';
 
   @override
+  String get nardyAutoConfirm => 'Auto-bevestigen';
+
+  @override
+  String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
+
+  @override
   String get nardyNoMoves => 'Geen zetten';
 
   @override

@@ -276,6 +276,8 @@
   "nardySkipTurn": "Hopp over turen",
   "nardyUndoMove": "Angre",
   "nardyDoneTurn": "Ferdig",
+  "nardyAutoConfirm": "Autobekreft",
+  "nardyAutoConfirmHint": "Etter alle trekk går turen automatisk videre",
   "nardyNoMoves": "Ingen trekk",
   "nardyYourRoll": "Ditt kast",
   "nardyPipsShort": "Igjen:",

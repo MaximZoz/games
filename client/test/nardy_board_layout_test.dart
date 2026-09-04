@@ -315,7 +315,7 @@ void main() {
 
   group('нижняя панель в портрете', () {
     test('во время партии слот фиксирован', () {
-      expect(nardyBottomPanelHeight(isOver: false), 118.0);
+      expect(nardyBottomPanelHeight(isOver: false), 148.0);
     });
 
     test('после партии высота по содержимому — кнопки не обрезаются', () {

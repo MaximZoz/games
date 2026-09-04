@@ -1553,6 +1553,18 @@ abstract class AppLocalizations {
   /// **'Готово'**
   String get nardyDoneTurn;
 
+  /// No description provided for @nardyAutoConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автоподтверждение'**
+  String get nardyAutoConfirm;
+
+  /// No description provided for @nardyAutoConfirmHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'После всех ходов сразу передать ход сопернику'**
+  String get nardyAutoConfirmHint;
+
   /// No description provided for @nardyNoMoves.
   ///
   /// In ru, this message translates to:

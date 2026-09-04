@@ -276,6 +276,8 @@
   "nardySkipTurn": "Bỏ lượt",
   "nardyUndoMove": "Hoàn tác",
   "nardyDoneTurn": "Xong",
+  "nardyAutoConfirm": "Tự xác nhận",
+  "nardyAutoConfirmHint": "Sau mọi nước đi, lượt tự chuyển cho đối thủ",
   "nardyNoMoves": "Không có nước đi",
   "nardyYourRoll": "Lượt gieo của bạn",
   "nardyPipsShort": "Còn lại:",

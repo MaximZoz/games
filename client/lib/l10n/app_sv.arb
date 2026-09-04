@@ -276,6 +276,8 @@
   "nardySkipTurn": "Hoppa över turen",
   "nardyUndoMove": "Ångra",
   "nardyDoneTurn": "Klar",
+  "nardyAutoConfirm": "Autobekräfta",
+  "nardyAutoConfirmHint": "Efter alla drag går turen vidare automatiskt",
   "nardyNoMoves": "Inga drag",
   "nardyYourRoll": "Ditt slag",
   "nardyPipsShort": "Kvar:",

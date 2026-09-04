@@ -276,6 +276,8 @@
   "nardySkipTurn": "Spring turen over",
   "nardyUndoMove": "Fortryd",
   "nardyDoneTurn": "Færdig",
+  "nardyAutoConfirm": "Autobekræft",
+  "nardyAutoConfirmHint": "Giv turen videre automatisk efter alle træk",
   "nardyNoMoves": "Ingen træk",
   "nardyYourRoll": "Dit slag",
   "nardyPipsShort": "Tilbage:",

@@ -735,6 +735,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nardyDoneTurn => 'Готово';
 
   @override
+  String get nardyAutoConfirm => 'Автопідтвердження';
+
+  @override
+  String get nardyAutoConfirmHint => 'Після всіх ходів хід одразу перейде супернику';
+
+  @override
   String get nardyNoMoves => 'Ходів немає';
 
   @override

@@ -735,6 +735,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nardyDoneTurn => '完了';
 
   @override
+  String get nardyAutoConfirm => '自動確定';
+
+  @override
+  String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
+
+  @override
   String get nardyNoMoves => '動かせません';
 
   @override

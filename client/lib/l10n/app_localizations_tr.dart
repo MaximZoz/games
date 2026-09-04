@@ -735,6 +735,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nardyDoneTurn => 'Bitti';
 
   @override
+  String get nardyAutoConfirm => 'Otomatik onay';
+
+  @override
+  String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
+
+  @override
   String get nardyNoMoves => 'Hamle yok';
 
   @override

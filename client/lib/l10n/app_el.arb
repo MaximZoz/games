@@ -276,6 +276,8 @@
   "nardySkipTurn": "Παράλειψη σειράς",
   "nardyUndoMove": "Αναίρεση",
   "nardyDoneTurn": "Έτοιμο",
+  "nardyAutoConfirm": "Αυτόματη επιβεβαίωση",
+  "nardyAutoConfirmHint": "Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα",
   "nardyNoMoves": "Καμία κίνηση",
   "nardyYourRoll": "Η ζαριά σας",
   "nardyPipsShort": "Απομένουν:",

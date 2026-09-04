@@ -735,6 +735,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nardyDoneTurn => 'Listo';
 
   @override
+  String get nardyAutoConfirm => 'Autoconfirmar';
+
+  @override
+  String get nardyAutoConfirmHint => 'Pasa el turno automáticamente tras todos los movimientos';
+
+  @override
   String get nardyNoMoves => 'Sin jugadas';
 
   @override

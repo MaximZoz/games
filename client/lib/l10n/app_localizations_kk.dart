@@ -735,6 +735,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get nardyDoneTurn => 'Дайын';
 
   @override
+  String get nardyAutoConfirm => 'Авторастау';
+
+  @override
+  String get nardyAutoConfirmHint => 'Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді';
+
+  @override
   String get nardyNoMoves => 'Жүріс жоқ';
 
   @override

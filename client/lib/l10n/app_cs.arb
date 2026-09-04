@@ -276,6 +276,8 @@
   "nardySkipTurn": "Přeskočit tah",
   "nardyUndoMove": "Vrátit",
   "nardyDoneTurn": "Hotovo",
+  "nardyAutoConfirm": "Automaticky",
+  "nardyAutoConfirmHint": "Po všech tazích ihned předat tah soupeři",
   "nardyNoMoves": "Žádné tahy",
   "nardyYourRoll": "Váš hod",
   "nardyPipsShort": "Zbývá:",

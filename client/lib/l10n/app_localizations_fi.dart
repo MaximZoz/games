@@ -735,6 +735,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get nardyDoneTurn => 'Valmis';
 
   @override
+  String get nardyAutoConfirm => 'Autovahvistus';
+
+  @override
+  String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
+
+  @override
   String get nardyNoMoves => 'Ei siirtoja';
 
   @override

@@ -735,6 +735,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get nardyDoneTurn => 'Gotowe';
 
   @override
+  String get nardyAutoConfirm => 'Autopotwierdzenie';
+
+  @override
+  String get nardyAutoConfirmHint => 'Po wszystkich ruchach tura przechodzi automatycznie';
+
+  @override
   String get nardyNoMoves => 'Brak ruchów';
 
   @override

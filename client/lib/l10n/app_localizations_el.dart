@@ -735,6 +735,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String get nardyDoneTurn => 'Έτοιμο';
 
   @override
+  String get nardyAutoConfirm => 'Αυτόματη επιβεβαίωση';
+
+  @override
+  String get nardyAutoConfirmHint => 'Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα';
+
+  @override
   String get nardyNoMoves => 'Καμία κίνηση';
 
   @override

@@ -276,6 +276,8 @@
   "nardySkipTurn": "Zug überspringen",
   "nardyUndoMove": "Zurück",
   "nardyDoneTurn": "Fertig",
+  "nardyAutoConfirm": "Auto-Bestätigung",
+  "nardyAutoConfirmHint": "Zug nach allen Zügen automatisch übergeben",
   "nardyNoMoves": "Kein Zug möglich",
   "nardyYourRoll": "Dein Wurf",
   "nardyPipsShort": "Rest:",

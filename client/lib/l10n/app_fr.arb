@@ -276,6 +276,8 @@
   "nardySkipTurn": "Passer le tour",
   "nardyUndoMove": "Annuler",
   "nardyDoneTurn": "Terminé",
+  "nardyAutoConfirm": "Auto-confirmation",
+  "nardyAutoConfirmHint": "Passe le tour automatiquement après tous les coups",
   "nardyNoMoves": "Aucun coup",
   "nardyYourRoll": "Votre lancer",
   "nardyPipsShort": "Reste :",
