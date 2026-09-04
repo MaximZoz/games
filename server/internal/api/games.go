@@ -1549,21 +1549,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			StakeBronze:          stakeBronze,
 			GameType:             gameType,
 		}
-		// Durak: правила и подписи строятся по колоде/режиму, не по variant.
-		if gameType == durakGameType {
-			deckSize, _ := strconv.Atoi(m["deck_size"])
-			if deckSize == 0 {
-				deckSize = 36
-			}
-			gm := strings.TrimSpace(m["game_mode"])
-			if gm == "" {
-				gm = "podkidnoi"
-			}
-			item.DeckSize = deckSize
-			item.GameMode = gm
-			item.Variant = ""
-			item.GridSize = 0
-		}
+		applyLobbyTypeFields(&item, m)
 		lobbies = append(lobbies, item)
 	}
 
@@ -1686,37 +1672,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		StakeBronze:  stakeBronze,
 		GameType:     gameType,
 	}
-	// Durak: правила рисуются по колоде и режиму, а не по variant/grid.
-	if gameType == durakGameType {
-		deckSize, _ := strconv.Atoi(m["deck_size"])
-		if deckSize == 0 {
-			deckSize = 36
-		}
-		gm := strings.TrimSpace(m["game_mode"])
-		if gm == "" {
-			gm = "podkidnoi"
-		}
-		item.DeckSize = deckSize
-		item.GameMode = gm
-		item.Variant = ""
-		item.GridSize = 0
-	}
-	if gameType == battleshipGameType {
-		item.Variant = ""
-		item.GridSize = 10
-		item.FirstMoveRestriction = m["first_move_restriction"] == "true"
-	}
-	if gameType == unoGameType {
-		item.Variant = "classic"
-		item.GridSize = 0
-		item.GameMode = "classic"
-	}
-	if gameType == nardyGameType {
-		mode := nardy.NormalizeMode(m["game_mode"])
-		item.Variant = mode
-		item.GridSize = 0
-		item.GameMode = mode
-	}
+	applyLobbyTypeFields(&item, m)
 	if opponentID != "" {
 		item.OpponentID = &opponentID
 	}

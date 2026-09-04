@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/offline_tictactoe_screen.dart';
 import 'package:multigames_client/screens/tictactoe_game_screen.dart';
 import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
@@ -10,6 +11,31 @@ import 'package:multigames_client/screens/tictactoe_lobby_screen.dart';
 class TicTacToeGame extends GameDescriptor {
   @override
   String get id => 'tictactoe';
+
+  @override
+  String localizedName(AppLocalizations l10n) => l10n.gamesTicTacToe;
+
+  @override
+  String visibleModeLabel({
+    required AppLocalizations l10n,
+    String variant = '',
+    String gameMode = '',
+    int deckSize = 36,
+  }) {
+    switch (parseVariant(variant)) {
+      case variantGomoku:
+        return l10n.gamesVariantGomoku;
+      case variantUltimate:
+        return l10n.gamesVariantUltimate;
+      case variantMulti3:
+        return l10n.gamesVariantMulti3;
+      case variantMulti4:
+        return l10n.gamesVariantMulti4;
+      case variantClassic:
+      default:
+        return l10n.gamesVariantClassic;
+    }
+  }
 
   @override
   int get sortOrder => 10;

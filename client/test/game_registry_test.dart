@@ -9,10 +9,11 @@ void main() {
     expect(gameRegistry.contains('battleship'), isTrue);
     expect(gameRegistry.contains('poker'), isTrue);
     expect(gameRegistry.contains('uno'), isTrue);
+    expect(gameRegistry.contains('nardy'), isTrue);
     expect(gameRegistry.contains('chess'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
     expect(gameRegistry.all.map((g) => g.id).toList(),
-        containsAll(['tictactoe', 'durak', 'battleship', 'uno', 'poker']));
+        containsAll(['tictactoe', 'durak', 'battleship', 'uno', 'poker', 'nardy']));
   });
 
   test('normalize unknown falls back to tictactoe', () {

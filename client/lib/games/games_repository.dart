@@ -653,6 +653,17 @@ class LobbyItem {
 
   bool get isUno => gameType == 'uno';
 
+  bool get isNardy => gameType == 'nardy';
+
+  /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
+  String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(
+        gameType: gameType,
+        variant: variant,
+        gameMode: gameMode,
+        deckSize: deckSize,
+        l10n: l10n,
+      );
+
   LobbyItem({
     required this.id,
     required this.creatorId,
