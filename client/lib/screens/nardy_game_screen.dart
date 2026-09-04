@@ -822,28 +822,29 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Widget _buildPortrait(NardyGameView game, String? me, bool myTurn) {
-    final bottomPanelHeight = game.isOver ? 156.0 : 118.0;
+    final panelHeight = nardyBottomPanelHeight(isOver: game.isOver);
+    final panel = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildStatusLine(game, myTurn),
+        const SizedBox(height: 6),
+        _buildControls(game, myTurn),
+        if (game.isOver) ...[
+          const SizedBox(height: 8),
+          _buildFinishRow(game, me),
+        ],
+      ],
+    );
     return Column(
       children: [
         _buildOpponentRow(game, me),
         const SizedBox(height: 6),
         Expanded(child: _buildBoard(game)),
         const SizedBox(height: 6),
-        SizedBox(
-          height: bottomPanelHeight,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildStatusLine(game, myTurn),
-              const SizedBox(height: 6),
-              _buildControls(game, myTurn),
-              if (game.isOver) ...[
-                const SizedBox(height: 8),
-                _buildFinishRow(game, me),
-              ],
-            ],
-          ),
-        ),
+        if (panelHeight == null)
+          panel
+        else
+          SizedBox(height: panelHeight, child: panel),
       ],
     );
   }

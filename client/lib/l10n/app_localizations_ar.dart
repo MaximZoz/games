@@ -720,6 +720,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesNardyWin => 'يفوز من يُخرج كل أحجاره أولًا.';
 
   @override
+  String get rulesNardySixPrime => 'لا يمكنك إغلاق ست نقاط متتالية ما لم يتجاوزها حجر واحد للخصم على الأقل.';
+
+  @override
   String get nardyRoll => 'ارمِ النرد';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'تم الإرسال';
+
+  @override
+  String get lobbySearchShort => 'بحث';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'مرفوض';
 
   @override
   String get lobbyInvitesSentWaiting => 'تم إرسال الدعوات. بانتظار الرد.';

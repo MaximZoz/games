@@ -720,6 +720,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesNardyWin => 'Ai gỡ hết quân trước sẽ thắng.';
 
   @override
+  String get rulesNardySixPrime => 'Bạn không được khóa sáu điểm liên tiếp khi chưa có quân nào của đối thủ vượt qua.';
+
+  @override
   String get nardyRoll => 'Gieo xúc xắc';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Đã gửi';
+
+  @override
+  String get lobbySearchShort => 'Tìm';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Đã từ chối';
 
   @override
   String get lobbyInvitesSentWaiting => 'Đã gửi lời mời. Đang chờ phản hồi.';

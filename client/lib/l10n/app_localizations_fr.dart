@@ -720,6 +720,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesNardyWin => 'Le premier à sortir toutes ses dames gagne.';
 
   @override
+  String get rulesNardySixPrime => 'Vous ne pouvez pas verrouiller six cases d’affilée tant qu’aucun pion adverse ne les a dépassées.';
+
+  @override
   String get nardyRoll => 'Lancer';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Envoyé';
+
+  @override
+  String get lobbySearchShort => 'Recherche';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Refusé';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invitations envoyées. En attente de réponse.';

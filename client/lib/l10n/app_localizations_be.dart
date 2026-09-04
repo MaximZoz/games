@@ -720,6 +720,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesNardyWin => 'Перамагае той, хто першым здыме ўсе свае шашкі.';
 
   @override
+  String get rulesNardySixPrime => 'Шэсць сваіх пунктаў запар замыкаць нельга, пакуль іх не абышла ніводная шашка суперніка.';
+
+  @override
   String get nardyRoll => 'Кінуць';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Адпраўлена';
+
+  @override
+  String get lobbySearchShort => 'Пошук';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Адмова';
 
   @override
   String get lobbyInvitesSentWaiting => 'Запрашэнні адпраўлены. Чакайце адказу.';

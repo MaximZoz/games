@@ -720,6 +720,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesNardyWin => 'Tüm pullarını ilk kaldıran kazanır.';
 
   @override
+  String get rulesNardySixPrime => 'Rakibin hiçbir pulu geçmeden art arda altı haneyi kapatamazsınız.';
+
+  @override
   String get nardyRoll => 'Zar at';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Gönderildi';
+
+  @override
+  String get lobbySearchShort => 'Ara';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Reddedildi';
 
   @override
   String get lobbyInvitesSentWaiting => 'Davetler gönderildi. Yanıt bekleniyor.';

@@ -720,6 +720,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesNardyWin => 'जो पहले सारे मोहरे उतार ले, वही जीते।';
 
   @override
+  String get rulesNardySixPrime => 'जब तक विरोधी की कोई गोटी उन्हें पार न कर ले, लगातार छह बिंदु बंद नहीं किए जा सकते।';
+
+  @override
   String get nardyRoll => 'पासा फेंकें';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'भेजा गया';
+
+  @override
+  String get lobbySearchShort => 'खोज';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'अस्वीकृत';
 
   @override
   String get lobbyInvitesSentWaiting => 'निमंत्रण भेजे गए। उत्तर की प्रतीक्षा।';

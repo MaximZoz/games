@@ -1190,7 +1190,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         ),
                         child: Column(
                           children: [
-                            if (!isOver) _buildOpponentCard(game, me),
+                            // Плашка соперника нужна и после партии: с неё
+                            // открываются чат и «добавить в друзья».
+                            _buildOpponentCard(game, me),
                             if (!isOver)
                               Text(
                                 game.isSetup

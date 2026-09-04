@@ -39,6 +39,7 @@ List<String> nardyRuleLines({
     if (stakeBronze > 0) rulesStakeLine(stakeBronze, t),
     t.rulesNardyIntro,
     mode == nardyModeLong ? t.rulesNardyPlayLong : t.rulesNardyPlayShort,
+    if (mode == nardyModeLong) t.rulesNardySixPrime,
     t.rulesNardyWin,
     if (offline) t.rulesNardyOfflineBot,
   ];

@@ -90,8 +90,28 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   bool _isJoining = false;
   bool _linkCopied = false;
   bool _missingLobbyHandled = false;
+  bool _startingSearch = false;
   Timer? _chatsRefreshTimer;
   Timer? _linkCopiedTimer;
+
+  /// Открыть свою игру для поиска: лобби становится публичным.
+  Future<void> _startSearch() async {
+    if (_startingSearch) return;
+    setState(() => _startingSearch = true);
+    try {
+      await ref
+          .read(gamesRepositoryProvider)
+          .startLobbyMatchmake(widget.lobbyId);
+      if (!mounted) return;
+      ref.invalidate(lobbyDetailProvider(widget.lobbyId));
+      ref.invalidate(openLobbiesProvider);
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    } finally {
+      if (mounted) setState(() => _startingSearch = false);
+    }
+  }
 
   @override
   void initState() {
@@ -207,8 +227,30 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                 );
               },
             ),
-            // Иконка правил — в AppBar, на одной высоте со стрелкой «Назад».
+            // Поиск и правила — в AppBar, на одной высоте со стрелкой «Назад».
             actions: [
+              if (() {
+                final lobby = lobbyAsync.valueOrNull;
+                if (lobby == null) return false;
+                final uid = currentUser?.id;
+                if (uid == null) return false;
+                final member = uid == lobby.creatorId ||
+                    lobby.playerIds.contains(uid) ||
+                    lobby.players.any((p) => p.id == uid);
+                if (!member) return false;
+                return lobby.status == 'waiting_invite' ||
+                    lobby.status == 'waiting_matchmake';
+              }())
+                LobbySearchAction(
+                  searching: () {
+                    final lobby = lobbyAsync.valueOrNull;
+                    if (lobby == null) return false;
+                    return lobby.status == 'waiting_matchmake' ||
+                        lobby.mode == 'matchmake';
+                  }(),
+                  busy: _startingSearch,
+                  onStart: () => unawaited(_startSearch()),
+                ),
               if (() {
                 final lobby = lobbyAsync.valueOrNull;
                 if (lobby == null) return false;
@@ -288,19 +330,18 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
                   friendsCount: friendCount,
                   padding: EdgeInsets.all(pad),
                   maxWidth: isDesktop ? 480 : 480,
-                  searchBanner: showOpenFindWaiting
-                      ? LobbySearchBanner(
-                          label: context.l10n.lobbySearchingOpponent,
-                        )
-                      : null,
                   multiPlayersCard: showMultiLobby
                       ? _buildMultiLobbyCard(lobby)
                       : null,
                   shareLinkCard: _buildShareInviteLinkCard(context),
                   friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+                    pendingInvites: lobby.invited,
                     friendsAsync: friendsAsync,
                     excludeUserIds: lobbyMemberIds,
-                    invitedIds: _invitedFriendIds,
+                    invitedIds: {
+                      ..._invitedFriendIds,
+                      for (final guest in lobby.invited) guest.id,
+                    },
                     invitingIds: _invitingFriendIds,
                     cancellingIds: _cancellingFriendIds,
                     declinedIds: _declinedFriendIds,

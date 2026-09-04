@@ -720,6 +720,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesNardyWin => 'Vince chi toglie per primo tutte le pedine.';
 
   @override
+  String get rulesNardySixPrime => 'Non puoi chiudere sei punti di fila finché nessuna pedina avversaria li ha superati.';
+
+  @override
   String get nardyRoll => 'Lancia';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Inviato';
+
+  @override
+  String get lobbySearchShort => 'Cerca';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Rifiutato';
 
   @override
   String get lobbyInvitesSentWaiting => 'Inviti inviati. In attesa di risposta.';

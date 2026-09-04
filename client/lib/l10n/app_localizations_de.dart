@@ -720,6 +720,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesNardyWin => 'Wer zuerst alle Steine abgetragen hat, gewinnt.';
 
   @override
+  String get rulesNardySixPrime => 'Sechs Punkte in Folge darfst du erst sperren, wenn mindestens ein gegnerischer Stein daran vorbei ist.';
+
+  @override
   String get nardyRoll => 'Würfeln';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Gesendet';
+
+  @override
+  String get lobbySearchShort => 'Suche';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Abgelehnt';
 
   @override
   String get lobbyInvitesSentWaiting => 'Einladungen gesendet. Warte auf Antwort.';

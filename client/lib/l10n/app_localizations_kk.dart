@@ -720,6 +720,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesNardyWin => 'Барлық тасын бірінші алған жеңеді.';
 
   @override
+  String get rulesNardySixPrime => 'Қарсыластың бірде-бір тасы өтпейінше, қатарынан алты пунктті бекітуге болмайды.';
+
+  @override
   String get nardyRoll => 'Лақтыру';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Жіберілді';
+
+  @override
+  String get lobbySearchShort => 'Іздеу';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Бас тарту';
 
   @override
   String get lobbyInvitesSentWaiting => 'Шақырулар жіберілді. Жауап күтілуде.';

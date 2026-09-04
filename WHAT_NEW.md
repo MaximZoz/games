@@ -3,6 +3,11 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Длинные нарды: нельзя запирать шесть пунктов подряд, пока их не обошла ни одна шашка соперника
+- Нарды в портрете: «Повторить» и «Другой соперник» после партии больше не обрезаются
+- Лобби: «Поиск» стоит рядом с правилами — в своей игре им можно открыть поиск соперника, и она попадает в общий список лобби
+- Своя игра: приглашённый виден в списке, даже если его нет в друзьях; после отказа кнопка пишет «Отказ», а не «Отправлено»
+- Покер, уно и морской бой: итог партии больше не закрывает игроков — можно посмотреть соперника, написать ему и добавить в друзья
 - Нарды: полноценная игра — короткие и длинные, лобби, поиск соперника, бот, отмена хода, ставки и статистика
 - Вибрация «ваш ход» на Android теперь ощущается
 - Приглашение в игру сразу видно другу и догоняется сверкой с сервером, даже если кадр сокета потерялся
@@ -61,7 +66,11 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Backgammon: a full game — short and long modes, lobby, matchmaking, bot, move undo, stakes and stats
+- Long backgammon: you may not seal six points in a row until an opposing checker has passed them
+- Backgammon in portrait: Rematch and Another opponent are no longer clipped after the game
+- Lobby: Search sits next to the rules — a private game can open matchmaking from there and joins the public lobby list
+- Private game: an invited player is listed even when they are not your friend, and a declined invite now reads “Declined” instead of “Sent”
+- Poker, Uno and Battleship: the end-of-game panel no longer covers the players, so you can still open their profile, message them or add them as a friend
 - “Your turn” vibration now actually fires on Android
 - Game invites show up for the friend immediately and are reconciled from the server if a socket frame is dropped
 - Poker: Fold stays gone after a hand-ending fold; a second tap no longer shows “the game is already over”

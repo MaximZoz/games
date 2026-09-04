@@ -196,6 +196,97 @@ void main() {
     expect(game.dice, isEmpty);
   });
 
+  group('длинные нарды: шесть подряд', () {
+    NardyEngine longGame({
+      required Map<int, int> mine,
+      required Map<int, int> theirs,
+      List<int>? off,
+    }) {
+      final game = NardyEngine.newGame(nardyModeLong);
+      game.debugSetPosition(
+        tracksForSeat0: mine,
+        tracksForSeat1: theirs,
+        off: off,
+      );
+      return game;
+    }
+
+    test('ряд из шести запрещён, пока соперник целиком позади', () {
+      final game = longGame(
+        mine: {5: 1, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2},
+        theirs: {0: nardyCheckers},
+      );
+      expect(game.rollWith(6, 3), isTrue);
+      expect(
+        game.legalMoves().where((m) => m.from == 5 && m.die == 6),
+        isEmpty,
+      );
+      expect(game.applyMove(0, const NardyMove(5, 6)), isFalse);
+    });
+
+    test('ряд разрешён, когда чужая шашка уже прошла блок', () {
+      final game = longGame(
+        mine: {5: 1, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2},
+        theirs: {0: nardyCheckers - 1, 20: 1},
+      );
+      expect(game.rollWith(6, 3), isTrue);
+      expect(
+        game.legalMoves().where((m) => m.from == 5 && m.die == 6),
+        isNotEmpty,
+      );
+    });
+
+    test('пять подряд строить можно', () {
+      final game = longGame(
+        mine: {5: 1, 6: 2, 7: 2, 8: 2, 9: 2},
+        theirs: {0: nardyCheckers},
+      );
+      expect(game.rollWith(5, 3), isTrue);
+      expect(
+        game.legalMoves().where((m) => m.from == 5 && m.die == 5),
+        isNotEmpty,
+      );
+    });
+
+    test('в коротких нардах блок из шести законен', () {
+      final game = NardyEngine.newGame(nardyModeShort);
+      game.debugSetPosition(
+        tracksForSeat0: {5: 1, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2},
+        tracksForSeat1: {0: nardyCheckers},
+      );
+      expect(game.rollWith(6, 3), isTrue);
+      expect(
+        game.legalMoves().where((m) => m.from == 5 && m.die == 6),
+        isNotEmpty,
+      );
+    });
+
+    test('снятая с доски шашка считается прошедшей блок', () {
+      final game = longGame(
+        mine: {5: 2, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2},
+        theirs: {0: nardyCheckers - 1},
+      );
+      expect(
+        nardyHasSealedPrime(
+          mode: nardyModeLong,
+          seat: 0,
+          board: game.board,
+          opponentOff: 0,
+        ),
+        isTrue,
+      );
+      expect(
+        nardyHasSealedPrime(
+          mode: nardyModeLong,
+          seat: 0,
+          board: game.board,
+          opponentOff: 1,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   for (final mode in [nardyModeShort, nardyModeLong]) {
     test('бот доигрывает партию ($mode) без потери шашек', () {
       final game = NardyEngine.newGame(mode);

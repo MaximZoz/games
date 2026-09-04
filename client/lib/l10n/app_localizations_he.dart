@@ -720,6 +720,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesNardyWin => 'מנצח מי שמוריד ראשון את כל האבנים.';
 
   @override
+  String get rulesNardySixPrime => 'אי אפשר לחסום שש נקודות ברצף כל עוד אף כלי של היריב לא עבר אותן.';
+
+  @override
   String get nardyRoll => 'הטל';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'נשלח';
+
+  @override
+  String get lobbySearchShort => 'חיפוש';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'נדחה';
 
   @override
   String get lobbyInvitesSentWaiting => 'ההזמנות נשלחו. ממתינים לתשובה.';

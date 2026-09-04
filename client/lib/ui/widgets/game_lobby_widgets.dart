@@ -176,6 +176,80 @@ double estimateLobbyFriendsCardHeight(int friendCount) {
 }
 
 /// Баннер «Поиск соперника…» — общий для matchmake-лобби всех игр.
+/// «Поиск» в шапке лобби — в одну строку с правилами.
+///
+/// В своей игре это кнопка: лобби открывается для поиска соперника и попадает
+/// в общий список. Когда поиск уже идёт, тот же слот показывает крутилку,
+/// поэтому большой баннер над столом не нужен.
+class LobbySearchAction extends StatelessWidget {
+  const LobbySearchAction({
+    super.key,
+    required this.searching,
+    this.busy = false,
+    this.onStart,
+  });
+
+  /// Лобби уже публичное — соперник ищется.
+  final bool searching;
+  final bool busy;
+  final VoidCallback? onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.l10n.lobbySearchShort;
+    final active = !searching && !busy && onStart != null;
+    final Widget leading = searching || busy
+        ? const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accentStart,
+            ),
+          )
+        : const Icon(Icons.search_rounded, size: 18, color: AppColors.accentStart);
+    return Tooltip(
+      message: searching ? context.l10n.lobbySearchingOpponent : label,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(
+              color: AppColors.accentStart.withValues(
+                alpha: active || searching ? 0.7 : 0.35,
+              ),
+            ),
+          ),
+          child: InkWell(
+            onTap: active ? onStart : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  leading,
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.accentStart,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class LobbySearchBanner extends StatelessWidget {
   const LobbySearchBanner({super.key, required this.label});
 
@@ -633,6 +707,7 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
     this.declinedIds = const {},
     this.onFriendTap,
     this.profileReturnPath,
+    this.pendingInvites = const [],
   });
 
   final AsyncValue<FriendsSnapshot> friendsAsync;
@@ -647,6 +722,9 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
   final ValueChanged<String> onCancel;
   final ValueChanged<FriendItem>? onFriendTap;
   final String? profileReturnPath;
+
+  /// Уже приглашённые, которых нет в друзьях (например соперник по реваншу).
+  final List<LobbyPlayer> pendingInvites;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -663,7 +741,17 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
               .where((friend) => !excludeUserIds.contains(friend.user.id))
               .toList();
           sortByPresenceOnlineFirst(list, (friend) => friend.user.id, presence);
-          if (list.isEmpty) {
+          final friendIds = {for (final f in list) f.user.id};
+          // Приглашение уже ушло, а в друзьях человека нет — всё равно
+          // показываем строку, иначе реванш выглядит как пустое лобби.
+          final guests = [
+            for (final guest in pendingInvites)
+              if (guest.id.isNotEmpty &&
+                  !friendIds.contains(guest.id) &&
+                  !excludeUserIds.contains(guest.id))
+                guest,
+          ];
+          if (list.isEmpty && guests.isEmpty) {
             final empty = Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -683,8 +771,12 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                     parent: ClampingScrollPhysics(),
                   )
                 : const NeverScrollableScrollPhysics(),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
+            itemCount: guests.length + list.length,
+            itemBuilder: (context, rawIndex) {
+              if (rawIndex < guests.length) {
+                return _buildGuestRow(context, guests[rawIndex]);
+              }
+              final index = rawIndex - guests.length;
               final friend = list[index];
               final id = friend.user.id;
               final invited = invitedIds.contains(id);
@@ -760,7 +852,7 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     LobbyInviteActionButton(
                       label: declined
-                          ? context.l10n.lobbyInviteSentShort
+                          ? context.l10n.lobbyInviteDeclinedShort
                           : invited
                               ? context.l10n.commonCancel
                               : context.l10n.lobbyInvite,
@@ -793,6 +885,55 @@ class LobbyFriendsInviteCard extends ConsumerWidget {
             style: const TextStyle(color: Colors.red),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Строка приглашённого, которого нет в друзьях: имя и статус «Отправлено».
+  Widget _buildGuestRow(BuildContext context, LobbyPlayer guest) {
+    final name = guest.displayName.trim();
+    final busy = cancellingIds.contains(guest.id);
+    return Padding(
+      key: ValueKey('lobby-invited-${guest.id}'),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          LobbyPlayerAvatar(player: guest),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.isEmpty ? context.l10n.commonPlayer : name,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    context.l10n.lobbyInviteSentShort,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          LobbyInviteActionButton(
+            label: context.l10n.commonCancel,
+            busy: busy,
+            onPressed: busy ? null : () => onCancel(guest.id),
+          ),
+        ],
       ),
     );
   }

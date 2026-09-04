@@ -720,6 +720,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesNardyWin => 'Voittaa se, joka ensimmäisenä poistaa kaikki nappulat.';
 
   @override
+  String get rulesNardySixPrime => 'Kuutta peräkkäistä pistettä ei saa sulkea ennen kuin vähintään yksi vastustajan nappula on ohittanut ne.';
+
+  @override
   String get nardyRoll => 'Heitä';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Lähetetty';
+
+  @override
+  String get lobbySearchShort => 'Haku';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Hylätty';
 
   @override
   String get lobbyInvitesSentWaiting => 'Kutsut lähetetty. Odotetaan vastausta.';

@@ -720,6 +720,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesNardyWin => '先将全部棋子出局者获胜。';
 
   @override
+  String get rulesNardySixPrime => '在对手没有任何棋子越过之前，不能连续封锁六个点。';
+
+  @override
   String get nardyRoll => '掷骰';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => '已发送';
+
+  @override
+  String get lobbySearchShort => '搜索';
+
+  @override
+  String get lobbyInviteDeclinedShort => '已拒绝';
 
   @override
   String get lobbyInvitesSentWaiting => '邀请已发送。等待回复。';

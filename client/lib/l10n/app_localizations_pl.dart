@@ -720,6 +720,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesNardyWin => 'Wygrywa ten, kto pierwszy zdejmie wszystkie pionki.';
 
   @override
+  String get rulesNardySixPrime => 'Nie możesz zamknąć sześciu pól z rzędu, dopóki nie minie ich żaden pionek przeciwnika.';
+
+  @override
   String get nardyRoll => 'Rzuć';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Wysłano';
+
+  @override
+  String get lobbySearchShort => 'Szukaj';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Odrzucono';
 
   @override
   String get lobbyInvitesSentWaiting => 'Zaproszenia wysłane. Czekaj na odpowiedź.';

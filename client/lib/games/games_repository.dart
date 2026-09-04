@@ -603,6 +603,15 @@ class LobbyPlayer {
   }
 }
 
+/// Приглашённые из ответа лобби — показываем и тех, кого нет в друзьях.
+List<LobbyPlayer> parseLobbyInvited(dynamic raw) {
+  if (raw is! List) return const [];
+  return raw
+      .whereType<Map>()
+      .map((e) => LobbyPlayer.fromJson(e.cast<String, dynamic>()))
+      .toList();
+}
+
 class LobbyItem {
   final String id;
   final String creatorId;
@@ -621,6 +630,9 @@ class LobbyItem {
   final int playersCount;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final String? chatId;
   final bool swapRule;
   final bool firstMoveRestriction;
@@ -657,6 +669,7 @@ class LobbyItem {
     int? playersCount,
     List<String>? playerIds,
     List<LobbyPlayer>? players,
+    List<LobbyPlayer>? invited,
     this.chatId,
     this.swapRule = false,
     this.firstMoveRestriction = false,
@@ -667,6 +680,7 @@ class LobbyItem {
   })  : gridSize = gridSize ?? gridSizeForVariant(variant),
         maxPlayers = maxPlayers ?? configForVariant(variant).maxPlayers,
         players = players ?? const [],
+        invited = invited ?? const [],
         playerIds = playerIds ?? const [],
         playersCount =
             playersCount ?? (players?.length ?? playerIds?.length ?? 1),
@@ -698,6 +712,7 @@ class LobbyItem {
           (players.isNotEmpty ? players.length : playerIds.length),
       playerIds: playerIds,
       players: players,
+      invited: _parseLobbyPlayers(json['invited']),
       chatId: json['chat_id'] as String?,
       swapRule: json['swap_rule'] == true,
       firstMoveRestriction: json['first_move_restriction'] == true,
@@ -1769,6 +1784,20 @@ class GamesRepository {
         },
         body: jsonEncode({'friend_user_id': friendUserId}),
         operation: 'GamesRepository.cancelLobbyInvite',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwForErrorResponse(response);
+    }
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startLobbyMatchmake(String lobbyId) async {
+    final response = await _authorizedRequest(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/tictactoe/lobby/$lobbyId/matchmake'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'GamesRepository.startLobbyMatchmake',
       ),
     );
     if (response.statusCode != 200) {

@@ -720,6 +720,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesNardyWin => 'The first player to bear off all checkers wins.';
 
   @override
+  String get rulesNardySixPrime => 'You may not seal six points in a row until at least one opposing checker has passed them.';
+
+  @override
   String get nardyRoll => 'Roll';
 
   @override
@@ -2047,6 +2050,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lobbyInviteSentShort => 'Sent';
+
+  @override
+  String get lobbySearchShort => 'Search';
+
+  @override
+  String get lobbyInviteDeclinedShort => 'Declined';
 
   @override
   String get lobbyInvitesSentWaiting => 'Invites sent. Waiting for a response.';
