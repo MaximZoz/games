@@ -584,8 +584,15 @@ class ActiveGameNotifier extends AutoDisposeAsyncNotifier<ActiveGameItem?> {
           final status = data['status']?.toString() ?? '';
           if (status == 'over' ||
               status == 'draw' ||
-              status.endsWith('_won')) {
+              status.endsWith('_won') ||
+              data['is_over'] == true) {
             unawaited(ref.read(activeGameProvider.notifier).refresh());
+            return;
+          }
+          final current = state.valueOrNull;
+          final next = applyActiveGameTurnFromEvent(current, data);
+          if (next != null) {
+            state = AsyncValue.data(next);
           }
           return;
         }

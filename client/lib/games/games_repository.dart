@@ -1263,6 +1263,45 @@ class ActiveGameItem {
           : 'tictactoe',
     );
   }
+
+  ActiveGameItem copyWith({
+    String? type,
+    String? gameId,
+    String? lobbyId,
+    bool? isMyTurn,
+    String? gameType,
+  }) {
+    return ActiveGameItem(
+      type: type ?? this.type,
+      gameId: gameId ?? this.gameId,
+      lobbyId: lobbyId ?? this.lobbyId,
+      isMyTurn: isMyTurn ?? this.isMyTurn,
+      gameType: gameType ?? this.gameType,
+    );
+  }
+}
+
+/// Обновить `is_my_turn` из WS `game_state` / `game_started`.
+///
+/// GetActive не дергается на каждый ход — без этого бейдж «ваш ход» и звук
+/// с вкладки сообщений остаются на старом значении. `null` — кадр не про
+/// эту партию или ход не изменился.
+ActiveGameItem? applyActiveGameTurnFromEvent(
+  ActiveGameItem? current,
+  Map<String, dynamic> event,
+) {
+  if (current == null || current.type != 'game') return null;
+  final type = event['type']?.toString() ?? '';
+  if (type != 'game_state' && type != 'game_started') return null;
+  if (!event.containsKey('is_my_turn')) return null;
+  final gameId = event['game_id']?.toString().trim() ?? '';
+  final currentId = current.gameId?.trim() ?? '';
+  if (gameId.isNotEmpty && currentId.isNotEmpty && gameId != currentId) {
+    return null;
+  }
+  final isMyTurn = event['is_my_turn'] == true;
+  if (current.isMyTurn == isMyTurn) return null;
+  return current.copyWith(isMyTurn: isMyTurn);
 }
 
 /// Наблюдение за multi-партией после выбывания (пока лобби/партия жива).
