@@ -338,16 +338,14 @@ class _AchievementCard extends StatelessWidget {
           else
             FilledButton(
               onPressed: onClaim,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentStart,
-                foregroundColor: Colors.white,
+              style: AppButtonStyles.of(
                 minimumSize: const Size(double.infinity, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 alignment: Alignment.center,
                 textStyle: const TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   height: 1.2,
                   decoration: TextDecoration.none,
                 ),

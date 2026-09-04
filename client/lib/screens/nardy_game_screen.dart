@@ -1014,10 +1014,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             onPressed: _busy ? null : () => unawaited(_undo()),
             icon: const Icon(Icons.undo_rounded, size: 18),
             label: Text(l10n.nardyUndoMove),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.accentStart),
-            ),
+            style: AppButtonStyles.of(),
           ),
         if (showEndTurn)
           FilledButton.icon(
@@ -1027,10 +1024,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               size: 18,
             ),
             label: Text(noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentEnd,
-              foregroundColor: Colors.white,
-            ),
+            style: AppButtonStyles.of(),
           ),
       ],
     );
@@ -1043,10 +1037,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           onPressed: _isRematching ? null : () => unawaited(_rematch()),
           icon: const Icon(Icons.replay_rounded, size: 18),
           label: Text(context.l10n.offlinePlayAgain),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentStart,
-            foregroundColor: Colors.white,
-          ),
+          style: AppButtonStyles.of(),
         ),
       );
     }

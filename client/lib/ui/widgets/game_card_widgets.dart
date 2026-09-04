@@ -334,7 +334,7 @@ class GameCardActionsRow extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: isCreating || isFinding ? null : onCreate,
           icon: isCreating
-              ? const _ActionSpinner(color: Colors.white)
+              ? const _ActionSpinner(color: AppColors.textPrimary)
               : const Icon(Icons.add_rounded, size: 20),
           label: Text(
             isCreating ? creatingLabel : createLabel,
@@ -390,34 +390,16 @@ class GameCardActionsRow extends StatelessWidget {
     );
   }
 
-  ButtonStyle _primaryStyle() => FilledButton.styleFrom(
-        backgroundColor: AppColors.accentStart,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: AppColors.accentStart.withValues(alpha: 0.45),
-        disabledForegroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.transparent,
+  ButtonStyle _primaryStyle() => AppButtonStyles.of(
         textStyle: _labelStyle,
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-        ),
+        radius: _radius,
       );
 
-  /// Вторая кнопка — мягкая заливка вместо тонкого контура: в ряду с filled
-  /// контур выглядел «недорисованным».
-  ButtonStyle _secondaryStyle() => FilledButton.styleFrom(
-        backgroundColor: AppColors.accentSoft,
-        foregroundColor: AppColors.accentStart,
-        disabledBackgroundColor: AppColors.accentSoft.withValues(alpha: 0.6),
-        disabledForegroundColor: AppColors.accentStart.withValues(alpha: 0.6),
-        elevation: 0,
-        shadowColor: Colors.transparent,
+  ButtonStyle _secondaryStyle() => AppButtonStyles.of(
         textStyle: _labelStyle,
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-        ),
+        radius: _radius,
       );
 }
 

@@ -485,20 +485,13 @@ class ProfilePhotosGalleryBody extends StatelessWidget {
                     child: OutlinedButton(
                       key: ValueKey('profile-make-primary-${photos[i].id}'),
                       onPressed: () => onMakePrimary!(photos[i]),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accentStart,
+                      style: AppButtonStyles.of(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 8,
                         ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: VisualDensity.compact,
-                        side: BorderSide(
-                          color: AppColors.accentStart.withValues(alpha: 0.55),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999),
-                        ),
                       ),
                       child: Text(
                         context.l10n.profileMakePrimary,

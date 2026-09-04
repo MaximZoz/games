@@ -1319,10 +1319,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                   : () => unawaited(_rematch()),
                               icon: const Icon(Icons.replay_rounded, size: 18),
                               label: Text(context.l10n.offlinePlayAgain),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accentStart,
-                                foregroundColor: Colors.white,
-                              ),
+                              style: AppButtonStyles.of(),
                             ),
                           )
                         else
@@ -1599,16 +1596,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           width: double.infinity,
           child: FilledButton(
             onPressed: _busy ? null : () => unawaited(_confirmPlace()),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
+            style: AppButtonStyles.of(),
             child: _busy
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   )
                 : Text(context.l10n.gamesBattleshipConfirmPlace),

@@ -1644,7 +1644,6 @@ Future<bool> confirmGameActionDialog({
         ),
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
           child: Text(confirmLabel),
         ),
       ],
@@ -2034,12 +2033,7 @@ class GameRematchSection extends StatelessWidget {
                 children: [
                   OutlinedButton(
                     onPressed: () => onDecline(rematchOffer.lobbyId),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color: AppColors.textSecondary.withValues(alpha: 0.45),
-                      ),
+                    style: AppButtonStyles.of(
                       padding: btnPad,
                       minimumSize: const Size(0, 44),
                     ),
@@ -2047,9 +2041,7 @@ class GameRematchSection extends StatelessWidget {
                   ),
                   FilledButton(
                     onPressed: () => onAccept(rematchOffer.lobbyId),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStart,
-                      foregroundColor: Colors.white,
+                    style: AppButtonStyles.of(
                       padding: btnPad,
                       minimumSize: const Size(0, 44),
                     ),
@@ -2129,16 +2121,14 @@ class GameRematchSection extends StatelessWidget {
               height: spinnerSize,
               child: const CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
             )
           : Icon(Icons.replay_rounded, size: iconSize),
       label: Text(isRematching
           ? context.l10n.commonCreating
           : context.l10n.gameRematch),
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accentStart,
-        foregroundColor: Colors.white,
+      style: AppButtonStyles.of(
         padding: btnPadding,
         minimumSize: const Size(0, 44),
       ),
@@ -2155,10 +2145,7 @@ class GameRematchSection extends StatelessWidget {
       label: Text(isFindingGame
           ? context.l10n.commonSearching
           : context.l10n.gameOtherOpponent),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
-        backgroundColor: Colors.white,
-        side: const BorderSide(color: AppColors.accentStart),
+      style: AppButtonStyles.of(
         padding: btnPadding,
         minimumSize: const Size(0, 44),
       ),

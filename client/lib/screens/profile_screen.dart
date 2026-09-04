@@ -920,17 +920,10 @@ class _ProfileView extends ConsumerWidget {
         context.l10n.profileEdit,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
+      style: AppButtonStyles.of(
         padding: EdgeInsets.symmetric(
           horizontal: 22,
           vertical: shortScreen ? 11 : 13,
-        ),
-        side: BorderSide(
-          color: AppColors.accentStart.withValues(alpha: 0.6),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );

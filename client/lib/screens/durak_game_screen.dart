@@ -5304,10 +5304,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             onPressed: _isRematching ? null : _rematch,
             icon: const Icon(Icons.replay_rounded, size: 18),
             label: Text(context.l10n.offlinePlayAgain),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-            ),
+            style: AppButtonStyles.of(),
           ),
         );
       }
@@ -7013,7 +7010,7 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentStart.withValues(alpha: glow),
+                color: AppColors.buttonBorder.withValues(alpha: glow),
                 blurRadius: 14 + 8 * t,
                 spreadRadius: 0.5,
               ),
@@ -7034,21 +7031,15 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
                   if (mounted) setState(() => _pressed = false);
                 }
               },
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentStart,
-          disabledBackgroundColor:
-              AppColors.accentStart.withValues(alpha: 0.55),
-          foregroundColor: Colors.white,
+        style: AppButtonStyles.of(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+          radius: 18,
         ),
         icon: Icon(widget.icon, size: 20),
         label: Text(
           widget.label,
           style: const TextStyle(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             fontSize: 15,
             letterSpacing: 0.2,
           ),

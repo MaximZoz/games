@@ -201,24 +201,8 @@ class MultiGamesApp extends ConsumerWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.surfaceCard,
-            foregroundColor: AppColors.textPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            backgroundColor: AppColors.surfaceCard,
-            foregroundColor: AppColors.textPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            side: const BorderSide(color: AppColors.accentSoft),
-          ),
-        ),
+        filledButtonTheme: FilledButtonThemeData(style: AppButtonStyles.of()),
+        outlinedButtonTheme: OutlinedButtonThemeData(style: AppButtonStyles.of()),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.textPrimary,

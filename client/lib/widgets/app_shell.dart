@@ -1272,10 +1272,7 @@ Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-            ),
+            style: AppButtonStyles.of(),
             child: Text(l10n.appUpdateOk),
           ),
         ],
