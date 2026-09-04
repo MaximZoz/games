@@ -312,4 +312,15 @@ void main() {
       expect(engine.seq, greaterThan(afterMove));
     });
   });
+
+  group('нижняя панель в портрете', () {
+    test('во время партии слот фиксирован', () {
+      expect(nardyBottomPanelHeight(isOver: false), 118.0);
+    });
+
+    test('после партии высота по содержимому — кнопки не обрезаются', () {
+      expect(nardyBottomPanelHeight(isOver: true), isNull);
+    });
+  });
+
 }
