@@ -1351,7 +1351,7 @@ func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, 
 		if u, err := uuid.Parse(uid); err == nil {
 			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	winner := m["winner"]
@@ -1359,7 +1359,7 @@ func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, 
 		if u, err := uuid.Parse(winner); err == nil {
 			_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	h.recordBattleshipResult(ctx, gameID, m, stakeBronze, finishReason)

@@ -1430,9 +1430,27 @@ class _GamesPageContent extends ConsumerWidget {
 
     Widget gameCards(double maxWidth) {
       const gap = 16.0;
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final isMedium = screenWidth >= 700 && screenWidth < 950;
+      final titles = [
+        context.l10n.gamesTicTacToe,
+        context.l10n.gamesDurak,
+        context.l10n.gamesBattleship,
+        context.l10n.gamesPoker,
+        context.l10n.gamesUno,
+        context.l10n.gamesNardy,
+      ];
       final cols = gamesHubTileColumns(
         maxWidth: maxWidth,
         wide: isDesktop,
+        titles: titles,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+        titleStyle: gamesHubTitleStyle(
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+          base: Theme.of(context).textTheme.titleLarge,
+        ),
       );
       final tileWidth = gamesHubTileWidth(maxWidth: maxWidth, cols: cols);
       final tiles = <Widget>[

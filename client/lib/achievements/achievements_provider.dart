@@ -3,6 +3,32 @@ import 'package:multigames_client/achievements/achievements_repository.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
+import 'package:multigames_client/core/realtime_events_provider.dart';
+
+/// События, после которых надо сразу пересчитать бейджи заданий/достижений.
+bool isRewardBadgeRealtimeEvent(String type) {
+  switch (type) {
+    case 'achievements_updated':
+    case 'friends_updated':
+    case 'realtime_connected':
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// Держит бейджи заданий и достижений в актуальном состоянии без захода в раздел.
+final rewardBadgesRealtimeSyncProvider = Provider<void>((ref) {
+  ref.listen<AsyncValue<Map<String, dynamic>>>(
+    realtimeEventsProvider,
+    (_, next) {
+      final type = next.valueOrNull?['type']?.toString() ?? '';
+      if (!isRewardBadgeRealtimeEvent(type)) return;
+      ref.invalidate(tasksUnclaimedCountProvider);
+      ref.invalidate(achievementsUnclaimedCountProvider);
+    },
+  );
+});
 
 final achievementsRepositoryProvider = Provider<AchievementsRepository>((ref) {
   return AchievementsRepository(ref.watch(authRepositoryProvider));
