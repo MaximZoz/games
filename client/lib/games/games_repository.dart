@@ -1244,12 +1244,16 @@ class ActiveGameItem {
   /// в лобби/партию. Default 'tictactoe' сохраняет обратную совместимость.
   final String gameType;
 
+  /// `invite` — «Своя игра»; `matchmake` — «Лобби». Пусто, пока неизвестно.
+  final String mode;
+
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
     this.gameType = 'tictactoe',
+    this.mode = '',
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -1261,6 +1265,7 @@ class ActiveGameItem {
       gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
           ? (json['game_type'] as String).trim()
           : 'tictactoe',
+      mode: (json['mode'] as String?)?.trim() ?? '',
     );
   }
 
@@ -1270,6 +1275,7 @@ class ActiveGameItem {
     String? lobbyId,
     bool? isMyTurn,
     String? gameType,
+    String? mode,
   }) {
     return ActiveGameItem(
       type: type ?? this.type,
@@ -1277,6 +1283,7 @@ class ActiveGameItem {
       lobbyId: lobbyId ?? this.lobbyId,
       isMyTurn: isMyTurn ?? this.isMyTurn,
       gameType: gameType ?? this.gameType,
+      mode: mode ?? this.mode,
     );
   }
 }

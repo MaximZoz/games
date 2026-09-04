@@ -13,6 +13,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -32,6 +33,52 @@ const List<IconData> kLobbyPresetAvatarIcons = [
 /// Общие виджеты лобби (крестики / дурак / покер / морской бой / уно).
 /// См. также `games/shared_lobby.dart` — общая сессия и leave/creator.
 ///
+/// Иконка + заголовок шапки лобби: «Своя игра» / «Лобби» всегда помещается.
+///
+/// В узкой шапке (кнопка поиска справа) текст сжимается, а не обрезается.
+class GameLobbyAppBarTitle extends StatelessWidget {
+  const GameLobbyAppBarTitle({
+    super.key,
+    required this.gameType,
+    required this.title,
+  });
+
+  final String gameType;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    if (title.isEmpty) return const SizedBox.shrink();
+    final narrow = MediaQuery.sizeOf(context).width < 400;
+    return Row(
+      children: [
+        GameTypeIcon(
+          gameType: gameType,
+          size: narrow ? 18 : 20,
+          color: AppColors.accentStart,
+        ),
+        SizedBox(width: narrow ? 4 : 6),
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: narrow ? 15 : 17,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Чип «Ставки N 🥉» — общий для лобби всех игр (2 игрока).
 class LobbyStakeChip extends StatelessWidget {
   const LobbyStakeChip({
@@ -207,11 +254,11 @@ class LobbySearchAction extends StatelessWidget {
               color: AppColors.accentStart,
             ),
           )
-        : const Icon(Icons.search_rounded, size: 18, color: AppColors.accentStart);
+        : const Icon(Icons.search_rounded, size: 16, color: AppColors.accentStart);
     return Tooltip(
       message: searching ? context.l10n.lobbySearchingOpponent : label,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Material(
           color: Colors.white,
           shape: RoundedRectangleBorder(
@@ -226,18 +273,18 @@ class LobbySearchAction extends StatelessWidget {
             onTap: active ? onStart : null,
             borderRadius: BorderRadius.circular(10),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   leading,
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
                     label,
                     style: const TextStyle(
                       color: AppColors.accentStart,
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 ],

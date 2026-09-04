@@ -13,6 +13,7 @@ import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException, LobbyPlayer;
 import 'package:multigames_client/games/invite_link.dart';
+import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/uno/uno_repository.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
@@ -23,7 +24,6 @@ import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
-import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
 import 'package:multigames_client/ui/widgets/user_profile_dialog.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -202,17 +202,13 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
             onPressed: _leaving ? null : _confirmLeave,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const UnoGameIcon(size: 22),
-              const SizedBox(width: 8),
-              Text(
-                matchmaking
-                    ? context.l10n.gamesLobbyTab
-                    : context.l10n.lobbyPrivateGame,
-              ),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.uno,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
           centerTitle: false,
           actions: [

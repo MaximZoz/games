@@ -20,7 +20,6 @@ import 'package:multigames_client/games/invite_link.dart';
 import 'package:multigames_client/games/shared_lobby.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
-import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_lobby_widgets.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/ui_kit.dart';
@@ -223,15 +222,13 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: _leaving ? null : _confirmLeave,
           ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const PokerGameIcon(size: 22, color: AppColors.accentStart),
-              const SizedBox(width: 8),
-              Text(isMatchmake
-                  ? context.l10n.gamesLobbyTab
-                  : context.l10n.lobbyPrivateGame),
-            ],
+          titleSpacing: 8,
+          title: GameLobbyAppBarTitle(
+            gameType: LobbyGameKind.poker,
+            title: lobbyAppBarTitle(
+              initialMode: widget.initialMode,
+              lobbyMode: lobby?.mode,
+            ),
           ),
           centerTitle: false,
           actions: [

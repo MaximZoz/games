@@ -24,6 +24,8 @@
 1. Пакет `client/lib/games/<id>/` — движок, repository, providers, rules.
 2. Экраны `*_lobby_screen.dart`, `*_game_screen.dart` (+ offline при необходимости).
    - Лобби: собрать на `GameLobbyWaitingLayout`.
+   - Шапка: `GameLobbyAppBarTitle` + `lobbyAppBarTitle` — везде «Своя игра» /
+     «Лобби», не название игры.
    - Партия: хром через `GameActionsOverlay` + `handleGameScreenClose` + таймеры.
    - Выбывание multi: `enterGameObservation(ref, gameId, gameType: id)`.
 3. `GameDescriptor` в `client/lib/games/framework/<id>_game.dart`

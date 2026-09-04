@@ -100,6 +100,17 @@ void main() {
     test('дефолт tictactoe для обратной совместимости', () {
       final item = ActiveGameItem.fromJson({'type': 'lobby', 'lobby_id': 'l1'});
       expect(item.gameType, 'tictactoe');
+      expect(item.mode, isEmpty);
+    });
+
+    test('парсит mode лобби из GetActive', () {
+      final item = ActiveGameItem.fromJson({
+        'type': 'lobby',
+        'lobby_id': 'l1',
+        'game_type': 'uno',
+        'mode': 'matchmake',
+      });
+      expect(item.mode, 'matchmake');
     });
   });
 
