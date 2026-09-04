@@ -1655,6 +1655,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coinsFriendReward => 'Thưởng bạn bè';
 
   @override
+  String get coinsTasks => 'Nhiệm vụ';
+
+  @override
+  String get coinsTasksSubtitle => 'Phần thưởng cho hồ sơ, bạn bè và trận đấu';
+
+  @override
+  String get coinsTasksRewards => 'Có phần thưởng để nhận';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount khi đăng ký qua liên kết của bạn';
   }

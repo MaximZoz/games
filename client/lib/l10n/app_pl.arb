@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Dzisiejsza nagroda dostępna",
   "coinsLoginStreak": "Codzienna seria logowań",
   "coinsFriendReward": "Nagroda za znajomego",
+  "coinsTasks": "Zadania",
+  "coinsTasksSubtitle": "Nagrody za profil, znajomych i gry",
+  "coinsTasksRewards": "Dostępne nagrody do odebrania",
   "coinsFriendRewardHint": "+{amount} za rejestrację przez Twój link",
   "@coinsFriendRewardHint": {
     "placeholders": {

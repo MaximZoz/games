@@ -1655,6 +1655,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get coinsFriendReward => 'मित्र इनाम';
 
   @override
+  String get coinsTasks => 'कार्य';
+
+  @override
+  String get coinsTasksSubtitle => 'प्रोफ़ाइल, मित्रों और खेलों के इनाम';
+
+  @override
+  String get coinsTasksRewards => 'दावा करने योग्य इनाम उपलब्ध';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return 'आपके लिंक से रजिस्टर करने पर +$amount';
   }

@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Hadiah hari ini tersedia",
   "coinsLoginStreak": "Rentetan masuk harian",
   "coinsFriendReward": "Hadiah teman",
+  "coinsTasks": "Tugas",
+  "coinsTasksSubtitle": "Hadiah untuk profil, teman, dan permainan",
+  "coinsTasksRewards": "Ada hadiah yang bisa diklaim",
   "coinsFriendRewardHint": "+{amount} untuk pendaftaran lewat tautan Anda",
   "@coinsFriendRewardHint": {
     "placeholders": {

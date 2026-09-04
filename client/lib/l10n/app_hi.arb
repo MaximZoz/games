@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "आज का इनाम उपलब्ध है",
   "coinsLoginStreak": "दैनिक लॉगिन स्ट्रीक",
   "coinsFriendReward": "मित्र इनाम",
+  "coinsTasks": "कार्य",
+  "coinsTasksSubtitle": "प्रोफ़ाइल, मित्रों और खेलों के इनाम",
+  "coinsTasksRewards": "दावा करने योग्य इनाम उपलब्ध",
   "coinsFriendRewardHint": "आपके लिंक से रजिस्टर करने पर +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

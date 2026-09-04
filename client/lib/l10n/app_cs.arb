@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Dnešní odměna je k dispozici",
   "coinsLoginStreak": "Denní série přihlášení",
   "coinsFriendReward": "Odměna za přítele",
+  "coinsTasks": "Úkoly",
+  "coinsTasksSubtitle": "Odměny za profil, přátele a hry",
+  "coinsTasksRewards": "Dostupné odměny k vyzvednutí",
   "coinsFriendRewardHint": "+{amount} za registraci přes váš odkaz",
   "@coinsFriendRewardHint": {
     "placeholders": {

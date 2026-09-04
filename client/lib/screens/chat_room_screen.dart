@@ -2083,6 +2083,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
     final achievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final tasks = ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncome =
         ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
     final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
@@ -2092,6 +2093,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         gameInvites +
         dailyReward +
         achievements +
+        tasks +
         collectionIncome +
         gifted;
   }

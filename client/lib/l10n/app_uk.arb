@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Доступна нагорода за сьогодні",
   "coinsLoginStreak": "Щоденна серія входів",
   "coinsFriendReward": "Монети за друга",
+  "coinsTasks": "Завдання",
+  "coinsTasksSubtitle": "Нагороди за профіль, друзів і ігри",
+  "coinsTasksRewards": "Є нагороди для отримання",
   "coinsFriendRewardHint": "+{amount} за реєстрацію за посиланням",
   "@coinsFriendRewardHint": {
     "placeholders": {

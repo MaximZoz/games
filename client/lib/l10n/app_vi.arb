@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Thưởng hôm nay đã sẵn sàng",
   "coinsLoginStreak": "Chuỗi đăng nhập hàng ngày",
   "coinsFriendReward": "Thưởng bạn bè",
+  "coinsTasks": "Nhiệm vụ",
+  "coinsTasksSubtitle": "Phần thưởng cho hồ sơ, bạn bè và trận đấu",
+  "coinsTasksRewards": "Có phần thưởng để nhận",
   "coinsFriendRewardHint": "+{amount} khi đăng ký qua liên kết của bạn",
   "@coinsFriendRewardHint": {
     "placeholders": {

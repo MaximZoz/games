@@ -1655,6 +1655,15 @@ class AppLocalizationsBe extends AppLocalizations {
   String get coinsFriendReward => 'Манеты за сябра';
 
   @override
+  String get coinsTasks => 'Заданні';
+
+  @override
+  String get coinsTasksSubtitle => 'Узнагароды за профіль, сяброў і гульні';
+
+  @override
+  String get coinsTasksRewards => 'Ёсць узнагароды да атрымання';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount за рэгістрацыю па спасылцы';
   }

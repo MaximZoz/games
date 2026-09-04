@@ -21,11 +21,14 @@ class HomeScreen extends ConsumerWidget {
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true;
     final unclaimedAchievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final unclaimedTasks =
+        ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncomeAvailable =
         ref.watch(collectionIncomeAvailableProvider);
     final unreadGifts = ref.watch(unreadGiftedCollectionsCountProvider);
     // Прогрев кэша — экраны открываются без спиннера.
     ref.watch(achievementsListProvider);
+    ref.watch(tasksListProvider);
     ref.watch(shopCatalogProvider);
     ref.watch(inventoryListProvider);
     ref.watch(collectionIncomeProvider);
@@ -56,8 +59,10 @@ class HomeScreen extends ConsumerWidget {
         title: l10n.homeCoins,
         subtitle: rewardAvailable
             ? l10n.homeCoinsDailyReward
-            : l10n.homeCoinsSubtitle,
-        badgeCount: rewardAvailable ? 1 : 0,
+            : (unclaimedTasks > 0
+                ? l10n.coinsTasksRewards
+                : l10n.homeCoinsSubtitle),
+        badgeCount: (rewardAvailable ? 1 : 0) + unclaimedTasks,
         onTap: () => context.push('/coins'),
         dense: dense,
       ),

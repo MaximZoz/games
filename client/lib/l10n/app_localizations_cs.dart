@@ -1655,6 +1655,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get coinsFriendReward => 'Odměna za přítele';
 
   @override
+  String get coinsTasks => 'Úkoly';
+
+  @override
+  String get coinsTasksSubtitle => 'Odměny za profil, přátele a hry';
+
+  @override
+  String get coinsTasksRewards => 'Dostupné odměny k vyzvednutí';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount za registraci přes váš odkaz';
   }

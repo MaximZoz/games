@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "פרס היום זמין",
   "coinsLoginStreak": "רצף התחברויות יומי",
   "coinsFriendReward": "פרס חבר",
+  "coinsTasks": "משימות",
+  "coinsTasksSubtitle": "פרסים על פרופיל, חברים ומשחקים",
+  "coinsTasksRewards": "יש פרסים לקבלה",
   "coinsFriendRewardHint": "+{amount} על הרשמה דרך הקישור שלך",
   "@coinsFriendRewardHint": {
     "placeholders": {

@@ -1655,6 +1655,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get coinsFriendReward => '好友奖励';
 
   @override
+  String get coinsTasks => '任务';
+
+  @override
+  String get coinsTasksSubtitle => '资料、好友和对局奖励';
+
+  @override
+  String get coinsTasksRewards => '有可领取的奖励';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '通过您的链接注册可获得 +$amount';
   }

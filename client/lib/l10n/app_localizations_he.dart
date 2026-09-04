@@ -1655,6 +1655,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get coinsFriendReward => 'פרס חבר';
 
   @override
+  String get coinsTasks => 'משימות';
+
+  @override
+  String get coinsTasksSubtitle => 'פרסים על פרופיל, חברים ומשחקים';
+
+  @override
+  String get coinsTasksRewards => 'יש פרסים לקבלה';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount על הרשמה דרך הקישור שלך';
   }

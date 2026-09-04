@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Récompense du jour disponible",
   "coinsLoginStreak": "Série de connexions quotidiennes",
   "coinsFriendReward": "Récompense ami",
+  "coinsTasks": "Missions",
+  "coinsTasksSubtitle": "Récompenses pour le profil, les amis et les parties",
+  "coinsTasksRewards": "Récompenses à réclamer",
   "coinsFriendRewardHint": "+{amount} pour une inscription via votre lien",
   "@coinsFriendRewardHint": {
     "placeholders": {

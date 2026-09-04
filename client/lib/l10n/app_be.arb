@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Даступна ўзнагарода за сёння",
   "coinsLoginStreak": "Штодзённая серыя ўваходаў",
   "coinsFriendReward": "Манеты за сябра",
+  "coinsTasks": "Заданні",
+  "coinsTasksSubtitle": "Узнагароды за профіль, сяброў і гульні",
+  "coinsTasksRewards": "Ёсць узнагароды да атрымання",
   "coinsFriendRewardHint": "+{amount} за рэгістрацыю па спасылцы",
   "@coinsFriendRewardHint": {
     "placeholders": {

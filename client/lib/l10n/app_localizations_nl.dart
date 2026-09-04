@@ -1655,6 +1655,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get coinsFriendReward => 'Vriendenbeloning';
 
   @override
+  String get coinsTasks => 'Taken';
+
+  @override
+  String get coinsTasksSubtitle => 'Beloningen voor profiel, vrienden en games';
+
+  @override
+  String get coinsTasksRewards => 'Beloningen klaar om te claimen';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount voor registratie via jouw link';
   }

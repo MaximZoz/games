@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "今日奖励可领取",
   "coinsLoginStreak": "每日登录连续奖励",
   "coinsFriendReward": "好友奖励",
+  "coinsTasks": "任务",
+  "coinsTasksSubtitle": "资料、好友和对局奖励",
+  "coinsTasksRewards": "有可领取的奖励",
   "coinsFriendRewardHint": "通过您的链接注册可获得 +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

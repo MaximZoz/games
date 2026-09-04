@@ -1655,6 +1655,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get coinsFriendReward => 'Ανταμοιβή φίλου';
 
   @override
+  String get coinsTasks => 'Αποστολές';
+
+  @override
+  String get coinsTasksSubtitle => 'Ανταμοιβές για προφίλ, φίλους και παιχνίδια';
+
+  @override
+  String get coinsTasksRewards => 'Διαθέσιμες ανταμοιβές προς διεκδίκηση';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount για εγγραφή μέσω του συνδέσμου σας';
   }

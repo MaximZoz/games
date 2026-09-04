@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Bugungi mukofot mavjud",
   "coinsLoginStreak": "Kundalik kirish seriyasi",
   "coinsFriendReward": "Do‘st mukofoti",
+  "coinsTasks": "Vazifalar",
+  "coinsTasksSubtitle": "Profil, do‘stlar va o‘yin mukofotlari",
+  "coinsTasksRewards": "Olish uchun mukofotlar bor",
   "coinsFriendRewardHint": "Havolangiz orqali ro‘yxatdan o‘tish uchun +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

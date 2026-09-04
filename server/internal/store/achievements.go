@@ -50,7 +50,7 @@ type AchievementDef struct {
 	Target         int
 }
 
-func AchievementCatalog() []AchievementDef {
+func TaskCatalog() []AchievementDef {
 	return []AchievementDef{
 		{
 			Code:         AchievementProfileComplete,
@@ -73,6 +73,11 @@ func AchievementCatalog() []AchievementDef {
 			RewardBronze: AchievementRewardBronze,
 			Target:       5,
 		},
+	}
+}
+
+func AchievementCatalog() []AchievementDef {
+	return []AchievementDef{
 		{
 			Code:           AchievementWinsBronze10,
 			Title:          "Бронзовая рамка",
@@ -100,8 +105,31 @@ func AchievementCatalog() []AchievementDef {
 	}
 }
 
+func AllRewardCatalog() []AchievementDef {
+	out := make([]AchievementDef, 0, 6)
+	out = append(out, TaskCatalog()...)
+	return append(out, AchievementCatalog()...)
+}
+
+func IsTaskCode(code string) bool {
+	for _, d := range TaskCatalog() {
+		if d.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func catalogCodes(catalog []AchievementDef) []string {
+	out := make([]string, len(catalog))
+	for i, d := range catalog {
+		out[i] = d.Code
+	}
+	return out
+}
+
 func AchievementByCode(code string) (AchievementDef, bool) {
-	for _, d := range AchievementCatalog() {
+	for _, d := range AllRewardCatalog() {
 		if d.Code == code {
 			return d, true
 		}
@@ -318,7 +346,7 @@ func EvaluateAndUnlock(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID
 
 	profileDone := isProfileComplete(u)
 	unlocked := make([]AchievementDef, 0)
-	for _, def := range AchievementCatalog() {
+	for _, def := range AllRewardCatalog() {
 		if _, ok := existing[def.Code]; ok {
 			continue
 		}
@@ -363,8 +391,7 @@ func progressFor(def AchievementDef, profileDone bool, gamesFinished, friendsCou
 	}
 }
 
-// ListAchievements возвращает каталог со статусами; перед этим обновляет unlock.
-func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]AchievementItem, error) {
+func listRewardCatalog(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, catalog []AchievementDef) ([]AchievementItem, error) {
 	if _, err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
 		return nil, err
 	}
@@ -390,8 +417,8 @@ func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID)
 	}
 
 	profileDone := isProfileComplete(u)
-	out := make([]AchievementItem, 0, len(AchievementCatalog()))
-	for _, def := range AchievementCatalog() {
+	out := make([]AchievementItem, 0, len(catalog))
+	for _, def := range catalog {
 		item := AchievementItem{
 			Code:           def.Code,
 			Title:          def.Title,
@@ -433,17 +460,40 @@ func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID)
 	return out, nil
 }
 
-// CountUnclaimedAchievements — для бейджа на главной.
-func CountUnclaimedAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (int, error) {
+// ListAchievements возвращает рамки/достижения со статусами.
+func ListAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]AchievementItem, error) {
+	return listRewardCatalog(ctx, pool, userID, AchievementCatalog())
+}
+
+// ListTasks возвращает задания (анкета, друзья, 10 игр).
+func ListTasks(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([]AchievementItem, error) {
+	return listRewardCatalog(ctx, pool, userID, TaskCatalog())
+}
+
+func countUnclaimedInCatalog(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, catalog []AchievementDef) (int, error) {
 	if _, err := EvaluateAndUnlock(ctx, pool, userID); err != nil {
 		return 0, err
+	}
+	codes := catalogCodes(catalog)
+	if len(codes) == 0 {
+		return 0, nil
 	}
 	var n int
 	err := pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM user_achievements
-		WHERE user_id = $1 AND claimed_at IS NULL
-	`, userID).Scan(&n)
+		WHERE user_id = $1 AND claimed_at IS NULL AND code = ANY($2)
+	`, userID, codes).Scan(&n)
 	return n, err
+}
+
+// CountUnclaimedAchievements — для бейджа достижений (только рамки).
+func CountUnclaimedAchievements(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (int, error) {
+	return countUnclaimedInCatalog(ctx, pool, userID, AchievementCatalog())
+}
+
+// CountUnclaimedTasks — для бейджа заданий в «Монетах».
+func CountUnclaimedTasks(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) (int, error) {
+	return countUnclaimedInCatalog(ctx, pool, userID, TaskCatalog())
 }
 
 type ClaimAchievementResult struct {

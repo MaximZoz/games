@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Beloning van vandaag beschikbaar",
   "coinsLoginStreak": "Dagelijkse inlogreeks",
   "coinsFriendReward": "Vriendenbeloning",
+  "coinsTasks": "Taken",
+  "coinsTasksSubtitle": "Beloningen voor profiel, vrienden en games",
+  "coinsTasksRewards": "Beloningen klaar om te claimen",
   "coinsFriendRewardHint": "+{amount} voor registratie via jouw link",
   "@coinsFriendRewardHint": {
     "placeholders": {

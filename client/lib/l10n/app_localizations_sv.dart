@@ -1655,6 +1655,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get coinsFriendReward => 'Vänbelöning';
 
   @override
+  String get coinsTasks => 'Uppgifter';
+
+  @override
+  String get coinsTasksSubtitle => 'Belöningar för profil, vänner och matcher';
+
+  @override
+  String get coinsTasksRewards => 'Belöningar att hämta';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount för registrering via din länk';
   }

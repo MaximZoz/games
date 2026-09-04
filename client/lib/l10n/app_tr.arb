@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Bugünün ödülü hazır",
   "coinsLoginStreak": "Günlük giriş serisi",
   "coinsFriendReward": "Arkadaş ödülü",
+  "coinsTasks": "Görevler",
+  "coinsTasksSubtitle": "Profil, arkadaş ve oyun ödülleri",
+  "coinsTasksRewards": "Alınabilir ödüller var",
   "coinsFriendRewardHint": "Bağlantınızla kayıt için +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

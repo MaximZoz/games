@@ -1655,6 +1655,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get coinsFriendReward => 'Hadiah teman';
 
   @override
+  String get coinsTasks => 'Tugas';
+
+  @override
+  String get coinsTasksSubtitle => 'Hadiah untuk profil, teman, dan permainan';
+
+  @override
+  String get coinsTasksRewards => 'Ada hadiah yang bisa diklaim';
+
+  @override
   String coinsFriendRewardHint(String amount) {
     return '+$amount untuk pendaftaran lewat tautan Anda';
   }

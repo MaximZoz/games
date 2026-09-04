@@ -632,6 +632,9 @@
   "coinsLoginAvailableToday": "Recompensa de hoy disponible",
   "coinsLoginStreak": "Racha diaria de inicios de sesión",
   "coinsFriendReward": "Recompensa por amigo",
+  "coinsTasks": "Tareas",
+  "coinsTasksSubtitle": "Recompensas por perfil, amigos y partidas",
+  "coinsTasksRewards": "Recompensas disponibles para reclamar",
   "coinsFriendRewardHint": "+{amount} por registrarse con tu enlace",
   "@coinsFriendRewardHint": {
     "placeholders": {
