@@ -3,6 +3,11 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Дурак: веер в руке сжимается плавно, без рывка; в альбоме вернулась анимация раскладки, «Бито»/«Взять» больше не моргает
+- Игры: кнопка «Поиск игроков» вместо «Найти игру» — и в карточках, и в шапке лобби
+- Карточки игр: кнопки одной высоты и с мягкой заливкой у второй, без тонкого контура
+- Нарды: иконка стала понятнее — доска с крупными пунктами и стопкой шашек
+- Сообщения: автоперевод включён сразу, если собеседник пишет на другом языке
 - Длинные нарды: нельзя запирать шесть пунктов подряд, пока их не обошла ни одна шашка соперника
 - Нарды в портрете: «Повторить» и «Другой соперник» после партии больше не обрезаются
 - Лобби: «Поиск» стоит рядом с правилами — в своей игре им можно открыть поиск соперника, и она попадает в общий список лобби
@@ -66,6 +71,11 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Durak: the hand fan shrinks smoothly instead of snapping; landscape got its layout animation back and Beat/Take no longer blinks
+- Games: the button now reads Find players, both on game cards and in the lobby header
+- Game cards: both buttons share one height, and the secondary one has a soft fill instead of a thin outline
+- Backgammon: a clearer icon — a board with large points and a stack of checkers
+- Chats: auto-translate is on from the start when the other person writes in another language
 - Long backgammon: you may not seal six points in a row until an opposing checker has passed them
 - Backgammon in portrait: Rematch and Another opponent are no longer clipped after the game
 - Lobby: Search sits next to the rules — a private game can open matchmaking from there and joins the public lobby list
