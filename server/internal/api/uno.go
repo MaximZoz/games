@@ -66,6 +66,8 @@ func (h *GamesHandler) serveUno(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "matchmake" && r.Method == http.MethodPost:
+			h.StartLobbyMatchmake(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
 			h.CancelInvite(w, r, lobbyID)
 		default:

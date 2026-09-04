@@ -47,6 +47,24 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
   final Set<String> _cancelling = {};
   final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
+  bool _startingSearch = false;
+
+  /// Открыть свою игру для поиска: лобби становится публичным.
+  Future<void> _startSearch() async {
+    if (_startingSearch) return;
+    setState(() => _startingSearch = true);
+    try {
+      await ref.read(unoRepositoryProvider).startMatchmake(widget.lobbyId);
+      if (!mounted) return;
+      ref.invalidate(unoLobbyProvider(widget.lobbyId));
+      ref.invalidate(openLobbiesProvider);
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    } finally {
+      if (mounted) setState(() => _startingSearch = false);
+    }
+  }
   bool _linkCopied = false;
   Timer? _copyTimer;
 
@@ -200,6 +218,12 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
           centerTitle: true,
           actions: [
             if (lobby != null)
+              LobbySearchAction(
+                searching: matchmaking,
+                busy: _startingSearch,
+                onStart: () => unawaited(_startSearch()),
+              ),
+            if (lobby != null)
               IconButton(
                 tooltip: context.l10n.gamesRulesTitle,
                 onPressed: () => _showRules(lobby),
@@ -243,9 +267,6 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
       friendsCount: friendsCount,
       maxWidth: isNarrow(context) ? 480 : 560,
       padding: EdgeInsets.all(isNarrow(context) ? 16 : 24),
-      searchBanner: lobby.mode == 'matchmake'
-          ? LobbySearchBanner(label: context.l10n.lobbySearchingOpponent)
-          : null,
       multiPlayersCard: _buildMultiPlayersCard(lobby),
       shareLinkCard: LobbyShareLinkCard(
         title: context.l10n.lobbyCopyLink,
@@ -256,9 +277,13 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
         onTap: _copyLink,
       ),
       friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        pendingInvites: lobby.invited,
         friendsAsync: friendsAsync,
         excludeUserIds: memberIds,
-        invitedIds: _invited,
+        invitedIds: {
+          ..._invited,
+          for (final guest in lobby.invited) guest.id,
+        },
         invitingIds: _inviting,
         cancellingIds: _cancelling,
         listStorageKey: 'uno-lobby-friends',

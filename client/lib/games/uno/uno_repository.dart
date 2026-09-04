@@ -6,7 +6,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, LobbyPlayer;
+    show GamesException, LobbyPlayer, parseLobbyInvited;
 import 'package:multigames_client/games/uno/uno_card.dart';
 import 'package:multigames_client/games/uno/uno_engine.dart';
 import 'package:multigames_client/games/uno/uno_offline_session.dart';
@@ -402,6 +402,7 @@ class UnoLobbyView {
     required this.stakeBronze,
     required this.playerIds,
     required this.players,
+    this.invited = const [],
     this.chatId,
     this.gameId,
   });
@@ -415,6 +416,9 @@ class UnoLobbyView {
   final int stakeBronze;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final String? chatId;
   final String? gameId;
 
@@ -427,6 +431,7 @@ class UnoLobbyView {
       (item) => LobbyPlayer.fromJson(item),
     );
     return UnoLobbyView(
+      invited: parseLobbyInvited(json['invited']),
       id: (json['id'] ?? json['lobby_id'] ?? '').toString(),
       creatorId: (json['creator_id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
@@ -627,6 +632,10 @@ class UnoRepository {
         {'friend_user_id': friendUserId},
         'inviteFriend',
       );
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startMatchmake(String lobbyId) =>
+      _emptyPost('/api/games/uno/lobby/$lobbyId/matchmake', 'startMatchmake');
 
   Future<void> cancelInvite(String lobbyId, String friendUserId) => _jsonPost(
         '/api/games/uno/lobby/$lobbyId/cancel-invite',

@@ -46,6 +46,24 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
   final Set<String> _cancelling = {};
   final Set<String> _friendRequestInFlight = {};
   bool _leaving = false;
+  bool _startingSearch = false;
+
+  /// Открыть свою игру для поиска: лобби становится публичным.
+  Future<void> _startSearch() async {
+    if (_startingSearch) return;
+    setState(() => _startingSearch = true);
+    try {
+      await ref.read(durakRepositoryProvider).startMatchmake(widget.lobbyId);
+      if (!mounted) return;
+      ref.invalidate(durakLobbyProvider(widget.lobbyId));
+      ref.invalidate(openLobbiesProvider);
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+    } finally {
+      if (mounted) setState(() => _startingSearch = false);
+    }
+  }
   bool _linkCopied = false;
   Timer? _linkTimer;
 
@@ -229,6 +247,12 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
           centerTitle: true,
           actions: [
             if (lobby != null)
+              LobbySearchAction(
+                searching: isMatchmake,
+                busy: _startingSearch,
+                onStart: () => unawaited(_startSearch()),
+              ),
+            if (lobby != null)
               IconButton(
                 tooltip: context.l10n.gamesRulesTitle,
                 icon: const Icon(Icons.rule_rounded),
@@ -279,7 +303,6 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
             .where((f) => !memberIds.contains(f.user.id))
             .length ??
         0;
-    final isMatchmake = lobby.mode == 'matchmake';
     // Тот же скелет, что и в крестиках-ноликах: 2 игрока → чип ставки,
     // 3–4 → карточка «Игроки N/M», друзья — по контенту.
     return GameLobbyWaitingLayout(
@@ -287,9 +310,6 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
       stakeBronze: lobby.stakeBronze,
       stakeLabel: context.l10n.shopStakes,
       friendsCount: friendsCount,
-      searchBanner: isMatchmake
-          ? LobbySearchBanner(label: context.l10n.lobbySearchingOpponent)
-          : null,
       multiPlayersCard: _buildMultiPlayersCard(lobby),
       shareLinkCard: LobbyShareLinkCard(
         title: context.l10n.lobbyCopyLink,
@@ -300,9 +320,13 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
         onTap: () => _copyLink(lobby.id),
       ),
       friendsCardBuilder: (expand) => LobbyFriendsInviteCard(
+        pendingInvites: lobby.invited,
         friendsAsync: friendsAsync,
         excludeUserIds: memberIds,
-        invitedIds: _invited,
+        invitedIds: {
+          ..._invited,
+          for (final guest in lobby.invited) guest.id,
+        },
         invitingIds: _inviting,
         cancellingIds: _cancelling,
         declinedIds: _declined,

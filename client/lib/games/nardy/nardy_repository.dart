@@ -6,7 +6,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, LobbyPlayer;
+    show GamesException, LobbyPlayer, parseLobbyInvited;
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
@@ -34,6 +34,7 @@ class NardyLobbyView {
     required this.creatorId,
     required this.playerIds,
     required this.players,
+    this.invited = const [],
     required this.turnTimeSec,
     required this.stakeBronze,
     this.gameId,
@@ -46,6 +47,9 @@ class NardyLobbyView {
   final String creatorId;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final int turnTimeSec;
   final int stakeBronze;
   final String? gameId;
@@ -63,6 +67,7 @@ class NardyLobbyView {
         : players.map((p) => p.id).toList();
     final gameId = (json['game_id'] ?? '').toString().trim();
     return NardyLobbyView(
+      invited: parseLobbyInvited(json['invited']),
       id: (json['lobby_id'] ?? json['id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       mode: (json['mode'] ?? 'invite').toString(),
@@ -486,6 +491,18 @@ class NardyRepository {
         Uri.parse('$apiBaseUrl/api/games/nardy/lobby/$lobbyId/decline'),
         headers: {'Authorization': 'Bearer $token'},
         operation: 'NardyRepository.declineLobby',
+      ),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startMatchmake(String lobbyId) async {
+    final res = await _sendAuth(
+      (token) => ApiClient.post(
+        Uri.parse('$apiBaseUrl/api/games/nardy/lobby/$lobbyId/matchmake'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'NardyRepository.startMatchmake',
       ),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) _fail(res);

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -109,6 +110,9 @@ type LobbyItem struct {
 	PlayersCount         int               `json:"players_count,omitempty"`
 	PlayerIDs            []string          `json:"player_ids,omitempty"`
 	Players              []LobbyPlayerItem `json:"players,omitempty"`
+	// Invited — кому уже ушло приглашение. Нужен, чтобы в своей игре был
+	// виден приглашённый соперник, даже если его нет в друзьях (реванш).
+	Invited []LobbyPlayerItem `json:"invited,omitempty"`
 	ChatID               string            `json:"chat_id,omitempty"`
 	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
 	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
@@ -367,6 +371,8 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.LeaveLobby(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "decline" && r.Method == http.MethodPost:
 			h.DeclineInvite(w, r, lobbyID)
+		case len(parts) == 3 && parts[2] == "matchmake" && r.Method == http.MethodPost:
+			h.StartLobbyMatchmake(w, r, lobbyID)
 		case len(parts) == 3 && parts[2] == "cancel-invite" && r.Method == http.MethodPost:
 			h.CancelInvite(w, r, lobbyID)
 		default:
@@ -1675,6 +1681,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		PlayersCount: len(playerIDs),
 		PlayerIDs:    playerIDs,
 		Players:      h.loadLobbyPlayers(ctx, playerIDs),
+		Invited:      h.loadLobbyInvited(ctx, lobbyID, playerIDs),
 		ChatID:       chatIDStr,
 		StakeBronze:  stakeBronze,
 		GameType:     gameType,
@@ -1719,6 +1726,30 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(item)
+}
+
+// loadLobbyInvited — приглашённые, которые ещё не вошли в лобби.
+func (h *GamesHandler) loadLobbyInvited(
+	ctx context.Context,
+	lobbyID string,
+	playerIDs []string,
+) []LobbyPlayerItem {
+	ids, err := h.Rdb.SMembers(ctx, "lobby:"+lobbyID+":invited").Result()
+	if err != nil || len(ids) == 0 {
+		return nil
+	}
+	pending := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if stringSliceContains(playerIDs, id) {
+			continue
+		}
+		pending = append(pending, id)
+	}
+	if len(pending) == 0 {
+		return nil
+	}
+	sort.Strings(pending)
+	return h.loadLobbyPlayers(ctx, pending)
 }
 
 func (h *GamesHandler) loadLobbyPlayers(ctx context.Context, playerIDs []string) []LobbyPlayerItem {
@@ -3712,6 +3743,80 @@ func (h *GamesHandler) publishGameStartedTyped(userIDs []uuid.UUID, gameID, lobb
 
 // notifyPublicLobbiesChanged — сигнал всем онлайн обновить открытые лобби
 // (создание / отмена / старт публичного поиска).
+// StartLobbyMatchmake открывает свою игру для поиска соперника.
+//
+// Лобби остаётся тем же (ссылка и приглашения живы), но становится публичным:
+// его видно в списке лобби и подхватывает «Найти игру» у других игроков.
+func (h *GamesHandler) StartLobbyMatchmake(w http.ResponseWriter, r *http.Request, lobbyID string) {
+	userID, ok := currentUserIDFromGames(r)
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	ctx := r.Context()
+	key := "lobby:" + lobbyID
+	m, err := h.Rdb.HGetAll(ctx, key).Result()
+	if err != nil || len(m) == 0 {
+		WriteErr(w, r, http.StatusNotFound, "lobby not found")
+		return
+	}
+	if m["status"] != lobbyStatusWaitingInvite &&
+		m["status"] != lobbyStatusWaitingMatchmake {
+		WriteErr(w, r, http.StatusBadRequest, "lobby is not waiting")
+		return
+	}
+	players := parsePlayerIDsCSV(m["player_ids"])
+	if len(players) == 0 {
+		players = []string{m["creator_id"]}
+	}
+	isMember := m["creator_id"] == userID.String()
+	for _, p := range players {
+		if p == userID.String() {
+			isMember = true
+			break
+		}
+	}
+	if !isMember {
+		WriteErr(w, r, http.StatusForbidden, "forbidden")
+		return
+	}
+	if m["mode"] == "matchmake" && strings.TrimSpace(m["invite_target_id"]) == "" {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"lobby_id": lobbyID,
+			"mode":     "matchmake",
+		})
+		return
+	}
+
+	pipe := h.Rdb.Pipeline()
+	pipe.HSet(ctx, key, "mode", "matchmake")
+	// Пока стоит адресат приглашения, лобби не публичное — снимаем метку.
+	pipe.HDel(ctx, key, "invite_target_id")
+	pipe.Expire(ctx, key, lobbyTTL)
+	if _, err := pipe.Exec(ctx); err != nil {
+		WriteErr(w, r, http.StatusInternalServerError, "server error")
+		return
+	}
+
+	notify := make([]uuid.UUID, 0, len(players))
+	for _, p := range players {
+		if u, e := uuid.Parse(p); e == nil {
+			notify = append(notify, u)
+		}
+	}
+	h.broadcast(notify, map[string]any{
+		"type":     "lobby_updated",
+		"lobby_id": lobbyID,
+		"mode":     "matchmake",
+	})
+	h.notifyPublicLobbiesChanged()
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"lobby_id": lobbyID,
+		"mode":     "matchmake",
+	})
+}
+
 func (h *GamesHandler) notifyPublicLobbiesChanged() {
 	payload := map[string]any{"type": "lobbies_changed"}
 	if h.Broadcaster != nil && h.Broadcaster.Rdb != nil {

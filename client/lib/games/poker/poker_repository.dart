@@ -9,7 +9,7 @@ import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/games/durak/card.dart';
 import 'package:multigames_client/games/poker/poker_offline_session.dart';
 import 'package:multigames_client/games/games_repository.dart'
-    show GamesException, LobbyPlayer;
+    show GamesException, LobbyPlayer, parseLobbyInvited;
 
 /// Карта покера в JSON API: ранг [2..14], масть — одна буква H/D/C/S.
 class PokerApiCard {
@@ -386,6 +386,7 @@ class PokerLobbyView {
     required this.stakeBronze,
     required this.playerIds,
     required this.players,
+    this.invited = const [],
     this.chatId,
     this.gameId,
   });
@@ -399,6 +400,9 @@ class PokerLobbyView {
   final int stakeBronze;
   final List<String> playerIds;
   final List<LobbyPlayer> players;
+
+  /// Кому уже ушло приглашение и кто ещё не вошёл — виден даже не-друг.
+  final List<LobbyPlayer> invited;
   final String? chatId;
   final String? gameId;
 
@@ -416,6 +420,7 @@ class PokerLobbyView {
         ? parsedPlayers
         : [for (final id in ids) LobbyPlayer(id: id, displayName: 'Player')];
     return PokerLobbyView(
+      invited: parseLobbyInvited(json['invited']),
       id: (json['id'] ?? json['lobby_id'] ?? '').toString(),
       creatorId: (json['creator_id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
@@ -664,6 +669,16 @@ class PokerRepository {
           },
           body: jsonEncode({'friend_user_id': friendUserId}),
           operation: 'PokerRepository.inviteFriend',
+        ));
+    if (r.statusCode != 200) _fail(r);
+  }
+
+  /// Открыть свою игру для поиска соперника — лобби становится публичным.
+  Future<void> startMatchmake(String lobbyId) async {
+    final r = await _sendAuth((token) => ApiClient.post(
+          Uri.parse('$apiBaseUrl/api/games/poker/lobby/$lobbyId/matchmake'),
+          headers: {'Authorization': 'Bearer $token'},
+          operation: 'PokerRepository.startMatchmake',
         ));
     if (r.statusCode != 200) _fail(r);
   }
