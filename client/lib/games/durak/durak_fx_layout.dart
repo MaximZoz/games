@@ -228,10 +228,11 @@ double durakOpponentFanMinStepFrac(int shown) {
   return 0.58;
 }
 
-/// Сколько рубашек рисуем.
+/// Сколько рубашек рисуем в веере соперника.
 ///
-/// [hidden] — только вскрытие козыря (одна карта). Pending раздачи больше
-/// не прячет всю руку: зависший полёт оставлял веер пустым до конца партии.
+/// [hidden] — добор из колоды и/или вскрытие козыря: эти карты ещё в полёте.
+/// Пока все карты скрыты, веер пустой — иначе сначала вспыхивает вся рука,
+/// а потом уже летит добор. Зависший FX снимает pending через snap.
 int durakOpponentFanShownCount({
   required int serverCount,
   required int hidden,
@@ -239,9 +240,9 @@ int durakOpponentFanShownCount({
   final n = serverCount < 0 ? 0 : serverCount;
   final hide = hidden < 0 ? 0 : hidden;
   final visible = n - hide;
+  if (visible <= 0) return 0;
   if (visible > 20) return 20;
-  if (visible > 0) return visible;
-  return n > 20 ? 20 : n;
+  return visible;
 }
 
 /// Snap к серверу обязан открыть то, что прятал незавершённый FX.
