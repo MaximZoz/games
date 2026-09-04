@@ -22,6 +22,8 @@ const (
 	nardyStatusOver = "over"
 	// Пауза между шагами бота: бросок и каждая шашка видны отдельно.
 	nardyBotStepDelay = 800 * time.Millisecond
+	// Замок «бегуна» переживает весь ход бота и продлевается на каждом шаге.
+	nardyBotRunTTL = 20 * time.Second
 	nardyMaxPlayers = 2
 )
 

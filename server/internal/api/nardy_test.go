@@ -1,6 +1,7 @@
 package api
 
 import (
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -92,6 +93,36 @@ func TestNardyBotFirstStepIsOnlyTheRoll(t *testing.T) {
 	}
 	if len(state.History) != 0 {
 		t.Fatalf("no checker may move on the roll step: %+v", state.History)
+	}
+}
+
+func TestNardyBotRunKeyIsPerGame(t *testing.T) {
+	if nardyBotRunKey("a") == nardyBotRunKey("b") {
+		t.Fatal("bot runner lock must be per game")
+	}
+	if !strings.Contains(nardyBotRunKey("g1"), "g1") {
+		t.Fatalf("key %q must carry the game id", nardyBotRunKey("g1"))
+	}
+	if nardyBotRunTTL <= nardyBotStepDelay {
+		t.Fatalf("runner lock (%v) must outlive a single step (%v)",
+			nardyBotRunTTL, nardyBotStepDelay)
+	}
+}
+
+func TestNardyBotTurnTakesSeveralSteps(t *testing.T) {
+	state := nardy.NewGame(nardy.ModeShort)
+	state.Turn = 1
+	rng := rand.New(rand.NewSource(9))
+	steps := 0
+	for steps < 12 && !nardy.PlayBotStep(state, rng) {
+		steps++
+	}
+	// Бросок и ходы — разные шаги: иначе на экране ход соперника мгновенный.
+	if steps < 2 {
+		t.Fatalf("bot turn collapsed into %d step(s)", steps+1)
+	}
+	if state.Turn != 0 && state.Winner < 0 {
+		t.Fatalf("bot did not hand the turn back: turn=%d", state.Turn)
 	}
 }
 
