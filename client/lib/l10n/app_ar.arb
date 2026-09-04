@@ -276,6 +276,8 @@
   "nardySkipTurn": "تخطَّ الدور",
   "nardyUndoMove": "تراجع",
   "nardyDoneTurn": "تم",
+  "nardyAutoConfirm": "تأكيد تلقائي",
+  "nardyAutoConfirmHint": "تمرير الدور تلقائياً بعد كل النقلات",
   "nardyNoMoves": "لا توجد نقلات",
   "nardyYourRoll": "رميتك",
   "nardyPipsShort": "المتبقي:",

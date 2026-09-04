@@ -735,6 +735,12 @@ class AppLocalizationsDa extends AppLocalizations {
   String get nardyDoneTurn => 'Færdig';
 
   @override
+  String get nardyAutoConfirm => 'Autobekræft';
+
+  @override
+  String get nardyAutoConfirmHint => 'Giv turen videre automatisk efter alle træk';
+
+  @override
   String get nardyNoMoves => 'Ingen træk';
 
   @override

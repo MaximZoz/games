@@ -276,6 +276,8 @@
   "nardySkipTurn": "Pasar turno",
   "nardyUndoMove": "Deshacer",
   "nardyDoneTurn": "Listo",
+  "nardyAutoConfirm": "Autoconfirmar",
+  "nardyAutoConfirmHint": "Pasa el turno automáticamente tras todos los movimientos",
   "nardyNoMoves": "Sin jugadas",
   "nardyYourRoll": "Tu tirada",
   "nardyPipsShort": "Quedan:",

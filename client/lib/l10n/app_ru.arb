@@ -328,6 +328,8 @@
   "nardySkipTurn": "Пропустить ход",
   "nardyUndoMove": "Вернуть",
   "nardyDoneTurn": "Готово",
+  "nardyAutoConfirm": "Автоподтверждение",
+  "nardyAutoConfirmHint": "После всех ходов сразу передать ход сопернику",
   "nardyNoMoves": "Ходов нет",
   "nardyYourRoll": "Ваш бросок",
   "nardyPipsShort": "Осталось:",

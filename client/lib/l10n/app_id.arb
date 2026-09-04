@@ -276,6 +276,8 @@
   "nardySkipTurn": "Lewati giliran",
   "nardyUndoMove": "Batalkan",
   "nardyDoneTurn": "Selesai",
+  "nardyAutoConfirm": "Konfirmasi otomatis",
+  "nardyAutoConfirmHint": "Setelah semua langkah, giliran langsung berpindah",
   "nardyNoMoves": "Tidak ada langkah",
   "nardyYourRoll": "Lemparan Anda",
   "nardyPipsShort": "Sisa:",

@@ -735,6 +735,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get nardyDoneTurn => 'Klar';
 
   @override
+  String get nardyAutoConfirm => 'Autobekräfta';
+
+  @override
+  String get nardyAutoConfirmHint => 'Efter alla drag går turen vidare automatiskt';
+
+  @override
   String get nardyNoMoves => 'Inga drag';
 
   @override

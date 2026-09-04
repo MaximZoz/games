@@ -735,6 +735,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nardyDoneTurn => 'تم';
 
   @override
+  String get nardyAutoConfirm => 'تأكيد تلقائي';
+
+  @override
+  String get nardyAutoConfirmHint => 'تمرير الدور تلقائياً بعد كل النقلات';
+
+  @override
   String get nardyNoMoves => 'لا توجد نقلات';
 
   @override

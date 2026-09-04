@@ -735,6 +735,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nardyDoneTurn => 'Terminé';
 
   @override
+  String get nardyAutoConfirm => 'Auto-confirmation';
+
+  @override
+  String get nardyAutoConfirmHint => 'Passe le tour automatiquement après tous les coups';
+
+  @override
   String get nardyNoMoves => 'Aucun coup';
 
   @override

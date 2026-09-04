@@ -735,6 +735,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nardyDoneTurn => '完成';
 
   @override
+  String get nardyAutoConfirm => '自动确认';
+
+  @override
+  String get nardyAutoConfirmHint => '走完所有步后自动把回合交给对手';
+
+  @override
   String get nardyNoMoves => '无棋可走';
 
   @override

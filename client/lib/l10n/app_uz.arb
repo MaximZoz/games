@@ -276,6 +276,8 @@
   "nardySkipTurn": "Yurishni o‘tkazish",
   "nardyUndoMove": "Qaytarish",
   "nardyDoneTurn": "Tayyor",
+  "nardyAutoConfirm": "Avtotasdiqlash",
+  "nardyAutoConfirmHint": "Barcha yurishlardan so‘ng navbat avtomatik o‘tadi",
   "nardyNoMoves": "Yurish yo‘q",
   "nardyYourRoll": "Sizning tashlashingiz",
   "nardyPipsShort": "Qoldi:",

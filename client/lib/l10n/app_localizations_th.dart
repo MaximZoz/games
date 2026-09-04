@@ -735,6 +735,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get nardyDoneTurn => 'เสร็จ';
 
   @override
+  String get nardyAutoConfirm => 'ยืนยันอัตโนมัติ';
+
+  @override
+  String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
+
+  @override
   String get nardyNoMoves => 'ไม่มีตาเดิน';
 
   @override

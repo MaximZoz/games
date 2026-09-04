@@ -276,6 +276,8 @@
   "nardySkipTurn": "Прапусціць ход",
   "nardyUndoMove": "Вярнуць",
   "nardyDoneTurn": "Гатова",
+  "nardyAutoConfirm": "Аўтапацвярджэнне",
+  "nardyAutoConfirmHint": "Пасля ўсіх хадоў адразу перадаць ход суперніку",
   "nardyNoMoves": "Хадоў няма",
   "nardyYourRoll": "Ваш кідок",
   "nardyPipsShort": "Засталося:",

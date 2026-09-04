@@ -276,6 +276,8 @@
   "nardySkipTurn": "Жүрісті өткізу",
   "nardyUndoMove": "Қайтару",
   "nardyDoneTurn": "Дайын",
+  "nardyAutoConfirm": "Авторастау",
+  "nardyAutoConfirmHint": "Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді",
   "nardyNoMoves": "Жүріс жоқ",
   "nardyYourRoll": "Сіздің лақтыруыңыз",
   "nardyPipsShort": "Қалды:",

@@ -58,6 +58,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
   String _autoRollKey = '';
+  String _autoEndKey = '';
   NardyGameView? _optimisticGame;
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
@@ -174,6 +175,39 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     });
   }
 
+  void _scheduleAutoEndTurn(NardyGameView game) {
+    final autoConfirm = ref.read(nardyAutoConfirmProvider);
+    if (_busy ||
+        !nardyShouldAutoEndTurn(
+          autoConfirm: autoConfirm,
+          isMyTurn: game.isMyTurn,
+          isOver: game.isOver,
+          needsRoll: game.needsRoll,
+          hasLegalMoves: game.legalMoves.isNotEmpty,
+        )) {
+      return;
+    }
+    final key = '${game.id}:${game.seq}:${game.turn}:${game.turnNo}';
+    if (_autoEndKey == key) return;
+    _autoEndKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _busy) return;
+      final latest = _optimisticGame ??
+          ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+      if (latest == null) return;
+      if (!nardyShouldAutoEndTurn(
+        autoConfirm: ref.read(nardyAutoConfirmProvider),
+        isMyTurn: latest.isMyTurn,
+        isOver: latest.isOver,
+        needsRoll: latest.needsRoll,
+        hasLegalMoves: latest.legalMoves.isNotEmpty,
+      )) {
+        return;
+      }
+      unawaited(_endTurn());
+    });
+  }
+
   Future<void> _endTurn() {
     setState(() => _selectedTrack = null);
     return _run(() => _repo.endTurn(widget.gameId));
@@ -222,7 +256,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
     } finally {
       _turnAction.release();
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        final latest = _optimisticGame ??
+            ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+        if (latest != null) _scheduleAutoEndTurn(latest);
+      }
     }
   }
 
@@ -825,6 +864,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Widget _buildGame(NardyGameView game, String? me) {
     _scheduleAutoRoll(game);
+    _scheduleAutoEndTurn(game);
     final myTurn = game.isMyTurn && !game.isOver;
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
@@ -994,8 +1034,21 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Widget _buildControls(NardyGameView game, bool myTurn) {
     final l10n = context.l10n;
-    final showEndTurn = myTurn && !game.needsRoll && game.legalMoves.isEmpty;
-    final noMoves = showEndTurn && game.currentTurn.isEmpty;
+    final autoConfirm = ref.watch(nardyAutoConfirmProvider);
+    final canEnd = nardyCanEndTurn(
+      isMyTurn: myTurn,
+      isOver: game.isOver,
+      needsRoll: game.needsRoll,
+      hasLegalMoves: game.legalMoves.isNotEmpty,
+    );
+    final showEndTurn = nardyShouldShowEndTurn(
+      autoConfirm: autoConfirm,
+      isMyTurn: myTurn,
+      isOver: game.isOver,
+      needsRoll: game.needsRoll,
+      hasLegalMoves: game.legalMoves.isNotEmpty,
+    );
+    final noMoves = canEnd && game.currentTurn.isEmpty;
     return Wrap(
       spacing: 10,
       runSpacing: 8,
@@ -1009,6 +1062,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           highlight: myTurn,
           size: 38,
         ),
+        if (!game.isOver) _buildAutoConfirmCheck(autoConfirm),
         if (myTurn && game.canUndo)
           FramedButton(
             onPressed: _busy ? null : () => unawaited(_undo()),
@@ -1022,6 +1076,43 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             label: noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn,
           ),
       ],
+    );
+  }
+
+  Widget _buildAutoConfirmCheck(bool value) {
+    final l10n = context.l10n;
+    return Tooltip(
+      message: l10n.nardyAutoConfirmHint,
+      child: InkWell(
+        onTap: () =>
+            unawaited(ref.read(nardyAutoConfirmProvider.notifier).set(!value)),
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: Checkbox(
+                value: value,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                activeColor: AppColors.accentStart,
+                onChanged: (v) => unawaited(
+                  ref.read(nardyAutoConfirmProvider.notifier).set(v ?? false),
+                ),
+              ),
+            ),
+            Text(
+              l10n.nardyAutoConfirm,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -735,6 +735,12 @@ class AppLocalizationsBe extends AppLocalizations {
   String get nardyDoneTurn => 'Гатова';
 
   @override
+  String get nardyAutoConfirm => 'Аўтапацвярджэнне';
+
+  @override
+  String get nardyAutoConfirmHint => 'Пасля ўсіх хадоў адразу перадаць ход суперніку';
+
+  @override
   String get nardyNoMoves => 'Хадоў няма';
 
   @override

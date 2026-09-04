@@ -735,6 +735,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get nardyDoneTurn => '완료';
 
   @override
+  String get nardyAutoConfirm => '자동 확인';
+
+  @override
+  String get nardyAutoConfirmHint => '모든 수를 두면 차례가 자동으로 넘어갑니다';
+
+  @override
   String get nardyNoMoves => '둘 수 없음';
 
   @override

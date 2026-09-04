@@ -735,6 +735,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get nardyDoneTurn => 'Tayyor';
 
   @override
+  String get nardyAutoConfirm => 'Avtotasdiqlash';
+
+  @override
+  String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
+
+  @override
   String get nardyNoMoves => 'Yurish yo‘q';
 
   @override

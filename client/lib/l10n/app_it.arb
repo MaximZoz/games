@@ -276,6 +276,8 @@
   "nardySkipTurn": "Salta il turno",
   "nardyUndoMove": "Annulla",
   "nardyDoneTurn": "Fatto",
+  "nardyAutoConfirm": "Conferma auto",
+  "nardyAutoConfirmHint": "Dopo tutte le mosse il turno passa automaticamente",
   "nardyNoMoves": "Nessuna mossa",
   "nardyYourRoll": "Il tuo lancio",
   "nardyPipsShort": "Restano:",

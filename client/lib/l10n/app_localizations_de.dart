@@ -735,6 +735,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nardyDoneTurn => 'Fertig';
 
   @override
+  String get nardyAutoConfirm => 'Auto-Bestätigung';
+
+  @override
+  String get nardyAutoConfirmHint => 'Zug nach allen Zügen automatisch übergeben';
+
+  @override
   String get nardyNoMoves => 'Kein Zug möglich';
 
   @override

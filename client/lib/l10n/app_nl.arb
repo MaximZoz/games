@@ -276,6 +276,8 @@
   "nardySkipTurn": "Beurt overslaan",
   "nardyUndoMove": "Ongedaan",
   "nardyDoneTurn": "Klaar",
+  "nardyAutoConfirm": "Auto-bevestigen",
+  "nardyAutoConfirmHint": "Geef de beurt automatisch door na alle zetten",
   "nardyNoMoves": "Geen zetten",
   "nardyYourRoll": "Jouw worp",
   "nardyPipsShort": "Resterend:",

@@ -735,6 +735,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get nardyDoneTurn => 'Selesai';
 
   @override
+  String get nardyAutoConfirm => 'Konfirmasi otomatis';
+
+  @override
+  String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
+
+  @override
   String get nardyNoMoves => 'Tidak ada langkah';
 
   @override

@@ -276,6 +276,8 @@
   "nardySkipTurn": "ข้ามตา",
   "nardyUndoMove": "ย้อนกลับ",
   "nardyDoneTurn": "เสร็จ",
+  "nardyAutoConfirm": "ยืนยันอัตโนมัติ",
+  "nardyAutoConfirmHint": "เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที",
   "nardyNoMoves": "ไม่มีตาเดิน",
   "nardyYourRoll": "การทอยของคุณ",
   "nardyPipsShort": "เหลือ:",

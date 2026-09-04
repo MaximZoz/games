@@ -735,6 +735,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nardyDoneTurn => 'Xong';
 
   @override
+  String get nardyAutoConfirm => 'Tự xác nhận';
+
+  @override
+  String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
+
+  @override
   String get nardyNoMoves => 'Không có nước đi';
 
   @override

@@ -276,6 +276,8 @@
   "nardySkipTurn": "Ohita vuoro",
   "nardyUndoMove": "Kumoa",
   "nardyDoneTurn": "Valmis",
+  "nardyAutoConfirm": "Autovahvistus",
+  "nardyAutoConfirmHint": "Siirron jälkeen vuoro siirtyy automaattisesti",
   "nardyNoMoves": "Ei siirtoja",
   "nardyYourRoll": "Sinun heittosi",
   "nardyPipsShort": "Jäljellä:",

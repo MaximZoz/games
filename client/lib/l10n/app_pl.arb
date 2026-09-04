@@ -276,6 +276,8 @@
   "nardySkipTurn": "Pomiń turę",
   "nardyUndoMove": "Cofnij",
   "nardyDoneTurn": "Gotowe",
+  "nardyAutoConfirm": "Autopotwierdzenie",
+  "nardyAutoConfirmHint": "Po wszystkich ruchach tura przechodzi automatycznie",
   "nardyNoMoves": "Brak ruchów",
   "nardyYourRoll": "Twój rzut",
   "nardyPipsShort": "Zostało:",
