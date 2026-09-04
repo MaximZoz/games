@@ -167,6 +167,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   /// Автоперевод входящих сообщений (локальный переключатель на чат).
   bool _autoTranslate = false;
+
+  /// Выбор пользователя для этого чата; null — ещё не трогал переключатель.
+  bool? _autoTranslatePref;
   final Map<String, String> _translations = <String, String>{};
   bool _translateInFlight = false;
   String? _peerLanguageHint;
@@ -221,6 +224,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       _messageIDs.clear();
       _translations.clear();
       _autoTranslate = false;
+      _autoTranslatePref = null;
       _peerLanguageHint = null;
       unawaited(_restoreAutoTranslatePref());
       _loadMessages(initial: true);
@@ -233,14 +237,32 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   Future<void> _restoreAutoTranslatePref() async {
     final prefs = await SharedPreferences.getInstance();
-    final enabled = prefs.getBool(_autoTranslatePrefsKey) ?? false;
+    final stored = prefs.getBool(_autoTranslatePrefsKey);
     if (!mounted) return;
-    setState(() => _autoTranslate = enabled);
+    _autoTranslatePref = stored;
+    _applyAutoTranslateDefault();
+  }
+
+  /// Свести переключатель с языком собеседника: у иностранца перевод сразу
+  /// включён, пока пользователь сам его не выключил.
+  void _applyAutoTranslateDefault() {
+    if (!mounted) return;
+    final enabled = chatAutoTranslateEnabled(
+      stored: _autoTranslatePref,
+      peerLanguage: _peerLanguageHint,
+      myLanguage: effectiveAppLocale(ref.read(appLocaleProvider)).languageCode,
+    );
+    if (enabled == _autoTranslate) return;
+    setState(() {
+      _autoTranslate = enabled;
+      if (!enabled) _translations.clear();
+    });
     if (enabled) unawaited(_ensureTranslations());
   }
 
   Future<void> _setAutoTranslate(bool enabled) async {
     setState(() {
+      _autoTranslatePref = enabled;
       _autoTranslate = enabled;
       if (!enabled) _translations.clear();
     });
@@ -2528,6 +2550,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final peerLang = (peerUser?.preferredLanguage ?? '').trim();
     if (peerLang.isNotEmpty && peerLang != _peerLanguageHint) {
       _peerLanguageHint = peerLang;
+      // Язык собеседника приходит уже после открытия чата — только сейчас
+      // видно, нужен ли перевод по умолчанию.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _applyAutoTranslateDefault(),
+      );
     }
     final title = _chatTitle(currentChat, routeTitle);
     final peerPresence = currentChat?.isGroup == true || peerUser == null
