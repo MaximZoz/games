@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
+import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
@@ -128,7 +129,7 @@ class GameStatsBody extends ConsumerWidget {
                 for (final g in stats.games) ...[
                   const SizedBox(height: 12),
                   _GameStatsBlock(
-                    title: _gameTypeTitle(l10n, g.gameType),
+                    title: localizedGameTypeName(g.gameType, l10n),
                     icon: GameTypeIcon(
                       gameType: g.gameType,
                       size: 20,
@@ -148,23 +149,6 @@ class GameStatsBody extends ConsumerWidget {
               ],
             ),
     );
-  }
-}
-
-String _gameTypeTitle(AppLocalizations l10n, String gameType) {
-  switch (gameType) {
-    case 'tictactoe':
-      return l10n.gamesTicTacToe;
-    case 'durak':
-      return l10n.gamesDurak;
-    case 'battleship':
-      return l10n.gamesBattleship;
-    case 'poker':
-      return l10n.gamesPoker;
-    case 'uno':
-      return l10n.gamesUno;
-    default:
-      return gameType;
   }
 }
 

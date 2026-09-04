@@ -1345,6 +1345,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
           ));
+        } else if (lobby.isNardy) {
+          body = rulesTextLines(nardyRuleLines(
+            gameMode: lobby.gameMode,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+            l10n: context.l10n,
+          ));
         } else {
           body = buildTictactoeRulesTextWidget(
             variant: lobby.variant,
@@ -1619,7 +1626,9 @@ class _LobbiesPageContent extends ConsumerWidget {
             }
             final lobbyCards = lobbies
                 .map(
-                  (lobby) => Padding(
+                  (lobby) {
+                    final modeText = lobby.modeLabel(context.l10n);
+                    return Padding(
                     padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
                     child: GradientCard(
                       animate: false,
@@ -1703,14 +1712,14 @@ class _LobbiesPageContent extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
-                                    if (!lobby.isPoker)
+                                    if (modeText.isNotEmpty)
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(
                                             lobby.isBattleship
                                                 ? Icons.grid_on_rounded
-                                                : lobby.isDurak
+                                                : lobby.isDurak || lobby.isNardy
                                                     ? Icons.swap_horiz_rounded
                                                     : Icons.extension_rounded,
                                             size: 14,
@@ -1718,12 +1727,9 @@ class _LobbiesPageContent extends ConsumerWidget {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            lobby.isBattleship
-                                                ? '10×10'
-                                                : lobby.isDurak
-                                                    ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                    : variantShortLabel(
-                                                        lobby.variant),
+                                            lobby.isDurak
+                                                ? '$modeText · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                : modeText,
                                             style: TextStyle(
                                               fontSize: isDesktop ? 14 : 13,
                                               color: AppColors.textSecondary,
@@ -1778,7 +1784,8 @@ class _LobbiesPageContent extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  );
+                  },
                 )
                 .toList();
             if (isDesktop) {
