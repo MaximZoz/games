@@ -22,12 +22,12 @@ const (
 	battleshipPhaseBattle = "battle"
 	battleshipStatusOver  = "over"
 	battleshipSetupSec    = 60 // расстановка по умолчанию — 1 минута
-	battleshipBotDelay    = 700 * time.Millisecond
-	battleshipBotHitDelay = 1100 * time.Millisecond
+	battleshipBotDelay    = time.Second
+	battleshipBotHitDelay = time.Second
 )
 
 // battleshipBotActDelay — пауза перед выстрелом бота, чтобы игрок успел
-// увидеть свой ход. Повтор после попадания чуть длиннее.
+// увидеть свой ход. После попадания бота — та же секунда перед следующим.
 func battleshipBotActDelay(continueAfterHit bool) time.Duration {
 	if continueAfterHit {
 		return battleshipBotHitDelay
