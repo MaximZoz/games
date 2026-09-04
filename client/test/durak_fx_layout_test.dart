@@ -212,10 +212,10 @@ void main() {
       expect(geo.reserveH, greaterThan(geo.tile.height));
     });
 
-    test('раздача не прячет весь веер — иначе FX зависает на пустом слоте', () {
+    test('добор прячет новые рубашки, пока они летят из колоды', () {
       expect(
         durakOpponentFanShownCount(serverCount: 6, hidden: 6),
-        6,
+        0,
       );
       expect(
         durakOpponentFanShownCount(serverCount: 6, hidden: 1),

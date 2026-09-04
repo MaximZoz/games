@@ -3,6 +3,10 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Игровой чат больше не остаётся без игры: чат лобби удаляется, если партия уже окончена
+- Дурак: добор соперника сначала летит из колоды, а не вспыхивает всей рукой
+- Дурак: при переводе карта, которая уже на столе, не моргает
+- Текстовые кнопки — светлый фон, лавандовая рамка и чёрный текст; в покере кнопки хода как были
 - Правила игр: во всех карточках один заголовок «Правила игры», в том числе у нард
 - Нарды: после «Готово» соперник больше не бросает кубики дважды
 - Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
@@ -76,6 +80,10 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Game chat no longer outlives the match: a lobby chat is removed when the game is already over
+- Durak: opponent draw cards fly from the deck instead of flashing the whole fan first
+- Durak: transferring a card no longer blinks the card already on the table
+- Text buttons use a pill with a gradient frame, like Edit on the profile
 - Game rules: every card uses the same “Game rules” title, including Backgammon
 - Backgammon: ending a turn no longer makes the opponent appear to roll twice
 - Backgammon: if you are in messages or another tab, your turn now notifies you like the other games

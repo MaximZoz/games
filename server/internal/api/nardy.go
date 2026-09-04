@@ -996,6 +996,8 @@ func (h *GamesHandler) onNardyGameFinished(
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
+		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
+		h.broadcast(humans, map[string]any{"type": "chat_list_changed"})
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
 	winners := make([]string, 0, 1)

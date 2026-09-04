@@ -1010,21 +1010,16 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           size: 38,
         ),
         if (myTurn && game.canUndo)
-          OutlinedButton.icon(
+          FramedButton(
             onPressed: _busy ? null : () => unawaited(_undo()),
-            icon: const Icon(Icons.undo_rounded, size: 18),
-            label: Text(l10n.nardyUndoMove),
-            style: AppButtonStyles.of(),
+            icon: Icons.undo_rounded,
+            label: l10n.nardyUndoMove,
           ),
         if (showEndTurn)
-          FilledButton.icon(
+          FramedButton(
             onPressed: _busy ? null : () => unawaited(_endTurn()),
-            icon: Icon(
-              noMoves ? Icons.skip_next_rounded : Icons.check_rounded,
-              size: 18,
-            ),
-            label: Text(noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn),
-            style: AppButtonStyles.of(),
+            icon: noMoves ? Icons.skip_next_rounded : Icons.check_rounded,
+            label: noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn,
           ),
       ],
     );
@@ -1033,11 +1028,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   Widget _buildFinishRow(NardyGameView game, String? me) {
     if (_isOffline) {
       return Center(
-        child: FilledButton.icon(
+        child: FramedButton(
           onPressed: _isRematching ? null : () => unawaited(_rematch()),
-          icon: const Icon(Icons.replay_rounded, size: 18),
-          label: Text(context.l10n.offlinePlayAgain),
-          style: AppButtonStyles.of(),
+          icon: Icons.replay_rounded,
+          label: context.l10n.offlinePlayAgain,
         ),
       );
     }

@@ -34,6 +34,7 @@ import 'package:multigames_client/ui/durak/card_fly.dart';
 import 'package:multigames_client/ui/durak/deck_pile.dart';
 import 'package:multigames_client/ui/durak/playing_card_widget.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
+import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/game_fly_overlay.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
@@ -99,6 +100,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   /// Атаки, которые ещё летят на стол (плейсхолдер скрыт под fly).
   final Set<PlayingCard> _flyingToTable = {};
+
+  /// Карты, которые уже сидят на столе — их нельзя прятать при переводе.
+  final Set<String> _seatedTableCardIds = {};
 
   /// Оптимистичная защита: индекс пары → карта.
   final Map<int, PlayingCard> _optimisticDefends = {};
@@ -352,6 +356,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       // Сыгранные карты не возвращаем: сервер ещё может держать их в руке.
       _optimisticAttacks.clear();
       _optimisticDefends.clear();
+      _seatedTableCardIds.clear();
       _fanAnimDuringBusy = false;
       _suppressFanLayoutAnim = true;
       _frozenFanCardSize = null;
@@ -675,6 +680,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   static String _cardId(PlayingCard c) => '${c.rank.value}-${c.suit.name}';
+
+  void _seatTableCard(PlayingCard card) {
+    _seatedTableCardIds.add(_cardId(card));
+  }
+
+  void _seatTablePairs(Iterable<DurakTablePairApi> table) {
+    for (final pair in table) {
+      _seatTableCard(pair.attack.toPlayingCard());
+      final defense = pair.defense?.toPlayingCard();
+      if (defense != null) _seatTableCard(defense);
+    }
+  }
+
+  void _clearSeatedTableCards() {
+    _seatedTableCardIds.clear();
+  }
+
+  bool _isSeatedTableCard(PlayingCard card) =>
+      _seatedTableCardIds.contains(_cardId(card));
 
   bool _shouldShowTablePair(DurakTablePairApi pair, int _) {
     final atk = pair.attack.toPlayingCard();
@@ -1632,6 +1656,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           if (mounted) {
             setState(() {
               _flyingToTable.removeAll(cards);
+              for (final card in cards) {
+                _seatTableCard(card);
+              }
             });
           }
           await awaitDurakFrame();
@@ -1914,6 +1941,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           setState(() {
             _flyingToTable.removeAll(cards);
             for (final c in cards) {
+              _seatTableCard(c);
               if (seated.contains(c)) _optimisticAttacks.remove(c);
             }
             _removeFromHandOrder(cards, view);
@@ -2837,6 +2865,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _remoteFlyingCardIds.clear();
     _optimisticAttacks.clear();
     _optimisticDefends.clear();
+    _seatedTableCardIds.clear();
     _selected.clear();
     _handOrder = null;
     _deckCountFreeze = null;
@@ -2901,6 +2930,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         (o) => o.attack.rank == p.attack.rank && o.attack.suit == p.attack.suit,
       );
       if (remoteAttacker != view.myIndex &&
+          !_isSeatedTableCard(attack) &&
           durakHideDeferredRemoteAttack(
             existedOnPrevTable: existed,
             optimistic: _optimisticAttacks.contains(attack),
@@ -2962,6 +2992,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (view.table.isNotEmpty) {
       _lastNonEmptyTable = List.of(view.table);
       if (_firstLeadVisible) _firstLeadVisible = false;
+      // Уже лежавшие карты помечаем севшими до любого нового полёта.
+      _seatTablePairs(_prevTable);
+    } else if (!_hidingTable && _takeTableHold == null) {
+      _clearSeatedTableCards();
     }
     // Не глотать отбой/биту во время своего полёта — запомним стол и переиграем.
     if (_fxScheduled || _busy || _localAttackHold || _cardFlightActive) {
@@ -3032,6 +3066,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _prevAttackerIndex = view.attackerIndex;
       _prevDefenderIndex = view.defenderIndex;
       _syncPrevOppHandCounts(view);
+      _seatTablePairs(view.table);
       if (view.firstRound && view.table.isEmpty && !view.isOver) {
         _firstLeadVisible = true;
       }
@@ -4125,7 +4160,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final existed = prev.any(
         (o) => o.attack.rank == p.attack.rank && o.attack.suit == p.attack.suit,
       );
-      if (!existed && !_optimisticAttacks.contains(attack)) {
+      if (!existed &&
+          !_optimisticAttacks.contains(attack) &&
+          !_isSeatedTableCard(attack)) {
         flights.add(_RemoteTableFlight(
           card: attack,
           pairIndex: i,
@@ -4283,7 +4320,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       );
     } finally {
       if (mounted) {
-        setState(() => _remoteFlyingCardIds.remove(id));
+        setState(() {
+          _remoteFlyingCardIds.remove(id);
+          _seatTableCard(flight.card);
+        });
         await awaitDurakFrame();
         if (mounted) await awaitDurakFrame();
       } else {
@@ -5300,11 +5340,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     Widget rematchBlock() {
       if (_isOffline) {
         return Center(
-          child: FilledButton.icon(
+          child: FramedButton(
             onPressed: _isRematching ? null : _rematch,
-            icon: const Icon(Icons.replay_rounded, size: 18),
-            label: Text(context.l10n.offlinePlayAgain),
-            style: AppButtonStyles.of(),
+            icon: Icons.replay_rounded,
+            label: context.l10n.offlinePlayAgain,
           ),
         );
       }
@@ -6152,8 +6191,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// В альбоме плитки крупнее, иначе веер сливается в «иконку».
   Widget _opponentFan(DurakGameView view, int idx, Size cardSize) {
     final serverCount = view.hands.length > idx ? view.hands[idx].count : 0;
-    // Раздача не прячет веер: иначе зависший полёт оставляет пустой слот.
-    final hidden = _leadRevealHiddenSeat == idx ? 1 : 0;
+    final pendingDeal = (_oppDealPending[idx] ?? 0).clamp(0, serverCount);
+    final hidden = pendingDeal + (_leadRevealHiddenSeat == idx ? 1 : 0);
     final shown = durakOpponentFanShownCount(
       serverCount: serverCount,
       hidden: hidden,
@@ -6318,12 +6357,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (!_hidingTable) ...[
         for (var i = 0; i < sourceTable.length; i++)
           if (_shouldShowTakeHoldPair(sourceTable[i], i,
-              usingHold: hold != null))
+                  usingHold: hold != null) &&
+              (hold != null ||
+                  durakSeatedTablePairInLayout(
+                    seated: _isSeatedTableCard(
+                      sourceTable[i].attack.toPlayingCard(),
+                    ),
+                  )))
             Opacity(
               key: ValueKey(
                 'atk-${_cardId(sourceTable[i].attack.toPlayingCard())}',
               ),
-              opacity: durakTableSlotOpacity(
+              opacity: durakSeatedTableSlotOpacity(
+                seated: hold != null ||
+                    _isSeatedTableCard(
+                      sourceTable[i].attack.toPlayingCard(),
+                    ),
                 inFlight: durakTableAttackSlotInFlight(
                   localFlying: _flyingToTable.contains(
                     sourceTable[i].attack.toPlayingCard(),
@@ -7019,7 +7068,7 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
           child: child,
         );
       },
-      child: FilledButton.icon(
+      child: FramedButton(
         onPressed: _pressed
             ? null
             : () async {
@@ -7031,19 +7080,9 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
                   if (mounted) setState(() => _pressed = false);
                 }
               },
-        style: AppButtonStyles.of(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-          radius: 18,
-        ),
-        icon: Icon(widget.icon, size: 20),
-        label: Text(
-          widget.label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 15,
-            letterSpacing: 0.2,
-          ),
-        ),
+        icon: widget.icon,
+        label: widget.label,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
       ),
     );
   }

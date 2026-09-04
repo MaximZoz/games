@@ -3,6 +3,7 @@ export 'app_button.dart';
 export 'app_snack_bar.dart';
 export 'brand_accent_hairline.dart';
 export 'content_card.dart';
+export 'framed_button.dart';
 export 'framed_icon_button.dart';
 export 'gradient_background.dart';
 export 'gradient_card.dart';

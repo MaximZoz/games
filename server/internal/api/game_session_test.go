@@ -63,3 +63,21 @@ func TestClassifyOtherLobbyForJoin(t *testing.T) {
 		t.Fatalf("missing lobby: %v", got)
 	}
 }
+
+func TestGroupChatSessionLive(t *testing.T) {
+	if groupChatSessionLive(false, lobbyStatusInGame, "g1", gameStatusActive) {
+		t.Fatal("missing lobby is dead")
+	}
+	if !groupChatSessionLive(true, lobbyStatusWaitingInvite, "", "") {
+		t.Fatal("waiting lobby is live")
+	}
+	if !groupChatSessionLive(true, lobbyStatusInGame, "g1", gameStatusActive) {
+		t.Fatal("active game is live")
+	}
+	if groupChatSessionLive(true, lobbyStatusInGame, "g1", gameStatusDraw) {
+		t.Fatal("finished in_game lobby is orphan")
+	}
+	if groupChatSessionLive(true, lobbyStatusInGame, "", "") {
+		t.Fatal("in_game without game is orphan")
+	}
+}
