@@ -83,6 +83,60 @@ void main() {
     });
   });
 
+  group('rematchStayOnGameScreen', () {
+    test('1v1 stays on the finished board', () {
+      expect(rematchStayOnGameScreen(playerCount: 2), isTrue);
+      expect(rematchStayOnGameScreen(playerCount: 1), isTrue);
+    });
+
+    test('multi goes to lobby', () {
+      expect(rematchStayOnGameScreen(playerCount: 3), isFalse);
+      expect(rematchStayOnGameScreen(playerCount: 4), isFalse);
+    });
+  });
+
+  group('rematchRealtimeUpdate', () {
+    test('opens the new game when rematch lobby starts', () {
+      final update = rematchRealtimeUpdate(
+        event: {
+          'type': 'lobby_updated',
+          'lobby_id': 'L1',
+          'game_id': 'g2',
+        },
+        rematchLobbyId: 'L1',
+      );
+      expect(update?.startedGameId, 'g2');
+      expect(update?.declined, isFalse);
+    });
+
+    test('marks declined when opponent rejects', () {
+      final update = rematchRealtimeUpdate(
+        event: {
+          'type': 'invite_declined',
+          'lobby_id': 'L1',
+          'closed': true,
+        },
+        rematchLobbyId: 'L1',
+      );
+      expect(update?.declined, isTrue);
+      expect(update?.startedGameId, isNull);
+    });
+
+    test('ignores events for another lobby', () {
+      expect(
+        rematchRealtimeUpdate(
+          event: {
+            'type': 'lobby_updated',
+            'lobby_id': 'other',
+            'game_id': 'g2',
+          },
+          rematchLobbyId: 'L1',
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('rematchLobbyToLeave', () {
     test('returns own lobby when accepting another', () {
       expect(rematchLobbyToLeave('mine', 'theirs'), 'mine');

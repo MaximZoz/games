@@ -93,6 +93,38 @@ bool isBusyWithOtherSession(
   return false;
 }
 
+/// 1×1 реванш остаётся на экране партии; 3+ игроков уходят в лобби.
+bool rematchStayOnGameScreen({required int playerCount}) => playerCount <= 2;
+
+/// Разбор WS-события реванша: стартовала новая партия или соперник отказался.
+class RematchRealtimeUpdate {
+  const RematchRealtimeUpdate({this.startedGameId, this.declined = false});
+
+  final String? startedGameId;
+  final bool declined;
+}
+
+RematchRealtimeUpdate? rematchRealtimeUpdate({
+  required Map<String, dynamic> event,
+  required String? rematchLobbyId,
+}) {
+  final want = rematchLobbyId?.trim() ?? '';
+  if (want.isEmpty) return null;
+  final lobbyId = event['lobby_id']?.toString().trim() ?? '';
+  if (lobbyId != want) return null;
+  final type = event['type']?.toString() ?? '';
+  if (type == 'lobby_updated' || type == 'game_started') {
+    final gameId = event['game_id']?.toString().trim() ?? '';
+    if (gameId.isNotEmpty) {
+      return RematchRealtimeUpdate(startedGameId: gameId);
+    }
+  }
+  if (type == 'invite_declined' && event['closed'] != false) {
+    return const RematchRealtimeUpdate(declined: true);
+  }
+  return null;
+}
+
 /// Своё лобби реванша, которое нужно закрыть перед входом в чужое.
 String? rematchLobbyToLeave(String? ownLobbyId, String incomingLobbyId) {
   final own = ownLobbyId?.trim() ?? '';
