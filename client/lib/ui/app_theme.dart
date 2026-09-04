@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Цвета приложения: один светлый фон, белый в рамках/кнопках, чёрный текст.
+/// Цвета приложения: один светлый фон, белые карточки, чёрный текст.
 class AppColors {
   AppColors._();
 
@@ -15,8 +15,8 @@ class AppColors {
   static const Color accentEnd = Color(0xFF8B5CF6);
   static const Color accentSoft = Color(0xFFE0E7FF);
 
-  /// Текстовые кнопки: почти белый фон и лавандовая рамка.
-  static const Color buttonFill = Color(0xFFF5F5F7);
+  /// Текстовые кнопки и чипы: заливка цветом фона приложения, лавандовая рамка.
+  static const Color buttonFill = surfaceUnified;
   static const Color buttonBorder = Color(0xFFB3B3E6);
 
   /// Цвета для переливающегося градиента фона/тулбара.
@@ -37,7 +37,7 @@ class AppColors {
   ];
 }
 
-/// Единый вид текстовых кнопок: светлый фон, лавандовая рамка, чёрный текст.
+/// Единый вид текстовых кнопок: фон приложения, лавандовая рамка, чёрный текст.
 class AppButtonStyles {
   AppButtonStyles._();
 

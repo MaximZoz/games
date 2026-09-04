@@ -4,12 +4,12 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/app_button.dart';
 
 void main() {
-  test('единый стиль: светлый фон, лавандовая рамка, чёрный текст', () {
+  test('единый стиль: фон приложения, лавандовая рамка, чёрный текст', () {
     final style = AppButtonStyles.of();
     expect(style.backgroundColor!.resolve({}), AppColors.buttonFill);
     expect(style.foregroundColor!.resolve({}), AppColors.textPrimary);
     expect(style.side!.resolve({})!.color, AppColors.buttonBorder);
-    expect(AppColors.buttonFill, const Color(0xFFF5F5F7));
+    expect(AppColors.buttonFill, AppColors.surfaceUnified);
     expect(AppColors.buttonBorder, const Color(0xFFB3B3E6));
   });
 
@@ -43,7 +43,7 @@ void main() {
     expect(outlined.side!.resolve({})!.color, AppColors.buttonBorder);
   });
 
-  testWidgets('AppButton рисует светлый фон и лавандовую рамку', (tester) async {
+  testWidgets('AppButton рисует фон приложения и лавандовую рамку', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

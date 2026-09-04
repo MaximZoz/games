@@ -57,7 +57,7 @@ void main() {
     expect(size.width, 320);
   });
 
-  testWidgets('FramedButton: светлый фон, лавандовая рамка, чёрный текст',
+  testWidgets('FramedButton: фон приложения, лавандовая рамка, чёрный текст',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -76,6 +76,7 @@ void main() {
       ),
     );
     expect(material.color, AppColors.buttonFill);
+    expect(material.color, AppColors.surfaceUnified);
     final shape = material.shape! as RoundedRectangleBorder;
     expect(shape.side.color, AppColors.buttonBorder);
     final text = tester.widget<Text>(find.text('Сохранить'));

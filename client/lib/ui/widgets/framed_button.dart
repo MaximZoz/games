@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Текстовая кнопка: светлый фон, лавандовая рамка, чёрный текст.
+/// Текстовая кнопка: заливка цветом фона приложения, лавандовая рамка, чёрный текст.
 class FramedButton extends StatelessWidget {
   const FramedButton({
     super.key,

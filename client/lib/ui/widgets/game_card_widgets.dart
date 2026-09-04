@@ -228,9 +228,7 @@ class GameCardChip extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.accentSoft.withValues(alpha: 0.6)
-                : AppColors.textSecondary.withValues(alpha: 0.12),
+            color: AppColors.buttonFill,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: selected

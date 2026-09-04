@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
 
-/// Текстовая кнопка: светлый фон, лавандовая рамка, чёрный текст.
+/// Текстовая кнопка: заливка цветом фона приложения, лавандовая рамка, чёрный текст.
 class AppButton extends StatefulWidget {
   const AppButton({
     super.key,
