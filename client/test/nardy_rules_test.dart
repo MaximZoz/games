@@ -139,5 +139,17 @@ void main() {
       ),
       isFalse,
     );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: true, isOver: false),
+      isTrue,
+    );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: false, isOver: false),
+      isFalse,
+    );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: true, isOver: true),
+      isFalse,
+    );
   });
 }

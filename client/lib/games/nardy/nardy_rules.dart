@@ -54,6 +54,13 @@ bool nardyCanEndTurn({
 }) =>
     isMyTurn && !isOver && !needsRoll && !hasLegalMoves;
 
+/// Чекбокс «Автоподтверждение» — только на своём ходе, пока партия идёт.
+bool nardyShouldShowAutoConfirm({
+  required bool isMyTurn,
+  required bool isOver,
+}) =>
+    isMyTurn && !isOver;
+
 /// Показать «Готово» / «Пропустить», только если автоподтверждение выключено.
 bool nardyShouldShowEndTurn({
   required bool autoConfirm,

@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Нарды: чекбокс «Автоподтверждение» только на своём ходе, на ходе соперника его нет
 - Шапка лобби везде одинаковая: «Своя игра» или «Лобби», текст всегда помещается; вход из списка лобби сразу открывает «Лобби», а не свою игру
 - Игровой чат больше не остаётся без игры: чат лобби удаляется, если партия уже окончена
 - Дурак: добор соперника сначала летит из колоды, а не вспыхивает всей рукой
@@ -81,6 +82,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Backgammon: the Auto-confirm checkbox is only shown on your turn
 - Lobby header is the same everywhere: “Private game” or “Lobby”, and the title always fits; joining from the lobby list opens Lobby directly
 - Game chat no longer outlives the match: a lobby chat is removed when the game is already over
 - Durak: opponent draw cards fly from the deck instead of flashing the whole fan first

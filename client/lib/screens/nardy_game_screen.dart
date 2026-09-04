@@ -1062,7 +1062,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           highlight: myTurn,
           size: 38,
         ),
-        if (!game.isOver) _buildAutoConfirmCheck(autoConfirm),
+        if (nardyShouldShowAutoConfirm(isMyTurn: myTurn, isOver: game.isOver))
+          _buildAutoConfirmCheck(autoConfirm),
         if (myTurn && game.canUndo)
           FramedButton(
             onPressed: _busy ? null : () => unawaited(_undo()),
