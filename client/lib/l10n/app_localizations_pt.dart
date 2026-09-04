@@ -732,7 +732,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nardyDoneTurn => 'Pronto';
 
   @override
-  String get nardyNoMoves => 'Sem jogadas — passe a vez';
+  String get nardyNoMoves => 'Sem jogadas';
 
   @override
   String get nardyYourRoll => 'Seu lançamento';

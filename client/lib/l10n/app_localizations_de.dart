@@ -732,7 +732,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nardyDoneTurn => 'Fertig';
 
   @override
-  String get nardyNoMoves => 'Kein Zug möglich — überspringen';
+  String get nardyNoMoves => 'Kein Zug möglich';
 
   @override
   String get nardyYourRoll => 'Dein Wurf';

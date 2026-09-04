@@ -732,7 +732,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get nardyDoneTurn => '완료';
 
   @override
-  String get nardyNoMoves => '둘 수 없음 — 차례를 넘기세요';
+  String get nardyNoMoves => '둘 수 없음';
 
   @override
   String get nardyYourRoll => '당신의 주사위';

@@ -184,6 +184,51 @@ class NardyEngine {
     return engine;
   }
 
+  /// Собрать движок из серверного/репозиторного снимка.
+  ///
+  /// Используется клиентом для локального планирования подсветки: например,
+  /// дубль 4-4-4 должен подсветить для одной шашки не только +4, но и +8/+12,
+  /// если эти промежуточные ходы легальны.
+  factory NardyEngine.fromSnapshot({
+    required String mode,
+    required List<int> board,
+    required List<int> bar,
+    required List<int> off,
+    required int turn,
+    required List<int> dice,
+    required List<int> rolled,
+    required int headMoved,
+    required int turnNo,
+    int winner = -1,
+    String winKind = '',
+    int seq = 0,
+  }) {
+    final normalizedBoard = List<int>.filled(nardyPoints, 0);
+    for (var i = 0; i < board.length && i < nardyPoints; i++) {
+      normalizedBoard[i] = board[i];
+    }
+    return NardyEngine._(
+      mode: nardyNormalizeMode(mode),
+      board: normalizedBoard,
+      bar: [
+        bar.isNotEmpty ? bar[0] : 0,
+        bar.length > 1 ? bar[1] : 0,
+      ],
+      off: [
+        off.isNotEmpty ? off[0] : 0,
+        off.length > 1 ? off[1] : 0,
+      ],
+      turn: turn,
+      dice: List<int>.of(dice),
+      rolled: List<int>.of(rolled),
+      headMoved: headMoved,
+      turnNo: turnNo,
+      winner: winner,
+      winKind: winKind,
+      seq: seq,
+    );
+  }
+
   final String mode;
   final List<int> _board;
   final List<int> _bar;

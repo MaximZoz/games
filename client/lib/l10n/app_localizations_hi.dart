@@ -732,7 +732,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nardyDoneTurn => 'हो गया';
 
   @override
-  String get nardyNoMoves => 'कोई चाल नहीं — बारी छोड़ें';
+  String get nardyNoMoves => 'कोई चाल नहीं';
 
   @override
   String get nardyYourRoll => 'आपका पासा';

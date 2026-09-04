@@ -732,7 +732,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nardyDoneTurn => 'Done';
 
   @override
-  String get nardyNoMoves => 'No moves — skip the turn';
+  String get nardyNoMoves => 'No moves';
 
   @override
   String get nardyYourRoll => 'Your roll';

@@ -732,7 +732,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nardyDoneTurn => 'Bitti';
 
   @override
-  String get nardyNoMoves => 'Hamle yok — sırayı geçin';
+  String get nardyNoMoves => 'Hamle yok';
 
   @override
   String get nardyYourRoll => 'Zarınız';

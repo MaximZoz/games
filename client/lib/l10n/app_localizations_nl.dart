@@ -732,7 +732,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nardyDoneTurn => 'Klaar';
 
   @override
-  String get nardyNoMoves => 'Geen zetten — sla de beurt over';
+  String get nardyNoMoves => 'Geen zetten';
 
   @override
   String get nardyYourRoll => 'Jouw worp';

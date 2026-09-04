@@ -732,7 +732,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nardyDoneTurn => 'Fatto';
 
   @override
-  String get nardyNoMoves => 'Nessuna mossa — salta il turno';
+  String get nardyNoMoves => 'Nessuna mossa';
 
   @override
   String get nardyYourRoll => 'Il tuo lancio';

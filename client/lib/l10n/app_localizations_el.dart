@@ -732,7 +732,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get nardyDoneTurn => 'Έτοιμο';
 
   @override
-  String get nardyNoMoves => 'Καμία κίνηση — παραλείψτε τη σειρά';
+  String get nardyNoMoves => 'Καμία κίνηση';
 
   @override
   String get nardyYourRoll => 'Η ζαριά σας';

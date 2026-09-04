@@ -732,7 +732,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get nardyDoneTurn => 'Færdig';
 
   @override
-  String get nardyNoMoves => 'Ingen træk — spring turen over';
+  String get nardyNoMoves => 'Ingen træk';
 
   @override
   String get nardyYourRoll => 'Dit slag';

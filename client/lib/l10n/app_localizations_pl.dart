@@ -732,7 +732,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get nardyDoneTurn => 'Gotowe';
 
   @override
-  String get nardyNoMoves => 'Brak ruchów — pomiń turę';
+  String get nardyNoMoves => 'Brak ruchów';
 
   @override
   String get nardyYourRoll => 'Twój rzut';
