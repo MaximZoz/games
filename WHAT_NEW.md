@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Правила игр: во всех карточках один заголовок «Правила игры», в том числе у нард
 - Нарды: после «Готово» соперник больше не бросает кубики дважды
 - Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
 - Крестики-нолики: «Найти игру» использует тот же экран ожидания, что и другие игры
@@ -75,6 +76,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Game rules: every card uses the same “Game rules” title, including Backgammon
 - Backgammon: ending a turn no longer makes the opponent appear to roll twice
 - Backgammon: if you are in messages or another tab, your turn now notifies you like the other games
 - Tic-tac-toe: Find game uses the same waiting layout as the other games

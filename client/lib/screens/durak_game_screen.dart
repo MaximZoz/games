@@ -4462,7 +4462,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   void _showRules(DurakGameView view) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(durakRuleLines(
         mode: view.mode,
         players: view.playerIds.length,

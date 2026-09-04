@@ -247,7 +247,6 @@ class _PokerLobbyScreenState extends ConsumerState<PokerLobbyScreen> {
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(pokerRuleLines(
                     players: lobby.maxPlayers,
                     turnTimeSec: lobby.turnTimeSec,

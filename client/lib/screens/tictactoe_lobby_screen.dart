@@ -517,7 +517,6 @@ class _TicTacToeLobbyScreenState extends ConsumerState<TicTacToeLobbyScreen> {
   void _showRules(BuildContext context, LobbyItem lobby) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       closeLabel: context.l10n.commonClose,
       content: buildTictactoeRulesTextWidget(
         variant: lobby.variant,

@@ -258,7 +258,6 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(durakRuleLines(
                     mode: lobby.gameMode,
                     players: lobby.maxPlayers,

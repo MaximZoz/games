@@ -1075,7 +1075,6 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.gamesRulesTitle,
                   content: rulesTextLines(pokerRuleLines(
                     players: game?.playerIds.length ?? 2,
                     turnTimeSec: game?.turnTimeSec ?? 0,

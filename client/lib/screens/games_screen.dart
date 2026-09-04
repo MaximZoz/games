@@ -2153,7 +2153,6 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(durakRuleLines(
         mode: _gameMode,
         players: _players,
@@ -2432,7 +2431,6 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.rulesBattleshipTitle,
       content: rulesTextLines(battleshipRuleLines(
         turnTimeSec: _turnTimeSec,
         stakeBronze: _stakeBronze,
@@ -2637,7 +2635,6 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(pokerRuleLines(
         players: _players < 2 ? 2 : _players,
         turnTimeSec: _turnTimeSec,
@@ -2907,7 +2904,6 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: _players,
         turnTimeSec: _turnTimeSec,
@@ -3232,7 +3228,6 @@ class _TictactoeGameCard extends StatelessWidget {
   void _showRulesInfo(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: _buildRulesWidget(),
       closeLabel: context.l10n.commonClose,
     );
@@ -4010,7 +4005,6 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
   void _showRules(BuildContext context) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.rulesNardyTitle,
       content: rulesTextLines(nardyRuleLines(
         gameMode: _gameMode,
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,

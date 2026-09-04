@@ -253,7 +253,6 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
                 icon: const Icon(Icons.rule_rounded),
                 onPressed: () => showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesNardyTitle,
                   content: rulesTextLines(nardyRuleLines(
                     gameMode: lobby.gameMode,
                     turnTimeSec: lobby.turnTimeSec,

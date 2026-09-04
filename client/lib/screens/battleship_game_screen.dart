@@ -1200,7 +1200,6 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 final game = gameAsync.valueOrNull;
                 showGameRulesDialog(
                   context: context,
-                  title: context.l10n.rulesBattleshipTitle,
                   content: rulesTextLines(battleshipRuleLines(
                     turnTimeSec: game?.turnTimeSec ?? 0,
                     stakeBronze: game?.stakeBronze ?? 2,

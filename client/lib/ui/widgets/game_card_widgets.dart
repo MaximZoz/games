@@ -436,12 +436,10 @@ class _ActionSpinner extends StatelessWidget {
   }
 }
 
-/// Открывает единый диалог правил игры. Единый вид: заголовок, произвольный
-/// widget-контент (например [buildTictactoeRulesTextWidget] или список
-/// строк), кнопка «Закрыть».
+/// Открывает единый диалог правил. Заголовок всегда [gamesRulesTitle] —
+/// карточки и экраны игр не задают свой.
 Future<void> showGameRulesDialog({
   required BuildContext context,
-  required String title,
   required Widget content,
   String? closeLabel,
 }) {
@@ -449,7 +447,7 @@ Future<void> showGameRulesDialog({
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(title),
+      title: Text(context.l10n.gamesRulesTitle),
       content: SingleChildScrollView(child: content),
       actions: [
         TextButton(

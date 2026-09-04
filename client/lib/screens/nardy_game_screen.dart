@@ -783,7 +783,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             surrenderTooltip: context.l10n.gameSurrender,
             onShowRules: () => showGameRulesDialog(
               context: context,
-              title: context.l10n.rulesNardyTitle,
               content: rulesTextLines(nardyRuleLines(
                 gameMode: game?.gameMode ?? nardyModeShort,
                 turnTimeSec: game?.turnTimeSec ?? 0,

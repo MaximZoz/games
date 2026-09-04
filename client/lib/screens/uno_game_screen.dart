@@ -1272,7 +1272,6 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   void _showRules(UnoGameView? game) {
     showGameRulesDialog(
       context: context,
-      title: context.l10n.gamesRulesTitle,
       content: rulesTextLines(unoRuleLines(
         players: game?.players.length ?? 2,
         turnTimeSec: game?.turnTimeSec ?? 0,
