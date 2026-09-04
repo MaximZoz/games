@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "Første trekk kan ikke være i midten",
   "lobbyInviteSentShort": "Sendt",
   "lobbySearchShort": "Søk",
+  "lobbySearchPlayers": "Finn spillere",
   "lobbyInviteDeclinedShort": "Avslått",
   "lobbyInvitesSentWaiting": "Invitasjoner sendt. Venter på svar.",
   "lobbyLinkCopiedHint": "Lim den inn i en chat eller melding til en venn",

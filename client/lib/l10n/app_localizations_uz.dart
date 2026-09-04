@@ -2055,6 +2055,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lobbySearchShort => 'Qidiruv';
 
   @override
+  String get lobbySearchPlayers => 'O‘yinchi qidirish';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Rad etildi';
 
   @override

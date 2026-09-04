@@ -2055,6 +2055,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get lobbySearchShort => 'Іздеу';
 
   @override
+  String get lobbySearchPlayers => 'Ойыншы іздеу';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Бас тарту';
 
   @override

@@ -2055,6 +2055,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lobbySearchShort => '搜索';
 
   @override
+  String get lobbySearchPlayers => '寻找玩家';
+
+  @override
   String get lobbyInviteDeclinedShort => '已拒绝';
 
   @override

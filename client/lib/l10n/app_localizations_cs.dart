@@ -2055,6 +2055,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lobbySearchShort => 'Hledat';
 
   @override
+  String get lobbySearchPlayers => 'Hledat hráče';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Odmítnuto';
 
   @override

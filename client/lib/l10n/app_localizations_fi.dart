@@ -2055,6 +2055,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get lobbySearchShort => 'Haku';
 
   @override
+  String get lobbySearchPlayers => 'Etsi pelaajia';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Hylätty';
 
   @override

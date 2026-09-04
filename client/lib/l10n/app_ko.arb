@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "첫 수는 중앙에 둘 수 없음",
   "lobbyInviteSentShort": "보냄",
   "lobbySearchShort": "검색",
+  "lobbySearchPlayers": "플레이어 찾기",
   "lobbyInviteDeclinedShort": "거절함",
   "lobbyInvitesSentWaiting": "초대가 전송되었습니다. 응답을 기다리는 중.",
   "lobbyLinkCopiedHint": "채팅이나 친구에게 보내는 메시지에 붙여넣으세요",

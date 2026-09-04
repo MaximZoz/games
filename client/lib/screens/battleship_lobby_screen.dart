@@ -245,7 +245,7 @@ class _BattleshipLobbyScreenState extends ConsumerState<BattleshipLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(

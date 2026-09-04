@@ -244,7 +244,7 @@ class _DurakLobbyScreenState extends ConsumerState<DurakLobbyScreen> {
                   : context.l10n.lobbyPrivateGame),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(

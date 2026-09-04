@@ -215,7 +215,7 @@ class _UnoLobbyScreenState extends ConsumerState<UnoLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(

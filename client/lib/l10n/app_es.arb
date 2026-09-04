@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "El primer movimiento no puede ser al centro",
   "lobbyInviteSentShort": "Enviado",
   "lobbySearchShort": "Buscar",
+  "lobbySearchPlayers": "Buscar jugadores",
   "lobbyInviteDeclinedShort": "Rechazado",
   "lobbyInvitesSentWaiting": "Invitaciones enviadas. Esperando respuesta.",
   "lobbyLinkCopiedHint": "Pégalo en un chat o mensaje a un amigo",

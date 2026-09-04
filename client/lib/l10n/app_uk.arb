@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "Перший хід не в центр",
   "lobbyInviteSentShort": "Надіслано",
   "lobbySearchShort": "Пошук",
+  "lobbySearchPlayers": "Пошук гравців",
   "lobbyInviteDeclinedShort": "Відмова",
   "lobbyInvitesSentWaiting": "Запрошення надіслано. Очікуйте відповіді.",
   "lobbyLinkCopiedHint": "Вставте її в чат або повідомлення другу",

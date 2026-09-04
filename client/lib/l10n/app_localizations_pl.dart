@@ -2055,6 +2055,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get lobbySearchShort => 'Szukaj';
 
   @override
+  String get lobbySearchPlayers => 'Szukaj graczy';
+
+  @override
   String get lobbyInviteDeclinedShort => 'Odrzucono';
 
   @override

@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "A primeira jogada não pode ser no centro",
   "lobbyInviteSentShort": "Enviado",
   "lobbySearchShort": "Buscar",
+  "lobbySearchPlayers": "Procurar jogadores",
   "lobbyInviteDeclinedShort": "Recusado",
   "lobbyInvitesSentWaiting": "Convites enviados. A aguardar resposta.",
   "lobbyLinkCopiedHint": "Cole-o num chat ou mensagem a um amigo",

@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "Η πρώτη κίνηση δεν μπορεί να είναι στο κέντρο",
   "lobbyInviteSentShort": "Εστάλη",
   "lobbySearchShort": "Αναζήτηση",
+  "lobbySearchPlayers": "Αναζήτηση παικτών",
   "lobbyInviteDeclinedShort": "Απορρίφθηκε",
   "lobbyInvitesSentWaiting": "Οι προσκλήσεις στάλθηκαν. Αναμονή απάντησης.",
   "lobbyLinkCopiedHint": "Επικολλήστε τον σε συνομιλία ή μήνυμα σε φίλο",

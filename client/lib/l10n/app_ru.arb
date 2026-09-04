@@ -1178,6 +1178,7 @@
   "gamesNoCenterHint": "Первый ход не в центр",
   "lobbyInviteSentShort": "Отправлено",
   "lobbySearchShort": "Поиск",
+  "lobbySearchPlayers": "Поиск игроков",
   "lobbyInviteDeclinedShort": "Отказ",
   "lobbyInvitesSentWaiting": "Приглашения отправлены. Ожидайте ответа.",
   "lobbyLinkCopiedHint": "Вставьте её в чат или сообщение другу",

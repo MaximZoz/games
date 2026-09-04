@@ -239,7 +239,7 @@ class _NardyLobbyScreenState extends ConsumerState<NardyLobbyScreen> {
               ),
             ],
           ),
-          centerTitle: true,
+          centerTitle: false,
           actions: [
             if (lobby != null)
               LobbySearchAction(

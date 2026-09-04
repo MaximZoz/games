@@ -981,6 +981,7 @@
   "gamesNoCenterHint": "Birinchi yurish markazda bo‘lmasin",
   "lobbyInviteSentShort": "Yuborildi",
   "lobbySearchShort": "Qidiruv",
+  "lobbySearchPlayers": "O‘yinchi qidirish",
   "lobbyInviteDeclinedShort": "Rad etildi",
   "lobbyInvitesSentWaiting": "Takliflar yuborildi. Javob kutilmoqda.",
   "lobbyLinkCopiedHint": "Uni chatga yoki do‘stga xabarga joylashtiring",

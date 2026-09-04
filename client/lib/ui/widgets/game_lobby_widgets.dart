@@ -196,7 +196,7 @@ class LobbySearchAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = context.l10n.lobbySearchShort;
+    final label = context.l10n.lobbySearchPlayers;
     final active = !searching && !busy && onStart != null;
     final Widget leading = searching || busy
         ? const SizedBox(
