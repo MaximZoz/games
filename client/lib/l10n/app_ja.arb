@@ -275,7 +275,7 @@
   "nardySkipTurn": "手番をパス",
   "nardyUndoMove": "戻す",
   "nardyDoneTurn": "完了",
-  "nardyNoMoves": "動かせません — 手番をパス",
+  "nardyNoMoves": "動かせません",
   "nardyYourRoll": "あなたの出目",
   "nardyPipsShort": "残り:",
   "nardyYouWonMars": "勝利 — ギャモン！",

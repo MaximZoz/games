@@ -23,7 +23,7 @@ const (
 	// Пауза между шагами бота: бросок и каждая шашка видны отдельно.
 	nardyBotStepDelay = 800 * time.Millisecond
 	// Замок «бегуна» переживает весь ход бота и продлевается на каждом шаге.
-	nardyBotRunTTL = 20 * time.Second
+	nardyBotRunTTL  = 20 * time.Second
 	nardyMaxPlayers = 2
 )
 
@@ -890,10 +890,15 @@ func (h *GamesHandler) saveNardyState(
 		m["turn_actor_idx"] = "-1"
 	} else {
 		turnTimeSec, _ := strconv.Atoi(m["turn_time_sec"])
-		deadline := int64(0)
-		if turnTimeSec > 0 {
-			deadline = time.Now().UTC().Unix() + int64(turnTimeSec)
-		}
+		prevActor, _ := strconv.Atoi(m["turn_actor_idx"])
+		prevDeadline, _ := strconv.ParseInt(m["turn_deadline"], 10, 64)
+		deadline := nardyNextTurnDeadline(
+			turnTimeSec,
+			prevActor,
+			prevDeadline,
+			state.Turn,
+			time.Now().UTC().Unix(),
+		)
 		fields = append(fields,
 			"status", gameStatusActive,
 			"turn_deadline", strconv.FormatInt(deadline, 10),
@@ -906,6 +911,25 @@ func (h *GamesHandler) saveNardyState(
 	m["state"] = encoded
 	h.Rdb.HSet(ctx, "game:"+gameID, fields...)
 	h.Rdb.Expire(ctx, "game:"+gameID, 24*time.Hour)
+}
+
+func nardyNextTurnDeadline(
+	turnTimeSec int,
+	prevActor int,
+	prevDeadline int64,
+	nextActor int,
+	nowUnix int64,
+) int64 {
+	if turnTimeSec <= 0 {
+		return 0
+	}
+	if prevActor == nextActor && prevDeadline > 0 {
+		// Ход в нардах состоит из броска, нескольких шашек, отмен и
+		// подтверждения «Готово». Таймер идёт на весь ход целиком, поэтому
+		// микродействия того же игрока не продлевают дедлайн.
+		return prevDeadline
+	}
+	return nowUnix + int64(turnTimeSec)
 }
 
 func (h *GamesHandler) broadcastNardyState(gameID string, m map[string]string) {
@@ -1163,25 +1187,25 @@ func (h *GamesHandler) nardyViewFor(
 		winnerID = players[state.Winner]
 	}
 	return map[string]any{
-		"id":             gameID,
-		"game_id":        gameID,
-		"game_type":      nardyGameType,
-		"lobby_id":       m["lobby_id"],
-		"game_mode":      nardy.NormalizeMode(state.Mode),
-		"board":          board,
-		"bar":            []int{state.Bar[0], state.Bar[1]},
-		"off":            []int{state.Off[0], state.Off[1]},
-		"dice":           state.Dice,
-		"rolled":         state.Rolled,
-		"turn":           state.Turn,
-		"turn_no":        state.TurnNo,
-		"seq":            state.Seq,
-		"head_moved":     state.HeadMoved,
-		"players":        playerViews,
-		"player_ids":     players,
-		"legal_moves":    legal,
-		"my_index":       seat,
-		"is_my_turn":     seat >= 0 && seat == state.Turn && !over,
+		"id":          gameID,
+		"game_id":     gameID,
+		"game_type":   nardyGameType,
+		"lobby_id":    m["lobby_id"],
+		"game_mode":   nardy.NormalizeMode(state.Mode),
+		"board":       board,
+		"bar":         []int{state.Bar[0], state.Bar[1]},
+		"off":         []int{state.Off[0], state.Off[1]},
+		"dice":        state.Dice,
+		"rolled":      state.Rolled,
+		"turn":        state.Turn,
+		"turn_no":     state.TurnNo,
+		"seq":         state.Seq,
+		"head_moved":  state.HeadMoved,
+		"players":     playerViews,
+		"player_ids":  players,
+		"legal_moves": legal,
+		"my_index":    seat,
+		"is_my_turn":  seat >= 0 && seat == state.Turn && !over,
 		"needs_roll": seat >= 0 && seat == state.Turn && !over &&
 			len(state.Dice) == 0 && !state.CanUndo(),
 		"can_undo":       seat >= 0 && seat == state.Turn && state.CanUndo(),

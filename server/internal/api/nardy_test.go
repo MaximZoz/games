@@ -126,6 +126,46 @@ func TestNardyBotTurnTakesSeveralSteps(t *testing.T) {
 	}
 }
 
+func TestNardyDeadlineDoesNotResetDuringSameTurn(t *testing.T) {
+	const oldDeadline int64 = 1000
+	got := nardyNextTurnDeadline(
+		60,
+		0,
+		oldDeadline,
+		0,
+		2000,
+	)
+	if got != oldDeadline {
+		t.Fatalf("same turn deadline = %d, want %d", got, oldDeadline)
+	}
+}
+
+func TestNardyDeadlineResetsWhenTurnChanges(t *testing.T) {
+	got := nardyNextTurnDeadline(
+		60,
+		0,
+		1000,
+		1,
+		2000,
+	)
+	if got != 2060 {
+		t.Fatalf("new turn deadline = %d, want 2060", got)
+	}
+}
+
+func TestNardyDeadlineNoLimitStaysZero(t *testing.T) {
+	got := nardyNextTurnDeadline(
+		0,
+		0,
+		1000,
+		0,
+		2000,
+	)
+	if got != 0 {
+		t.Fatalf("no-limit deadline = %d, want 0", got)
+	}
+}
+
 func TestNardyIsOverTracksWinner(t *testing.T) {
 	state := nardy.NewGame(nardy.ModeShort)
 	if nardyIsOver(state) {

@@ -732,7 +732,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nardyDoneTurn => 'Xong';
 
   @override
-  String get nardyNoMoves => 'Không có nước đi — bỏ lượt';
+  String get nardyNoMoves => 'Không có nước đi';
 
   @override
   String get nardyYourRoll => 'Lượt gieo của bạn';

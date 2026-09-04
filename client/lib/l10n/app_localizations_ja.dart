@@ -732,7 +732,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nardyDoneTurn => '完了';
 
   @override
-  String get nardyNoMoves => '動かせません — 手番をパス';
+  String get nardyNoMoves => '動かせません';
 
   @override
   String get nardyYourRoll => 'あなたの出目';

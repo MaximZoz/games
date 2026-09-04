@@ -1550,7 +1550,7 @@ abstract class AppLocalizations {
   /// No description provided for @nardyNoMoves.
   ///
   /// In ru, this message translates to:
-  /// **'Ходов нет — пропустите ход'**
+  /// **'Ходов нет'**
   String get nardyNoMoves;
 
   /// No description provided for @nardyYourRoll.

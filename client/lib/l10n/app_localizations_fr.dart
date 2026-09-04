@@ -732,7 +732,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nardyDoneTurn => 'Terminé';
 
   @override
-  String get nardyNoMoves => 'Aucun coup — passez le tour';
+  String get nardyNoMoves => 'Aucun coup';
 
   @override
   String get nardyYourRoll => 'Votre lancer';

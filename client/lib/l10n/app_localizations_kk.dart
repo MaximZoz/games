@@ -732,7 +732,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get nardyDoneTurn => 'Дайын';
 
   @override
-  String get nardyNoMoves => 'Жүріс жоқ — жүрісті өткізіңіз';
+  String get nardyNoMoves => 'Жүріс жоқ';
 
   @override
   String get nardyYourRoll => 'Сіздің лақтыруыңыз';

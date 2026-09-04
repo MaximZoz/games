@@ -732,7 +732,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nardyDoneTurn => 'Listo';
 
   @override
-  String get nardyNoMoves => 'Sin jugadas — pasa el turno';
+  String get nardyNoMoves => 'Sin jugadas';
 
   @override
   String get nardyYourRoll => 'Tu tirada';

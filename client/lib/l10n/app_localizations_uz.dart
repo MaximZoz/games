@@ -732,7 +732,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get nardyDoneTurn => 'Tayyor';
 
   @override
-  String get nardyNoMoves => 'Yurish yo‘q — yurishni o‘tkazing';
+  String get nardyNoMoves => 'Yurish yo‘q';
 
   @override
   String get nardyYourRoll => 'Sizning tashlashingiz';

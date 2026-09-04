@@ -732,7 +732,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get nardyDoneTurn => 'Ferdig';
 
   @override
-  String get nardyNoMoves => 'Ingen trekk — hopp over turen';
+  String get nardyNoMoves => 'Ingen trekk';
 
   @override
   String get nardyYourRoll => 'Ditt kast';

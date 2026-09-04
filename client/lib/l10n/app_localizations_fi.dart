@@ -732,7 +732,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get nardyDoneTurn => 'Valmis';
 
   @override
-  String get nardyNoMoves => 'Ei siirtoja — ohita vuoro';
+  String get nardyNoMoves => 'Ei siirtoja';
 
   @override
   String get nardyYourRoll => 'Sinun heittosi';

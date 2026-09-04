@@ -732,7 +732,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get nardyDoneTurn => 'Hotovo';
 
   @override
-  String get nardyNoMoves => 'Žádné tahy — přeskočte tah';
+  String get nardyNoMoves => 'Žádné tahy';
 
   @override
   String get nardyYourRoll => 'Váš hod';

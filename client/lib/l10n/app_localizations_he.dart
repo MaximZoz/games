@@ -732,7 +732,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get nardyDoneTurn => 'סיום';
 
   @override
-  String get nardyNoMoves => 'אין מהלכים — דלג על התור';
+  String get nardyNoMoves => 'אין מהלכים';
 
   @override
   String get nardyYourRoll => 'ההטלה שלך';

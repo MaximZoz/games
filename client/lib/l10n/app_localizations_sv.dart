@@ -732,7 +732,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get nardyDoneTurn => 'Klar';
 
   @override
-  String get nardyNoMoves => 'Inga drag — hoppa över turen';
+  String get nardyNoMoves => 'Inga drag';
 
   @override
   String get nardyYourRoll => 'Ditt slag';

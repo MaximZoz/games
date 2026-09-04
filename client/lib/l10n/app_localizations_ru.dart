@@ -732,7 +732,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nardyDoneTurn => 'Готово';
 
   @override
-  String get nardyNoMoves => 'Ходов нет — пропустите ход';
+  String get nardyNoMoves => 'Ходов нет';
 
   @override
   String get nardyYourRoll => 'Ваш бросок';

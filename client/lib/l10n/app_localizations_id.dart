@@ -732,7 +732,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get nardyDoneTurn => 'Selesai';
 
   @override
-  String get nardyNoMoves => 'Tidak ada langkah — lewati giliran';
+  String get nardyNoMoves => 'Tidak ada langkah';
 
   @override
   String get nardyYourRoll => 'Lemparan Anda';

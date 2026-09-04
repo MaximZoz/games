@@ -16,6 +16,7 @@ import 'package:multigames_client/games/nardy/nardy_board_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
 import 'package:multigames_client/games/nardy/nardy_dice_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
+import 'package:multigames_client/games/nardy/nardy_move_planner.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
@@ -55,6 +56,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   bool _rematchDeclined = false;
   bool _iDeclinedRematch = false;
   String? _rematchLobbyId;
+  String _autoRollKey = '';
+  NardyGameView? _optimisticGame;
 
   bool get _isOffline =>
       OfflineNardyRegistry.instance.isOffline(widget.gameId);
@@ -126,6 +129,25 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Future<void> _roll() => _run(() => _repo.roll(widget.gameId));
 
+  void _scheduleAutoRoll(NardyGameView game) {
+    if (!game.isMyTurn || !game.needsRoll || game.isOver || _busy) return;
+    final key = '${game.id}:${game.seq}:${game.turn}:${game.turnNo}';
+    if (_autoRollKey == key) return;
+    _autoRollKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final latest = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+      if (latest == null ||
+          latest.isOver ||
+          !latest.isMyTurn ||
+          !latest.needsRoll ||
+          _busy) {
+        return;
+      }
+      unawaited(_roll());
+    });
+  }
+
   Future<void> _endTurn() {
     setState(() => _selectedTrack = null);
     return _run(() => _repo.endTurn(widget.gameId));
@@ -136,9 +158,46 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     return _run(() => _repo.undo(widget.gameId));
   }
 
-  Future<void> _applyMove(NardyMove mv) async {
-    setState(() => _selectedTrack = null);
-    await _run(() => _repo.move(widget.gameId, mv));
+  Future<void> _applyMoves(List<NardyMove> moves) async {
+    if (moves.isEmpty) return;
+    if (_busy || !_turnAction.tryAcquire()) return;
+    final base = _optimisticGame ??
+        ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+    if (base == null) {
+      _turnAction.release();
+      return;
+    }
+    setState(() {
+      _selectedTrack = null;
+      _busy = true;
+    });
+    try {
+      for (var i = 0; i < moves.length; i++) {
+        final current = _optimisticGame ??
+            ref.read(nardyGameProvider(widget.gameId)).valueOrNull ??
+            base;
+        final optimistic = nardyViewAfterMoves(current, [moves[i]]);
+        setState(() => _optimisticGame = optimistic);
+        await _repo.move(widget.gameId, moves[i]);
+        if (i + 1 < moves.length) {
+          await Future<void>.delayed(
+            NardyBoard.moveDuration + const Duration(milliseconds: 80),
+          );
+        }
+      }
+      if (!mounted) return;
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } on GamesException catch (e) {
+      if (!mounted) return;
+      setState(() => _optimisticGame = null);
+      if (!isStaleNotYourTurnError(e) && !isStaleGameOverError(e)) {
+        showAppSnackBar(context, message: e.message, kind: AppSnackKind.error);
+      }
+      if (!_isOffline) ref.invalidate(nardyGameProvider(widget.gameId));
+    } finally {
+      _turnAction.release();
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _onTrackTap(NardyGameView game, int track) {
@@ -156,15 +215,15 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     }
 
     if (selected != null) {
-      final mv = _moveTo(game, selected, track);
-      if (mv != null) {
-        unawaited(_applyMove(mv));
+      final target = _targetTo(game, selected, track);
+      if (target != null) {
+        unawaited(_applyMoves(target.moves));
         return;
       }
     }
 
     // Выбрать можно и только что сходившую шашку — чтобы вернуть её назад.
-    final canSelect = game.movableTracks.contains(track) ||
+    final canSelect = nardyMoveTargetsFor(game, track).isNotEmpty ||
         (played != null && played.to == track);
     if (!canSelect) {
       if (selected != null) setState(() => _selectedTrack = null);
@@ -184,7 +243,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   /// Шашку с этого пункта можно потащить.
   bool _canDragFrom(NardyGameView game, int track) {
     if (_busy || !game.isMyTurn || game.dice.isEmpty) return false;
-    return game.movableTracks.contains(track);
+    return nardyMoveTargetsFor(game, track).isNotEmpty;
   }
 
   /// Шашку отпустили: [track] — пункт, [nardyPoints] — зона снятия.
@@ -196,17 +255,17 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       return;
     }
     if (track >= nardyPoints) {
-      final die = _bearOffDie(game, from);
-      if (die != null) {
-        unawaited(_applyMove(NardyMove(from, die)));
+      final target = _targetTo(game, from, nardyPoints);
+      if (target != null) {
+        unawaited(_applyMoves(target.moves));
         return;
       }
       setState(() => _selectedTrack = null);
       return;
     }
-    final mv = _moveTo(game, from, track);
-    if (mv != null) {
-      unawaited(_applyMove(mv));
+    final target = _targetTo(game, from, track);
+    if (target != null) {
+      unawaited(_applyMoves(target.moves));
       return;
     }
     // Бросили мимо — оставляем шашку выбранной, подсветка целей уже видна.
@@ -225,36 +284,19 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   void _onBearOffTap(NardyGameView game) {
     final selected = _selectedTrack;
     if (selected == null || selected == nardyBarTrack) return;
-    final die = _bearOffDie(game, selected);
-    if (die == null) return;
-    unawaited(_applyMove(NardyMove(selected, die)));
+    final target = _targetTo(game, selected, nardyPoints);
+    if (target == null) return;
+    unawaited(_applyMoves(target.moves));
   }
 
-  /// Кубик, которым выбранная шашка встаёт на [track]; `null` — нельзя.
-  NardyMove? _moveTo(NardyGameView game, int from, int track) {
-    for (final die in game.diceFrom(from)) {
-      if (nardyDestinationTrack(from, die) == track &&
-          !nardyIsBearOff(from, die)) {
-        return NardyMove(from, die);
-      }
-    }
-    return null;
-  }
-
-  int? _bearOffDie(NardyGameView game, int from) {
-    for (final die in game.diceFrom(from)) {
-      if (nardyIsBearOff(from, die)) return die;
-    }
-    return null;
-  }
+  NardyMoveTarget? _targetTo(NardyGameView game, int from, int track) =>
+      nardyMoveTargetsFor(game, from)[track];
 
   Set<int> _targetsFor(NardyGameView game) {
     final from = _selectedTrack;
     if (from == null) return const {};
-    return {
-      for (final die in game.diceFrom(from))
-        if (!nardyIsBearOff(from, die)) nardyDestinationTrack(from, die),
-    };
+    final targets = nardyMoveTargetsFor(game, from);
+    return targets.keys.where((track) => track < nardyPoints).toSet();
   }
 
   String _statusText(NardyGameView game) {
@@ -619,6 +661,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       final before = previous?.valueOrNull;
       final after = next.valueOrNull;
       if (after == null) return;
+      final optimistic = _optimisticGame;
+      if (optimistic != null &&
+          optimistic.id == after.id &&
+          (after.seq >= optimistic.seq || after.isOver)) {
+        setState(() => _optimisticGame = null);
+      }
       for (final cue in nardySfxCues(before, after)) {
         switch (cue) {
           case NardySfxCue.roll:
@@ -631,7 +679,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       }
     });
 
-    final game = gameAsync.valueOrNull;
+    final rawGame = gameAsync.valueOrNull;
+    final game = _optimisticGame?.id == rawGame?.id ? _optimisticGame : rawGame;
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
@@ -686,7 +735,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             child: gameAsync.when(
               skipLoadingOnReload: true,
               skipLoadingOnRefresh: true,
-              data: (game) => _buildGame(game, me),
+              data: (game) => _buildGame(
+                _optimisticGame?.id == game.id ? _optimisticGame! : game,
+                me,
+              ),
               loading: () => const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
@@ -707,6 +759,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Widget _buildGame(NardyGameView game, String? me) {
+    _scheduleAutoRoll(game);
     final myTurn = game.isMyTurn && !game.isOver;
     final landscape = isPhoneLandscape(context) ||
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
@@ -727,9 +780,8 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   /// Доска занимает всю доступную высоту, полоса «осталось» — её ширину.
   Widget _buildBoard(NardyGameView game) {
     final selected = _selectedTrack;
-    final canBearOff = selected != null &&
-        selected != nardyBarTrack &&
-        _bearOffDie(game, selected) != null;
+    final canBearOff =
+        selected != null && _targetTo(game, selected, nardyPoints) != null;
     const barHeight = 26.0;
     const barGap = 6.0;
     return LayoutBuilder(
@@ -770,19 +822,28 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Widget _buildPortrait(NardyGameView game, String? me, bool myTurn) {
+    final bottomPanelHeight = game.isOver ? 156.0 : 118.0;
     return Column(
       children: [
         _buildOpponentRow(game, me),
         const SizedBox(height: 6),
         Expanded(child: _buildBoard(game)),
         const SizedBox(height: 6),
-        _buildStatusLine(game, myTurn),
-        const SizedBox(height: 6),
-        _buildControls(game, myTurn),
-        if (game.isOver) ...[
-          const SizedBox(height: 8),
-          _buildFinishRow(game, me),
-        ],
+        SizedBox(
+          height: bottomPanelHeight,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildStatusLine(game, myTurn),
+              const SizedBox(height: 6),
+              _buildControls(game, myTurn),
+              if (game.isOver) ...[
+                const SizedBox(height: 8),
+                _buildFinishRow(game, me),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -867,7 +928,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
   Widget _buildControls(NardyGameView game, bool myTurn) {
     final l10n = context.l10n;
-    final showRoll = myTurn && game.needsRoll;
     final showEndTurn = myTurn && !game.needsRoll && game.legalMoves.isEmpty;
     final noMoves = showEndTurn && game.currentTurn.isEmpty;
     return Wrap(
@@ -883,16 +943,6 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           highlight: myTurn,
           size: 38,
         ),
-        if (showRoll)
-          FilledButton.icon(
-            onPressed: _busy ? null : () => unawaited(_roll()),
-            icon: const Icon(Icons.casino_rounded, size: 18),
-            label: Text(l10n.nardyRoll),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-            ),
-          ),
         if (myTurn && game.canUndo)
           OutlinedButton.icon(
             onPressed: _busy ? null : () => unawaited(_undo()),
