@@ -1378,6 +1378,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           Positioned.fill(
             child: _UnoRoundScoreOverlay(
               game: game,
+              // Партия закончилась — итог панелью снизу, без затемнения:
+              // видно, с кем играл, и можно открыть его профиль.
+              anchorBottom: game.isOver,
               nameOf: (player, index) => _playerName(player, index),
               onContinue: _busy
                   ? null
@@ -2140,11 +2143,15 @@ class _UnoRoundScoreOverlay extends StatelessWidget {
     required this.game,
     required this.nameOf,
     this.onContinue,
+    this.anchorBottom = false,
   });
 
   final UnoGameView game;
   final String Function(UnoPlayerView player, int index) nameOf;
   final VoidCallback? onContinue;
+
+  /// Панель снизу без затемнения — плашки игроков остаются видимыми.
+  final bool anchorBottom;
 
   @override
   Widget build(BuildContext context) {
@@ -2157,12 +2164,17 @@ class _UnoRoundScoreOverlay extends StatelessWidget {
         ? nameOf(game.players[winnerIndex], winnerIndex)
         : l10n.commonPlayer;
     return Material(
-      color: Colors.black.withValues(alpha: 0.55),
-      child: Center(
+      color: anchorBottom
+          ? Colors.transparent
+          : Colors.black.withValues(alpha: 0.55),
+      child: Align(
+        alignment:
+            anchorBottom ? Alignment.bottomCenter : Alignment.center,
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: narrow ? 340 : 420,
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            maxHeight: MediaQuery.sizeOf(context).height *
+                (anchorBottom ? 0.6 : 0.85),
           ),
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),

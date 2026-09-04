@@ -1103,39 +1103,45 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                 heroBottom: showEndDialog ? 12.0 : heroLift,
               ),
             ),
+            // Итог — панелью снизу, без затемнения: плашки соперников видно
+            // и после партии, по ним можно открыть профиль, чат и «в друзья».
             if (showEndDialog)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.42),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        narrow ? 16 : 28,
-                        24,
-                        narrow ? 16 : 28,
-                        bottomPad + 8,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      narrow ? 12 : 24,
+                      0,
+                      narrow ? 12 : 24,
+                      bottomPad + 8,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 360,
+                        maxHeight: constraints.maxHeight * 0.56,
                       ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        child: GradientCard(
-                          animate: false,
-                          margin: EdgeInsets.zero,
-                          padding: EdgeInsets.fromLTRB(
-                            narrow ? 16 : 20,
-                            18,
-                            narrow ? 16 : 20,
-                            16,
-                          ),
-                          // Статус + награда + реванш — одно окно; в альбоме
-                          // высоты мало, поэтому окно ещё и скроллится.
-                          child: SingleChildScrollView(
-                            child: _buildEndDialog(
-                              game,
-                              status: status,
-                              showReward: showReward,
-                              rewardBronze: rewardBronze,
-                              narrow: narrow,
-                            ),
+                      child: GradientCard(
+                        animate: false,
+                        margin: EdgeInsets.zero,
+                        padding: EdgeInsets.fromLTRB(
+                          narrow ? 16 : 20,
+                          18,
+                          narrow ? 16 : 20,
+                          16,
+                        ),
+                        // Статус + награда + реванш — одно окно; в альбоме
+                        // высоты мало, поэтому окно ещё и скроллится.
+                        child: SingleChildScrollView(
+                          child: _buildEndDialog(
+                            game,
+                            status: status,
+                            showReward: showReward,
+                            rewardBronze: rewardBronze,
+                            narrow: narrow,
                           ),
                         ),
                       ),
