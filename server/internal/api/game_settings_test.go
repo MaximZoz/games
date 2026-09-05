@@ -233,7 +233,7 @@ func TestNormalizeCheckersGameSettings(t *testing.T) {
 	if errMsg != "" {
 		t.Fatal(errMsg)
 	}
-	if s2.GameMode != "corners" || s2.MaxPlayers != 2 {
+	if s2.GameMode != "russian" || s2.Variant != "russian" || s2.MaxPlayers != 2 {
 		t.Fatalf("mode=%s players=%d", s2.GameMode, s2.MaxPlayers)
 	}
 	s3, errMsg := normalizeGameSettings(gameSettingsBody{
@@ -245,8 +245,8 @@ func TestNormalizeCheckersGameSettings(t *testing.T) {
 	if errMsg != "" {
 		t.Fatal(errMsg)
 	}
-	if s3.GameMode != "english" {
-		t.Fatalf("english mode: %s", s3.GameMode)
+	if s3.GameMode != "russian" {
+		t.Fatalf("unknown mode must fall back to russian: %s", s3.GameMode)
 	}
 }
 

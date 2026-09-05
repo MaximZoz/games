@@ -64,4 +64,7 @@ func TestDefaultRegistry(t *testing.T) {
 	if r.Normalize("unknown") != store.GameTypeTicTacToe {
 		t.Fatalf("normalize unknown")
 	}
+	if !r.Has(store.GameTypeCheckers) {
+		t.Fatalf("expected checkers, got %v", r.IDs())
+	}
 }

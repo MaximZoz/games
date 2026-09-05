@@ -720,7 +720,21 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
   String get rulesCheckersIntro => '8×8 棋盘，两人对抗。';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String get rulesCheckersPlayRussian => '俄式跳棋：各 12 枚棋子放在深色格。兵斜向前走，可向前或向后跳吃。王可飞任意格。必须吃子，并选择吃子最多的路线。吃光对方棋子或让对方无子可走即胜。';

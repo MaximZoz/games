@@ -720,7 +720,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get rulesCheckersIntro => 'An 8×8 board. Two players.';
+  String rulesCheckersTime(String time) {
+    return 'Time per move: $time. If time runs out — you lose.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'An 8×8 board, 12 pieces each on dark squares. Men move forward diagonally and capture in any direction. Kings fly along the diagonal.';
+
+  @override
+  String get rulesCheckersPlay => 'Captures are mandatory. If you can capture again, you continue with the same piece. A man that reaches the last rank becomes a king.';
+
+  @override
+  String get rulesCheckersWin => 'In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Offline: a game against the bot.';
 
   @override
   String get rulesCheckersPlayRussian => 'Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory — take the longest sequence. Win by capturing all enemy pieces or leaving the opponent with no moves.';

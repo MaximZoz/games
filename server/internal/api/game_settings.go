@@ -47,7 +47,8 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
 	}
-	if s.GameType == store.GameTypeNardy {
+	if s.GameType == store.GameTypeNardy ||
+		s.GameType == store.GameTypeCheckers {
 		out["max_players"] = 2
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
@@ -252,36 +253,14 @@ func normalizeNardySettings(body gameSettingsBody) (store.UserGameSettings, stri
 	}, ""
 }
 
-func normalizeCheckersMode(raw string) string {
-	switch strings.TrimSpace(strings.ToLower(raw)) {
-	case "english":
-		return "english"
-	case "giveaway":
-		return "giveaway"
-	case "corners":
-		return "corners"
-	case "russian":
-		return "russian"
-	default:
-		return ""
-	}
-}
-
-func resolveCheckersMode(gameMode, variant string) string {
-	if mode := normalizeCheckersMode(gameMode); mode != "" {
-		return mode
-	}
-	if mode := normalizeCheckersMode(variant); mode != "" {
-		return mode
-	}
-	return "russian"
-}
-
 func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, string) {
 	if !validTurnTimeSec[body.TurnTimeSec] {
 		return store.UserGameSettings{}, "invalid turn_time_sec"
 	}
-	mode := resolveCheckersMode(body.GameMode, body.Variant)
+	mode := strings.TrimSpace(strings.ToLower(body.GameMode))
+	if mode != "giveaway" {
+		mode = "russian"
+	}
 	stake := body.StakeBronze
 	if stake < 2 {
 		stake = 2
@@ -289,7 +268,7 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 	return store.UserGameSettings{
 		GameType:             store.GameTypeCheckers,
 		TurnTimeSec:          body.TurnTimeSec,
-		GridSize:             3,
+		GridSize:             8,
 		Variant:              mode,
 		SwapRule:             false,
 		FirstMoveRestriction: false,
@@ -363,7 +342,9 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		s.Variant = s.GameMode
 	} else if gameType == store.GameTypeCheckers {
 		s.MaxPlayers = 2
-		s.GameMode = resolveCheckersMode(s.GameMode, s.Variant)
+		if s.GameMode != "giveaway" {
+			s.GameMode = "russian"
+		}
 		s.Variant = s.GameMode
 	}
 	w.Header().Set("Content-Type", "application/json")

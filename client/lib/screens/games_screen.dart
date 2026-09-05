@@ -14,6 +14,8 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
@@ -770,6 +772,44 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
+    if (inv.gameType == 'checkers') {
+      try {
+        final res =
+            await ref.read(checkersRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'checkers',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'checkers');
+          if (context.mounted) {
+            context.go('/games/checkers/game/$gameId');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'checkers',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/checkers/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -885,6 +925,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         l10n: context.l10n,
       ));
     }
+    if (inv.isCheckers) {
+      return rulesTextLines(checkersRuleLines(
+        gameMode: inv.durakMode,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -982,6 +1030,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         await ref.read(unoRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'nardy') {
         await ref.read(nardyRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'checkers') {
+        await ref.read(checkersRepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -1226,6 +1276,56 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             gameType: 'nardy',
             mode: mode,
           );
+        }
+      } on GamesException catch (error) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(error)
+              ? finishCurrentGameMessage
+              : formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          showAppSnackBar(
+            context,
+            message: formatUserError(error),
+            kind: AppSnackKind.error,
+          );
+        }
+      }
+      return;
+    }
+    if (gameType == 'checkers') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res =
+            await ref.read(checkersRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'checkers',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'checkers');
+          context.go('/games/checkers/game/$gameId');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'checkers',
+                ),
+              );
+          context.go('/games/checkers/lobby/$lobbyId?mode=invite');
         }
       } on GamesException catch (error) {
         if (!context.mounted) return;
@@ -1744,7 +1844,9 @@ class _LobbiesPageContent extends ConsumerWidget {
                                           Icon(
                                             lobby.isBattleship
                                                 ? Icons.grid_on_rounded
-                                                : lobby.isDurak || lobby.isNardy
+                                                : lobby.isDurak ||
+                                                        lobby.isNardy ||
+                                                        lobby.isCheckers
                                                     ? Icons.swap_horiz_rounded
                                                     : Icons.extension_rounded,
                                             size: 14,
@@ -3743,10 +3845,10 @@ class _InviteCard extends ConsumerWidget {
                                 child: Icon(
                                   inv.isBattleship
                                       ? Icons.grid_on_rounded
-                                      : inv.isDurak
+                                      : inv.isDurak ||
+                                              inv.isNardy ||
+                                              inv.isCheckers
                                           ? Icons.swap_horiz_rounded
-                                          : inv.isNardy
-                                              ? Icons.swap_horiz_rounded
                                           : Icons.extension_rounded,
                                   size: iconSz,
                                   color: AppColors.textSecondary,
@@ -4077,7 +4179,6 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
   }
 }
 
-/// Карточка «Шашки» — 2 игрока, режимы, время и ставка; игра в разработке.
 class _CheckersGameCard extends ConsumerStatefulWidget {
   const _CheckersGameCard({
     required this.isOffline,
@@ -4094,8 +4195,10 @@ class _CheckersGameCard extends ConsumerStatefulWidget {
 class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
   int _turnTimeSec = 60;
   int _stakeBronze = 2;
-  String _gameMode = checkersModeRussian;
+  String _gameMode = CheckersEngine.modeRussian;
   bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
 
   @override
   void initState() {
@@ -4114,7 +4217,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
       _turnTimeSec =
           turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
-      _gameMode = checkersNormalizeMode(saved.gameMode);
+      _gameMode = CheckersEngine.normalizeMode(saved.gameMode);
     });
   }
 
@@ -4148,8 +4251,80 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
   }
 
   void _cycleGameMode() {
-    setState(() => _gameMode = checkersNextMode(_gameMode));
+    setState(() {
+      _gameMode = _gameMode == CheckersEngine.modeRussian
+          ? CheckersEngine.modeGiveaway
+          : CheckersEngine.modeRussian;
+    });
     _persistSettings();
+  }
+
+  Future<void> _create(String mode) async {
+    if (_creating || _finding) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final result = await ref.read(checkersRepositoryProvider).createLobby(
+            mode: mode,
+            gameMode: _gameMode,
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+          );
+      if (!mounted) return;
+      final gameId = result.gameId?.trim() ?? '';
+      final lobbyId = result.lobbyId.trim();
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'checkers',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'checkers');
+        context.push('/games/checkers/game/$gameId');
+      } else if (lobbyId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'checkers',
+              ),
+            );
+        context.push('/games/checkers/lobby/$lobbyId?mode=$mode');
+      } else {
+        throw GamesException(503, context.l10n.commonTryLater);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _playOffline() {
+    disposeAllOfflineGameSessions();
+    context.push(
+      Uri(
+        path: '/games/checkers/offline',
+        queryParameters: {'mode': _gameMode},
+      ).toString(),
+    );
   }
 
   @override
@@ -4164,7 +4339,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
             ? saved.turnTimeSec
             : 60;
         _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
-        _gameMode = checkersNormalizeMode(saved.gameMode);
+        _gameMode = CheckersEngine.normalizeMode(saved.gameMode);
       });
     });
     final available = widget.stakeOptionsList.isEmpty
@@ -4181,7 +4356,6 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-
     final chips = <Widget>[
       GameCardChip(
         selected: false,
@@ -4204,11 +4378,12 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
           selected: true,
           icon: Icons.timer_outlined,
           label: formatTurnTime(_turnTimeSec),
-          onTap: _cycleTurnTime,
+          onTap: _creating || _finding ? null : _cycleTurnTime,
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
     ];
+    final busy = _creating || _finding;
 
     return GameCardShell(
       isDesktop: isDesktop,
@@ -4220,8 +4395,9 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline ? null : _cycleStake,
-        onInfoTap: () => _showRules(context),
+        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -4229,13 +4405,15 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
       actions: GameCardActionsRow(
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
-        onCreate: null,
+        isCreating: _creating,
+        onCreate: () => _create('invite'),
         findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
-        onFind: null,
-        inDevelopment: true,
+        isFinding: _finding,
+        onFind: () => _create('matchmake'),
         offline: widget.isOffline,
         offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: _playOffline,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -4249,6 +4427,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
         gameMode: _gameMode,
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
         stakeBronze: widget.isOffline ? 0 : _stakeBronze,
+        offline: widget.isOffline,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,

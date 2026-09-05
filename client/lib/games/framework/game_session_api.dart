@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/battleship/battleship_provider.dart';
 import 'package:multigames_client/games/battleship/battleship_repository.dart';
+import 'package:multigames_client/games/checkers/checkers_provider.dart';
+import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/games/durak/durak_provider.dart';
 import 'package:multigames_client/games/durak/durak_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
@@ -29,6 +31,7 @@ class GameSessionApi {
   PokerRepository get _poker => _ref.read(pokerRepositoryProvider);
   UnoRepository get _uno => _ref.read(unoRepositoryProvider);
   NardyRepository get _nardy => _ref.read(nardyRepositoryProvider);
+  CheckersRepository get _checkers => _ref.read(checkersRepositoryProvider);
 
   Future<void> leaveLobby(String lobbyId, {required String gameType}) async {
     final gt = gameRegistry.normalizeId(gameType);
@@ -50,6 +53,10 @@ class GameSessionApi {
     }
     if (gt == 'nardy') {
       await _nardy.leaveLobby(lobbyId);
+      return;
+    }
+    if (gt == 'checkers') {
+      await _checkers.leaveLobby(lobbyId);
       return;
     }
     await _ttt.leaveLobby(lobbyId);
@@ -79,6 +86,10 @@ class GameSessionApi {
       await _nardy.forfeit(gameId);
       return;
     }
+    if (gt == 'checkers') {
+      await _checkers.forfeit(gameId);
+      return;
+    }
     await _ttt.forfeitGame(gameId);
   }
 
@@ -92,6 +103,10 @@ class GameSessionApi {
       // Морской бой и нарды не поддерживают ничью.
       return;
     }
+    if (gt == 'checkers') {
+      await _checkers.offerDraw(gameId);
+      return;
+    }
     await _ttt.offerDraw(gameId);
   }
 
@@ -102,6 +117,10 @@ class GameSessionApi {
       return;
     }
     if (gt == 'battleship' || gt == 'nardy') {
+      return;
+    }
+    if (gt == 'checkers') {
+      await _checkers.acceptDraw(gameId);
       return;
     }
     await _ttt.acceptDraw(gameId);
@@ -124,6 +143,10 @@ class GameSessionApi {
     try {
       await _nardy.getGame(gameId);
       return 'nardy';
+    } catch (_) {}
+    try {
+      await _checkers.getGame(gameId);
+      return 'checkers';
     } catch (_) {}
     try {
       await _durak.getGame(gameId);

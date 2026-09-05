@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"multigames/server/internal/checkers"
 	"multigames/server/internal/nardy"
 	"multigames/server/internal/store"
 )
@@ -50,6 +51,15 @@ func applyLobbyTypeFields(item *LobbyItem, m map[string]string) {
 			raw = strings.TrimSpace(m["variant"])
 		}
 		mode := nardy.NormalizeMode(raw)
+		item.Variant = ""
+		item.GridSize = 0
+		item.GameMode = mode
+	case store.GameTypeCheckers:
+		raw := strings.TrimSpace(m["game_mode"])
+		if raw == "" {
+			raw = strings.TrimSpace(m["variant"])
+		}
+		mode := checkers.NormalizeMode(raw)
 		item.Variant = ""
 		item.GridSize = 0
 		item.GameMode = mode

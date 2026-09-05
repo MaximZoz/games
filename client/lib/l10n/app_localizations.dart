@@ -1523,11 +1523,35 @@ abstract class AppLocalizations {
   /// **'Режим: {mode}.'**
   String rulesCheckersMode(String mode);
 
+  /// No description provided for @rulesCheckersTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
+  String rulesCheckersTime(String time);
+
   /// No description provided for @rulesCheckersIntro.
   ///
   /// In ru, this message translates to:
-  /// **'Доска 8×8. Играют двое.'**
+  /// **'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.'**
   String get rulesCheckersIntro;
+
+  /// No description provided for @rulesCheckersPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.'**
+  String get rulesCheckersPlay;
+
+  /// No description provided for @rulesCheckersWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.'**
+  String get rulesCheckersWin;
+
+  /// No description provided for @rulesCheckersOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesCheckersOfflineBot;
 
   /// No description provided for @rulesCheckersPlayRussian.
   ///

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
@@ -13,56 +14,54 @@ void main() {
 
   test('режимы шашек нормализуются и подписываются правильно', () {
     final t = l10n();
-    expect(checkersNormalizeMode(null), checkersModeRussian);
-    expect(checkersNormalizeMode('english'), checkersModeEnglish);
-    expect(checkersNormalizeMode('giveaway'), checkersModeGiveaway);
-    expect(checkersNormalizeMode('corners'), checkersModeCorners);
-    expect(checkersNormalizeMode('poddavki'), checkersModeRussian);
-    expect(checkersModeLabel(checkersModeRussian, t), t.gamesCheckersModeRussian);
-    expect(checkersModeLabel(checkersModeEnglish, t), t.gamesCheckersModeEnglish);
+    expect(CheckersEngine.normalizeMode(null), CheckersEngine.modeRussian);
+    expect(CheckersEngine.normalizeMode('english'), CheckersEngine.modeRussian);
     expect(
-        checkersModeLabel(checkersModeGiveaway, t), t.gamesCheckersModeGiveaway);
-    expect(checkersModeLabel(checkersModeCorners, t), t.gamesCheckersModeCorners);
+        CheckersEngine.normalizeMode('giveaway'), CheckersEngine.modeGiveaway);
+    expect(CheckersEngine.normalizeMode('corners'), CheckersEngine.modeRussian);
+    expect(
+        checkersModeLabel(CheckersEngine.modeRussian, t),
+        t.gamesCheckersModeRussian);
+    expect(
+        checkersModeLabel(CheckersEngine.modeGiveaway, t),
+        t.gamesCheckersModeGiveaway);
     expect(t.gamesCheckersModeGiveaway, 'Поддавки');
-    expect(t.gamesCheckersModeEnglish, 'Английские');
-  });
-
-  test('цикл режимов идёт русские → английские → поддавки → уголки', () {
-    expect(checkersNextMode(checkersModeRussian), checkersModeEnglish);
-    expect(checkersNextMode(checkersModeEnglish), checkersModeGiveaway);
-    expect(checkersNextMode(checkersModeGiveaway), checkersModeCorners);
-    expect(checkersNextMode(checkersModeCorners), checkersModeRussian);
   });
 
   test('правила содержат игроков, режим, время и ставку', () {
     final t = l10n();
     final russian = checkersRuleLines(
-      gameMode: checkersModeRussian,
+      gameMode: CheckersEngine.modeRussian,
       turnTimeSec: 60,
       stakeBronze: 10,
       l10n: t,
     );
     expect(russian, contains(t.rulesCheckersPlayers));
     expect(russian, contains(t.rulesCheckersMode(t.gamesCheckersModeRussian)));
-    expect(russian, contains(t.rulesCheckersPlayRussian));
-    expect(russian, isNot(contains(t.rulesCheckersPlayEnglish)));
+    expect(russian, contains(t.rulesCheckersPlay));
+    expect(russian, contains(t.rulesCheckersWin));
 
     final giveaway = checkersRuleLines(
-      gameMode: checkersModeGiveaway,
+      gameMode: CheckersEngine.modeGiveaway,
       turnTimeSec: 0,
       stakeBronze: 0,
       l10n: t,
     );
-    expect(giveaway, contains(t.rulesCheckersPlayGiveaway));
-    expect(giveaway, contains(t.rulesNoTimeLimit));
+    expect(giveaway, contains(t.rulesCheckersMode(t.gamesCheckersModeGiveaway)));
+    expect(giveaway, contains(t.rulesCheckersWin));
 
-    final corners = checkersRuleLines(
-      gameMode: checkersModeCorners,
+    final offline = checkersRuleLines(
+      gameMode: CheckersEngine.modeRussian,
       turnTimeSec: 20,
       stakeBronze: 2,
       l10n: t,
+      offline: true,
     );
-    expect(corners, contains(t.rulesCheckersPlayCorners));
+    expect(offline, contains(t.rulesCheckersOfflineBot));
+    expect(
+      offline.any((line) => line.contains(t.rulesCheckersTime(''))),
+      isFalse,
+    );
   });
 
   testWidgets('диалог правил шашек использует общий заголовок', (tester) async {
@@ -79,7 +78,7 @@ void main() {
                   context: context,
                   content: rulesTextLines(
                     checkersRuleLines(
-                      gameMode: checkersModeEnglish,
+                      gameMode: CheckersEngine.modeRussian,
                       turnTimeSec: 600,
                       stakeBronze: 2,
                       l10n: context.l10n,
@@ -98,6 +97,6 @@ void main() {
 
     expect(find.text('Правила игры'), findsOneWidget);
     expect(find.textContaining('Игроки: 2.'), findsOneWidget);
-    expect(find.textContaining('Английские шашки'), findsOneWidget);
+    expect(find.textContaining('Русские'), findsOneWidget);
   });
 }

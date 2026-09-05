@@ -720,7 +720,21 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
   String get rulesCheckersIntro => 'Дошка 8×8. Грають двоє.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String get rulesCheckersPlayRussian => 'Російські шашки: у кожного 12 шашок на темних клітинах. Прості ходять по діагоналі вперед, а б’ють уперед і назад. Дамка літає на будь-яке число клітин. Бій обов’язковий — обирають взяття з найбільшою кількістю шашок. Перемагає той, хто з’їв усі шашки суперника або позбавив його ходів.';

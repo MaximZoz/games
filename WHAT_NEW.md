@@ -3,6 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
+- Шашки: русские и поддавки — лобби, поиск, инвайт, бот, ничья, сдача, реванш и статистика, как в других играх
 - Морской бой с ботом: после вашего хода пауза 1 с, после хода бота ещё 1 с — и только тогда меняется поле
 - Задания (полная анкета, 5 друзей, 10 игр) переехали из достижений в «Монеты»
 - Нарды: чекбокс «Автоподтверждение» только на своём ходе, на ходе соперника его нет
@@ -84,6 +85,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
+- Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games
 - Battleship vs bot: a 1 s pause after your shot, then another 1 s after the bot shoots — only then does the board switch
 - Tasks (complete profile, 5 friends, 10 games) moved from Achievements into Coins
 - Backgammon: the Auto-confirm checkbox is only shown on your turn
