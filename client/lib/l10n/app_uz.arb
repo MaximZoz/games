@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Doska 8×8. Ikki o‘yinchi.",
-  "rulesCheckersPlayRussian": "Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy — eng ko‘p tosh olinadigan yo‘l tanlanadi. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.",
+  "rulesCheckersPlay": "Urish majburiy. Damka va oddiy tosh qo‘ngan katakdan yana ura olsa, to‘xtamasdan davom ettirishi shart. Yo‘nalishlar ko‘p bo‘lsa, istalganini tanlash mumkin, eng uzun yo‘l shart emas. Oxirgi qatorga yetgan oddiy tosh damkaga aylanadi.",
+  "rulesCheckersPlayRussian": "Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy: davom ettirish mumkin bo‘lsa to‘xtab bo‘lmaydi, lekin yo‘nalishlar ko‘p bo‘lsa istalganini tanlaysiz, eng uzini shart emas. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.",
   "rulesCheckersPlayEnglish": "Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.",
   "rulesCheckersPlayGiveaway": "Berilmali: yurishlar rus shashkasidagidek, lekin maqsad teskarisi — barcha toshni berib qo‘yish yoki yurishsiz qolish. Urish baribir majburiy.",
   "rulesCheckersPlayCorners": "Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.",

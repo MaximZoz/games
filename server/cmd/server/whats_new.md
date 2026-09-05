@@ -3,11 +3,11 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Карточка шашек на экране «Игры»: ставки, правила, время и режимы (русские, английские, поддавки, уголки) — партия ещё в разработке
+- Шашки: ровная доска без щелей и кривой подсветки; дамка обязана бить дальше, но направление выбираете сами (не максимум фигур)
 - Галерея профиля: до 3 фото, просмотр на весь экран, «сделать основным»
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Checkers card on the Games screen: stakes, rules, turn time and modes (Russian, English, Giveaway, Corners) — the match is still in development
+- Checkers: even 8×8 board without hairline gaps; a king must keep capturing, but you may choose any direction (not the longest)
 - Profile gallery: up to 3 photos, fullscreen view, set as primary avatar
 - Coin icon next to the stake in game rules

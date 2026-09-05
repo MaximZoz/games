@@ -728,7 +728,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesCheckersIntro => 'Tablero 8×8. Dos jugadores.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Capturar es obligatorio. Dama y peón deben seguir mientras desde la casilla de llegada se pueda capturar otra vez: no se puede parar a mitad. Si hay varias direcciones, se puede elegir cualquiera, no necesariamente la más larga. Un peón en la última fila se corona.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: se elige la secuencia más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.';
+  String get rulesCheckersPlayRussian => 'Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: hay que seguir si se puede, pero se puede elegir cualquier dirección, no necesariamente la más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Damas inglesas: 12 fichas cada uno. Los peones avanzan y capturan solo en diagonal hacia adelante. Las damas avanzan una casilla en diagonal. Capturar es obligatorio. Gana quien capture todas las fichas o deje al rival sin movimientos.';

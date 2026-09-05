@@ -728,7 +728,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesCheckersIntro => 'Doska 8×8. Ikki o‘yinchi.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Urish majburiy. Damka va oddiy tosh qo‘ngan katakdan yana ura olsa, to‘xtamasdan davom ettirishi shart. Yo‘nalishlar ko‘p bo‘lsa, istalganini tanlash mumkin, eng uzun yo‘l shart emas. Oxirgi qatorga yetgan oddiy tosh damkaga aylanadi.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy — eng ko‘p tosh olinadigan yo‘l tanlanadi. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+  String get rulesCheckersPlayRussian => 'Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy: davom ettirish mumkin bo‘lsa to‘xtab bo‘lmaydi, lekin yo‘nalishlar ko‘p bo‘lsa istalganini tanlaysiz, eng uzini shart emas. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';

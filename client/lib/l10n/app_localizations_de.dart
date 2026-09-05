@@ -728,7 +728,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesCheckersIntro => 'Brett 8×8. Zwei Spieler.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Schlagen ist Pflicht. Dame und Stein müssen weiterschlagen, solange vom Landefeld ein weiterer Schlag möglich ist — in der Mitte anhalten ist verboten. Gibt es mehrere Richtungen, darf jede gewählt werden, nicht zwingend die längste. Ein Stein auf der letzten Reihe wird zur Dame.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht — die längste Schlagfolge zählt. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.';
+  String get rulesCheckersPlayRussian => 'Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht: weiterzuschlagen, wenn möglich, aber bei mehreren Richtungen darf jede gewählt werden, nicht zwingend die längste. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Englisches Damespiel: je 12 Steine. Bauern ziehen und schlagen nur diagonal vorwärts. Damen ziehen ein Feld diagonal in jede Richtung. Schlagen ist Pflicht. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.';

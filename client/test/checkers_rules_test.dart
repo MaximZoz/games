@@ -39,6 +39,9 @@ void main() {
     expect(russian, contains(t.rulesCheckersPlayers));
     expect(russian, contains(t.rulesCheckersMode(t.gamesCheckersModeRussian)));
     expect(russian, contains(t.rulesCheckersPlay));
+    expect(t.rulesCheckersPlay, contains('продолжать бой'));
+    expect(t.rulesCheckersPlay, contains('любое'));
+    expect(t.rulesCheckersPlayRussian, contains('не обязательно самое длинное'));
     expect(russian, contains(t.rulesCheckersWin));
 
     final giveaway = checkersRuleLines(

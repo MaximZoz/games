@@ -728,7 +728,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesCheckersIntro => 'Lauta 8×8. Kaksi pelaajaa.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Lyöminen on pakollista. Dama ja nappula jatkavat, jos laskeutumiruudusta voi lyödä lisää — kesken ei saa pysähtyä. Jos suuntia on useita, saa valita minkä tahansa, ei välttämättä pisintä. Viimeiselle riville päässyt nappula muuttuu damaksi.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista — valitaan pisin sarja. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+  String get rulesCheckersPlayRussian => 'Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista: jatka jos mahdollista, mutta suuntia voi olla useita ja saat valita minkä tahansa, ei välttämättä pisintä. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';

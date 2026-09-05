@@ -82,6 +82,77 @@ func TestGiveawayNoMovesWins(t *testing.T) {
 	}
 }
 
+func TestKingMustContinueAnyDirection(t *testing.T) {
+	setup := func() *Game {
+		g := NewGame(ModeRussian)
+		for i := range g.Board {
+			g.Board[i] = Empty
+		}
+		g.set(2, 1, WhiteKing)
+		g.set(3, 2, BlackMan)
+		g.set(5, 4, BlackMan)
+		g.set(1, 2, BlackMan)
+		g.Turn = 0
+		return g
+	}
+
+	g := setup()
+	moves := g.LegalMoves()
+	hasLong, hasShort := false, false
+	for _, m := range moves {
+		if m.To == (Square{R: 4, C: 3}) {
+			hasLong = true
+		}
+		if m.To == (Square{R: 0, C: 3}) {
+			hasShort = true
+		}
+	}
+	if !hasLong || !hasShort {
+		t.Fatalf("expected both capture directions, got %+v", moves)
+	}
+
+	short := setup()
+	if err := short.Apply(0, Move{
+		From:   Square{R: 2, C: 1},
+		To:     Square{R: 0, C: 3},
+		Jumped: []Square{{R: 1, C: 2}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if short.MustContinue || short.Turn != 1 {
+		t.Fatalf("short path must end turn: continue=%v turn=%d", short.MustContinue, short.Turn)
+	}
+
+	if err := g.Apply(0, Move{
+		From:   Square{R: 2, C: 1},
+		To:     Square{R: 4, C: 3},
+		Jumped: []Square{{R: 3, C: 2}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if !g.MustContinue || g.Turn != 0 || g.ContR != 4 || g.ContC != 3 {
+		t.Fatalf("must continue after first king capture: %+v", g)
+	}
+	cont := g.LegalMoves()
+	if len(cont) == 0 {
+		t.Fatal("king must have a follow-up capture")
+	}
+	for _, m := range cont {
+		if m.From != (Square{R: 4, C: 3}) || len(m.Jumped) == 0 {
+			t.Fatalf("illegal follow-up %+v", m)
+		}
+	}
+	if err := g.Apply(0, Move{From: Square{R: 4, C: 3}, To: Square{R: 5, C: 2}}); err == nil {
+		t.Fatal("quiet stop in a capture sequence must be illegal")
+	}
+	if err := g.Apply(0, cont[0]); err != nil {
+		t.Fatal(err)
+	}
+	if g.at(5, 4) != Empty || g.MustContinue {
+		t.Fatalf("second capture must finish sequence")
+	}
+}
+
 func TestEncodeDecode(t *testing.T) {
 	g := NewGame(ModeRussian)
 	raw, err := Encode(g)

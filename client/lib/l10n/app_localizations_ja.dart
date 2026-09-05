@@ -728,7 +728,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesCheckersIntro => '盤は 8×8。2 人対戦。';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => '取りは義務です。キングも駒も、着地マスからさらに取れるなら続けなければならず、途中で止められません。方向が複数あればどれを選んでもよく、最長である必要はありません。最終段に達した駒はキングになります。';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務で最長手順を選ぶ。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+  String get rulesCheckersPlayRussian => 'ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務：続けられるなら止められませんが、方向が複数ならどれでもよく最長である必要はありません。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
 
   @override
   String get rulesCheckersPlayEnglish => 'イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。';

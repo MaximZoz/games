@@ -728,7 +728,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesCheckersIntro => '8×8 棋盘，两人对抗。';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => '必须吃子。王或兵只要从落点还能再跳吃，就必须继续，不能中途停下。若有多个方向，可任选其一，不必走最长路线。到达底线的兵升为王。';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => '俄式跳棋：各 12 枚棋子放在深色格。兵斜向前走，可向前或向后跳吃。王可飞任意格。必须吃子，并选择吃子最多的路线。吃光对方棋子或让对方无子可走即胜。';
+  String get rulesCheckersPlayRussian => '俄式跳棋：各 12 枚棋子放在深色格。兵斜向前走，可向前或向后跳吃。王可飞任意格。必须吃子：还能再跳则不能停下，但有多个方向时可任选，不必走最长。吃光对方棋子或让对方无子可走即胜。';
 
   @override
   String get rulesCheckersPlayEnglish => '英式跳棋：各 12 枚。兵只能斜向前走和跳吃。王斜走一格。必须吃子。吃光对方棋子或让对方无子可走即胜。';

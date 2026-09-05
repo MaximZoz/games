@@ -728,7 +728,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesCheckersIntro => 'Scacchiera 8×8. Due giocatori.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'La cattura è obbligatoria. Dama e pedina devono continuare finché dalla casa di arrivo si può catturare ancora: non ci si ferma a metà. Se ci sono più direzioni si può sceglierne una qualsiasi, non per forza la più lunga. Una pedina sull’ultima riga diventa dama.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Dama russa: 12 pedine ciascuno sulle case scure. Le pedine avanzano in diagonale e catturano avanti e indietro. Le dame volano di quante case vogliono. La cattura è obbligatoria: si sceglie la sequenza più lunga. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
+  String get rulesCheckersPlayRussian => 'Dama russa: 12 pedine ciascuno sulle case scure. Le pedine avanzano in diagonale e catturano avanti e indietro. Le dame volano di quante case vogliono. La cattura è obbligatoria: si continua se possibile, ma si può scegliere qualsiasi direzione, non per forza la più lunga. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Dama inglese: 12 pedine ciascuno. Le pedine avanzano e catturano solo in diagonale in avanti. Le dame si muovono di una casa in diagonale. La cattura è obbligatoria. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';

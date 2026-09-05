@@ -728,7 +728,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesCheckersIntro => 'Bräde 8×8. Två spelare.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Slag är obligatoriskt. Dam och bricka måste fortsätta så länge ett nytt hopp går från landningsrutan — man får inte stanna mitt i. Finns flera riktningar får du välja vilken som helst, inte nödvändigtvis den längsta. En bricka på sista raden blir dam.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Ryskt damspel: 12 brickor var på mörka rutor. Bönder går snett framåt och slår framåt och bakåt. Damer flyger valfritt långt. Slag är obligatoriskt — den längsta serien väljs. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.';
+  String get rulesCheckersPlayRussian => 'Ryskt damspel: 12 brickor var på mörka rutor. Bönder går snett framåt och slår framåt och bakåt. Damer flyger valfritt långt. Slag är obligatoriskt: du måste fortsätta om det går, men får välja valfri riktning — inte nödvändigtvis den längsta. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Engelskt damspel: 12 brickor var. Bönder går och slår endast snett framåt. Damer går ett fält snett åt valfritt håll. Slag är obligatoriskt. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.';

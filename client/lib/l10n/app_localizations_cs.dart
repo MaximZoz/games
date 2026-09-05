@@ -728,7 +728,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesCheckersIntro => 'Deska 8×8. Dva hráči.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Braní je povinné. Dáma i pěšec musí pokračovat, dokud z pole dopadu lze brát dál — zastavit uprostřed nelze. Při více směrech lze zvolit kterýkoli, ne nutně nejdelší. Pěšec na poslední řadě se stává dámou.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné — volí se nejdelší série. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+  String get rulesCheckersPlayRussian => 'Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné: nelze zastavit, pokud lze pokračovat, ale při více směrech zvolíte kterýkoli, ne nutně nejdelší. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
