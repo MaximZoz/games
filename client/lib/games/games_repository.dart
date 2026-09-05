@@ -144,6 +144,15 @@ class UserGameSettings {
     gameMode: 'short',
   );
 
+  static const checkersDefaults = UserGameSettings(
+    gameType: 'checkers',
+    turnTimeSec: 60,
+    variant: 'russian',
+    stakeBronze: 2,
+    maxPlayers: 2,
+    gameMode: 'russian',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
@@ -154,6 +163,8 @@ class UserGameSettings {
         return unoDefaults;
       case 'nardy':
         return nardyDefaults;
+      case 'checkers':
+        return checkersDefaults;
       default:
         return defaults;
     }
@@ -251,6 +262,19 @@ class UserGameSettings {
         gameMode: mode,
       );
     }
+    if (gameType == 'checkers') {
+      const modes = {'russian', 'english', 'giveaway', 'corners'};
+      final mode = modes.contains(gameMode) ? gameMode : 'russian';
+      return UserGameSettings(
+        gameType: 'checkers',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: mode,
+        gridSize: 3,
+        stakeBronze: stake < 2 ? 2 : stake,
+        maxPlayers: 2,
+        gameMode: mode,
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -291,6 +315,11 @@ class UserGameSettings {
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
     } else if (gameType == 'nardy') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
+      out['max_players'] = 2;
+      out['game_mode'] = gameMode;
+    } else if (gameType == 'checkers') {
       out['variant'] = gameMode;
       out['grid_size'] = 3;
       out['max_players'] = 2;

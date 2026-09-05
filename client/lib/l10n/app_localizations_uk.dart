@@ -697,6 +697,44 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesNardyModeLong => 'Довгі';
 
   @override
+  String get gamesCheckers => 'Шашки';
+
+  @override
+  String get gamesCheckersModeRussian => 'Російські';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Англійські';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Піддавки';
+
+  @override
+  String get gamesCheckersModeCorners => 'Кутки';
+
+  @override
+  String get rulesCheckersPlayers => 'Гравці: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Дошка 8×8. Грають двоє.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Російські шашки: у кожного 12 шашок на темних клітинах. Прості ходять по діагоналі вперед, а б’ють уперед і назад. Дамка літає на будь-яке число клітин. Бій обов’язковий — обирають взяття з найбільшою кількістю шашок. Перемагає той, хто з’їв усі шашки суперника або позбавив його ходів.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Англійські шашки: у кожного 12 шашок. Прості ходять і б’ють лише вперед по діагоналі. Дамка ходить на одну клітину в будь-який бік по діагоналі. Бій обов’язковий. Перемагає той, хто з’їв усі шашки суперника або позбавив його ходів.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Піддавки: ті самі ходи, що в російських шашках, але мета зворотна — віддати всі свої шашки або залишитися без ходу. Бій усе одно обов’язковий.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Кутки: шашки стоять у протилежних кутах. Ходять на сусідню вільну клітину по горизонталі чи вертикалі або перестрибують через будь-яку шашку, не знімаючи її. Мета — перевести всі свої шашки в кут суперника.';
+
+  @override
   String get rulesNardyTitle => 'Нарди — правила';
 
   @override

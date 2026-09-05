@@ -697,6 +697,44 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesNardyModeLong => 'Dài';
 
   @override
+  String get gamesCheckers => 'Cờ đam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Nga';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anh';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Nhường';
+
+  @override
+  String get gamesCheckersModeCorners => 'Góc';
+
+  @override
+  String get rulesCheckersPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bàn 8×8. Hai người chơi.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn — chọn chuỗi dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Nhường: nước đi như cờ đam Nga nhưng mục tiêu ngược lại — mất hết quân hoặc hết nước đi. Vẫn bắt buộc ăn.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.';
+
+  @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';
 
   @override

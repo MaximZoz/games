@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Corto",
   "gamesNardyModeLong": "Largo",
+  "gamesCheckers": "Damas",
+  "gamesCheckersModeRussian": "Rusas",
+  "gamesCheckersModeEnglish": "Inglesas",
+  "gamesCheckersModeGiveaway": "Damas locas",
+  "gamesCheckersModeCorners": "Esquinas",
+  "rulesCheckersPlayers": "Jugadores: 2.",
+  "rulesCheckersMode": "Modo: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Tablero 8×8. Dos jugadores.",
+  "rulesCheckersPlayRussian": "Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: se elige la secuencia más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.",
+  "rulesCheckersPlayEnglish": "Damas inglesas: 12 fichas cada uno. Los peones avanzan y capturan solo en diagonal hacia adelante. Las damas avanzan una casilla en diagonal. Capturar es obligatorio. Gana quien capture todas las fichas o deje al rival sin movimientos.",
+  "rulesCheckersPlayGiveaway": "Damas locas: los mismos movimientos que las damas rusas, pero el objetivo es el inverso: perder todas las fichas o quedarse sin movimientos. Capturar sigue siendo obligatorio.",
+  "rulesCheckersPlayCorners": "Esquinas: las fichas empiezan en esquinas opuestas. Se avanza a una casilla libre vecina en horizontal o vertical, o se salta sobre cualquier ficha sin quitarla. El objetivo es llevar todas las fichas a la esquina del rival.",
   "rulesNardyTitle": "Backgammon — reglas",
   "rulesNardyPlayers": "Jugadores: 2.",
   "rulesNardyMode": "Modo: {mode}.",

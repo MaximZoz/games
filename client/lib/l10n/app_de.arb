@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kurz",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dame",
+  "gamesCheckersModeRussian": "Russisch",
+  "gamesCheckersModeEnglish": "Englisch",
+  "gamesCheckersModeGiveaway": "Verlierdame",
+  "gamesCheckersModeCorners": "Ecken",
+  "rulesCheckersPlayers": "Spieler: 2.",
+  "rulesCheckersMode": "Modus: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Brett 8×8. Zwei Spieler.",
+  "rulesCheckersPlayRussian": "Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht — die längste Schlagfolge zählt. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
+  "rulesCheckersPlayEnglish": "Englisches Damespiel: je 12 Steine. Bauern ziehen und schlagen nur diagonal vorwärts. Damen ziehen ein Feld diagonal in jede Richtung. Schlagen ist Pflicht. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
+  "rulesCheckersPlayGiveaway": "Verlierdame: dieselben Züge wie im russischen Damespiel, aber das Ziel ist umgekehrt — alle eigenen Steine abgeben oder keinen Zug mehr haben. Schlagen bleibt Pflicht.",
+  "rulesCheckersPlayCorners": "Ecken: die Steine stehen in gegenüberliegenden Ecken. Ziehe auf ein benachbartes freies Feld waagerecht oder senkrecht oder springe über einen beliebigen Stein, ohne ihn zu schlagen. Ziel ist, alle eigenen Steine in die Ecke des Gegners zu bringen.",
   "rulesNardyTitle": "Backgammon — Regeln",
   "rulesNardyPlayers": "Spieler: 2.",
   "rulesNardyMode": "Modus: {mode}.",

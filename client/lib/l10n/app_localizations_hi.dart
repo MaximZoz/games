@@ -697,6 +697,44 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesNardyModeLong => 'लंबा';
 
   @override
+  String get gamesCheckers => 'चेकर्स';
+
+  @override
+  String get gamesCheckersModeRussian => 'रूसी';
+
+  @override
+  String get gamesCheckersModeEnglish => 'अंग्रेज़ी';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'गिवअवे';
+
+  @override
+  String get gamesCheckersModeCorners => 'कॉर्नर';
+
+  @override
+  String get rulesCheckersPlayers => 'खिलाड़ी: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'मोड: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'बोर्ड 8×8. दो खिलाड़ी.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'रूसी चेकर्स: प्रत्येक के 12 मोहरे गहरे घरों पर। साधारण मोहरे तिरछे आगे चलते हैं और आगे-पीछे मारते हैं। रानी किसी भी दूरी तक उड़ती है। मारना अनिवार्य है — सबसे लंबी श्रृंखला चुनें। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'अंग्रेज़ी चेकर्स: प्रत्येक के 12 मोहरे। साधारण मोहरे केवल तिरछे आगे चलते और मारते हैं। रानी किसी भी दिशा में एक घर चलती है। मारना अनिवार्य है। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'गिवअवे: चालें रूसी चेकर्स जैसी हैं, पर लक्ष्य उलटा है — अपने सारे मोहरे दे देना या बिना चाल के रह जाना। मारना फिर भी अनिवार्य है।';
+
+  @override
+  String get rulesCheckersPlayCorners => 'कॉर्नर: मोहरे आमने-सामने के कोनों में शुरू होते हैं। क्षैतिज या ऊर्ध्व खाली पड़ोसी घर पर चलें, या किसी भी मोहरे के ऊपर कूदें बिना उसे हटाए। लक्ष्य अपने सारे मोहरे विरोधी के कोने में पहुँचाना है।';
+
+  @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';
 
   @override

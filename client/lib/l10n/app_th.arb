@@ -257,6 +257,25 @@
   "gamesNardy": "แบ็กแกมมอน",
   "gamesNardyModeShort": "สั้น",
   "gamesNardyModeLong": "ยาว",
+  "gamesCheckers": "หมากฮอส",
+  "gamesCheckersModeRussian": "รัสเซีย",
+  "gamesCheckersModeEnglish": "อังกฤษ",
+  "gamesCheckersModeGiveaway": "กิฟอะเวย์",
+  "gamesCheckersModeCorners": "มุม",
+  "rulesCheckersPlayers": "ผู้เล่น: 2",
+  "rulesCheckersMode": "โหมด: {mode}",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "กระดาน 8×8 สองผู้เล่น",
+  "rulesCheckersPlayRussian": "หมากฮอสรัสเซีย: คนละ 12 ตัวบนช่องเข้ม ตัวธรรมดาเดินทแยงไปข้างหน้าและกินไปข้างหน้าหรือถอยหลัง ดามก้าบินได้ทุกช่อง ต้องกินและเลือกทางที่กินได้มากที่สุด ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้",
+  "rulesCheckersPlayEnglish": "หมากฮอสอังกฤษ: คนละ 12 ตัว ตัวธรรมดาเดินและกินทแยงไปข้างหน้าเท่านั้น ดามก้าเดินทแยงหนึ่งช่อง ต้องกิน ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้",
+  "rulesCheckersPlayGiveaway": "กิฟอะเวย์: เดินแบบหมากฮอสรัสเซีย แต่เป้าหมายกลับกัน คือยอมเสียหมากทั้งหมดหรือเดินไม่ได้ การกินยังบังคับ",
+  "rulesCheckersPlayCorners": "มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม",
   "rulesNardyTitle": "แบ็กแกมมอน — กติกา",
   "rulesNardyPlayers": "ผู้เล่น: 2 คน",
   "rulesNardyMode": "โหมด: {mode}",

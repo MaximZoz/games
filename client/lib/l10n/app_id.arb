@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Pendek",
   "gamesNardyModeLong": "Panjang",
+  "gamesCheckers": "Dam",
+  "gamesCheckersModeRussian": "Rusia",
+  "gamesCheckersModeEnglish": "Inggris",
+  "gamesCheckersModeGiveaway": "Giveaway",
+  "gamesCheckersModeCorners": "Sudut",
+  "rulesCheckersPlayers": "Pemain: 2.",
+  "rulesCheckersMode": "Mode: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Papan 8×8. Dua pemain.",
+  "rulesCheckersPlayRussian": "Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib — pilih rangkaian terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.",
+  "rulesCheckersPlayEnglish": "Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.",
+  "rulesCheckersPlayGiveaway": "Giveaway: langkahnya sama seperti dam Rusia, tetapi tujuannya terbalik — kehilangan semua buah atau kehabisan langkah. Makan tetap wajib.",
+  "rulesCheckersPlayCorners": "Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.",
   "rulesNardyTitle": "Backgammon — aturan",
   "rulesNardyPlayers": "Pemain: 2.",
   "rulesNardyMode": "Mode: {mode}.",

@@ -697,6 +697,44 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesNardyModeLong => 'Uzun';
 
   @override
+  String get gamesCheckers => 'Dama';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rus';
+
+  @override
+  String get gamesCheckersModeEnglish => 'İngiliz';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Teslim dama';
+
+  @override
+  String get gamesCheckersModeCorners => 'Köşeler';
+
+  @override
+  String get rulesCheckersPlayers => 'Oyuncular: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tahta 8×8. İki oyuncu.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur — en uzun dizi seçilir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'İngiliz daması: her birinde 12 taş. Piyonlar yalnızca çapraz ileri gider ve vurur. Damkalar çapraz bir kare gider. Vuruş zorunludur. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Teslim dama: hamleler Rus damasıyla aynıdır, ama amaç tersidir — tüm taşlarını vermek veya hamlesiz kalmak. Vuruş yine zorunludur.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Köşeler: taşlar karşı köşelerde durur. Yatay veya dikey komşu boş kareye gider ya da herhangi bir taşın üzerinden atlar, taşı almaz. Amaç tüm taşları rakibin köşesine taşımaktır.';
+
+  @override
   String get rulesNardyTitle => 'Tavla — kurallar';
 
   @override

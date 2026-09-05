@@ -697,6 +697,44 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesNardyModeLong => 'Pitkä';
 
   @override
+  String get gamesCheckers => 'Tammi';
+
+  @override
+  String get gamesCheckersModeRussian => 'Venäläinen';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Englantilainen';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Antodami';
+
+  @override
+  String get gamesCheckersModeCorners => 'Kulmat';
+
+  @override
+  String get rulesCheckersPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Lauta 8×8. Kaksi pelaajaa.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista — valitaan pisin sarja. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — säännöt';
 
   @override

@@ -697,6 +697,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesNardyModeLong => 'Long';
 
   @override
+  String get gamesCheckers => 'Dames';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russes';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anglaises';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Donne';
+
+  @override
+  String get gamesCheckersModeCorners => 'Coins';
+
+  @override
+  String get rulesCheckersPlayers => 'Joueurs : 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode : $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Plateau 8×8. Deux joueurs.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dames russes : 12 pions chacun sur les cases sombres. Les pions avancent en diagonale et prennent en avant et en arrière. Les dames volent d’un nombre quelconque de cases. La prise est obligatoire — on choisit la plus longue. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dames anglaises : 12 pions chacun. Les pions n’avancent et ne prennent qu’en diagonale vers l’avant. Les dames avancent d’une case en diagonale. La prise est obligatoire. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Donne : les mêmes coups que les dames russes, mais le but est inverse — perdre tous ses pions ou n’avoir plus de coup. La prise reste obligatoire.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Coins : les pions partent des coins opposés. On avance d’une case libre à l’horizontale ou à la verticale, ou on saute par-dessus n’importe quel pion sans le retirer. Le but est d’amener tous ses pions dans le coin adverse.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — règles';
 
   @override

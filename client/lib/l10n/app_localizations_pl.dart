@@ -697,6 +697,44 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesNardyModeLong => 'Długie';
 
   @override
+  String get gamesCheckers => 'Warcaby';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rosyjskie';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Angielskie';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Poddawki';
+
+  @override
+  String get gamesCheckersModeCorners => 'Kąciki';
+
+  @override
+  String get rulesCheckersPlayers => 'Gracze: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tryb: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Plansza 8×8. Dwóch graczy.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe — wybiera się najdłuższą sekwencję. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Poddawki: te same ruchy co w warcabach rosyjskich, ale cel jest odwrotny — oddać wszystkie piony albo zostać bez ruchu. Bicie nadal jest obowiązkowe.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.';
+
+  @override
   String get rulesNardyTitle => 'Nardy — zasady';
 
   @override

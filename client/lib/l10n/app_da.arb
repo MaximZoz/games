@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dam",
+  "gamesCheckersModeRussian": "Russisk",
+  "gamesCheckersModeEnglish": "Engelsk",
+  "gamesCheckersModeGiveaway": "Givspil",
+  "gamesCheckersModeCorners": "Hjørner",
+  "rulesCheckersPlayers": "Spillere: 2.",
+  "rulesCheckersMode": "Tilstand: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bræt 8×8. To spillere.",
+  "rulesCheckersPlayRussian": "Russisk dam: 12 brikker hver på mørke felter. Bønder går skråt frem og slår frem og tilbage. Damer flyver frit. Slag er pligt — den længste serie vælges. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.",
+  "rulesCheckersPlayEnglish": "Engelsk dam: 12 brikker hver. Bønder går og slår kun skråt frem. Damer går ét felt skråt i alle retninger. Slag er pligt. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.",
+  "rulesCheckersPlayGiveaway": "Givspil: samme træk som russisk dam, men målet er omvendt — afgive alle brikker eller stå uden træk. Slag er stadig pligt.",
+  "rulesCheckersPlayCorners": "Hjørner: brikkerne starter i modsatte hjørner. Gå til et ledigt nabofelt vandret eller lodret, eller hop over en hvilken som helst brik uden at fjerne den. Målet er at flytte alle sine brikker til modstanderens hjørne.",
   "rulesNardyTitle": "Backgammon — regler",
   "rulesNardyPlayers": "Spillere: 2.",
   "rulesNardyMode": "Tilstand: {mode}.",

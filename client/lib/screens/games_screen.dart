@@ -14,6 +14,7 @@ import 'package:multigames_client/games/poker/poker_provider.dart';
 import 'package:multigames_client/games/poker/poker_rules.dart';
 import 'package:multigames_client/games/uno/uno_rules.dart';
 import 'package:multigames_client/games/uno/uno_provider.dart';
+import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
@@ -28,6 +29,7 @@ import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
@@ -1439,6 +1441,7 @@ class _GamesPageContent extends ConsumerWidget {
         context.l10n.gamesPoker,
         context.l10n.gamesUno,
         context.l10n.gamesNardy,
+        context.l10n.gamesCheckers,
       ];
       final cols = gamesHubTileColumns(
         maxWidth: maxWidth,
@@ -1488,6 +1491,10 @@ class _GamesPageContent extends ConsumerWidget {
           stakeOptionsList: stakeOptionsList,
         ),
         _NardyGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _CheckersGameCard(
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),
@@ -4063,6 +4070,185 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
         stakeBronze: widget.isOffline ? 0 : _stakeBronze,
         offline: widget.isOffline,
+        l10n: context.l10n,
+      )),
+      closeLabel: context.l10n.commonClose,
+    );
+  }
+}
+
+/// Карточка «Шашки» — 2 игрока, режимы, время и ставка; игра в разработке.
+class _CheckersGameCard extends ConsumerStatefulWidget {
+  const _CheckersGameCard({
+    required this.isOffline,
+    required this.stakeOptionsList,
+  });
+
+  final bool isOffline;
+  final List<int> stakeOptionsList;
+
+  @override
+  ConsumerState<_CheckersGameCard> createState() => _CheckersGameCardState();
+}
+
+class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
+  int _turnTimeSec = 60;
+  int _stakeBronze = 2;
+  String _gameMode = checkersModeRussian;
+  bool _settingsHydrated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrateFromSaved();
+    });
+  }
+
+  void _hydrateFromSaved() {
+    if (_settingsHydrated) return;
+    final saved = ref.read(userGameSettingsProvider('checkers')).valueOrNull;
+    if (saved == null) return;
+    _settingsHydrated = true;
+    setState(() {
+      _turnTimeSec =
+          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+      _gameMode = checkersNormalizeMode(saved.gameMode);
+    });
+  }
+
+  void _persistSettings() {
+    ref.read(userGameSettingsProvider('checkers').notifier).updateLocal(
+          gameCardSettings(
+            gameType: 'checkers',
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+            gameMode: _gameMode,
+          ),
+        );
+  }
+
+  void _cycleTurnTime() {
+    setState(() {
+      const arr = [20, 60, 600, 0];
+      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
+    });
+    _persistSettings();
+  }
+
+  void _cycleStake() {
+    final options = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    final idx = options.indexOf(_stakeBronze);
+    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
+    setState(() => _stakeBronze = next);
+    _persistSettings();
+  }
+
+  void _cycleGameMode() {
+    setState(() => _gameMode = checkersNextMode(_gameMode));
+    _persistSettings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserGameSettings>>(
+        userGameSettingsProvider('checkers'), (prev, next) {
+      final saved = next.valueOrNull;
+      if (saved == null || _settingsHydrated) return;
+      _settingsHydrated = true;
+      setState(() {
+        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
+            ? saved.turnTimeSec
+            : 60;
+        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
+        _gameMode = checkersNormalizeMode(saved.gameMode);
+      });
+    });
+    final available = widget.stakeOptionsList.isEmpty
+        ? freeStakeOptions
+        : widget.stakeOptionsList;
+    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _stakeBronze = available.first);
+        if (_settingsHydrated) _persistSettings();
+      });
+    }
+
+    final isDesktop = isWide(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isMedium = width >= 700 && width < 950;
+
+    final chips = <Widget>[
+      GameCardChip(
+        selected: false,
+        icon: Icons.groups_rounded,
+        label: '2',
+        onTap: null,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      GameCardChip(
+        selected: true,
+        icon: Icons.swap_horiz_rounded,
+        label: checkersModeLabel(_gameMode, context.l10n),
+        onTap: _cycleGameMode,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      if (!widget.isOffline)
+        GameCardChip(
+          selected: true,
+          icon: Icons.timer_outlined,
+          label: formatTurnTime(_turnTimeSec),
+          onTap: _cycleTurnTime,
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+        ),
+    ];
+
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesCheckers,
+        icon: CheckersGameIcon.iconData,
+        iconChild: const CheckersGameIcon(size: 26, color: Colors.white),
+        stakeBronze: widget.isOffline ? null : _stakeBronze,
+        stakeLabel: formatStakeAmount(_stakeBronze),
+        stakeCoinType: stakeCoinType(_stakeBronze),
+        onStakeTap: widget.isOffline ? null : _cycleStake,
+        onInfoTap: () => _showRules(context),
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+      chips: chips,
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: null,
+        findLabel: context.l10n.lobbySearchPlayers,
+        findingLabel: context.l10n.commonSearching,
+        onFind: null,
+        inDevelopment: true,
+        offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+      ),
+    );
+  }
+
+  void _showRules(BuildContext context) {
+    showGameRulesDialog(
+      context: context,
+      content: rulesTextLines(checkersRuleLines(
+        gameMode: _gameMode,
+        turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
+        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
         l10n: context.l10n,
       )),
       closeLabel: context.l10n.commonClose,

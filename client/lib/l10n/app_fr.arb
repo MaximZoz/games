@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Court",
   "gamesNardyModeLong": "Long",
+  "gamesCheckers": "Dames",
+  "gamesCheckersModeRussian": "Russes",
+  "gamesCheckersModeEnglish": "Anglaises",
+  "gamesCheckersModeGiveaway": "Donne",
+  "gamesCheckersModeCorners": "Coins",
+  "rulesCheckersPlayers": "Joueurs : 2.",
+  "rulesCheckersMode": "Mode : {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Plateau 8×8. Deux joueurs.",
+  "rulesCheckersPlayRussian": "Dames russes : 12 pions chacun sur les cases sombres. Les pions avancent en diagonale et prennent en avant et en arrière. Les dames volent d’un nombre quelconque de cases. La prise est obligatoire — on choisit la plus longue. On gagne en prenant tous les pions ou en privant l’adversaire de coups.",
+  "rulesCheckersPlayEnglish": "Dames anglaises : 12 pions chacun. Les pions n’avancent et ne prennent qu’en diagonale vers l’avant. Les dames avancent d’une case en diagonale. La prise est obligatoire. On gagne en prenant tous les pions ou en privant l’adversaire de coups.",
+  "rulesCheckersPlayGiveaway": "Donne : les mêmes coups que les dames russes, mais le but est inverse — perdre tous ses pions ou n’avoir plus de coup. La prise reste obligatoire.",
+  "rulesCheckersPlayCorners": "Coins : les pions partent des coins opposés. On avance d’une case libre à l’horizontale ou à la verticale, ou on saute par-dessus n’importe quel pion sans le retirer. Le but est d’amener tous ses pions dans le coin adverse.",
   "rulesNardyTitle": "Backgammon — règles",
   "rulesNardyPlayers": "Joueurs : 2.",
   "rulesNardyMode": "Mode : {mode}.",

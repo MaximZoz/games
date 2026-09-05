@@ -697,6 +697,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesNardyModeLong => '长盘';
 
   @override
+  String get gamesCheckers => '国际跳棋';
+
+  @override
+  String get gamesCheckersModeRussian => '俄式';
+
+  @override
+  String get gamesCheckersModeEnglish => '英式';
+
+  @override
+  String get gamesCheckersModeGiveaway => '让子跳棋';
+
+  @override
+  String get gamesCheckersModeCorners => '角落棋';
+
+  @override
+  String get rulesCheckersPlayers => '玩家：2 人。';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String get rulesCheckersIntro => '8×8 棋盘，两人对抗。';
+
+  @override
+  String get rulesCheckersPlayRussian => '俄式跳棋：各 12 枚棋子放在深色格。兵斜向前走，可向前或向后跳吃。王可飞任意格。必须吃子，并选择吃子最多的路线。吃光对方棋子或让对方无子可走即胜。';
+
+  @override
+  String get rulesCheckersPlayEnglish => '英式跳棋：各 12 枚。兵只能斜向前走和跳吃。王斜走一格。必须吃子。吃光对方棋子或让对方无子可走即胜。';
+
+  @override
+  String get rulesCheckersPlayGiveaway => '让子跳棋：走法与俄式相同，但目标相反——送掉全部己方棋子或让自己无子可走。仍必须吃子。';
+
+  @override
+  String get rulesCheckersPlayCorners => '角落棋：棋子从对角摆起。可走到相邻空格（横或竖），或跳过任意棋子但不吃子。目标是把己方棋子全部走到对方角落。';
+
+  @override
   String get rulesNardyTitle => '西洋双陆 — 规则';
 
   @override

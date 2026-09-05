@@ -697,6 +697,44 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesNardyModeLong => 'Panjang';
 
   @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rusia';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inggris';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get gamesCheckersModeCorners => 'Sudut';
+
+  @override
+  String get rulesCheckersPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Papan 8×8. Dua pemain.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib — pilih rangkaian terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Giveaway: langkahnya sama seperti dam Rusia, tetapi tujuannya terbalik — kehilangan semua buah atau kehabisan langkah. Makan tetap wajib.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — aturan';
 
   @override

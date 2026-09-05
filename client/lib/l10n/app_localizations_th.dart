@@ -697,6 +697,44 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesNardyModeLong => 'ยาว';
 
   @override
+  String get gamesCheckers => 'หมากฮอส';
+
+  @override
+  String get gamesCheckersModeRussian => 'รัสเซีย';
+
+  @override
+  String get gamesCheckersModeEnglish => 'อังกฤษ';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'กิฟอะเวย์';
+
+  @override
+  String get gamesCheckersModeCorners => 'มุม';
+
+  @override
+  String get rulesCheckersPlayers => 'ผู้เล่น: 2';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'กระดาน 8×8 สองผู้เล่น';
+
+  @override
+  String get rulesCheckersPlayRussian => 'หมากฮอสรัสเซีย: คนละ 12 ตัวบนช่องเข้ม ตัวธรรมดาเดินทแยงไปข้างหน้าและกินไปข้างหน้าหรือถอยหลัง ดามก้าบินได้ทุกช่อง ต้องกินและเลือกทางที่กินได้มากที่สุด ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'หมากฮอสอังกฤษ: คนละ 12 ตัว ตัวธรรมดาเดินและกินทแยงไปข้างหน้าเท่านั้น ดามก้าเดินทแยงหนึ่งช่อง ต้องกิน ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'กิฟอะเวย์: เดินแบบหมากฮอสรัสเซีย แต่เป้าหมายกลับกัน คือยอมเสียหมากทั้งหมดหรือเดินไม่ได้ การกินยังบังคับ';
+
+  @override
+  String get rulesCheckersPlayCorners => 'มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม';
+
+  @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
 
   @override

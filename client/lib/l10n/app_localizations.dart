@@ -1481,6 +1481,78 @@ abstract class AppLocalizations {
   /// **'Длинные'**
   String get gamesNardyModeLong;
 
+  /// No description provided for @gamesCheckers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шашки'**
+  String get gamesCheckers;
+
+  /// No description provided for @gamesCheckersModeRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские'**
+  String get gamesCheckersModeRussian;
+
+  /// No description provided for @gamesCheckersModeEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские'**
+  String get gamesCheckersModeEnglish;
+
+  /// No description provided for @gamesCheckersModeGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки'**
+  String get gamesCheckersModeGiveaway;
+
+  /// No description provided for @gamesCheckersModeCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки'**
+  String get gamesCheckersModeCorners;
+
+  /// No description provided for @rulesCheckersPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesCheckersPlayers;
+
+  /// No description provided for @rulesCheckersMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesCheckersMode(String mode);
+
+  /// No description provided for @rulesCheckersIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска 8×8. Играют двое.'**
+  String get rulesCheckersIntro;
+
+  /// No description provided for @rulesCheckersPlayRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские шашки: у каждого 12 шашек на тёмных клетках. Простые ходят по диагонали вперёд, а бьют вперёд и назад. Дамка летает на любое число клеток. Бой обязателен — выбирают взятие с наибольшим числом шашек. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayRussian;
+
+  /// No description provided for @rulesCheckersPlayEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские шашки: у каждого 12 шашек. Простые ходят и бьют только вперёд по диагонали. Дамка ходит на одну клетку в любую сторону по диагонали. Бой обязателен. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayEnglish;
+
+  /// No description provided for @rulesCheckersPlayGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки: те же ходы, что в русских шашках, но цель обратная — отдать все свои шашки или остаться без хода. Бой по-прежнему обязателен.'**
+  String get rulesCheckersPlayGiveaway;
+
+  /// No description provided for @rulesCheckersPlayCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.'**
+  String get rulesCheckersPlayCorners;
+
   /// No description provided for @rulesNardyTitle.
   ///
   /// In ru, this message translates to:

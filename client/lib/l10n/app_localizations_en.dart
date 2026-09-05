@@ -697,6 +697,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesNardyModeLong => 'Long';
 
   @override
+  String get gamesCheckers => 'Checkers';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russian';
+
+  @override
+  String get gamesCheckersModeEnglish => 'English';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get gamesCheckersModeCorners => 'Corners';
+
+  @override
+  String get rulesCheckersPlayers => 'Players: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'An 8×8 board. Two players.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory — take the longest sequence. Win by capturing all enemy pieces or leaving the opponent with no moves.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'English draughts: 12 pieces each. Men move and capture only diagonally forward. Kings move one square diagonally in any direction. Captures are mandatory. Win by capturing all enemy pieces or leaving the opponent with no moves.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Giveaway: the same moves as Russian draughts, but the goal is reversed — lose all your pieces or be left with no moves. Captures are still mandatory.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Corners: pieces start in opposite corners. Move to an adjacent empty square horizontally or vertically, or jump over any piece without removing it. The goal is to move all your pieces into the opponent’s corner.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — rules';
 
   @override
