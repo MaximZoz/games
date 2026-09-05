@@ -943,7 +943,28 @@ bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
   return false;
 }
 
-/// Простая стратегия бота: чек; дешёвый колл; олл-ин — только с сильной картой.
+int pokerBotStrength(PokerEngine g, PokerEnginePlayer p) {
+  if (g.community.length >= 3 && p.hole.length >= 2) {
+    final best = evaluateBestHand([...p.hole, ...g.community]);
+    final kick = best.tie.isEmpty ? 0 : best.tie.first;
+    return best.rank.index * 16 + kick;
+  }
+  if (p.hole.length < 2) return 0;
+  var a = p.hole[0].rank.value;
+  var b = p.hole[1].rank.value;
+  if (a < b) {
+    final t = a;
+    a = b;
+    b = t;
+  }
+  var score = a + b;
+  if (a == b) score += 42;
+  if (p.hole[0].suit == p.hole[1].suit) score += 8;
+  if (a - b <= 2) score += 6;
+  return score;
+}
+
+/// Сила руки: чек/рейз, колл по силе, олл-ин только с сильной картой.
 PokerAction pokerBotAction(PokerEngine g) {
   final idx = g.actingIndex;
   final legal = g.legalActions(idx);
@@ -955,12 +976,17 @@ PokerAction pokerBotAction(PokerEngine g) {
   final facingAllIn = callAmount >= p.chips ||
       g.players.any((other) =>
           other.seat != p.seat && !other.folded && other.allIn);
+  final strength = pokerBotStrength(g, p);
+  final wantRaise = strength >= 58 &&
+      has(PokerActionType.raise) &&
+      p.chips > g.bigBlind * 2;
 
   if (has(PokerActionType.check)) {
-    if (has(PokerActionType.raise) &&
-        p.chips > g.bigBlind * 2 &&
-        rng.nextInt(4) == 0) {
-      final to = g.currentBet + g.minRaise;
+    if (wantRaise && rng.nextInt(3) != 0) {
+      var to = g.currentBet + g.minRaise;
+      if (strength >= 80 && p.chips > g.minRaise * 3) {
+        to = g.currentBet + g.minRaise * 2;
+      }
       if (to <= p.bet + p.chips) {
         return PokerAction(PokerActionType.raise, amount: to);
       }
@@ -971,10 +997,8 @@ PokerAction pokerBotAction(PokerEngine g) {
       callAmount < p.chips &&
       callAmount <= p.chips ~/ 3 &&
       !facingAllIn;
-  if (has(PokerActionType.call) && cheapCall) {
-    if (has(PokerActionType.raise) &&
-        p.chips > g.bigBlind * 4 &&
-        rng.nextInt(6) == 0) {
+  if (has(PokerActionType.call) && cheapCall && strength >= 24) {
+    if (wantRaise && strength >= 70 && p.chips > g.bigBlind * 4) {
       final to = g.currentBet + g.minRaise;
       if (to <= p.bet + p.chips) {
         return PokerAction(PokerActionType.raise, amount: to);

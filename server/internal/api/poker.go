@@ -1026,7 +1026,63 @@ func (h *GamesHandler) schedulePokerBotAct(gameID string) {
 	}()
 }
 
-// pokerBotAction — простая стратегия: чек, иначе колл если дёшево, иногда мин-рейз, иначе фолд.
+func pokerBotHasCallStrength(state *poker.Game, idx int) bool {
+	if state == nil || idx < 0 || idx >= len(state.Players) {
+		return false
+	}
+	p := state.Players[idx]
+	a, b := int(p.Hole[0].Rank), int(p.Hole[1].Rank)
+	if a == 0 || b == 0 {
+		return false
+	}
+	if a == b {
+		return true
+	}
+	if a >= 11 || b >= 11 {
+		return true
+	}
+	if len(state.Community) >= 3 {
+		cards := append([]poker.Card{p.Hole[0], p.Hole[1]}, state.Community...)
+		if v, err := poker.EvaluateBest(cards); err == nil && v.Rank >= poker.OnePair {
+			return true
+		}
+	}
+	return false
+}
+
+func pokerBotStrength(state *poker.Game, idx int) int {
+	if state == nil || idx < 0 || idx >= len(state.Players) {
+		return 0
+	}
+	p := state.Players[idx]
+	if len(state.Community) >= 3 {
+		cards := append([]poker.Card{p.Hole[0], p.Hole[1]}, state.Community...)
+		if v, err := poker.EvaluateBest(cards); err == nil {
+			kick := 0
+			if len(v.Tie) > 0 {
+				kick = v.Tie[0]
+			}
+			return int(v.Rank)*16 + kick
+		}
+	}
+	a, b := int(p.Hole[0].Rank), int(p.Hole[1].Rank)
+	if a < b {
+		a, b = b, a
+	}
+	score := a + b
+	if a == b {
+		score += 42
+	}
+	if p.Hole[0].Suit == p.Hole[1].Suit {
+		score += 8
+	}
+	if a-b <= 2 {
+		score += 6
+	}
+	return score
+}
+
+// pokerBotAction — сила руки: чек/рейз, колл по силе, фолд мусора.
 func pokerBotAction(state *poker.Game) poker.Action {
 	idx := state.ActingIndex
 	legal := state.LegalActions(idx)
@@ -1043,23 +1099,46 @@ func pokerBotAction(state *poker.Game) poker.Action {
 	if callAmount < 0 {
 		callAmount = 0
 	}
+	strength := pokerBotStrength(state, idx)
+	facingAllIn := callAmount >= p.Chips
+	if !facingAllIn {
+		for _, other := range state.Players {
+			if other.Seat != p.Seat && !other.Folded && other.AllIn {
+				facingAllIn = true
+				break
+			}
+		}
+	}
+	wantRaise := strength >= 58 && has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2
 	if has(string(poker.ActionCheck)) {
-		// Иногда мин-рейз при наличии фишек.
-		if has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2 && rand.Intn(4) == 0 {
+		if wantRaise && rand.Intn(3) != 0 {
 			to := state.CurrentBet + state.MinRaise
+			if strength >= 80 && p.Chips > state.MinRaise*3 {
+				to = state.CurrentBet + state.MinRaise*2
+			}
 			if to <= p.Bet+p.Chips {
 				return poker.Action{Type: poker.ActionRaise, Amount: to}
 			}
 		}
 		return poker.Action{Type: poker.ActionCheck}
 	}
-	if has(string(poker.ActionCall)) && callAmount <= p.Chips/3 {
-		// Изредка отвечаем рейзом.
-		if has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*4 && rand.Intn(6) == 0 {
+	cheapCall := callAmount > 0 && callAmount < p.Chips && callAmount <= p.Chips/3 && !facingAllIn
+	if has(string(poker.ActionCall)) && cheapCall && strength >= 24 {
+		if wantRaise && strength >= 70 && p.Chips > state.BigBlind*4 {
 			to := state.CurrentBet + state.MinRaise
 			if to <= p.Bet+p.Chips {
 				return poker.Action{Type: poker.ActionRaise, Amount: to}
 			}
+		}
+		return poker.Action{Type: poker.ActionCall}
+	}
+	if (has(string(poker.ActionCall)) || has(string(poker.ActionAllIn))) &&
+		callAmount > 0 && pokerBotHasCallStrength(state, idx) {
+		if has(string(poker.ActionCall)) && callAmount < p.Chips {
+			return poker.Action{Type: poker.ActionCall}
+		}
+		if has(string(poker.ActionAllIn)) {
+			return poker.Action{Type: poker.ActionAllIn}
 		}
 		return poker.Action{Type: poker.ActionCall}
 	}

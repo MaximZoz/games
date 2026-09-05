@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/games/checkers/checkers_bot.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 
 void main() {
@@ -150,5 +151,41 @@ void main() {
     final mv = checkersPickMove(g);
     expect(mv, isNotNull);
     expect(mv!.jumped, isNotEmpty);
+  });
+
+  test('уголки: бот развивает заднюю шашку, а не одну ближнюю', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
+    g.board = List<int>.filled(64, 0);
+    g.set(7, 7, CheckersEngine.blackMan);
+    g.set(5, 5, CheckersEngine.blackMan);
+    g.set(0, 0, CheckersEngine.whiteMan);
+    g.turn = 1;
+    final mv = checkersPickMove(g);
+    expect(mv, isNotNull);
+    expect(mv!.from, const CheckersSquare(7, 7));
+  });
+
+  test('уголки: бот ходит разными шашками', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
+    final froms = <CheckersSquare>{};
+    var blackMoves = 0;
+    for (var i = 0; i < 40 && !g.isOver && blackMoves < 8; i++) {
+      final seat = g.turn;
+      final mv = checkersPickMove(g);
+      expect(mv, isNotNull);
+      g.apply(seat, mv!);
+      if (seat == 1) {
+        froms.add(mv.from);
+        blackMoves++;
+      }
+    }
+    expect(froms.length, greaterThanOrEqualTo(3));
+    var inStart = 0;
+    for (var r = 5; r < 8; r++) {
+      for (var c = 5; c < 8; c++) {
+        if (CheckersEngine.owner(g.at(r, c)) == 1) inStart++;
+      }
+    }
+    expect(inStart, lessThan(8));
   });
 }

@@ -128,6 +128,16 @@ func (g *Game) set(r, c, v int) { g.Board[g.idx(r, c)] = v }
 
 func (g *Game) IsOver() bool { return g != nil && g.Winner != WinnerNone }
 
+// Clone — глубокая копия для поиска хода бота.
+func (g *Game) Clone() *Game {
+	if g == nil {
+		return nil
+	}
+	cp := *g
+	cp.Board = append([]int(nil), g.Board...)
+	return &cp
+}
+
 func owner(piece int) int {
 	if piece == WhiteMan || piece == WhiteKing {
 		return 0

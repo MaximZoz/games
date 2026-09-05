@@ -388,23 +388,150 @@ func BotNeighborCandidates(ships Ships, shots []int) []int {
 	return out
 }
 
-// BotPickShot выбирает следующий выстрел: сначала соседи попаданий, иначе случайная свободная клетка.
+// BotPickShot — добивание по линии, затем соседи, затем шахматный поиск.
 func BotPickShot(ships Ships, shots []int, rng *rand.Rand) (int, error) {
 	if rng == nil {
 		rng = rand.New(rand.NewSource(1))
 	}
 	hitSet := ShotsToHitSet(shots)
+	if line := botLineCandidates(ships, shots); len(line) > 0 {
+		return line[rng.Intn(len(line))], nil
+	}
 	if cands := BotNeighborCandidates(ships, shots); len(cands) > 0 {
 		return cands[rng.Intn(len(cands))], nil
 	}
-	free := make([]int, 0, CellCount-len(hitSet))
+	minLen := botMinUnsunkLen(ships, shots)
+	parity := 0
+	if minLen > 1 {
+		parity = minLen % 2
+	}
+	var preferred, free []int
 	for i := 0; i < CellCount; i++ {
-		if _, ok := hitSet[i]; !ok {
-			free = append(free, i)
+		if _, ok := hitSet[i]; ok {
+			continue
 		}
+		free = append(free, i)
+		if minLen > 1 && (i/BoardSize+i%BoardSize)%2 == parity {
+			preferred = append(preferred, i)
+		}
+	}
+	if len(preferred) > 0 {
+		return preferred[rng.Intn(len(preferred))], nil
 	}
 	if len(free) == 0 {
 		return 0, ErrInvalidCell
 	}
 	return free[rng.Intn(len(free))], nil
+}
+
+func botMinUnsunkLen(ships Ships, shots []int) int {
+	hitSet := ShotsToHitSet(shots)
+	minLen := 0
+	for _, ship := range ships {
+		sunk := true
+		for _, c := range ship {
+			if _, ok := hitSet[c]; !ok {
+				sunk = false
+				break
+			}
+		}
+		if sunk {
+			continue
+		}
+		if minLen == 0 || len(ship) < minLen {
+			minLen = len(ship)
+		}
+	}
+	if minLen == 0 {
+		return 1
+	}
+	return minLen
+}
+
+func botLineCandidates(ships Ships, shots []int) []int {
+	hits := botUnsunkHits(ships, shots)
+	if len(hits) < 2 {
+		return nil
+	}
+	hitSet := ShotsToHitSet(shots)
+	seen := map[int]struct{}{}
+	var out []int
+	add := func(cell int) {
+		if cell < 0 || cell >= CellCount {
+			return
+		}
+		if _, ok := hitSet[cell]; ok {
+			return
+		}
+		if _, ok := seen[cell]; ok {
+			return
+		}
+		seen[cell] = struct{}{}
+		out = append(out, cell)
+	}
+	for i := 0; i < len(hits); i++ {
+		for j := i + 1; j < len(hits); j++ {
+			a, b := hits[i], hits[j]
+			ar, ac := a/BoardSize, a%BoardSize
+			br, bc := b/BoardSize, b%BoardSize
+			if ar == br {
+				lo, hi := ac, bc
+				if lo > hi {
+					lo, hi = hi, lo
+				}
+				if hi-lo == 1 || cellsFilled(ar, lo, hi, true, hitSet) {
+					add(ar*BoardSize + lo - 1)
+					add(ar*BoardSize + hi + 1)
+				}
+			} else if ac == bc {
+				lo, hi := ar, br
+				if lo > hi {
+					lo, hi = hi, lo
+				}
+				if hi-lo == 1 || cellsFilled(ac, lo, hi, false, hitSet) {
+					add((lo-1)*BoardSize + ac)
+					add((hi+1)*BoardSize + ac)
+				}
+			}
+		}
+	}
+	sort.Ints(out)
+	return out
+}
+
+func cellsFilled(fixed, lo, hi int, horizontal bool, hitSet map[int]struct{}) bool {
+	for x := lo + 1; x < hi; x++ {
+		cell := fixed*BoardSize + x
+		if !horizontal {
+			cell = x*BoardSize + fixed
+		}
+		if _, ok := hitSet[cell]; !ok {
+			return false
+		}
+	}
+	return hi > lo
+}
+
+func botUnsunkHits(ships Ships, shots []int) []int {
+	hitSet := ShotsToHitSet(shots)
+	var out []int
+	for _, ship := range ships {
+		sunk := true
+		for _, c := range ship {
+			if _, ok := hitSet[c]; !ok {
+				sunk = false
+				break
+			}
+		}
+		if sunk {
+			continue
+		}
+		for _, c := range ship {
+			if _, ok := hitSet[c]; ok {
+				out = append(out, c)
+			}
+		}
+	}
+	sort.Ints(out)
+	return out
 }

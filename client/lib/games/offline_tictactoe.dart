@@ -175,13 +175,95 @@ int pickBotCell({
     if (cell >= 0 && moves.contains(cell)) return cell;
   }
 
-  // 4. Центр (не ultimate)
+  // 4. Своя угроза, затем блок чужой.
   if (resolved != variantUltimate) {
-    final center = (gridSize ~/ 2) * gridSize + (gridSize ~/ 2);
-    if (moves.contains(center)) return center;
+    final threat = _bestThreat(board, moves, turn, gridSize, winLen);
+    if (threat >= 0) return threat;
+    for (final opp in opponents) {
+      final block = _bestThreat(board, moves, opp, gridSize, winLen);
+      if (block >= 0) return block;
+    }
+    var bestCell = moves.first;
+    var bestScore = -1;
+    for (final cell in moves) {
+      final r = cell ~/ gridSize;
+      final c = cell % gridSize;
+      final s = gridSize -
+          (r - gridSize ~/ 2).abs() -
+          (c - gridSize ~/ 2).abs();
+      if (s > bestScore) {
+        bestScore = s;
+        bestCell = cell;
+      }
+    }
+    return bestCell;
   }
 
   return moves[Random().nextInt(moves.length)];
+}
+
+int _bestThreat(
+  List<String> board,
+  List<int> moves,
+  String mark,
+  int gridSize,
+  int winLen,
+) {
+  var best = -1;
+  var bestScore = 0;
+  for (final cell in moves) {
+    final next = List<String>.from(board);
+    next[cell] = mark;
+    final n = _countOpenThreats(next, mark, gridSize, winLen);
+    if (n > bestScore) {
+      bestScore = n;
+      best = cell;
+    }
+  }
+  return bestScore > 0 ? best : -1;
+}
+
+int _countOpenThreats(
+  List<String> board,
+  String mark,
+  int gridSize,
+  int winLen,
+) {
+  var n = 0;
+  const dirs = [
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [1, -1],
+  ];
+  for (var r = 0; r < gridSize; r++) {
+    for (var c = 0; c < gridSize; c++) {
+      for (final d in dirs) {
+        var own = 0;
+        var empty = 0;
+        var ok = true;
+        for (var k = 0; k < winLen; k++) {
+          final rr = r + d[0] * k;
+          final cc = c + d[1] * k;
+          if (rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize) {
+            ok = false;
+            break;
+          }
+          final v = board[rr * gridSize + cc];
+          if (v == mark) {
+            own++;
+          } else if (v.isEmpty) {
+            empty++;
+          } else {
+            ok = false;
+            break;
+          }
+        }
+        if (ok && own == winLen - 1 && empty == 1) n++;
+      }
+    }
+  }
+  return n;
 }
 
 bool _ultimateWouldWin(

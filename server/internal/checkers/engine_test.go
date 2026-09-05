@@ -1,6 +1,9 @@
 package checkers
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 func TestStartPosition(t *testing.T) {
 	g := NewGame(ModeRussian)
@@ -287,6 +290,74 @@ func TestCornersWinByFillingOpponentHome(t *testing.T) {
 	}
 	if g.Winner != 0 {
 		t.Fatalf("winner=%d want white after filling black home", g.Winner)
+	}
+}
+
+func TestBotPrefersCapture(t *testing.T) {
+	g := NewGame(ModeRussian)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(3, 2, WhiteMan)
+	g.set(4, 3, BlackMan)
+	g.set(2, 1, WhiteMan)
+	g.Turn = 0
+	mv, ok := PickMove(g, nil)
+	if !ok || len(mv.Jumped) == 0 {
+		t.Fatalf("bot must capture: %+v ok=%v", mv, ok)
+	}
+}
+
+func TestCornersBotDevelopsRearPiece(t *testing.T) {
+	g := NewGame(ModeCorners)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(7, 7, BlackMan)
+	g.set(5, 5, BlackMan)
+	g.set(0, 0, WhiteMan)
+	g.Turn = 1
+	mv, ok := PickMove(g, nil)
+	if !ok {
+		t.Fatal("no move")
+	}
+	if mv.From != (Square{R: 7, C: 7}) {
+		t.Fatalf("bot must develop the lagging piece, got from=%+v", mv.From)
+	}
+}
+
+func TestCornersBotMovesSeveralPieces(t *testing.T) {
+	g := NewGame(ModeCorners)
+	rng := rand.New(rand.NewSource(1))
+	froms := map[Square]bool{}
+	blackMoves := 0
+	for i := 0; i < 40 && !g.IsOver() && blackMoves < 8; i++ {
+		seat := g.Turn
+		mv, ok := PickMove(g, rng)
+		if !ok {
+			t.Fatal("bot stuck")
+		}
+		if err := g.Apply(seat, mv); err != nil {
+			t.Fatal(err)
+		}
+		if seat == 1 {
+			froms[mv.From] = true
+			blackMoves++
+		}
+	}
+	if len(froms) < 3 {
+		t.Fatalf("corners bot walked one piece: froms=%d", len(froms))
+	}
+	inStart := 0
+	for r := 5; r < 8; r++ {
+		for c := 5; c < 8; c++ {
+			if owner(g.at(r, c)) == 1 {
+				inStart++
+			}
+		}
+	}
+	if inStart >= 8 {
+		t.Fatalf("still %d black in start corner", inStart)
 	}
 }
 

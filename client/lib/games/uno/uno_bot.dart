@@ -61,7 +61,10 @@ UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
         break;
       }
     }
-    if (drawn == null || rng.nextDouble() < 0.15) {
+    if (drawn == null || !game.canPlay(index, drawn)) {
+      return const UnoAction(UnoActionType.keep);
+    }
+    if (drawn.isWild && player.hand.length > 3 && rng.nextDouble() < 0.2) {
       return const UnoAction(UnoActionType.keep);
     }
     return UnoAction(
@@ -77,8 +80,8 @@ UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
   if (legal.isEmpty) return const UnoAction(UnoActionType.draw);
 
   legal.sort((a, b) {
-    final actionCompare = b.points.compareTo(a.points);
-    if (actionCompare != 0) return actionCompare;
+    final cmp = _unoCardScore(game, index, b).compareTo(_unoCardScore(game, index, a));
+    if (cmp != 0) return cmp;
     return a.id.compareTo(b.id);
   });
   final card = legal.first;
@@ -87,4 +90,48 @@ UnoAction pickUnoBotAction(UnoEngine game, {Random? random}) {
     cardId: card.id,
     color: card.isWild ? chooseUnoBotColor(player) : null,
   );
+}
+
+int _unoNextHandSize(UnoEngine game, int index) {
+  final n = game.players.length;
+  var dir = game.direction;
+  if (dir == 0) dir = 1;
+  for (var step = 1; step <= n; step++) {
+    var next = (index + dir * step) % n;
+    if (next < 0) next += n;
+    if (!game.players[next].forfeited) {
+      return game.players[next].hand.length;
+    }
+  }
+  return 7;
+}
+
+int _unoCardScore(UnoEngine game, int index, UnoCard card) {
+  final next = _unoNextHandSize(game, index);
+  final counts = <UnoColor, int>{};
+  for (final c in game.players[index].hand) {
+    if (c.color.isPlayableColor) {
+      counts[c.color] = (counts[c.color] ?? 0) + 1;
+    }
+  }
+  var score = card.points;
+  switch (card.kind) {
+    case UnoCardKind.skip:
+    case UnoCardKind.reverse:
+    case UnoCardKind.drawTwo:
+      if (next <= 2) {
+        score += 70;
+      } else if (next <= 4) {
+        score += 25;
+      } else {
+        score += 8;
+      }
+    case UnoCardKind.wild:
+      score += next <= 2 ? 40 : -25;
+    case UnoCardKind.wildDrawFour:
+      score += next <= 2 ? 90 : -45;
+    case UnoCardKind.number:
+      score += (counts[card.color] ?? 0) * 10;
+  }
+  return score;
 }

@@ -87,25 +87,124 @@ List<int> battleshipBotNeighborCandidates(
   return out;
 }
 
-/// Выбор выстрела бота: соседи попаданий, иначе случайная свободная клетка.
+/// Выбор выстрела бота: линия попаданий, соседи, шахматный поиск.
 int battleshipBotPickShot(
   List<List<int>> ships,
   List<int> shots,
   Random rng,
 ) {
+  final line = _battleshipLineCandidates(ships, shots);
+  if (line.isNotEmpty) {
+    return line[rng.nextInt(line.length)];
+  }
   final cands = battleshipBotNeighborCandidates(ships, shots);
   if (cands.isNotEmpty) {
     return cands[rng.nextInt(cands.length)];
   }
   final hitSet = shots.toSet();
-  final free = <int>[
-    for (var i = 0; i < kBattleshipCellCount; i++)
-      if (!hitSet.contains(i)) i,
-  ];
+  final minLen = _battleshipMinUnsunkLen(ships, shots);
+  final parity = minLen > 1 ? minLen % 2 : 0;
+  final preferred = <int>[];
+  final free = <int>[];
+  for (var i = 0; i < kBattleshipCellCount; i++) {
+    if (hitSet.contains(i)) continue;
+    free.add(i);
+    if (minLen > 1 &&
+        (i ~/ kBattleshipBoardSize + i % kBattleshipBoardSize) % 2 == parity) {
+      preferred.add(i);
+    }
+  }
+  if (preferred.isNotEmpty) {
+    return preferred[rng.nextInt(preferred.length)];
+  }
   if (free.isEmpty) {
     throw GamesException(400, 'no cells left');
   }
   return free[rng.nextInt(free.length)];
+}
+
+int _battleshipMinUnsunkLen(List<List<int>> ships, List<int> shots) {
+  final hit = shots.toSet();
+  var minLen = 0;
+  for (final ship in ships) {
+    if (ship.every(hit.contains)) continue;
+    if (minLen == 0 || ship.length < minLen) minLen = ship.length;
+  }
+  return minLen == 0 ? 1 : minLen;
+}
+
+List<int> _battleshipUnsunkHits(List<List<int>> ships, List<int> shots) {
+  final hit = shots.toSet();
+  final out = <int>[];
+  for (final ship in ships) {
+    if (ship.every(hit.contains)) continue;
+    for (final c in ship) {
+      if (hit.contains(c)) out.add(c);
+    }
+  }
+  out.sort();
+  return out;
+}
+
+List<int> _battleshipLineCandidates(List<List<int>> ships, List<int> shots) {
+  final hits = _battleshipUnsunkHits(ships, shots);
+  if (hits.length < 2) return const [];
+  final hitSet = shots.toSet();
+  final seen = <int>{};
+  final out = <int>[];
+  void add(int cell) {
+    if (cell < 0 || cell >= kBattleshipCellCount) return;
+    if (hitSet.contains(cell) || !seen.add(cell)) return;
+    out.add(cell);
+  }
+
+  bool filled(int fixed, int lo, int hi, bool horizontal) {
+    for (var x = lo + 1; x < hi; x++) {
+      final cell = horizontal
+          ? fixed * kBattleshipBoardSize + x
+          : x * kBattleshipBoardSize + fixed;
+      if (!hitSet.contains(cell)) return false;
+    }
+    return hi > lo;
+  }
+
+  for (var i = 0; i < hits.length; i++) {
+    for (var j = i + 1; j < hits.length; j++) {
+      final a = hits[i];
+      final b = hits[j];
+      final ar = a ~/ kBattleshipBoardSize;
+      final ac = a % kBattleshipBoardSize;
+      final br = b ~/ kBattleshipBoardSize;
+      final bc = b % kBattleshipBoardSize;
+      if (ar == br) {
+        var lo = ac;
+        var hi = bc;
+        if (lo > hi) {
+          final t = lo;
+          lo = hi;
+          hi = t;
+        }
+        if (hi - lo == 1 || filled(ar, lo, hi, true)) {
+          add(ar * kBattleshipBoardSize + lo - 1);
+          add(ar * kBattleshipBoardSize + hi + 1);
+        }
+      } else if (ac == bc) {
+        var lo = ar;
+        var hi = br;
+        if (lo > hi) {
+          final t = lo;
+          lo = hi;
+          hi = t;
+        }
+        if (hi - lo == 1 || filled(ac, lo, hi, false)) {
+          add((lo - 1) * kBattleshipBoardSize + ac);
+          add((hi + 1) * kBattleshipBoardSize + ac);
+        }
+      }
+    }
+  }
+  out.sort();
+  return out;
 }
 
 /// Локальная партия Морского боя с ботом — тот же [BattleshipGameView], что онлайн.
