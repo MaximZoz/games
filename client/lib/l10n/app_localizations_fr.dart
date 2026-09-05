@@ -728,7 +728,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCheckersIntro => 'Plateau 8×8. Deux joueurs.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'La prise est obligatoire. Dame et pion doivent continuer tant qu’un nouveau saut est possible depuis la case d’arrivée — on ne s’arrête pas au milieu. S’il y a plusieurs directions, on peut en choisir n’importe laquelle, pas forcément la plus longue. Un pion arrivé sur la dernière rangée devient dame.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Dames russes : 12 pions chacun sur les cases sombres. Les pions avancent en diagonale et prennent en avant et en arrière. Les dames volent d’un nombre quelconque de cases. La prise est obligatoire — on choisit la plus longue. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
+  String get rulesCheckersPlayRussian => 'Dames russes : 12 pions chacun sur les cases sombres. Les pions avancent en diagonale et prennent en avant et en arrière. Les dames volent d’un nombre quelconque de cases. La prise est obligatoire : il faut continuer s’il reste un saut, mais on peut choisir n’importe quelle direction, pas forcément la plus longue. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Dames anglaises : 12 pions chacun. Les pions n’avancent et ne prennent qu’en diagonale vers l’avant. Les dames avancent d’une case en diagonale. La prise est obligatoire. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';

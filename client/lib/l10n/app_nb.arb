@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Brett 8×8. To spillere.",
-  "rulesCheckersPlayRussian": "Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt — den lengste serien velges. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.",
+  "rulesCheckersPlay": "Slag er plikt. Dame og brikke må fortsette så lenge et nytt hopp går fra landingsfeltet — du kan ikke stanse midt i. Finnes flere retninger kan du velge hvilken som helst, ikke nødvendigvis den lengste. En brikke på siste rad blir dame.",
+  "rulesCheckersPlayRussian": "Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt: du må fortsette hvis det går, men kan velge hvilken som helst retning — ikke nødvendigvis den lengste. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.",
   "rulesCheckersPlayEnglish": "Engelsk dam: 12 brikker hver. Bønder går og slår bare skrått frem. Damer går ett felt skrått i alle retninger. Slag er plikt. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.",
   "rulesCheckersPlayGiveaway": "Gi-bort: samme trekk som russisk dam, men målet er omvendt — gi bort alle brikker eller stå uten trekk. Slag er fortsatt plikt.",
   "rulesCheckersPlayCorners": "Hjørner: brikkene starter i motstående hjørner. Gå til et tomt nabo-felt vannrett eller loddrett, eller hopp over en hvilken som helst brikke uten å fjerne den. Målet er å flytte alle brikkene til motstanderens hjørne.",

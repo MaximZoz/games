@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Bord 8×8. Twee spelers.",
-  "rulesCheckersPlayRussian": "Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht — kies de langste reeks. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
+  "rulesCheckersPlay": "Slaan is verplicht. Dam en schijf moeten doorgaan zolang vanaf het landingsveld nog een slag kan — stoppen halverwege mag niet. Bij meerdere richtingen mag je elke kiezen, niet per se de langste. Een schijf op de laatste rij wordt dam.",
+  "rulesCheckersPlayRussian": "Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht: doorgaan als het kan, maar bij meerdere richtingen mag je elke kiezen, niet per se de langste. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
   "rulesCheckersPlayEnglish": "Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
   "rulesCheckersPlayGiveaway": "Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.",
   "rulesCheckersPlayCorners": "Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.",

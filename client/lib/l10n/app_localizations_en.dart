@@ -728,7 +728,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesCheckersIntro => 'An 8×8 board, 12 pieces each on dark squares. Men move forward diagonally and capture in any direction. Kings fly along the diagonal.';
 
   @override
-  String get rulesCheckersPlay => 'Captures are mandatory. If you can capture again, you continue with the same piece. A man that reaches the last rank becomes a king.';
+  String get rulesCheckersPlay => 'Captures are mandatory. A king or man must keep capturing while a further jump is possible from the landing square — you cannot stop mid-sequence. If several directions are available, you may choose any of them; the longest capture is not required. A man that reaches the last rank becomes a king.';
 
   @override
   String get rulesCheckersWin => 'In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.';
@@ -737,7 +737,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Offline: a game against the bot.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory — take the longest sequence. Win by capturing all enemy pieces or leaving the opponent with no moves.';
+  String get rulesCheckersPlayRussian => 'Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory: you must continue if another jump is possible, but you may choose any direction — not necessarily the longest. Win by capturing all enemy pieces or leaving the opponent with no moves.';
 
   @override
   String get rulesCheckersPlayEnglish => 'English draughts: 12 pieces each. Men move and capture only diagonally forward. Kings move one square diagonally in any direction. Captures are mandatory. Win by capturing all enemy pieces or leaving the opponent with no moves.';

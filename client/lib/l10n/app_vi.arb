@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Bàn 8×8. Hai người chơi.",
-  "rulesCheckersPlayRussian": "Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn — chọn chuỗi dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.",
+  "rulesCheckersPlay": "Bắt buộc ăn. Đam và quân thường phải ăn tiếp nếu từ ô đáp còn nhảy được — không được dừng giữa chừng. Có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Quân thường tới hàng cuối thành đam.",
+  "rulesCheckersPlayRussian": "Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn: còn nhảy được thì không được dừng, nhưng có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.",
   "rulesCheckersPlayEnglish": "Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.",
   "rulesCheckersPlayGiveaway": "Nhường: nước đi như cờ đam Nga nhưng mục tiêu ngược lại — mất hết quân hoặc hết nước đi. Vẫn bắt buộc ăn.",
   "rulesCheckersPlayCorners": "Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.",

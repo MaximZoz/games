@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Deska 8×8. Dva hráči.",
-  "rulesCheckersPlayRussian": "Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné — volí se nejdelší série. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.",
+  "rulesCheckersPlay": "Braní je povinné. Dáma i pěšec musí pokračovat, dokud z pole dopadu lze brát dál — zastavit uprostřed nelze. Při více směrech lze zvolit kterýkoli, ne nutně nejdelší. Pěšec na poslední řadě se stává dámou.",
+  "rulesCheckersPlayRussian": "Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné: nelze zastavit, pokud lze pokračovat, ale při více směrech zvolíte kterýkoli, ne nutně nejdelší. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.",
   "rulesCheckersPlayEnglish": "Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.",
   "rulesCheckersPlayGiveaway": "Poddávaná: stejné tahy jako v ruské dámě, ale cíl je opačný — odevzdat všechny kameny nebo zůstat bez tahu. Braní je stále povinné.",
   "rulesCheckersPlayCorners": "Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.",

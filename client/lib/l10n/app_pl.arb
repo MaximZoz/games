@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Plansza 8×8. Dwóch graczy.",
-  "rulesCheckersPlayRussian": "Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe — wybiera się najdłuższą sekwencję. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
+  "rulesCheckersPlay": "Bicie jest obowiązkowe. Damka i pion muszą kontynuować bój, dopóki z pola lądowania można bić dalej — nie wolno stanąć w połowie. Przy kilku kierunkach można wybrać dowolny, niekoniecznie najdłuższy. Pion na ostatniej linii staje się damką.",
+  "rulesCheckersPlayRussian": "Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe: nie wolno przerwać, jeśli można kontynuować, ale przy kilku kierunkach wybierasz dowolny, niekoniecznie najdłuższy. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
   "rulesCheckersPlayEnglish": "Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
   "rulesCheckersPlayGiveaway": "Poddawki: te same ruchy co w warcabach rosyjskich, ale cel jest odwrotny — oddać wszystkie piony albo zostać bez ruchu. Bicie nadal jest obowiązkowe.",
   "rulesCheckersPlayCorners": "Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.",

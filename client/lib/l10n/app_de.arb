@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Brett 8×8. Zwei Spieler.",
-  "rulesCheckersPlayRussian": "Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht — die längste Schlagfolge zählt. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
+  "rulesCheckersPlay": "Schlagen ist Pflicht. Dame und Stein müssen weiterschlagen, solange vom Landefeld ein weiterer Schlag möglich ist — in der Mitte anhalten ist verboten. Gibt es mehrere Richtungen, darf jede gewählt werden, nicht zwingend die längste. Ein Stein auf der letzten Reihe wird zur Dame.",
+  "rulesCheckersPlayRussian": "Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht: weiterzuschlagen, wenn möglich, aber bei mehreren Richtungen darf jede gewählt werden, nicht zwingend die längste. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
   "rulesCheckersPlayEnglish": "Englisches Damespiel: je 12 Steine. Bauern ziehen und schlagen nur diagonal vorwärts. Damen ziehen ein Feld diagonal in jede Richtung. Schlagen ist Pflicht. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
   "rulesCheckersPlayGiveaway": "Verlierdame: dieselben Züge wie im russischen Damespiel, aber das Ziel ist umgekehrt — alle eigenen Steine abgeben oder keinen Zug mehr haben. Schlagen bleibt Pflicht.",
   "rulesCheckersPlayCorners": "Ecken: die Steine stehen in gegenüberliegenden Ecken. Ziehe auf ein benachbartes freies Feld waagerecht oder senkrecht oder springe über einen beliebigen Stein, ohne ihn zu schlagen. Ziel ist, alle eigenen Steine in die Ecke des Gegners zu bringen.",

@@ -8,6 +8,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/checkers/checkers_board.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_offline_session.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
@@ -767,57 +768,11 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   Widget _buildBoard(CheckersGameView game) {
-    final flip = game.myIndex != 1;
-    final selected = _selected;
-    final targets = <CheckersSquare>{
-      if (selected != null)
-        for (final m in game.legalMoves)
-          if (m.from == selected) m.to,
-    };
-    final origins = <CheckersSquare>{
-      for (final m in game.legalMoves) m.from,
-    };
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final side = constraints.biggest.shortestSide;
-        return Center(
-          child: SizedBox(
-            width: side,
-            height: side,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(side * 0.03),
-              child: Column(
-                children: [
-                  for (var visR = 0; visR < CheckersEngine.size; visR++)
-                    Expanded(
-                      child: Row(
-                        children: [
-                          for (var visC = 0; visC < CheckersEngine.size; visC++)
-                            Expanded(
-                              child: _CheckersCell(
-                                r: flip
-                                    ? CheckersEngine.size - 1 - visR
-                                    : visR,
-                                c: flip
-                                    ? CheckersEngine.size - 1 - visC
-                                    : visC,
-                                game: game,
-                                selected: selected,
-                                targets: targets,
-                                origins: origins,
-                                onTap: (r, c) =>
-                                    unawaited(_onSquareTap(game, r, c)),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    return CheckersBoard(
+      game: game,
+      selected: _selected,
+      flip: game.myIndex != 1,
+      onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
     );
   }
 
@@ -850,119 +805,6 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       onCancelWait: () => unawaited(_cancelRematchWait()),
       onFindGame: () => unawaited(_findGame()),
       compact: true,
-    );
-  }
-}
-
-class _CheckersCell extends StatelessWidget {
-  const _CheckersCell({
-    required this.r,
-    required this.c,
-    required this.game,
-    required this.selected,
-    required this.targets,
-    required this.origins,
-    required this.onTap,
-  });
-
-  final int r;
-  final int c;
-  final CheckersGameView game;
-  final CheckersSquare? selected;
-  final Set<CheckersSquare> targets;
-  final Set<CheckersSquare> origins;
-  final void Function(int r, int c) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = CheckersEngine.dark(r, c);
-    final sq = CheckersSquare(r, c);
-    final piece = r * CheckersEngine.size + c < game.board.length
-        ? game.board[r * CheckersEngine.size + c]
-        : 0;
-    final isSelected = selected == sq;
-    final isTarget = targets.contains(sq);
-    final isOrigin = origins.contains(sq);
-    final last = (game.lastFromR == r && game.lastFromC == c) ||
-        (game.lastToR == r && game.lastToC == c);
-    return GestureDetector(
-      onTap: () => onTap(r, c),
-      child: ColoredBox(
-        color: dark ? const Color(0xFFB58863) : const Color(0xFFF0D9B5),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (isSelected || last)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: (isSelected ? const Color(0xFF65A30D) : AppColors.accentStart)
-                      .withValues(alpha: 0.28),
-                ),
-              ),
-            if (isOrigin && !isSelected)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: const Color(0xFFCA8A04).withValues(alpha: 0.18),
-                ),
-              ),
-            if (piece > 0) _CheckersPiece(piece: piece),
-            if (isTarget)
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF65A30D).withValues(alpha: 0.7),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CheckersPiece extends StatelessWidget {
-  const _CheckersPiece({required this.piece});
-
-  final int piece;
-
-  @override
-  Widget build(BuildContext context) {
-    final white = piece == CheckersEngine.whiteMan ||
-        piece == CheckersEngine.whiteKing;
-    final king = CheckersEngine.isKing(piece);
-    return FractionallySizedBox(
-      widthFactor: 0.78,
-      heightFactor: 0.78,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: white ? const Color(0xFFF8F4EA) : const Color(0xFF3B2414),
-          border: Border.all(
-            color: white ? const Color(0xFFD6C7A1) : const Color(0xFF1A1008),
-            width: 1.5,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 2,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-        child: king
-            ? Center(
-                child: Icon(
-                  Icons.workspace_premium_rounded,
-                  size: 14,
-                  color: white
-                      ? const Color(0xFFB45309)
-                      : const Color(0xFFFBBF24),
-                ),
-              )
-            : null,
-      ),
     );
   }
 }

@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Tabuleiro 8×8. Dois jogadores.",
-  "rulesCheckersPlayRussian": "Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório — escolhe-se a sequência mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
+  "rulesCheckersPlay": "Capturar é obrigatório. Dama e peão devem continuar enquanto, da casa de chegada, ainda for possível capturar — não se para no meio. Se houver várias direções, pode escolher qualquer uma, não necessariamente a mais longa. Um peão na última fileira vira dama.",
+  "rulesCheckersPlayRussian": "Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório: continue se ainda houver salto, mas pode escolher qualquer direção, não necessariamente a mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
   "rulesCheckersPlayEnglish": "Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
   "rulesCheckersPlayGiveaway": "Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.",
   "rulesCheckersPlayCorners": "Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.",

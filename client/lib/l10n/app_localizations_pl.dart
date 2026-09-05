@@ -728,7 +728,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesCheckersIntro => 'Plansza 8×8. Dwóch graczy.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Bicie jest obowiązkowe. Damka i pion muszą kontynuować bój, dopóki z pola lądowania można bić dalej — nie wolno stanąć w połowie. Przy kilku kierunkach można wybrać dowolny, niekoniecznie najdłuższy. Pion na ostatniej linii staje się damką.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe — wybiera się najdłuższą sekwencję. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
+  String get rulesCheckersPlayRussian => 'Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe: nie wolno przerwać, jeśli można kontynuować, ale przy kilku kierunkach wybierasz dowolny, niekoniecznie najdłuższy. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';

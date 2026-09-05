@@ -728,7 +728,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesCheckersIntro => 'Brett 8×8. To spillere.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Slag er plikt. Dame og brikke må fortsette så lenge et nytt hopp går fra landingsfeltet — du kan ikke stanse midt i. Finnes flere retninger kan du velge hvilken som helst, ikke nødvendigvis den lengste. En brikke på siste rad blir dame.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt — den lengste serien velges. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
+  String get rulesCheckersPlayRussian => 'Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt: du må fortsette hvis det går, men kan velge hvilken som helst retning — ikke nødvendigvis den lengste. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Engelsk dam: 12 brikker hver. Bønder går og slår bare skrått frem. Damer går ett felt skrått i alle retninger. Slag er plikt. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';

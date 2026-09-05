@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Lauta 8×8. Kaksi pelaajaa.",
-  "rulesCheckersPlayRussian": "Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista — valitaan pisin sarja. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
+  "rulesCheckersPlay": "Lyöminen on pakollista. Dama ja nappula jatkavat, jos laskeutumiruudusta voi lyödä lisää — kesken ei saa pysähtyä. Jos suuntia on useita, saa valita minkä tahansa, ei välttämättä pisintä. Viimeiselle riville päässyt nappula muuttuu damaksi.",
+  "rulesCheckersPlayRussian": "Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista: jatka jos mahdollista, mutta suuntia voi olla useita ja saat valita minkä tahansa, ei välttämättä pisintä. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
   "rulesCheckersPlayEnglish": "Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
   "rulesCheckersPlayGiveaway": "Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.",
   "rulesCheckersPlayCorners": "Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.",

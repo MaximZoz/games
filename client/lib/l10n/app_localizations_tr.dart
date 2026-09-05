@@ -728,7 +728,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesCheckersIntro => 'Tahta 8×8. İki oyuncu.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Vuruş zorunludur. Damka ve taş, indiği kareden başka vuruş varsa duramaz. Birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Son sıraya ulaşan taş damka olur.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur — en uzun dizi seçilir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
+  String get rulesCheckersPlayRussian => 'Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur: devam edilebiliyorsa durulmaz, ama birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
 
   @override
   String get rulesCheckersPlayEnglish => 'İngiliz daması: her birinde 12 taş. Piyonlar yalnızca çapraz ileri gider ve vurur. Damkalar çapraz bir kare gider. Vuruş zorunludur. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';

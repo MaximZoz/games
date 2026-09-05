@@ -728,7 +728,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesCheckersIntro => 'Bàn 8×8. Hai người chơi.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Bắt buộc ăn. Đam và quân thường phải ăn tiếp nếu từ ô đáp còn nhảy được — không được dừng giữa chừng. Có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Quân thường tới hàng cuối thành đam.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn — chọn chuỗi dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.';
+  String get rulesCheckersPlayRussian => 'Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn: còn nhảy được thì không được dừng, nhưng có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.';

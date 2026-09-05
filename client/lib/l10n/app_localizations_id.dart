@@ -728,7 +728,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesCheckersIntro => 'Papan 8×8. Dua pemain.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Makan wajib. Damka dan bidak harus lanjut selama dari petak mendarat masih bisa makan — tidak boleh berhenti di tengah. Jika ada beberapa arah, pilih yang mana saja, tidak wajib yang terpanjang. Bidak di baris terakhir menjadi damka.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib — pilih rangkaian terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+  String get rulesCheckersPlayRussian => 'Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib: lanjut jika masih bisa, tetapi jika ada beberapa arah pilih yang mana saja, tidak wajib yang terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';

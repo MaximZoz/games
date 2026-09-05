@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Tablero 8×8. Dos jugadores.",
-  "rulesCheckersPlayRussian": "Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: se elige la secuencia más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.",
+  "rulesCheckersPlay": "Capturar es obligatorio. Dama y peón deben seguir mientras desde la casilla de llegada se pueda capturar otra vez: no se puede parar a mitad. Si hay varias direcciones, se puede elegir cualquiera, no necesariamente la más larga. Un peón en la última fila se corona.",
+  "rulesCheckersPlayRussian": "Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: hay que seguir si se puede, pero se puede elegir cualquier dirección, no necesariamente la más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.",
   "rulesCheckersPlayEnglish": "Damas inglesas: 12 fichas cada uno. Los peones avanzan y capturan solo en diagonal hacia adelante. Las damas avanzan una casilla en diagonal. Capturar es obligatorio. Gana quien capture todas las fichas o deje al rival sin movimientos.",
   "rulesCheckersPlayGiveaway": "Damas locas: los mismos movimientos que las damas rusas, pero el objetivo es el inverso: perder todas las fichas o quedarse sin movimientos. Capturar sigue siendo obligatorio.",
   "rulesCheckersPlayCorners": "Esquinas: las fichas empiezan en esquinas opuestas. Se avanza a una casilla libre vecina en horizontal o vertical, o se salta sobre cualquier ficha sin quitarla. El objetivo es llevar todas las fichas a la esquina del rival.",

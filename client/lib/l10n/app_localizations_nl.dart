@@ -728,7 +728,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesCheckersIntro => 'Bord 8×8. Twee spelers.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => 'Slaan is verplicht. Dam en schijf moeten doorgaan zolang vanaf het landingsveld nog een slag kan — stoppen halverwege mag niet. Bij meerdere richtingen mag je elke kiezen, niet per se de langste. Een schijf op de laatste rij wordt dam.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => 'Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht — kies de langste reeks. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+  String get rulesCheckersPlayRussian => 'Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht: doorgaan als het kan, maar bij meerdere richtingen mag je elke kiezen, niet per se de langste. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
 
   @override
   String get rulesCheckersPlayEnglish => 'Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';

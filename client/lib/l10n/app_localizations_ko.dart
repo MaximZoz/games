@@ -728,7 +728,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesCheckersIntro => '보드 8×8. 2인 대전.';
 
   @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+  String get rulesCheckersPlay => '잡기는 필수입니다. 킹과 졸은 착지한 칸에서 더 잡을 수 있으면 반드시 이어가야 하며 중간에 멈출 수 없습니다. 방향이 여러 개면 아무거나 골라도 되고 가장 긴 경로일 필요는 없습니다. 마지막 줄에 오른 졸은 킹이 됩니다.';
 
   @override
   String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
@@ -737,7 +737,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get rulesCheckersPlayRussian => '러시아 체커: 각자 어두운 칸에 12개. 졸은 대각선 앞으로 움직이고 앞뒤로 잡습니다. 킹은 원하는 칸만큼 날아갑니다. 잡기는 필수이며 가장 긴 연속을 고릅니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
+  String get rulesCheckersPlayRussian => '러시아 체커: 각자 어두운 칸에 12개. 졸은 대각선 앞으로 움직이고 앞뒤로 잡습니다. 킹은 원하는 칸만큼 날아갑니다. 잡기는 필수입니다. 더 잡을 수 있으면 멈춰서는 안 되지만, 방향이 여러 개면 아무거나 골라도 되고 가장 긴 경로일 필요는 없습니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
 
   @override
   String get rulesCheckersPlayEnglish => '영국식 체커: 각자 12개. 졸은 대각선 앞으로만 움직이고 잡습니다. 킹은 대각선 한 칸입니다. 잡기는 필수입니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';

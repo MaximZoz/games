@@ -272,7 +272,8 @@
     }
   },
   "rulesCheckersIntro": "Tahta 8×8. İki oyuncu.",
-  "rulesCheckersPlayRussian": "Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur — en uzun dizi seçilir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.",
+  "rulesCheckersPlay": "Vuruş zorunludur. Damka ve taş, indiği kareden başka vuruş varsa duramaz. Birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Son sıraya ulaşan taş damka olur.",
+  "rulesCheckersPlayRussian": "Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur: devam edilebiliyorsa durulmaz, ama birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.",
   "rulesCheckersPlayEnglish": "İngiliz daması: her birinde 12 taş. Piyonlar yalnızca çapraz ileri gider ve vurur. Damkalar çapraz bir kare gider. Vuruş zorunludur. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.",
   "rulesCheckersPlayGiveaway": "Teslim dama: hamleler Rus damasıyla aynıdır, ama amaç tersidir — tüm taşlarını vermek veya hamlesiz kalmak. Vuruş yine zorunludur.",
   "rulesCheckersPlayCorners": "Köşeler: taşlar karşı köşelerde durur. Yatay veya dikey komşu boş kareye gider ya da herhangi bir taşın üzerinden atlar, taşı almaz. Amaç tüm taşları rakibin köşesine taşımaktır.",
