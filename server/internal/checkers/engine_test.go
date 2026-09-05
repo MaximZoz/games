@@ -153,6 +153,143 @@ func TestKingMustContinueAnyDirection(t *testing.T) {
 	}
 }
 
+func TestNormalizeAllModes(t *testing.T) {
+	if NormalizeMode("english") != ModeEnglish {
+		t.Fatal("english")
+	}
+	if NormalizeMode("corners") != ModeCorners {
+		t.Fatal("corners")
+	}
+	if NormalizeMode("giveaway") != ModeGiveaway {
+		t.Fatal("giveaway")
+	}
+	if NormalizeMode("nope") != ModeRussian {
+		t.Fatal("fallback")
+	}
+	if len(AllModes) != 4 {
+		t.Fatalf("modes=%d", len(AllModes))
+	}
+}
+
+func TestEnglishManCapturesOnlyForward(t *testing.T) {
+	g := NewGame(ModeEnglish)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(4, 3, WhiteMan)
+	g.set(3, 2, BlackMan) // назад для белых
+	g.set(5, 4, BlackMan) // вперёд
+	moves := g.LegalMoves()
+	if len(moves) != 1 || moves[0].To != (Square{R: 6, C: 5}) {
+		t.Fatalf("english forward-only capture: %+v", moves)
+	}
+}
+
+func TestEnglishKingStepsOneSquare(t *testing.T) {
+	g := NewGame(ModeEnglish)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(3, 2, WhiteKing)
+	g.Turn = 0
+	for _, mv := range g.LegalMoves() {
+		dr := mv.To.R - mv.From.R
+		dc := mv.To.C - mv.From.C
+		if dr < 0 {
+			dr = -dr
+		}
+		if dc < 0 {
+			dc = -dc
+		}
+		if dr != 1 || dc != 1 {
+			t.Fatalf("english king must step one square: %+v", mv)
+		}
+	}
+}
+
+func TestEnglishPromotionEndsTurn(t *testing.T) {
+	g := NewGame(ModeEnglish)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(5, 2, WhiteMan)
+	g.set(6, 3, BlackMan)
+	g.set(6, 5, BlackMan)
+	if err := g.Apply(0, Move{
+		From:   Square{R: 5, C: 2},
+		To:     Square{R: 7, C: 4},
+		Jumped: []Square{{R: 6, C: 3}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if g.at(7, 4) != WhiteKing {
+		t.Fatalf("piece=%d", g.at(7, 4))
+	}
+	if g.MustContinue || g.Turn != 1 {
+		t.Fatalf("english crown ends the turn: continue=%v turn=%d", g.MustContinue, g.Turn)
+	}
+}
+
+func TestCornersStartAndJumpKeepsPiece(t *testing.T) {
+	g := NewGame(ModeCorners)
+	white, black := 0, 0
+	for _, p := range g.Board {
+		if p == WhiteMan {
+			white++
+		}
+		if p == BlackMan {
+			black++
+		}
+	}
+	if white != 9 || black != 9 {
+		t.Fatalf("corners start %d/%d", white, black)
+	}
+	if err := g.Apply(0, Move{From: Square{R: 2, C: 2}, To: Square{R: 2, C: 3}}); err != nil {
+		t.Fatal(err)
+	}
+	g.Turn = 0
+	// Белая на 2,3; чёрная ещё в углу. Поставим фигуру для прыжка.
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(2, 2, WhiteMan)
+	g.set(2, 3, BlackMan)
+	g.Turn = 0
+	if err := g.Apply(0, Move{From: Square{R: 2, C: 2}, To: Square{R: 2, C: 4}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.at(2, 3) != BlackMan {
+		t.Fatal("corners jump must not remove the hopped piece")
+	}
+	if g.at(2, 4) != WhiteMan {
+		t.Fatal("jumper must land")
+	}
+}
+
+func TestCornersWinByFillingOpponentHome(t *testing.T) {
+	g := NewGame(ModeCorners)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	for r := 5; r < 8; r++ {
+		for c := 5; c < 8; c++ {
+			if r == 7 && c == 5 {
+				continue
+			}
+			g.set(r, c, WhiteMan)
+		}
+	}
+	g.set(7, 4, WhiteMan)
+	g.set(0, 0, BlackMan)
+	g.Turn = 0
+	if err := g.Apply(0, Move{From: Square{R: 7, C: 4}, To: Square{R: 7, C: 5}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Winner != 0 {
+		t.Fatalf("winner=%d want white after filling black home", g.Winner)
+	}
+}
+
 func TestEncodeDecode(t *testing.T) {
 	g := NewGame(ModeRussian)
 	raw, err := Encode(g)

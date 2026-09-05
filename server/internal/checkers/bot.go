@@ -23,6 +23,14 @@ func PickMove(g *Game, rng *rand.Rand) (Move, bool) {
 }
 
 func moveScore(g *Game, mv Move) int {
+	if g != nil && g.Mode == ModeCorners {
+		goalR, goalC := 6, 6
+		if g.Turn == 1 {
+			goalR, goalC = 1, 1
+		}
+		dist := absInt(mv.To.R-goalR) + absInt(mv.To.C-goalC)
+		return -dist
+	}
 	score := len(mv.Jumped) * 20
 	seat := g.Turn
 	if seat == 0 {
@@ -37,4 +45,11 @@ func moveScore(g *Game, mv Move) int {
 		}
 	}
 	return score
+}
+
+func absInt(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }

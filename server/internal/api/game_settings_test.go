@@ -245,8 +245,20 @@ func TestNormalizeCheckersGameSettings(t *testing.T) {
 	if errMsg != "" {
 		t.Fatal(errMsg)
 	}
-	if s3.GameMode != "russian" {
-		t.Fatalf("unknown mode must fall back to russian: %s", s3.GameMode)
+	if s3.GameMode != "english" || s3.Variant != "english" {
+		t.Fatalf("english must stay english: %+v", s3)
+	}
+	s4, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeCheckers,
+		TurnTimeSec: 60,
+		StakeBronze: 2,
+		GameMode:    "corners",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s4.GameMode != "corners" || s4.Variant != "corners" {
+		t.Fatalf("corners: %+v", s4)
 	}
 }
 

@@ -338,6 +338,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveNardy(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/checkers/") {
+		h.serveCheckers(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 

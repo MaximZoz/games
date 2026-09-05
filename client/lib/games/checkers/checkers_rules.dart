@@ -6,9 +6,29 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 
 String checkersModeLabel(String mode, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
-  return CheckersEngine.normalizeMode(mode) == CheckersEngine.modeGiveaway
-      ? t.gamesCheckersModeGiveaway
-      : t.gamesCheckersModeRussian;
+  switch (CheckersEngine.normalizeMode(mode)) {
+    case CheckersEngine.modeEnglish:
+      return t.gamesCheckersModeEnglish;
+    case CheckersEngine.modeGiveaway:
+      return t.gamesCheckersModeGiveaway;
+    case CheckersEngine.modeCorners:
+      return t.gamesCheckersModeCorners;
+    default:
+      return t.gamesCheckersModeRussian;
+  }
+}
+
+String checkersPlayLine(String mode, AppLocalizations l10n) {
+  switch (CheckersEngine.normalizeMode(mode)) {
+    case CheckersEngine.modeEnglish:
+      return l10n.rulesCheckersPlayEnglish;
+    case CheckersEngine.modeGiveaway:
+      return l10n.rulesCheckersPlayGiveaway;
+    case CheckersEngine.modeCorners:
+      return l10n.rulesCheckersPlayCorners;
+    default:
+      return l10n.rulesCheckersPlay;
+  }
 }
 
 List<String> checkersRuleLines({
@@ -27,8 +47,8 @@ List<String> checkersRuleLines({
     else
       l10n.rulesCheckersTime(formatTurnTime(turnTimeSec)),
     if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
-    l10n.rulesCheckersIntro,
-    l10n.rulesCheckersPlay,
-    l10n.rulesCheckersWin,
+    if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersIntro,
+    checkersPlayLine(mode, l10n),
+    if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersWin,
   ];
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"multigames/server/internal/checkers"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/store"
@@ -257,10 +258,7 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 	if !validTurnTimeSec[body.TurnTimeSec] {
 		return store.UserGameSettings{}, "invalid turn_time_sec"
 	}
-	mode := strings.TrimSpace(strings.ToLower(body.GameMode))
-	if mode != "giveaway" {
-		mode = "russian"
-	}
+	mode := checkers.NormalizeMode(strings.TrimSpace(strings.ToLower(body.GameMode)))
 	stake := body.StakeBronze
 	if stake < 2 {
 		stake = 2
