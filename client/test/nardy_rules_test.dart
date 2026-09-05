@@ -78,4 +78,78 @@ void main() {
     expect(find.text('Нарды — правила'), findsNothing);
     expect(find.textContaining('Игроки: 2.'), findsOneWidget);
   });
+
+  test('автоподтверждение скрывает Готово и само завершает ход', () {
+    expect(
+      nardyShouldShowEndTurn(
+        autoConfirm: false,
+        isMyTurn: true,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: false,
+      ),
+      isTrue,
+    );
+    expect(
+      nardyShouldShowEndTurn(
+        autoConfirm: true,
+        isMyTurn: true,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: false,
+      ),
+      isFalse,
+    );
+    expect(
+      nardyShouldAutoEndTurn(
+        autoConfirm: true,
+        isMyTurn: true,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: false,
+      ),
+      isTrue,
+    );
+    expect(
+      nardyShouldAutoEndTurn(
+        autoConfirm: true,
+        isMyTurn: true,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: true,
+      ),
+      isFalse,
+    );
+    expect(
+      nardyShouldAutoEndTurn(
+        autoConfirm: false,
+        isMyTurn: true,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: false,
+      ),
+      isFalse,
+    );
+    expect(
+      nardyCanEndTurn(
+        isMyTurn: false,
+        isOver: false,
+        needsRoll: false,
+        hasLegalMoves: false,
+      ),
+      isFalse,
+    );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: true, isOver: false),
+      isTrue,
+    );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: false, isOver: false),
+      isFalse,
+    );
+    expect(
+      nardyShouldShowAutoConfirm(isMyTurn: true, isOver: true),
+      isFalse,
+    );
+  });
 }

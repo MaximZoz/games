@@ -53,6 +53,11 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
 	}
+	if s.GameType == store.GameTypeCheckers {
+		out["max_players"] = 2
+		out["game_mode"] = s.GameMode
+		out["variant"] = s.Variant
+	}
 	return out
 }
 
@@ -261,12 +266,16 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 		stake = 2
 	}
 	return store.UserGameSettings{
-		GameType:    store.GameTypeCheckers,
-		TurnTimeSec: body.TurnTimeSec,
-		Variant:     mode,
-		StakeBronze: stake,
-		MaxPlayers:  2,
-		GameMode:    mode,
+		GameType:             store.GameTypeCheckers,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             8,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             36,
+		MaxPlayers:           2,
+		GameMode:             mode,
 	}, ""
 }
 

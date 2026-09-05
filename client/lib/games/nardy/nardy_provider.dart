@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
+import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show GamesException;
 import 'package:multigames_client/games/live_game_sync.dart';
@@ -11,6 +12,14 @@ import 'package:multigames_client/games/nardy/nardy_repository.dart';
 
 final nardyRepositoryProvider = Provider<NardyRepository>((ref) {
   return NardyRepository(authRepository: ref.watch(authRepositoryProvider));
+});
+
+const _keyNardyAutoConfirm = 'nardy_auto_confirm';
+
+/// Локально: после всех ходов сразу передать ход, без кнопки «Готово».
+final nardyAutoConfirmProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keyNardyAutoConfirm, defaultValue: false);
 });
 
 final nardyGameProvider = AsyncNotifierProvider.autoDispose

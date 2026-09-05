@@ -238,6 +238,8 @@ class AppShell extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final isAuthorized = authState.valueOrNull != null;
     final isOffline = ref.watch(isOfflineProvider);
+    // Бейджи заданий/достижений — сразу после выполнения, без захода в раздел.
+    ref.watch(rewardBadgesRealtimeSyncProvider);
     // Очередь покупок: при выходе в онлайн — flush + тосты результата.
     ref.watch(pendingPurchasesProvider);
     ref.listen<PendingPurchaseFlushNotice?>(
@@ -445,6 +447,8 @@ class AppShell extends ConsumerWidget {
     final dailyRewardCount = dailyRewardAsync.valueOrNull == true ? 1 : 0;
     final achievementsUnclaimed =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final tasksUnclaimed =
+        ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncomeAvailable =
         ref.watch(collectionIncomeAvailableProvider);
     final unreadGiftedCollections =
@@ -452,6 +456,7 @@ class AppShell extends ConsumerWidget {
     // На «Главной» суммируем daily + достижения + доход + подарки коллекций.
     final homeBadgeCount = dailyRewardCount +
         achievementsUnclaimed +
+        tasksUnclaimed +
         (collectionIncomeAvailable ? 1 : 0) +
         unreadGiftedCollections;
     final media = MediaQuery.of(context);
@@ -1272,10 +1277,7 @@ Future<void> _showAppUpdateDialog(BuildContext context, WidgetRef ref) async {
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-              foregroundColor: Colors.white,
-            ),
+            style: AppButtonStyles.of(),
             child: Text(l10n.appUpdateOk),
           ),
         ],

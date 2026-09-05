@@ -6,6 +6,20 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 
+const kTaskAchievementCodes = {
+  'profile_complete',
+  'games_10',
+  'friends_5',
+};
+
+bool isTaskAchievementCode(String code) => kTaskAchievementCodes.contains(code);
+
+List<AchievementItem> filterAchievementItems(List<AchievementItem> items) =>
+    items.where((e) => !isTaskAchievementCode(e.code)).toList(growable: false);
+
+List<AchievementItem> filterTaskItems(List<AchievementItem> items) =>
+    items.where((e) => isTaskAchievementCode(e.code)).toList(growable: false);
+
 class AchievementItem {
   const AchievementItem({
     required this.code,
@@ -109,10 +123,35 @@ class AchievementsRepository {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['achievements'];
     if (raw is! List) return const [];
-    return raw
-        .whereType<Map>()
-        .map((e) => AchievementItem.fromJson(Map<String, dynamic>.from(e)))
-        .toList(growable: false);
+    return filterAchievementItems(
+      raw
+          .whereType<Map>()
+          .map((e) => AchievementItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+    );
+  }
+
+  Future<List<AchievementItem>> listTasks() async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/tasks?_=$cacheBuster'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AchievementsRepository.listTasks',
+      ),
+    );
+    if (response.statusCode != 200) {
+      _throwError(response, fallback: LocaleService.l10n.commonGenericError);
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = body['tasks'] ?? body['achievements'];
+    if (raw is! List) return const [];
+    return filterTaskItems(
+      raw
+          .whereType<Map>()
+          .map((e) => AchievementItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+    );
   }
 
   Future<int> unclaimedCount() async {
@@ -134,10 +173,31 @@ class AchievementsRepository {
     }
   }
 
+  Future<int> unclaimedTasksCount() async {
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    final response = await _auth.sendAuthorized(
+      (token) => ApiClient.get(
+        Uri.parse('$apiBaseUrl/api/tasks/unclaimed-count?_=$cacheBuster'),
+        headers: {'Authorization': 'Bearer $token'},
+        operation: 'AchievementsRepository.unclaimedTasksCount',
+      ),
+    );
+    if (response.statusCode != 200) return 0;
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return (body['count'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<AchievementClaimResult> claim(String code) async {
+    final path = isTaskAchievementCode(code)
+        ? '/api/tasks/claim'
+        : '/api/achievements/claim';
     final response = await _auth.sendAuthorized(
       (token) => ApiClient.post(
-        Uri.parse('$apiBaseUrl/api/achievements/claim'),
+        Uri.parse('$apiBaseUrl$path'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

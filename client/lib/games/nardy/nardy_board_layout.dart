@@ -214,4 +214,4 @@ Size nardyFitBoard(Size available) {
 /// После партии `null`: «Повторить» и «Другой соперник» встают колонкой и в
 /// фиксированный слот не помещаются — панель берёт высоту по содержимому.
 double? nardyBottomPanelHeight({required bool isOver}) =>
-    isOver ? null : 118.0;
+    isOver ? null : 148.0;

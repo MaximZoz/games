@@ -697,6 +697,58 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesNardyModeLong => 'Uzun';
 
   @override
+  String get gamesCheckers => 'Dama';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rus';
+
+  @override
+  String get gamesCheckersModeEnglish => 'İngiliz';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Teslim dama';
+
+  @override
+  String get gamesCheckersModeCorners => 'Köşeler';
+
+  @override
+  String get rulesCheckersPlayers => 'Oyuncular: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tahta 8×8. İki oyuncu.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur — en uzun dizi seçilir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'İngiliz daması: her birinde 12 taş. Piyonlar yalnızca çapraz ileri gider ve vurur. Damkalar çapraz bir kare gider. Vuruş zorunludur. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Teslim dama: hamleler Rus damasıyla aynıdır, ama amaç tersidir — tüm taşlarını vermek veya hamlesiz kalmak. Vuruş yine zorunludur.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Köşeler: taşlar karşı köşelerde durur. Yatay veya dikey komşu boş kareye gider ya da herhangi bir taşın üzerinden atlar, taşı almaz. Amaç tüm taşları rakibin köşesine taşımaktır.';
+
+  @override
   String get rulesNardyTitle => 'Tavla — kurallar';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nardyDoneTurn => 'Bitti';
 
   @override
+  String get nardyAutoConfirm => 'Otomatik onay';
+
+  @override
+  String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
+
+  @override
   String get nardyNoMoves => 'Hamle yok';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Çevrimdışı: bota karşı oyun.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Arkadaş ödülü';
+
+  @override
+  String get coinsTasks => 'Görevler';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, arkadaş ve oyun ödülleri';
+
+  @override
+  String get coinsTasksRewards => 'Alınabilir ödüller var';
 
   @override
   String coinsFriendRewardHint(String amount) {

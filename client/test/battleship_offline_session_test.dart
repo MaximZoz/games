@@ -26,6 +26,14 @@ void main() {
       final cell = battleshipBotPickShot(ships, [0], Random(1));
       expect([1, 10], contains(cell));
     });
+
+    test('bot pauses are one second', () {
+      expect(OfflineBattleshipSession.botDelay, const Duration(seconds: 1));
+      expect(
+        OfflineBattleshipSession.botHitContinueDelay,
+        const Duration(seconds: 1),
+      );
+    });
   });
 
   group('OfflineBattleshipSession', () {

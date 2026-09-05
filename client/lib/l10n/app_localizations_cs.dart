@@ -697,6 +697,58 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesNardyModeLong => 'Dlouhé';
 
   @override
+  String get gamesCheckers => 'Dáma';
+
+  @override
+  String get gamesCheckersModeRussian => 'Ruské';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anglické';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Poddávaná';
+
+  @override
+  String get gamesCheckersModeCorners => 'Rohy';
+
+  @override
+  String get rulesCheckersPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Deska 8×8. Dva hráči.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné — volí se nejdelší série. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Poddávaná: stejné tahy jako v ruské dámě, ale cíl je opačný — odevzdat všechny kameny nebo zůstat bez tahu. Braní je stále povinné.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.';
+
+  @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get nardyDoneTurn => 'Hotovo';
 
   @override
+  String get nardyAutoConfirm => 'Automaticky';
+
+  @override
+  String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
+
+  @override
   String get nardyNoMoves => 'Žádné tahy';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: hra proti botovi.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Odměna za přítele';
+
+  @override
+  String get coinsTasks => 'Úkoly';
+
+  @override
+  String get coinsTasksSubtitle => 'Odměny za profil, přátele a hry';
+
+  @override
+  String get coinsTasksRewards => 'Dostupné odměny k vyzvednutí';
 
   @override
   String coinsFriendRewardHint(String amount) {

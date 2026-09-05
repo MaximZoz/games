@@ -47,6 +47,7 @@ const Color _kSunkFrame = Color(0xFF212121);
 const Color _kSunkShipMine = Color(0xFFE53935);
 const Color _kSunkFrameMine = Color(0xFFB71C1C);
 const Duration _kShotRevealDelay = Duration(milliseconds: 280);
+const Duration _kBotFieldHoldDelay = Duration(seconds: 1);
 
 class BattleshipGameScreen extends ConsumerStatefulWidget {
   const BattleshipGameScreen({super.key, required this.gameId});
@@ -289,6 +290,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     required bool hit,
     required bool onMyBoard,
     bool sunk = false,
+    Duration hold = _kShotRevealDelay,
   }) async {
     if (!mounted) return;
     _fxInProgress = true;
@@ -305,7 +307,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     _hitPulse
       ..stop()
       ..forward(from: 0);
-    await Future<void>.delayed(_kShotRevealDelay);
+    await Future<void>.delayed(hold);
     if (!mounted) return;
     setState(() {
       _pulseHitCell = null;
@@ -325,11 +327,13 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
       return;
     }
     _lastFxKey = key;
+    final vsBot = _isOffline || game.hasBotOpponent;
     unawaited(_playShotReveal(
       cell: game.lastShot,
       hit: game.lastShotHit,
       onMyBoard: true,
       sunk: game.mySunkShips.any((ship) => ship.contains(game.lastShot)),
+      hold: vsBot ? _kBotFieldHoldDelay : _kShotRevealDelay,
     ));
   }
 
@@ -670,9 +674,11 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         if (view.isOver && !_hideTimers) {
           _hideTimers = true;
         }
-        // Промах / конец — сразу смена хода, без удержания поля на FX.
+        // Против бота: после промаха не переключаем поле, пока бот
+        // не выстрелит и клиент не удержит его ход секунду.
         if (!keepAttacking) {
-          _fxShowMineBoard = null;
+          _fxShowMineBoard =
+              (view.hasBotOpponent || _isOffline) ? false : null;
         }
       });
       _playLocalShotFx(
@@ -1319,10 +1325,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                                   : () => unawaited(_rematch()),
                               icon: const Icon(Icons.replay_rounded, size: 18),
                               label: Text(context.l10n.offlinePlayAgain),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accentStart,
-                                foregroundColor: Colors.white,
-                              ),
+                              style: AppButtonStyles.of(),
                             ),
                           )
                         else
@@ -1599,16 +1602,14 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           width: double.infinity,
           child: FilledButton(
             onPressed: _busy ? null : () => unawaited(_confirmPlace()),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentStart,
-            ),
+            style: AppButtonStyles.of(),
             child: _busy
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   )
                 : Text(context.l10n.gamesBattleshipConfirmPlace),
@@ -1621,7 +1622,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Widget _buildBattle(BattleshipGameView game, String? me, bool narrow) {
     final myTurn = game.isTurnOf(me);
     // Одно поле: мой ход / конец — поле соперника; ход соперника — моё.
-    // Во время FX удерживаем поле, куда пришёл выстрел, ещё 1с.
+    // Против бота: своё поле показываем только после хода бота и паузы 1 с.
     final showMyBoard = _fxShowMineBoard ?? (!game.isOver && !myTurn);
     final pulseCell = _pulseHitCell;
 

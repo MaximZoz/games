@@ -697,6 +697,58 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesNardyModeLong => 'Lang';
 
   @override
+  String get gamesCheckers => 'Dammen';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisch';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engels';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Geefdam';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hoeken';
+
+  @override
+  String get rulesCheckersPlayers => 'Spelers: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bord 8×8. Twee spelers.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht — kies de langste reeks. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regels';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nardyDoneTurn => 'Klaar';
 
   @override
+  String get nardyAutoConfirm => 'Auto-bevestigen';
+
+  @override
+  String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
+
+  @override
   String get nardyNoMoves => 'Geen zetten';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: partij tegen de bot.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Vriendenbeloning';
+
+  @override
+  String get coinsTasks => 'Taken';
+
+  @override
+  String get coinsTasksSubtitle => 'Beloningen voor profiel, vrienden en games';
+
+  @override
+  String get coinsTasksRewards => 'Beloningen klaar om te claimen';
 
   @override
   String coinsFriendRewardHint(String amount) {

@@ -44,3 +44,51 @@ List<String> nardyRuleLines({
     if (offline) t.rulesNardyOfflineBot,
   ];
 }
+
+/// Можно подтвердить ход вручную: кубики брошены, легальных ходов больше нет.
+bool nardyCanEndTurn({
+  required bool isMyTurn,
+  required bool isOver,
+  required bool needsRoll,
+  required bool hasLegalMoves,
+}) =>
+    isMyTurn && !isOver && !needsRoll && !hasLegalMoves;
+
+/// Чекбокс «Автоподтверждение» — только на своём ходе, пока партия идёт.
+bool nardyShouldShowAutoConfirm({
+  required bool isMyTurn,
+  required bool isOver,
+}) =>
+    isMyTurn && !isOver;
+
+/// Показать «Готово» / «Пропустить», только если автоподтверждение выключено.
+bool nardyShouldShowEndTurn({
+  required bool autoConfirm,
+  required bool isMyTurn,
+  required bool isOver,
+  required bool needsRoll,
+  required bool hasLegalMoves,
+}) =>
+    !autoConfirm &&
+    nardyCanEndTurn(
+      isMyTurn: isMyTurn,
+      isOver: isOver,
+      needsRoll: needsRoll,
+      hasLegalMoves: hasLegalMoves,
+    );
+
+/// После всех ходов (или если ходить нечем) сразу отдать ход сопернику.
+bool nardyShouldAutoEndTurn({
+  required bool autoConfirm,
+  required bool isMyTurn,
+  required bool isOver,
+  required bool needsRoll,
+  required bool hasLegalMoves,
+}) =>
+    autoConfirm &&
+    nardyCanEndTurn(
+      isMyTurn: isMyTurn,
+      isOver: isOver,
+      needsRoll: needsRoll,
+      hasLegalMoves: hasLegalMoves,
+    );

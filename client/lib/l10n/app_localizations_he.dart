@@ -697,6 +697,58 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesNardyModeLong => 'ארוך';
 
   @override
+  String get gamesCheckers => 'דמקה';
+
+  @override
+  String get gamesCheckersModeRussian => 'רוסית';
+
+  @override
+  String get gamesCheckersModeEnglish => 'אנגלית';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'הפוכות';
+
+  @override
+  String get gamesCheckersModeCorners => 'פינות';
+
+  @override
+  String get rulesCheckersPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'לוח 8×8. שני שחקנים.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'דמקה רוסית: 12 חיילים לכל אחד במשבצות כהות. חיילים זזים באלכסון קדימה ואוכלים קדימה ואחורה. מלכות עפות לכל מרחק. אכילה חובה — בוחרים את הרצף הארוך. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'דמקה אנגלית: 12 חיילים לכל אחד. חיילים זזים ואוכלים רק באלכסון קדימה. מלכות זזות משבצת אחת באלכסון. אכילה חובה. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'הפוכות: אותם מהלכים כמו בדמקה רוסית, אבל המטרה הפוכה — למסור את כל החיילים או להישאר בלי מהלכים. אכילה עדיין חובה.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'פינות: החיילים מתחילים בפינות נגדיות. זזים למשבצת פנויה סמוכה אופקית או אנכית, או קופצים מעל כל חייל בלי להוריד אותו. המטרה היא להעביר את כל החיילים לפינת היריב.';
+
+  @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get nardyDoneTurn => 'סיום';
 
   @override
+  String get nardyAutoConfirm => 'אישור אוטומטי';
+
+  @override
+  String get nardyAutoConfirmHint => 'לאחר כל המהלכים התור עובר ליריב';
+
+  @override
   String get nardyNoMoves => 'אין מהלכים';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'לא מקוון: משחק מול הבוט.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'פרס חבר';
+
+  @override
+  String get coinsTasks => 'משימות';
+
+  @override
+  String get coinsTasksSubtitle => 'פרסים על פרופיל, חברים ומשחקים';
+
+  @override
+  String get coinsTasksRewards => 'יש פרסים לקבלה';
 
   @override
   String coinsFriendRewardHint(String amount) {

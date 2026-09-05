@@ -257,6 +257,25 @@
   "gamesNardy": "Nardy",
   "gamesNardyModeShort": "Krótkie",
   "gamesNardyModeLong": "Długie",
+  "gamesCheckers": "Warcaby",
+  "gamesCheckersModeRussian": "Rosyjskie",
+  "gamesCheckersModeEnglish": "Angielskie",
+  "gamesCheckersModeGiveaway": "Poddawki",
+  "gamesCheckersModeCorners": "Kąciki",
+  "rulesCheckersPlayers": "Gracze: 2.",
+  "rulesCheckersMode": "Tryb: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Plansza 8×8. Dwóch graczy.",
+  "rulesCheckersPlayRussian": "Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe — wybiera się najdłuższą sekwencję. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
+  "rulesCheckersPlayEnglish": "Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
+  "rulesCheckersPlayGiveaway": "Poddawki: te same ruchy co w warcabach rosyjskich, ale cel jest odwrotny — oddać wszystkie piony albo zostać bez ruchu. Bicie nadal jest obowiązkowe.",
+  "rulesCheckersPlayCorners": "Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.",
   "rulesNardyTitle": "Nardy — zasady",
   "rulesNardyPlayers": "Gracze: 2.",
   "rulesNardyMode": "Tryb: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Pomiń turę",
   "nardyUndoMove": "Cofnij",
   "nardyDoneTurn": "Gotowe",
+  "nardyAutoConfirm": "Autopotwierdzenie",
+  "nardyAutoConfirmHint": "Po wszystkich ruchach tura przechodzi automatycznie",
   "nardyNoMoves": "Brak ruchów",
   "nardyYourRoll": "Twój rzut",
   "nardyPipsShort": "Zostało:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Dzisiejsza nagroda dostępna",
   "coinsLoginStreak": "Codzienna seria logowań",
   "coinsFriendReward": "Nagroda za znajomego",
+  "coinsTasks": "Zadania",
+  "coinsTasksSubtitle": "Nagrody za profil, znajomych i gry",
+  "coinsTasksRewards": "Dostępne nagrody do odebrania",
   "coinsFriendRewardHint": "+{amount} za rejestrację przez Twój link",
   "@coinsFriendRewardHint": {
     "placeholders": {

@@ -6,12 +6,9 @@ import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
-import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
-import 'package:multigames_client/games/checkers/checkers_rules.dart';
-import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 
@@ -85,29 +82,12 @@ class GameInvite {
       deckSize == other.deckSize &&
       durakMode == other.durakMode;
 
-  /// Подпись режима для карточки приглашения.
-  /// Для покера пусто — NLHE не показываем (есть иконка игры и число игроков).
-  String get modeLabel {
-    if (isDurak) {
-      return durakModeLabel(durakMode);
-    }
-    if (isBattleship) {
-      return '10×10';
-    }
-    if (isPoker) {
-      return '';
-    }
-    if (isUno) {
-      return '';
-    }
-    if (isNardy) {
-      return nardyModeLabel(durakMode);
-    }
-    if (isCheckers) {
-      return checkersModeLabel(durakMode);
-    }
-    return variantLabel(variant);
-  }
+  /// Подпись режима для карточки приглашения — из реестра игр.
+  String get modeLabel => localizedGameModeLabel(
+        gameType: gameType,
+        variant: variant,
+        gameMode: durakMode,
+      );
 }
 
 /// Список приглашений визуально тот же — не трогать state.

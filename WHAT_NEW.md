@@ -4,6 +4,14 @@
 
 ## ru
 - Шашки: русские и поддавки — лобби, поиск, инвайт, бот, ничья, сдача, реванш и статистика, как в других играх
+- Морской бой с ботом: после вашего хода пауза 1 с, после хода бота ещё 1 с — и только тогда меняется поле
+- Задания (полная анкета, 5 друзей, 10 игр) переехали из достижений в «Монеты»
+- Нарды: чекбокс «Автоподтверждение» только на своём ходе, на ходе соперника его нет
+- Шапка лобби везде одинаковая: «Своя игра» или «Лобби», текст всегда помещается; вход из списка лобби сразу открывает «Лобби», а не свою игру
+- Игровой чат больше не остаётся без игры: чат лобби удаляется, если партия уже окончена
+- Дурак: добор соперника сначала летит из колоды, а не вспыхивает всей рукой
+- Дурак: при переводе карта, которая уже на столе, не моргает
+- Текстовые кнопки — светлый фон, лавандовая рамка и чёрный текст; в покере кнопки хода как были
 - Правила игр: во всех карточках один заголовок «Правила игры», в том числе у нард
 - Нарды: после «Готово» соперник больше не бросает кубики дважды
 - Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
@@ -11,7 +19,7 @@
 - Реванш 1×1: после «Повторить» остаётесь на экране партии — как в крестиках и дураке
 - Дурак: веер в руке сжимается плавно, без рывка; в альбоме вернулась анимация раскладки, «Бито»/«Взять» больше не моргает
 - Игры: кнопка «Поиск игроков» вместо «Найти игру» — и в карточках, и в шапке лобби
-- Карточки игр: кнопки одной высоты и с мягкой заливкой у второй, без тонкого контура
+- Карточки игр: «Создать игру» и «Поиск игроков» всегда в один ряд; на узкой карточке меньше отступ и текст
 - Нарды: иконка стала понятнее — доска с крупными пунктами и стопкой шашек
 - Сообщения: автоперевод включён сразу, если собеседник пишет на другом языке
 - Длинные нарды: нельзя запирать шесть пунктов подряд, пока их не обошла ни одна шашка соперника
@@ -38,7 +46,7 @@
 - Игры в альбоме на Android: шапка не заезжает под часы сверху, рейл — под камеру и статус-бар слева
 - Таймер хода: после сигнала «мало времени» тиканье часов не пропадает
 - Друзья в альбоме: число на табах «Друзья» и «Найти друга» снова цветное, как бейдж в портрете
-- Морской бой с ботом: после вашего выстрела бот ждёт ~700 мс, чтобы был виден свой ход
+- Морской бой с ботом: после вашего хода пауза 1 с, после хода бота ещё 1 с — затем смена поля
 - Игры с ботом: переключение вкладок возвращает за тот же стол; вспышка каталога больше не сносит партию
 - Дурак в альбоме: колода и бита больше не обрезаются по краям, «Бито»/«Взять» не наезжает на веер; застрявшие полёты снимаются при возврате с вкладки, resume и если карта зависла скрытой
 - Дурак в альбоме: видно веер соперника и карту биты; раздача не зависает и не прячет рубашки
@@ -78,6 +86,14 @@
 
 ## en
 - Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games
+- Battleship vs bot: a 1 s pause after your shot, then another 1 s after the bot shoots — only then does the board switch
+- Tasks (complete profile, 5 friends, 10 games) moved from Achievements into Coins
+- Backgammon: the Auto-confirm checkbox is only shown on your turn
+- Lobby header is the same everywhere: “Private game” or “Lobby”, and the title always fits; joining from the lobby list opens Lobby directly
+- Game chat no longer outlives the match: a lobby chat is removed when the game is already over
+- Durak: opponent draw cards fly from the deck instead of flashing the whole fan first
+- Durak: transferring a card no longer blinks the card already on the table
+- Text buttons use a pill with a gradient frame, like Edit on the profile
 - Game rules: every card uses the same “Game rules” title, including Backgammon
 - Backgammon: ending a turn no longer makes the opponent appear to roll twice
 - Backgammon: if you are in messages or another tab, your turn now notifies you like the other games
@@ -110,7 +126,7 @@
 - Android landscape games: the header stays below the status bar, and the rail shifts past the left camera / status bar
 - Turn timer: the clock keeps ticking after the low-time warning
 - Friends in landscape: the Friends / Find-a-friend tab counts use the same colors as the portrait badges
-- Battleship vs bot: the bot waits ~700 ms after your shot so you can see the hit or miss
+- Battleship vs bot: a 1 s pause after your shot and another 1 s after the bot, then the board switches
 - Bot games: switching tabs brings you back to the same table; a brief catalog flash no longer wipes the match
 - Durak in landscape: the deck and discard piles stay on screen, Beat/Take sit above the hand, and leftover flights clear on tab return, app resume, or a stuck hidden card
 - Durak in landscape: the opponent fan and discard pile stay visible; a stuck deal no longer hides the card backs

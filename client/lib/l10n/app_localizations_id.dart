@@ -697,6 +697,58 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesNardyModeLong => 'Panjang';
 
   @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rusia';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inggris';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get gamesCheckersModeCorners => 'Sudut';
+
+  @override
+  String get rulesCheckersPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Papan 8×8. Dua pemain.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib — pilih rangkaian terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Giveaway: langkahnya sama seperti dam Rusia, tetapi tujuannya terbalik — kehilangan semua buah atau kehabisan langkah. Makan tetap wajib.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — aturan';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get nardyDoneTurn => 'Selesai';
 
   @override
+  String get nardyAutoConfirm => 'Konfirmasi otomatis';
+
+  @override
+  String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
+
+  @override
   String get nardyNoMoves => 'Tidak ada langkah';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: bermain melawan bot.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Hadiah teman';
+
+  @override
+  String get coinsTasks => 'Tugas';
+
+  @override
+  String get coinsTasksSubtitle => 'Hadiah untuk profil, teman, dan permainan';
+
+  @override
+  String get coinsTasksRewards => 'Ada hadiah yang bisa diklaim';
 
   @override
   String coinsFriendRewardHint(String amount) {

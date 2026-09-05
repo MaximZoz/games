@@ -714,7 +714,6 @@ class _UserCard extends ConsumerWidget {
                     : 'Списано ${amount.abs()} бронзовых',
               );
             },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
             child: const Text('Начислить'),
           ),
         ],
@@ -748,7 +747,6 @@ class _UserCard extends ConsumerWidget {
                 success: 'Пароль сброшен',
               );
             },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accentStart),
             child: const Text('Сбросить'),
           ),
         ],

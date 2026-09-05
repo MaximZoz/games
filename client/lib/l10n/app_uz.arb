@@ -257,6 +257,25 @@
   "gamesNardy": "Narda",
   "gamesNardyModeShort": "Qisqa",
   "gamesNardyModeLong": "Uzun",
+  "gamesCheckers": "Shashka",
+  "gamesCheckersModeRussian": "Rus",
+  "gamesCheckersModeEnglish": "Ingliz",
+  "gamesCheckersModeGiveaway": "Berilmali",
+  "gamesCheckersModeCorners": "Burchaklar",
+  "rulesCheckersPlayers": "O‘yinchilar: 2.",
+  "rulesCheckersMode": "Rejim: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Doska 8×8. Ikki o‘yinchi.",
+  "rulesCheckersPlayRussian": "Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy — eng ko‘p tosh olinadigan yo‘l tanlanadi. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.",
+  "rulesCheckersPlayEnglish": "Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.",
+  "rulesCheckersPlayGiveaway": "Berilmali: yurishlar rus shashkasidagidek, lekin maqsad teskarisi — barcha toshni berib qo‘yish yoki yurishsiz qolish. Urish baribir majburiy.",
+  "rulesCheckersPlayCorners": "Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.",
   "rulesNardyTitle": "Narda — qoidalar",
   "rulesNardyPlayers": "O‘yinchilar: 2.",
   "rulesNardyMode": "Rejim: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Yurishni o‘tkazish",
   "nardyUndoMove": "Qaytarish",
   "nardyDoneTurn": "Tayyor",
+  "nardyAutoConfirm": "Avtotasdiqlash",
+  "nardyAutoConfirmHint": "Barcha yurishlardan so‘ng navbat avtomatik o‘tadi",
   "nardyNoMoves": "Yurish yo‘q",
   "nardyYourRoll": "Sizning tashlashingiz",
   "nardyPipsShort": "Qoldi:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Bugungi mukofot mavjud",
   "coinsLoginStreak": "Kundalik kirish seriyasi",
   "coinsFriendReward": "Do‘st mukofoti",
+  "coinsTasks": "Vazifalar",
+  "coinsTasksSubtitle": "Profil, do‘stlar va o‘yin mukofotlari",
+  "coinsTasksRewards": "Olish uchun mukofotlar bor",
   "coinsFriendRewardHint": "Havolangiz orqali ro‘yxatdan o‘tish uchun +{amount}",
   "@coinsFriendRewardHint": {
     "placeholders": {

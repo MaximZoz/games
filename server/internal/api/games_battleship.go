@@ -22,12 +22,12 @@ const (
 	battleshipPhaseBattle = "battle"
 	battleshipStatusOver  = "over"
 	battleshipSetupSec    = 60 // расстановка по умолчанию — 1 минута
-	battleshipBotDelay    = 700 * time.Millisecond
-	battleshipBotHitDelay = 1100 * time.Millisecond
+	battleshipBotDelay    = time.Second
+	battleshipBotHitDelay = time.Second
 )
 
 // battleshipBotActDelay — пауза перед выстрелом бота, чтобы игрок успел
-// увидеть свой ход. Повтор после попадания чуть длиннее.
+// увидеть свой ход. После попадания бота — та же секунда перед следующим.
 func battleshipBotActDelay(continueAfterHit bool) time.Duration {
 	if continueAfterHit {
 		return battleshipBotHitDelay
@@ -1351,7 +1351,7 @@ func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, 
 		if u, err := uuid.Parse(uid); err == nil {
 			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	winner := m["winner"]
@@ -1359,7 +1359,7 @@ func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, 
 		if u, err := uuid.Parse(winner); err == nil {
 			_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	h.recordBattleshipResult(ctx, gameID, m, stakeBronze, finishReason)

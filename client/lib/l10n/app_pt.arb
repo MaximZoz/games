@@ -257,6 +257,25 @@
   "gamesNardy": "Gamão",
   "gamesNardyModeShort": "Curto",
   "gamesNardyModeLong": "Longo",
+  "gamesCheckers": "Damas",
+  "gamesCheckersModeRussian": "Russas",
+  "gamesCheckersModeEnglish": "Inglesas",
+  "gamesCheckersModeGiveaway": "Damas loucas",
+  "gamesCheckersModeCorners": "Cantos",
+  "rulesCheckersPlayers": "Jogadores: 2.",
+  "rulesCheckersMode": "Modo: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Tabuleiro 8×8. Dois jogadores.",
+  "rulesCheckersPlayRussian": "Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório — escolhe-se a sequência mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
+  "rulesCheckersPlayEnglish": "Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
+  "rulesCheckersPlayGiveaway": "Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.",
+  "rulesCheckersPlayCorners": "Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.",
   "rulesNardyTitle": "Gamão — regras",
   "rulesNardyPlayers": "Jogadores: 2.",
   "rulesNardyMode": "Modo: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Passar a vez",
   "nardyUndoMove": "Desfazer",
   "nardyDoneTurn": "Pronto",
+  "nardyAutoConfirm": "Autoconfirmar",
+  "nardyAutoConfirmHint": "Após todos os lances, o turno passa automaticamente",
   "nardyNoMoves": "Sem jogadas",
   "nardyYourRoll": "Seu lançamento",
   "nardyPipsShort": "Faltam:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Recompensa de hoje disponível",
   "coinsLoginStreak": "Sequência diária de logins",
   "coinsFriendReward": "Recompensa por amigo",
+  "coinsTasks": "Tarefas",
+  "coinsTasksSubtitle": "Recompensas por perfil, amigos e partidas",
+  "coinsTasksRewards": "Recompensas disponíveis para resgatar",
   "coinsFriendRewardHint": "+{amount} por registo através do seu link",
   "@coinsFriendRewardHint": {
     "placeholders": {

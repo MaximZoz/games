@@ -98,6 +98,18 @@ void main() {
     expect(long.modeLabel, isNot(l10n().gamesVariantClassic));
   });
 
+  test('uno invite has no classic mode chip', () {
+    final uno = GameInvite(
+      lobbyId: 'U1',
+      creatorId: 'c1',
+      creatorName: 'Ann',
+      gameType: 'uno',
+      variant: 'classic',
+    );
+    expect(uno.modeLabel, isEmpty);
+    expect(uno.modeLabel, isNot(l10n().gamesVariantClassic));
+  });
+
   test('hydrate не стирает свежий WS-инвайт, если GET пустой', () {
     final ws = invite(lobbyId: 'L1', creatorId: 'c1', name: 'Ann');
     final now = DateTime(2026, 9, 3, 14, 0, 0);

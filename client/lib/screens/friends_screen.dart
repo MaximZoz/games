@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
@@ -67,6 +68,73 @@ Color friendsTabCountColor({
   return AppColors.accentStart;
 }
 
+@visibleForTesting
+const double friendsDesktopGridGap = 12;
+
+@visibleForTesting
+const double friendsDesktopMaxContentWidth = 960;
+
+@visibleForTesting
+double friendsDesktopMaxCellWidth({
+  required bool phoneLandscape,
+  required bool tablet,
+}) {
+  if (phoneLandscape) return 220;
+  if (tablet) return 260;
+  return 300;
+}
+
+/// Сетка карточек друзей и «Найти друга» на широких экранах.
+@visibleForTesting
+({int crossAxisCount, double itemWidth, double contentWidth})
+    friendsDesktopGridLayout({
+  required double viewportWidth,
+  required bool phoneLandscape,
+  required bool tablet,
+}) {
+  final maxCellWidth = friendsDesktopMaxCellWidth(
+    phoneLandscape: phoneLandscape,
+    tablet: tablet,
+  );
+  final contentWidth =
+      (viewportWidth - 32).clamp(0.0, friendsDesktopMaxContentWidth);
+  final crossAxisCount =
+      (contentWidth / (maxCellWidth + friendsDesktopGridGap)).floor().clamp(1, 3);
+  final itemWidth =
+      (contentWidth - friendsDesktopGridGap * (crossAxisCount - 1)) /
+          crossAxisCount;
+  return (
+    crossAxisCount: crossAxisCount,
+    itemWidth: itemWidth,
+    contentWidth: contentWidth,
+  );
+}
+
+/// Лоадер пагинации попал в экран — грузим следующую страницу.
+@visibleForTesting
+bool friendsLoaderIsVisible({
+  required Rect? loaderGlobalRect,
+  required Size viewportSize,
+}) {
+  if (loaderGlobalRect == null) return false;
+  if (loaderGlobalRect.width <= 0 || loaderGlobalRect.height <= 0) {
+    return false;
+  }
+  return loaderGlobalRect.bottom > 0 &&
+      loaderGlobalRect.top < viewportSize.height &&
+      loaderGlobalRect.right > 0 &&
+      loaderGlobalRect.left < viewportSize.width;
+}
+
+@visibleForTesting
+bool friendsShouldLoadNextPage({
+  required bool hasMore,
+  required bool loading,
+  required bool loaderVisible,
+}) {
+  return hasMore && !loading && loaderVisible;
+}
+
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -118,6 +186,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   /// Deep-link `/friends?tab=incoming` (пуш / бейдж) — применить один раз.
   bool _deepLinkIncomingApplied = false;
+
+  final GlobalKey _friendsLoaderKey = GlobalKey();
+  final GlobalKey _incomingLoaderKey = GlobalKey();
+  final GlobalKey _outgoingLoaderKey = GlobalKey();
+  final GlobalKey _searchLoaderKey = GlobalKey();
+  bool _desktopPagingScheduled = false;
 
   @override
   void initState() {
@@ -654,7 +728,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(l10n.friendsRemoveConfirmAction),
           ),
@@ -685,6 +758,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         requestID: nextRequestID,
       );
       await _refreshSnapshot(refreshSearch: false);
+      _refreshRewardBadges();
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -696,6 +770,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         setState(() => _actionsInProgress.remove(key));
       }
     }
+  }
+
+  void _refreshRewardBadges() {
+    ref.invalidate(tasksUnclaimedCountProvider);
+    ref.invalidate(achievementsUnclaimedCountProvider);
   }
 
   Future<void> _runAction({
@@ -712,6 +791,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       await call(repo);
       _showMessage(null, success);
       await _refreshSnapshot(refreshSearch: refreshSearch);
+      _refreshRewardBadges();
     } catch (e) {
       if (e is FriendsException) {
         await _handleFriendsException(e);
@@ -812,6 +892,44 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       ),
     );
+  }
+
+  GlobalKey _loaderKeyForTab(_FriendsTabKind tab) {
+    return switch (tab) {
+      _FriendsTabKind.friends => _friendsLoaderKey,
+      _FriendsTabKind.incoming => _incomingLoaderKey,
+      _FriendsTabKind.outgoing => _outgoingLoaderKey,
+      _FriendsTabKind.findFriend => _searchLoaderKey,
+    };
+  }
+
+  void _scheduleVisiblePaging({
+    required GlobalKey loaderKey,
+    required VoidCallback loadMore,
+    required bool hasMore,
+    required bool loading,
+  }) {
+    if (_desktopPagingScheduled) return;
+    if (!hasMore || loading) return;
+    _desktopPagingScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _desktopPagingScheduled = false;
+      if (!mounted) return;
+      final loaderContext = loaderKey.currentContext;
+      if (loaderContext == null) return;
+      final box = loaderContext.findRenderObject();
+      if (box is! RenderBox || !box.hasSize || !box.attached) return;
+      final origin = box.localToGlobal(Offset.zero);
+      final rect = origin & box.size;
+      final viewport = MediaQuery.sizeOf(context);
+      if (!friendsLoaderIsVisible(
+        loaderGlobalRect: rect,
+        viewportSize: viewport,
+      )) {
+        return;
+      }
+      loadMore();
+    });
   }
 
   void _expandVisibleForTab(_FriendsTabKind tab, int totalCount) {
@@ -918,57 +1036,79 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         if (useGrid) {
-          const gap = 12.0;
-          // Уже плитки: телефон landscape / планшет — 3 в ряд, десктоп шире.
-          final maxCellWidth = isPhoneLandscape(context)
-              ? 220.0
-              : (isTablet(context) ? 260.0 : 300.0);
-          const maxContentWidth = 960.0;
-          final availableWidth =
-              (constraints.maxWidth - 32).clamp(0.0, maxContentWidth);
-          final crossAxisCount =
-              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 3);
-          final itemWidth =
-              (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
-            physics: const AlwaysScrollableScrollPhysics(
-                parent: ClampingScrollPhysics()),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: availableWidth,
-                child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: gap,
-                  runSpacing: gap,
-                  alignment: WrapAlignment.start,
-                  children: [
-                    for (var i = 0; i < visibleCount; i++)
-                      SizedBox(
-                        width: itemWidth,
-                        child: itemBuilder(items[i]),
+          const gap = friendsDesktopGridGap;
+          final layout = friendsDesktopGridLayout(
+            viewportWidth: constraints.maxWidth,
+            phoneLandscape: isPhoneLandscape(context),
+            tablet: isTablet(context),
+          );
+          final itemWidth = layout.itemWidth;
+          final availableWidth = layout.contentWidth;
+          final tabActive = _currentTabs.isNotEmpty &&
+              _tabController.index >= 0 &&
+              _tabController.index < _currentTabs.length &&
+              _currentTabs[_tabController.index] == tab;
+          if (hasMore && tabActive) {
+            _scheduleVisiblePaging(
+              loaderKey: _loaderKeyForTab(tab),
+              loadMore: () => _expandVisibleForTab(tab, items.length),
+              hasMore: hasMore,
+              loading: false,
+            );
+          }
+          return NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if ((notification is ScrollUpdateNotification ||
+                      notification is ScrollEndNotification) &&
+                  hasMore &&
+                  tabActive) {
+                _scheduleVisiblePaging(
+                  loaderKey: _loaderKeyForTab(tab),
+                  loadMore: () => _expandVisibleForTab(tab, items.length),
+                  hasMore: hasMore,
+                  loading: false,
+                );
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
+              physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics()),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: availableWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        alignment: WrapAlignment.start,
+                        children: [
+                          for (var i = 0; i < visibleCount; i++)
+                            SizedBox(
+                              width: itemWidth,
+                              child: itemBuilder(items[i]),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-                if (hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () => _expandVisibleForTab(tab, items.length),
-                        child: const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      if (hasMore)
+                        Padding(
+                          key: _loaderKeyForTab(tab),
+                          padding: const EdgeInsets.only(top: 16),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
                   ),
-              ],
                 ),
               ),
             ),
@@ -1374,67 +1514,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       controlRow.add(controls[i]);
     }
 
-    final isDesktop = isWide(context);
-    return GradientCard(
-      margin: EdgeInsets.zero,
-      padding: isDesktop
-          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
-          : const EdgeInsets.all(10),
-      animate: false,
-      child: Row(
-        children: [
-          _buildAvatar(
-            item.user,
-            isOnline: presence[item.user.id]?.online,
-            onTap: () => _showRequestInfoDialog(
-              user: item.user,
-              presence: presence[item.user.id],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _displayName(item.user),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                if (presence[item.user.id] != null) ...[
-                  Text(
-                    formatPresenceStatus(presence[item.user.id]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                ],
-                Text(
-                  relationLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(mainAxisSize: MainAxisSize.min, children: controlRow),
-        ],
-      ),
+    return _buildUserCard(
+      context: context,
+      user: item.user,
+      presence: presence[item.user.id],
+      subtitle: relationLabel,
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: controlRow),
+      actions: const [],
     );
   }
 
@@ -1568,63 +1654,84 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final showPagingLoader = _isSearchLoadingMore || _searchHasMore;
     final itemCount = _searchResults.length + (showPagingLoader ? 1 : 0);
 
-    if (isWide(context)) {
+    if (useDesktopTiles(context)) {
       return LayoutBuilder(
         builder: (context, constraints) {
-          const gap = 12.0;
-          const maxCellWidth = 600.0;
-          final availableWidth = constraints.maxWidth - 32;
-          final crossAxisCount =
-              (availableWidth / (maxCellWidth + gap)).floor().clamp(1, 4);
-          final itemWidth =
-              (availableWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
+          const gap = friendsDesktopGridGap;
+          final layout = friendsDesktopGridLayout(
+            viewportWidth: constraints.maxWidth,
+            phoneLandscape: isPhoneLandscape(context),
+            tablet: isTablet(context),
+          );
+          final itemWidth = layout.itemWidth;
+          final availableWidth = layout.contentWidth;
+          if (_isFindFriendTab && _searchHasMore && !_isSearchLoadingMore) {
+            _scheduleVisiblePaging(
+              loaderKey: _searchLoaderKey,
+              loadMore: () => unawaited(_loadMoreSearchResults()),
+              hasMore: _searchHasMore,
+              loading: _isSearchLoadingMore,
+            );
+          }
           return NotificationListener<ScrollNotification>(
             onNotification: (notification) {
-              if (notification is ScrollEndNotification &&
+              if ((notification is ScrollUpdateNotification ||
+                      notification is ScrollEndNotification) &&
+                  _isFindFriendTab &&
                   _searchHasMore &&
                   !_isSearchLoadingMore) {
-                final m = notification.metrics;
-                if (m.pixels >= m.maxScrollExtent - 80) {
-                  unawaited(_loadMoreSearchResults());
-                }
+                _scheduleVisiblePaging(
+                  loaderKey: _searchLoaderKey,
+                  loadMore: () => unawaited(_loadMoreSearchResults()),
+                  hasMore: _searchHasMore,
+                  loading: _isSearchLoadingMore,
+                );
               }
               return false;
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(
                   parent: ClampingScrollPhysics()),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
+              padding: EdgeInsets.all(isPhoneLandscape(context) ? 10 : 16),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: availableWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (var i = 0; i < _searchResults.length; i++)
-                        SizedBox(
-                          width: itemWidth,
-                          child: _buildSearchResultCard(
-                              context, _searchResults[i], presence),
+                      Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        alignment: WrapAlignment.start,
+                        children: [
+                          for (var i = 0; i < _searchResults.length; i++)
+                            SizedBox(
+                              width: itemWidth,
+                              child: _buildSearchResultCard(
+                                  context, _searchResults[i], presence),
+                            ),
+                        ],
+                      ),
+                      if (showPagingLoader)
+                        Padding(
+                          key: _searchLoaderKey,
+                          padding: const EdgeInsets.only(top: 16),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accentStart,
+                              ),
+                            ),
+                          ),
                         ),
                     ],
                   ),
-                  if (showPagingLoader)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accentStart,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
           );

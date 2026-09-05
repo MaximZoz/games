@@ -697,6 +697,58 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesNardyModeLong => 'Dài';
 
   @override
+  String get gamesCheckers => 'Cờ đam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Nga';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anh';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Nhường';
+
+  @override
+  String get gamesCheckersModeCorners => 'Góc';
+
+  @override
+  String get rulesCheckersPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bàn 8×8. Hai người chơi.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn — chọn chuỗi dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Nhường: nước đi như cờ đam Nga nhưng mục tiêu ngược lại — mất hết quân hoặc hết nước đi. Vẫn bắt buộc ăn.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.';
+
+  @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nardyDoneTurn => 'Xong';
 
   @override
+  String get nardyAutoConfirm => 'Tự xác nhận';
+
+  @override
+  String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
+
+  @override
   String get nardyNoMoves => 'Không có nước đi';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Ngoại tuyến: chơi với bot.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Thưởng bạn bè';
+
+  @override
+  String get coinsTasks => 'Nhiệm vụ';
+
+  @override
+  String get coinsTasksSubtitle => 'Phần thưởng cho hồ sơ, bạn bè và trận đấu';
+
+  @override
+  String get coinsTasksRewards => 'Có phần thưởng để nhận';
 
   @override
   String coinsFriendRewardHint(String amount) {

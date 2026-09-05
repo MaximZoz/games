@@ -309,34 +309,11 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Short",
   "gamesNardyModeLong": "Long",
-  "rulesNardyTitle": "Backgammon — rules",
-  "rulesNardyPlayers": "Players: 2.",
-  "rulesNardyMode": "Mode: {mode}.",
-  "@rulesNardyMode": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "rulesNardyIntro": "A 24-point board, 15 checkers each. Roll two dice: move one checker the sum or two checkers the individual pips.",
-  "rulesNardyPlayShort": "Short backgammon: you move toward each other and may hit lone opponent checkers. A hit checker goes to the bar and must re-enter. When all checkers are in your home board, bear them off.",
-  "rulesNardyPlayLong": "Long backgammon: both start from the same head and move the same way. Only one checker may leave the head per turn. Hitting is not allowed. When all checkers are in the home board, bear them off.",
-  "rulesNardyWin": "The first player to bear off all checkers wins.",
-  "rulesNardySixPrime": "You may not seal six points in a row until at least one opposing checker has passed them.",
-  "nardyRoll": "Roll",
-  "nardySkipTurn": "Skip turn",
-  "nardyUndoMove": "Undo",
-  "nardyDoneTurn": "Done",
-  "nardyNoMoves": "No moves",
-  "nardyYourRoll": "Your roll",
-  "nardyPipsShort": "Left:",
-  "nardyYouWonMars": "You won — gammon!",
-  "nardyYouLostMars": "You lost — gammon",
-  "rulesNardyOfflineBot": "Offline: a game against the bot.",
   "gamesCheckers": "Checkers",
   "gamesCheckersModeRussian": "Russian",
+  "gamesCheckersModeEnglish": "English",
   "gamesCheckersModeGiveaway": "Giveaway",
+  "gamesCheckersModeCorners": "Corners",
   "rulesCheckersPlayers": "Players: 2.",
   "rulesCheckersMode": "Mode: {mode}.",
   "@rulesCheckersMode": {
@@ -358,6 +335,37 @@
   "rulesCheckersPlay": "Captures are mandatory. If you can capture again, you continue with the same piece. A man that reaches the last rank becomes a king.",
   "rulesCheckersWin": "In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.",
   "rulesCheckersOfflineBot": "Offline: a game against the bot.",
+  "rulesCheckersPlayRussian": "Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory — take the longest sequence. Win by capturing all enemy pieces or leaving the opponent with no moves.",
+  "rulesCheckersPlayEnglish": "English draughts: 12 pieces each. Men move and capture only diagonally forward. Kings move one square diagonally in any direction. Captures are mandatory. Win by capturing all enemy pieces or leaving the opponent with no moves.",
+  "rulesCheckersPlayGiveaway": "Giveaway: the same moves as Russian draughts, but the goal is reversed — lose all your pieces or be left with no moves. Captures are still mandatory.",
+  "rulesCheckersPlayCorners": "Corners: pieces start in opposite corners. Move to an adjacent empty square horizontally or vertically, or jump over any piece without removing it. The goal is to move all your pieces into the opponent’s corner.",
+  "rulesNardyTitle": "Backgammon — rules",
+  "rulesNardyPlayers": "Players: 2.",
+  "rulesNardyMode": "Mode: {mode}.",
+  "@rulesNardyMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesNardyIntro": "A 24-point board, 15 checkers each. Roll two dice: move one checker the sum or two checkers the individual pips.",
+  "rulesNardyPlayShort": "Short backgammon: you move toward each other and may hit lone opponent checkers. A hit checker goes to the bar and must re-enter. When all checkers are in your home board, bear them off.",
+  "rulesNardyPlayLong": "Long backgammon: both start from the same head and move the same way. Only one checker may leave the head per turn. Hitting is not allowed. When all checkers are in the home board, bear them off.",
+  "rulesNardyWin": "The first player to bear off all checkers wins.",
+  "rulesNardySixPrime": "You may not seal six points in a row until at least one opposing checker has passed them.",
+  "nardyRoll": "Roll",
+  "nardySkipTurn": "Skip turn",
+  "nardyUndoMove": "Undo",
+  "nardyDoneTurn": "Done",
+  "nardyAutoConfirm": "Auto-confirm",
+  "nardyAutoConfirmHint": "Pass the turn automatically after all moves",
+  "nardyNoMoves": "No moves",
+  "nardyYourRoll": "Your roll",
+  "nardyPipsShort": "Left:",
+  "nardyYouWonMars": "You won — gammon!",
+  "nardyYouLostMars": "You lost — gammon",
+  "rulesNardyOfflineBot": "Offline: a game against the bot.",
   "rulesUnoPlayers": "Players: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {
@@ -701,6 +709,9 @@
   "coinsLoginAvailableToday": "Today's reward available",
   "coinsLoginStreak": "Daily login streak",
   "coinsFriendReward": "Friend reward",
+  "coinsTasks": "Tasks",
+  "coinsTasksSubtitle": "Rewards for profile, friends and games",
+  "coinsTasksRewards": "Rewards available to claim",
   "coinsFriendRewardHint": "+{amount} for signing up via your link",
   "@coinsFriendRewardHint": {
     "placeholders": {

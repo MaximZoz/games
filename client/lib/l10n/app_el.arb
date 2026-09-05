@@ -257,6 +257,25 @@
   "gamesNardy": "Τάβλι",
   "gamesNardyModeShort": "Κοντό",
   "gamesNardyModeLong": "Μακρύ",
+  "gamesCheckers": "Ντάμα",
+  "gamesCheckersModeRussian": "Ρωσικά",
+  "gamesCheckersModeEnglish": "Αγγλικά",
+  "gamesCheckersModeGiveaway": "Παραχώρηση",
+  "gamesCheckersModeCorners": "Γωνίες",
+  "rulesCheckersPlayers": "Παίκτες: 2.",
+  "rulesCheckersMode": "Λειτουργία: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Ταμπλό 8×8. Δύο παίκτες.",
+  "rulesCheckersPlayRussian": "Ρωσική ντάμα: 12 πούλια ο καθένας στις σκούρες. Οι απλοί προχωρούν διαγώνια και χτυπούν μπρος και πίσω. Οι ντάμες πετούν όσες θέσεις θέλουν. Το χτύπημα είναι υποχρεωτικό — επιλέγεται η μεγαλύτερη σειρά. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.",
+  "rulesCheckersPlayEnglish": "Αγγλική ντάμα: 12 πούλια ο καθένας. Οι απλοί προχωρούν και χτυπούν μόνο διαγώνια μπροστά. Οι ντάμες κινούνται μία θέση διαγώνια. Το χτύπημα είναι υποχρεωτικό. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.",
+  "rulesCheckersPlayGiveaway": "Παραχώρηση: οι ίδιες κινήσεις με τη ρωσική ντάμα, αλλά ο στόχος είναι αντίστροφος — να χάσεις όλα τα πούλια ή να μείνεις χωρίς κίνηση. Το χτύπημα παραμένει υποχρεωτικό.",
+  "rulesCheckersPlayCorners": "Γωνίες: τα πούλια ξεκινούν στις απέναντι γωνίες. Πηγαίνετε σε διπλανή ελεύθερη θέση οριζόντια ή κάθετα ή πηδάτε πάνω από οποιοδήποτε πούλι χωρίς να το βγάλετε. Στόχος είναι να μεταφέρετε όλα τα πούλια στη γωνία του αντιπάλου.",
   "rulesNardyTitle": "Τάβλι — κανόνες",
   "rulesNardyPlayers": "Παίκτες: 2.",
   "rulesNardyMode": "Λειτουργία: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Παράλειψη σειράς",
   "nardyUndoMove": "Αναίρεση",
   "nardyDoneTurn": "Έτοιμο",
+  "nardyAutoConfirm": "Αυτόματη επιβεβαίωση",
+  "nardyAutoConfirmHint": "Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα",
   "nardyNoMoves": "Καμία κίνηση",
   "nardyYourRoll": "Η ζαριά σας",
   "nardyPipsShort": "Απομένουν:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Η σημερινή ανταμοιβή είναι διαθέσιμη",
   "coinsLoginStreak": "Καθημερινή σειρά συνδέσεων",
   "coinsFriendReward": "Ανταμοιβή φίλου",
+  "coinsTasks": "Αποστολές",
+  "coinsTasksSubtitle": "Ανταμοιβές για προφίλ, φίλους και παιχνίδια",
+  "coinsTasksRewards": "Διαθέσιμες ανταμοιβές προς διεκδίκηση",
   "coinsFriendRewardHint": "+{amount} για εγγραφή μέσω του συνδέσμου σας",
   "@coinsFriendRewardHint": {
     "placeholders": {

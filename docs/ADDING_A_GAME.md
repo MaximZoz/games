@@ -24,11 +24,20 @@
 1. Пакет `client/lib/games/<id>/` — движок, repository, providers, rules.
 2. Экраны `*_lobby_screen.dart`, `*_game_screen.dart` (+ offline при необходимости).
    - Лобби: собрать на `GameLobbyWaitingLayout`.
+   - Шапка: `GameLobbyAppBarTitle` + `lobbyAppBarTitle` — везде «Своя игра» /
+     «Лобби», не название игры.
    - Партия: хром через `GameActionsOverlay` + `handleGameScreenClose` + таймеры.
    - Выбывание multi: `enterGameObservation(ref, gameId, gameType: id)`.
 3. `GameDescriptor` в `client/lib/games/framework/<id>_game.dart`
-   (`id`, `buildLobbyScreen`, `buildGameScreen`, `buildOfflineScreen`).
+   (`id`, `localizedName`, `visibleModeLabel`, экраны).
+   - `localizedName` — тот же `.arb`-ключ, что на карточке игры. Статистика,
+     список лобби, инвайты и чат берут имя через `localizedGameTypeName`.
+   - `visibleModeLabel` — чип режима на карточке лобби. По умолчанию пусто:
+     не подставлять «Классика». Переопределять, только если у игры есть
+     реальные пользовательские режимы (как короткие/длинные нарды).
 4. Зарегистрировать в `GameRegistry` (`_builtinGames` в `game_registry.dart`).
+   Имя и режим подхватятся везде, где уже стоит `localizedGameTypeName` /
+   `localizedGameModeLabel`.
 5. Карточку на «Игры»:
    - hydrate из `userGameSettingsProvider('<id>')`;
    - persist через `gameCardSettings(gameType: '<id>', …)` + `updateLocal`;

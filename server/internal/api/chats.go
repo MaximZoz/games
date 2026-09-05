@@ -1163,8 +1163,9 @@ func (h *ChatsHandler) publishChatListChanged(userIDs ...uuid.UUID) {
 	})
 }
 
-// cleanupOrphanGroupChats удаляет групповые чаты, чьё лобби уже нет в Redis
-// (партия закончилась / лобби истекло).
+// cleanupOrphanGroupChats удаляет групповые чаты, у которых нет живой сессии:
+// лобби уже нет, либо лобби «в игре», а партия уже окончена.
+// Иначе в чатах остаётся «Дурак на четверых», а каталога/поиска игр нет.
 func (h *ChatsHandler) cleanupOrphanGroupChats(ctx context.Context, userID uuid.UUID) {
 	if h == nil || h.Pool == nil || h.Rdb == nil {
 		return
@@ -1175,20 +1176,49 @@ func (h *ChatsHandler) cleanupOrphanGroupChats(ctx context.Context, userID uuid.
 	}
 	removed := 0
 	for _, lobbyID := range lobbyIDs {
-		n, err := h.Rdb.Exists(ctx, "lobby:"+lobbyID).Result()
-		if err != nil {
-			continue
-		}
-		if n > 0 {
+		if h.groupChatSessionLive(ctx, lobbyID) {
 			continue
 		}
 		if err := store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID); err == nil {
 			removed++
+			h.Rdb.Del(ctx, "lobby:"+lobbyID)
+			h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		}
 	}
 	if removed > 0 {
 		h.publishChatListChanged(userID)
 	}
+}
+
+func (h *ChatsHandler) groupChatSessionLive(ctx context.Context, lobbyID string) bool {
+	if h == nil || h.Rdb == nil {
+		return false
+	}
+	lobbyID = strings.TrimSpace(lobbyID)
+	if lobbyID == "" {
+		return false
+	}
+	m, err := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
+	if err != nil || len(m) == 0 {
+		return false
+	}
+	gameID := strings.TrimSpace(m["game_id"])
+	gameStatus := ""
+	if gameID != "" {
+		if gm, gerr := h.Rdb.HGetAll(ctx, "game:"+gameID).Result(); gerr == nil && len(gm) > 0 {
+			gameStatus = gm["status"]
+		}
+	}
+	return groupChatSessionLive(true, m["status"], gameID, gameStatus)
+}
+
+// groupChatSessionLive — лобби ждёт игроков или в нём идёт живая партия.
+func groupChatSessionLive(lobbyExists bool, lobbyStatus, gameID, gameStatus string) bool {
+	if !lobbyExists {
+		return false
+	}
+	_, clear := classifyGetActiveLobby(lobbyStatus, gameID, gameStatus)
+	return !clear
 }
 
 func uuidSliceToStrings(ids []uuid.UUID) []string {

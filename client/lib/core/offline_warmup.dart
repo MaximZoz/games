@@ -70,6 +70,8 @@ class OfflineWarmup {
       ref.invalidate(userGameSettingsProvider);
       ref.invalidate(achievementsListProvider);
       ref.invalidate(achievementsUnclaimedCountProvider);
+      ref.invalidate(tasksListProvider);
+      ref.invalidate(tasksUnclaimedCountProvider);
       ref.invalidate(collectionIncomeProvider);
       ref.invalidate(dailyRewardStatusProvider);
 
@@ -82,6 +84,8 @@ class OfflineWarmup {
         _awaitIgnore(ref.read(userGameSettingsProvider('poker').future)),
         _awaitIgnore(ref.read(achievementsListProvider.future)),
         _awaitIgnore(ref.read(achievementsUnclaimedCountProvider.future)),
+        _awaitIgnore(ref.read(tasksListProvider.future)),
+        _awaitIgnore(ref.read(tasksUnclaimedCountProvider.future)),
         _awaitIgnore(ref.read(collectionIncomeProvider.future)),
         _awaitIgnore(ref.read(dailyRewardStatusProvider.future)),
       ]);
@@ -96,6 +100,7 @@ class OfflineWarmup {
       final pokerSettings =
           ref.read(userGameSettingsProvider('poker')).valueOrNull;
       final achievements = ref.read(achievementsListProvider).valueOrNull;
+      final tasks = ref.read(tasksListProvider).valueOrNull;
       final income = ref.read(collectionIncomeProvider).valueOrNull;
       final daily = ref.read(dailyRewardStatusProvider).valueOrNull;
 
@@ -127,6 +132,9 @@ class OfflineWarmup {
       }
       if (achievements != null) {
         await OfflineDiskCache.saveAchievements(uid, achievements);
+      }
+      if (tasks != null) {
+        await OfflineDiskCache.saveTasks(uid, tasks);
       }
       if (income != null) {
         await OfflineDiskCache.saveCollectionIncome(uid, income);

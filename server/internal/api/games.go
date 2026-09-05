@@ -338,10 +338,6 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveNardy(w, r)
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/api/games/checkers/") {
-		h.serveCheckers(w, r)
-		return
-	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -1553,26 +1549,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 			StakeBronze:          stakeBronze,
 			GameType:             gameType,
 		}
-		// Durak: правила и подписи строятся по колоде/режиму, не по variant.
-		if gameType == durakGameType {
-			deckSize, _ := strconv.Atoi(m["deck_size"])
-			if deckSize == 0 {
-				deckSize = 36
-			}
-			gm := strings.TrimSpace(m["game_mode"])
-			if gm == "" {
-				gm = "podkidnoi"
-			}
-			item.DeckSize = deckSize
-			item.GameMode = gm
-			item.Variant = ""
-			item.GridSize = 0
-		}
-		if isSimpleBoardGame(gameType) {
-			item.GameMode = strings.TrimSpace(m["game_mode"])
-			item.Variant = item.GameMode
-			item.GridSize = 0
-		}
+		applyLobbyTypeFields(&item, m)
 		lobbies = append(lobbies, item)
 	}
 
@@ -1695,43 +1672,7 @@ func (h *GamesHandler) GetLobby(w http.ResponseWriter, r *http.Request, lobbyID 
 		StakeBronze:  stakeBronze,
 		GameType:     gameType,
 	}
-	// Durak: правила рисуются по колоде и режиму, а не по variant/grid.
-	if gameType == durakGameType {
-		deckSize, _ := strconv.Atoi(m["deck_size"])
-		if deckSize == 0 {
-			deckSize = 36
-		}
-		gm := strings.TrimSpace(m["game_mode"])
-		if gm == "" {
-			gm = "podkidnoi"
-		}
-		item.DeckSize = deckSize
-		item.GameMode = gm
-		item.Variant = ""
-		item.GridSize = 0
-	}
-	if gameType == battleshipGameType {
-		item.Variant = ""
-		item.GridSize = 10
-		item.FirstMoveRestriction = m["first_move_restriction"] == "true"
-	}
-	if gameType == unoGameType {
-		item.Variant = "classic"
-		item.GridSize = 0
-		item.GameMode = "classic"
-	}
-	if gameType == nardyGameType {
-		mode := nardy.NormalizeMode(m["game_mode"])
-		item.Variant = mode
-		item.GridSize = 0
-		item.GameMode = mode
-	}
-	if isSimpleBoardGame(gameType) {
-		mode := strings.TrimSpace(m["game_mode"])
-		item.Variant = mode
-		item.GridSize = 0
-		item.GameMode = mode
-	}
+	applyLobbyTypeFields(&item, m)
 	if opponentID != "" {
 		item.OpponentID = &opponentID
 	}
@@ -1945,10 +1886,6 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 		inviteData["game_mode"] = "classic"
 	} else if gameType == nardyGameType {
 		mode := nardy.NormalizeMode(m["game_mode"])
-		inviteData["variant"] = mode
-		inviteData["game_mode"] = mode
-	} else if isSimpleBoardGame(gameType) {
-		mode := strings.TrimSpace(m["game_mode"])
 		inviteData["variant"] = mode
 		inviteData["game_mode"] = mode
 	} else {
@@ -2801,10 +2738,6 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 			mode := nardy.NormalizeMode(m["game_mode"])
 			item["variant"] = mode
 			item["game_mode"] = mode
-		} else if isSimpleBoardGame(gt) {
-			mode := strings.TrimSpace(m["game_mode"])
-			item["variant"] = mode
-			item["game_mode"] = mode
 		} else {
 			item["variant"] = m["variant"]
 			gs, _ := strconv.Atoi(m["grid_size"])
@@ -2904,7 +2837,7 @@ func (h *GamesHandler) applyGameTimeout(ctx context.Context, key string, m map[s
 	}
 	if m["game_type"] == durakGameType || m["game_type"] == battleshipGameType ||
 		m["game_type"] == pokerGameType || m["game_type"] == unoGameType ||
-		m["game_type"] == nardyGameType || isSimpleBoardGame(m["game_type"]) {
+		m["game_type"] == nardyGameType {
 		return false
 	}
 	dl := m["turn_deadline"]
@@ -3983,7 +3916,7 @@ func (h *GamesHandler) blockingActiveGameID(ctx context.Context, userID uuid.UUI
 	}
 	// Durak / Poker / Nardy: участие определяется по player_ids CSV.
 	if gm["game_type"] == durakGameType || gm["game_type"] == pokerGameType ||
-		gm["game_type"] == nardyGameType || isSimpleBoardGame(gm["game_type"]) {
+		gm["game_type"] == nardyGameType {
 		players := parsePlayerIDsCSV(gm["player_ids"])
 		for _, p := range players {
 			if p == userID.String() {
@@ -4048,7 +3981,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 		if u, err := uuid.Parse(uid); err == nil {
 			_ = store.IncrementGamesFinished(ctx, h.Pool, u)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-			notifyAchievementUnlocks(h.Push, u, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 		}
 	}
 	// Multi: лобби завершается вместе с партией → удаляем групповой чат.
@@ -4088,7 +4021,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 			if u, err := uuid.Parse(wid); err == nil {
 				_ = store.IncrementWinsByStake(ctx, h.Pool, u, stakeBronze)
 				unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, u)
-				notifyAchievementUnlocks(h.Push, u, unlocked)
+				notifyAchievementUnlocks(h.Hub, h.Push, u, unlocked)
 			}
 		}
 	}
@@ -4222,7 +4155,7 @@ func (h *GamesHandler) recordGameWin(ctx context.Context, xUserID, oUserID strin
 		return
 	}
 	unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-	notifyAchievementUnlocks(h.Push, uid, unlocked)
+	notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 }
 
 func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID string) {
@@ -4238,7 +4171,7 @@ func (h *GamesHandler) recordGameFinished(ctx context.Context, xUserID, oUserID 
 			continue
 		}
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, uid)
-		notifyAchievementUnlocks(h.Push, uid, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, uid, unlocked)
 	}
 }
 
@@ -4384,7 +4317,7 @@ func (h *GamesHandler) observationPayload(ctx context.Context, userID uuid.UUID)
 	}
 	inGame := false
 	if gt == durakGameType || gt == pokerGameType || gt == unoGameType ||
-		gt == nardyGameType || isSimpleBoardGame(gt) {
+		gt == nardyGameType {
 		for _, p := range parsePlayerIDsCSV(m["player_ids"]) {
 			if p == userID.String() {
 				inGame = true
@@ -4456,8 +4389,6 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
-			} else if m["game_type"] == store.GameTypeCheckers {
-				h.applyCheckersTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4602,20 +4533,6 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_type": nardyGameType,
 					}
 				}
-			} else if isSimpleBoardGame(m["game_type"]) {
-				players := parsePlayerIDsCSV(m["player_ids"])
-				if !stringSliceContains(players, userID.String()) {
-					clearUserActiveGame(ctx, h.Rdb, userID)
-				} else {
-					seat := simple1v1SeatOf(players, userID.String())
-					active = map[string]any{
-						"type":       "game",
-						"game_id":    gameID,
-						"lobby_id":   m["lobby_id"],
-						"game_type":  m["game_type"],
-						"is_my_turn": seat >= 0 && strconv.Itoa(seat) == m["turn_actor_idx"],
-					}
-				}
 			} else {
 				myMark := markForUserID(m, userID.String())
 				if myMark == "" {
@@ -4673,6 +4590,7 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 							"type":      "lobby",
 							"lobby_id":  lobbyID,
 							"game_type": gt,
+							"mode":      strings.TrimSpace(m["mode"]),
 						}
 					}
 				}

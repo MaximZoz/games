@@ -697,6 +697,58 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesNardyModeLong => 'ยาว';
 
   @override
+  String get gamesCheckers => 'หมากฮอส';
+
+  @override
+  String get gamesCheckersModeRussian => 'รัสเซีย';
+
+  @override
+  String get gamesCheckersModeEnglish => 'อังกฤษ';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'กิฟอะเวย์';
+
+  @override
+  String get gamesCheckersModeCorners => 'มุม';
+
+  @override
+  String get rulesCheckersPlayers => 'ผู้เล่น: 2';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'กระดาน 8×8 สองผู้เล่น';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'หมากฮอสรัสเซีย: คนละ 12 ตัวบนช่องเข้ม ตัวธรรมดาเดินทแยงไปข้างหน้าและกินไปข้างหน้าหรือถอยหลัง ดามก้าบินได้ทุกช่อง ต้องกินและเลือกทางที่กินได้มากที่สุด ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'หมากฮอสอังกฤษ: คนละ 12 ตัว ตัวธรรมดาเดินและกินทแยงไปข้างหน้าเท่านั้น ดามก้าเดินทแยงหนึ่งช่อง ต้องกิน ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'กิฟอะเวย์: เดินแบบหมากฮอสรัสเซีย แต่เป้าหมายกลับกัน คือยอมเสียหมากทั้งหมดหรือเดินไม่ได้ การกินยังบังคับ';
+
+  @override
+  String get rulesCheckersPlayCorners => 'มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม';
+
+  @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get nardyDoneTurn => 'เสร็จ';
 
   @override
+  String get nardyAutoConfirm => 'ยืนยันอัตโนมัติ';
+
+  @override
+  String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
+
+  @override
   String get nardyNoMoves => 'ไม่มีตาเดิน';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'ออฟไลน์: เล่นกับบอท';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'รางวัลเพื่อน';
+
+  @override
+  String get coinsTasks => 'ภารกิจ';
+
+  @override
+  String get coinsTasksSubtitle => 'รางวัลสำหรับโปรไฟล์ เพื่อน และเกม';
+
+  @override
+  String get coinsTasksRewards => 'มีรางวัลพร้อมรับ';
 
   @override
   String coinsFriendRewardHint(String amount) {

@@ -1481,6 +1481,102 @@ abstract class AppLocalizations {
   /// **'Длинные'**
   String get gamesNardyModeLong;
 
+  /// No description provided for @gamesCheckers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шашки'**
+  String get gamesCheckers;
+
+  /// No description provided for @gamesCheckersModeRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские'**
+  String get gamesCheckersModeRussian;
+
+  /// No description provided for @gamesCheckersModeEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские'**
+  String get gamesCheckersModeEnglish;
+
+  /// No description provided for @gamesCheckersModeGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки'**
+  String get gamesCheckersModeGiveaway;
+
+  /// No description provided for @gamesCheckersModeCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки'**
+  String get gamesCheckersModeCorners;
+
+  /// No description provided for @rulesCheckersPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesCheckersPlayers;
+
+  /// No description provided for @rulesCheckersMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesCheckersMode(String mode);
+
+  /// No description provided for @rulesCheckersTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
+  String rulesCheckersTime(String time);
+
+  /// No description provided for @rulesCheckersIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.'**
+  String get rulesCheckersIntro;
+
+  /// No description provided for @rulesCheckersPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.'**
+  String get rulesCheckersPlay;
+
+  /// No description provided for @rulesCheckersWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.'**
+  String get rulesCheckersWin;
+
+  /// No description provided for @rulesCheckersOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesCheckersOfflineBot;
+
+  /// No description provided for @rulesCheckersPlayRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские шашки: у каждого 12 шашек на тёмных клетках. Простые ходят по диагонали вперёд, а бьют вперёд и назад. Дамка летает на любое число клеток. Бой обязателен — выбирают взятие с наибольшим числом шашек. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayRussian;
+
+  /// No description provided for @rulesCheckersPlayEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские шашки: у каждого 12 шашек. Простые ходят и бьют только вперёд по диагонали. Дамка ходит на одну клетку в любую сторону по диагонали. Бой обязателен. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayEnglish;
+
+  /// No description provided for @rulesCheckersPlayGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки: те же ходы, что в русских шашках, но цель обратная — отдать все свои шашки или остаться без хода. Бой по-прежнему обязателен.'**
+  String get rulesCheckersPlayGiveaway;
+
+  /// No description provided for @rulesCheckersPlayCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.'**
+  String get rulesCheckersPlayCorners;
+
   /// No description provided for @rulesNardyTitle.
   ///
   /// In ru, this message translates to:
@@ -1553,6 +1649,18 @@ abstract class AppLocalizations {
   /// **'Готово'**
   String get nardyDoneTurn;
 
+  /// No description provided for @nardyAutoConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автоподтверждение'**
+  String get nardyAutoConfirm;
+
+  /// No description provided for @nardyAutoConfirmHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'После всех ходов сразу передать ход сопернику'**
+  String get nardyAutoConfirmHint;
+
   /// No description provided for @nardyNoMoves.
   ///
   /// In ru, this message translates to:
@@ -1588,66 +1696,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Офлайн: партия против бота.'**
   String get rulesNardyOfflineBot;
-
-  /// No description provided for @gamesCheckers.
-  ///
-  /// In ru, this message translates to:
-  /// **'Шашки'**
-  String get gamesCheckers;
-
-  /// No description provided for @gamesCheckersModeRussian.
-  ///
-  /// In ru, this message translates to:
-  /// **'Русские'**
-  String get gamesCheckersModeRussian;
-
-  /// No description provided for @gamesCheckersModeGiveaway.
-  ///
-  /// In ru, this message translates to:
-  /// **'Поддавки'**
-  String get gamesCheckersModeGiveaway;
-
-  /// No description provided for @rulesCheckersPlayers.
-  ///
-  /// In ru, this message translates to:
-  /// **'Игроки: 2.'**
-  String get rulesCheckersPlayers;
-
-  /// No description provided for @rulesCheckersMode.
-  ///
-  /// In ru, this message translates to:
-  /// **'Режим: {mode}.'**
-  String rulesCheckersMode(String mode);
-
-  /// No description provided for @rulesCheckersTime.
-  ///
-  /// In ru, this message translates to:
-  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
-  String rulesCheckersTime(String time);
-
-  /// No description provided for @rulesCheckersIntro.
-  ///
-  /// In ru, this message translates to:
-  /// **'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.'**
-  String get rulesCheckersIntro;
-
-  /// No description provided for @rulesCheckersPlay.
-  ///
-  /// In ru, this message translates to:
-  /// **'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.'**
-  String get rulesCheckersPlay;
-
-  /// No description provided for @rulesCheckersWin.
-  ///
-  /// In ru, this message translates to:
-  /// **'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.'**
-  String get rulesCheckersWin;
-
-  /// No description provided for @rulesCheckersOfflineBot.
-  ///
-  /// In ru, this message translates to:
-  /// **'Офлайн: партия против бота.'**
-  String get rulesCheckersOfflineBot;
 
   /// No description provided for @rulesUnoPlayers.
   ///
@@ -3328,6 +3376,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Монеты за друга'**
   String get coinsFriendReward;
+
+  /// No description provided for @coinsTasks.
+  ///
+  /// In ru, this message translates to:
+  /// **'Задания'**
+  String get coinsTasks;
+
+  /// No description provided for @coinsTasksSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Награды за профиль, друзей и игры'**
+  String get coinsTasksSubtitle;
+
+  /// No description provided for @coinsTasksRewards.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть награды к получению'**
+  String get coinsTasksRewards;
 
   /// No description provided for @coinsFriendRewardHint.
   ///

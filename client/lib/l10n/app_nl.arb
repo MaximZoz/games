@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dammen",
+  "gamesCheckersModeRussian": "Russisch",
+  "gamesCheckersModeEnglish": "Engels",
+  "gamesCheckersModeGiveaway": "Geefdam",
+  "gamesCheckersModeCorners": "Hoeken",
+  "rulesCheckersPlayers": "Spelers: 2.",
+  "rulesCheckersMode": "Modus: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bord 8×8. Twee spelers.",
+  "rulesCheckersPlayRussian": "Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht — kies de langste reeks. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
+  "rulesCheckersPlayEnglish": "Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
+  "rulesCheckersPlayGiveaway": "Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.",
+  "rulesCheckersPlayCorners": "Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.",
   "rulesNardyTitle": "Backgammon — regels",
   "rulesNardyPlayers": "Spelers: 2.",
   "rulesNardyMode": "Modus: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Beurt overslaan",
   "nardyUndoMove": "Ongedaan",
   "nardyDoneTurn": "Klaar",
+  "nardyAutoConfirm": "Auto-bevestigen",
+  "nardyAutoConfirmHint": "Geef de beurt automatisch door na alle zetten",
   "nardyNoMoves": "Geen zetten",
   "nardyYourRoll": "Jouw worp",
   "nardyPipsShort": "Resterend:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Beloning van vandaag beschikbaar",
   "coinsLoginStreak": "Dagelijkse inlogreeks",
   "coinsFriendReward": "Vriendenbeloning",
+  "coinsTasks": "Taken",
+  "coinsTasksSubtitle": "Beloningen voor profiel, vrienden en games",
+  "coinsTasksRewards": "Beloningen klaar om te claimen",
   "coinsFriendRewardHint": "+{amount} voor registratie via jouw link",
   "@coinsFriendRewardHint": {
     "placeholders": {

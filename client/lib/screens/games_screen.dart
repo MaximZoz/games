@@ -249,6 +249,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       final path =
           GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
       if (path != '/games') return;
+      // Вкладка «Лобби» — список открытых столов, не уводим в свою игру.
+      if (_selectedTab == _GamesTab.lobbies) return;
       if (hasBlockingActiveMatch(active)) {
         goToActiveSession(context, active);
         return;
@@ -325,6 +327,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         final path =
             GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
         if (path != '/games') return;
+        if (_selectedTab == _GamesTab.lobbies) return;
         goToActiveSession(context, activeSession);
       });
     }
@@ -540,10 +543,11 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
               ActiveGameItem(
                 type: 'lobby',
                 lobbyId: result.lobbyId,
+                mode: mode,
               ),
             );
         context.push(
-          '/games/tictactoe/lobby/${result.lobbyId}?mode=$mode',
+          lobbyScreenPath(result.lobbyId, mode: mode),
         );
       }
     } catch (e) {
@@ -1036,10 +1040,30 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     }
   }
 
+  void _goLobbyScreen(
+    BuildContext context, {
+    required String lobbyId,
+    required String gameType,
+    required String mode,
+  }) {
+    ref.read(activeGameProvider.notifier).setLocal(
+          ActiveGameItem(
+            type: 'lobby',
+            lobbyId: lobbyId,
+            gameType: gameType,
+            mode: mode,
+          ),
+        );
+    if (context.mounted) {
+      context.go(lobbyScreenPath(lobbyId, gameType: gameType, mode: mode));
+    }
+  }
+
   Future<void> _joinLobby(
     BuildContext context,
     String lobbyId, {
     String gameType = 'tictactoe',
+    String mode = 'matchmake',
   }) async {
     if (await blockJoinIfBusyAsync(
       context,
@@ -1069,14 +1093,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           return;
         }
         if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'durak',
-                ),
-              );
-          context.go('/games/durak/lobby/$lobbyId?mode=invite');
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'durak',
+            mode: mode,
+          );
         }
       } on GamesException catch (e) {
         if (!context.mounted) return;
@@ -1115,14 +1137,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           return;
         }
         if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'battleship',
-                ),
-              );
-          context.go('/games/battleship/lobby/$lobbyId?mode=invite');
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'battleship',
+            mode: mode,
+          );
         }
       } on GamesException catch (e) {
         if (!context.mounted) return;
@@ -1160,14 +1180,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           return;
         }
         if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'poker',
-                ),
-              );
-          context.go('/games/poker/lobby/$lobbyId?mode=invite');
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'poker',
+            mode: mode,
+          );
         }
       } on GamesException catch (e) {
         if (!context.mounted) return;
@@ -1205,14 +1223,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           return;
         }
         if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'uno',
-                ),
-              );
-          context.go('/games/uno/lobby/$lobbyId?mode=invite');
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'uno',
+            mode: mode,
+          );
         }
       } on GamesException catch (error) {
         if (!context.mounted) return;
@@ -1254,14 +1270,12 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           return;
         }
         if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'nardy',
-                ),
-              );
-          context.go('/games/nardy/lobby/$lobbyId?mode=invite');
+          _goLobbyScreen(
+            context,
+            lobbyId: lobbyId,
+            gameType: 'nardy',
+            mode: mode,
+          );
         }
       } on GamesException catch (error) {
         if (!context.mounted) return;
@@ -1341,12 +1355,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
       ref.invalidate(openLobbiesProvider);
       if (result.joined && result.waitingMore) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
-            );
+        _goLobbyScreen(
+          context,
+          lobbyId: lobbyId,
+          gameType: 'tictactoe',
+          mode: mode,
+        );
         ref.invalidate(lobbyDetailProvider(lobbyId));
         unawaited(refreshChatsList(ref, force: true).catchError((_) {}));
-        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
       if (result.joined && result.gameId != null) {
@@ -1367,11 +1383,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       if (_isAlreadyInLobbyError(e)) {
         ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(type: 'lobby', lobbyId: lobbyId),
-            );
+        _goLobbyScreen(
+          context,
+          lobbyId: lobbyId,
+          gameType: 'tictactoe',
+          mode: mode,
+        );
         ref.invalidate(lobbyDetailProvider(lobbyId));
-        context.go('/games/tictactoe/lobby/$lobbyId?mode=invite');
         return;
       }
       showAppSnackBar(
@@ -1428,6 +1446,13 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             players: lobby.maxPlayers,
             turnTimeSec: lobby.turnTimeSec,
             stakeBronze: lobby.stakeBronze,
+          ));
+        } else if (lobby.isNardy) {
+          body = rulesTextLines(nardyRuleLines(
+            gameMode: lobby.gameMode,
+            turnTimeSec: lobby.turnTimeSec,
+            stakeBronze: lobby.stakeBronze,
+            l10n: context.l10n,
           ));
         } else {
           body = buildTictactoeRulesTextWidget(
@@ -1507,9 +1532,28 @@ class _GamesPageContent extends ConsumerWidget {
 
     Widget gameCards(double maxWidth) {
       const gap = 16.0;
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final isMedium = screenWidth >= 700 && screenWidth < 950;
+      final titles = [
+        context.l10n.gamesTicTacToe,
+        context.l10n.gamesDurak,
+        context.l10n.gamesBattleship,
+        context.l10n.gamesPoker,
+        context.l10n.gamesUno,
+        context.l10n.gamesNardy,
+        context.l10n.gamesCheckers,
+      ];
       final cols = gamesHubTileColumns(
         maxWidth: maxWidth,
         wide: isDesktop,
+        titles: titles,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+        titleStyle: gamesHubTitleStyle(
+          isDesktop: isDesktop,
+          isMedium: isMedium,
+          base: Theme.of(context).textTheme.titleLarge,
+        ),
       );
       final tileWidth = gamesHubTileWidth(maxWidth: maxWidth, cols: cols);
       final tiles = <Widget>[
@@ -1612,7 +1656,8 @@ class _LobbiesPageContent extends ConsumerWidget {
   final AsyncValue<List<LobbyItem>> lobbiesAsync;
   final List<GameInvite> invites;
   final bool isDesktop;
-  final void Function(BuildContext, String, {String gameType}) onJoinLobby;
+  final void Function(BuildContext, String, {String gameType, String mode})
+      onJoinLobby;
   final void Function(BuildContext, LobbyItem) onShowLobbyRules;
   final VoidCallback onRefresh;
   final void Function(BuildContext, GameInvite) onAcceptInvite;
@@ -1706,7 +1751,9 @@ class _LobbiesPageContent extends ConsumerWidget {
             }
             final lobbyCards = lobbies
                 .map(
-                  (lobby) => Padding(
+                  (lobby) {
+                    final modeText = lobby.modeLabel(context.l10n);
+                    return Padding(
                     padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 6),
                     child: GradientCard(
                       animate: false,
@@ -1790,7 +1837,7 @@ class _LobbiesPageContent extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
-                                    if (!lobby.isPoker)
+                                    if (modeText.isNotEmpty)
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -1807,20 +1854,9 @@ class _LobbiesPageContent extends ConsumerWidget {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            lobby.isBattleship
-                                                ? '10×10'
-                                                : lobby.isDurak
-                                                    ? '${durakModeLabel(lobby.gameMode, context.l10n)} · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
-                                                    : lobby.isNardy
-                                                        ? nardyModeLabel(
-                                                            lobby.gameMode,
-                                                            context.l10n)
-                                                        : lobby.isCheckers
-                                                            ? checkersModeLabel(
-                                                                lobby.gameMode,
-                                                                context.l10n)
-                                                            : variantShortLabel(
-                                                                lobby.variant),
+                                            lobby.isDurak
+                                                ? '$modeText · ${durakDeckLabel(lobby.deckSize, context.l10n)}'
+                                                : modeText,
                                             style: TextStyle(
                                               fontSize: isDesktop ? 14 : 13,
                                               color: AppColors.textSecondary,
@@ -1857,8 +1893,14 @@ class _LobbiesPageContent extends ConsumerWidget {
                             tooltip: context.l10n.gamesRulesTitle,
                           ),
                           IconButton.filled(
-                            onPressed: () => onJoinLobby(context, lobby.id,
-                                gameType: lobby.gameType),
+                            onPressed: () => onJoinLobby(
+                              context,
+                              lobby.id,
+                              gameType: lobby.gameType,
+                              mode: lobby.mode.trim().isEmpty
+                                  ? 'matchmake'
+                                  : lobby.mode,
+                            ),
                             icon: const Icon(Icons.login_rounded),
                             tooltip: context.l10n.gamesJoin,
                             style: IconButton.styleFrom(
@@ -1869,7 +1911,8 @@ class _LobbiesPageContent extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  );
+                  },
                 )
                 .toList();
             if (isDesktop) {
@@ -2065,9 +2108,10 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
                 type: 'lobby',
                 lobbyId: lobbyId,
                 gameType: 'durak',
+                mode: mode,
               ),
             );
-        context.push('/games/durak/lobby/$lobbyId?mode=$mode');
+        context.push(lobbyScreenPath(lobbyId, gameType: 'durak', mode: mode));
       }
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -2232,7 +2276,7 @@ class _DurakGameCardState extends ConsumerState<_DurakGameCard> {
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: busy ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
+        onInfoTap: () => _showRules(context),
         busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
@@ -2404,9 +2448,12 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
                 type: 'lobby',
                 lobbyId: lobbyId,
                 gameType: 'battleship',
+                mode: mode,
               ),
             );
-        context.push('/games/battleship/lobby/$lobbyId?mode=$mode');
+        context.push(
+          lobbyScreenPath(lobbyId, gameType: 'battleship', mode: mode),
+        );
       }
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -2517,7 +2564,7 @@ class _BattleshipGameCardState extends ConsumerState<_BattleshipGameCard> {
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: busy || widget.isOffline ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
+        onInfoTap: () => _showRules(context),
         busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
@@ -2686,9 +2733,10 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
                 type: 'lobby',
                 lobbyId: lobbyId,
                 gameType: 'poker',
+                mode: mode,
               ),
             );
-        context.push('/games/poker/lobby/$lobbyId?mode=$mode');
+        context.push(lobbyScreenPath(lobbyId, gameType: 'poker', mode: mode));
       }
     } on GamesException catch (e) {
       if (!mounted) return;
@@ -2824,7 +2872,7 @@ class _PokerGameCardState extends ConsumerState<_PokerGameCard> {
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: busy || widget.isOffline ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
+        onInfoTap: () => _showRules(context),
         busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
@@ -2992,9 +3040,10 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
                 type: 'lobby',
                 lobbyId: lobbyId,
                 gameType: 'uno',
+                mode: mode,
               ),
             );
-        context.push('/games/uno/lobby/$lobbyId?mode=$mode');
+        context.push(lobbyScreenPath(lobbyId, gameType: 'uno', mode: mode));
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -3094,7 +3143,7 @@ class _UnoGameCardState extends ConsumerState<_UnoGameCard> {
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: busy || widget.isOffline ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
+        onInfoTap: () => _showRules(context),
         busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
@@ -3210,9 +3259,7 @@ class _TictactoeGameCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.accentSoft.withValues(alpha: 0.6)
-                : AppColors.textSecondary.withValues(alpha: 0.12),
+            color: AppColors.buttonFill,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: selected
@@ -3295,7 +3342,7 @@ class _TictactoeGameCard extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
                 decoration: BoxDecoration(
-                  color: AppColors.accentSoft.withValues(alpha: 0.6),
+                  color: AppColors.buttonFill,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: AppColors.accentStart.withValues(alpha: 0.3),
@@ -3436,9 +3483,7 @@ class _TictactoeGameCard extends StatelessWidget {
                       ),
                     ],
                     IconButton(
-                      onPressed: isCreating || isFinding
-                          ? null
-                          : () => _showRulesInfo(context),
+                      onPressed: () => _showRulesInfo(context),
                       icon: const Icon(
                         Icons.info_outline_rounded,
                         size: 22,
@@ -3989,9 +4034,10 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
                 type: 'lobby',
                 lobbyId: lobbyId,
                 gameType: 'nardy',
+                mode: mode,
               ),
             );
-        context.push('/games/nardy/lobby/$lobbyId?mode=$mode');
+        context.push(lobbyScreenPath(lobbyId, gameType: 'nardy', mode: mode));
       } else {
         throw GamesException(503, context.l10n.commonTryLater);
       }
@@ -4094,7 +4140,7 @@ class _NardyGameCardState extends ConsumerState<_NardyGameCard> {
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
         onStakeTap: widget.isOffline || busy ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
+        onInfoTap: () => _showRules(context),
         busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,

@@ -497,9 +497,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
               child: Text(context.l10n.commonCancel),
             ),
             FilledButton(
-              style: destructive
-                  ? FilledButton.styleFrom(backgroundColor: Colors.red.shade700)
-                  : null,
+              style: AppButtonStyles.of(
+                foregroundColor:
+                    destructive ? Colors.red.shade800 : AppColors.textPrimary,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),
             ),
@@ -2082,6 +2083,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         ref.watch(dailyRewardAvailableProvider).valueOrNull == true ? 1 : 0;
     final achievements =
         ref.watch(achievementsUnclaimedCountProvider).valueOrNull ?? 0;
+    final tasks = ref.watch(tasksUnclaimedCountProvider).valueOrNull ?? 0;
     final collectionIncome =
         ref.watch(collectionIncomeAvailableProvider) ? 1 : 0;
     final gifted = ref.watch(unreadGiftedCollectionsCountProvider);
@@ -2091,6 +2093,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         gameInvites +
         dailyReward +
         achievements +
+        tasks +
         collectionIncome +
         gifted;
   }
@@ -4430,15 +4433,10 @@ class _ChatCoinsCreditCardState extends ConsumerState<_ChatCoinsCreditCard> {
                 FilledButton(
                   key: _claimKey,
                   onPressed: _claiming ? null : () => _claim(credit),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentStart,
-                    foregroundColor: Colors.white,
+                  style: AppButtonStyles.of(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _claiming

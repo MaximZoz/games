@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lång",
+  "gamesCheckers": "Damspel",
+  "gamesCheckersModeRussian": "Ryska",
+  "gamesCheckersModeEnglish": "Engelska",
+  "gamesCheckersModeGiveaway": "Ge-bort",
+  "gamesCheckersModeCorners": "Hörn",
+  "rulesCheckersPlayers": "Spelare: 2.",
+  "rulesCheckersMode": "Läge: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bräde 8×8. Två spelare.",
+  "rulesCheckersPlayRussian": "Ryskt damspel: 12 brickor var på mörka rutor. Bönder går snett framåt och slår framåt och bakåt. Damer flyger valfritt långt. Slag är obligatoriskt — den längsta serien väljs. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.",
+  "rulesCheckersPlayEnglish": "Engelskt damspel: 12 brickor var. Bönder går och slår endast snett framåt. Damer går ett fält snett åt valfritt håll. Slag är obligatoriskt. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.",
+  "rulesCheckersPlayGiveaway": "Ge-bort: samma drag som ryskt damspel, men målet är omvänt — ge bort alla brickor eller bli utan drag. Slag är fortfarande obligatoriskt.",
+  "rulesCheckersPlayCorners": "Hörn: brickorna startar i motstående hörn. Gå till en tom grannruta vågrätt eller lodrätt, eller hoppa över valfri bricka utan att ta den. Målet är att flytta alla sina brickor till motståndarens hörn.",
   "rulesNardyTitle": "Backgammon — regler",
   "rulesNardyPlayers": "Spelare: 2.",
   "rulesNardyMode": "Läge: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Hoppa över turen",
   "nardyUndoMove": "Ångra",
   "nardyDoneTurn": "Klar",
+  "nardyAutoConfirm": "Autobekräfta",
+  "nardyAutoConfirmHint": "Efter alla drag går turen vidare automatiskt",
   "nardyNoMoves": "Inga drag",
   "nardyYourRoll": "Ditt slag",
   "nardyPipsShort": "Kvar:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Dagens belöning tillgänglig",
   "coinsLoginStreak": "Daglig inloggningsstreak",
   "coinsFriendReward": "Vänbelöning",
+  "coinsTasks": "Uppgifter",
+  "coinsTasksSubtitle": "Belöningar för profil, vänner och matcher",
+  "coinsTasksRewards": "Belöningar att hämta",
   "coinsFriendRewardHint": "+{amount} för registrering via din länk",
   "@coinsFriendRewardHint": {
     "placeholders": {

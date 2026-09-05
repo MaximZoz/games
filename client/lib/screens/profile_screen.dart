@@ -602,10 +602,11 @@ class _ProfileEmptyState extends StatelessWidget {
               expanded: true,
             ),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
+            FramedButton(
               onPressed: onRegister,
-              icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: Text(context.l10n.registerTitle),
+              icon: Icons.person_add_alt_1_rounded,
+              label: context.l10n.registerTitle,
+              expanded: true,
             ),
           ],
         ),
@@ -913,25 +914,13 @@ class _ProfileView extends ConsumerWidget {
       },
     );
 
-    final editButton = OutlinedButton.icon(
+    final editButton = FramedButton(
       onPressed: onEdit,
-      icon: const Icon(Icons.edit_outlined, size: 18),
-      label: Text(
-        context.l10n.profileEdit,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.accentStart,
-        padding: EdgeInsets.symmetric(
-          horizontal: 22,
-          vertical: shortScreen ? 11 : 13,
-        ),
-        side: BorderSide(
-          color: AppColors.accentStart.withValues(alpha: 0.6),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+      icon: Icons.edit_outlined,
+      label: context.l10n.profileEdit,
+      padding: EdgeInsets.symmetric(
+        horizontal: 22,
+        vertical: shortScreen ? 11 : 13,
       ),
     );
 

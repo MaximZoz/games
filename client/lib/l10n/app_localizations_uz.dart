@@ -697,6 +697,58 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesNardyModeLong => 'Uzun';
 
   @override
+  String get gamesCheckers => 'Shashka';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rus';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Ingliz';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Berilmali';
+
+  @override
+  String get gamesCheckersModeCorners => 'Burchaklar';
+
+  @override
+  String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Doska 8×8. Ikki o‘yinchi.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy — eng ko‘p tosh olinadigan yo‘l tanlanadi. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Berilmali: yurishlar rus shashkasidagidek, lekin maqsad teskarisi — barcha toshni berib qo‘yish yoki yurishsiz qolish. Urish baribir majburiy.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.';
+
+  @override
   String get rulesNardyTitle => 'Narda — qoidalar';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get nardyDoneTurn => 'Tayyor';
 
   @override
+  String get nardyAutoConfirm => 'Avtotasdiqlash';
+
+  @override
+  String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
+
+  @override
   String get nardyNoMoves => 'Yurish yo‘q';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Oflayn: bot bilan o‘yin.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Do‘st mukofoti';
+
+  @override
+  String get coinsTasks => 'Vazifalar';
+
+  @override
+  String get coinsTasksSubtitle => 'Profil, do‘stlar va o‘yin mukofotlari';
+
+  @override
+  String get coinsTasksRewards => 'Olish uchun mukofotlar bor';
 
   @override
   String coinsFriendRewardHint(String amount) {

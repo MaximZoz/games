@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Метаданные и точки подключения одной игры в общий каркас.
 ///
@@ -8,6 +9,26 @@ import 'package:flutter/widgets.dart';
 abstract class GameDescriptor {
   /// Стабильный id (`tictactoe`, `durak`, …) — совпадает с `game_type` API.
   String get id;
+
+  /// Локализованное имя — то же, что на карточке игры.
+  ///
+  /// Используется в статистике, списке лобби, инвайтах и чате через
+  /// [localizedGameTypeName]. Новая игра обязана вернуть ключ из `.arb`,
+  /// а не сырой `id`.
+  String localizedName(AppLocalizations l10n);
+
+  /// Подпись режима на карточке лобби/инвайта.
+  ///
+  /// Пусто — режима нет, чип не показывать. Не подставлять «Классика»
+  /// только потому, что так у крестиков-ноликов: у Уно/покера и будущих
+  /// игр без вариантов чип должен отсутствовать.
+  String visibleModeLabel({
+    required AppLocalizations l10n,
+    String variant = '',
+    String gameMode = '',
+    int deckSize = 36,
+  }) =>
+      '';
 
   /// Порядок карточек на экране «Игры» (меньше — выше).
   int get sortOrder;

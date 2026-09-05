@@ -697,6 +697,58 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesNardyModeLong => 'Longo';
 
   @override
+  String get gamesCheckers => 'Damas';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russas';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesas';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Damas loucas';
+
+  @override
+  String get gamesCheckersModeCorners => 'Cantos';
+
+  @override
+  String get rulesCheckersPlayers => 'Jogadores: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tabuleiro 8×8. Dois jogadores.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório — escolhe-se a sequência mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.';
+
+  @override
   String get rulesNardyTitle => 'Gamão — regras';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nardyDoneTurn => 'Pronto';
 
   @override
+  String get nardyAutoConfirm => 'Autoconfirmar';
+
+  @override
+  String get nardyAutoConfirmHint => 'Após todos os lances, o turno passa automaticamente';
+
+  @override
   String get nardyNoMoves => 'Sem jogadas';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: partida contra o bot.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Recompensa por amigo';
+
+  @override
+  String get coinsTasks => 'Tarefas';
+
+  @override
+  String get coinsTasksSubtitle => 'Recompensas por perfil, amigos e partidas';
+
+  @override
+  String get coinsTasksRewards => 'Recompensas disponíveis para resgatar';
 
   @override
   String coinsFriendRewardHint(String amount) {

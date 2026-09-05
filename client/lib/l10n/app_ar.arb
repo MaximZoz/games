@@ -257,6 +257,25 @@
   "gamesNardy": "النرد",
   "gamesNardyModeShort": "قصيرة",
   "gamesNardyModeLong": "طويلة",
+  "gamesCheckers": "الضامة",
+  "gamesCheckersModeRussian": "روسية",
+  "gamesCheckersModeEnglish": "إنجليزية",
+  "gamesCheckersModeGiveaway": "الضامة العكسية",
+  "gamesCheckersModeCorners": "الزوايا",
+  "rulesCheckersPlayers": "اللاعبون: 2.",
+  "rulesCheckersMode": "الوضع: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "رقعة 8×8. لاعبان.",
+  "rulesCheckersPlayRussian": "الضامة الروسية: 12 قطعة لكل لاعب على المربعات الداكنة. الجنود يتحركون قطريًا للأمام ويأكلون للأمام والخلف. الملكة تطير أي عدد من المربعات. الأكل إلزامي ويُختار أطول تسلسل. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.",
+  "rulesCheckersPlayEnglish": "الضامة الإنجليزية: 12 قطعة لكل لاعب. الجنود يتحركون ويأكلون قطريًا للأمام فقط. الملكة تتحرك مربعًا واحدًا قطريًا. الأكل إلزامي. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.",
+  "rulesCheckersPlayGiveaway": "الضامة العكسية: نفس حركات الضامة الروسية لكن الهدف معكوس — أن تخسر كل قطعك أو تبقى بلا حركة. الأكل ما زال إلزاميًا.",
+  "rulesCheckersPlayCorners": "الزوايا: القطع تبدأ في الزوايا المتقابلة. تتحرك إلى مربع فارغ مجاور أفقيًا أو عموديًا أو تقفز فوق أي قطعة دون إزالتها. الهدف نقل كل قطعك إلى زاوية الخصم.",
   "rulesNardyTitle": "النرد — القواعد",
   "rulesNardyPlayers": "اللاعبون: 2.",
   "rulesNardyMode": "الوضع: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "تخطَّ الدور",
   "nardyUndoMove": "تراجع",
   "nardyDoneTurn": "تم",
+  "nardyAutoConfirm": "تأكيد تلقائي",
+  "nardyAutoConfirmHint": "تمرير الدور تلقائياً بعد كل النقلات",
   "nardyNoMoves": "لا توجد نقلات",
   "nardyYourRoll": "رميتك",
   "nardyPipsShort": "المتبقي:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "مكافأة اليوم متاحة",
   "coinsLoginStreak": "سلسلة تسجيل الدخول اليومية",
   "coinsFriendReward": "مكافأة الصديق",
+  "coinsTasks": "المهام",
+  "coinsTasksSubtitle": "مكافآت الملف الشخصي والأصدقاء والألعاب",
+  "coinsTasksRewards": "هناك مكافآت جاهزة للاستلام",
   "coinsFriendRewardHint": "+{amount} للتسجيل عبر رابطك",
   "@coinsFriendRewardHint": {
     "placeholders": {

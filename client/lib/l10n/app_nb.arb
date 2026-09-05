@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dam",
+  "gamesCheckersModeRussian": "Russisk",
+  "gamesCheckersModeEnglish": "Engelsk",
+  "gamesCheckersModeGiveaway": "Gi-bort",
+  "gamesCheckersModeCorners": "Hjørner",
+  "rulesCheckersPlayers": "Spillere: 2.",
+  "rulesCheckersMode": "Modus: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Brett 8×8. To spillere.",
+  "rulesCheckersPlayRussian": "Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt — den lengste serien velges. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.",
+  "rulesCheckersPlayEnglish": "Engelsk dam: 12 brikker hver. Bønder går og slår bare skrått frem. Damer går ett felt skrått i alle retninger. Slag er plikt. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.",
+  "rulesCheckersPlayGiveaway": "Gi-bort: samme trekk som russisk dam, men målet er omvendt — gi bort alle brikker eller stå uten trekk. Slag er fortsatt plikt.",
+  "rulesCheckersPlayCorners": "Hjørner: brikkene starter i motstående hjørner. Gå til et tomt nabo-felt vannrett eller loddrett, eller hopp over en hvilken som helst brikke uten å fjerne den. Målet er å flytte alle brikkene til motstanderens hjørne.",
   "rulesNardyTitle": "Backgammon — regler",
   "rulesNardyPlayers": "Spillere: 2.",
   "rulesNardyMode": "Modus: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Hopp over turen",
   "nardyUndoMove": "Angre",
   "nardyDoneTurn": "Ferdig",
+  "nardyAutoConfirm": "Autobekreft",
+  "nardyAutoConfirmHint": "Etter alle trekk går turen automatisk videre",
   "nardyNoMoves": "Ingen trekk",
   "nardyYourRoll": "Ditt kast",
   "nardyPipsShort": "Igjen:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Dagens belønning er tilgjengelig",
   "coinsLoginStreak": "Daglig innloggingsrekke",
   "coinsFriendReward": "Vennebelønning",
+  "coinsTasks": "Oppgaver",
+  "coinsTasksSubtitle": "Belønninger for profil, venner og spill",
+  "coinsTasksRewards": "Belønninger klare til å hentes",
   "coinsFriendRewardHint": "+{amount} for registrering via lenken din",
   "@coinsFriendRewardHint": {
     "placeholders": {

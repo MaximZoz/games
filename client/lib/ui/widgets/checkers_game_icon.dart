@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Иконка «Шашки» — мини-доска с двумя шашками на тёмных клетках.
+/// Иконка «Шашки» — клеточная доска и две шашки.
+///
+/// На 24–26 px мелкая сетка 8×8 сливается, поэтому рисуем 4×4
+/// и две крупные шашки: силуэт читается в шапке карточки.
 class CheckersGameIcon extends StatelessWidget {
   const CheckersGameIcon({
     super.key,
@@ -11,7 +14,8 @@ class CheckersGameIcon extends StatelessWidget {
   final double size;
   final Color? color;
 
-  static const IconData iconData = Icons.circle_outlined;
+  /// Запасной [IconData] для мест, где нужен только символ.
+  static const IconData iconData = Icons.grid_on_rounded;
 
   @override
   Widget build(BuildContext context) {
@@ -30,53 +34,97 @@ class _CheckersGameIconPainter extends CustomPainter {
 
   final Color color;
 
+  static const int _cells = 4;
+
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.shortestSide;
-    final strokeW = s * 0.08;
-    final boardS = s * 0.88;
-    final left = (size.width - boardS) / 2;
-    final top = (size.height - boardS) / 2;
+    final strokeW = s * 0.085;
+    final boardSide = s * 0.92;
+    final left = (size.width - boardSide) / 2;
+    final top = (size.height - boardSide) / 2;
     final board = RRect.fromRectAndRadius(
-      Rect.fromLTWH(left, top, boardS, boardS),
-      Radius.circular(s * 0.12),
+      Rect.fromLTWH(left, top, boardSide, boardSide),
+      Radius.circular(s * 0.14),
     );
 
-    canvas.drawRRect(board, Paint()..color = color.withValues(alpha: 0.12));
+    canvas.saveLayer(Offset.zero & size, Paint());
+    canvas.drawRRect(board, Paint()..color = color.withValues(alpha: 0.14));
+
+    final inner = boardSide - strokeW * 2;
+    final cell = inner / _cells;
+    final originX = left + strokeW;
+    final originY = top + strokeW;
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(originX, originY, inner, inner),
+        Radius.circular(s * 0.08),
+      ),
+    );
+    final dark = Paint()..color = color.withValues(alpha: 0.88);
+    for (var row = 0; row < _cells; row++) {
+      for (var col = 0; col < _cells; col++) {
+        if ((row + col).isEven) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(originX + col * cell, originY + row * cell, cell, cell),
+          dark,
+        );
+      }
+    }
+    canvas.restore();
+
     canvas.drawRRect(
       board,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW
+        ..strokeJoin = StrokeJoin.round
         ..color = color,
     );
-
-    const n = 4;
-    final cell = boardS / n;
-    for (var r = 0; r < n; r++) {
-      for (var c = 0; c < n; c++) {
-        if ((r + c) % 2 == 0) continue;
-        canvas.drawRect(
-          Rect.fromLTWH(left + c * cell, top + r * cell, cell, cell),
-          Paint()..color = color.withValues(alpha: 0.28),
-        );
-      }
-    }
 
     final pieceR = cell * 0.32;
-    canvas.drawCircle(
-      Offset(left + 1.5 * cell, top + 0.5 * cell),
+    _drawPiece(
+      canvas,
+      Offset(originX + cell * 1.5, originY + cell * 0.5),
       pieceR,
-      Paint()..color = color,
+      s,
+      filled: true,
     );
-    canvas.drawCircle(
-      Offset(left + 2.5 * cell, top + 3.5 * cell),
+    _drawPiece(
+      canvas,
+      Offset(originX + cell * 2.5, originY + cell * 3.5),
       pieceR,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.06
-        ..color = color,
+      s,
+      filled: false,
     );
+    canvas.restore();
+  }
+
+  void _drawPiece(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double s, {
+    required bool filled,
+  }) {
+    canvas.drawCircle(
+      center,
+      radius + s * 0.03,
+      Paint()..blendMode = BlendMode.clear,
+    );
+    if (filled) {
+      canvas.drawCircle(center, radius, Paint()..color = color);
+    } else {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s * 0.07
+          ..color = color,
+      );
+    }
   }
 
   @override

@@ -6,25 +6,62 @@ import (
 
 func TestAchievementCatalog(t *testing.T) {
 	cat := AchievementCatalog()
-	if len(cat) != 6 {
-		t.Fatalf("want 6 achievements, got %d", len(cat))
+	if len(cat) != 3 {
+		t.Fatalf("want 3 achievements, got %d", len(cat))
 	}
 	foundFrame := 0
 	for _, d := range cat {
 		if d.Target <= 0 {
 			t.Fatalf("%s target must be > 0", d.Code)
 		}
-		if d.RewardItemCode != "" {
-			foundFrame++
-			if d.RewardBronze != 0 {
-				t.Fatalf("%s frame reward should be 0 bronze, got %d", d.Code, d.RewardBronze)
-			}
-		} else if d.RewardBronze != AchievementRewardBronze {
-			t.Fatalf("%s reward=%d want %d", d.Code, d.RewardBronze, AchievementRewardBronze)
+		if d.RewardItemCode == "" {
+			t.Fatalf("%s should be a frame achievement", d.Code)
+		}
+		foundFrame++
+		if d.RewardBronze != 0 {
+			t.Fatalf("%s frame reward should be 0 bronze, got %d", d.Code, d.RewardBronze)
+		}
+		if IsTaskCode(d.Code) {
+			t.Fatalf("%s must not be a task", d.Code)
 		}
 	}
 	if foundFrame != 3 {
 		t.Fatalf("want 3 frame achievements, got %d", foundFrame)
+	}
+}
+
+func TestTaskCatalog(t *testing.T) {
+	cat := TaskCatalog()
+	if len(cat) != 3 {
+		t.Fatalf("want 3 tasks, got %d", len(cat))
+	}
+	want := map[string]bool{
+		AchievementProfileComplete: false,
+		AchievementGames10:         false,
+		AchievementFriends5:        false,
+	}
+	for _, d := range cat {
+		if !IsTaskCode(d.Code) {
+			t.Fatalf("%s should be a task", d.Code)
+		}
+		if d.RewardItemCode != "" {
+			t.Fatalf("%s must not award a frame", d.Code)
+		}
+		if d.RewardBronze != AchievementRewardBronze {
+			t.Fatalf("%s reward=%d want %d", d.Code, d.RewardBronze, AchievementRewardBronze)
+		}
+		if _, ok := want[d.Code]; !ok {
+			t.Fatalf("unexpected task %s", d.Code)
+		}
+		want[d.Code] = true
+	}
+	for code, seen := range want {
+		if !seen {
+			t.Fatalf("missing task %s", code)
+		}
+	}
+	if len(AllRewardCatalog()) != 6 {
+		t.Fatalf("want 6 total reward defs, got %d", len(AllRewardCatalog()))
 	}
 }
 
@@ -109,6 +146,15 @@ func TestProgressFor(t *testing.T) {
 func TestAchievementByCodeUnknown(t *testing.T) {
 	if _, ok := AchievementByCode("nope"); ok {
 		t.Fatal("expected unknown")
+	}
+	if !IsTaskCode(AchievementFriends5) {
+		t.Fatal("friends_5 should be a task")
+	}
+	if IsTaskCode(AchievementWinsGold10) {
+		t.Fatal("gold frame should not be a task")
+	}
+	if IsTaskCode("nope") {
+		t.Fatal("unknown code should not be a task")
 	}
 }
 

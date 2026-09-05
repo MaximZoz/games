@@ -144,6 +144,15 @@ class UserGameSettings {
     gameMode: 'short',
   );
 
+  static const checkersDefaults = UserGameSettings(
+    gameType: 'checkers',
+    turnTimeSec: 60,
+    variant: 'russian',
+    stakeBronze: 2,
+    maxPlayers: 2,
+    gameMode: 'russian',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
@@ -154,6 +163,8 @@ class UserGameSettings {
         return unoDefaults;
       case 'nardy':
         return nardyDefaults;
+      case 'checkers':
+        return checkersDefaults;
       default:
         return defaults;
     }
@@ -305,6 +316,11 @@ class UserGameSettings {
     } else if (gameType == 'nardy' || gameType == 'checkers') {
       out['variant'] = gameMode;
       out['grid_size'] = gameType == 'checkers' ? 8 : 3;
+      out['max_players'] = 2;
+      out['game_mode'] = gameMode;
+    } else if (gameType == 'checkers') {
+      out['variant'] = gameMode;
+      out['grid_size'] = 3;
       out['max_players'] = 2;
       out['game_mode'] = gameMode;
     } else {
@@ -668,6 +684,15 @@ class LobbyItem {
   bool get isNardy => gameType == 'nardy';
 
   bool get isCheckers => gameType == 'checkers';
+
+  /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
+  String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(
+        gameType: gameType,
+        variant: variant,
+        gameMode: gameMode,
+        deckSize: deckSize,
+        l10n: l10n,
+      );
 
   LobbyItem({
     required this.id,
@@ -1260,12 +1285,16 @@ class ActiveGameItem {
   /// в лобби/партию. Default 'tictactoe' сохраняет обратную совместимость.
   final String gameType;
 
+  /// `invite` — «Своя игра»; `matchmake` — «Лобби». Пусто, пока неизвестно.
+  final String mode;
+
   ActiveGameItem({
     required this.type,
     this.gameId,
     this.lobbyId,
     this.isMyTurn = false,
     this.gameType = 'tictactoe',
+    this.mode = '',
   });
 
   factory ActiveGameItem.fromJson(Map<String, dynamic> json) {
@@ -1277,6 +1306,7 @@ class ActiveGameItem {
       gameType: (json['game_type'] as String?)?.trim().isNotEmpty == true
           ? (json['game_type'] as String).trim()
           : 'tictactoe',
+      mode: (json['mode'] as String?)?.trim() ?? '',
     );
   }
 
@@ -1286,6 +1316,7 @@ class ActiveGameItem {
     String? lobbyId,
     bool? isMyTurn,
     String? gameType,
+    String? mode,
   }) {
     return ActiveGameItem(
       type: type ?? this.type,
@@ -1293,6 +1324,7 @@ class ActiveGameItem {
       lobbyId: lobbyId ?? this.lobbyId,
       isMyTurn: isMyTurn ?? this.isMyTurn,
       gameType: gameType ?? this.gameType,
+      mode: mode ?? this.mode,
     );
   }
 }

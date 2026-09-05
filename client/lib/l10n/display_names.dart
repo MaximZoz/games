@@ -1,4 +1,5 @@
 import 'package:multigames_client/core/locale_provider.dart';
+import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Канонические значения пола в API/БД (исторически на русском).
@@ -30,27 +31,39 @@ String localizeDisplayName(String? name, [AppLocalizations? l10n]) {
   }
 }
 
-/// Название игры по `game_type` (карточки приглашений, лобби, чат).
+/// Название игры по `game_type` (карточки, лобби, статистика, чат).
+///
+/// Берёт [GameDescriptor.localizedName] из реестра — новая игра появляется
+/// везде после регистрации и ключа в `.arb`. Неизвестный id не маскируется
+/// под крестики-нолики.
 String localizedGameTypeName(String gameType, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
-  switch (gameType.trim()) {
-    case 'durak':
-      return t.gamesDurak;
-    case 'battleship':
-      return t.gamesBattleship;
-    case 'poker':
-      return t.gamesPoker;
-    case 'uno':
-      return t.gamesUno;
-    case 'nardy':
-      return t.gamesNardy;
-    case 'checkers':
-      return t.gamesCheckers;
-    case 'tictactoe':
-      return t.gamesTicTacToe;
-    default:
-      return t.gamesTicTacToe;
-  }
+  final id = gameType.trim();
+  if (id.isEmpty) return t.gamesTicTacToe;
+  final game = gameRegistry[id];
+  if (game != null) return game.localizedName(t);
+  return id;
+}
+
+/// Пользовательский режим лобби/инвайта. Пусто — чип не показывать.
+///
+/// Источник — [GameDescriptor.visibleModeLabel]. Игры без вариантов
+/// (Уно, покер, будущие) не получают «Классику» по умолчанию.
+String localizedGameModeLabel({
+  required String gameType,
+  String variant = '',
+  String gameMode = '',
+  int deckSize = 36,
+  AppLocalizations? l10n,
+}) {
+  final t = l10n ?? LocaleService.l10n;
+  return gameRegistry[gameType.trim()]?.visibleModeLabel(
+        l10n: t,
+        variant: variant,
+        gameMode: gameMode,
+        deckSize: deckSize,
+      ) ??
+      '';
 }
 
 /// Локализует заголовки групповых чатов игр (в БД исторически на русском).

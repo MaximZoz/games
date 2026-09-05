@@ -697,6 +697,58 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesNardyModeLong => 'ロング';
 
   @override
+  String get gamesCheckers => 'チェッカー';
+
+  @override
+  String get gamesCheckersModeRussian => 'ロシア';
+
+  @override
+  String get gamesCheckersModeEnglish => 'イギリス';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'ギブアウェイ';
+
+  @override
+  String get gamesCheckersModeCorners => 'コーナー';
+
+  @override
+  String get rulesCheckersPlayers => 'プレイヤー: 2。';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'モード: $mode。';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => '盤は 8×8。2 人対戦。';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務で最長手順を選ぶ。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'ギブアウェイ：動きはロシア式と同じだが、目的は逆。自分の駒をすべて失うか、手がなくなると勝ち。取りはやはり義務。';
+
+  @override
+  String get rulesCheckersPlayCorners => 'コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。';
+
+  @override
   String get rulesNardyTitle => 'バックギャモン — ルール';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nardyDoneTurn => '完了';
 
   @override
+  String get nardyAutoConfirm => '自動確定';
+
+  @override
+  String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
+
+  @override
   String get nardyNoMoves => '動かせません';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'オフライン: ボットとの対戦。';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'フレンド報酬';
+
+  @override
+  String get coinsTasks => 'クエスト';
+
+  @override
+  String get coinsTasksSubtitle => 'プロフィール・フレンド・対局の報酬';
+
+  @override
+  String get coinsTasksRewards => '受け取れる報酬があります';
 
   @override
   String coinsFriendRewardHint(String amount) {

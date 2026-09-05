@@ -257,6 +257,25 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Lyhyt",
   "gamesNardyModeLong": "Pitkä",
+  "gamesCheckers": "Tammi",
+  "gamesCheckersModeRussian": "Venäläinen",
+  "gamesCheckersModeEnglish": "Englantilainen",
+  "gamesCheckersModeGiveaway": "Antodami",
+  "gamesCheckersModeCorners": "Kulmat",
+  "rulesCheckersPlayers": "Pelaajat: 2.",
+  "rulesCheckersMode": "Tila: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Lauta 8×8. Kaksi pelaajaa.",
+  "rulesCheckersPlayRussian": "Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista — valitaan pisin sarja. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
+  "rulesCheckersPlayEnglish": "Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
+  "rulesCheckersPlayGiveaway": "Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.",
+  "rulesCheckersPlayCorners": "Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.",
   "rulesNardyTitle": "Backgammon — säännöt",
   "rulesNardyPlayers": "Pelaajat: 2.",
   "rulesNardyMode": "Tila: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Ohita vuoro",
   "nardyUndoMove": "Kumoa",
   "nardyDoneTurn": "Valmis",
+  "nardyAutoConfirm": "Autovahvistus",
+  "nardyAutoConfirmHint": "Siirron jälkeen vuoro siirtyy automaattisesti",
   "nardyNoMoves": "Ei siirtoja",
   "nardyYourRoll": "Sinun heittosi",
   "nardyPipsShort": "Jäljellä:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Päivän palkinto saatavilla",
   "coinsLoginStreak": "Päivittäinen kirjautumisputki",
   "coinsFriendReward": "Kaveripalkinto",
+  "coinsTasks": "Tehtävät",
+  "coinsTasksSubtitle": "Palkinnot profiilista, kavereista ja peleistä",
+  "coinsTasksRewards": "Noudettavissa olevia palkintoja",
   "coinsFriendRewardHint": "+{amount} rekisteröitymisestä linkkisi kautta",
   "@coinsFriendRewardHint": {
     "placeholders": {

@@ -605,7 +605,7 @@ func (h *GamesHandler) onSimple1v1Finished(ctx context.Context, s simple1v1, gam
 	for _, userID := range humans {
 		_ = store.IncrementGamesFinished(ctx, h.Pool, userID)
 		unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, userID)
-		notifyAchievementUnlocks(h.Push, userID, unlocked)
+		notifyAchievementUnlocks(h.Hub, h.Push, userID, unlocked)
 	}
 	for _, winnerID := range winners {
 		if isBot(winnerID) {
@@ -614,7 +614,7 @@ func (h *GamesHandler) onSimple1v1Finished(ctx context.Context, s simple1v1, gam
 		if userID, err := uuid.Parse(winnerID); err == nil {
 			_ = store.IncrementWinsByStake(ctx, h.Pool, userID, stakeBronze)
 			unlocked, _ := store.EvaluateAndUnlock(ctx, h.Pool, userID)
-			notifyAchievementUnlocks(h.Push, userID, unlocked)
+			notifyAchievementUnlocks(h.Hub, h.Push, userID, unlocked)
 		}
 	}
 	h.recordSimple1v1Result(ctx, s, gameID, m, players, winners, stakeBronze, finishReason)

@@ -697,6 +697,58 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesNardyModeLong => 'Pitkä';
 
   @override
+  String get gamesCheckers => 'Tammi';
+
+  @override
+  String get gamesCheckersModeRussian => 'Venäläinen';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Englantilainen';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Antodami';
+
+  @override
+  String get gamesCheckersModeCorners => 'Kulmat';
+
+  @override
+  String get rulesCheckersPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Lauta 8×8. Kaksi pelaajaa.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista — valitaan pisin sarja. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — säännöt';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get nardyDoneTurn => 'Valmis';
 
   @override
+  String get nardyAutoConfirm => 'Autovahvistus';
+
+  @override
+  String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
+
+  @override
   String get nardyNoMoves => 'Ei siirtoja';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: peli bottia vastaan.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Kaveripalkinto';
+
+  @override
+  String get coinsTasks => 'Tehtävät';
+
+  @override
+  String get coinsTasksSubtitle => 'Palkinnot profiilista, kavereista ja peleistä';
+
+  @override
+  String get coinsTasksRewards => 'Noudettavissa olevia palkintoja';
 
   @override
   String coinsFriendRewardHint(String amount) {

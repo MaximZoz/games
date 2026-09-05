@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/screens/durak_game_screen.dart';
 import 'package:multigames_client/screens/durak_lobby_screen.dart';
 import 'package:multigames_client/screens/durak_offline_screen.dart';
@@ -8,6 +10,18 @@ import 'package:multigames_client/screens/durak_offline_screen.dart';
 class DurakGame extends GameDescriptor {
   @override
   String get id => 'durak';
+
+  @override
+  String localizedName(AppLocalizations l10n) => l10n.gamesDurak;
+
+  @override
+  String visibleModeLabel({
+    required AppLocalizations l10n,
+    String variant = '',
+    String gameMode = '',
+    int deckSize = 36,
+  }) =>
+      durakModeLabel(gameMode, l10n);
 
   @override
   int get sortOrder => 20;

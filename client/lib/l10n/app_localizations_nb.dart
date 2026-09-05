@@ -697,6 +697,58 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesNardyModeLong => 'Lang';
 
   @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisk';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engelsk';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Gi-bort';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hjørner';
+
+  @override
+  String get rulesCheckersPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Brett 8×8. To spillere.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt — den lengste serien velges. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engelsk dam: 12 brikker hver. Bønder går og slår bare skrått frem. Damer går ett felt skrått i alle retninger. Slag er plikt. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Gi-bort: samme trekk som russisk dam, men målet er omvendt — gi bort alle brikker eller stå uten trekk. Slag er fortsatt plikt.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hjørner: brikkene starter i motstående hjørner. Gå til et tomt nabo-felt vannrett eller loddrett, eller hopp over en hvilken som helst brikke uten å fjerne den. Målet er å flytte alle brikkene til motstanderens hjørne.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override
@@ -735,6 +787,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get nardyDoneTurn => 'Ferdig';
 
   @override
+  String get nardyAutoConfirm => 'Autobekreft';
+
+  @override
+  String get nardyAutoConfirmHint => 'Etter alle trekk går turen automatisk videre';
+
+  @override
   String get nardyNoMoves => 'Ingen trekk';
 
   @override
@@ -751,40 +809,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesNardyOfflineBot => 'Offline: parti mot boten.';
-
-  @override
-  String get gamesCheckers => 'Шашки';
-
-  @override
-  String get gamesCheckersModeRussian => 'Русские';
-
-  @override
-  String get gamesCheckersModeGiveaway => 'Поддавки';
-
-  @override
-  String get rulesCheckersPlayers => 'Игроки: 2.';
-
-  @override
-  String rulesCheckersMode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesCheckersTime(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
-
-  @override
-  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
-
-  @override
-  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
-
-  @override
-  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
   String rulesUnoPlayers(int players) {
@@ -1681,6 +1705,15 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get coinsFriendReward => 'Vennebelønning';
+
+  @override
+  String get coinsTasks => 'Oppgaver';
+
+  @override
+  String get coinsTasksSubtitle => 'Belønninger for profil, venner og spill';
+
+  @override
+  String get coinsTasksRewards => 'Belønninger klare til å hentes';
 
   @override
   String coinsFriendRewardHint(String amount) {

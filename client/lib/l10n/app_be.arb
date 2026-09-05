@@ -257,6 +257,25 @@
   "gamesNardy": "Нарды",
   "gamesNardyModeShort": "Кароткія",
   "gamesNardyModeLong": "Доўгія",
+  "gamesCheckers": "Шашкі",
+  "gamesCheckersModeRussian": "Рускія",
+  "gamesCheckersModeEnglish": "Англійскія",
+  "gamesCheckersModeGiveaway": "Паддаўкі",
+  "gamesCheckersModeCorners": "Вуглікі",
+  "rulesCheckersPlayers": "Гульцы: 2.",
+  "rulesCheckersMode": "Рэжым: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Дошка 8×8. Гуляюць двое.",
+  "rulesCheckersPlayRussian": "Рускія шашкі: у кожнага 12 шашак на цёмных клетках. Простыя ходзяць па дыяганалі наперад, а б’юць наперад і назад. Дамка ляціць на любую колькасць клетак. Бой абавязковы — выбіраюць узяцце з найбольшай колькасцю шашак. Перамагае той, хто з’еў усе шашкі суперніка або пазбавіў яго хадоў.",
+  "rulesCheckersPlayEnglish": "Англійскія шашкі: у кожнага 12 шашак. Простыя ходзяць і б’юць толькі наперад па дыяганалі. Дамка ходзіць на адну клетку ў любы бок па дыяганалі. Бой абавязковы. Перамагае той, хто з’еў усе шашкі суперніка або пазбавіў яго хадоў.",
+  "rulesCheckersPlayGiveaway": "Паддаўкі: тыя ж хады, што ў рускіх шашках, але мэта адваротная — аддаць усе свае шашкі або застацца без ходу. Бой усё роўна абавязковы.",
+  "rulesCheckersPlayCorners": "Вуглікі: шашкі стаяць у супрацьлеглых вуглах. Ходзяць на суседнюю свабодную клетку па гарызанталі ці вертыкалі або пераскокваюць праз любую шашку, не здымаючы яе. Мэта — перавесці ўсе свае шашкі ў вугал суперніка.",
   "rulesNardyTitle": "Нарды — правілы",
   "rulesNardyPlayers": "Ігракі: 2.",
   "rulesNardyMode": "Рэжым: {mode}.",
@@ -276,6 +295,8 @@
   "nardySkipTurn": "Прапусціць ход",
   "nardyUndoMove": "Вярнуць",
   "nardyDoneTurn": "Гатова",
+  "nardyAutoConfirm": "Аўтапацвярджэнне",
+  "nardyAutoConfirmHint": "Пасля ўсіх хадоў адразу перадаць ход суперніку",
   "nardyNoMoves": "Хадоў няма",
   "nardyYourRoll": "Ваш кідок",
   "nardyPipsShort": "Засталося:",
@@ -630,6 +651,9 @@
   "coinsLoginAvailableToday": "Даступна ўзнагарода за сёння",
   "coinsLoginStreak": "Штодзённая серыя ўваходаў",
   "coinsFriendReward": "Манеты за сябра",
+  "coinsTasks": "Заданні",
+  "coinsTasksSubtitle": "Узнагароды за профіль, сяброў і гульні",
+  "coinsTasksRewards": "Ёсць узнагароды да атрымання",
   "coinsFriendRewardHint": "+{amount} за рэгістрацыю па спасылцы",
   "@coinsFriendRewardHint": {
     "placeholders": {

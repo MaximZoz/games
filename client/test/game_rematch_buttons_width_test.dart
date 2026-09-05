@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
 Widget _wrap(Widget child, {double width = 400}) {
@@ -48,8 +49,8 @@ void main() {
     const width = 400.0;
     await tester.pumpWidget(_wrap(_section(), width: width));
 
-    final rematchFinder = find.bySubtype<FilledButton>();
-    final otherFinder = find.bySubtype<OutlinedButton>();
+    final rematchFinder = find.widgetWithText(FramedButton, 'Повторить');
+    final otherFinder = find.widgetWithText(FramedButton, 'Другой соперник');
     final rematch = tester.getSize(rematchFinder);
     final other = tester.getSize(otherFinder);
 
@@ -71,7 +72,8 @@ void main() {
     );
     final blockCenter =
         box.localToGlobal(box.size.center(Offset.zero)).dx;
-    final rematchCenter = tester.getCenter(find.bySubtype<FilledButton>()).dx;
+    final rematchCenter =
+        tester.getCenter(find.widgetWithText(FramedButton, 'Повторить')).dx;
     expect((rematchCenter - blockCenter).abs(), lessThan(1.0));
   });
 
@@ -82,8 +84,9 @@ void main() {
 
     await tester.pumpWidget(_wrap(_section(), width: 720));
 
-    final rematch = tester.getRect(find.bySubtype<FilledButton>());
-    final other = tester.getRect(find.bySubtype<OutlinedButton>());
+    final rematch = tester.getRect(find.widgetWithText(FramedButton, 'Повторить'));
+    final other =
+        tester.getRect(find.widgetWithText(FramedButton, 'Другой соперник'));
     expect((rematch.center.dy - other.center.dy).abs(), lessThan(8));
     expect(rematch.right, lessThan(other.left + 1));
   });
