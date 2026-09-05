@@ -10,6 +10,8 @@ import 'package:multigames_client/games/durak/durak_rules.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/live_game_sync.dart';
+import 'package:multigames_client/games/checkers/checkers_rules.dart';
+import 'package:multigames_client/games/connect4/connect4_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -69,6 +71,10 @@ class GameInvite {
 
   bool get isNardy => gameType == 'nardy';
 
+  bool get isCheckers => gameType == 'checkers';
+
+  bool get isConnect4 => gameType == 'connect4';
+
   /// Тот же инвайт на экране — не пересоздавать карточку (иначе мигает).
   bool sameVisibleCard(GameInvite other) =>
       lobbyId == other.lobbyId &&
@@ -99,6 +105,12 @@ class GameInvite {
     }
     if (isNardy) {
       return nardyModeLabel(durakMode);
+    }
+    if (isCheckers) {
+      return checkersModeLabel(durakMode);
+    }
+    if (isConnect4) {
+      return connect4ModeLabel(durakMode);
     }
     return variantLabel(variant);
   }

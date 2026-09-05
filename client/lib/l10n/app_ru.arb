@@ -334,6 +334,64 @@
   "nardyYouWonMars": "Вы выиграли — марс!",
   "nardyYouLostMars": "Поражение — марс",
   "rulesNardyOfflineBot": "Офлайн: партия против бота.",
+  "gamesCheckers": "Шашки",
+  "gamesCheckersModeRussian": "Русские",
+  "gamesCheckersModeGiveaway": "Поддавки",
+  "rulesCheckersPlayers": "Игроки: 2.",
+  "rulesCheckersMode": "Режим: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersTime": "Время на ход: {time}. Если время вышло — проигрыш.",
+  "@rulesCheckersTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.",
+  "rulesCheckersPlay": "Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.",
+  "rulesCheckersWin": "В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.",
+  "rulesCheckersOfflineBot": "Офлайн: партия против бота.",
+  "gamesConnect4": "Четыре в ряд",
+  "gamesConnect4ModeClassic": "7×6",
+  "gamesConnect4ModeWide": "9×7",
+  "rulesConnect4Players": "Игроки: 2.",
+  "rulesConnect4Mode": "Режим: {mode}.",
+  "@rulesConnect4Mode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesConnect4Time": "Время на ход: {time}. Если время вышло — проигрыш.",
+  "@rulesConnect4Time": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesConnect4Intro": "Поле {cols}×{rows}. По очереди бросаете фишку в колонку — она падает вниз.",
+  "@rulesConnect4Intro": {
+    "placeholders": {
+      "cols": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesConnect4Play": "Выигрывает ряд из четырёх своих фишек: горизонталь, вертикаль или диагональ. Если поле заполнено и ряда нет — ничья. Ничью можно предложить сопернику.",
+  "rulesConnect4Win": "Побеждает тот, кто первым собрал четыре в ряд, или соперник сдался / просрочил ход.",
+  "rulesConnect4OfflineBot": "Офлайн: партия против бота.",
   "rulesUnoPlayers": "Игроки: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

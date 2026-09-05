@@ -753,6 +753,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesNardyOfflineBot => 'Offline: a game against the bot.';
 
   @override
+  String get gamesCheckers => 'Checkers';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russian';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get rulesCheckersPlayers => 'Players: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Time per move: $time. If time runs out — you lose.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'An 8×8 board, 12 pieces each on dark squares. Men move forward diagonally and capture in any direction. Kings fly along the diagonal.';
+
+  @override
+  String get rulesCheckersPlay => 'Captures are mandatory. If you can capture again, you continue with the same piece. A man that reaches the last rank becomes a king.';
+
+  @override
+  String get rulesCheckersWin => 'In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Offline: a game against the bot.';
+
+  @override
+  String get gamesConnect4 => 'Connect Four';
+
+  @override
+  String get gamesConnect4ModeClassic => '7×6';
+
+  @override
+  String get gamesConnect4ModeWide => '9×7';
+
+  @override
+  String get rulesConnect4Players => 'Players: 2.';
+
+  @override
+  String rulesConnect4Mode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String rulesConnect4Time(String time) {
+    return 'Time per move: $time. If time runs out — you lose.';
+  }
+
+  @override
+  String rulesConnect4Intro(int cols, int rows) {
+    return 'A $cols×$rows board. Take turns dropping a disc into a column — it falls to the lowest empty cell.';
+  }
+
+  @override
+  String get rulesConnect4Play => 'Four of your discs in a row win: horizontal, vertical or diagonal. A full board without four in a row is a draw. You may offer a draw.';
+
+  @override
+  String get rulesConnect4Win => 'The first to make four in a row wins, or the opponent resigns / runs out of time.';
+
+  @override
+  String get rulesConnect4OfflineBot => 'Offline: a game against the bot.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Players: $players.';
   }

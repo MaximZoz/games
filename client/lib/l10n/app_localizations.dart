@@ -1589,6 +1589,126 @@ abstract class AppLocalizations {
   /// **'Офлайн: партия против бота.'**
   String get rulesNardyOfflineBot;
 
+  /// No description provided for @gamesCheckers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шашки'**
+  String get gamesCheckers;
+
+  /// No description provided for @gamesCheckersModeRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские'**
+  String get gamesCheckersModeRussian;
+
+  /// No description provided for @gamesCheckersModeGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки'**
+  String get gamesCheckersModeGiveaway;
+
+  /// No description provided for @rulesCheckersPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesCheckersPlayers;
+
+  /// No description provided for @rulesCheckersMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesCheckersMode(String mode);
+
+  /// No description provided for @rulesCheckersTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
+  String rulesCheckersTime(String time);
+
+  /// No description provided for @rulesCheckersIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.'**
+  String get rulesCheckersIntro;
+
+  /// No description provided for @rulesCheckersPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.'**
+  String get rulesCheckersPlay;
+
+  /// No description provided for @rulesCheckersWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.'**
+  String get rulesCheckersWin;
+
+  /// No description provided for @rulesCheckersOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesCheckersOfflineBot;
+
+  /// No description provided for @gamesConnect4.
+  ///
+  /// In ru, this message translates to:
+  /// **'Четыре в ряд'**
+  String get gamesConnect4;
+
+  /// No description provided for @gamesConnect4ModeClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'7×6'**
+  String get gamesConnect4ModeClassic;
+
+  /// No description provided for @gamesConnect4ModeWide.
+  ///
+  /// In ru, this message translates to:
+  /// **'9×7'**
+  String get gamesConnect4ModeWide;
+
+  /// No description provided for @rulesConnect4Players.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesConnect4Players;
+
+  /// No description provided for @rulesConnect4Mode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesConnect4Mode(String mode);
+
+  /// No description provided for @rulesConnect4Time.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
+  String rulesConnect4Time(String time);
+
+  /// No description provided for @rulesConnect4Intro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поле {cols}×{rows}. По очереди бросаете фишку в колонку — она падает вниз.'**
+  String rulesConnect4Intro(int cols, int rows);
+
+  /// No description provided for @rulesConnect4Play.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выигрывает ряд из четырёх своих фишек: горизонталь, вертикаль или диагональ. Если поле заполнено и ряда нет — ничья. Ничью можно предложить сопернику.'**
+  String get rulesConnect4Play;
+
+  /// No description provided for @rulesConnect4Win.
+  ///
+  /// In ru, this message translates to:
+  /// **'Побеждает тот, кто первым собрал четыре в ряд, или соперник сдался / просрочил ход.'**
+  String get rulesConnect4Win;
+
+  /// No description provided for @rulesConnect4OfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesConnect4OfflineBot;
+
   /// No description provided for @rulesUnoPlayers.
   ///
   /// In ru, this message translates to:

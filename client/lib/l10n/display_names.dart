@@ -44,6 +44,10 @@ String localizedGameTypeName(String gameType, [AppLocalizations? l10n]) {
       return t.gamesUno;
     case 'nardy':
       return t.gamesNardy;
+    case 'checkers':
+      return t.gamesCheckers;
+    case 'connect4':
+      return t.gamesConnect4;
     case 'tictactoe':
       return t.gamesTicTacToe;
     default:
@@ -70,6 +74,16 @@ String localizeChatTitle(String? title, [AppLocalizations? l10n]) {
     case 'Уно':
     case 'Uno':
       return t.gamesUno;
+    case 'Нарды':
+    case 'Nardy':
+    case 'Backgammon':
+      return t.gamesNardy;
+    case 'Шашки':
+    case 'Checkers':
+      return t.gamesCheckers;
+    case 'Четыре в ряд':
+    case 'Connect Four':
+      return t.gamesConnect4;
     case 'На троих':
       return t.gamesVariantMulti3;
     case 'На четверых':

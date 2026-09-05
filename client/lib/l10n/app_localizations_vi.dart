@@ -753,6 +753,76 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesNardyOfflineBot => 'Ngoại tuyến: chơi với bot.';
 
   @override
+  String get gamesCheckers => 'Шашки';
+
+  @override
+  String get gamesCheckersModeRussian => 'Русские';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Поддавки';
+
+  @override
+  String get rulesCheckersPlayers => 'Игроки: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Если после взятия можно бить дальше — продолжаете той же шашкой. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get gamesConnect4 => 'Четыре в ряд';
+
+  @override
+  String get gamesConnect4ModeClassic => '7×6';
+
+  @override
+  String get gamesConnect4ModeWide => '9×7';
+
+  @override
+  String get rulesConnect4Players => 'Игроки: 2.';
+
+  @override
+  String rulesConnect4Mode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String rulesConnect4Time(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String rulesConnect4Intro(int cols, int rows) {
+    return 'Поле $cols×$rows. По очереди бросаете фишку в колонку — она падает вниз.';
+  }
+
+  @override
+  String get rulesConnect4Play => 'Выигрывает ряд из четырёх своих фишек: горизонталь, вертикаль или диагональ. Если поле заполнено и ряда нет — ничья. Ничью можно предложить сопернику.';
+
+  @override
+  String get rulesConnect4Win => 'Побеждает тот, кто первым собрал четыре в ряд, или соперник сдался / просрочил ход.';
+
+  @override
+  String get rulesConnect4OfflineBot => 'Офлайн: партия против бота.';
+
+  @override
   String rulesUnoPlayers(int players) {
     return 'Người chơi: $players.';
   }

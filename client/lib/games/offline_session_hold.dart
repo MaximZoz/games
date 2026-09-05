@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/games/battleship/battleship_offline_session.dart';
+import 'package:multigames_client/games/checkers/checkers_offline_session.dart';
+import 'package:multigames_client/games/connect4/connect4_offline_session.dart';
 import 'package:multigames_client/games/durak/durak_offline_session.dart';
 import 'package:multigames_client/games/framework/game_registry.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
@@ -46,4 +48,6 @@ void disposeAllOfflineGameSessions() {
   OfflinePokerRegistry.instance.disposeAll();
   OfflineTttRegistry.instance.disposeAll();
   OfflineNardyRegistry.instance.disposeAll();
+  OfflineCheckersRegistry.instance.disposeAll();
+  OfflineConnect4Registry.instance.disposeAll();
 }

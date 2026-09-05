@@ -20,6 +20,10 @@ void main() {
     expect(localizedGameTypeName('battleship', t), t.gamesBattleship);
     expect(localizedGameTypeName('nardy', t), t.gamesNardy);
     expect(localizedGameTypeName('nardy', t), isNot(t.gamesTicTacToe));
+    expect(localizedGameTypeName('checkers', t), t.gamesCheckers);
+    expect(localizedGameTypeName('connect4', t), t.gamesConnect4);
+    expect(localizeChatTitle('Шашки', t), t.gamesCheckers);
+    expect(localizeChatTitle('Четыре в ряд', t), t.gamesConnect4);
   });
 
   test('заголовок группового чата Уно локализуется', () {
