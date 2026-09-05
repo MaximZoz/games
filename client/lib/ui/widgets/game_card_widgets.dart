@@ -281,6 +281,7 @@ class GameCardActionsRow extends StatelessWidget {
     this.offline = false,
     this.offlinePlayLabel,
     this.onOfflinePlay,
+    this.inDevelopment = false,
     this.isCreating = false,
     this.isFinding = false,
     this.isDesktop = false,
@@ -299,6 +300,9 @@ class GameCardActionsRow extends StatelessWidget {
   final String? offlinePlayLabel;
   final VoidCallback? onOfflinePlay;
 
+  /// Одна неактивная кнопка «В разработке» вместо Создать/Найти/Играть.
+  final bool inDevelopment;
+
   final bool isCreating;
   final bool isFinding;
   final bool isDesktop;
@@ -309,6 +313,19 @@ class GameCardActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (inDevelopment) {
+      return SizedBox(
+        height: _height,
+        child: FramedButton(
+          onPressed: null,
+          icon: Icons.construction_rounded,
+          label: context.l10n.gamesInDevelopment,
+          expanded: true,
+          minHeight: _height,
+        ),
+      );
+    }
+
     if (offline) {
       return SizedBox(
         height: _height,

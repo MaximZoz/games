@@ -697,6 +697,44 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesNardyModeLong => 'Uzun';
 
   @override
+  String get gamesCheckers => 'Shashka';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rus';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Ingliz';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Berilmali';
+
+  @override
+  String get gamesCheckersModeCorners => 'Burchaklar';
+
+  @override
+  String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Doska 8×8. Ikki o‘yinchi.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy — eng ko‘p tosh olinadigan yo‘l tanlanadi. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Berilmali: yurishlar rus shashkasidagidek, lekin maqsad teskarisi — barcha toshni berib qo‘yish yoki yurishsiz qolish. Urish baribir majburiy.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.';
+
+  @override
   String get rulesNardyTitle => 'Narda — qoidalar';
 
   @override

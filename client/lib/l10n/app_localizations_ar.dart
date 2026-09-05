@@ -697,6 +697,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesNardyModeLong => 'طويلة';
 
   @override
+  String get gamesCheckers => 'الضامة';
+
+  @override
+  String get gamesCheckersModeRussian => 'روسية';
+
+  @override
+  String get gamesCheckersModeEnglish => 'إنجليزية';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'الضامة العكسية';
+
+  @override
+  String get gamesCheckersModeCorners => 'الزوايا';
+
+  @override
+  String get rulesCheckersPlayers => 'اللاعبون: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'رقعة 8×8. لاعبان.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'الضامة الروسية: 12 قطعة لكل لاعب على المربعات الداكنة. الجنود يتحركون قطريًا للأمام ويأكلون للأمام والخلف. الملكة تطير أي عدد من المربعات. الأكل إلزامي ويُختار أطول تسلسل. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'الضامة الإنجليزية: 12 قطعة لكل لاعب. الجنود يتحركون ويأكلون قطريًا للأمام فقط. الملكة تتحرك مربعًا واحدًا قطريًا. الأكل إلزامي. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'الضامة العكسية: نفس حركات الضامة الروسية لكن الهدف معكوس — أن تخسر كل قطعك أو تبقى بلا حركة. الأكل ما زال إلزاميًا.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'الزوايا: القطع تبدأ في الزوايا المتقابلة. تتحرك إلى مربع فارغ مجاور أفقيًا أو عموديًا أو تقفز فوق أي قطعة دون إزالتها. الهدف نقل كل قطعك إلى زاوية الخصم.';
+
+  @override
   String get rulesNardyTitle => 'النرد — القواعد';
 
   @override

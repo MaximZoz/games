@@ -31,4 +31,9 @@ func TestDefaultUserGameSettings(t *testing.T) {
 		n.GameMode != "short" || n.Variant != "short" {
 		t.Fatalf("nardy defaults: %+v", n)
 	}
+	c := DefaultUserGameSettings(GameTypeCheckers)
+	if c.GameType != GameTypeCheckers || c.TurnTimeSec != 60 || c.MaxPlayers != 2 ||
+		c.GameMode != "russian" || c.Variant != "russian" {
+		t.Fatalf("checkers defaults: %+v", c)
+	}
 }

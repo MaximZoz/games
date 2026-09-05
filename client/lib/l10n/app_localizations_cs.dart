@@ -697,6 +697,44 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesNardyModeLong => 'Dlouhé';
 
   @override
+  String get gamesCheckers => 'Dáma';
+
+  @override
+  String get gamesCheckersModeRussian => 'Ruské';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anglické';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Poddávaná';
+
+  @override
+  String get gamesCheckersModeCorners => 'Rohy';
+
+  @override
+  String get rulesCheckersPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Deska 8×8. Dva hráči.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné — volí se nejdelší série. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Poddávaná: stejné tahy jako v ruské dámě, ale cíl je opačný — odevzdat všechny kameny nebo zůstat bez tahu. Braní je stále povinné.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.';
+
+  @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';
 
   @override

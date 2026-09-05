@@ -697,6 +697,44 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesNardyModeLong => 'Μακρύ';
 
   @override
+  String get gamesCheckers => 'Ντάμα';
+
+  @override
+  String get gamesCheckersModeRussian => 'Ρωσικά';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Αγγλικά';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Παραχώρηση';
+
+  @override
+  String get gamesCheckersModeCorners => 'Γωνίες';
+
+  @override
+  String get rulesCheckersPlayers => 'Παίκτες: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Ταμπλό 8×8. Δύο παίκτες.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Ρωσική ντάμα: 12 πούλια ο καθένας στις σκούρες. Οι απλοί προχωρούν διαγώνια και χτυπούν μπρος και πίσω. Οι ντάμες πετούν όσες θέσεις θέλουν. Το χτύπημα είναι υποχρεωτικό — επιλέγεται η μεγαλύτερη σειρά. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Αγγλική ντάμα: 12 πούλια ο καθένας. Οι απλοί προχωρούν και χτυπούν μόνο διαγώνια μπροστά. Οι ντάμες κινούνται μία θέση διαγώνια. Το χτύπημα είναι υποχρεωτικό. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Παραχώρηση: οι ίδιες κινήσεις με τη ρωσική ντάμα, αλλά ο στόχος είναι αντίστροφος — να χάσεις όλα τα πούλια ή να μείνεις χωρίς κίνηση. Το χτύπημα παραμένει υποχρεωτικό.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Γωνίες: τα πούλια ξεκινούν στις απέναντι γωνίες. Πηγαίνετε σε διπλανή ελεύθερη θέση οριζόντια ή κάθετα ή πηδάτε πάνω από οποιοδήποτε πούλι χωρίς να το βγάλετε. Στόχος είναι να μεταφέρετε όλα τα πούλια στη γωνία του αντιπάλου.';
+
+  @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';
 
   @override

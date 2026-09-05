@@ -697,6 +697,44 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesNardyModeLong => 'Longo';
 
   @override
+  String get gamesCheckers => 'Damas';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russas';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesas';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Damas loucas';
+
+  @override
+  String get gamesCheckersModeCorners => 'Cantos';
+
+  @override
+  String get rulesCheckersPlayers => 'Jogadores: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tabuleiro 8×8. Dois jogadores.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório — escolhe-se a sequência mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.';
+
+  @override
   String get rulesNardyTitle => 'Gamão — regras';
 
   @override

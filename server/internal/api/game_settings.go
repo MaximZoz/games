@@ -52,6 +52,11 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
 	}
+	if s.GameType == store.GameTypeCheckers {
+		out["max_players"] = 2
+		out["game_mode"] = s.GameMode
+		out["variant"] = s.Variant
+	}
 	return out
 }
 
@@ -73,6 +78,8 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizeUnoSettings(body)
 	case store.GameTypeNardy:
 		return normalizeNardySettings(body)
+	case store.GameTypeCheckers:
+		return normalizeCheckersSettings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -245,6 +252,54 @@ func normalizeNardySettings(body gameSettingsBody) (store.UserGameSettings, stri
 	}, ""
 }
 
+func normalizeCheckersMode(raw string) string {
+	switch strings.TrimSpace(strings.ToLower(raw)) {
+	case "english":
+		return "english"
+	case "giveaway":
+		return "giveaway"
+	case "corners":
+		return "corners"
+	case "russian":
+		return "russian"
+	default:
+		return ""
+	}
+}
+
+func resolveCheckersMode(gameMode, variant string) string {
+	if mode := normalizeCheckersMode(gameMode); mode != "" {
+		return mode
+	}
+	if mode := normalizeCheckersMode(variant); mode != "" {
+		return mode
+	}
+	return "russian"
+}
+
+func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, string) {
+	if !validTurnTimeSec[body.TurnTimeSec] {
+		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	mode := resolveCheckersMode(body.GameMode, body.Variant)
+	stake := body.StakeBronze
+	if stake < 2 {
+		stake = 2
+	}
+	return store.UserGameSettings{
+		GameType:             store.GameTypeCheckers,
+		TurnTimeSec:          body.TurnTimeSec,
+		GridSize:             3,
+		Variant:              mode,
+		SwapRule:             false,
+		FirstMoveRestriction: false,
+		StakeBronze:          stake,
+		DeckSize:             36,
+		MaxPlayers:           2,
+		GameMode:             mode,
+	}, ""
+}
+
 // GameSettings — GET/PUT /api/games/settings (Postgres, без Redis).
 func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := currentUserIDFromGames(r); !ok {
@@ -305,6 +360,10 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		if s.GameMode != "long" {
 			s.GameMode = "short"
 		}
+		s.Variant = s.GameMode
+	} else if gameType == store.GameTypeCheckers {
+		s.MaxPlayers = 2
+		s.GameMode = resolveCheckersMode(s.GameMode, s.Variant)
 		s.Variant = s.GameMode
 	}
 	w.Header().Set("Content-Type", "application/json")

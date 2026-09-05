@@ -697,6 +697,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesNardyModeLong => 'Largo';
 
   @override
+  String get gamesCheckers => 'Damas';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rusas';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesas';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Damas locas';
+
+  @override
+  String get gamesCheckersModeCorners => 'Esquinas';
+
+  @override
+  String get rulesCheckersPlayers => 'Jugadores: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tablero 8×8. Dos jugadores.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Damas rusas: 12 fichas cada uno en casillas oscuras. Los peones avanzan en diagonal y capturan adelante y atrás. Las damas vuelan cualquier número de casillas. Capturar es obligatorio: se elige la secuencia más larga. Gana quien capture todas las fichas o deje al rival sin movimientos.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Damas inglesas: 12 fichas cada uno. Los peones avanzan y capturan solo en diagonal hacia adelante. Las damas avanzan una casilla en diagonal. Capturar es obligatorio. Gana quien capture todas las fichas o deje al rival sin movimientos.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Damas locas: los mismos movimientos que las damas rusas, pero el objetivo es el inverso: perder todas las fichas o quedarse sin movimientos. Capturar sigue siendo obligatorio.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Esquinas: las fichas empiezan en esquinas opuestas. Se avanza a una casilla libre vecina en horizontal o vertical, o se salta sobre cualquier ficha sin quitarla. El objetivo es llevar todas las fichas a la esquina del rival.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — reglas';
 
   @override

@@ -697,6 +697,44 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesNardyModeLong => 'ロング';
 
   @override
+  String get gamesCheckers => 'チェッカー';
+
+  @override
+  String get gamesCheckersModeRussian => 'ロシア';
+
+  @override
+  String get gamesCheckersModeEnglish => 'イギリス';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'ギブアウェイ';
+
+  @override
+  String get gamesCheckersModeCorners => 'コーナー';
+
+  @override
+  String get rulesCheckersPlayers => 'プレイヤー: 2。';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'モード: $mode。';
+  }
+
+  @override
+  String get rulesCheckersIntro => '盤は 8×8。2 人対戦。';
+
+  @override
+  String get rulesCheckersPlayRussian => 'ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務で最長手順を選ぶ。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'ギブアウェイ：動きはロシア式と同じだが、目的は逆。自分の駒をすべて失うか、手がなくなると勝ち。取りはやはり義務。';
+
+  @override
+  String get rulesCheckersPlayCorners => 'コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。';
+
+  @override
   String get rulesNardyTitle => 'バックギャモン — ルール';
 
   @override

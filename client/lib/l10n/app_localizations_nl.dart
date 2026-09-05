@@ -697,6 +697,44 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesNardyModeLong => 'Lang';
 
   @override
+  String get gamesCheckers => 'Dammen';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisch';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engels';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Geefdam';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hoeken';
+
+  @override
+  String get rulesCheckersPlayers => 'Spelers: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bord 8×8. Twee spelers.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht — kies de langste reeks. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regels';
 
   @override

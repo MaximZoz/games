@@ -257,6 +257,25 @@
   "gamesNardy": "バックギャモン",
   "gamesNardyModeShort": "ショート",
   "gamesNardyModeLong": "ロング",
+  "gamesCheckers": "チェッカー",
+  "gamesCheckersModeRussian": "ロシア",
+  "gamesCheckersModeEnglish": "イギリス",
+  "gamesCheckersModeGiveaway": "ギブアウェイ",
+  "gamesCheckersModeCorners": "コーナー",
+  "rulesCheckersPlayers": "プレイヤー: 2。",
+  "rulesCheckersMode": "モード: {mode}。",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "盤は 8×8。2 人対戦。",
+  "rulesCheckersPlayRussian": "ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務で最長手順を選ぶ。相手の駒をすべて取るか、相手に手をなくせば勝ち。",
+  "rulesCheckersPlayEnglish": "イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。",
+  "rulesCheckersPlayGiveaway": "ギブアウェイ：動きはロシア式と同じだが、目的は逆。自分の駒をすべて失うか、手がなくなると勝ち。取りはやはり義務。",
+  "rulesCheckersPlayCorners": "コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。",
   "rulesNardyTitle": "バックギャモン — ルール",
   "rulesNardyPlayers": "プレイヤー: 2人。",
   "rulesNardyMode": "モード: {mode}。",

@@ -697,6 +697,44 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesNardyModeLong => 'Lang';
 
   @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisk';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engelsk';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Givspil';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hjørner';
+
+  @override
+  String get rulesCheckersPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tilstand: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bræt 8×8. To spillere.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisk dam: 12 brikker hver på mørke felter. Bønder går skråt frem og slår frem og tilbage. Damer flyver frit. Slag er pligt — den længste serie vælges. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engelsk dam: 12 brikker hver. Bønder går og slår kun skråt frem. Damer går ét felt skråt i alle retninger. Slag er pligt. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Givspil: samme træk som russisk dam, men målet er omvendt — afgive alle brikker eller stå uden træk. Slag er stadig pligt.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hjørner: brikkerne starter i modsatte hjørner. Gå til et ledigt nabofelt vandret eller lodret, eller hop over en hvilken som helst brik uden at fjerne den. Målet er at flytte alle sine brikker til modstanderens hjørne.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override

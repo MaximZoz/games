@@ -697,6 +697,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesNardyModeLong => '롱';
 
   @override
+  String get gamesCheckers => '체커';
+
+  @override
+  String get gamesCheckersModeRussian => '러시아';
+
+  @override
+  String get gamesCheckersModeEnglish => '영국식';
+
+  @override
+  String get gamesCheckersModeGiveaway => '기브어웨이';
+
+  @override
+  String get gamesCheckersModeCorners => '코너';
+
+  @override
+  String get rulesCheckersPlayers => '플레이어: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => '보드 8×8. 2인 대전.';
+
+  @override
+  String get rulesCheckersPlayRussian => '러시아 체커: 각자 어두운 칸에 12개. 졸은 대각선 앞으로 움직이고 앞뒤로 잡습니다. 킹은 원하는 칸만큼 날아갑니다. 잡기는 필수이며 가장 긴 연속을 고릅니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
+
+  @override
+  String get rulesCheckersPlayEnglish => '영국식 체커: 각자 12개. 졸은 대각선 앞으로만 움직이고 잡습니다. 킹은 대각선 한 칸입니다. 잡기는 필수입니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => '기브어웨이: 수는 러시아 체커와 같지만 목표는 반대입니다. 자기 말을 모두 잃거나 둘 곳이 없으면 이깁니다. 잡기는 여전히 필수입니다.';
+
+  @override
+  String get rulesCheckersPlayCorners => '코너: 말은 맞은편 모서리에서 시작합니다. 가로 또는 세로로 빈 칸으로 가거나, 어떤 말이든 넘기만 하고 잡지는 않습니다. 목표는 자기 말을 모두 상대 모서리로 옮기는 것입니다.';
+
+  @override
   String get rulesNardyTitle => '백개먼 — 규칙';
 
   @override

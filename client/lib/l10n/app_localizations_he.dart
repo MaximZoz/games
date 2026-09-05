@@ -697,6 +697,44 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesNardyModeLong => 'ארוך';
 
   @override
+  String get gamesCheckers => 'דמקה';
+
+  @override
+  String get gamesCheckersModeRussian => 'רוסית';
+
+  @override
+  String get gamesCheckersModeEnglish => 'אנגלית';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'הפוכות';
+
+  @override
+  String get gamesCheckersModeCorners => 'פינות';
+
+  @override
+  String get rulesCheckersPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'לוח 8×8. שני שחקנים.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'דמקה רוסית: 12 חיילים לכל אחד במשבצות כהות. חיילים זזים באלכסון קדימה ואוכלים קדימה ואחורה. מלכות עפות לכל מרחק. אכילה חובה — בוחרים את הרצף הארוך. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'דמקה אנגלית: 12 חיילים לכל אחד. חיילים זזים ואוכלים רק באלכסון קדימה. מלכות זזות משבצת אחת באלכסון. אכילה חובה. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'הפוכות: אותם מהלכים כמו בדמקה רוסית, אבל המטרה הפוכה — למסור את כל החיילים או להישאר בלי מהלכים. אכילה עדיין חובה.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'פינות: החיילים מתחילים בפינות נגדיות. זזים למשבצת פנויה סמוכה אופקית או אנכית, או קופצים מעל כל חייל בלי להוריד אותו. המטרה היא להעביר את כל החיילים לפינת היריב.';
+
+  @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
 
   @override

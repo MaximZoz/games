@@ -697,6 +697,44 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesNardyModeLong => 'Ұзын';
 
   @override
+  String get gamesCheckers => 'Дойбы';
+
+  @override
+  String get gamesCheckersModeRussian => 'Орысша';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Ағылшын';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Берілмелі';
+
+  @override
+  String get gamesCheckersModeCorners => 'Бұрыштар';
+
+  @override
+  String get rulesCheckersPlayers => 'Ойыншылар: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Тақта 8×8. Екі ойыншы.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Орыс дойбысы: әрқайсысында қара ұяшықтарда 12 тас. Жәй тастар қиғаш алға жүреді, алдыға да артқа да ұрады. Дамка кез келген ұяшыққа ұшады. Ұру міндетті — ең көп тас алынатын жол таңдалады. Жеңу үшін қарсыластың барлық тасын алу немесе жүріссіз қалдыру керек.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Ағылшын дойбысы: әрқайсысында 12 тас. Жәй тастар тек қиғаш алға жүреді және ұрады. Дамка кез келген бағытта бір ұяшық жүреді. Ұру міндетті. Жеңу үшін қарсыластың барлық тасын алу немесе жүріссіз қалдыру керек.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Берілмелі: жүрістер орыс дойбысындағыдай, бірақ мақсат кері — барлық тасты беру немесе жүріссіз қалу. Ұру әлі де міндетті.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Бұрыштар: тастар қарама-қарсы бұрыштарда тұрады. Көрші бос ұяшыққа көлденең не тігінен жүреді немесе кез келген тастан секіріп өтеді, оны алмайды. Мақсат — барлық тасты қарсыластың бұрышына жеткізу.';
+
+  @override
   String get rulesNardyTitle => 'Нарды — ережелер';
 
   @override

@@ -697,6 +697,44 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesNardyModeLong => 'Доўгія';
 
   @override
+  String get gamesCheckers => 'Шашкі';
+
+  @override
+  String get gamesCheckersModeRussian => 'Рускія';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Англійскія';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Паддаўкі';
+
+  @override
+  String get gamesCheckersModeCorners => 'Вуглікі';
+
+  @override
+  String get rulesCheckersPlayers => 'Гульцы: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Рэжым: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Дошка 8×8. Гуляюць двое.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Рускія шашкі: у кожнага 12 шашак на цёмных клетках. Простыя ходзяць па дыяганалі наперад, а б’юць наперад і назад. Дамка ляціць на любую колькасць клетак. Бой абавязковы — выбіраюць узяцце з найбольшай колькасцю шашак. Перамагае той, хто з’еў усе шашкі суперніка або пазбавіў яго хадоў.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Англійскія шашкі: у кожнага 12 шашак. Простыя ходзяць і б’юць толькі наперад па дыяганалі. Дамка ходзіць на адну клетку ў любы бок па дыяганалі. Бой абавязковы. Перамагае той, хто з’еў усе шашкі суперніка або пазбавіў яго хадоў.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Паддаўкі: тыя ж хады, што ў рускіх шашках, але мэта адваротная — аддаць усе свае шашкі або застацца без ходу. Бой усё роўна абавязковы.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Вуглікі: шашкі стаяць у супрацьлеглых вуглах. Ходзяць на суседнюю свабодную клетку па гарызанталі ці вертыкалі або пераскокваюць праз любую шашку, не здымаючы яе. Мэта — перавесці ўсе свае шашкі ў вугал суперніка.';
+
+  @override
   String get rulesNardyTitle => 'Нарды — правілы';
 
   @override

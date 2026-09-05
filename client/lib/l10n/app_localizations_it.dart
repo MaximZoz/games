@@ -697,6 +697,44 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesNardyModeLong => 'Lungo';
 
   @override
+  String get gamesCheckers => 'Dama';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russe';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesi';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Dama pazza';
+
+  @override
+  String get gamesCheckersModeCorners => 'Angoli';
+
+  @override
+  String get rulesCheckersPlayers => 'Giocatori: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modalità: $mode.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Scacchiera 8×8. Due giocatori.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dama russa: 12 pedine ciascuno sulle case scure. Le pedine avanzano in diagonale e catturano avanti e indietro. Le dame volano di quante case vogliono. La cattura è obbligatoria: si sceglie la sequenza più lunga. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dama inglese: 12 pedine ciascuno. Le pedine avanzano e catturano solo in diagonale in avanti. Le dame si muovono di una casa in diagonale. La cattura è obbligatoria. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Dama pazza: stesse mosse della dama russa, ma l’obiettivo è inverso — perdere tutte le pedine o restare senza mosse. La cattura resta obbligatoria.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Angoli: le pedine partono dagli angoli opposti. Si va in una casa libera adiacente in orizzontale o verticale, oppure si salta una pedina qualsiasi senza toglierla. L’obiettivo è portare tutte le pedine nell’angolo avversario.';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regole';
 
   @override

@@ -52,6 +52,39 @@ void main() {
     expect(create.right, lessThanOrEqualTo(findBtn.left + 1));
   });
 
+  testWidgets('в разработке одна неактивная кнопка', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: GameCardActionsRow(
+              createLabel: 'Создать игру',
+              creatingLabel: 'Создание…',
+              onCreate: null,
+              findLabel: 'Поиск игроков',
+              findingLabel: 'Поиск…',
+              onFind: null,
+              inDevelopment: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.widgetWithText(FramedButton, 'В разработке'), findsOneWidget);
+    expect(find.text('Создать игру'), findsNothing);
+    expect(find.text('Поиск игроков'), findsNothing);
+    expect(find.text('Играть'), findsNothing);
+    final button = tester.widget<FramedButton>(
+      find.widgetWithText(FramedButton, 'В разработке'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
   testWidgets('на широкой карточке кнопки тоже в ряд', (tester) async {
     await tester.pumpWidget(_wrap(400));
 
