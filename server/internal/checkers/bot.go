@@ -1,50 +1,275 @@
 package checkers
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+)
 
-// PickMove — бой, если есть; иначе ближе к дамке.
+const (
+	botWinScore     = 100000
+	botSearchDepth  = 4
+	botCornersDepth = 3
+)
+
+// PickMove выбирает ход поиском с оценкой всей позиции.
 func PickMove(g *Game, rng *rand.Rand) (Move, bool) {
+	if g == nil {
+		return Move{}, false
+	}
 	legal := g.LegalMoves()
 	if len(legal) == 0 {
 		return Move{}, false
 	}
+	if len(legal) == 1 {
+		return legal[0], true
+	}
+	if rng == nil {
+		rng = rand.New(rand.NewSource(1))
+	}
+	rootSeat := g.Turn
+	depth := botSearchDepth
+	if g.Mode == ModeCorners {
+		depth = botCornersDepth
+	}
+	if len(legal) > 36 {
+		depth = 2
+	}
 	best := legal[0]
-	bestScore := moveScore(g, best)
-	for i := 1; i < len(legal); i++ {
-		s := moveScore(g, legal[i])
-		if rng != nil {
-			s += rng.Intn(3)
+	bestScore := math.MinInt32 / 4
+	ties := 0
+	alpha := math.MinInt32 / 4
+	beta := math.MaxInt32 / 4
+	for _, mv := range orderMoves(g, legal) {
+		child := g.Clone()
+		if err := child.Apply(g.Turn, mv); err != nil {
+			continue
 		}
-		if s > bestScore {
-			best, bestScore = legal[i], s
+		score := alphabeta(child, depth-1, alpha, beta, rootSeat)
+		switch {
+		case score > bestScore:
+			bestScore = score
+			best = mv
+			ties = 1
+			if score > alpha {
+				alpha = score
+			}
+		case score == bestScore:
+			ties++
+			if rng.Intn(ties) == 0 {
+				best = mv
+			}
 		}
 	}
 	return best, true
 }
 
-func moveScore(g *Game, mv Move) int {
-	if g != nil && g.Mode == ModeCorners {
-		goalR, goalC := 6, 6
-		if g.Turn == 1 {
-			goalR, goalC = 1, 1
-		}
-		dist := absInt(mv.To.R-goalR) + absInt(mv.To.C-goalC)
-		return -dist
+func alphabeta(g *Game, depth, alpha, beta, rootSeat int) int {
+	if g == nil {
+		return 0
 	}
-	score := len(mv.Jumped) * 20
-	seat := g.Turn
-	if seat == 0 {
-		score += mv.To.R
-		if mv.To.R == Size-1 {
-			score += 8
+	if g.IsOver() {
+		switch g.Winner {
+		case rootSeat:
+			return botWinScore + depth
+		case WinnerDraw:
+			return 0
+		case WinnerNone:
+			return evaluate(g, rootSeat)
+		default:
+			return -botWinScore - depth
 		}
-	} else {
-		score += Size - 1 - mv.To.R
-		if mv.To.R == 0 {
-			score += 8
+	}
+	if depth <= 0 {
+		return evaluate(g, rootSeat)
+	}
+	legal := g.LegalMoves()
+	if len(legal) == 0 {
+		return evaluate(g, rootSeat)
+	}
+	maximizing := g.Turn == rootSeat
+	if maximizing {
+		best := math.MinInt32 / 4
+		for _, mv := range legal {
+			child := g.Clone()
+			if err := child.Apply(g.Turn, mv); err != nil {
+				continue
+			}
+			s := alphabeta(child, depth-1, alpha, beta, rootSeat)
+			if s > best {
+				best = s
+			}
+			if best > alpha {
+				alpha = best
+			}
+			if alpha >= beta {
+				break
+			}
+		}
+		return best
+	}
+	best := math.MaxInt32 / 4
+	for _, mv := range legal {
+		child := g.Clone()
+		if err := child.Apply(g.Turn, mv); err != nil {
+			continue
+		}
+		s := alphabeta(child, depth-1, alpha, beta, rootSeat)
+		if s < best {
+			best = s
+		}
+		if best < beta {
+			beta = best
+		}
+		if alpha >= beta {
+			break
+		}
+	}
+	return best
+}
+
+func orderMoves(g *Game, legal []Move) []Move {
+	out := append([]Move(nil), legal...)
+	if g != nil && g.Mode == ModeCorners {
+		tr, tc := targetOrigin(g.Turn)
+		for i := 1; i < len(out); i++ {
+			for j := i; j > 0; j-- {
+				if moveProgress(out[j], tr, tc) > moveProgress(out[j-1], tr, tc) {
+					out[j], out[j-1] = out[j-1], out[j]
+					continue
+				}
+				break
+			}
+		}
+		return out
+	}
+	for i := 1; i < len(out); i++ {
+		for j := i; j > 0; j-- {
+			if len(out[j].Jumped) > len(out[j-1].Jumped) {
+				out[j], out[j-1] = out[j-1], out[j]
+				continue
+			}
+			break
+		}
+	}
+	return out
+}
+
+func moveProgress(mv Move, tr, tc int) int {
+	from := minDistToBox(mv.From.R, mv.From.C, tr, tc)
+	to := minDistToBox(mv.To.R, mv.To.C, tr, tc)
+	return (from - to) + from
+}
+
+func evaluate(g *Game, seat int) int {
+	if g == nil {
+		return 0
+	}
+	if g.Mode == ModeCorners {
+		return evalCorners(g, seat)
+	}
+	score := evalDraughts(g, seat)
+	if g.Mode == ModeGiveaway {
+		return -score
+	}
+	return score
+}
+
+func evalDraughts(g *Game, seat int) int {
+	score := 0
+	for r := 0; r < Size; r++ {
+		for c := 0; c < Size; c++ {
+			p := g.at(r, c)
+			own := owner(p)
+			if own < 0 {
+				continue
+			}
+			val := 100
+			if isKing(p) {
+				val = 280
+				val += 6 - absInt(r-3) - absInt(c-3)
+			} else if own == 0 {
+				val += r * 8
+				if r >= 5 {
+					val += 12
+				}
+			} else {
+				val += (Size - 1 - r) * 8
+				if r <= 2 {
+					val += 12
+				}
+			}
+			if dark(r, c) && r >= 2 && r <= 5 && c >= 2 && c <= 5 {
+				val += 3
+			}
+			if own == seat {
+				score += val
+			} else {
+				score -= val
+			}
 		}
 	}
 	return score
+}
+
+func evalCorners(g *Game, seat int) int {
+	if g.cornersFilled(seat) {
+		return botWinScore
+	}
+	if g.cornersFilled(1-seat) {
+		return -botWinScore
+	}
+	score := 0
+	for s := 0; s < 2; s++ {
+		sign := 1
+		if s != seat {
+			sign = -1
+		}
+		tr, tc := targetOrigin(s)
+		sr, sc := startOrigin(s)
+		sum, sumSq, maxd, inTarget, inStart, far := 0, 0, 0, 0, 0, 0
+		for r := 0; r < Size; r++ {
+			for c := 0; c < Size; c++ {
+				if owner(g.at(r, c)) != s {
+					continue
+				}
+				d := minDistToBox(r, c, tr, tc)
+				sum += d
+				sumSq += d * d
+				if d > maxd {
+					maxd = d
+				}
+				if d >= 4 {
+					far++
+				}
+				if inBox(r, c, tr, tc) {
+					inTarget++
+				}
+				if inBox(r, c, sr, sc) {
+					inStart++
+				}
+			}
+		}
+		score += sign * (inTarget*140 - inStart*18 - sum*4 - sumSq*5 - maxd*22 - far*14)
+	}
+	return score
+}
+
+func targetOrigin(seat int) (int, int) {
+	if seat == 0 {
+		return 5, 5
+	}
+	return 0, 0
+}
+
+func startOrigin(seat int) (int, int) {
+	if seat == 0 {
+		return 0, 0
+	}
+	return 5, 5
+}
+
+func inBox(r, c, tr, tc int) bool {
+	return r >= tr && r < tr+3 && c >= tc && c < tc+3
 }
 
 func absInt(v int) int {
@@ -52,4 +277,20 @@ func absInt(v int) int {
 		return -v
 	}
 	return v
+}
+
+func minDistToBox(r, c, tr, tc int) int {
+	dr := 0
+	if r < tr {
+		dr = tr - r
+	} else if r > tr+2 {
+		dr = r - (tr + 2)
+	}
+	dc := 0
+	if c < tc {
+		dc = tc - c
+	} else if c > tc+2 {
+		dc = c - (tc + 2)
+	}
+	return dr + dc
 }

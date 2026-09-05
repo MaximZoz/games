@@ -182,6 +182,28 @@ func TestBotPickShotPrefersNeighbors(t *testing.T) {
 	}
 }
 
+func TestBotPickShotExtendsHitLine(t *testing.T) {
+	ships := Ships{
+		{0, 1, 2, 3},
+		{5, 6, 7},
+		{20, 21, 22},
+		{40, 41},
+		{43, 44},
+		{46, 47},
+		{60},
+		{62},
+		{64},
+		{66},
+	}
+	cell, err := BotPickShot(ships, []int{0, 1}, rand.New(rand.NewSource(1)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cell != 2 {
+		t.Fatalf("must continue the hit line, got %d", cell)
+	}
+}
+
 func TestBotPickShotExhausted(t *testing.T) {
 	ships := fallbackShips()
 	shots := make([]int, CellCount)

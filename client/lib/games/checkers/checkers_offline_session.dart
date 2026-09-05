@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:multigames_client/games/checkers/checkers_bot.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/games/games_repository.dart'

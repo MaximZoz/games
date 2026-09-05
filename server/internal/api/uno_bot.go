@@ -125,7 +125,9 @@ func unoApplyBotAction(state *uno.Game) error {
 				return nil
 			}
 		}
-		for _, card := range player.Hand {
+		bestIdx := -1
+		bestScore := -1 << 30
+		for i, card := range player.Hand {
 			candidate, err := cloneUnoGame(state)
 			if err != nil {
 				return err
@@ -137,6 +139,25 @@ func unoApplyBotAction(state *uno.Game) error {
 			}
 			if err := candidate.Apply(action); err != nil {
 				continue
+			}
+			score := unoCardScore(state, index, card)
+			if score > bestScore {
+				bestScore = score
+				bestIdx = i
+			}
+		}
+		if bestIdx >= 0 {
+			candidate, err := cloneUnoGame(state)
+			if err != nil {
+				return err
+			}
+			action := uno.Action{
+				Type:   uno.ActionPlay,
+				CardID: player.Hand[bestIdx].ID,
+				Color:  unoBotColor(candidate, index),
+			}
+			if err := candidate.Apply(action); err != nil {
+				return err
 			}
 			unoBotCallIfNeeded(candidate, index)
 			*state = *candidate
@@ -158,6 +179,66 @@ func unoBotCallIfNeeded(state *uno.Game, playerIndex int) {
 			ActorUserID: state.Players[playerIndex].UserID,
 		})
 	}
+}
+
+func unoNextHandSize(state *uno.Game, playerIndex int) int {
+	if state == nil || len(state.Players) == 0 {
+		return 7
+	}
+	n := len(state.Players)
+	dir := state.Direction
+	if dir == 0 {
+		dir = 1
+	}
+	for step := 1; step <= n; step++ {
+		next := (playerIndex + dir*step) % n
+		if next < 0 {
+			next += n
+		}
+		if !state.Players[next].Forfeited {
+			return len(state.Players[next].Hand)
+		}
+	}
+	return 7
+}
+
+func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
+	next := unoNextHandSize(state, playerIndex)
+	colorCounts := map[uno.Color]int{}
+	if state != nil && playerIndex >= 0 && playerIndex < len(state.Players) {
+		for _, c := range state.Players[playerIndex].Hand {
+			if c.Color == uno.ColorRed || c.Color == uno.ColorYellow ||
+				c.Color == uno.ColorGreen || c.Color == uno.ColorBlue {
+				colorCounts[c.Color]++
+			}
+		}
+	}
+	score := card.Points()
+	switch card.Kind {
+	case uno.KindSkip, uno.KindReverse, uno.KindDrawTwo:
+		if next <= 2 {
+			score += 70
+		} else if next <= 4 {
+			score += 25
+		} else {
+			score += 8
+		}
+	case uno.KindWild:
+		if next <= 2 {
+			score += 40
+		} else {
+			score -= 25
+		}
+	case uno.KindWildDrawFour:
+		if next <= 2 {
+			score += 90
+		} else {
+			score -= 45
+		}
+	default:
+		score += colorCounts[card.Color] * 10
+	}
+	return score
 }
 
 func unoBotColor(state *uno.Game, playerIndex int) string {

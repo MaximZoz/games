@@ -152,6 +152,21 @@ class CheckersEngine {
 
   bool get isOver => winner != winnerNone;
 
+  CheckersEngine clone() => CheckersEngine(
+        mode: mode,
+        board: List<int>.from(board),
+        turn: turn,
+        winner: winner,
+        seq: seq,
+        mustContinue: mustContinue,
+        contR: contR,
+        contC: contC,
+        lastFromR: lastFromR,
+        lastFromC: lastFromC,
+        lastToR: lastToR,
+        lastToC: lastToC,
+      );
+
   int idx(int r, int c) => r * size + c;
 
   int at(int r, int c) {
@@ -478,20 +493,3 @@ class CheckersEngine {
   }
 }
 
-CheckersMove? checkersPickMove(CheckersEngine g) {
-  final legal = g.legalMoves();
-  if (legal.isEmpty) return null;
-  legal.sort((a, b) {
-    if (g.isCorners) {
-      final goalR = g.turn == 0 ? 6 : 1;
-      final goalC = g.turn == 0 ? 6 : 1;
-      final sa = -((a.to.r - goalR).abs() + (a.to.c - goalC).abs());
-      final sb = -((b.to.r - goalR).abs() + (b.to.c - goalC).abs());
-      return sb.compareTo(sa);
-    }
-    final sa = a.jumped.length * 20 + (g.turn == 0 ? a.to.r : 7 - a.to.r);
-    final sb = b.jumped.length * 20 + (g.turn == 0 ? b.to.r : 7 - b.to.r);
-    return sb.compareTo(sa);
-  });
-  return legal.first;
-}

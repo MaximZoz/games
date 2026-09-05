@@ -27,6 +27,12 @@ void main() {
       expect([1, 10], contains(cell));
     });
 
+    test('bot pick continues a hit line', () {
+      final ships = defaultBattleshipShips();
+      final cell = battleshipBotPickShot(ships, [0, 1], Random(1));
+      expect(cell, 2);
+    });
+
     test('bot pauses are one second', () {
       expect(OfflineBattleshipSession.botDelay, const Duration(seconds: 1));
       expect(
