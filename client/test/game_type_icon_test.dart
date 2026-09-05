@@ -4,7 +4,6 @@ import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_type_icon.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
-import 'package:multigames_client/ui/widgets/connect4_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
 import 'package:multigames_client/ui/widgets/uno_game_icon.dart';
@@ -22,7 +21,6 @@ void main() {
       expect(GameTypeIcon.iconDataOf('uno'), Icons.style_rounded);
       expect(GameTypeIcon.iconDataOf('nardy'), NardyGameIcon.iconData);
       expect(GameTypeIcon.iconDataOf('checkers'), CheckersGameIcon.iconData);
-      expect(GameTypeIcon.iconDataOf('connect4'), Connect4GameIcon.iconData);
     });
 
     test('unknown type falls back to gamepad', () {
@@ -80,12 +78,6 @@ void main() {
                 lost: 1,
                 drawn: 0,
               ),
-              GameTypeScoreChip(
-                gameType: 'connect4',
-                won: 3,
-                lost: 0,
-                drawn: 1,
-              ),
             ],
           ),
         ),
@@ -99,7 +91,6 @@ void main() {
     expect(find.byType(UnoGameIcon), findsOneWidget);
     expect(find.byType(NardyGameIcon), findsOneWidget);
     expect(find.byType(CheckersGameIcon), findsOneWidget);
-    expect(find.byType(Connect4GameIcon), findsOneWidget);
     expect(find.byIcon(Icons.casino_rounded), findsNothing);
     expect(find.byIcon(Icons.sports_esports_rounded), findsNothing);
     expect(find.byIcon(Icons.sailing_rounded), findsNothing);

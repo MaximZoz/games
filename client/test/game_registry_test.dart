@@ -11,7 +11,7 @@ void main() {
     expect(gameRegistry.contains('uno'), isTrue);
     expect(gameRegistry.contains('nardy'), isTrue);
     expect(gameRegistry.contains('checkers'), isTrue);
-    expect(gameRegistry.contains('connect4'), isTrue);
+    expect(gameRegistry.contains('connect4'), isFalse);
     expect(gameRegistry.contains('chess'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
     expect(
@@ -24,7 +24,6 @@ void main() {
           'poker',
           'nardy',
           'checkers',
-          'connect4',
         ]));
   });
 
@@ -65,7 +64,6 @@ void main() {
     expect(gameRegistry['uno']!.supportsDrawOffer(2), isFalse);
     expect(gameRegistry['nardy']!.supportsDrawOffer(2), isFalse);
     expect(gameRegistry['checkers']!.supportsDrawOffer(2), isTrue);
-    expect(gameRegistry['connect4']!.supportsDrawOffer(2), isTrue);
   });
 
   test('offline supported for tictactoe, durak, battleship, poker', () {
@@ -80,8 +78,6 @@ void main() {
     expect(gameRegistry['uno']!.offlinePath, '/games/uno/offline');
     expect(gameRegistry['nardy']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.supportsOffline, isTrue);
-    expect(gameRegistry['connect4']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.offlinePath, '/games/checkers/offline');
-    expect(gameRegistry['connect4']!.offlinePath, '/games/connect4/offline');
   });
 }

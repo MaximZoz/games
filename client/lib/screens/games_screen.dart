@@ -17,9 +17,6 @@ import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
-import 'package:multigames_client/games/connect4/connect4_engine.dart';
-import 'package:multigames_client/games/connect4/connect4_provider.dart';
-import 'package:multigames_client/games/connect4/connect4_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
@@ -35,7 +32,6 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
-import 'package:multigames_client/ui/widgets/connect4_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
@@ -810,44 +806,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
-    if (inv.gameType == 'connect4') {
-      try {
-        final res =
-            await ref.read(connect4RepositoryProvider).joinLobby(lobbyId);
-        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
-        final gameId = res.gameId?.trim() ?? '';
-        if (res.joined && gameId.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: gameId,
-                  gameType: 'connect4',
-                ),
-              );
-          pinBlockingGame(ref, gameId, gameType: 'connect4');
-          if (context.mounted) {
-            context.go('/games/connect4/game/$gameId');
-          }
-          return;
-        }
-        if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'connect4',
-                ),
-              );
-          if (context.mounted) {
-            context.go('/games/connect4/lobby/$lobbyId?mode=invite');
-          }
-        }
-      } catch (e) {
-        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
-        _showInviteError(e);
-      }
-      return;
-    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -971,14 +929,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         l10n: context.l10n,
       ));
     }
-    if (inv.isConnect4) {
-      return rulesTextLines(connect4RuleLines(
-        gameMode: inv.durakMode,
-        turnTimeSec: inv.turnTimeSec,
-        stakeBronze: inv.stakeBronze,
-        l10n: context.l10n,
-      ));
-    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -1078,8 +1028,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         await ref.read(nardyRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'checkers') {
         await ref.read(checkersRepositoryProvider).declineLobby(lobbyId);
-      } else if (gameType == 'connect4') {
-        await ref.read(connect4RepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -1385,56 +1333,6 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
-    if (gameType == 'connect4') {
-      try {
-        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
-        final res =
-            await ref.read(connect4RepositoryProvider).joinLobby(lobbyId);
-        if (!context.mounted) return;
-        ref.invalidate(openLobbiesProvider);
-        final gameId = res.gameId?.trim() ?? '';
-        if (res.joined && gameId.isNotEmpty) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'game',
-                  gameId: gameId,
-                  gameType: 'connect4',
-                ),
-              );
-          pinBlockingGame(ref, gameId, gameType: 'connect4');
-          context.go('/games/connect4/game/$gameId');
-          return;
-        }
-        if (res.joined) {
-          ref.read(activeGameProvider.notifier).setLocal(
-                ActiveGameItem(
-                  type: 'lobby',
-                  lobbyId: lobbyId,
-                  gameType: 'connect4',
-                ),
-              );
-          context.go('/games/connect4/lobby/$lobbyId?mode=invite');
-        }
-      } on GamesException catch (error) {
-        if (!context.mounted) return;
-        showAppSnackBar(
-          context,
-          message: isFinishCurrentGameError(error)
-              ? finishCurrentGameMessage
-              : formatUserError(error),
-          kind: AppSnackKind.error,
-        );
-      } catch (error) {
-        if (context.mounted) {
-          showAppSnackBar(
-            context,
-            message: formatUserError(error),
-            kind: AppSnackKind.error,
-          );
-        }
-      }
-      return;
-    }
     try {
       ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
       final repo = ref.read(gamesRepositoryProvider);
@@ -1653,10 +1551,6 @@ class _GamesPageContent extends ConsumerWidget {
           stakeOptionsList: stakeOptionsList,
         ),
         _CheckersGameCard(
-          isOffline: isOffline,
-          stakeOptionsList: stakeOptionsList,
-        ),
-        _Connect4GameCard(
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),
@@ -1905,8 +1799,7 @@ class _LobbiesPageContent extends ConsumerWidget {
                                                 ? Icons.grid_on_rounded
                                                 : lobby.isDurak ||
                                                         lobby.isNardy ||
-                                                        lobby.isCheckers ||
-                                                        lobby.isConnect4
+                                                        lobby.isCheckers
                                                     ? Icons.swap_horiz_rounded
                                                     : Icons.extension_rounded,
                                             size: 14,
@@ -1926,15 +1819,8 @@ class _LobbiesPageContent extends ConsumerWidget {
                                                             ? checkersModeLabel(
                                                                 lobby.gameMode,
                                                                 context.l10n)
-                                                            : lobby.isConnect4
-                                                                ? connect4ModeLabel(
-                                                                    lobby
-                                                                        .gameMode,
-                                                                    context
-                                                                        .l10n)
-                                                                : variantShortLabel(
-                                                                    lobby
-                                                                        .variant),
+                                                            : variantShortLabel(
+                                                                lobby.variant),
                                             style: TextStyle(
                                               fontSize: isDesktop ? 14 : 13,
                                               color: AppColors.textSecondary,
@@ -3916,8 +3802,7 @@ class _InviteCard extends ConsumerWidget {
                                       ? Icons.grid_on_rounded
                                       : inv.isDurak ||
                                               inv.isNardy ||
-                                              inv.isCheckers ||
-                                              inv.isConnect4
+                                              inv.isCheckers
                                           ? Icons.swap_horiz_rounded
                                           : Icons.extension_rounded,
                                   size: iconSz,
@@ -4493,262 +4378,6 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
     showGameRulesDialog(
       context: context,
       content: rulesTextLines(checkersRuleLines(
-        gameMode: _gameMode,
-        turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
-        stakeBronze: widget.isOffline ? 0 : _stakeBronze,
-        offline: widget.isOffline,
-        l10n: context.l10n,
-      )),
-      closeLabel: context.l10n.commonClose,
-    );
-  }
-}
-
-class _Connect4GameCard extends ConsumerStatefulWidget {
-  const _Connect4GameCard({
-    required this.isOffline,
-    required this.stakeOptionsList,
-  });
-
-  final bool isOffline;
-  final List<int> stakeOptionsList;
-
-  @override
-  ConsumerState<_Connect4GameCard> createState() => _Connect4GameCardState();
-}
-
-class _Connect4GameCardState extends ConsumerState<_Connect4GameCard> {
-  int _turnTimeSec = 60;
-  int _stakeBronze = 2;
-  String _gameMode = Connect4Engine.modeClassic;
-  bool _settingsHydrated = false;
-  bool _creating = false;
-  bool _finding = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _hydrateFromSaved();
-    });
-  }
-
-  void _hydrateFromSaved() {
-    if (_settingsHydrated) return;
-    final saved = ref.read(userGameSettingsProvider('connect4')).valueOrNull;
-    if (saved == null) return;
-    _settingsHydrated = true;
-    setState(() {
-      _turnTimeSec =
-          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
-      _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
-      _gameMode = Connect4Engine.normalizeMode(saved.gameMode);
-    });
-  }
-
-  void _persistSettings() {
-    ref.read(userGameSettingsProvider('connect4').notifier).updateLocal(
-          gameCardSettings(
-            gameType: 'connect4',
-            turnTimeSec: _turnTimeSec,
-            stakeBronze: _stakeBronze,
-            gameMode: _gameMode,
-          ),
-        );
-  }
-
-  void _cycleTurnTime() {
-    setState(() {
-      const arr = [20, 60, 600, 0];
-      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
-    });
-    _persistSettings();
-  }
-
-  void _cycleStake() {
-    final options = widget.stakeOptionsList.isEmpty
-        ? freeStakeOptions
-        : widget.stakeOptionsList;
-    final idx = options.indexOf(_stakeBronze);
-    final next = options[(idx < 0 ? 0 : idx + 1) % options.length];
-    setState(() => _stakeBronze = next);
-    _persistSettings();
-  }
-
-  void _cycleGameMode() {
-    setState(() {
-      _gameMode = _gameMode == Connect4Engine.modeClassic
-          ? Connect4Engine.modeWide
-          : Connect4Engine.modeClassic;
-    });
-    _persistSettings();
-  }
-
-  Future<void> _create(String mode) async {
-    if (_creating || _finding) return;
-    setState(() {
-      _creating = mode == 'invite';
-      _finding = mode == 'matchmake';
-    });
-    try {
-      final result = await ref.read(connect4RepositoryProvider).createLobby(
-            mode: mode,
-            gameMode: _gameMode,
-            turnTimeSec: _turnTimeSec,
-            stakeBronze: _stakeBronze,
-          );
-      if (!mounted) return;
-      final gameId = result.gameId?.trim() ?? '';
-      final lobbyId = result.lobbyId.trim();
-      if (gameId.isNotEmpty) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(
-                type: 'game',
-                gameId: gameId,
-                lobbyId: lobbyId.isEmpty ? null : lobbyId,
-                gameType: 'connect4',
-              ),
-            );
-        pinBlockingGame(ref, gameId, gameType: 'connect4');
-        context.push('/games/connect4/game/$gameId');
-      } else if (lobbyId.isNotEmpty) {
-        ref.read(activeGameProvider.notifier).setLocal(
-              ActiveGameItem(
-                type: 'lobby',
-                lobbyId: lobbyId,
-                gameType: 'connect4',
-              ),
-            );
-        context.push('/games/connect4/lobby/$lobbyId?mode=$mode');
-      } else {
-        throw GamesException(503, context.l10n.commonTryLater);
-      }
-    } catch (error) {
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: isFinishCurrentGameError(error)
-            ? finishCurrentGameMessage
-            : formatUserError(error),
-        kind: AppSnackKind.error,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _creating = false;
-          _finding = false;
-        });
-      }
-    }
-  }
-
-  void _playOffline() {
-    disposeAllOfflineGameSessions();
-    context.push(
-      Uri(
-        path: '/games/connect4/offline',
-        queryParameters: {'mode': _gameMode},
-      ).toString(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    ref.listen<AsyncValue<UserGameSettings>>(
-        userGameSettingsProvider('connect4'), (prev, next) {
-      final saved = next.valueOrNull;
-      if (saved == null || _settingsHydrated) return;
-      _settingsHydrated = true;
-      setState(() {
-        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
-            ? saved.turnTimeSec
-            : 60;
-        _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
-        _gameMode = Connect4Engine.normalizeMode(saved.gameMode);
-      });
-    });
-    final available = widget.stakeOptionsList.isEmpty
-        ? freeStakeOptions
-        : widget.stakeOptionsList;
-    if (!available.contains(_stakeBronze) && available.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        setState(() => _stakeBronze = available.first);
-        if (_settingsHydrated) _persistSettings();
-      });
-    }
-
-    final isDesktop = isWide(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final isMedium = width >= 700 && width < 950;
-    final chips = <Widget>[
-      GameCardChip(
-        selected: false,
-        icon: Icons.groups_rounded,
-        label: '2',
-        onTap: null,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
-      GameCardChip(
-        selected: true,
-        icon: Icons.swap_horiz_rounded,
-        label: connect4ModeLabel(_gameMode, context.l10n),
-        onTap: _cycleGameMode,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
-      if (!widget.isOffline)
-        GameCardChip(
-          selected: true,
-          icon: Icons.timer_outlined,
-          label: formatTurnTime(_turnTimeSec),
-          onTap: _creating || _finding ? null : _cycleTurnTime,
-          isDesktop: isDesktop,
-          isMedium: isMedium,
-        ),
-    ];
-    final busy = _creating || _finding;
-
-    return GameCardShell(
-      isDesktop: isDesktop,
-      isMedium: isMedium,
-      header: GameCardHeader(
-        title: context.l10n.gamesConnect4,
-        icon: Connect4GameIcon.iconData,
-        iconChild: const Connect4GameIcon(size: 26, color: Colors.white),
-        stakeBronze: widget.isOffline ? null : _stakeBronze,
-        stakeLabel: formatStakeAmount(_stakeBronze),
-        stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
-        onInfoTap: busy ? null : () => _showRules(context),
-        busy: busy,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
-      chips: chips,
-      actions: GameCardActionsRow(
-        createLabel: context.l10n.gamesCreate,
-        creatingLabel: context.l10n.commonCreating,
-        isCreating: _creating,
-        onCreate: () => _create('invite'),
-        findLabel: context.l10n.lobbySearchPlayers,
-        findingLabel: context.l10n.commonSearching,
-        isFinding: _finding,
-        onFind: () => _create('matchmake'),
-        offline: widget.isOffline,
-        offlinePlayLabel: context.l10n.gamesPlay,
-        onOfflinePlay: _playOffline,
-        isDesktop: isDesktop,
-        isMedium: isMedium,
-      ),
-    );
-  }
-
-  void _showRules(BuildContext context) {
-    showGameRulesDialog(
-      context: context,
-      content: rulesTextLines(connect4RuleLines(
         gameMode: _gameMode,
         turnTimeSec: widget.isOffline ? 0 : _turnTimeSec,
         stakeBronze: widget.isOffline ? 0 : _stakeBronze,

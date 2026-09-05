@@ -3,7 +3,7 @@
 # Автоиз git log (origin/develop..HEAD). ## en можно править руками.
 
 ## ru
-- Шашки и «Четыре в ряд»: лобби, поиск, инвайт, бот во всех режимах, ничья, сдача, реванш и статистика — как в других играх
+- Шашки: русские и поддавки — лобби, поиск, инвайт, бот, ничья, сдача, реванш и статистика, как в других играх
 - Правила игр: во всех карточках один заголовок «Правила игры», в том числе у нард
 - Нарды: после «Готово» соперник больше не бросает кубики дважды
 - Нарды: если вы в сообщениях или на другой вкладке, при вашем ходе приходит уведомление, как в остальных играх
@@ -77,7 +77,7 @@
 - Иконка монеты в правилах ставки для всех игр
 
 ## en
-- Checkers and Connect Four: lobby, search, invite, bot in every mode, draw, resign, rematch and stats — same chrome as the other games
+- Checkers: Russian and giveaway — lobby, search, invite, bot, draw, resign, rematch and stats, same chrome as the other games
 - Game rules: every card uses the same “Game rules” title, including Backgammon
 - Backgammon: ending a turn no longer makes the opponent appear to roll twice
 - Backgammon: if you are in messages or another tab, your turn now notifies you like the other games

@@ -263,18 +263,6 @@ class UserGameSettings {
         gameMode: mode,
       );
     }
-    if (gameType == 'connect4') {
-      final mode = gameMode == 'wide' ? 'wide' : 'classic';
-      return UserGameSettings(
-        gameType: 'connect4',
-        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
-        variant: mode,
-        gridSize: mode == 'wide' ? 9 : 7,
-        stakeBronze: stake < 2 ? 2 : stake,
-        maxPlayers: 2,
-        gameMode: mode,
-      );
-    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -314,13 +302,9 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
-    } else if (gameType == 'nardy' ||
-        gameType == 'checkers' ||
-        gameType == 'connect4') {
+    } else if (gameType == 'nardy' || gameType == 'checkers') {
       out['variant'] = gameMode;
-      out['grid_size'] = gameType == 'connect4'
-          ? (gameMode == 'wide' ? 9 : 7)
-          : (gameType == 'checkers' ? 8 : 3);
+      out['grid_size'] = gameType == 'checkers' ? 8 : 3;
       out['max_players'] = 2;
       out['game_mode'] = gameMode;
     } else {
@@ -684,8 +668,6 @@ class LobbyItem {
   bool get isNardy => gameType == 'nardy';
 
   bool get isCheckers => gameType == 'checkers';
-
-  bool get isConnect4 => gameType == 'connect4';
 
   LobbyItem({
     required this.id,

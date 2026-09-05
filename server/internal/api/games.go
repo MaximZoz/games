@@ -342,10 +342,6 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveCheckers(w, r)
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/api/games/connect4/") {
-		h.serveConnect4(w, r)
-		return
-	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -4460,8 +4456,6 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
-			} else if m["game_type"] == store.GameTypeConnect4 {
-				h.applyConnect4Timeout(ctx, gameID, m)
 			} else if m["game_type"] == store.GameTypeCheckers {
 				h.applyCheckersTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {

@@ -48,8 +48,7 @@ func gameSettingsToJSON(s store.UserGameSettings) map[string]any {
 		out["variant"] = s.Variant
 	}
 	if s.GameType == store.GameTypeNardy ||
-		s.GameType == store.GameTypeCheckers ||
-		s.GameType == store.GameTypeConnect4 {
+		s.GameType == store.GameTypeCheckers {
 		out["max_players"] = 2
 		out["game_mode"] = s.GameMode
 		out["variant"] = s.Variant
@@ -77,8 +76,6 @@ func normalizeGameSettings(body gameSettingsBody) (store.UserGameSettings, strin
 		return normalizeNardySettings(body)
 	case store.GameTypeCheckers:
 		return normalizeCheckersSettings(body)
-	case store.GameTypeConnect4:
-		return normalizeConnect4Settings(body)
 	default:
 		return store.UserGameSettings{}, "unsupported game_type"
 	}
@@ -273,28 +270,6 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 	}, ""
 }
 
-func normalizeConnect4Settings(body gameSettingsBody) (store.UserGameSettings, string) {
-	if !validTurnTimeSec[body.TurnTimeSec] {
-		return store.UserGameSettings{}, "invalid turn_time_sec"
-	}
-	mode := strings.TrimSpace(strings.ToLower(body.GameMode))
-	if mode != "wide" {
-		mode = "classic"
-	}
-	stake := body.StakeBronze
-	if stake < 2 {
-		stake = 2
-	}
-	return store.UserGameSettings{
-		GameType:    store.GameTypeConnect4,
-		TurnTimeSec: body.TurnTimeSec,
-		Variant:     mode,
-		StakeBronze: stake,
-		MaxPlayers:  2,
-		GameMode:    mode,
-	}, ""
-}
-
 // GameSettings — GET/PUT /api/games/settings (Postgres, без Redis).
 func (h *GamesHandler) GameSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := currentUserIDFromGames(r); !ok {
@@ -360,12 +335,6 @@ func (h *GamesHandler) getGameSettings(w http.ResponseWriter, r *http.Request) {
 		s.MaxPlayers = 2
 		if s.GameMode != "giveaway" {
 			s.GameMode = "russian"
-		}
-		s.Variant = s.GameMode
-	} else if gameType == store.GameTypeConnect4 {
-		s.MaxPlayers = 2
-		if s.GameMode != "wide" {
-			s.GameMode = "classic"
 		}
 		s.Variant = s.GameMode
 	}

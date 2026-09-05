@@ -35,8 +35,4 @@ func TestDefaultUserGameSettings(t *testing.T) {
 	if ch.GameType != GameTypeCheckers || ch.GameMode != "russian" {
 		t.Fatalf("checkers defaults: %+v", ch)
 	}
-	c4 := DefaultUserGameSettings(GameTypeConnect4)
-	if c4.GameType != GameTypeConnect4 || c4.GameMode != "classic" {
-		t.Fatalf("connect4 defaults: %+v", c4)
-	}
 }

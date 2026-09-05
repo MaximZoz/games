@@ -718,7 +718,7 @@ func (h *GamesHandler) acceptSimple1v1Draw(s simple1v1, applyDraw func(encoded s
 }
 
 func isSimpleBoardGame(gt string) bool {
-	return gt == store.GameTypeCheckers || gt == store.GameTypeConnect4
+	return gt == store.GameTypeCheckers
 }
 
 func simple1v1SeatOf(players []string, userID string) int {

@@ -787,42 +787,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
 
   @override
-  String get gamesConnect4 => 'Четыре в ряд';
-
-  @override
-  String get gamesConnect4ModeClassic => '7×6';
-
-  @override
-  String get gamesConnect4ModeWide => '9×7';
-
-  @override
-  String get rulesConnect4Players => 'Игроки: 2.';
-
-  @override
-  String rulesConnect4Mode(String mode) {
-    return 'Режим: $mode.';
-  }
-
-  @override
-  String rulesConnect4Time(String time) {
-    return 'Время на ход: $time. Если время вышло — проигрыш.';
-  }
-
-  @override
-  String rulesConnect4Intro(int cols, int rows) {
-    return 'Поле $cols×$rows. По очереди бросаете фишку в колонку — она падает вниз.';
-  }
-
-  @override
-  String get rulesConnect4Play => 'Выигрывает ряд из четырёх своих фишек: горизонталь, вертикаль или диагональ. Если поле заполнено и ряда нет — ничья. Ничью можно предложить сопернику.';
-
-  @override
-  String get rulesConnect4Win => 'Побеждает тот, кто первым собрал четыре в ряд, или соперник сдался / просрочил ход.';
-
-  @override
-  String get rulesConnect4OfflineBot => 'Офлайн: партия против бота.';
-
-  @override
   String rulesUnoPlayers(int players) {
     return 'खिलाड़ी: $players.';
   }

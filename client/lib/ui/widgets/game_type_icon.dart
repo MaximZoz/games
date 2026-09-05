@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
-import 'package:multigames_client/ui/widgets/connect4_game_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
@@ -34,8 +33,6 @@ class GameTypeIcon extends StatelessWidget {
         return NardyGameIcon.iconData;
       case 'checkers':
         return CheckersGameIcon.iconData;
-      case 'connect4':
-        return Connect4GameIcon.iconData;
       case 'tictactoe':
         return Icons.grid_3x3_rounded;
       default:
@@ -56,8 +53,6 @@ class GameTypeIcon extends StatelessWidget {
         return NardyGameIcon(size: size, color: color);
       case 'checkers':
         return CheckersGameIcon(size: size, color: color);
-      case 'connect4':
-        return Connect4GameIcon(size: size, color: color);
       default:
         return Icon(iconDataOf(gameType), size: size, color: color);
     }

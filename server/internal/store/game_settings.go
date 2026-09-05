@@ -17,7 +17,6 @@ const (
 	GameTypeUno        = "uno"
 	GameTypeNardy      = "nardy"
 	GameTypeCheckers   = "checkers"
-	GameTypeConnect4   = "connect4"
 )
 
 // UserGameSettings — сохранённая конфигурация создания игры (на game_type).
@@ -86,12 +85,6 @@ func DefaultUserGameSettings(gameType string) UserGameSettings {
 		s.MaxPlayers = 2
 		s.GameMode = "russian"
 		s.Variant = "russian"
-	}
-	if gameType == GameTypeConnect4 {
-		s.TurnTimeSec = 60
-		s.MaxPlayers = 2
-		s.GameMode = "classic"
-		s.Variant = "classic"
 	}
 	return s
 }

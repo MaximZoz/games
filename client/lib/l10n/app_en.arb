@@ -358,40 +358,6 @@
   "rulesCheckersPlay": "Captures are mandatory. If you can capture again, you continue with the same piece. A man that reaches the last rank becomes a king.",
   "rulesCheckersWin": "In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.",
   "rulesCheckersOfflineBot": "Offline: a game against the bot.",
-  "gamesConnect4": "Connect Four",
-  "gamesConnect4ModeClassic": "7×6",
-  "gamesConnect4ModeWide": "9×7",
-  "rulesConnect4Players": "Players: 2.",
-  "rulesConnect4Mode": "Mode: {mode}.",
-  "@rulesConnect4Mode": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "rulesConnect4Time": "Time per move: {time}. If time runs out — you lose.",
-  "@rulesConnect4Time": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "rulesConnect4Intro": "A {cols}×{rows} board. Take turns dropping a disc into a column — it falls to the lowest empty cell.",
-  "@rulesConnect4Intro": {
-    "placeholders": {
-      "cols": {
-        "type": "int"
-      },
-      "rows": {
-        "type": "int"
-      }
-    }
-  },
-  "rulesConnect4Play": "Four of your discs in a row win: horizontal, vertical or diagonal. A full board without four in a row is a draw. You may offer a draw.",
-  "rulesConnect4Win": "The first to make four in a row wins, or the opponent resigns / runs out of time.",
-  "rulesConnect4OfflineBot": "Offline: a game against the bot.",
   "rulesUnoPlayers": "Players: {players}.",
   "@rulesUnoPlayers": {
     "placeholders": {

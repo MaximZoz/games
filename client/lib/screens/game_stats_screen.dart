@@ -167,8 +167,6 @@ String _gameTypeTitle(AppLocalizations l10n, String gameType) {
       return l10n.gamesNardy;
     case 'checkers':
       return l10n.gamesCheckers;
-    case 'connect4':
-      return l10n.gamesConnect4;
     default:
       return gameType;
   }
