@@ -4251,11 +4251,7 @@ class _CheckersGameCardState extends ConsumerState<_CheckersGameCard> {
   }
 
   void _cycleGameMode() {
-    setState(() {
-      _gameMode = _gameMode == CheckersEngine.modeRussian
-          ? CheckersEngine.modeGiveaway
-          : CheckersEngine.modeRussian;
-    });
+    setState(() => _gameMode = CheckersEngine.nextMode(_gameMode));
     _persistSettings();
   }
 

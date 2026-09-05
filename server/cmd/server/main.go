@@ -628,6 +628,7 @@ func main() {
 	log.Printf("Chats API: GET /api/chats, /api/chats/blocked; POST /api/chats/start, /api/chats/messages, /api/chats/read, /api/chats/delivered, /api/chats/clear, /api/chats/block, /api/chats/unblock (Bearer)")
 	log.Printf("Presence API: GET /api/presence?user_ids=... (Bearer)")
 	log.Printf("Games API: POST /api/games/tictactoe/lobby, GET /api/games/tictactoe/lobbies, POST /api/games/tictactoe/lobby/:id/invite|join|leave, GET /api/games/tictactoe/game/:id, POST /api/games/tictactoe/game/:id/move (Bearer, Redis required)")
+	log.Printf("Checkers API: POST /api/games/checkers/lobby, GET /api/games/checkers/game/:id, POST /api/games/checkers/game/:id/move (Bearer, Redis required)")
 	log.Printf("Battleship API: POST /api/games/battleship/lobby, GET /api/games/battleship/lobbies, POST /api/games/battleship/game/:id/place_ships|shoot|forfeit (Bearer, Redis required)")
 
 	// После деплоя уведомляем онлайн-клиентов (с небольшой задержкой на подъём WS).

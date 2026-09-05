@@ -8,7 +8,9 @@ func NewCheckers() Module {
 		offline: true,
 		modes: []ModeDescriptor{
 			{ID: "russian", MinPlayers: 2, MaxPlayers: 2},
+			{ID: "english", MinPlayers: 2, MaxPlayers: 2},
 			{ID: "giveaway", MinPlayers: 2, MaxPlayers: 2},
+			{ID: "corners", MinPlayers: 2, MaxPlayers: 2},
 		},
 		defaults: store.DefaultUserGameSettings(store.GameTypeCheckers),
 	}

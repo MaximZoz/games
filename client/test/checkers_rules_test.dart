@@ -15,17 +15,32 @@ void main() {
   test('режимы шашек нормализуются и подписываются правильно', () {
     final t = l10n();
     expect(CheckersEngine.normalizeMode(null), CheckersEngine.modeRussian);
-    expect(CheckersEngine.normalizeMode('english'), CheckersEngine.modeRussian);
+    expect(CheckersEngine.normalizeMode('english'), CheckersEngine.modeEnglish);
     expect(
         CheckersEngine.normalizeMode('giveaway'), CheckersEngine.modeGiveaway);
-    expect(CheckersEngine.normalizeMode('corners'), CheckersEngine.modeRussian);
+    expect(CheckersEngine.normalizeMode('corners'), CheckersEngine.modeCorners);
+    expect(CheckersEngine.nextMode(CheckersEngine.modeRussian),
+        CheckersEngine.modeEnglish);
+    expect(CheckersEngine.nextMode(CheckersEngine.modeEnglish),
+        CheckersEngine.modeGiveaway);
+    expect(CheckersEngine.nextMode(CheckersEngine.modeGiveaway),
+        CheckersEngine.modeCorners);
+    expect(CheckersEngine.nextMode(CheckersEngine.modeCorners),
+        CheckersEngine.modeRussian);
     expect(
         checkersModeLabel(CheckersEngine.modeRussian, t),
         t.gamesCheckersModeRussian);
     expect(
+        checkersModeLabel(CheckersEngine.modeEnglish, t),
+        t.gamesCheckersModeEnglish);
+    expect(
         checkersModeLabel(CheckersEngine.modeGiveaway, t),
         t.gamesCheckersModeGiveaway);
+    expect(
+        checkersModeLabel(CheckersEngine.modeCorners, t),
+        t.gamesCheckersModeCorners);
     expect(t.gamesCheckersModeGiveaway, 'Поддавки');
+    expect(t.gamesCheckersModeCorners, 'Уголки');
   });
 
   test('правила содержат игроков, режим, время и ставку', () {
@@ -51,7 +66,25 @@ void main() {
       l10n: t,
     );
     expect(giveaway, contains(t.rulesCheckersMode(t.gamesCheckersModeGiveaway)));
+    expect(giveaway, contains(t.rulesCheckersPlayGiveaway));
     expect(giveaway, contains(t.rulesCheckersWin));
+
+    final english = checkersRuleLines(
+      gameMode: CheckersEngine.modeEnglish,
+      turnTimeSec: 60,
+      stakeBronze: 0,
+      l10n: t,
+    );
+    expect(english, contains(t.rulesCheckersPlayEnglish));
+
+    final corners = checkersRuleLines(
+      gameMode: CheckersEngine.modeCorners,
+      turnTimeSec: 60,
+      stakeBronze: 0,
+      l10n: t,
+    );
+    expect(corners, contains(t.rulesCheckersPlayCorners));
+    expect(corners, contains(t.rulesCheckersMode(t.gamesCheckersModeCorners)));
 
     final offline = checkersRuleLines(
       gameMode: CheckersEngine.modeRussian,

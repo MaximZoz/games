@@ -1,4 +1,4 @@
-// Package checkers — русские шашки и поддавки на доске 8×8.
+// Package checkers — русские / английские шашки, поддавки и уголки на доске 8×8.
 package checkers
 
 import (
@@ -9,7 +9,9 @@ import (
 
 const (
 	ModeRussian  = "russian"
+	ModeEnglish  = "english"
 	ModeGiveaway = "giveaway"
+	ModeCorners  = "corners"
 
 	Empty     int = 0
 	WhiteMan  int = 1
@@ -30,13 +32,21 @@ var (
 	ErrGameOver    = errors.New("game is over")
 )
 
-// NormalizeMode — russian или giveaway.
+// AllModes — порядок на карточке игры.
+var AllModes = []string{ModeRussian, ModeEnglish, ModeGiveaway, ModeCorners}
+
+// NormalizeMode — один из четырёх режимов; неизвестное → русские.
 func NormalizeMode(mode string) string {
-	if mode == ModeGiveaway {
-		return ModeGiveaway
+	switch mode {
+	case ModeEnglish, ModeGiveaway, ModeCorners:
+		return mode
+	default:
+		return ModeRussian
 	}
-	return ModeRussian
 }
+
+func (g *Game) isEnglish() bool { return g != nil && g.Mode == ModeEnglish }
+func (g *Game) isCorners() bool { return g != nil && g.Mode == ModeCorners }
 
 // Square — клетка доски.
 type Square struct {
@@ -80,6 +90,15 @@ func NewGame(mode string) *Game {
 		LastFromC: -1,
 		LastToR:   -1,
 		LastToC:   -1,
+	}
+	if g.Mode == ModeCorners {
+		for r := 0; r < 3; r++ {
+			for c := 0; c < 3; c++ {
+				g.set(r, c, WhiteMan)
+				g.set(Size-3+r, Size-3+c, BlackMan)
+			}
+		}
+		return g
 	}
 	for r := 0; r < Size; r++ {
 		for c := 0; c < Size; c++ {
@@ -128,6 +147,9 @@ func (g *Game) LegalMoves() []Move {
 	if g == nil || g.IsOver() {
 		return nil
 	}
+	if g.isCorners() {
+		return g.cornersMoves(g.Turn)
+	}
 	if g.MustContinue {
 		return g.capturesFrom(g.ContR, g.ContC)
 	}
@@ -166,7 +188,15 @@ func (g *Game) manCaptures(r, c int) []Move {
 	piece := g.at(r, c)
 	seat := owner(piece)
 	var out []Move
-	for _, d := range [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}} {
+	dirs := [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
+	if g.isEnglish() {
+		fwd := 1
+		if seat == 1 {
+			fwd = -1
+		}
+		dirs = [][2]int{{fwd, 1}, {fwd, -1}}
+	}
+	for _, d := range dirs {
 		jr, jc := r+d[0], c+d[1]
 		tr, tc := r+2*d[0], c+2*d[1]
 		mid := g.at(jr, jc)
@@ -193,6 +223,23 @@ func (g *Game) kingCaptures(r, c int) []Move {
 	seat := owner(piece)
 	var out []Move
 	for _, d := range [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}} {
+		if g.isEnglish() {
+			jr, jc := r+d[0], c+d[1]
+			tr, tc := r+2*d[0], c+2*d[1]
+			mid := g.at(jr, jc)
+			if owner(mid) < 0 || owner(mid) == seat {
+				continue
+			}
+			if g.at(tr, tc) != Empty || !dark(tr, tc) {
+				continue
+			}
+			out = append(out, Move{
+				From:   Square{R: r, C: c},
+				To:     Square{R: tr, C: tc},
+				Jumped: []Square{{R: jr, C: jc}},
+			})
+			continue
+		}
 		jr, jc := r+d[0], c+d[1]
 		for g.at(jr, jc) == Empty {
 			jr += d[0]
@@ -227,6 +274,15 @@ func (g *Game) quietMoves(seat int) []Move {
 			if isKing(piece) {
 				for _, d := range [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}} {
 					nr, nc := r+d[0], c+d[1]
+					if g.isEnglish() {
+						if g.at(nr, nc) == Empty && dark(nr, nc) {
+							out = append(out, Move{
+								From: Square{R: r, C: c},
+								To:   Square{R: nr, C: nc},
+							})
+						}
+						continue
+					}
 					for g.at(nr, nc) == Empty && dark(nr, nc) {
 						out = append(out, Move{
 							From: Square{R: r, C: c},
@@ -254,6 +310,77 @@ func (g *Game) quietMoves(seat int) []Move {
 		}
 	}
 	return out
+}
+
+var ortho = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+
+func (g *Game) cornersMoves(seat int) []Move {
+	var out []Move
+	for r := 0; r < Size; r++ {
+		for c := 0; c < Size; c++ {
+			if owner(g.at(r, c)) != seat {
+				continue
+			}
+			out = append(out, g.cornersMovesFrom(r, c)...)
+		}
+	}
+	return out
+}
+
+func (g *Game) cornersMovesFrom(r, c int) []Move {
+	var out []Move
+	from := Square{R: r, C: c}
+	for _, d := range ortho {
+		nr, nc := r+d[0], c+d[1]
+		if g.at(nr, nc) == Empty {
+			out = append(out, Move{From: from, To: Square{R: nr, C: nc}})
+		}
+	}
+	seen := map[[2]int]bool{{r, c}: true}
+	queue := [][2]int{{r, c}}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		for _, d := range ortho {
+			mr, mc := cur[0]+d[0], cur[1]+d[1]
+			lr, lc := cur[0]+2*d[0], cur[1]+2*d[1]
+			if g.at(mr, mc) <= 0 {
+				continue
+			}
+			if g.at(lr, lc) != Empty {
+				continue
+			}
+			key := [2]int{lr, lc}
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			out = append(out, Move{From: from, To: Square{R: lr, C: lc}})
+			queue = append(queue, key)
+		}
+	}
+	return out
+}
+
+func (g *Game) cornersFilled(seat int) bool {
+	tr0, tc0 := 5, 5
+	if seat == 1 {
+		tr0, tc0 = 0, 0
+	}
+	own := 0
+	inTarget := 0
+	for r := 0; r < Size; r++ {
+		for c := 0; c < Size; c++ {
+			if owner(g.at(r, c)) != seat {
+				continue
+			}
+			own++
+			if r >= tr0 && r < tr0+3 && c >= tc0 && c < tc0+3 {
+				inTarget++
+			}
+		}
+	}
+	return own > 0 && own == inTarget
 }
 
 func sameMove(a, b Move) bool {
@@ -286,7 +413,8 @@ func (g *Game) Apply(seat int, mv Move) error {
 	ok := false
 	var chosen Move
 	for _, cand := range legal {
-		if sameMove(cand, mv) {
+		if cand.From == mv.From && cand.To == mv.To &&
+			(len(mv.Jumped) == 0 || sameMove(cand, mv)) {
 			ok = true
 			chosen = cand
 			break
@@ -297,11 +425,13 @@ func (g *Game) Apply(seat int, mv Move) error {
 	}
 	piece := g.at(chosen.From.R, chosen.From.C)
 	g.set(chosen.From.R, chosen.From.C, Empty)
-	for _, j := range chosen.Jumped {
-		g.set(j.R, j.C, Empty)
+	if !g.isCorners() {
+		for _, j := range chosen.Jumped {
+			g.set(j.R, j.C, Empty)
+		}
 	}
 	promoted := false
-	if !isKing(piece) {
+	if !g.isCorners() && !isKing(piece) {
 		if (seat == 0 && chosen.To.R == Size-1) || (seat == 1 && chosen.To.R == 0) {
 			if seat == 0 {
 				piece = WhiteKing
@@ -316,10 +446,15 @@ func (g *Game) Apply(seat int, mv Move) error {
 	g.LastToR, g.LastToC = chosen.To.R, chosen.To.C
 	g.Seq++
 
-	if len(chosen.Jumped) > 0 {
+	if g.isCorners() {
+		if g.cornersFilled(seat) {
+			g.Winner = seat
+			g.MustContinue = false
+			g.ContR, g.ContC = -1, -1
+			return nil
+		}
+	} else if len(chosen.Jumped) > 0 && !(g.isEnglish() && promoted) {
 		more := g.capturesFrom(chosen.To.R, chosen.To.C)
-		// После превращения в дамку бой продолжается дамкой.
-		_ = promoted
 		if len(more) > 0 {
 			g.MustContinue = true
 			g.ContR, g.ContC = chosen.To.R, chosen.To.C
@@ -334,6 +469,16 @@ func (g *Game) Apply(seat int, mv Move) error {
 }
 
 func (g *Game) resolveEnd() {
+	if g.isCorners() {
+		if g.cornersFilled(0) {
+			g.Winner = 0
+			return
+		}
+		if g.cornersFilled(1) {
+			g.Winner = 1
+			return
+		}
+	}
 	if len(g.LegalMoves()) > 0 {
 		return
 	}

@@ -98,6 +98,48 @@ void main() {
     expect(g.mustContinue, isFalse);
   });
 
+  test('английские: простая бьёт только вперёд, дамка ходит на одну клетку', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeEnglish);
+    g.board = List<int>.filled(64, 0);
+    g.set(4, 3, CheckersEngine.whiteMan);
+    g.set(3, 2, CheckersEngine.blackMan);
+    g.set(5, 4, CheckersEngine.blackMan);
+    g.turn = 0;
+    final caps = g.legalMoves();
+    expect(caps, hasLength(1));
+    expect(caps.first.to, const CheckersSquare(6, 5));
+
+    final king = CheckersEngine.newGame(CheckersEngine.modeEnglish);
+    king.board = List<int>.filled(64, 0);
+    king.set(3, 2, CheckersEngine.whiteKing);
+    for (final m in king.legalMoves()) {
+      expect((m.to.r - m.from.r).abs(), 1);
+      expect((m.to.c - m.from.c).abs(), 1);
+    }
+  });
+
+  test('уголки: 9 на 9, прыжок не снимает фигуру', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
+    var white = 0;
+    var black = 0;
+    for (final p in g.board) {
+      if (p == CheckersEngine.whiteMan) white++;
+      if (p == CheckersEngine.blackMan) black++;
+    }
+    expect(white, 9);
+    expect(black, 9);
+    g.board = List<int>.filled(64, 0);
+    g.set(2, 2, CheckersEngine.whiteMan);
+    g.set(2, 3, CheckersEngine.blackMan);
+    g.turn = 0;
+    g.apply(0, const CheckersMove(
+      from: CheckersSquare(2, 2),
+      to: CheckersSquare(2, 4),
+    ));
+    expect(g.at(2, 3), CheckersEngine.blackMan);
+    expect(g.at(2, 4), CheckersEngine.whiteMan);
+  });
+
   test('bot prefers a capture', () {
     final g = CheckersEngine.newGame(CheckersEngine.modeRussian);
     g.board = List<int>.filled(64, 0);
