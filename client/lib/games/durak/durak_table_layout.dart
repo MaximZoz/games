@@ -168,11 +168,53 @@ bool durakTableAttackSlotInFlight({
 ///
 /// Новая атака (перевод, подкид) тоже занимает слот сразу — [reserveForFlight].
 /// Иначе стол перестроится только после посадки, и карта прыгнет.
+/// [keepVisible] — севшая/своя пара: не выкидывать из дерева, даже если
+/// флаг seated на кадр сбросился (перевод иначе моргает лежащую карту).
 bool durakSeatedTablePairInLayout({
   required bool seated,
   bool reserveForFlight = false,
+  bool keepVisible = false,
 }) =>
-    seated || reserveForFlight;
+    seated || reserveForFlight || keepVisible;
+
+/// Одна севшая пара + новый слот (перевод/подкид): не центровать заново.
+/// Иначе лежащая карта прыгает влево и выглядит как моргание.
+bool durakPinExistingTablePair({
+  required int settledCount,
+  required int layoutCount,
+}) =>
+    settledCount == 1 && layoutCount == 2;
+
+/// Левый край первой пары: как у одиночной карты по центру, со сдвигом
+/// только если вторая пара не влезает в [maxWidth].
+double durakPinnedFirstPairLeft({
+  required Size cardSize,
+  required double maxWidth,
+  double gap = 10,
+}) {
+  final pairW = durakTablePairSlotWidth(cardSize);
+  final natural = (maxWidth - pairW) / 2;
+  final second = natural + pairW + gap;
+  if (second + pairW <= maxWidth) return natural;
+  final overflow = second + pairW - maxWidth;
+  return natural - overflow;
+}
+
+/// Левый край второй пары при закреплённой первой.
+double durakPinnedSecondPairLeft({
+  required Size cardSize,
+  required double maxWidth,
+  double gap = 10,
+}) {
+  final pairW = durakTablePairSlotWidth(cardSize);
+  return durakPinnedFirstPairLeft(
+        cardSize: cardSize,
+        maxWidth: maxWidth,
+        gap: gap,
+      ) +
+      pairW +
+      gap;
+}
 
 /// Финальный rect атаки в сетке стола — тот же расчёт, что у рядов.
 Rect durakEstimateAttackLandRect({
@@ -215,14 +257,22 @@ Rect durakEstimateDefenseLandRect(Rect attackRect) => Rect.fromLTWH(
       attackRect.height,
     );
 
-/// Opacity слота: севшая карта всегда видна, летящая — только в overlay.
+/// Слот пустой, только пока overlay летит и карта ещё не села.
+///
+/// Не seated и не inFlight — всё равно показать: иначе перевод на кадр
+/// выкидывает лежащую карту из дерева (моргание).
+bool durakTableSlotBlankUntilLand({
+  required bool seated,
+  required bool inFlight,
+}) =>
+    inFlight && !seated;
+
+/// Opacity слота: прячем только летящую ещё не севшую карту.
 double durakSeatedTableSlotOpacity({
   required bool seated,
   required bool inFlight,
-}) {
-  if (seated) return 1;
-  return inFlight ? 0 : 0;
-}
+}) =>
+    durakTableSlotBlankUntilLand(seated: seated, inFlight: inFlight) ? 0 : 1;
 
 /// Защиту не рисуем, пока свой отбой или remote-полёт ещё на overlay.
 bool durakTableDefenseHiddenDuringFlight({

@@ -198,8 +198,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   final GlobalKey _winRewardKey = GlobalKey();
   final GlobalKey<CardFanState> _fanKey = GlobalKey<CardFanState>();
   final GlobalKey _defendTargetKey = GlobalKey();
-  final Map<int, GlobalKey> _tableAttackKeys = {};
+  final Map<String, GlobalKey> _tableAttackKeys = {};
   final GlobalKey _attackSlotKey = GlobalKey();
+
+  GlobalKey _attackKeyFor(PlayingCard card) =>
+      _tableAttackKeys.putIfAbsent(_cardId(card), GlobalKey.new);
+
+  GlobalKey? _attackKeyAt(int index, List<DurakTablePairApi> table) {
+    if (index < 0 || index >= table.length) return null;
+    return _attackKeyFor(table[index].attack.toPlayingCard());
+  }
 
   /// Слот посадки подкида — в финальном месте стола (не «рядом», потом сдвиг).
   final GlobalKey _pendingAttackLandKey = GlobalKey();
@@ -1163,7 +1171,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     var bestDist = double.infinity;
     final n = view.table.length;
     for (final i in candidates) {
-      final key = _tableAttackKeys[i];
+      final key = _attackKeyAt(i, view.table);
       final rect = key != null ? globalRectOf(key) : null;
       final center = rect?.center ?? _estimatePairCenter(i, n);
       if (center == null) continue;
@@ -1256,7 +1264,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (p == null) return false;
     final defendIdx = _defendTargetIndex(view, card, pointer: p);
     if (defendIdx < 0) return true;
-    final atkKey = _tableAttackKeys[defendIdx];
+    final atkKey = _attackKeyAt(defendIdx, view.table);
     final defendCenter =
         (atkKey != null ? globalRectOf(atkKey)?.center : null) ??
             _estimatePairCenter(defendIdx, view.table.length);
@@ -1566,7 +1574,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         to = defendRect;
       } else {
         final atkKey = defendIdx >= 0
-            ? _tableAttackKeys.putIfAbsent(defendIdx, GlobalKey.new)
+            ? _attackKeyAt(defendIdx, view.table)
             : null;
         final atk = (atkKey != null ? globalRectOf(atkKey) : null) ??
             globalRectOf(_tableKey) ??
@@ -2020,9 +2028,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Посадка своего подкида: ключ слота в уже перестроенной сетке.
   Rect _landRectForPendingAttack(DurakGameView view, Size screen) {
     final pending = _pendingAttackPlaceholders(view);
-    final lastPending = pending.isEmpty ? 0 : pending.length - 1;
-    final idx = _serverPairsInLayout(view) + lastPending;
-    return globalRectOf(_tableAttackKeys.putIfAbsent(idx, GlobalKey.new)) ??
+    final pendingCard = pending.isEmpty ? null : pending.last;
+    final idx = _serverPairsInLayout(view) + (pending.isEmpty ? 0 : pending.length - 1);
+    return (pendingCard != null
+            ? globalRectOf(_attackKeyFor(pendingCard))
+            : null) ??
         globalRectOf(_pendingAttackLandKey) ??
         globalRectOf(_attackSlotKey) ??
         _estimateAttackLandRect(view, screen, pairIndex: idx);
@@ -2508,7 +2518,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     for (var i = 0; i < table.length; i++) {
       final p = table[i];
       final keyRect = globalRectOf(
-        _tableAttackKeys.putIfAbsent(i, GlobalKey.new),
+        _attackKeyFor(p.attack.toPlayingCard()),
       );
       final atk = keyRect ??
           durakEstimateAttackLandRect(
@@ -2537,7 +2547,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     for (var i = 0; i < table.length; i++) {
       final p = table[i];
       final keyRect = globalRectOf(
-        _tableAttackKeys.putIfAbsent(i, GlobalKey.new),
+        _attackKeyFor(p.attack.toPlayingCard()),
       );
       final atk = keyRect ??
           durakEstimateAttackLandRect(
@@ -4412,9 +4422,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           height: _tableCardSize.height * 0.5,
         );
 
-    final attackRect = globalRectOf(
-          _tableAttackKeys.putIfAbsent(flight.pairIndex, GlobalKey.new),
-        ) ??
+    final attackCard = flight.isDefense &&
+            flight.pairIndex >= 0 &&
+            flight.pairIndex < view.table.length
+        ? view.table[flight.pairIndex].attack.toPlayingCard()
+        : flight.card;
+    final attackRect = globalRectOf(_attackKeyFor(attackCard)) ??
         _estimateAttackLandRect(
           view,
           _flyScreen,
@@ -6516,6 +6529,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // При «Взять» рисуем снимок стола — сервер уже пустой, карты улетают по одной.
     final hold = _takeTableHold;
     final sourceTable = hold ?? view.table;
+    var settledVisible = 0;
+    for (final p in sourceTable) {
+      final atk = p.attack.toPlayingCard();
+      if (_isSeatedTableCard(atk) && !_isRemoteTableCardHidden(atk)) {
+        settledVisible++;
+      }
+    }
     final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < sourceTable.length; i++)
@@ -6529,6 +6549,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                     reserveForFlight: _isRemoteTableCardHidden(
                       sourceTable[i].attack.toPlayingCard(),
                     ),
+                    keepVisible: true,
                   )))
             Opacity(
               key: ValueKey(
@@ -6553,7 +6574,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                     usingHold: hold != null),
                 cardSize: cardSize,
                 highlightAttack: hold == null && defendTargets.contains(i),
-                attackKey: _tableAttackKeys.putIfAbsent(i, GlobalKey.new),
+                attackKey: _attackKeyFor(
+                  sourceTable[i].attack.toPlayingCard(),
+                ),
                 defendTargetKey: hold == null && i == defendPairIndex
                     ? _defendTargetKey
                     : null,
@@ -6576,10 +6599,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                   attack: DurakApiCard.fromCard(pendingAttacks[i]),
                 ),
                 cardSize: cardSize,
-                attackKey: _tableAttackKeys.putIfAbsent(
-                  _serverPairsInLayout(view) + i,
-                  GlobalKey.new,
-                ),
+                attackKey: _attackKeyFor(pendingAttacks[i]),
               ),
             ),
         // Слот атаки/перевода — только при подъёме карты (как раньше):
@@ -6694,6 +6714,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       items: tableItems,
                       cardSize: cardSize,
                       maxWidth: tableMaxW,
+                      pinFirstSlot: durakPinExistingTablePair(
+                        settledCount: settledVisible,
+                        layoutCount: tableItems.length,
+                      ),
                     ),
                   ),
                 ),
@@ -6780,12 +6804,38 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     required List<Widget> items,
     required Size cardSize,
     required double maxWidth,
+    bool pinFirstSlot = false,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
     final n = items.length;
     final pairW = durakTablePairSlotWidth(cardSize);
     const baseGap = 10.0;
     const cols = _tableCols;
+
+    // Перевод/подкид: лежащая карта остаётся в центре, новый слот справа.
+    if (pinFirstSlot && n == 2) {
+      final left0 = durakPinnedFirstPairLeft(
+        cardSize: cardSize,
+        maxWidth: maxWidth,
+        gap: baseGap,
+      );
+      final left1 = durakPinnedSecondPairLeft(
+        cardSize: cardSize,
+        maxWidth: maxWidth,
+        gap: baseGap,
+      );
+      return SizedBox(
+        width: maxWidth,
+        height: durakTablePairHeight(cardSize),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(left: left0, top: 0, child: items[0]),
+            Positioned(left: left1, top: 0, child: items[1]),
+          ],
+        ),
+      );
+    }
 
     final rows = <List<Widget>>[
       for (var i = 0; i < n; i += cols) items.skip(i).take(cols).toList(),

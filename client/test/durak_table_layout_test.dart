@@ -277,12 +277,43 @@ void main() {
         isTrue,
       );
       expect(
+        durakSeatedTablePairInLayout(
+          seated: false,
+          keepVisible: true,
+        ),
+        isTrue,
+      );
+      expect(
         durakSeatedTableSlotOpacity(seated: true, inFlight: true),
         1,
       );
       expect(
         durakSeatedTableSlotOpacity(seated: false, inFlight: true),
         0,
+      );
+      expect(
+        durakSeatedTableSlotOpacity(seated: false, inFlight: false),
+        1,
+      );
+      expect(
+        durakTableSlotBlankUntilLand(seated: false, inFlight: false),
+        isFalse,
+      );
+      expect(durakPinExistingTablePair(settledCount: 1, layoutCount: 2), isTrue);
+      expect(
+        durakPinExistingTablePair(settledCount: 1, layoutCount: 1),
+        isFalse,
+      );
+      expect(
+        durakPinExistingTablePair(settledCount: 2, layoutCount: 3),
+        isFalse,
+      );
+      final pinned0 = durakPinnedFirstPairLeft(cardSize: card, maxWidth: 400);
+      final alone = (400 - durakTablePairSlotWidth(card)) / 2;
+      expect(pinned0, alone);
+      expect(
+        durakPinnedSecondPairLeft(cardSize: card, maxWidth: 400),
+        greaterThan(pinned0),
       );
     });
 
