@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit",
   "gamepadKeyboardTitle": "Toetsenbord",
   "gamepadKeyboardSpace": "Spatie",
+  "gamepadLegendConfirm": "Kiezen",
+  "gamepadLegendBack": "Terug",
+  "gamepadLegendTabs": "Tabbladen",
+  "gamepadLegendCycle": "Wijzigen",
   "gamepadConnectedSnack": "Controller verbonden: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

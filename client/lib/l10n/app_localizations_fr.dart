@@ -99,6 +99,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Espace';
 
   @override
+  String get gamepadLegendConfirm => 'Choisir';
+
+  @override
+  String get gamepadLegendBack => 'Retour';
+
+  @override
+  String get gamepadLegendTabs => 'Onglets';
+
+  @override
+  String get gamepadLegendCycle => 'Changer';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Manette connectée : $name';
   }

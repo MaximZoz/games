@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -1145,12 +1146,14 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           _buildAutoConfirmCheck(autoConfirm),
         if (myTurn && game.canUndo)
           FramedButton(
+            gamepadAction: GamepadAction.actionX,
             onPressed: _busy ? null : () => unawaited(_undo()),
             icon: Icons.undo_rounded,
             label: l10n.nardyUndoMove,
           ),
         if (showEndTurn)
           FramedButton(
+            gamepadAction: GamepadAction.actionY,
             onPressed: _busy ? null : () => unawaited(_endTurn()),
             icon: noMoves ? Icons.skip_next_rounded : Icons.check_rounded,
             label: noMoves ? l10n.nardySkipTurn : l10n.nardyDoneTurn,
@@ -1163,7 +1166,9 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final l10n = context.l10n;
     return Tooltip(
       message: l10n.nardyAutoConfirmHint,
-      child: InkWell(
+      child: GamepadHinted(
+        action: GamepadAction.confirm,
+        child: InkWell(
         onTap: () =>
             unawaited(ref.read(nardyAutoConfirmProvider.notifier).set(!value)),
         borderRadius: BorderRadius.circular(8),
@@ -1191,6 +1196,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -99,6 +99,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Cách';
 
   @override
+  String get gamepadLegendConfirm => 'Chọn';
+
+  @override
+  String get gamepadLegendBack => 'Quay lại';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Đổi';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Đã kết nối tay cầm: $name';
   }

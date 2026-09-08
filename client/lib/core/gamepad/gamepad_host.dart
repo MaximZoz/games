@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
@@ -97,6 +98,7 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
         return Stack(
           children: [
             widget.child,
+            if (!kb) const GamepadHintsOverlay(),
             if (kb)
               Align(
                 alignment: Alignment.bottomCenter,

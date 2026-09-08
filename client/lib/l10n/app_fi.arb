@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee",
   "gamepadKeyboardTitle": "Näppäimistö",
   "gamepadKeyboardSpace": "Välilyönti",
+  "gamepadLegendConfirm": "Valitse",
+  "gamepadLegendBack": "Takaisin",
+  "gamepadLegendTabs": "Välilehdet",
+  "gamepadLegendCycle": "Vaihda",
   "gamepadConnectedSnack": "Ohjain yhdistetty: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

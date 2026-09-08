@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
@@ -32,8 +32,10 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     case GamepadAction.down:
       return _moveFocus(TraversalDirection.down);
     case GamepadAction.left:
+      if (_nudgeFocused(-1)) return true;
       return _moveFocus(TraversalDirection.left);
     case GamepadAction.right:
+      if (_nudgeFocused(1)) return true;
       return _moveFocus(TraversalDirection.right);
     case GamepadAction.confirm:
       return _activateFocused();
@@ -103,11 +105,86 @@ bool _activateFocused() {
     GamepadKeyboardController.instance.show();
     return true;
   }
-  final invoked = Actions.maybeInvoke<ActivateIntent>(
-    ctx,
-    const ActivateIntent(),
-  );
-  return invoked != null;
+  if (_toggleSwitchOrCheckbox(ctx)) return true;
+  if (Actions.maybeFind<ActivateIntent>(ctx) != null) {
+    Actions.maybeInvoke<ActivateIntent>(ctx, const ActivateIntent());
+    return true;
+  }
+  final ink = ctx.findAncestorWidgetOfExactType<InkWell>();
+  if (ink?.onTap != null) {
+    ink!.onTap!();
+    return true;
+  }
+  final btn = ctx.findAncestorWidgetOfExactType<IconButton>();
+  if (btn?.onPressed != null) {
+    btn!.onPressed!();
+    return true;
+  }
+  return false;
+}
+
+bool _toggleSwitchOrCheckbox(BuildContext ctx) {
+  Switch? sw;
+  Checkbox? box;
+  void pick(Widget w) {
+    if (w is Switch && w.onChanged != null) sw = w;
+    if (w is Checkbox && w.onChanged != null) box = w;
+  }
+
+  pick(ctx.widget);
+  ctx.visitAncestorElements((el) {
+    pick(el.widget);
+    return sw == null && box == null;
+  });
+  void walk(Element el) {
+    if (sw != null || box != null) return;
+    pick(el.widget);
+    el.visitChildren(walk);
+  }
+
+  ctx.visitChildElements(walk);
+  final foundSwitch = sw;
+  if (foundSwitch != null && foundSwitch.onChanged != null) {
+    foundSwitch.onChanged!(!foundSwitch.value);
+    return true;
+  }
+  final foundBox = box;
+  if (foundBox != null && foundBox.onChanged != null) {
+    foundBox.onChanged!(!(foundBox.value ?? false));
+    return true;
+  }
+  return false;
+}
+
+bool _nudgeFocused(int delta) {
+  final ctx = FocusManager.instance.primaryFocus?.context;
+  if (ctx == null) return false;
+  Slider? slider;
+  void pick(Widget w) {
+    if (w is Slider && w.onChanged != null) slider = w;
+  }
+
+  pick(ctx.widget);
+  void walk(Element el) {
+    if (slider != null) return;
+    pick(el.widget);
+    el.visitChildren(walk);
+  }
+
+  ctx.visitChildElements(walk);
+  ctx.visitAncestorElements((el) {
+    pick(el.widget);
+    return slider == null;
+  });
+  final found = slider;
+  if (found == null || found.onChanged == null) return false;
+  final span = found.max - found.min;
+  final step = found.divisions != null && found.divisions! > 0
+      ? span / found.divisions!
+      : span / 20;
+  final next = (found.value + delta * step).clamp(found.min, found.max);
+  found.onChanged!(next);
+  return true;
 }
 
 bool _focusTextField() {

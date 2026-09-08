@@ -99,6 +99,18 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Mellanslag';
 
   @override
+  String get gamepadLegendConfirm => 'Välj';
+
+  @override
+  String get gamepadLegendBack => 'Tillbaka';
+
+  @override
+  String get gamepadLegendTabs => 'Flikar';
+
+  @override
+  String get gamepadLegendCycle => 'Ändra';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Handkontroll ansluten: $name';
   }

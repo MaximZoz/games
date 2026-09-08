@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "En un campo A abre el teclado del mando; X cambia el diseño, B borra o cierra",
   "gamepadKeyboardTitle": "Teclado",
   "gamepadKeyboardSpace": "Espacio",
+  "gamepadLegendConfirm": "Elegir",
+  "gamepadLegendBack": "Atrás",
+  "gamepadLegendTabs": "Pestañas",
+  "gamepadLegendCycle": "Cambiar",
   "gamepadConnectedSnack": "Mando conectado: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes",
   "gamepadKeyboardTitle": "Keyboard",
   "gamepadKeyboardSpace": "Space",
+  "gamepadLegendConfirm": "Select",
+  "gamepadLegendBack": "Back",
+  "gamepadLegendTabs": "Tabs",
+  "gamepadLegendCycle": "Change",
   "gamepadConnectedSnack": "Controller connected: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

@@ -99,6 +99,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamepadKeyboardSpace => 'स्पेस';
 
   @override
+  String get gamepadLegendConfirm => 'चुनें';
+
+  @override
+  String get gamepadLegendBack => 'वापस';
+
+  @override
+  String get gamepadLegendTabs => 'टैब';
+
+  @override
+  String get gamepadLegendCycle => 'बदलें';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'कंट्रोलर जुड़ा: $name';
   }

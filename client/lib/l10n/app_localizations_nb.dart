@@ -99,6 +99,18 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Mellomrom';
 
   @override
+  String get gamepadLegendConfirm => 'Velg';
+
+  @override
+  String get gamepadLegendBack => 'Tilbake';
+
+  @override
+  String get gamepadLegendTabs => 'Faner';
+
+  @override
+  String get gamepadLegendCycle => 'Endre';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Kontroller tilkoblet: $name';
   }

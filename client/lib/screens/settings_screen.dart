@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
@@ -209,6 +212,9 @@ class SettingsScreen extends ConsumerWidget {
                       valueListenable: GamepadService.instance.devices,
                       builder: (context, pads, _) {
                         final enabled = ref.watch(gamepadEnabledProvider);
+                        final family = pads.isEmpty
+                            ? GamepadFamily.xbox
+                            : gamepadFamilyFromName(pads.first.name);
                         final connected = pads.isNotEmpty
                             ? l10n.settingsGamepadConnected(pads.first.name)
                             : l10n.settingsGamepadDisconnected;
@@ -242,62 +248,44 @@ class SettingsScreen extends ConsumerWidget {
                                     ),
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                l10n.settingsGamepadHelpNavigate,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                              GamepadHintLabel(
+                                action: GamepadAction.left,
+                                family: family,
+                                text: l10n.settingsGamepadHelpNavigate,
                               ),
-                              Text(
-                                l10n.settingsGamepadHelpConfirm,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                              const SizedBox(height: 6),
+                              GamepadHintLabel(
+                                action: GamepadAction.confirm,
+                                family: family,
+                                text: l10n.settingsGamepadHelpConfirm,
                               ),
-                              Text(
-                                l10n.settingsGamepadHelpBack,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                              const SizedBox(height: 6),
+                              GamepadHintLabel(
+                                action: GamepadAction.cancel,
+                                family: family,
+                                text: l10n.settingsGamepadHelpBack,
                               ),
-                              Text(
-                                l10n.settingsGamepadHelpTabs,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                              const SizedBox(height: 6),
+                              GamepadHintLabel(
+                                action: GamepadAction.shoulderL,
+                                family: family,
+                                text: l10n.settingsGamepadHelpTabs,
                               ),
+                              const SizedBox(height: 6),
+                              GamepadHintLabel(
+                                action: GamepadAction.actionY,
+                                family: family,
+                                text: l10n.settingsGamepadHelpCards,
+                              ),
+                              const SizedBox(height: 6),
+                              GamepadHintLabel(
+                                action: GamepadAction.actionX,
+                                family: family,
+                                text: l10n.settingsGamepadHelpKeyboard,
+                              ),
+                              const SizedBox(height: 4),
                               Text(
                                 l10n.settingsGamepadHelpPlay,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                              ),
-                              Text(
-                                l10n.settingsGamepadHelpCards,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                              ),
-                              Text(
-                                l10n.settingsGamepadHelpKeyboard,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -666,38 +654,59 @@ class _SwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitleText = subtitle;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        GamepadService.instance.devices,
+        GamepadService.instance.activityTick,
+      ]),
+      builder: (context, _) {
+    return InkWell(
+      onTap: onChanged == null ? null : () => onChanged!(!value),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  if (subtitleText != null && subtitleText.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitleText,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                     ),
+                  ],
+                ],
               ),
-              if (subtitleText != null && subtitleText.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  subtitleText,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-              ],
+            ),
+            ExcludeFocus(
+              child: Switch(
+                value: value,
+                onChanged: onChanged,
+                activeTrackColor: AppColors.accentStart,
+              ),
+            ),
+            if (gamepadHintsWanted()) ...[
+              const SizedBox(width: 8),
+              const GamepadGlyph(action: GamepadAction.confirm, size: 20),
             ],
-          ),
+          ],
         ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeTrackColor: AppColors.accentStart,
-        ),
-      ],
+      ),
+    );
+      },
     );
   }
 }
@@ -715,21 +724,42 @@ class _CategoryCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Checkbox(
-          value: value,
-          onChanged: (v) => onChanged(v ?? false),
-          activeColor: AppColors.accentStart,
-        ),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
-        ),
-      ],
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        GamepadService.instance.devices,
+        GamepadService.instance.activityTick,
+      ]),
+      builder: (context, _) {
+        return InkWell(
+          onTap: () => onChanged(!value),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ExcludeFocus(
+                  child: Checkbox(
+                    value: value,
+                    onChanged: (v) => onChanged(v ?? false),
+                    activeColor: AppColors.accentStart,
+                  ),
+                ),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                ),
+                if (gamepadHintsWanted()) ...[
+                  const SizedBox(width: 6),
+                  const GamepadGlyph(action: GamepadAction.confirm, size: 18),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng",
   "gamepadKeyboardTitle": "Bàn phím",
   "gamepadKeyboardSpace": "Cách",
+  "gamepadLegendConfirm": "Chọn",
+  "gamepadLegendBack": "Quay lại",
+  "gamepadLegendTabs": "Tab",
+  "gamepadLegendCycle": "Đổi",
   "gamepadConnectedSnack": "Đã kết nối tay cầm: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

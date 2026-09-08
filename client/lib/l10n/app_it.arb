@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude",
   "gamepadKeyboardTitle": "Tastiera",
   "gamepadKeyboardSpace": "Spazio",
+  "gamepadLegendConfirm": "Scegli",
+  "gamepadLegendBack": "Indietro",
+  "gamepadLegendTabs": "Schede",
+  "gamepadLegendCycle": "Cambia",
   "gamepadConnectedSnack": "Controller collegato: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

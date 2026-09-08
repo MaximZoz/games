@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει",
   "gamepadKeyboardTitle": "Πληκτρολόγιο",
   "gamepadKeyboardSpace": "Διάστημα",
+  "gamepadLegendConfirm": "Επιλογή",
+  "gamepadLegendBack": "Πίσω",
+  "gamepadLegendTabs": "Καρτέλες",
+  "gamepadLegendCycle": "Αλλαγή",
   "gamepadConnectedSnack": "Συνδέθηκε χειριστήριο: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

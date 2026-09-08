@@ -7365,6 +7365,7 @@ class _PulsingActionButtonState extends State<_PulsingActionButton>
         );
       },
       child: FramedButton(
+        gamepadAction: GamepadAction.actionY,
         onPressed: _pressed
             ? null
             : () async {

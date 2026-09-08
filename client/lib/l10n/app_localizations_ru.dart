@@ -99,6 +99,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Пробел';
 
   @override
+  String get gamepadLegendConfirm => 'Выбрать';
+
+  @override
+  String get gamepadLegendBack => 'Назад';
+
+  @override
+  String get gamepadLegendTabs => 'Вкладки';
+
+  @override
+  String get gamepadLegendCycle => 'Сменить';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Контроллер подключён: $name';
   }

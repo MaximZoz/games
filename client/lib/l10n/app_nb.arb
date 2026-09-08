@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "I et felt åpner A gamepad-tastaturet; X bytter oppsett, B sletter eller lukker",
   "gamepadKeyboardTitle": "Tastatur",
   "gamepadKeyboardSpace": "Mellomrom",
+  "gamepadLegendConfirm": "Velg",
+  "gamepadLegendBack": "Tilbake",
+  "gamepadLegendTabs": "Faner",
+  "gamepadLegendCycle": "Endre",
   "gamepadConnectedSnack": "Kontroller tilkoblet: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

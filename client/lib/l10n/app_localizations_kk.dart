@@ -99,6 +99,18 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Бос орын';
 
   @override
+  String get gamepadLegendConfirm => 'Таңдау';
+
+  @override
+  String get gamepadLegendBack => 'Артқа';
+
+  @override
+  String get gamepadLegendTabs => 'Қойындылар';
+
+  @override
+  String get gamepadLegendCycle => 'Өзгерту';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Контроллер қосылды: $name';
   }

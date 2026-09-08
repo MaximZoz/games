@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด",
   "gamepadKeyboardTitle": "คีย์บอร์ด",
   "gamepadKeyboardSpace": "เว้นวรรค",
+  "gamepadLegendConfirm": "เลือก",
+  "gamepadLegendBack": "กลับ",
+  "gamepadLegendTabs": "แท็บ",
+  "gamepadLegendCycle": "เปลี่ยน",
   "gamepadConnectedSnack": "เชื่อมต่อคอนโทรลเลอร์แล้ว: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

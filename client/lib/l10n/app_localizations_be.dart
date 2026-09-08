@@ -99,6 +99,18 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Прабел';
 
   @override
+  String get gamepadLegendConfirm => 'Выбраць';
+
+  @override
+  String get gamepadLegendBack => 'Назад';
+
+  @override
+  String get gamepadLegendTabs => 'Укладкі';
+
+  @override
+  String get gamepadLegendCycle => 'Змяніць';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Кантролер падключаны: $name';
   }

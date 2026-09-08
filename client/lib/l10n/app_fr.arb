@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme",
   "gamepadKeyboardTitle": "Clavier",
   "gamepadKeyboardSpace": "Espace",
+  "gamepadLegendConfirm": "Choisir",
+  "gamepadLegendBack": "Retour",
+  "gamepadLegendTabs": "Onglets",
+  "gamepadLegendCycle": "Changer",
   "gamepadConnectedSnack": "Manette connectée : {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

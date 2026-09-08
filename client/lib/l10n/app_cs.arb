@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře",
   "gamepadKeyboardTitle": "Klávesnice",
   "gamepadKeyboardSpace": "Mezera",
+  "gamepadLegendConfirm": "Vybrat",
+  "gamepadLegendBack": "Zpět",
+  "gamepadLegendTabs": "Karty",
+  "gamepadLegendCycle": "Změnit",
   "gamepadConnectedSnack": "Ovladač připojen: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

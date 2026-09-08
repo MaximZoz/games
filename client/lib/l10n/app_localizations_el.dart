@@ -99,6 +99,18 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Διάστημα';
 
   @override
+  String get gamepadLegendConfirm => 'Επιλογή';
+
+  @override
+  String get gamepadLegendBack => 'Πίσω';
+
+  @override
+  String get gamepadLegendTabs => 'Καρτέλες';
+
+  @override
+  String get gamepadLegendCycle => 'Αλλαγή';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Συνδέθηκε χειριστήριο: $name';
   }

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть",
   "gamepadKeyboardTitle": "Клавиатура",
   "gamepadKeyboardSpace": "Пробел",
+  "gamepadLegendConfirm": "Выбрать",
+  "gamepadLegendBack": "Назад",
+  "gamepadLegendTabs": "Вкладки",
+  "gamepadLegendCycle": "Сменить",
   "gamepadConnectedSnack": "Контроллер подключён: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

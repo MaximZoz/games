@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır",
   "gamepadKeyboardTitle": "Klavye",
   "gamepadKeyboardSpace": "Boşluk",
+  "gamepadLegendConfirm": "Seç",
+  "gamepadLegendBack": "Geri",
+  "gamepadLegendTabs": "Sekmeler",
+  "gamepadLegendCycle": "Değiştir",
   "gamepadConnectedSnack": "Kol bağlandı: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

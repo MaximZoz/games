@@ -99,6 +99,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Spasi';
 
   @override
+  String get gamepadLegendConfirm => 'Pilih';
+
+  @override
+  String get gamepadLegendBack => 'Kembali';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Ubah';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Kontroler terhubung: $name';
   }

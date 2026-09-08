@@ -99,6 +99,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamepadKeyboardSpace => 'スペース';
 
   @override
+  String get gamepadLegendConfirm => '決定';
+
+  @override
+  String get gamepadLegendBack => '戻る';
+
+  @override
+  String get gamepadLegendTabs => 'タブ';
+
+  @override
+  String get gamepadLegendCycle => '切替';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'コントローラー接続: $name';
   }

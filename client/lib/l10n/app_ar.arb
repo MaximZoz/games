@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق",
   "gamepadKeyboardTitle": "لوحة المفاتيح",
   "gamepadKeyboardSpace": "مسافة",
+  "gamepadLegendConfirm": "اختيار",
+  "gamepadLegendBack": "رجوع",
+  "gamepadLegendTabs": "تبويبات",
+  "gamepadLegendCycle": "تغيير",
   "gamepadConnectedSnack": "تم توصيل وحدة التحكم: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

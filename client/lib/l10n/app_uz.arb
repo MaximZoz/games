@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish",
   "gamepadKeyboardTitle": "Klaviatura",
   "gamepadKeyboardSpace": "Probel",
+  "gamepadLegendConfirm": "Tanlash",
+  "gamepadLegendBack": "Orqaga",
+  "gamepadLegendTabs": "Ichki oynalar",
+  "gamepadLegendCycle": "O‘zgartirish",
   "gamepadConnectedSnack": "Kontroller ulandi: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

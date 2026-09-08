@@ -99,6 +99,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamepadKeyboardSpace => 'مسافة';
 
   @override
+  String get gamepadLegendConfirm => 'اختيار';
+
+  @override
+  String get gamepadLegendBack => 'رجوع';
+
+  @override
+  String get gamepadLegendTabs => 'تبويبات';
+
+  @override
+  String get gamepadLegendCycle => 'تغيير';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'تم توصيل وحدة التحكم: $name';
   }

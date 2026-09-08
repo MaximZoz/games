@@ -99,6 +99,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamepadKeyboardSpace => '空格';
 
   @override
+  String get gamepadLegendConfirm => '选择';
+
+  @override
+  String get gamepadLegendBack => '返回';
+
+  @override
+  String get gamepadLegendTabs => '标签';
+
+  @override
+  String get gamepadLegendCycle => '切换';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return '手柄已连接：$name';
   }

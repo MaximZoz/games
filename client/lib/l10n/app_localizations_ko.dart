@@ -99,6 +99,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamepadKeyboardSpace => '스페이스';
 
   @override
+  String get gamepadLegendConfirm => '선택';
+
+  @override
+  String get gamepadLegendBack => '뒤로';
+
+  @override
+  String get gamepadLegendTabs => '탭';
+
+  @override
+  String get gamepadLegendCycle => '변경';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return '컨트롤러 연결됨: $name';
   }

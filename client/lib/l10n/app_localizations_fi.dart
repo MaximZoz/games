@@ -99,6 +99,18 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Välilyönti';
 
   @override
+  String get gamepadLegendConfirm => 'Valitse';
+
+  @override
+  String get gamepadLegendBack => 'Takaisin';
+
+  @override
+  String get gamepadLegendTabs => 'Välilehdet';
+
+  @override
+  String get gamepadLegendCycle => 'Vaihda';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Ohjain yhdistetty: $name';
   }

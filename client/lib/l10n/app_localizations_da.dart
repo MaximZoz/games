@@ -99,6 +99,18 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Mellemrum';
 
   @override
+  String get gamepadLegendConfirm => 'Vælg';
+
+  @override
+  String get gamepadLegendBack => 'Tilbage';
+
+  @override
+  String get gamepadLegendTabs => 'Faner';
+
+  @override
+  String get gamepadLegendCycle => 'Skift';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Controller forbundet: $name';
   }

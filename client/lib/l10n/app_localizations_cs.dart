@@ -99,6 +99,18 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Mezera';
 
   @override
+  String get gamepadLegendConfirm => 'Vybrat';
+
+  @override
+  String get gamepadLegendBack => 'Zpět';
+
+  @override
+  String get gamepadLegendTabs => 'Karty';
+
+  @override
+  String get gamepadLegendCycle => 'Změnit';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Ovladač připojen: $name';
   }

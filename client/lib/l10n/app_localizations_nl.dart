@@ -99,6 +99,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Spatie';
 
   @override
+  String get gamepadLegendConfirm => 'Kiezen';
+
+  @override
+  String get gamepadLegendBack => 'Terug';
+
+  @override
+  String get gamepadLegendTabs => 'Tabbladen';
+
+  @override
+  String get gamepadLegendCycle => 'Wijzigen';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Controller verbonden: $name';
   }

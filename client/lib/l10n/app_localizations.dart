@@ -329,6 +329,30 @@ abstract class AppLocalizations {
   /// **'Пробел'**
   String get gamepadKeyboardSpace;
 
+  /// No description provided for @gamepadLegendConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать'**
+  String get gamepadLegendConfirm;
+
+  /// No description provided for @gamepadLegendBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get gamepadLegendBack;
+
+  /// No description provided for @gamepadLegendTabs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вкладки'**
+  String get gamepadLegendTabs;
+
+  /// No description provided for @gamepadLegendCycle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сменить'**
+  String get gamepadLegendCycle;
+
   /// No description provided for @gamepadConnectedSnack.
   ///
   /// In ru, this message translates to:

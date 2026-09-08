@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup",
   "gamepadKeyboardTitle": "Papan ketik",
   "gamepadKeyboardSpace": "Spasi",
+  "gamepadLegendConfirm": "Pilih",
+  "gamepadLegendBack": "Kembali",
+  "gamepadLegendTabs": "Tab",
+  "gamepadLegendCycle": "Ubah",
   "gamepadConnectedSnack": "Kontroler terhubung: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

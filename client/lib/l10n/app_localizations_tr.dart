@@ -99,6 +99,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Boşluk';
 
   @override
+  String get gamepadLegendConfirm => 'Seç';
+
+  @override
+  String get gamepadLegendBack => 'Geri';
+
+  @override
+  String get gamepadLegendTabs => 'Sekmeler';
+
+  @override
+  String get gamepadLegendCycle => 'Değiştir';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Kol bağlandı: $name';
   }

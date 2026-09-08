@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу",
   "gamepadKeyboardTitle": "Пернетақта",
   "gamepadKeyboardSpace": "Бос орын",
+  "gamepadLegendConfirm": "Таңдау",
+  "gamepadLegendBack": "Артқа",
+  "gamepadLegendTabs": "Қойындылар",
+  "gamepadLegendCycle": "Өзгерту",
   "gamepadConnectedSnack": "Контроллер қосылды: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

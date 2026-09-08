@@ -99,6 +99,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamepadKeyboardSpace => 'เว้นวรรค';
 
   @override
+  String get gamepadLegendConfirm => 'เลือก';
+
+  @override
+  String get gamepadLegendBack => 'กลับ';
+
+  @override
+  String get gamepadLegendTabs => 'แท็บ';
+
+  @override
+  String get gamepadLegendCycle => 'เปลี่ยน';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'เชื่อมต่อคอนโทรลเลอร์แล้ว: $name';
   }

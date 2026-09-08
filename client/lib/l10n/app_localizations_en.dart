@@ -99,6 +99,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Space';
 
   @override
+  String get gamepadLegendConfirm => 'Select';
+
+  @override
+  String get gamepadLegendBack => 'Back';
+
+  @override
+  String get gamepadLegendTabs => 'Tabs';
+
+  @override
+  String get gamepadLegendCycle => 'Change';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Controller connected: $name';
   }

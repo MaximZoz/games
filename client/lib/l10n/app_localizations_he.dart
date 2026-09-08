@@ -99,6 +99,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamepadKeyboardSpace => 'רווח';
 
   @override
+  String get gamepadLegendConfirm => 'בחירה';
+
+  @override
+  String get gamepadLegendBack => 'חזרה';
+
+  @override
+  String get gamepadLegendTabs => 'לשוניות';
+
+  @override
+  String get gamepadLegendCycle => 'שינוי';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'בקר מחובר: $name';
   }

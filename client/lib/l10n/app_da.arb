@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker",
   "gamepadKeyboardTitle": "Tastatur",
   "gamepadKeyboardSpace": "Mellemrum",
+  "gamepadLegendConfirm": "Vælg",
+  "gamepadLegendBack": "Tilbage",
+  "gamepadLegendTabs": "Faner",
+  "gamepadLegendCycle": "Skift",
   "gamepadConnectedSnack": "Controller forbundet: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

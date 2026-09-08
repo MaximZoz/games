@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "Num campo A abre o teclado do controle; X muda o layout, B apaga ou fecha",
   "gamepadKeyboardTitle": "Teclado",
   "gamepadKeyboardSpace": "Espaço",
+  "gamepadLegendConfirm": "Escolher",
+  "gamepadLegendBack": "Voltar",
+  "gamepadLegendTabs": "Abas",
+  "gamepadLegendCycle": "Mudar",
   "gamepadConnectedSnack": "Controle ligado: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

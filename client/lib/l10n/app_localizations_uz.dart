@@ -99,6 +99,18 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamepadKeyboardSpace => 'Probel';
 
   @override
+  String get gamepadLegendConfirm => 'Tanlash';
+
+  @override
+  String get gamepadLegendBack => 'Orqaga';
+
+  @override
+  String get gamepadLegendTabs => 'Ichki oynalar';
+
+  @override
+  String get gamepadLegendCycle => 'O‘zgartirish';
+
+  @override
   String gamepadConnectedSnack(String name) {
     return 'Kontroller ulandi: $name';
   }

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है",
   "gamepadKeyboardTitle": "कीबोर्ड",
   "gamepadKeyboardSpace": "स्पेस",
+  "gamepadLegendConfirm": "चुनें",
+  "gamepadLegendBack": "वापस",
+  "gamepadLegendTabs": "टैब",
+  "gamepadLegendCycle": "बदलें",
   "gamepadConnectedSnack": "कंट्रोलर जुड़ा: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

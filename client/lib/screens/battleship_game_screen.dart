@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
@@ -1644,7 +1645,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
         Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
+              child: GamepadHinted(
+                action: GamepadAction.actionY,
+                child: OutlinedButton.icon(
                 onPressed: _busy ? null : () => unawaited(_randomPlace()),
                 icon: const Icon(Icons.casino_rounded, size: 18),
                 label: Text(
@@ -1652,19 +1655,25 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              ),
             ),
             const SizedBox(width: 8),
-            IconButton.outlined(
+            GamepadHinted(
+              action: GamepadAction.actionX,
+              child: IconButton.outlined(
               onPressed: _busy || selectedIdx == null ? null : _rotateSelected,
               tooltip: context.l10n.gamesBattleshipRotate,
               icon: const Icon(Icons.rotate_right_rounded),
+            ),
             ),
           ],
         ),
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: FilledButton(
+          child: GamepadHinted(
+            action: GamepadAction.menu,
+            child: FilledButton(
             onPressed: _busy ? null : () => unawaited(_confirmPlace()),
             style: AppButtonStyles.of(),
             child: _busy
@@ -1677,6 +1686,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                     ),
                   )
                 : Text(context.l10n.gamesBattleshipConfirmPlace),
+          ),
           ),
         ),
       ],

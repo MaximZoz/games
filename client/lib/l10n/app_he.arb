@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר",
   "gamepadKeyboardTitle": "מקלדת",
   "gamepadKeyboardSpace": "רווח",
+  "gamepadLegendConfirm": "בחירה",
+  "gamepadLegendBack": "חזרה",
+  "gamepadLegendTabs": "לשוניות",
+  "gamepadLegendCycle": "שינוי",
   "gamepadConnectedSnack": "בקר מחובר: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

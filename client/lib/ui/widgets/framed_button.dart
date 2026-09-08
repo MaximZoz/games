@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Текстовая кнопка: заливка цветом фона приложения, лавандовая рамка, чёрный текст.
@@ -15,6 +17,7 @@ class FramedButton extends StatelessWidget {
     this.minHeight = 44,
     this.fontSize = 14,
     this.iconSize = 20,
+    this.gamepadAction,
   });
 
   final String label;
@@ -27,6 +30,7 @@ class FramedButton extends StatelessWidget {
   final double minHeight;
   final double fontSize;
   final double iconSize;
+  final GamepadAction? gamepadAction;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +100,9 @@ class FramedButton extends StatelessWidget {
       ),
     );
 
-    return expanded ? SizedBox(width: double.infinity, child: button) : button;
+    final hinted = gamepadAction == null
+        ? button
+        : GamepadHinted(action: gamepadAction!, child: button);
+    return expanded ? SizedBox(width: double.infinity, child: hinted) : hinted;
   }
 }

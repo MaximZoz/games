@@ -30,6 +30,8 @@ class GamepadService {
 
   static const recentWindow = Duration(minutes: 10);
 
+  bool get isRunning => _running;
+
   bool get isRecentlyActive {
     final at = lastActiveAt;
     if (at == null) return false;

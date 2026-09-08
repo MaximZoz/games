@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger",
   "gamepadKeyboardTitle": "Tangentbord",
   "gamepadKeyboardSpace": "Mellanslag",
+  "gamepadLegendConfirm": "Välj",
+  "gamepadLegendBack": "Tillbaka",
+  "gamepadLegendTabs": "Flikar",
+  "gamepadLegendCycle": "Ändra",
   "gamepadConnectedSnack": "Handkontroll ansluten: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

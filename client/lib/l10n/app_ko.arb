@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기",
   "gamepadKeyboardTitle": "키보드",
   "gamepadKeyboardSpace": "스페이스",
+  "gamepadLegendConfirm": "선택",
+  "gamepadLegendBack": "뒤로",
+  "gamepadLegendTabs": "탭",
+  "gamepadLegendCycle": "변경",
   "gamepadConnectedSnack": "컨트롤러 연결됨: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

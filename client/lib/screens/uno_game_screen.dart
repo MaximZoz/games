@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
@@ -1985,7 +1986,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           runSpacing: 7,
           children: [
             if (canDraw)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: FilledButton.icon(
                 onPressed: unoDrawControlEnabled(busy: _busy, canTake: true)
                     ? () => _draw(game)
                     : null,
@@ -1993,22 +1996,31 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
+              ),
             if (game.canKeepOrPlayDrawn)
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: OutlinedButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.keep),
                 style: outlined,
                 icon: const Icon(Icons.pan_tool_alt_rounded),
                 label: Text(context.l10n.unoKeep),
               ),
+              ),
             if (canCallUno)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: FilledButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.callUno),
                 style: _unoActionStyle(),
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),
+              ),
             if (game.unoCatchReady && challengeTarget != null)
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: OutlinedButton.icon(
                 onPressed: _busy
                     ? null
                     : () => _move(
@@ -2019,15 +2031,21 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.notification_important_rounded),
                 label: Text(context.l10n.unoChallengeUno),
               ),
+              ),
             if (game.canChallengeWd4) ...[
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: OutlinedButton.icon(
                 onPressed:
                     _busy ? null : () => _move(UnoActionType.challengeWd4),
                 style: outlined,
                 icon: const Icon(Icons.gavel_rounded),
                 label: Text(context.l10n.unoChallengeWd4),
               ),
-              FilledButton.icon(
+              ),
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: FilledButton.icon(
                 onPressed: unoDrawControlEnabled(
                   busy: _busy,
                   canTake: _canTakeFromDeck(game),
@@ -2038,13 +2056,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
+              ),
             ],
             if (game.mustChooseColor)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.confirm,
+                child: FilledButton.icon(
                 onPressed: _busy ? null : _choosePendingColor,
                 style: filled,
                 icon: const Icon(Icons.palette_rounded),
                 label: Text(context.l10n.unoChooseColor),
+              ),
               ),
           ],
         ),

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる",
   "gamepadKeyboardTitle": "キーボード",
   "gamepadKeyboardSpace": "スペース",
+  "gamepadLegendConfirm": "決定",
+  "gamepadLegendBack": "戻る",
+  "gamepadLegendTabs": "タブ",
+  "gamepadLegendCycle": "切替",
   "gamepadConnectedSnack": "コントローラー接続: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

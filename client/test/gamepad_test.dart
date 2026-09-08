@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
@@ -13,6 +14,7 @@ import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/settings_provider.dart';
+import 'package:multigames_client/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -150,6 +152,26 @@ void main() {
     expect(GamepadDispatcher.dispatch(GamepadAction.confirm), isFalse);
   });
 
+  test('семейство геймпада по имени устройства', () {
+    expect(gamepadFamilyFromName('Xbox Wireless Controller'), GamepadFamily.xbox);
+    expect(gamepadFamilyFromName('DualSense Wireless Controller'), GamepadFamily.playstation);
+    expect(gamepadFamilyFromName('Nintendo Switch Pro Controller'), GamepadFamily.nintendo);
+    expect(
+      gamepadButtonLook(GamepadAction.confirm, family: GamepadFamily.xbox).label,
+      'A',
+    );
+    expect(
+      gamepadButtonLook(GamepadAction.confirm, family: GamepadFamily.playstation)
+          .label,
+      '✕',
+    );
+    expect(
+      gamepadButtonLook(GamepadAction.confirm, family: GamepadFamily.nintendo)
+          .label,
+      'B',
+    );
+  });
+
   test('cycleIndex ходит по кругу', () {
     expect(cycleIndex(0, 3, GamepadAction.left), 2);
     expect(cycleIndex(2, 3, GamepadAction.right), 0);
@@ -204,6 +226,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: GamepadHost(
             child: Scaffold(
               body: Center(
@@ -222,5 +246,38 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(tapped, 1);
+  });
+
+  testWidgets('GamepadHost по A переключает сфокусированный Switch',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var value = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: StatefulBuilder(
+                  builder: (context, setState) {
+                    return Switch(
+                      autofocus: true,
+                      value: value,
+                      onChanged: (v) => setState(() => value = v),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(value, isTrue);
   });
 }

@@ -37,6 +37,10 @@
   "settingsGamepadHelpKeyboard": "W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka",
   "gamepadKeyboardTitle": "Klawiatura",
   "gamepadKeyboardSpace": "Spacja",
+  "gamepadLegendConfirm": "Wybierz",
+  "gamepadLegendBack": "Wstecz",
+  "gamepadLegendTabs": "Karty",
+  "gamepadLegendCycle": "Zmień",
   "gamepadConnectedSnack": "Kontroler połączony: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {
