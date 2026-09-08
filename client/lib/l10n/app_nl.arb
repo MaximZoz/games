@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Kruis — bevestigen of zetten",
   "settingsGamepadHelpBack": "B / Cirkel — terug of deselecteren",
   "settingsGamepadHelpTabs": "L1 / R1 — menutabbladen",
-  "settingsGamepadHelpPlay": "Bij dammen, boter-kaas-eieren en zeeslag beweegt de cursor over vakjes",
+  "settingsGamepadHelpPlay": "Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon",
+  "settingsGamepadHelpCards": "Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt",
+  "settingsGamepadHelpKeyboard": "In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit",
+  "gamepadKeyboardTitle": "Toetsenbord",
+  "gamepadKeyboardSpace": "Spatie",
   "gamepadConnectedSnack": "Controller verbonden: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

@@ -84,7 +84,19 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
 
   @override
-  String get settingsGamepadHelpPlay => 'ในหมากฮอส โอเอกซ์ และเรือรบ เคอร์เซอร์เลื่อนตามช่อง';
+  String get settingsGamepadHelpPlay => 'เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน';
+
+  @override
+  String get settingsGamepadHelpCards => 'ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด';
+
+  @override
+  String get gamepadKeyboardTitle => 'คีย์บอร์ด';
+
+  @override
+  String get gamepadKeyboardSpace => 'เว้นวรรค';
 
   @override
   String gamepadConnectedSnack(String name) {

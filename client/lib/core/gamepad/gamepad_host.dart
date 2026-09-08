@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/settings_provider.dart';
@@ -51,6 +52,7 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
       _sub = null;
       _service.devices.removeListener(_onDevices);
       _service.stop();
+      GamepadKeyboardController.instance.hide();
     }
   }
 
@@ -88,6 +90,23 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     ref.listen<bool>(gamepadEnabledProvider, (prev, next) {
       _syncEnabled();
     });
-    return widget.child;
+    return ListenableBuilder(
+      listenable: GamepadKeyboardController.instance,
+      builder: (context, _) {
+        final kb = GamepadKeyboardController.instance.visible;
+        return Stack(
+          children: [
+            widget.child,
+            if (kb)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: GamepadKeyboardPanel(
+                  onClose: GamepadKeyboardController.instance.hide,
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

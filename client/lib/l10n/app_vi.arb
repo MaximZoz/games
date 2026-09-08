@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Chéo — xác nhận hoặc đi nước",
   "settingsGamepadHelpBack": "B / Tròn — quay lại hoặc bỏ chọn",
   "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
-  "settingsGamepadHelpPlay": "Trong cờ đam, cờ caro và hải chiến con trỏ đi theo ô",
+  "settingsGamepadHelpPlay": "Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược",
+  "settingsGamepadHelpCards": "Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc",
+  "settingsGamepadHelpKeyboard": "Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng",
+  "gamepadKeyboardTitle": "Bàn phím",
+  "gamepadKeyboardSpace": "Cách",
   "gamepadConnectedSnack": "Đã kết nối tay cầm: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

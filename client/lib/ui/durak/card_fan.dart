@@ -23,6 +23,7 @@ class CardFan extends StatefulWidget {
     this.legalCards,
     this.emphasizeLegal = true,
     this.selectedCards,
+    this.cursorCard,
     this.hiddenCards,
     this.onTap,
     this.onLongPress,
@@ -48,6 +49,9 @@ class CardFan extends StatefulWidget {
   /// Подсветка/dim по [legalCards]. Выкл. — ограничение хода без визуального акцента.
   final bool emphasizeLegal;
   final Set<PlayingCard>? selectedCards;
+
+  /// Карта под курсором геймпада — та же подсветка, что у выбранной.
+  final PlayingCard? cursorCard;
   final Set<PlayingCard>? hiddenCards;
   final ValueChanged<PlayingCard>? onTap;
   final ValueChanged<PlayingCard>? onLongPress;
@@ -661,7 +665,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       widget.legalCards == null || widget.legalCards!.contains(card);
 
   bool _isSelected(PlayingCard card) =>
-      widget.selectedCards?.contains(card) == true;
+      widget.selectedCards?.contains(card) == true || widget.cursorCard == card;
 
   double _cardLeft(int i, int n, double baseSpacing, double totalW) {
     if (widget.fillWidth) {

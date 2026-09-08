@@ -84,7 +84,19 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menyflikar';
 
   @override
-  String get settingsGamepadHelpPlay => 'I dam, luffarschack och sänka skepp flyttar markören över rutorna';
+  String get settingsGamepadHelpPlay => 'Markör på bräde och hand: dam, luffarschack, sänka skepp, durak, uno, poker och backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'I kort: styrkors flyttar handen, A spelar, X väljer / Uno, Y tar, passar eller drar';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tangentbord';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mellanslag';
 
   @override
   String gamepadConnectedSnack(String name) {

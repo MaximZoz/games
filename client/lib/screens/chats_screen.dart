@@ -8,6 +8,11 @@ import 'package:multigames_client/router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/presence_sort.dart';
@@ -86,6 +91,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   Future<List<FriendItem>>? _friendsLoadInFlight;
   List<FriendItem> _cachedFriends = const [];
   List<ChatPreviewItem> _chats = const [];
+  int _gamepadChatIndex = 0;
   DateTime? _friendsCachedAt;
   Timer? _navigationLockTimer;
 
@@ -1736,7 +1742,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     final compact = widget.sidebarCompact && widget.inSplitView;
 
     if (compact) {
-      return Scaffold(
+      return GamepadScope(
+        onAction: _onGamepad,
+        child: Scaffold(
         backgroundColor: Colors.transparent,
         // Клавиатуру уже вычел AppShell — второй раз нельзя.
         resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
@@ -1784,7 +1792,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: Center(
-                                    child: Material(
+                                    child: wrapGamepadCursor(
+                                      highlighted: _isGamepadChat(item),
+                                      radius: 24,
+                                      child: Material(
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: _isNavigatingToChat
@@ -1842,6 +1853,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                         ),
                                       ),
                                     ),
+                                    ),
                                   ),
                                 );
                               },
@@ -1851,10 +1863,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
             ],
           ),
         ),
+      ),
       );
     }
 
-    return Scaffold(
+    return GamepadScope(
+      onAction: _onGamepad,
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       // Клавиатуру уже вычел AppShell — второй раз нельзя.
       resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
@@ -2023,7 +2038,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                         ),
                                     ],
                                   ),
-                                  child: Opacity(
+                                  child: wrapGamepadCursor(
+                                    highlighted: _isGamepadChat(item),
+                                    radius: AppRadius.card,
+                                    child: Opacity(
                                     opacity: itemBusy ? 0.65 : 1,
                                     child: GradientCard(
                                       margin: EdgeInsets.zero,
@@ -2265,6 +2283,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ),
                               );
                             },
@@ -2293,7 +2312,39 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
           ],
         ),
       ),
+    ),
     );
+  }
+
+  bool _onGamepad(GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (_chats.isEmpty) return false;
+    _gamepadChatIndex = _gamepadChatIndex.clamp(0, _chats.length - 1);
+    if (action.isDirection) {
+      setState(() {
+        _gamepadChatIndex = cycleIndex(_gamepadChatIndex, _chats.length, action);
+      });
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_isNavigatingToChat) return true;
+      final item = _chats[_gamepadChatIndex];
+      FocusManager.instance.primaryFocus?.unfocus();
+      _openChatRoute(chatID: item.chatID, peerName: _chatTitle(item));
+      return true;
+    }
+    return false;
+  }
+
+  bool _isGamepadChat(ChatPreviewItem item) {
+    if (!GamepadService.instance.isRecentlyActive || _chats.isEmpty) {
+      return false;
+    }
+    final i = _gamepadChatIndex.clamp(0, _chats.length - 1);
+    return _chats[i].chatID == item.chatID;
   }
 }
 

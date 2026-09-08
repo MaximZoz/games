@@ -84,7 +84,19 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
 
   @override
-  String get settingsGamepadHelpPlay => 'בדמקה, איקס-עיגול וקרב אוניות הסמן זז בין המשבצות';
+  String get settingsGamepadHelpPlay => 'סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש';
+
+  @override
+  String get settingsGamepadHelpCards => 'בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר';
+
+  @override
+  String get gamepadKeyboardTitle => 'מקלדת';
+
+  @override
+  String get gamepadKeyboardSpace => 'רווח';
 
   @override
   String gamepadConnectedSnack(String name) {

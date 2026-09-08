@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Risti — vahvista tai siirrä",
   "settingsGamepadHelpBack": "B / Ympyrä — takaisin tai poista valinta",
   "settingsGamepadHelpTabs": "L1 / R1 — valikon välilehdet",
-  "settingsGamepadHelpPlay": "Tammessa, ristinollassa ja laivanupotuksessa kursori liikkuu ruuduilla",
+  "settingsGamepadHelpPlay": "Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon",
+  "settingsGamepadHelpCards": "Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa",
+  "settingsGamepadHelpKeyboard": "Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee",
+  "gamepadKeyboardTitle": "Näppäimistö",
+  "gamepadKeyboardSpace": "Välilyönti",
   "gamepadConnectedSnack": "Ohjain yhdistetty: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

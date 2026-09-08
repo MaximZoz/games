@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Krzyżyk — potwierdź lub wykonaj ruch",
   "settingsGamepadHelpBack": "B / Kółko — wstecz lub odznacz",
   "settingsGamepadHelpTabs": "L1 / R1 — karty menu",
-  "settingsGamepadHelpPlay": "W warcabach, kółku i krzyżyku oraz statkach kursor chodzi po polach",
+  "settingsGamepadHelpPlay": "Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak",
+  "settingsGamepadHelpCards": "W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera",
+  "settingsGamepadHelpKeyboard": "W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka",
+  "gamepadKeyboardTitle": "Klawiatura",
+  "gamepadKeyboardSpace": "Spacja",
   "gamepadConnectedSnack": "Kontroler połączony: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

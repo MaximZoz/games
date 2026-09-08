@@ -84,7 +84,19 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
 
   @override
-  String get settingsGamepadHelpPlay => 'Дойбыда, крестик-ноликте және теңіз шайқасында курсор ұяшықтармен жүреді';
+  String get settingsGamepadHelpPlay => 'Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды';
+
+  @override
+  String get settingsGamepadHelpCards => 'Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу';
+
+  @override
+  String get gamepadKeyboardTitle => 'Пернетақта';
+
+  @override
+  String get gamepadKeyboardSpace => 'Бос орын';
 
   @override
   String gamepadConnectedSnack(String name) {

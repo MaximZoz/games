@@ -84,7 +84,19 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
 
   @override
-  String get settingsGamepadHelpPlay => 'Στη ντάμα, τρίλιζα και ναυμαχία ο δρομέας κινείται στα τετράγωνα';
+  String get settingsGamepadHelpPlay => 'Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι';
+
+  @override
+  String get settingsGamepadHelpCards => 'Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει';
+
+  @override
+  String get gamepadKeyboardTitle => 'Πληκτρολόγιο';
+
+  @override
+  String get gamepadKeyboardSpace => 'Διάστημα';
 
   @override
   String gamepadConnectedSnack(String name) {

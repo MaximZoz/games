@@ -84,7 +84,19 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menyfaner';
 
   @override
-  String get settingsGamepadHelpPlay => 'I dam, tripp-trapp-tresko og senk skip flytter markøren over rutene';
+  String get settingsGamepadHelpPlay => 'Markør på brett og hånd: dam, tre på rad, senk skipene, durak, uno, poker og backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X velger / Uno, Y tar, passer eller trekker';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'I et felt åpner A gamepad-tastaturet; X bytter oppsett, B sletter eller lukker';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastatur';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mellomrom';
 
   @override
   String gamepadConnectedSnack(String name) {

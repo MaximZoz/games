@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Silang — konfirmasi atau jalan",
   "settingsGamepadHelpBack": "B / Lingkaran — kembali atau batal pilih",
   "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
-  "settingsGamepadHelpPlay": "Di dam, tic-tac-toe, dan kapal perang kursor bergerak di kotak",
+  "settingsGamepadHelpPlay": "Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon",
+  "settingsGamepadHelpCards": "Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi",
+  "settingsGamepadHelpKeyboard": "Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup",
+  "gamepadKeyboardTitle": "Papan ketik",
+  "gamepadKeyboardSpace": "Spasi",
   "gamepadConnectedSnack": "Kontroler terhubung: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

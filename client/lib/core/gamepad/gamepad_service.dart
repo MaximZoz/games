@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_poller.dart';
 
@@ -80,6 +81,7 @@ class GamepadService {
     devices.value = const [];
     lastActiveAt = null;
     activityTick.value = 0;
+    GamepadKeyboardController.instance.hide();
   }
 
   void _emit(GamepadActionEvent event) {

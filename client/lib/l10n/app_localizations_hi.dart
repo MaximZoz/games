@@ -84,7 +84,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
 
   @override
-  String get settingsGamepadHelpPlay => 'चेकर्स, टिक-टैक-टो और बैटलशिप में कर्सर घरों पर चलता है';
+  String get settingsGamepadHelpPlay => 'बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन';
+
+  @override
+  String get settingsGamepadHelpCards => 'पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है';
+
+  @override
+  String get gamepadKeyboardTitle => 'कीबोर्ड';
+
+  @override
+  String get gamepadKeyboardSpace => 'स्पेस';
 
   @override
   String gamepadConnectedSnack(String name) {

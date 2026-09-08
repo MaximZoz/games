@@ -84,7 +84,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
 
   @override
-  String get settingsGamepadHelpPlay => '在跳棋、井字棋和海战棋中，光标在格子上移动';
+  String get settingsGamepadHelpPlay => '棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆';
+
+  @override
+  String get settingsGamepadHelpCards => '卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭';
+
+  @override
+  String get gamepadKeyboardTitle => '键盘';
+
+  @override
+  String get gamepadKeyboardSpace => '空格';
 
   @override
   String gamepadConnectedSnack(String name) {

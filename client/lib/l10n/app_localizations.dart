@@ -302,8 +302,32 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpPlay.
   ///
   /// In ru, this message translates to:
-  /// **'В шашках, крестиках-ноликах и морском бое курсор ходит по клеткам'**
+  /// **'Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды'**
   String get settingsGamepadHelpPlay;
+
+  /// No description provided for @settingsGamepadHelpCards.
+  ///
+  /// In ru, this message translates to:
+  /// **'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать'**
+  String get settingsGamepadHelpCards;
+
+  /// No description provided for @settingsGamepadHelpKeyboard.
+  ///
+  /// In ru, this message translates to:
+  /// **'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть'**
+  String get settingsGamepadHelpKeyboard;
+
+  /// No description provided for @gamepadKeyboardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клавиатура'**
+  String get gamepadKeyboardTitle;
+
+  /// No description provided for @gamepadKeyboardSpace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пробел'**
+  String get gamepadKeyboardSpace;
 
   /// No description provided for @gamepadConnectedSnack.
   ///

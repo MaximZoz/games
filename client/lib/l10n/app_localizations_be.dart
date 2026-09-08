@@ -84,7 +84,19 @@ class AppLocalizationsBe extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — укладкі меню';
 
   @override
-  String get settingsGamepadHelpPlay => 'У шашках, крыжыках-нуліках і марскім баі курсор ходзіць па клетках';
+  String get settingsGamepadHelpPlay => 'Курсор на полі і ў руцэ: шашкі, крыжыкі-нулікі, марскі бой, дурань, уно, покер і нарды';
+
+  @override
+  String get settingsGamepadHelpCards => 'У картах: крыж — рука, A — ход, X — выбраць / Уно, Y — узяць, біта або дабраць';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'У полі ўводу A адкрывае клавіятуру геймпада; X — раскладка, B — сцерці або закрыць';
+
+  @override
+  String get gamepadKeyboardTitle => 'Клавіятура';
+
+  @override
+  String get gamepadKeyboardSpace => 'Прабел';
 
   @override
   String gamepadConnectedSnack(String name) {

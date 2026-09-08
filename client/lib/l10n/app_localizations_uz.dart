@@ -84,7 +84,19 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
 
   @override
-  String get settingsGamepadHelpPlay => 'Shashka, x-nol va dengiz jangida kursor kataklar bo‘ylab yuradi';
+  String get settingsGamepadHelpPlay => 'Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard';
+
+  @override
+  String get settingsGamepadHelpCards => 'Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klaviatura';
+
+  @override
+  String get gamepadKeyboardSpace => 'Probel';
 
   @override
   String gamepadConnectedSnack(String name) {

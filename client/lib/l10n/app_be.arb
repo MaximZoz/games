@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Крыж — выбраць або зрабіць ход",
   "settingsGamepadHelpBack": "B / Круг — назад або зняць выбар",
   "settingsGamepadHelpTabs": "L1 / R1 — укладкі меню",
-  "settingsGamepadHelpPlay": "У шашках, крыжыках-нуліках і марскім баі курсор ходзіць па клетках",
+  "settingsGamepadHelpPlay": "Курсор на полі і ў руцэ: шашкі, крыжыкі-нулікі, марскі бой, дурань, уно, покер і нарды",
+  "settingsGamepadHelpCards": "У картах: крыж — рука, A — ход, X — выбраць / Уно, Y — узяць, біта або дабраць",
+  "settingsGamepadHelpKeyboard": "У полі ўводу A адкрывае клавіятуру геймпада; X — раскладка, B — сцерці або закрыць",
+  "gamepadKeyboardTitle": "Клавіятура",
+  "gamepadKeyboardSpace": "Прабел",
   "gamepadConnectedSnack": "Кантролер падключаны: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

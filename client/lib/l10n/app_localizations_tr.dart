@@ -84,7 +84,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menü sekmeleri';
 
   @override
-  String get settingsGamepadHelpPlay => 'Dama, xox ve amiral battıda imleç karelerde gezer';
+  String get settingsGamepadHelpPlay => 'Tahta ve el imleci: dama, xox, amiral battı, durak, uno, poker ve tavla';
+
+  @override
+  String get settingsGamepadHelpCards => 'Kartlarda: yön tuşları eli gezer, A oynar, X seçer / Uno, Y alır, geçer veya çeker';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klavye';
+
+  @override
+  String get gamepadKeyboardSpace => 'Boşluk';
 
   @override
   String gamepadConnectedSnack(String name) {

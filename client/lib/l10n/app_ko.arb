@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / 십자 — 확인 또는 수 두기",
   "settingsGamepadHelpBack": "B / 원 — 뒤로 또는 선택 해제",
   "settingsGamepadHelpTabs": "L1 / R1 — 메뉴 탭",
-  "settingsGamepadHelpPlay": "체커, 틱택토, 배틀십에서 커서가 칸을 이동합니다",
+  "settingsGamepadHelpPlay": "보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이",
+  "settingsGamepadHelpCards": "카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우",
+  "settingsGamepadHelpKeyboard": "입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기",
+  "gamepadKeyboardTitle": "키보드",
+  "gamepadKeyboardSpace": "스페이스",
   "gamepadConnectedSnack": "컨트롤러 연결됨: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

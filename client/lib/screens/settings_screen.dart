@@ -287,6 +287,24 @@ class SettingsScreen extends ConsumerWidget {
                                       color: AppColors.textSecondary,
                                     ),
                               ),
+                              Text(
+                                l10n.settingsGamepadHelpCards,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                l10n.settingsGamepadHelpKeyboard,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
                             ],
                           ],
                         );

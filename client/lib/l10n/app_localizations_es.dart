@@ -84,7 +84,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — pestañas del menú';
 
   @override
-  String get settingsGamepadHelpPlay => 'En damas, tres en raya y hundir la flota el cursor recorre las casillas';
+  String get settingsGamepadHelpPlay => 'Cursor de tablero y mano: damas, tres en raya, hundir la flota, durak, uno, póker y backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'En cartas: cruceta mueve la mano, A juega, X selecciona / Uno, Y toma, pasa o roba';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'En un campo A abre el teclado del mando; X cambia el diseño, B borra o cierra';
+
+  @override
+  String get gamepadKeyboardTitle => 'Teclado';
+
+  @override
+  String get gamepadKeyboardSpace => 'Espacio';
 
   @override
   String gamepadConnectedSnack(String name) {

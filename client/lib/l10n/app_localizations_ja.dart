@@ -84,7 +84,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
 
   @override
-  String get settingsGamepadHelpPlay => 'チェッカー、三目並べ、戦艦ではカーソルがマスを移動します';
+  String get settingsGamepadHelpPlay => '盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン';
+
+  @override
+  String get settingsGamepadHelpCards => 'カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる';
+
+  @override
+  String get gamepadKeyboardTitle => 'キーボード';
+
+  @override
+  String get gamepadKeyboardSpace => 'スペース';
 
   @override
   String gamepadConnectedSnack(String name) {

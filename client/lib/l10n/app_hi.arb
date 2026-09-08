@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / क्रॉस — पुष्टि या चाल",
   "settingsGamepadHelpBack": "B / सर्कल — वापस या चयन हटाएँ",
   "settingsGamepadHelpTabs": "L1 / R1 — मेनू टैब",
-  "settingsGamepadHelpPlay": "चेकर्स, टिक-टैक-टो और बैटलशिप में कर्सर घरों पर चलता है",
+  "settingsGamepadHelpPlay": "बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन",
+  "settingsGamepadHelpCards": "पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है",
+  "settingsGamepadHelpKeyboard": "टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है",
+  "gamepadKeyboardTitle": "कीबोर्ड",
+  "gamepadKeyboardSpace": "स्पेस",
   "gamepadConnectedSnack": "कंट्रोलर जुड़ा: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

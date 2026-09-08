@@ -84,7 +84,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
 
   @override
-  String get settingsGamepadHelpPlay => 'In checkers, tic-tac-toe and battleship the cursor moves across cells';
+  String get settingsGamepadHelpPlay => 'Board and hand cursor: checkers, tic-tac-toe, battleship, durak, uno, poker and backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'In card games: D-pad moves the hand, A plays, X selects / Uno, Y takes, passes or draws';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes';
+
+  @override
+  String get gamepadKeyboardTitle => 'Keyboard';
+
+  @override
+  String get gamepadKeyboardSpace => 'Space';
 
   @override
   String gamepadConnectedSnack(String name) {

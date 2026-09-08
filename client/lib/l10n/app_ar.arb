@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / تقاطع — تأكيد أو تنفيذ نقلة",
   "settingsGamepadHelpBack": "B / دائرة — رجوع أو إلغاء التحديد",
   "settingsGamepadHelpTabs": "L1 / R1 — تبويبات القائمة",
-  "settingsGamepadHelpPlay": "في الضامة وإكس-أو والبحرية يتحرك المؤشر على الخانات",
+  "settingsGamepadHelpPlay": "مؤشر اللوحة واليد: الضامة، إكس أو، السفن، الدوراك، أونو، البوكر والنرد",
+  "settingsGamepadHelpCards": "في الورق: الأسهم تحرّك اليد، A يلعب، X يختار / أونو، Y يأخذ أو يسحب",
+  "settingsGamepadHelpKeyboard": "في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق",
+  "gamepadKeyboardTitle": "لوحة المفاتيح",
+  "gamepadKeyboardSpace": "مسافة",
   "gamepadConnectedSnack": "تم توصيل وحدة التحكم: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

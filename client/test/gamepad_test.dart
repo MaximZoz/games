@@ -8,8 +8,10 @@ import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
 import 'package:multigames_client/core/gamepad/gamepad_host.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -146,6 +148,53 @@ void main() {
     expect(handled, [GamepadAction.confirm]);
     await tester.pumpWidget(const SizedBox());
     expect(GamepadDispatcher.dispatch(GamepadAction.confirm), isFalse);
+  });
+
+  test('cycleIndex ходит по кругу', () {
+    expect(cycleIndex(0, 3, GamepadAction.left), 2);
+    expect(cycleIndex(2, 3, GamepadAction.right), 0);
+    expect(cycleIndex(1, 3, GamepadAction.up), 0);
+    expect(cycleIndex(1, 3, GamepadAction.down), 2);
+    expect(cycleIndex(0, 0, GamepadAction.right), 0);
+  });
+
+  test('GamepadTextEditing вставляет и стирает в выделении', () {
+    const value = TextEditingValue(
+      text: 'abc',
+      selection: TextSelection(baseOffset: 1, extentOffset: 2),
+    );
+    final inserted = GamepadTextEditing.applyInsert(value, 'X');
+    expect(inserted!.text, 'aXc');
+    expect(inserted.selection.baseOffset, 2);
+    final erased = GamepadTextEditing.applyBackspace(value);
+    expect(erased.text, 'ac');
+    expect(erased.selection.baseOffset, 1);
+    final one = GamepadTextEditing.applyBackspace(
+      const TextEditingValue(
+        text: 'hi',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+    expect(one.text, 'h');
+  });
+
+  test('раскладки клавиатуры геймпада содержат буквы и служебные клавиши', () {
+    final latin = gamepadKeyboardRows(
+      layout: GamepadKeyboardLayout.latin,
+      shift: false,
+    );
+    expect(latin.first.map((k) => k.id).join(), 'qwertyuiop');
+    expect(latin.last.any((k) => k.id == 'space'), isTrue);
+    final cyr = gamepadKeyboardRows(
+      layout: GamepadKeyboardLayout.cyrillic,
+      shift: true,
+    );
+    expect(cyr.first.first.label, 'Й');
+    final digits = gamepadKeyboardRows(
+      layout: GamepadKeyboardLayout.digits,
+      shift: false,
+    );
+    expect(digits.first.first.id, '1');
   });
 
   testWidgets('GamepadHost по A активирует сфокусированную кнопку',

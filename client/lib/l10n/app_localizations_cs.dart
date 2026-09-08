@@ -84,7 +84,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'V dáme, piškvorkách a lodích kurzor chodí po polích';
+  String get settingsGamepadHelpPlay => 'Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby';
+
+  @override
+  String get settingsGamepadHelpCards => 'V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klávesnice';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mezera';
 
   @override
   String gamepadConnectedSnack(String name) {

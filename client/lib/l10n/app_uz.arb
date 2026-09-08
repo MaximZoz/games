@@ -32,7 +32,11 @@
   "settingsGamepadHelpConfirm": "A / Xrest — tanlash yoki yurish",
   "settingsGamepadHelpBack": "B / Doira — orqaga yoki tanlovni olish",
   "settingsGamepadHelpTabs": "L1 / R1 — menyu ichki oynalari",
-  "settingsGamepadHelpPlay": "Shashka, x-nol va dengiz jangida kursor kataklar bo‘ylab yuradi",
+  "settingsGamepadHelpPlay": "Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard",
+  "settingsGamepadHelpCards": "Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish",
+  "settingsGamepadHelpKeyboard": "Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish",
+  "gamepadKeyboardTitle": "Klaviatura",
+  "gamepadKeyboardSpace": "Probel",
   "gamepadConnectedSnack": "Kontroller ulandi: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

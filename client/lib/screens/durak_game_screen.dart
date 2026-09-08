@@ -4,6 +4,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -82,6 +86,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Кратко выключить AnimatedPositioned после хода/добора.
   bool _suppressFanLayoutAnim = false;
   final Set<PlayingCard> _selected = {};
+  int _gamepadHandIndex = 0;
 
   /// Карты, скрытые в веере на время полёта/ожидания сервера.
   final Set<PlayingCard> _flyingFromHand = {};
@@ -5184,7 +5189,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       return 0;
     }();
-    return SwipeBackScope.gameBoard(
+    return GamepadScope(
+      onAction: (action) {
+        final current = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+        if (current == null) return false;
+        return _onGamepad(current, action);
+      },
+      child: SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       bottomInset: swipeBottomExclude,
       child: Scaffold(
@@ -5331,7 +5342,67 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           ),
         ),
       ),
+    ),
     );
+  }
+
+  List<PlayingCard> _gamepadHand(DurakGameView view) {
+    final trump = _suitFromApi(view.trumpSuit);
+    final serverHand = _apiCardsToPlaying(
+      view.hands.length > view.myIndex && view.myIndex >= 0
+          ? (view.hands[view.myIndex].cards ?? const [])
+          : const [],
+    );
+    return _orderedHand(serverHand, trump);
+  }
+
+  bool _onGamepad(DurakGameView view, GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (view.isOver) return false;
+    final hand = _gamepadHand(view);
+    if (hand.isNotEmpty) {
+      _gamepadHandIndex = _gamepadHandIndex.clamp(0, hand.length - 1);
+    }
+    if (action.isDirection) {
+      if (hand.isEmpty) return true;
+      setState(() {
+        _gamepadHandIndex = cycleIndex(_gamepadHandIndex, hand.length, action);
+      });
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_busy || !view.canAct || hand.isEmpty) return true;
+      final card = hand[_gamepadHandIndex];
+      unawaited(_playCards(view, _cardsToPlay(view, card)));
+      return true;
+    }
+    if (action == GamepadAction.actionX) {
+      if (hand.isEmpty) return true;
+      _toggleSelect(view, hand[_gamepadHandIndex]);
+      return true;
+    }
+    if (action == GamepadAction.actionY || action == GamepadAction.menu) {
+      if (_busy) return true;
+      if (_canTake(view)) {
+        unawaited(_take());
+      } else if (_canPass(view)) {
+        unawaited(_pass());
+      } else if (_canDone(view)) {
+        unawaited(_confirmTakeDone());
+      } else if (_canBito(view)) {
+        unawaited(_bito());
+      }
+      return true;
+    }
+    if (action == GamepadAction.cancel &&
+        (_selected.isNotEmpty || _activeCard != null)) {
+      _clearHandSelection();
+      return true;
+    }
+    return false;
   }
 
   Widget _buildTable(DurakGameView view) {
@@ -5699,6 +5770,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                               cardSize: Size(animW, animH),
                                               spacing: animSp,
                                               fillWidth: fillWidth,
+                                              cursorCard: GamepadService
+                                                          .instance
+                                                          .isRecentlyActive &&
+                                                      handForFan.isNotEmpty
+                                                  ? handForFan[_gamepadHandIndex
+                                                      .clamp(
+                                                      0,
+                                                      handForFan.length - 1,
+                                                    )]
+                                                  : null,
                                               animateLayout: animateFanLayout,
                                               layoutDuration:
                                                   durakFanLayoutTweenDuration(

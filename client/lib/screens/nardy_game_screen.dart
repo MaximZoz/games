@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
@@ -50,6 +54,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   final NardyCheckerTracker _tracker = NardyCheckerTracker();
 
   int? _selectedTrack;
+  int _gamepadSlot = 0;
   bool _busy = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
@@ -786,7 +791,15 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
 
     final rawGame = gameAsync.valueOrNull;
     final game = _optimisticGame?.id == rawGame?.id ? _optimisticGame : rawGame;
-    return SwipeBackScope.gameBoard(
+    return GamepadScope(
+      onAction: (action) {
+        final raw = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
+        final current =
+            _optimisticGame?.id == raw?.id ? _optimisticGame : raw;
+        if (current == null) return false;
+        return _onGamepad(current, action);
+      },
+      child: SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -859,7 +872,67 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
           ),
         ),
       ),
+    ),
     );
+  }
+
+  List<int> _gamepadTracks(NardyGameView game) => [
+        ...NardyBoardLayout.allTracks,
+        if (!game.isLong) nardyBarTrack,
+        nardyPoints,
+      ];
+
+  bool _onGamepad(NardyGameView game, GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (game.isOver) return false;
+    final tracks = _gamepadTracks(game);
+    _gamepadSlot = _gamepadSlot.clamp(0, tracks.length - 1);
+    if (action.isDirection) {
+      final cursor = GamepadGridCursor(
+        columns: 12,
+        count: tracks.length,
+        index: _gamepadSlot,
+      );
+      if (cursor.move(action)) {
+        setState(() => _gamepadSlot = cursor.index);
+      }
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_busy || !game.isMyTurn) return true;
+      final track = tracks[_gamepadSlot];
+      if (track == nardyBarTrack) {
+        _onBarTap(game);
+      } else if (track == nardyPoints) {
+        _onBearOffTap(game);
+      } else {
+        _onTrackTap(game, track);
+      }
+      return true;
+    }
+    if (action == GamepadAction.cancel && _selectedTrack != null) {
+      setState(() => _selectedTrack = null);
+      return true;
+    }
+    if (action == GamepadAction.actionX) {
+      if (!_busy && game.isMyTurn && game.canUndo) {
+        unawaited(_undo());
+      }
+      return true;
+    }
+    if (action == GamepadAction.actionY || action == GamepadAction.menu) {
+      if (_busy || !game.isMyTurn) return true;
+      if (game.needsRoll) {
+        unawaited(_roll());
+      } else {
+        unawaited(_endTurn());
+      }
+      return true;
+    }
+    return false;
   }
 
   Widget _buildGame(NardyGameView game, String? me) {
@@ -908,6 +981,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
                 game: game,
                 tracker: _tracker,
                 selectedTrack: selected,
+                cursorTrack: GamepadService.instance.isRecentlyActive
+                    ? _gamepadTracks(game)[_gamepadSlot.clamp(
+                        0,
+                        _gamepadTracks(game).length - 1,
+                      )]
+                    : null,
                 targetTracks: _targetsFor(game),
                 canBearOff: canBearOff,
                 undoTracks: _undoTargets(game),
