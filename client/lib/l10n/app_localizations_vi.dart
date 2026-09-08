@@ -58,6 +58,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ';
 
   @override
+  String get settingsGamepadTitle => 'Tay cầm';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad cho menu và ván đấu';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Đã kết nối: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu và con trỏ trên bàn';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Chéo — xác nhận hoặc đi nước';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Tròn — quay lại hoặc bỏ chọn';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Trong cờ đam, cờ caro và hải chiến con trỏ đi theo ô';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Đã kết nối tay cầm: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Chế độ mạng';
 
   @override

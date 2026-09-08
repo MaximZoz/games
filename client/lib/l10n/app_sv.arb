@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Tur",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Endast aviseringar: meddelanden, förfrågningar, din tur och timern",
+  "settingsGamepadTitle": "Handkontroll",
+  "settingsGamepadSubtitle": "Gamepad för menyer och partier",
+  "settingsGamepadConnected": "Ansluten: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.",
+  "settingsGamepadHelpNavigate": "Styrkors / spak — menyer och brädcursor",
+  "settingsGamepadHelpConfirm": "A / Kors — bekräfta eller göra ett drag",
+  "settingsGamepadHelpBack": "B / Cirkel — tillbaka eller avmarkera",
+  "settingsGamepadHelpTabs": "L1 / R1 — menyflikar",
+  "settingsGamepadHelpPlay": "I dam, luffarschack och sänka skepp flyttar markören över rutorna",
+  "gamepadConnectedSnack": "Handkontroll ansluten: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Meddelanden endast från vänner",
   "settingsFriendsOnlySubtitle": "Icke-vänner kan bara skicka emojis. Vid spam, blockera användaren tillfälligt.",
   "settingsNotifications": "Aviseringar",

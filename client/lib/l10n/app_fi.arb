@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Vuoro",
   "settingsHapticsTitle": "Tärinä",
   "settingsHapticsSubtitle": "Vain ilmoitukset: viestit, pyynnöt, vuorosi ja ajastin",
+  "settingsGamepadTitle": "Ohjain",
+  "settingsGamepadSubtitle": "Gamepad valikoille ja peleille",
+  "settingsGamepadConnected": "Yhdistetty: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.",
+  "settingsGamepadHelpNavigate": "Risti / tikku — valikot ja laudan kursori",
+  "settingsGamepadHelpConfirm": "A / Risti — vahvista tai siirrä",
+  "settingsGamepadHelpBack": "B / Ympyrä — takaisin tai poista valinta",
+  "settingsGamepadHelpTabs": "L1 / R1 — valikon välilehdet",
+  "settingsGamepadHelpPlay": "Tammessa, ristinollassa ja laivanupotuksessa kursori liikkuu ruuduilla",
+  "gamepadConnectedSnack": "Ohjain yhdistetty: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Viestit vain kavereilta",
   "settingsFriendsOnlySubtitle": "Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.",
   "settingsNotifications": "Ilmoitukset",

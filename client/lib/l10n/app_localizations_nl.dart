@@ -58,6 +58,40 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alleen meldingen: berichten, verzoeken, jouw beurt en de timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad voor menu\'s en partijen';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Verbonden: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kruis / stick — menu\'s en bordcursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kruis — bevestigen of zetten';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Cirkel — terug of deselecteren';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Bij dammen, boter-kaas-eieren en zeeslag beweegt de cursor over vakjes';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller verbonden: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Netwerkmodus';
 
   @override

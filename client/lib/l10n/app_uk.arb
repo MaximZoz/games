@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Хід",
   "settingsHapticsTitle": "Вібрація",
   "settingsHapticsSubtitle": "Лише сповіщення: повідомлення, заявки, ваш хід і таймер",
+  "settingsGamepadTitle": "Контролер",
+  "settingsGamepadSubtitle": "Геймпад для меню і партій",
+  "settingsGamepadConnected": "Підключено: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Геймпад не знайдено. Підключіть контролер і натисніть будь-яку кнопку.",
+  "settingsGamepadHelpNavigate": "Хрест / стік — меню і курсор на полі",
+  "settingsGamepadHelpConfirm": "A / Хрест — вибрати або сходити",
+  "settingsGamepadHelpBack": "B / Коло — назад або зняти вибір",
+  "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
+  "settingsGamepadHelpPlay": "У шашках, хрестиках-нуликах і морському бою курсор ходить по клітинках",
+  "gamepadConnectedSnack": "Контролер підключено: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Повідомлення лише від друзів",
   "settingsFriendsOnlySubtitle": "Хто не в друзях, зможе надсилати лише емодзі. Якщо заважає спам — тимчасово заблокуйте користувача.",
   "settingsNotifications": "Сповіщення",

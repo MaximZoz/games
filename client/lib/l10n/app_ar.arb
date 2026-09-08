@@ -17,6 +17,30 @@
   "settingsSoundTurn": "الدور",
   "settingsHapticsTitle": "الاهتزاز",
   "settingsHapticsSubtitle": "التنبيهات فقط: الرسائل والطلبات ودورَك والمؤقت",
+  "settingsGamepadTitle": "وحدة التحكم",
+  "settingsGamepadSubtitle": "لوحة ألعاب للقوائم والمباريات",
+  "settingsGamepadConnected": "متصل: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.",
+  "settingsGamepadHelpNavigate": "الأسهم / العصا — القوائم ومؤشر اللوحة",
+  "settingsGamepadHelpConfirm": "A / تقاطع — تأكيد أو تنفيذ نقلة",
+  "settingsGamepadHelpBack": "B / دائرة — رجوع أو إلغاء التحديد",
+  "settingsGamepadHelpTabs": "L1 / R1 — تبويبات القائمة",
+  "settingsGamepadHelpPlay": "في الضامة وإكس-أو والبحرية يتحرك المؤشر على الخانات",
+  "gamepadConnectedSnack": "تم توصيل وحدة التحكم: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "رسائل من الأصدقاء فقط",
   "settingsFriendsOnlySubtitle": "غير الأصدقاء يمكنهم إرسال الرموز التعبيرية فقط. عند الإزعاج، احظر المستخدم مؤقتًا.",
   "settingsNotifications": "الإشعارات",

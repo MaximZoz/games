@@ -58,6 +58,40 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHapticsSubtitle => '알림만: 메시지, 요청, 내 차례, 타이머';
 
   @override
+  String get settingsGamepadTitle => '컨트롤러';
+
+  @override
+  String get settingsGamepadSubtitle => '메뉴와 대국용 게임패드';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '연결됨: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
+
+  @override
+  String get settingsGamepadHelpNavigate => '십자 / 스틱 — 메뉴와 보드 커서';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / 십자 — 확인 또는 수 두기';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / 원 — 뒤로 또는 선택 해제';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
+
+  @override
+  String get settingsGamepadHelpPlay => '체커, 틱택토, 배틀십에서 커서가 칸을 이동합니다';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return '컨트롤러 연결됨: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => '네트워크 모드';
 
   @override

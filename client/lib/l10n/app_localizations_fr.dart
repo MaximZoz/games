@@ -58,6 +58,40 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alertes uniquement : messages, demandes, votre tour et le minuteur';
 
   @override
+  String get settingsGamepadTitle => 'Manette';
+
+  @override
+  String get settingsGamepadSubtitle => 'Manette pour les menus et les parties';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Connectée : $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Croix / stick — menus et curseur sur le plateau';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Croix — valider ou jouer';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Rond — retour ou désélection';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Aux dames, morpion et bataille navale le curseur se déplace sur les cases';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Manette connectée : $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Mode réseau';
 
   @override

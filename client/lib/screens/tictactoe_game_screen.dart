@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -2527,6 +2531,7 @@ class _GameBoardState extends State<_GameBoard>
   final TransformationController _transform = TransformationController();
   AnimationController? _resetController;
   Animation<Matrix4>? _resetAnimation;
+  final GamepadGridCursor _cursor = GamepadGridCursor(columns: 3, count: 9);
 
   bool get _zoomableVariant {
     final v = widget.game.variant;
@@ -2615,6 +2620,39 @@ class _GameBoardState extends State<_GameBoard>
     widget.onMove(cell);
   }
 
+  bool _onGamepad(GamepadAction action) {
+    if (widget.isOver) return false;
+    if (action.isDirection) {
+      if (_cursor.move(action)) setState(() {});
+      return true;
+    }
+    if (action != GamepadAction.confirm) return false;
+    if (!widget.isMyTurn || widget.isMakingMove) return true;
+    final visual = _cursor.index;
+    final cellIndex = widget.game.variant == variantUltimate
+        ? _ultimateCellFromVisualIndex(visual)
+        : visual;
+    final engine = newEngine(widget.game.variant);
+    final legal = engine
+        .legalCells(
+          GameEngineState(
+            board: widget.game.board,
+            turn: widget.game.turn,
+            status: widget.game.status,
+            winner: widget.game.winner ?? '',
+            nextBoard: widget.game.nextBoard ?? -1,
+            metaBoard: widget.game.metaBoard,
+          ),
+        )
+        .toSet();
+    if (cellIndex < widget.game.board.length &&
+        widget.game.board[cellIndex].isEmpty &&
+        legal.contains(cellIndex)) {
+      _handleMove(cellIndex);
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final game = widget.game;
@@ -2627,6 +2665,8 @@ class _GameBoardState extends State<_GameBoard>
     final gridSize = game.gridSize;
     final isUltimate = game.variant == variantUltimate;
     final n = game.board.length;
+    _cursor.configure(columns: gridSize, count: n);
+    final showCursor = GamepadService.instance.isRecentlyActive;
     final engine = newEngine(game.variant);
     final legalCells = isMyTurn && !isOver && !isMakingMove
         ? engine
@@ -2727,6 +2767,8 @@ class _GameBoardState extends State<_GameBoard>
                                   ? () => _handleMove(cellIndex)
                                   : null,
                               pulse: cellCanTap ? pulseController : null,
+                              highlighted: showCursor &&
+                                  visualIndex == _cursor.index,
                             ),
                           );
                         });
@@ -2746,7 +2788,9 @@ class _GameBoardState extends State<_GameBoard>
           ),
         );
 
-        return Center(
+        return GamepadScope(
+          onAction: _onGamepad,
+          child: Center(
           child: SizedBox.square(
             dimension: viewportSize,
             child: _zoomableVariant
@@ -2766,6 +2810,7 @@ class _GameBoardState extends State<_GameBoard>
                   )
                 : board,
           ),
+        ),
         );
       },
     );
@@ -3149,6 +3194,7 @@ class _AnimatedGameCell extends StatelessWidget {
     this.isForbidden = false,
     this.isActiveBoard = false,
     this.isClosedBoard = false,
+    this.highlighted = false,
     this.onTap,
     this.pulse,
   });
@@ -3159,6 +3205,7 @@ class _AnimatedGameCell extends StatelessWidget {
   final bool isForbidden;
   final bool isActiveBoard;
   final bool isClosedBoard;
+  final bool highlighted;
   final VoidCallback? onTap;
   final AnimationController? pulse;
 
@@ -3172,6 +3219,9 @@ class _AnimatedGameCell extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
+            border: highlighted
+                ? Border.all(color: AppColors.accentStart, width: 2.4)
+                : null,
             color: isForbidden
                 ? Colors.grey.withValues(alpha: 0.15)
                 : isClosedBoard

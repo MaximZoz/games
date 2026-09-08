@@ -58,6 +58,40 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Solo avvisi: messaggi, richieste, il tuo turno e il timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad per menu e partite';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Collegato: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Nessun gamepad. Collega un controller e premi un pulsante.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Croce / stick — menu e cursore sulla scacchiera';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Croce — conferma o muovi';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Cerchio — indietro o deseleziona';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — schede del menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'In dama, tris e battaglia navale il cursore si sposta sulle caselle';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller collegato: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Modalità di rete';
 
   @override

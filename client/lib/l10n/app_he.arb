@@ -17,6 +17,30 @@
   "settingsSoundTurn": "תור",
   "settingsHapticsTitle": "רטט",
   "settingsHapticsSubtitle": "התראות בלבד: הודעות, בקשות, התור שלך והטיימר",
+  "settingsGamepadTitle": "בקר",
+  "settingsGamepadSubtitle": "גיימפד לתפריטים ולמשחקים",
+  "settingsGamepadConnected": "מחובר: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "לא נמצא גיימפד. חברו בקר ולחצו על כפתור.",
+  "settingsGamepadHelpNavigate": "חיצים / סטיק — תפריטים וסמן על הלוח",
+  "settingsGamepadHelpConfirm": "A / איקס — אישור או מהלך",
+  "settingsGamepadHelpBack": "B / עיגול — חזרה או ביטול בחירה",
+  "settingsGamepadHelpTabs": "L1 / R1 — לשוניות תפריט",
+  "settingsGamepadHelpPlay": "בדמקה, איקס-עיגול וקרב אוניות הסמן זז בין המשבצות",
+  "gamepadConnectedSnack": "בקר מחובר: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "הודעות מחברים בלבד",
   "settingsFriendsOnlySubtitle": "מי שאינם חברים יכולים לשלוח רק אימוג׳ים. אם יש ספאם, חסמו את המשתמש זמנית.",
   "settingsNotifications": "התראות",

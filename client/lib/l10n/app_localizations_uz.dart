@@ -58,6 +58,40 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Faqat bildirishnomalar: xabarlar, so‘rovlar, yurishingiz va taymer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Menyu va o‘yinlar uchun geympad';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Ulangan: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Xrest / stik — menyu va doskadagi kursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Xrest — tanlash yoki yurish';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Doira — orqaga yoki tanlovni olish';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Shashka, x-nol va dengiz jangida kursor kataklar bo‘ylab yuradi';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroller ulandi: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Tarmoq rejimi';
 
   @override

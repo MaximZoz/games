@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Vez",
   "settingsHapticsTitle": "Vibração",
   "settingsHapticsSubtitle": "Apenas alertas: mensagens, pedidos, a sua vez e o temporizador",
+  "settingsGamepadTitle": "Controle",
+  "settingsGamepadSubtitle": "Gamepad para menus e partidas",
+  "settingsGamepadConnected": "Ligado: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nenhum gamepad. Ligue um controle e pressione qualquer botão.",
+  "settingsGamepadHelpNavigate": "Cruz / stick — menus e cursor no tabuleiro",
+  "settingsGamepadHelpConfirm": "A / Cruz — confirmar ou jogar",
+  "settingsGamepadHelpBack": "B / Círculo — voltar ou desmarcar",
+  "settingsGamepadHelpTabs": "L1 / R1 — abas do menu",
+  "settingsGamepadHelpPlay": "Em damas, jogo da velha e batalha naval o cursor percorre as casas",
+  "gamepadConnectedSnack": "Controle ligado: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Mensagens só de amigos",
   "settingsFriendsOnlySubtitle": "Quem não é amigo só pode enviar emojis. Se houver spam, bloqueie temporariamente o usuário.",
   "settingsNotifications": "Notificações",

@@ -23,12 +23,14 @@ class CheckersBoard extends StatelessWidget {
     required this.selected,
     required this.flip,
     required this.onSquareTap,
+    this.cursor,
   });
 
   final CheckersGameView game;
   final CheckersSquare? selected;
   final bool flip;
   final void Function(int r, int c) onSquareTap;
+  final CheckersSquare? cursor;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +64,7 @@ class CheckersBoard extends StatelessWidget {
                       painter: _CheckersBoardPainter(
                         flip: flip,
                         selected: selected,
+                        cursor: cursor,
                         targets: targets,
                         captureTargets: captureTargets,
                         origins: origins,
@@ -132,6 +135,7 @@ class _CheckersBoardPainter extends CustomPainter {
   _CheckersBoardPainter({
     required this.flip,
     required this.selected,
+    required this.cursor,
     required this.targets,
     required this.captureTargets,
     required this.origins,
@@ -143,6 +147,7 @@ class _CheckersBoardPainter extends CustomPainter {
 
   final bool flip;
   final CheckersSquare? selected;
+  final CheckersSquare? cursor;
   final Set<CheckersSquare> targets;
   final Set<CheckersSquare> captureTargets;
   final Set<CheckersSquare> origins;
@@ -174,6 +179,15 @@ class _CheckersBoardPainter extends CustomPainter {
           fill.color = _kOriginTint.withValues(alpha: 0.18);
           canvas.drawRect(paintRect, fill);
         }
+        if (cursor == sq) {
+          canvas.drawRect(
+            paintRect.deflate(1.5),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 3
+              ..color = AppColors.accentStart,
+          );
+        }
         if (targets.contains(sq)) {
           final dot = checkersTargetDotSize(cell.shortestSide);
           canvas.drawCircle(
@@ -193,6 +207,7 @@ class _CheckersBoardPainter extends CustomPainter {
   bool shouldRepaint(covariant _CheckersBoardPainter oldDelegate) =>
       oldDelegate.flip != flip ||
       oldDelegate.selected != selected ||
+      oldDelegate.cursor != cursor ||
       oldDelegate.lastFromR != lastFromR ||
       oldDelegate.lastFromC != lastFromC ||
       oldDelegate.lastToR != lastToR ||

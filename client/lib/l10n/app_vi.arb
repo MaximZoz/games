@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Lượt",
   "settingsHapticsTitle": "Rung",
   "settingsHapticsSubtitle": "Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ",
+  "settingsGamepadTitle": "Tay cầm",
+  "settingsGamepadSubtitle": "Gamepad cho menu và ván đấu",
+  "settingsGamepadConnected": "Đã kết nối: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.",
+  "settingsGamepadHelpNavigate": "D-pad / stick — menu và con trỏ trên bàn",
+  "settingsGamepadHelpConfirm": "A / Chéo — xác nhận hoặc đi nước",
+  "settingsGamepadHelpBack": "B / Tròn — quay lại hoặc bỏ chọn",
+  "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
+  "settingsGamepadHelpPlay": "Trong cờ đam, cờ caro và hải chiến con trỏ đi theo ô",
+  "gamepadConnectedSnack": "Đã kết nối tay cầm: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Chỉ nhận tin từ bạn bè",
   "settingsFriendsOnlySubtitle": "Người không phải bạn bè chỉ gửi được emoji. Nếu bị spam, hãy tạm chặn người đó.",
   "settingsNotifications": "Thông báo",

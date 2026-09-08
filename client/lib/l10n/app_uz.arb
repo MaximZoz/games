@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Yurish",
   "settingsHapticsTitle": "Tebranish",
   "settingsHapticsSubtitle": "Faqat bildirishnomalar: xabarlar, so‘rovlar, yurishingiz va taymer",
+  "settingsGamepadTitle": "Kontroller",
+  "settingsGamepadSubtitle": "Menyu va o‘yinlar uchun geympad",
+  "settingsGamepadConnected": "Ulangan: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.",
+  "settingsGamepadHelpNavigate": "Xrest / stik — menyu va doskadagi kursor",
+  "settingsGamepadHelpConfirm": "A / Xrest — tanlash yoki yurish",
+  "settingsGamepadHelpBack": "B / Doira — orqaga yoki tanlovni olish",
+  "settingsGamepadHelpTabs": "L1 / R1 — menyu ichki oynalari",
+  "settingsGamepadHelpPlay": "Shashka, x-nol va dengiz jangida kursor kataklar bo‘ylab yuradi",
+  "gamepadConnectedSnack": "Kontroller ulandi: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Faqat do‘stlardan xabarlar",
   "settingsFriendsOnlySubtitle": "Do‘st bo‘lmaganlar faqat emoji yubora oladi. Spam xalaqit bersa, foydalanuvchini vaqtincha bloklang.",
   "settingsNotifications": "Bildirishnomalar",

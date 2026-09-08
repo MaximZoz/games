@@ -58,6 +58,40 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Pouze upozornění: zprávy, žádosti, váš tah a časovač';
 
   @override
+  String get settingsGamepadTitle => 'Ovladač';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad pro menu a partie';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Připojeno: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kříž / páčka — menu a kurzor na desce';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Křížek — potvrdit nebo táhnout';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kroužek — zpět nebo zrušit výběr';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'V dáme, piškvorkách a lodích kurzor chodí po polích';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Ovladač připojen: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Režim sítě';
 
   @override

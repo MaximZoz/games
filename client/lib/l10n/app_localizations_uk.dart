@@ -58,6 +58,40 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Лише сповіщення: повідомлення, заявки, ваш хід і таймер';
 
   @override
+  String get settingsGamepadTitle => 'Контролер';
+
+  @override
+  String get settingsGamepadSubtitle => 'Геймпад для меню і партій';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Підключено: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Геймпад не знайдено. Підключіть контролер і натисніть будь-яку кнопку.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Хрест / стік — меню і курсор на полі';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Хрест — вибрати або сходити';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Коло — назад або зняти вибір';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+
+  @override
+  String get settingsGamepadHelpPlay => 'У шашках, хрестиках-нуликах і морському бою курсор ходить по клітинках';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Контролер підключено: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Режим мережі';
 
   @override

@@ -58,6 +58,40 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Tylko powiadomienia: wiadomości, zaproszenia, twoja tura i timer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroler';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad do menu i partii';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Połączono: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Krzyżak / drążek — menu i kursor na planszy';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Krzyżyk — potwierdź lub wykonaj ruch';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kółko — wstecz lub odznacz';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — karty menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'W warcabach, kółku i krzyżyku oraz statkach kursor chodzi po polach';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroler połączony: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Tryb sieci';
 
   @override

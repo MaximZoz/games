@@ -58,6 +58,40 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Endast aviseringar: meddelanden, förfrågningar, din tur och timern';
 
   @override
+  String get settingsGamepadTitle => 'Handkontroll';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad för menyer och partier';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Ansluten: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Styrkors / spak — menyer och brädcursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kors — bekräfta eller göra ett drag';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Cirkel — tillbaka eller avmarkera';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menyflikar';
+
+  @override
+  String get settingsGamepadHelpPlay => 'I dam, luffarschack och sänka skepp flyttar markören över rutorna';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Handkontroll ansluten: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Nätverksläge';
 
   @override

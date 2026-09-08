@@ -58,6 +58,40 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Kun varsler: meldinger, forespørsler, din tur og timeren';
 
   @override
+  String get settingsGamepadTitle => 'Kontroller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad for menyer og partier';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Tilkoblet: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Ingen gamepad. Koble til en kontroller og trykk på en knapp.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kors / spak — menyer og brettmarkør';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kors — bekreft eller trekk';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Sirkel — tilbake eller fjern valg';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menyfaner';
+
+  @override
+  String get settingsGamepadHelpPlay => 'I dam, tripp-trapp-tresko og senk skip flytter markøren over rutene';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroller tilkoblet: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Nettverksmodus';
 
   @override

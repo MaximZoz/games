@@ -58,6 +58,40 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Тек хабарландырулар: хабарлар, өтінімдер, сіздің жүрісіңіз және таймер';
 
   @override
+  String get settingsGamepadTitle => 'Контроллер';
+
+  @override
+  String get settingsGamepadSubtitle => 'Мәзір мен партияларға арналған геймпад';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Қосылған: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Крест / стик — мәзір және тақтадағы курсор';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Крест — таңдау немесе жүру';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Шеңбер — артқа немесе таңдауды алу';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Дойбыда, крестик-ноликте және теңіз шайқасында курсор ұяшықтармен жүреді';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Контроллер қосылды: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Желі режимі';
 
   @override

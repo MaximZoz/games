@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Tura",
   "settingsHapticsTitle": "Wibracje",
   "settingsHapticsSubtitle": "Tylko powiadomienia: wiadomości, zaproszenia, twoja tura i timer",
+  "settingsGamepadTitle": "Kontroler",
+  "settingsGamepadSubtitle": "Gamepad do menu i partii",
+  "settingsGamepadConnected": "Połączono: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.",
+  "settingsGamepadHelpNavigate": "Krzyżak / drążek — menu i kursor na planszy",
+  "settingsGamepadHelpConfirm": "A / Krzyżyk — potwierdź lub wykonaj ruch",
+  "settingsGamepadHelpBack": "B / Kółko — wstecz lub odznacz",
+  "settingsGamepadHelpTabs": "L1 / R1 — karty menu",
+  "settingsGamepadHelpPlay": "W warcabach, kółku i krzyżyku oraz statkach kursor chodzi po polach",
+  "gamepadConnectedSnack": "Kontroler połączony: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Wiadomości tylko od znajomych",
   "settingsFriendsOnlySubtitle": "Osoby spoza znajomych mogą wysyłać tylko emoji. Jeśli przeszkadza spam, tymczasowo zablokuj użytkownika.",
   "settingsNotifications": "Powiadomienia",

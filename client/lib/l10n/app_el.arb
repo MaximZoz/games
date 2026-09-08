@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Σειρά",
   "settingsHapticsTitle": "Δόνηση",
   "settingsHapticsSubtitle": "Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης",
+  "settingsGamepadTitle": "Χειριστήριο",
+  "settingsGamepadSubtitle": "Gamepad για μενού και παρτίδες",
+  "settingsGamepadConnected": "Συνδεδεμένο: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.",
+  "settingsGamepadHelpNavigate": "Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα",
+  "settingsGamepadHelpConfirm": "A / Σταυρός — επιβεβαίωση ή κίνηση",
+  "settingsGamepadHelpBack": "B / Κύκλος — πίσω ή αποεπιλογή",
+  "settingsGamepadHelpTabs": "L1 / R1 — καρτέλες μενού",
+  "settingsGamepadHelpPlay": "Στη ντάμα, τρίλιζα και ναυμαχία ο δρομέας κινείται στα τετράγωνα",
+  "gamepadConnectedSnack": "Συνδέθηκε χειριστήριο: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Μηνύματα μόνο από φίλους",
   "settingsFriendsOnlySubtitle": "Οι μη φίλοι μπορούν να στέλνουν μόνο emoji. Αν υπάρχει spam, αποκλείστε προσωρινά τον χρήστη.",
   "settingsNotifications": "Ειδοποιήσεις",

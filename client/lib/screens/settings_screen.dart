@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/haptics.dart';
@@ -199,6 +200,96 @@ class SettingsScreen extends ConsumerWidget {
                         await ref.read(hapticsEnabledProvider.notifier).set(v);
                         Haptics.setEnabled(v);
                         if (v) Haptics.play(HapticKind.notify);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    child: ValueListenableBuilder(
+                      valueListenable: GamepadService.instance.devices,
+                      builder: (context, pads, _) {
+                        final enabled = ref.watch(gamepadEnabledProvider);
+                        final connected = pads.isNotEmpty
+                            ? l10n.settingsGamepadConnected(pads.first.name)
+                            : l10n.settingsGamepadDisconnected;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _SwitchRow(
+                              title: l10n.settingsGamepadTitle,
+                              subtitle: l10n.settingsGamepadSubtitle,
+                              value: enabled,
+                              onChanged: (v) async {
+                                await ref
+                                    .read(gamepadEnabledProvider.notifier)
+                                    .set(v);
+                              },
+                            ),
+                            if (enabled) ...[
+                              const SizedBox(height: 8),
+                              const Divider(
+                                height: 1,
+                                color: AppColors.accentSoft,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                connected,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.settingsGamepadHelpNavigate,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                l10n.settingsGamepadHelpConfirm,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                l10n.settingsGamepadHelpBack,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                l10n.settingsGamepadHelpTabs,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                l10n.settingsGamepadHelpPlay,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                            ],
+                          ],
+                        );
                       },
                     ),
                   ),

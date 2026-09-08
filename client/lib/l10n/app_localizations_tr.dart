@@ -58,6 +58,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Yalnızca uyarılar: mesajlar, istekler, sıra ve süre';
 
   @override
+  String get settingsGamepadTitle => 'Kol';
+
+  @override
+  String get settingsGamepadSubtitle => 'Menüler ve maçlar için gamepad';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Bağlı: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Yön tuşları / çubuk — menü ve tahta imleci';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Çarpı — onayla veya hamle yap';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Daire — geri veya seçimi kaldır';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menü sekmeleri';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Dama, xox ve amiral battıda imleç karelerde gezer';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kol bağlandı: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Ağ modu';
 
   @override
