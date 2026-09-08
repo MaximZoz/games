@@ -701,10 +701,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   void _seatTablePairs(Iterable<DurakTablePairApi> table) {
     for (final pair in table) {
-      _seatTableCard(pair.attack.toPlayingCard());
+      final attack = pair.attack.toPlayingCard();
+      if (durakShouldSeatPrevTableCard(
+        remoteFlying: _remoteFlyingCardIds.contains(_cardId(attack)),
+      )) {
+        _seatTableCard(attack);
+      }
       final defense = pair.defense?.toPlayingCard();
-      if (defense != null) _seatTableCard(defense);
+      if (defense != null &&
+          durakShouldSeatPrevTableCard(
+            remoteFlying: _remoteFlyingCardIds.contains(_cardId(defense)),
+          )) {
+        _seatTableCard(defense);
+      }
     }
+  }
+
+  void _unseatTableCard(PlayingCard card) {
+    _seatedTableCardIds.remove(_cardId(card));
+  }
+
+  void _markRemoteTableCardFlying(PlayingCard card) {
+    _remoteFlyingCardIds.add(_cardId(card));
+    _unseatTableCard(card);
   }
 
   void _clearSeatedTableCards() {
@@ -2092,6 +2111,15 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _flyingToTable.isNotEmpty ||
       _flightLockTable;
 
+  /// Свой overlay, busy или карта вытянута из веера — чужой FX стола ждёт.
+  bool get _tableFxDeferred => durakTableFxDeferred(
+        fxScheduled: _fxScheduled,
+        busy: _busy,
+        localAttackHold: _localAttackHold,
+        cardFlightActive: _cardFlightActive,
+        holdingFanCard: _holdingFanCard,
+      );
+
   bool get _localAttackHold => durakHoldTableFxForLocalAttack(
         optimisticAttack: _optimisticAttacks.isNotEmpty,
         flyingToTable: _flyingToTable.isNotEmpty,
@@ -2830,10 +2858,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   void _requestFxReplay() {
     if (!_fxNeedsReplay || !mounted) return;
-    if (_fxScheduled || _busy || _localAttackHold || _cardFlightActive) return;
+    if (_tableFxDeferred) return;
     _fxNeedsReplay = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _fxScheduled || _busy || _localAttackHold) return;
+      if (!mounted || _tableFxDeferred) return;
       final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
       if (v != null) _maybeRunTableFx(v);
     });
@@ -2923,7 +2951,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   void _syncOfflineFxHold() {
     if (!_isOffline) return;
     OfflineDurakRegistry.instance.get(widget.gameId)?.setFxHold(
-          _fxScheduled || _busy || _localAttackHold || _cardFlightActive,
+          _tableFxDeferred,
         );
   }
 
@@ -3084,7 +3112,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     }
     _reconcileHiddenRemoteTableCards(view);
     // Не глотать отбой/биту во время своего полёта — запомним стол и переиграем.
-    if (_fxScheduled || _busy || _localAttackHold || _cardFlightActive) {
+    if (_tableFxDeferred) {
       _fxNeedsReplay = true;
       // Чужие карты уже в view — прячем до полёта, иначе вспышка на столе.
       _hideNewRemoteTableCards(view);
@@ -4322,8 +4350,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (flights.isEmpty) return;
 
     // Скрыть сразу в этом же build — до отрисовки стола (без вспышки карты).
+    // Снимаем seated: иначе следующий build посадит карту из prev, и слот
+    // вспыхнет до посадки overlay.
     for (final f in flights) {
-      _remoteFlyingCardIds.add(_cardId(f.card));
+      _markRemoteTableCardFlying(f.card);
     }
 
     _beginTableFx();
@@ -5695,6 +5725,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                                 }
                                                 setState(() =>
                                                     _holdingFanCard = holding);
+                                                if (!holding) {
+                                                  _requestFxReplay();
+                                                }
                                               },
                                               onDragPosition: (p) {
                                                 if (p == null) {

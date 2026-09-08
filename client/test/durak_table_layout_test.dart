@@ -160,6 +160,38 @@ void main() {
         ),
         isFalse,
       );
+      expect(durakShouldSeatPrevTableCard(remoteFlying: true), isFalse);
+      expect(durakShouldSeatPrevTableCard(remoteFlying: false), isTrue);
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: false,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: false,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: true,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: false,
+        ),
+        isTrue,
+      );
       expect(
         durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
         2,
