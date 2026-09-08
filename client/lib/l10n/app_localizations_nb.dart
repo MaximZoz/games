@@ -88,6 +88,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get offlineModePopupSettings => 'Innstillinger';
 
   @override
+  String get offlineModeOfferBody => 'Ingen internett, eller forbindelsen er veldig treg. Du kan slå på offline-modus og spille mot en bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Slå på offline';
+
+  @override
   String get gamesPlay => 'Spill';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Hjørner: brikkene starter i motstående hjørner. Gå til et tomt nabo-felt vannrett eller loddrett, eller hopp over en hvilken som helst brikke uten å fjerne den. Målet er å flytte alle brikkene til motstanderens hjørne.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'En brikke som har forlatt start-hjørnet sitt, kan ikke returnere dit.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Brikker som fortsatt er i hjemmet, må forlate det i spillerens 25 første trekk.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regler';

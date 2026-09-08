@@ -88,6 +88,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get offlineModePopupSettings => '設定';
 
   @override
+  String get offlineModeOfferBody => 'インターネットがないか、回線が非常に遅いです。オフラインモードをオンにしてボットと対戦できます。';
+
+  @override
+  String get offlineModeOfferAction => 'オフラインにする';
+
+  @override
   String get gamesPlay => 'プレイ';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'スタートの隅を出た駒は、そこへ戻ってはいけません。';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。';
 
   @override
   String get rulesNardyTitle => 'バックギャモン — ルール';

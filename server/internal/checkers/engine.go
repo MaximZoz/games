@@ -24,6 +24,9 @@ const (
 
 	BotID = "bot:checkers"
 	Size  = 8
+
+	// CornersLeaveHomeMoves — за столько своих ходов фишки должны покинуть дом.
+	CornersLeaveHomeMoves = 25
 )
 
 var (
@@ -337,12 +340,46 @@ func (g *Game) cornersMoves(seat int) []Move {
 	return out
 }
 
+func cornersOwnHome(seat, r, c int) bool {
+	if seat == 0 {
+		return r >= 0 && r <= 2 && c >= 0 && c <= 2
+	}
+	if seat == 1 {
+		return r >= 5 && r <= 7 && c >= 5 && c <= 7
+	}
+	return false
+}
+
+// SeatMoveCount — сколько ходов уже сделал seat после seq полуходов.
+func SeatMoveCount(seq, seat int) int {
+	if seat == 0 {
+		return (seq + 1) / 2
+	}
+	return seq / 2
+}
+
+func (g *Game) cornersHasPiecesInOwnHome(seat int) bool {
+	for r := 0; r < Size; r++ {
+		for c := 0; c < Size; c++ {
+			if owner(g.at(r, c)) == seat && cornersOwnHome(seat, r, c) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (g *Game) cornersMovesFrom(r, c int) []Move {
 	var out []Move
 	from := Square{R: r, C: c}
+	seat := owner(g.at(r, c))
+	leftHome := seat >= 0 && !cornersOwnHome(seat, r, c)
 	for _, d := range ortho {
 		nr, nc := r+d[0], c+d[1]
 		if g.at(nr, nc) == Empty {
+			if leftHome && cornersOwnHome(seat, nr, nc) {
+				continue
+			}
 			out = append(out, Move{From: from, To: Square{R: nr, C: nc}})
 		}
 	}
@@ -365,6 +402,9 @@ func (g *Game) cornersMovesFrom(r, c int) []Move {
 				continue
 			}
 			seen[key] = true
+			if leftHome && cornersOwnHome(seat, lr, lc) {
+				continue
+			}
 			out = append(out, Move{From: from, To: Square{R: lr, C: lc}})
 			queue = append(queue, key)
 		}
@@ -463,6 +503,13 @@ func (g *Game) Apply(seat int, mv Move) error {
 			g.ContR, g.ContC = -1, -1
 			return nil
 		}
+		if SeatMoveCount(g.Seq, seat) >= CornersLeaveHomeMoves &&
+			g.cornersHasPiecesInOwnHome(seat) {
+			g.Winner = 1 - seat
+			g.MustContinue = false
+			g.ContR, g.ContC = -1, -1
+			return nil
+		}
 	} else if len(chosen.Jumped) > 0 && !(g.isEnglish() && promoted) {
 		more := g.capturesFrom(chosen.To.R, chosen.To.C)
 		if len(more) > 0 {
@@ -486,6 +533,12 @@ func (g *Game) resolveEnd() {
 		}
 		if g.cornersFilled(1) {
 			g.Winner = 1
+			return
+		}
+		justMoved := 1 - g.Turn
+		if SeatMoveCount(g.Seq, justMoved) >= CornersLeaveHomeMoves &&
+			g.cornersHasPiecesInOwnHome(justMoved) {
+			g.Winner = 1 - justMoved
 			return
 		}
 	}

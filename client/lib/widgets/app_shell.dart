@@ -270,6 +270,31 @@ class AppShell extends ConsumerWidget {
         ref.read(pendingPurchaseFlushNoticeProvider.notifier).state = null;
       },
     );
+    ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
+      if (next.isOffline) return;
+      if (!next.shouldOfferOffline) return;
+      if (prev != null && prev.shouldOfferOffline) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!context.mounted) return;
+        final ok = await ref
+            .read(offlineModeProvider.notifier)
+            .consumeOfflineOffer();
+        if (!ok || !context.mounted) return;
+        final l10n = context.l10n;
+        showAppSnackBar(
+          context,
+          message: l10n.offlineModeOfferBody,
+          actionLabel: l10n.offlineModeOfferAction,
+          onAction: () {
+            ref
+                .read(offlineModeProvider.notifier)
+                .setPreference(OfflinePreference.offline);
+          },
+          duration: const Duration(seconds: 8),
+          icon: Icons.wifi_off_rounded,
+        );
+      });
+    });
     // Данные и ассеты для офлайна: держим в памяти + прогрев при онлайне.
     if (isAuthorized) {
       ref.watch(offlineWarmupProvider);

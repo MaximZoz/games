@@ -88,6 +88,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get offlineModePopupSettings => 'การตั้งค่า';
 
   @override
+  String get offlineModeOfferBody => 'ไม่มีอินเทอร์เน็ตหรือการเชื่อมต่อช้ามาก คุณสามารถเปิดโหมดออฟไลน์แล้วเล่นกับบอทได้';
+
+  @override
+  String get offlineModeOfferAction => 'เปิดออฟไลน์';
+
+  @override
   String get gamesPlay => 'เล่น';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'หมากที่ออกจากมุมเริ่มต้นแล้วห้ามกลับเข้าไป';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
 
   @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';

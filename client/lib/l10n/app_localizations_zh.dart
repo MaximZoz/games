@@ -88,6 +88,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get offlineModePopupSettings => '设置';
 
   @override
+  String get offlineModeOfferBody => '没有网络或连接非常慢。可以开启离线模式与机器人对战。';
+
+  @override
+  String get offlineModeOfferAction => '开启离线';
+
+  @override
   String get gamesPlay => '开始';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => '角落棋：棋子从对角摆起。可走到相邻空格（横或竖），或跳过任意棋子但不吃子。目标是把己方棋子全部走到对方角落。';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => '已经离开己方起始角落的棋子不得再回到该角落。';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => '仍留在家里的棋子必须在该玩家前 25 步内离开家。';
 
   @override
   String get rulesNardyTitle => '西洋双陆 — 规则';

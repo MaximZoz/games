@@ -88,6 +88,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineModePopupSettings => 'Configurações';
 
   @override
+  String get offlineModeOfferBody => 'Sem internet ou a ligação está muito lenta. Pode ativar o modo offline e jogar contra um bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Ativar offline';
+
+  @override
   String get gamesPlay => 'Jogar';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Uma peça que já saiu do canto inicial não pode voltar para ele.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.';
 
   @override
   String get rulesNardyTitle => 'Gamão — regras';

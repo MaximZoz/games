@@ -213,15 +213,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         final repo = ref.read(authRepositoryProvider);
         final token = await repo.getAccessToken();
         if (token == null || token.isEmpty) {
-          if (authState.valueOrNull != null) {
-            await ref.read(authStateProvider.notifier).logout();
+          final persisted = await repo.peekStoredUser();
+          if (persisted != null) {
+            user = persisted;
+          } else {
+            if (authState.valueOrNull != null) {
+              await ref.read(authStateProvider.notifier).logout();
+            }
+            final afterLogin = (_preserveStartupPath(path) || path == '/games')
+                ? locationFromUri(state.uri)
+                : '/games';
+            return appendRedirectQuery('/login', afterLogin);
           }
-          final afterLogin = (_preserveStartupPath(path) || path == '/games')
-              ? locationFromUri(state.uri)
-              : '/games';
-          return appendRedirectQuery('/login', afterLogin);
+        } else {
+          user ??= await repo.peekStoredUser();
         }
-        user ??= await repo.getStoredUser();
       }
 
       if (isPublic && user != null) {

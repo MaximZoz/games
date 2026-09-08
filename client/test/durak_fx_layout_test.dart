@@ -514,6 +514,15 @@ void main() {
         isTrue,
       );
       expect(kDurakFanPlayCloseDuration.inMilliseconds, 180);
+      expect(kDurakFanIncomingDuration, kDurakFanPlayCloseDuration);
+      expect(
+        durakFanLayoutTweenDuration(compact: true, fastClose: true),
+        kDurakFanPlayCloseDuration,
+      );
+      expect(
+        durakFanLayoutTweenDuration(compact: true, fastClose: false),
+        durakLayoutTweenDuration(compact: true),
+      );
     });
   });
 }

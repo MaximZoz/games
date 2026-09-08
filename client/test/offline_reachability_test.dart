@@ -19,13 +19,32 @@ void main() {
       expect(r.nextProbeInterval, OfflineReachability.recoveringProbeInterval);
     });
 
-    test('два провала подряд включают офлайн', () {
+    test('два провала подряд ещё не снимают сервер', () {
       final r = online();
       r.onProbeFailure();
       r.onProbeFailure();
+      expect(r.serverReachable, isTrue);
+      expect(r.isAutoOffline, isFalse);
+    });
+
+    test('пять провалов подряд снимают сервер', () {
+      final r = online();
+      for (var i = 0; i < OfflineReachability.failStreakToOffline; i++) {
+        r.onProbeFailure();
+      }
       expect(r.serverReachable, isFalse);
       expect(r.isAutoOffline, isTrue);
       expect(r.nextProbeInterval, OfflineReachability.recoveringProbeInterval);
+    });
+
+    test('три медленных успеха помечают медленную сеть', () {
+      final r = online();
+      for (var i = 0; i < OfflineReachability.slowStreakToOffer; i++) {
+        r.onProbeSuccess(elapsed: OfflineReachability.slowProbeThreshold);
+      }
+      expect(r.serverReachable, isTrue);
+      expect(r.slowNetwork, isTrue);
+      expect(r.networkDegraded, isTrue);
     });
 
     test('успех после одного провала оставляет онлайн', () {
@@ -92,9 +111,9 @@ void main() {
 
     test('после офлайна интервал остаётся коротким', () {
       final r = online();
-      r.onProbeFailure();
-      r.onProbeFailure();
-      r.onProbeFailure();
+      for (var i = 0; i < OfflineReachability.failStreakToOffline + 1; i++) {
+        r.onProbeFailure();
+      }
       expect(r.nextProbeInterval, OfflineReachability.recoveringProbeInterval);
     });
   });
@@ -111,27 +130,42 @@ void main() {
       expect(s.onlineUnavailableReason, OnlineUnavailableReason.none);
     });
 
-    test('авто-офлайн если нет сети', () {
+    test('нет сети не включает офлайн, но предлагает его', () {
       const s = OfflineModeState(
         preference: OfflinePreference.online,
         deviceOnline: false,
         serverReachable: false,
       );
-      expect(s.isOffline, isTrue);
+      expect(s.isOffline, isFalse);
+      expect(s.hasNetwork, isFalse);
+      expect(s.shouldOfferOffline, isTrue);
       expect(s.onlineUnavailableReason, OnlineUnavailableReason.noInternet);
     });
 
-    test('авто-офлайн если сервер недоступен', () {
+    test('сервер недоступен не включает офлайн, но предлагает его', () {
       const s = OfflineModeState(
         preference: OfflinePreference.online,
         deviceOnline: true,
         serverReachable: false,
       );
-      expect(s.isOffline, isTrue);
+      expect(s.isOffline, isFalse);
+      expect(s.shouldOfferOffline, isTrue);
       expect(
         s.onlineUnavailableReason,
         OnlineUnavailableReason.serverUnreachable,
       );
+    });
+
+    test('медленная сеть тоже предлагает офлайн', () {
+      const s = OfflineModeState(
+        preference: OfflinePreference.online,
+        deviceOnline: true,
+        serverReachable: true,
+        slowNetwork: true,
+      );
+      expect(s.isOffline, isFalse);
+      expect(s.hasNetwork, isTrue);
+      expect(s.shouldOfferOffline, isTrue);
     });
 
     test('онлайн если сеть и сервер есть', () {

@@ -88,6 +88,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get offlineModePopupSettings => 'सेटिंग्स';
 
   @override
+  String get offlineModeOfferBody => 'इंटरनेट नहीं है या कनेक्शन बहुत धीमा है। आप ऑफ़लाइन मोड चालू करके बॉट से खेल सकते हैं।';
+
+  @override
+  String get offlineModeOfferAction => 'ऑफ़लाइन चालू करें';
+
+  @override
   String get gamesPlay => 'खेलें';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'कॉर्नर: मोहरे आमने-सामने के कोनों में शुरू होते हैं। क्षैतिज या ऊर्ध्व खाली पड़ोसी घर पर चलें, या किसी भी मोहरे के ऊपर कूदें बिना उसे हटाए। लक्ष्य अपने सारे मोहरे विरोधी के कोने में पहुँचाना है।';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'जो मोहरा अपने शुरुआती कोने से निकल चुका है, वह वहाँ वापस नहीं जा सकता।';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।';
 
   @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';

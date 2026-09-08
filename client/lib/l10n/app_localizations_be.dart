@@ -88,6 +88,12 @@ class AppLocalizationsBe extends AppLocalizations {
   String get offlineModePopupSettings => 'Налады';
 
   @override
+  String get offlineModeOfferBody => 'Няма інтэрнэту або сувязь вельмі слабая. Можна ўключыць афлайн рэжым і гуляць з ботам.';
+
+  @override
+  String get offlineModeOfferAction => 'Уключыць афлайн';
+
+  @override
   String get gamesPlay => 'Гуляць';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Вуглікі: шашкі стаяць у супрацьлеглых вуглах. Ходзяць на суседнюю свабодную клетку па гарызанталі ці вертыкалі або пераскокваюць праз любую шашку, не здымаючы яе. Мэта — перавесці ўсе свае шашкі ў вугал суперніка.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Фішка, якая ўжо пакінула свой стартавы вугал, не можа вярнуцца ў яго.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Фішкі, якія яшчэ не выйшлі з дома, павінны пакінуць яго за першыя 25 хадоў гульца.';
 
   @override
   String get rulesNardyTitle => 'Нарды — правілы';

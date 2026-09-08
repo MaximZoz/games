@@ -88,6 +88,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get offlineModePopupSettings => 'Настройки';
 
   @override
+  String get offlineModeOfferBody => 'Нет интернета или связь очень слабая. Можно включить офлайн режим и играть с ботом.';
+
+  @override
+  String get offlineModeOfferAction => 'Включить офлайн';
+
+  @override
   String get gamesPlay => 'Играть';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.';
 
   @override
   String get rulesNardyTitle => 'Нарды — правила';

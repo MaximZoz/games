@@ -311,6 +311,18 @@ abstract class AppLocalizations {
   /// **'Настройки'**
   String get offlineModePopupSettings;
 
+  /// No description provided for @offlineModeOfferBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет интернета или связь очень слабая. Можно включить офлайн режим и играть с ботом.'**
+  String get offlineModeOfferBody;
+
+  /// No description provided for @offlineModeOfferAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включить офлайн'**
+  String get offlineModeOfferAction;
+
   /// No description provided for @gamesPlay.
   ///
   /// In ru, this message translates to:
@@ -1576,6 +1588,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.'**
   String get rulesCheckersPlayCorners;
+
+  /// No description provided for @rulesCheckersPlayCornersNoReturn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.'**
+  String get rulesCheckersPlayCornersNoReturn;
+
+  /// No description provided for @rulesCheckersPlayCornersLeaveHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.'**
+  String get rulesCheckersPlayCornersLeaveHome;
 
   /// No description provided for @rulesNardyTitle.
   ///

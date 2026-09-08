@@ -88,6 +88,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offlineModePopupSettings => 'الإعدادات';
 
   @override
+  String get offlineModeOfferBody => 'لا يوجد إنترنت أو الاتصال ضعيف جداً. يمكنك تفعيل وضع عدم الاتصال واللعب ضد بوت.';
+
+  @override
+  String get offlineModeOfferAction => 'تفعيل عدم الاتصال';
+
+  @override
   String get gamesPlay => 'العب';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'الزوايا: القطع تبدأ في الزوايا المتقابلة. تتحرك إلى مربع فارغ مجاور أفقيًا أو عموديًا أو تقفز فوق أي قطعة دون إزالتها. الهدف نقل كل قطعك إلى زاوية الخصم.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'القطعة التي غادرت زاويتها الأولى لا يمكنها العودة إليها.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'يجب أن تغادر القطع التي ما زالت في البيت خلال أول 25 نقلة للاعب.';
 
   @override
   String get rulesNardyTitle => 'النرد — القواعد';

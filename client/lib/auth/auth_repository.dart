@@ -645,10 +645,8 @@ class AuthRepository {
     } catch (_) {}
   }
 
-  Future<AuthUser?> getStoredUser() async {
-    final token = await getAccessToken();
-    if (token == null || token.isEmpty) return null;
-
+  /// Сохранённый пользователь без проверки токена — сессия не сбрасывается.
+  Future<AuthUser?> peekStoredUser() async {
     if (_memoryUser != null) return _memoryUser;
 
     await init();
@@ -672,6 +670,10 @@ class AuthRepository {
 
     await _restoreFromBackupIfNeeded();
     return _memoryUser;
+  }
+
+  Future<AuthUser?> getStoredUser() async {
+    return peekStoredUser();
   }
 
   Future<void> logout() async {
@@ -810,7 +812,6 @@ class AuthRepository {
 
     response = await _withTransientRetry(() => request(token!));
     if (response.statusCode == 401) {
-      await logout();
       throw AuthException(401, LocaleService.l10n.sessionExpired);
     }
     if (response.statusCode == 502 || response.statusCode == 503) {
@@ -1014,7 +1015,6 @@ class AuthRepository {
   Future<String?> _refreshAccessTokenImpl() async {
     final refreshToken = await _getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
-      await logout();
       return null;
     }
 
@@ -1031,10 +1031,9 @@ class AuthRepository {
       return null;
     }
 
-    // Только явный отказ в авторизации сбрасывает сессию.
-    // 502/503 (деплой, БД EOF) — сессию не трогаем.
+    // Истёкший refresh или 401 не выкидывают из аккаунта: локальная сессия
+    // остаётся, пока пользователь сам не нажмёт «Выйти».
     if (response.statusCode == 401 || response.statusCode == 403) {
-      await logout();
       return null;
     }
     if (response.statusCode == 502 || response.statusCode == 503) {

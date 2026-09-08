@@ -88,6 +88,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get offlineModePopupSettings => '설정';
 
   @override
+  String get offlineModeOfferBody => '인터넷이 없거나 연결이 매우 느립니다. 오프라인 모드를 켜고 봇과 플레이할 수 있습니다.';
+
+  @override
+  String get offlineModeOfferAction => '오프라인 켜기';
+
+  @override
   String get gamesPlay => '플레이';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => '코너: 말은 맞은편 모서리에서 시작합니다. 가로 또는 세로로 빈 칸으로 가거나, 어떤 말이든 넘기만 하고 잡지는 않습니다. 목표는 자기 말을 모두 상대 모서리로 옮기는 것입니다.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => '시작 모서리를 떠난 말은 그곳으로 돌아갈 수 없습니다.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
 
   @override
   String get rulesNardyTitle => '백개먼 — 규칙';

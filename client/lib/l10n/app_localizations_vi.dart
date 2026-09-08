@@ -88,6 +88,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get offlineModePopupSettings => 'Cài đặt';
 
   @override
+  String get offlineModeOfferBody => 'Không có internet hoặc kết nối rất chậm. Bạn có thể bật chế độ ngoại tuyến và chơi với bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Bật ngoại tuyến';
+
+  @override
   String get gamesPlay => 'Chơi';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Quân đã rời góc xuất phát thì không được quay lại đó.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
 
   @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';

@@ -88,6 +88,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineModePopupSettings => 'Settings';
 
   @override
+  String get offlineModeOfferBody => 'No internet or the connection is very slow. You can turn on offline mode and play against a bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Go offline';
+
+  @override
   String get gamesPlay => 'Play';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Corners: pieces start in opposite corners. Move to an adjacent empty square horizontally or vertically, or jump over any piece without removing it. The goal is to move all your pieces into the opponent’s corner.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'A piece that has left its starting corner may not return there.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Pieces still in the home corner must leave it within the player’s first 25 moves.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — rules';

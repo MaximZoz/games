@@ -88,6 +88,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get offlineModePopupSettings => 'Nastavení';
 
   @override
+  String get offlineModeOfferBody => 'Není internet nebo je spojení velmi pomalé. Můžete zapnout režim offline a hrát proti botovi.';
+
+  @override
+  String get offlineModeOfferAction => 'Zapnout offline';
+
+  @override
   String get gamesPlay => 'Hrát';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Kámen, který už opustil svůj startovní roh, se do něj nesmí vrátit.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
 
   @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';

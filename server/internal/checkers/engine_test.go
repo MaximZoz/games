@@ -269,6 +269,39 @@ func TestCornersStartAndJumpKeepsPiece(t *testing.T) {
 	}
 }
 
+func TestCornersCannotReturnHome(t *testing.T) {
+	g := NewGame(ModeCorners)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(3, 2, WhiteMan)
+	g.set(7, 7, BlackMan)
+	g.Turn = 0
+	for _, mv := range g.LegalMoves() {
+		if mv.From.R == 3 && mv.From.C == 2 && cornersOwnHome(0, mv.To.R, mv.To.C) {
+			t.Fatalf("return home allowed: %+v", mv)
+		}
+	}
+}
+
+func TestCornersLeaveHomeDeadline(t *testing.T) {
+	g := NewGame(ModeCorners)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	g.set(1, 1, WhiteMan)
+	g.set(4, 4, WhiteMan)
+	g.set(7, 7, BlackMan)
+	g.Seq = 48
+	g.Turn = 0
+	if err := g.Apply(0, Move{From: Square{R: 4, C: 4}, To: Square{R: 4, C: 5}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Winner != 1 {
+		t.Fatalf("winner=%d want black after leave-home deadline", g.Winner)
+	}
+}
+
 func TestCornersWinByFillingOpponentHome(t *testing.T) {
 	g := NewGame(ModeCorners)
 	for i := range g.Board {
