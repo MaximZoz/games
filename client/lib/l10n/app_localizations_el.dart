@@ -58,6 +58,40 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης';
 
   @override
+  String get settingsGamepadTitle => 'Χειριστήριο';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad για μενού και παρτίδες';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Συνδεδεμένο: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Σταυρός — επιβεβαίωση ή κίνηση';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Κύκλος — πίσω ή αποεπιλογή';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Στη ντάμα, τρίλιζα και ναυμαχία ο δρομέας κινείται στα τετράγωνα';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Συνδέθηκε χειριστήριο: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';
 
   @override

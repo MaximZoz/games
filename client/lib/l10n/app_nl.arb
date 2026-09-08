@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Beurt",
   "settingsHapticsTitle": "Trillen",
   "settingsHapticsSubtitle": "Alleen meldingen: berichten, verzoeken, jouw beurt en de timer",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad voor menu's en partijen",
+  "settingsGamepadConnected": "Verbonden: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Geen gamepad. Sluit een controller aan en druk op een knop.",
+  "settingsGamepadHelpNavigate": "Kruis / stick — menu's en bordcursor",
+  "settingsGamepadHelpConfirm": "A / Kruis — bevestigen of zetten",
+  "settingsGamepadHelpBack": "B / Cirkel — terug of deselecteren",
+  "settingsGamepadHelpTabs": "L1 / R1 — menutabbladen",
+  "settingsGamepadHelpPlay": "Bij dammen, boter-kaas-eieren en zeeslag beweegt de cursor over vakjes",
+  "gamepadConnectedSnack": "Controller verbonden: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Berichten alleen van vrienden",
   "settingsFriendsOnlySubtitle": "Niet-vrienden kunnen alleen emoji’s sturen. Bij spam blokkeer je de gebruiker tijdelijk.",
   "settingsNotifications": "Meldingen",

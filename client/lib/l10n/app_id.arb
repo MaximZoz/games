@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Giliran",
   "settingsHapticsTitle": "Getar",
   "settingsHapticsSubtitle": "Hanya notifikasi: pesan, permintaan, giliran Anda, dan timer",
+  "settingsGamepadTitle": "Kontroler",
+  "settingsGamepadSubtitle": "Gamepad untuk menu dan pertandingan",
+  "settingsGamepadConnected": "Terhubung: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.",
+  "settingsGamepadHelpNavigate": "D-pad / stick — menu dan kursor papan",
+  "settingsGamepadHelpConfirm": "A / Silang — konfirmasi atau jalan",
+  "settingsGamepadHelpBack": "B / Lingkaran — kembali atau batal pilih",
+  "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
+  "settingsGamepadHelpPlay": "Di dam, tic-tac-toe, dan kapal perang kursor bergerak di kotak",
+  "gamepadConnectedSnack": "Kontroler terhubung: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Pesan hanya dari teman",
   "settingsFriendsOnlySubtitle": "Non-teman hanya bisa mengirim emoji. Jika spam jadi masalah, blokir pengguna sementara.",
   "settingsNotifications": "Notifikasi",

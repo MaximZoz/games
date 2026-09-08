@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Жүріс",
   "settingsHapticsTitle": "Діріл",
   "settingsHapticsSubtitle": "Тек хабарландырулар: хабарлар, өтінімдер, сіздің жүрісіңіз және таймер",
+  "settingsGamepadTitle": "Контроллер",
+  "settingsGamepadSubtitle": "Мәзір мен партияларға арналған геймпад",
+  "settingsGamepadConnected": "Қосылған: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.",
+  "settingsGamepadHelpNavigate": "Крест / стик — мәзір және тақтадағы курсор",
+  "settingsGamepadHelpConfirm": "A / Крест — таңдау немесе жүру",
+  "settingsGamepadHelpBack": "B / Шеңбер — артқа немесе таңдауды алу",
+  "settingsGamepadHelpTabs": "L1 / R1 — мәзір қойындылары",
+  "settingsGamepadHelpPlay": "Дойбыда, крестик-ноликте және теңіз шайқасында курсор ұяшықтармен жүреді",
+  "gamepadConnectedSnack": "Контроллер қосылды: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Тек достардан хабарлама",
   "settingsFriendsOnlySubtitle": "Достар емес адамдар тек эмодзи жібере алады. Спам кедергі жасаса, пайдаланушыны уақытша бұғаттаңыз.",
   "settingsNotifications": "Хабарландырулар",

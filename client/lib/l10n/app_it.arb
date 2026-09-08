@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Turno",
   "settingsHapticsTitle": "Vibrazione",
   "settingsHapticsSubtitle": "Solo avvisi: messaggi, richieste, il tuo turno e il timer",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad per menu e partite",
+  "settingsGamepadConnected": "Collegato: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nessun gamepad. Collega un controller e premi un pulsante.",
+  "settingsGamepadHelpNavigate": "Croce / stick — menu e cursore sulla scacchiera",
+  "settingsGamepadHelpConfirm": "A / Croce — conferma o muovi",
+  "settingsGamepadHelpBack": "B / Cerchio — indietro o deseleziona",
+  "settingsGamepadHelpTabs": "L1 / R1 — schede del menu",
+  "settingsGamepadHelpPlay": "In dama, tris e battaglia navale il cursore si sposta sulle caselle",
+  "gamepadConnectedSnack": "Controller collegato: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Messaggi solo dagli amici",
   "settingsFriendsOnlySubtitle": "Chi non è amico può inviare solo emoji. Se c’è spam, blocca temporaneamente l’utente.",
   "settingsNotifications": "Notifiche",

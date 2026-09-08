@@ -251,6 +251,66 @@ abstract class AppLocalizations {
   /// **'Только уведомления: сообщения, заявки, ваш ход и таймер'**
   String get settingsHapticsSubtitle;
 
+  /// No description provided for @settingsGamepadTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер'**
+  String get settingsGamepadTitle;
+
+  /// No description provided for @settingsGamepadSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Геймпад для меню и партий'**
+  String get settingsGamepadSubtitle;
+
+  /// No description provided for @settingsGamepadConnected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подключён: {name}'**
+  String settingsGamepadConnected(String name);
+
+  /// No description provided for @settingsGamepadDisconnected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.'**
+  String get settingsGamepadDisconnected;
+
+  /// No description provided for @settingsGamepadHelpNavigate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крест / стик — меню и курсор на поле'**
+  String get settingsGamepadHelpNavigate;
+
+  /// No description provided for @settingsGamepadHelpConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'A / Крест — выбрать или сходить'**
+  String get settingsGamepadHelpConfirm;
+
+  /// No description provided for @settingsGamepadHelpBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'B / Круг — назад или снять выбор'**
+  String get settingsGamepadHelpBack;
+
+  /// No description provided for @settingsGamepadHelpTabs.
+  ///
+  /// In ru, this message translates to:
+  /// **'L1 / R1 — вкладки меню'**
+  String get settingsGamepadHelpTabs;
+
+  /// No description provided for @settingsGamepadHelpPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'В шашках, крестиках-ноликах и морском бое курсор ходит по клеткам'**
+  String get settingsGamepadHelpPlay;
+
+  /// No description provided for @gamepadConnectedSnack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер подключён: {name}'**
+  String gamepadConnectedSnack(String name);
+
   /// No description provided for @settingsOfflineModeTitle.
   ///
   /// In ru, this message translates to:

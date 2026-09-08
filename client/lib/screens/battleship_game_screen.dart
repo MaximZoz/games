@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
@@ -105,6 +109,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
   /// Выстрел уже на поле, ждём ответ сервера.
   int? _pendingShotCell;
+  int _cursorCell = 0;
 
   /// Монотонный слой клеток: ответ `shoot()` сразу на доске, refetch не откатывает.
   BattleshipClientOverlay _overlay = const BattleshipClientOverlay();
@@ -252,6 +257,60 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     if (me == null || me.isEmpty) return false;
     if (me == game.p1UserId) return game.p1Ready;
     if (me == game.p2UserId) return game.p2Ready;
+    return false;
+  }
+
+  int? get _visibleCursor =>
+      GamepadService.instance.isRecentlyActive ? _cursorCell : null;
+
+  bool _onGamepad(GamepadAction action) {
+    final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
+    if (game == null || game.isOver) return false;
+    var me = ref.read(authStateProvider).valueOrNull?.id;
+    if (_isOffline && (me == null || me.isEmpty)) {
+      me = OfflineBattleshipRegistry.instance.get(widget.gameId)?.humanUserId;
+    }
+    if (action.isDirection) {
+      final cursor = GamepadGridCursor(
+        columns: kBattleshipBoardSize,
+        count: kBattleshipCellCount,
+        index: _cursorCell,
+      );
+      if (cursor.move(action)) {
+        setState(() => _cursorCell = cursor.index);
+      }
+      return true;
+    }
+    final ready = _iAmReady(game, me);
+    if (action == GamepadAction.confirm) {
+      if (!ready) {
+        _onSetupCellTap(_cursorCell);
+        return true;
+      }
+      final myTurn = game.isTurnOf(me);
+      final showMyBoard = _fxShowMineBoard ?? (!game.isOver && !myTurn);
+      if (!showMyBoard &&
+          myTurn &&
+          !_busy &&
+          _pendingShotCell == null) {
+        unawaited(_shoot(_cursorCell));
+      }
+      return true;
+    }
+    if (!ready) {
+      if (action == GamepadAction.actionX) {
+        _rotateSelected();
+        return true;
+      }
+      if (action == GamepadAction.actionY) {
+        unawaited(_randomPlace());
+        return true;
+      }
+      if (action == GamepadAction.menu) {
+        unawaited(_confirmPlace());
+        return true;
+      }
+    }
     return false;
   }
 
@@ -1189,7 +1248,9 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
 
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
-      child: Scaffold(
+      child: GamepadScope(
+        onAction: _onGamepad,
+        child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -1500,6 +1561,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -1534,6 +1596,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                 final board = ready
                     ? _BattleshipBoard(
                         cellSize: cell,
+                        cursorCell: _visibleCursor,
                         cellBuilder: (cellIdx) {
                           final occupied = <int>{
                             for (final s in ships) ...s,
@@ -1548,6 +1611,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                         cellSize: cell,
                         ships: ships,
                         selectedShipIndex: selectedIdx,
+                        cursorCell: _visibleCursor,
                         enabled: !_busy,
                         onTapCell: _onSetupCellTap,
                         onShipDropped: _onSetupShipDropped,
@@ -1669,6 +1733,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     };
     return _BattleshipBoard(
       cellSize: cellSize,
+      cursorCell: _visibleCursor,
       pulseCell: pulseCell,
       pulseHit: _fxHit,
       pulseAnimation: _hitPulse,
@@ -1716,6 +1781,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final revealed = <int>{for (final s in game.opponentShips) ...s};
     return _BattleshipBoard(
       cellSize: cellSize,
+      cursorCell: _visibleCursor,
       pulseCell: pulseCell,
       pulseHit: _fxHit,
       pulseAnimation: _hitPulse,
@@ -1866,6 +1932,7 @@ class _BattleshipBoard extends StatelessWidget {
     required this.cellBuilder,
     this.onTap,
     this.cellSize = 32,
+    this.cursorCell,
     this.pulseCell,
     this.pulseHit = true,
     this.pulseAnimation,
@@ -1874,6 +1941,7 @@ class _BattleshipBoard extends StatelessWidget {
   final Widget Function(int cell) cellBuilder;
   final void Function(int cell)? onTap;
   final double cellSize;
+  final int? cursorCell;
   final int? pulseCell;
   final bool pulseHit;
   final Animation<double>? pulseAnimation;
@@ -1943,6 +2011,7 @@ class _BattleshipBoard extends StatelessWidget {
         child: child,
       );
     }
+    child = _gamepadCursorWrap(child, index == cursorCell);
     if (onTap == null) return child;
     return Listener(
       behavior: HitTestBehavior.opaque,
@@ -1950,6 +2019,16 @@ class _BattleshipBoard extends StatelessWidget {
       child: child,
     );
   }
+}
+
+Widget _gamepadCursorWrap(Widget child, bool highlighted) {
+  if (!highlighted) return child;
+  return DecoratedBox(
+    decoration: BoxDecoration(
+      border: Border.all(color: AppColors.accentStart, width: 2),
+    ),
+    child: child,
+  );
 }
 
 /// Доска расстановки: drag-and-drop кораблей + превью валидности.
@@ -1962,6 +2041,7 @@ class _BattleshipSetupBoard extends StatefulWidget {
     required this.onShipDropped,
     required this.onShipSelected,
     this.cellSize = 32,
+    this.cursorCell,
   });
 
   final List<List<int>> ships;
@@ -1975,6 +2055,7 @@ class _BattleshipSetupBoard extends StatefulWidget {
   }) onShipDropped;
   final void Function(int shipIndex) onShipSelected;
   final double cellSize;
+  final int? cursorCell;
 
   @override
   State<_BattleshipSetupBoard> createState() => _BattleshipSetupBoardState();
@@ -2165,16 +2246,20 @@ class _BattleshipSetupBoardState extends State<_BattleshipSetupBoard> {
                       SizedBox(
                         width: size,
                         height: size,
-                        child: _CellPaint(
-                          color: _setupCellColor(
-                            row * kBattleshipBoardSize + col,
-                            preview: preview,
-                            previewOk: previewOk,
-                            draggingShip: draggingShip,
-                            conflictCells: conflictCells,
-                            selected: selected,
-                            occupied: occupied,
+                        child: _gamepadCursorWrap(
+                          _CellPaint(
+                            color: _setupCellColor(
+                              row * kBattleshipBoardSize + col,
+                              preview: preview,
+                              previewOk: previewOk,
+                              draggingShip: draggingShip,
+                              conflictCells: conflictCells,
+                              selected: selected,
+                              occupied: occupied,
+                            ),
                           ),
+                          widget.cursorCell ==
+                              row * kBattleshipBoardSize + col,
                         ),
                       ),
                     ],

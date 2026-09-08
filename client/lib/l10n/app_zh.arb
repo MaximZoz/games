@@ -17,6 +17,30 @@
   "settingsSoundTurn": "回合",
   "settingsHapticsTitle": "振动",
   "settingsHapticsSubtitle": "仅提醒：消息、请求、你的回合和计时器",
+  "settingsGamepadTitle": "手柄",
+  "settingsGamepadSubtitle": "用手柄操作菜单和对局",
+  "settingsGamepadConnected": "已连接：{name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "未检测到手柄。请连接并按下任意键。",
+  "settingsGamepadHelpNavigate": "方向键 / 摇杆 — 菜单和棋盘光标",
+  "settingsGamepadHelpConfirm": "A / 叉 — 确认或落子",
+  "settingsGamepadHelpBack": "B / 圈 — 返回或取消选择",
+  "settingsGamepadHelpTabs": "L1 / R1 — 切换标签",
+  "settingsGamepadHelpPlay": "在跳棋、井字棋和海战棋中，光标在格子上移动",
+  "gamepadConnectedSnack": "手柄已连接：{name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "仅接收好友消息",
   "settingsFriendsOnlySubtitle": "非好友只能发送表情。如遇骚扰，可暂时屏蔽该用户。",
   "settingsNotifications": "通知",

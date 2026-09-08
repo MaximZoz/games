@@ -17,6 +17,30 @@
   "settingsSoundTurn": "चाल",
   "settingsHapticsTitle": "कंपन",
   "settingsHapticsSubtitle": "केवल सूचनाएँ: संदेश, अनुरोध, आपकी बारी और टाइमर",
+  "settingsGamepadTitle": "कंट्रोलर",
+  "settingsGamepadSubtitle": "मेनू और मैच के लिए गेमपैड",
+  "settingsGamepadConnected": "जुड़ा: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।",
+  "settingsGamepadHelpNavigate": "डी-पैड / स्टिक — मेनू और बोर्ड कर्सर",
+  "settingsGamepadHelpConfirm": "A / क्रॉस — पुष्टि या चाल",
+  "settingsGamepadHelpBack": "B / सर्कल — वापस या चयन हटाएँ",
+  "settingsGamepadHelpTabs": "L1 / R1 — मेनू टैब",
+  "settingsGamepadHelpPlay": "चेकर्स, टिक-टैक-टो और बैटलशिप में कर्सर घरों पर चलता है",
+  "gamepadConnectedSnack": "कंट्रोलर जुड़ा: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "केवल मित्रों के संदेश",
   "settingsFriendsOnlySubtitle": "गैर-मित्र केवल इमोजी भेज सकते हैं। यदि स्पैम हो, तो उपयोगकर्ता को अस्थायी रूप से ब्लॉक करें।",
   "settingsNotifications": "सूचनाएँ",

@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Tur",
   "settingsHapticsTitle": "Vibrasjon",
   "settingsHapticsSubtitle": "Kun varsler: meldinger, forespørsler, din tur og timeren",
+  "settingsGamepadTitle": "Kontroller",
+  "settingsGamepadSubtitle": "Gamepad for menyer og partier",
+  "settingsGamepadConnected": "Tilkoblet: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ingen gamepad. Koble til en kontroller og trykk på en knapp.",
+  "settingsGamepadHelpNavigate": "Kors / spak — menyer og brettmarkør",
+  "settingsGamepadHelpConfirm": "A / Kors — bekreft eller trekk",
+  "settingsGamepadHelpBack": "B / Sirkel — tilbake eller fjern valg",
+  "settingsGamepadHelpTabs": "L1 / R1 — menyfaner",
+  "settingsGamepadHelpPlay": "I dam, tripp-trapp-tresko og senk skip flytter markøren over rutene",
+  "gamepadConnectedSnack": "Kontroller tilkoblet: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Meldinger kun fra venner",
   "settingsFriendsOnlySubtitle": "Ikke-venner kan bare sende emojier. Ved spam, blokker brukeren midlertidig.",
   "settingsNotifications": "Varsler",

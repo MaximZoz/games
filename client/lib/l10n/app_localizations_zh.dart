@@ -58,6 +58,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHapticsSubtitle => '仅提醒：消息、请求、你的回合和计时器';
 
   @override
+  String get settingsGamepadTitle => '手柄';
+
+  @override
+  String get settingsGamepadSubtitle => '用手柄操作菜单和对局';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '已连接：$name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
+
+  @override
+  String get settingsGamepadHelpNavigate => '方向键 / 摇杆 — 菜单和棋盘光标';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / 叉 — 确认或落子';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / 圈 — 返回或取消选择';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
+
+  @override
+  String get settingsGamepadHelpPlay => '在跳棋、井字棋和海战棋中，光标在格子上移动';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return '手柄已连接：$name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => '网络模式';
 
   @override

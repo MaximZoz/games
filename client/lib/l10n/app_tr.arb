@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Sıra",
   "settingsHapticsTitle": "Titreşim",
   "settingsHapticsSubtitle": "Yalnızca uyarılar: mesajlar, istekler, sıra ve süre",
+  "settingsGamepadTitle": "Kol",
+  "settingsGamepadSubtitle": "Menüler ve maçlar için gamepad",
+  "settingsGamepadConnected": "Bağlı: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.",
+  "settingsGamepadHelpNavigate": "Yön tuşları / çubuk — menü ve tahta imleci",
+  "settingsGamepadHelpConfirm": "A / Çarpı — onayla veya hamle yap",
+  "settingsGamepadHelpBack": "B / Daire — geri veya seçimi kaldır",
+  "settingsGamepadHelpTabs": "L1 / R1 — menü sekmeleri",
+  "settingsGamepadHelpPlay": "Dama, xox ve amiral battıda imleç karelerde gezer",
+  "gamepadConnectedSnack": "Kol bağlandı: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Yalnızca arkadaşlardan mesaj",
   "settingsFriendsOnlySubtitle": "Arkadaş olmayanlar yalnızca emoji gönderebilir. Spam sorunsa kullanıcıyı geçici olarak engelleyin.",
   "settingsNotifications": "Bildirimler",

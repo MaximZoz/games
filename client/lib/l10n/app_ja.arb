@@ -17,6 +17,30 @@
   "settingsSoundTurn": "手番",
   "settingsHapticsTitle": "振動",
   "settingsHapticsSubtitle": "通知のみ：メッセージ、リクエスト、手番、タイマー",
+  "settingsGamepadTitle": "コントローラー",
+  "settingsGamepadSubtitle": "メニューと対局用のゲームパッド",
+  "settingsGamepadConnected": "接続中: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "ゲームパッドがありません。接続していずれかのボタンを押してください。",
+  "settingsGamepadHelpNavigate": "十字 / スティック — メニューと盤上のカーソル",
+  "settingsGamepadHelpConfirm": "A / × — 決定または着手",
+  "settingsGamepadHelpBack": "B / ○ — 戻るまたは選択解除",
+  "settingsGamepadHelpTabs": "L1 / R1 — タブ切替",
+  "settingsGamepadHelpPlay": "チェッカー、三目並べ、戦艦ではカーソルがマスを移動します",
+  "gamepadConnectedSnack": "コントローラー接続: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "フレンドからのメッセージのみ",
   "settingsFriendsOnlySubtitle": "フレンド以外は絵文字のみ送信できます。迷惑行為がある場合は一時的にブロックしてください。",
   "settingsNotifications": "通知",

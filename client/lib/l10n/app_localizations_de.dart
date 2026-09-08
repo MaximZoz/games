@@ -58,6 +58,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Nur Hinweise: Nachrichten, Anfragen, Ihr Zug und der Timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad für Menüs und Partien';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Verbunden: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Kein Gamepad gefunden. Controller anschließen und eine Taste drücken.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kreuz / Stick — Menüs und Feldcursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kreuz — bestätigen oder ziehen';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kreis — zurück oder Auswahl aufheben';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — Menü-Tabs';
+
+  @override
+  String get settingsGamepadHelpPlay => 'In Dame, Tic-Tac-Toe und Schiffe versenken bewegt der Cursor die Felder';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller verbunden: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Netzwerkmodus';
 
   @override

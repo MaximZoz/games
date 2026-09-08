@@ -58,6 +58,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Только уведомления: сообщения, заявки, ваш ход и таймер';
 
   @override
+  String get settingsGamepadTitle => 'Контроллер';
+
+  @override
+  String get settingsGamepadSubtitle => 'Геймпад для меню и партий';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Подключён: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Крест / стик — меню и курсор на поле';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Крест — выбрать или сходить';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Круг — назад или снять выбор';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+
+  @override
+  String get settingsGamepadHelpPlay => 'В шашках, крестиках-ноликах и морском бое курсор ходит по клеткам';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Контроллер подключён: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override

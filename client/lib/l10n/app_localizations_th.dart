@@ -58,6 +58,40 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsHapticsSubtitle => 'เฉพาะการแจ้งเตือน: ข้อความ คำขอ ตาของคุณ และตัวจับเวลา';
 
   @override
+  String get settingsGamepadTitle => 'คอนโทรลเลอร์';
+
+  @override
+  String get settingsGamepadSubtitle => 'เกมแพดสำหรับเมนูและเกม';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'เชื่อมต่อแล้ว: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / กากบาท — ยืนยันหรือเดิน';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
+
+  @override
+  String get settingsGamepadHelpPlay => 'ในหมากฮอส โอเอกซ์ และเรือรบ เคอร์เซอร์เลื่อนตามช่อง';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'เชื่อมต่อคอนโทรลเลอร์แล้ว: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'โหมดเครือข่าย';
 
   @override

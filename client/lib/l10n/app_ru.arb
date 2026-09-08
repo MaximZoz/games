@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Ход",
   "settingsHapticsTitle": "Вибрация",
   "settingsHapticsSubtitle": "Только уведомления: сообщения, заявки, ваш ход и таймер",
+  "settingsGamepadTitle": "Контроллер",
+  "settingsGamepadSubtitle": "Геймпад для меню и партий",
+  "settingsGamepadConnected": "Подключён: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Геймпад не найден. Подключите контроллер и нажмите любую кнопку.",
+  "settingsGamepadHelpNavigate": "Крест / стик — меню и курсор на поле",
+  "settingsGamepadHelpConfirm": "A / Крест — выбрать или сходить",
+  "settingsGamepadHelpBack": "B / Круг — назад или снять выбор",
+  "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
+  "settingsGamepadHelpPlay": "В шашках, крестиках-ноликах и морском бое курсор ходит по клеткам",
+  "gamepadConnectedSnack": "Контроллер подключён: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsOfflineModeTitle": "Режим сети",
   "settingsOfflineModeSubtitle": "Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.",
   "settingsModeOnline": "Онлайн",

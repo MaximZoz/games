@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Turno",
   "settingsHapticsTitle": "Vibración",
   "settingsHapticsSubtitle": "Solo avisos: mensajes, solicitudes, tu turno y el temporizador",
+  "settingsGamepadTitle": "Mando",
+  "settingsGamepadSubtitle": "Mando para menús y partidas",
+  "settingsGamepadConnected": "Conectado: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "No hay mando. Conéctalo y pulsa cualquier botón.",
+  "settingsGamepadHelpNavigate": "Cruz / stick — menús y cursor en el tablero",
+  "settingsGamepadHelpConfirm": "A / Cruz — confirmar o mover",
+  "settingsGamepadHelpBack": "B / Círculo — atrás o quitar selección",
+  "settingsGamepadHelpTabs": "L1 / R1 — pestañas del menú",
+  "settingsGamepadHelpPlay": "En damas, tres en raya y hundir la flota el cursor recorre las casillas",
+  "gamepadConnectedSnack": "Mando conectado: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Mensajes solo de amigos",
   "settingsFriendsOnlySubtitle": "Quienes no son amigos solo pueden enviar emojis. Si hay spam, bloquea temporalmente al usuario.",
   "settingsNotifications": "Notificaciones",

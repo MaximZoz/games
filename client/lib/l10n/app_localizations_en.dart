@@ -58,6 +58,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alerts only: messages, requests, your turn, and the timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad for menus and matches';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Connected: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'No gamepad found. Connect a controller and press any button.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menus and the board cursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Cross — confirm or make a move';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Circle — back or deselect';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
+
+  @override
+  String get settingsGamepadHelpPlay => 'In checkers, tic-tac-toe and battleship the cursor moves across cells';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller connected: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Network mode';
 
   @override

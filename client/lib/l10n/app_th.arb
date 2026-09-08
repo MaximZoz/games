@@ -17,6 +17,30 @@
   "settingsSoundTurn": "ตา",
   "settingsHapticsTitle": "การสั่น",
   "settingsHapticsSubtitle": "เฉพาะการแจ้งเตือน: ข้อความ คำขอ ตาของคุณ และตัวจับเวลา",
+  "settingsGamepadTitle": "คอนโทรลเลอร์",
+  "settingsGamepadSubtitle": "เกมแพดสำหรับเมนูและเกม",
+  "settingsGamepadConnected": "เชื่อมต่อแล้ว: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้",
+  "settingsGamepadHelpNavigate": "ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน",
+  "settingsGamepadHelpConfirm": "A / กากบาท — ยืนยันหรือเดิน",
+  "settingsGamepadHelpBack": "B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก",
+  "settingsGamepadHelpTabs": "L1 / R1 — แท็บเมนู",
+  "settingsGamepadHelpPlay": "ในหมากฮอส โอเอกซ์ และเรือรบ เคอร์เซอร์เลื่อนตามช่อง",
+  "gamepadConnectedSnack": "เชื่อมต่อคอนโทรลเลอร์แล้ว: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "ข้อความจากเพื่อนเท่านั้น",
   "settingsFriendsOnlySubtitle": "ผู้ที่ไม่ใช่เพื่อนส่งได้เฉพาะอีโมจิ หากถูกรบกวน ให้บล็อกผู้ใช้นั้นชั่วคราว",
   "settingsNotifications": "การแจ้งเตือน",

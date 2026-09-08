@@ -58,6 +58,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Solo avisos: mensajes, solicitudes, tu turno y el temporizador';
 
   @override
+  String get settingsGamepadTitle => 'Mando';
+
+  @override
+  String get settingsGamepadSubtitle => 'Mando para menús y partidas';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Conectado: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'No hay mando. Conéctalo y pulsa cualquier botón.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Cruz / stick — menús y cursor en el tablero';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Cruz — confirmar o mover';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Círculo — atrás o quitar selección';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — pestañas del menú';
+
+  @override
+  String get settingsGamepadHelpPlay => 'En damas, tres en raya y hundir la flota el cursor recorre las casillas';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Mando conectado: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Modo de red';
 
   @override

@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
@@ -44,6 +48,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   final GlobalKey _rewardKey = GlobalKey();
 
   CheckersSquare? _selected;
+  CheckersSquare _cursor = const CheckersSquare(0, 0);
   bool _busy = false;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
@@ -768,12 +773,51 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   Widget _buildBoard(CheckersGameView game) {
-    return CheckersBoard(
-      game: game,
-      selected: _selected,
-      flip: game.myIndex != 1,
-      onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
+    final flip = game.myIndex != 1;
+    return GamepadScope(
+      onAction: (action) => _onGamepad(game, action, flip: flip),
+      child: CheckersBoard(
+        game: game,
+        selected: _selected,
+        cursor: GamepadService.instance.isRecentlyActive ? _cursor : null,
+        flip: flip,
+        onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
+      ),
     );
+  }
+
+  bool _onGamepad(
+    CheckersGameView game,
+    GamepadAction action, {
+    required bool flip,
+  }) {
+    if (game.isOver) return false;
+    if (action.isDirection) {
+      final cursor = GamepadGridCursor(
+        columns: CheckersEngine.size,
+        count: CheckersEngine.size * CheckersEngine.size,
+        index: _cursor.r * CheckersEngine.size + _cursor.c,
+      );
+      if (cursor.move(action, flip: flip)) {
+        setState(() {
+          _cursor = CheckersSquare(
+            cursor.index ~/ CheckersEngine.size,
+            cursor.index % CheckersEngine.size,
+          );
+        });
+      }
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (!game.isMyTurn || _busy) return true;
+      unawaited(_onSquareTap(game, _cursor.r, _cursor.c));
+      return true;
+    }
+    if (action == GamepadAction.cancel && _selected != null) {
+      setState(() => _selected = null);
+      return true;
+    }
+    return false;
   }
 
   Widget _buildFinishRow(CheckersGameView game, String? me) {

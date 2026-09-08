@@ -58,6 +58,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHapticsSubtitle => '通知のみ：メッセージ、リクエスト、手番、タイマー';
 
   @override
+  String get settingsGamepadTitle => 'コントローラー';
+
+  @override
+  String get settingsGamepadSubtitle => 'メニューと対局用のゲームパッド';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '接続中: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
+
+  @override
+  String get settingsGamepadHelpNavigate => '十字 / スティック — メニューと盤上のカーソル';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / × — 決定または着手';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / ○ — 戻るまたは選択解除';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
+
+  @override
+  String get settingsGamepadHelpPlay => 'チェッカー、三目並べ、戦艦ではカーソルがマスを移動します';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'コントローラー接続: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'ネットワークモード';
 
   @override

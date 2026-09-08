@@ -58,6 +58,40 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Vain ilmoitukset: viestit, pyynnöt, vuorosi ja ajastin';
 
   @override
+  String get settingsGamepadTitle => 'Ohjain';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad valikoille ja peleille';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Yhdistetty: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Risti / tikku — valikot ja laudan kursori';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Risti — vahvista tai siirrä';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Ympyrä — takaisin tai poista valinta';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — valikon välilehdet';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Tammessa, ristinollassa ja laivanupotuksessa kursori liikkuu ruuduilla';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Ohjain yhdistetty: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Verkkotila';
 
   @override

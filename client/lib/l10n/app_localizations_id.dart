@@ -58,6 +58,40 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Hanya notifikasi: pesan, permintaan, giliran Anda, dan timer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroler';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad untuk menu dan pertandingan';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Terhubung: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu dan kursor papan';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Silang — konfirmasi atau jalan';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Lingkaran — kembali atau batal pilih';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Di dam, tic-tac-toe, dan kapal perang kursor bergerak di kotak';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroler terhubung: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Mode jaringan';
 
   @override

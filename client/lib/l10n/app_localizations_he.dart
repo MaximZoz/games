@@ -58,6 +58,40 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsHapticsSubtitle => 'התראות בלבד: הודעות, בקשות, התור שלך והטיימר';
 
   @override
+  String get settingsGamepadTitle => 'בקר';
+
+  @override
+  String get settingsGamepadSubtitle => 'גיימפד לתפריטים ולמשחקים';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'מחובר: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'חיצים / סטיק — תפריטים וסמן על הלוח';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / איקס — אישור או מהלך';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / עיגול — חזרה או ביטול בחירה';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
+
+  @override
+  String get settingsGamepadHelpPlay => 'בדמקה, איקס-עיגול וקרב אוניות הסמן זז בין המשבצות';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'בקר מחובר: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'מצב רשת';
 
   @override

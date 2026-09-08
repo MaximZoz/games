@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Tour",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Alertes uniquement : messages, demandes, votre tour et le minuteur",
+  "settingsGamepadTitle": "Manette",
+  "settingsGamepadSubtitle": "Manette pour les menus et les parties",
+  "settingsGamepadConnected": "Connectée : {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Aucune manette. Branchez-en une et appuyez sur un bouton.",
+  "settingsGamepadHelpNavigate": "Croix / stick — menus et curseur sur le plateau",
+  "settingsGamepadHelpConfirm": "A / Croix — valider ou jouer",
+  "settingsGamepadHelpBack": "B / Rond — retour ou désélection",
+  "settingsGamepadHelpTabs": "L1 / R1 — onglets du menu",
+  "settingsGamepadHelpPlay": "Aux dames, morpion et bataille navale le curseur se déplace sur les cases",
+  "gamepadConnectedSnack": "Manette connectée : {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Messages des amis uniquement",
   "settingsFriendsOnlySubtitle": "Les non-amis ne peuvent envoyer que des emojis. En cas de spam, bloquez temporairement l’utilisateur.",
   "settingsNotifications": "Notifications",

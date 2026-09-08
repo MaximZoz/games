@@ -17,6 +17,30 @@
   "settingsSoundTurn": "Tur",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Kun notifikationer: beskeder, anmodninger, din tur og timeren",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad til menuer og partier",
+  "settingsGamepadConnected": "Forbundet: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ingen gamepad. Tilslut en controller og tryk på en knap.",
+  "settingsGamepadHelpNavigate": "Kors / stick — menuer og brætmarkør",
+  "settingsGamepadHelpConfirm": "A / Kors — bekræft eller træk",
+  "settingsGamepadHelpBack": "B / Cirkel — tilbage eller fravælg",
+  "settingsGamepadHelpTabs": "L1 / R1 — menufaner",
+  "settingsGamepadHelpPlay": "I dam, kryds og bolle og sænk skibe flytter markøren over felterne",
+  "gamepadConnectedSnack": "Controller forbundet: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Beskeder kun fra venner",
   "settingsFriendsOnlySubtitle": "Ikke-venner kan kun sende emojis. Ved spam, bloker brugeren midlertidigt.",
   "settingsNotifications": "Notifikationer",

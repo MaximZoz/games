@@ -7,6 +7,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
@@ -818,6 +819,14 @@ class AppShell extends ConsumerWidget {
         );
       }
     }
+
+    GamepadNav.switchTab = (delta) {
+      final n = navItems.length;
+      if (n <= 0) return;
+      var next = (selectedIndex + delta) % n;
+      if (next < 0) next += n;
+      navigateWithPrefetch(next);
+    };
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.

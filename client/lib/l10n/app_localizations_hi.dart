@@ -58,6 +58,40 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'केवल सूचनाएँ: संदेश, अनुरोध, आपकी बारी और टाइमर';
 
   @override
+  String get settingsGamepadTitle => 'कंट्रोलर';
+
+  @override
+  String get settingsGamepadSubtitle => 'मेनू और मैच के लिए गेमपैड';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'जुड़ा: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'डी-पैड / स्टिक — मेनू और बोर्ड कर्सर';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / क्रॉस — पुष्टि या चाल';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / सर्कल — वापस या चयन हटाएँ';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
+
+  @override
+  String get settingsGamepadHelpPlay => 'चेकर्स, टिक-टैक-टो और बैटलशिप में कर्सर घरों पर चलता है';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'कंट्रोलर जुड़ा: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'नेटवर्क मोड';
 
   @override

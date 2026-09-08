@@ -58,6 +58,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHapticsSubtitle => 'التنبيهات فقط: الرسائل والطلبات ودورَك والمؤقت';
 
   @override
+  String get settingsGamepadTitle => 'وحدة التحكم';
+
+  @override
+  String get settingsGamepadSubtitle => 'لوحة ألعاب للقوائم والمباريات';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'متصل: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'الأسهم / العصا — القوائم ومؤشر اللوحة';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / تقاطع — تأكيد أو تنفيذ نقلة';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / دائرة — رجوع أو إلغاء التحديد';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — تبويبات القائمة';
+
+  @override
+  String get settingsGamepadHelpPlay => 'في الضامة وإكس-أو والبحرية يتحرك المؤشر على الخانات';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'تم توصيل وحدة التحكم: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'وضع الشبكة';
 
   @override

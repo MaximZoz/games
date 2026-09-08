@@ -55,6 +55,7 @@ const _keySoundGamesEnabled = 'sound_games_enabled';
 const _keySoundNotificationsEnabled = 'sound_notifications_enabled';
 const _keySoundTurnEnabled = 'sound_turn_enabled';
 const _keyHapticsEnabled = 'haptics_enabled';
+const _keyGamepadEnabled = 'gamepad_enabled';
 const _keyMessagesFriendsOnlyPrefix = 'messages_friends_only';
 
 /// Настройка: мастер звука (игры + уведомления + ход).
@@ -123,6 +124,12 @@ final soundTurnEnabledProvider =
 final hapticsEnabledProvider =
     StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
   return PrefBoolNotifier(_keyHapticsEnabled);
+});
+
+/// Геймпад: меню, вкладки и курсор на поле.
+final gamepadEnabledProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keyGamepadEnabled);
 });
 
 /// Настройка: не-друзья могут писать вам только смайликами.
