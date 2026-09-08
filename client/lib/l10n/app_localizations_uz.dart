@@ -88,6 +88,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get offlineModePopupSettings => 'Sozlamalar';
 
   @override
+  String get offlineModeOfferBody => 'Internet yo‘q yoki aloqa juda sekin. Oflayn rejimni yoqib, bot bilan o‘ynashingiz mumkin.';
+
+  @override
+  String get offlineModeOfferAction => 'Oflaynni yoqish';
+
+  @override
   String get gamesPlay => 'O‘ynash';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Boshlang‘ich burchagini tark etgan tosh u yerga qayta olmaydi.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Hali uydagi toshlar o‘yinchining dastlabki 25 yurishida uydan chiqishi kerak.';
 
   @override
   String get rulesNardyTitle => 'Narda — qoidalar';

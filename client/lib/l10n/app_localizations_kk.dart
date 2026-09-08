@@ -88,6 +88,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get offlineModePopupSettings => 'Баптаулар';
 
   @override
+  String get offlineModeOfferBody => 'Интернет жоқ немесе байланыс өте баяу. Офлайн режимді қосып, ботпен ойнауға болады.';
+
+  @override
+  String get offlineModeOfferAction => 'Офлайнды қосу';
+
+  @override
   String get gamesPlay => 'Ойнау';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Бұрыштар: тастар қарама-қарсы бұрыштарда тұрады. Көрші бос ұяшыққа көлденең не тігінен жүреді немесе кез келген тастан секіріп өтеді, оны алмайды. Мақсат — барлық тасты қарсыластың бұрышына жеткізу.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Өз бастапқы бұрышынан шыққан тас оған қайта орала алмайды.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Үйде қалған тастар ойыншының алғашқы 25 жүрісінде шығуы тиіс.';
 
   @override
   String get rulesNardyTitle => 'Нарды — ережелер';

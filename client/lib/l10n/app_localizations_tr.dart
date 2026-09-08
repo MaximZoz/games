@@ -88,6 +88,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get offlineModePopupSettings => 'Ayarlar';
 
   @override
+  String get offlineModeOfferBody => 'İnternet yok veya bağlantı çok yavaş. Çevrimdışı modu açıp botla oynayabilirsiniz.';
+
+  @override
+  String get offlineModeOfferAction => 'Çevrimdışına geç';
+
+  @override
   String get gamesPlay => 'Oyna';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Köşeler: taşlar karşı köşelerde durur. Yatay veya dikey komşu boş kareye gider ya da herhangi bir taşın üzerinden atlar, taşı almaz. Amaç tüm taşları rakibin köşesine taşımaktır.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Başlangıç köşesini terk eden taş oraya geri dönemez.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.';
 
   @override
   String get rulesNardyTitle => 'Tavla — kurallar';

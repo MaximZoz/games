@@ -88,6 +88,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get offlineModePopupSettings => 'Asetukset';
 
   @override
+  String get offlineModeOfferBody => 'Ei internetiä tai yhteys on hyvin hidas. Voit ottaa offline-tilan käyttöön ja pelata bottia vastaan.';
+
+  @override
+  String get offlineModeOfferAction => 'Siirry offlineen';
+
+  @override
   String get gamesPlay => 'Pelaa';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Nappula, joka on lähtenyt aloituskulmastaan, ei saa palata sinne.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — säännöt';

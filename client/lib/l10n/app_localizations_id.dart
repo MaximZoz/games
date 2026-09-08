@@ -88,6 +88,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get offlineModePopupSettings => 'Pengaturan';
 
   @override
+  String get offlineModeOfferBody => 'Tidak ada internet atau koneksi sangat lambat. Anda bisa mengaktifkan mode offline dan bermain lawan bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Aktifkan offline';
+
+  @override
   String get gamesPlay => 'Main';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Buah yang sudah meninggalkan sudut awalnya tidak boleh kembali ke sana.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — aturan';

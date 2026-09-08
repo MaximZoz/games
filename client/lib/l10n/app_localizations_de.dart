@@ -88,6 +88,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get offlineModePopupSettings => 'Einstellungen';
 
   @override
+  String get offlineModeOfferBody => 'Kein Internet oder die Verbindung ist sehr langsam. Du kannst den Offline-Modus einschalten und gegen einen Bot spielen.';
+
+  @override
+  String get offlineModeOfferAction => 'Offline einschalten';
+
+  @override
   String get gamesPlay => 'Spielen';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Ecken: die Steine stehen in gegenüberliegenden Ecken. Ziehe auf ein benachbartes freies Feld waagerecht oder senkrecht oder springe über einen beliebigen Stein, ohne ihn zu schlagen. Ziel ist, alle eigenen Steine in die Ecke des Gegners zu bringen.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Ein Stein, der seine Start-Ecke verlassen hat, darf nicht dorthin zurückkehren.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — Regeln';

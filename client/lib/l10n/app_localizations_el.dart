@@ -88,6 +88,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String get offlineModePopupSettings => 'Ρυθμίσεις';
 
   @override
+  String get offlineModeOfferBody => 'Δεν υπάρχει διαδίκτυο ή η σύνδεση είναι πολύ αργή. Μπορείτε να ενεργοποιήσετε τη λειτουργία εκτός σύνδεσης και να παίξετε με bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Ενεργοποίηση εκτός σύνδεσης';
+
+  @override
   String get gamesPlay => 'Παίξτε';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Γωνίες: τα πούλια ξεκινούν στις απέναντι γωνίες. Πηγαίνετε σε διπλανή ελεύθερη θέση οριζόντια ή κάθετα ή πηδάτε πάνω από οποιοδήποτε πούλι χωρίς να το βγάλετε. Στόχος είναι να μεταφέρετε όλα τα πούλια στη γωνία του αντιπάλου.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Πούλι που έχει φύγει από την αρχική του γωνία δεν μπορεί να επιστρέψει εκεί.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
 
   @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';

@@ -88,6 +88,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get offlineModePopupSettings => 'Impostazioni';
 
   @override
+  String get offlineModeOfferBody => 'Niente internet o connessione molto lenta. Puoi attivare la modalità offline e giocare contro un bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Attiva offline';
+
+  @override
   String get gamesPlay => 'Gioca';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Angoli: le pedine partono dagli angoli opposti. Si va in una casa libera adiacente in orizzontale o verticale, oppure si salta una pedina qualsiasi senza toglierla. L’obiettivo è portare tutte le pedine nell’angolo avversario.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Una pedina che ha lasciato il proprio angolo di partenza non può tornarvi.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regole';

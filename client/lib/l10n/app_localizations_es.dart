@@ -88,6 +88,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offlineModePopupSettings => 'Ajustes';
 
   @override
+  String get offlineModeOfferBody => 'No hay internet o la conexión es muy lenta. Puedes activar el modo sin conexión y jugar contra un bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Activar sin conexión';
+
+  @override
   String get gamesPlay => 'Jugar';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Esquinas: las fichas empiezan en esquinas opuestas. Se avanza a una casilla libre vecina en horizontal o vertical, o se salta sobre cualquier ficha sin quitarla. El objetivo es llevar todas las fichas a la esquina del rival.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Una ficha que ya salió de su esquina inicial no puede volver a ella.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Las fichas que aún no han salido de casa deben abandonarla en los primeros 25 movimientos del jugador.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — reglas';

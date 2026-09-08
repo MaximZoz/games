@@ -88,6 +88,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get offlineModePopupSettings => 'Ustawienia';
 
   @override
+  String get offlineModeOfferBody => 'Brak internetu albo połączenie jest bardzo wolne. Możesz włączyć tryb offline i zagrać z botem.';
+
+  @override
+  String get offlineModeOfferAction => 'Włącz offline';
+
+  @override
   String get gamesPlay => 'Graj';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Pion, który opuścił swój róg startowy, nie może do niego wrócić.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.';
 
   @override
   String get rulesNardyTitle => 'Nardy — zasady';

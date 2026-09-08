@@ -84,6 +84,8 @@ void main() {
       l10n: t,
     );
     expect(corners, contains(t.rulesCheckersPlayCorners));
+    expect(corners, contains(t.rulesCheckersPlayCornersNoReturn));
+    expect(corners, contains(t.rulesCheckersPlayCornersLeaveHome));
     expect(corners, contains(t.rulesCheckersMode(t.gamesCheckersModeCorners)));
 
     final offline = checkersRuleLines(

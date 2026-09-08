@@ -88,6 +88,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get offlineModePopupSettings => 'Instellingen';
 
   @override
+  String get offlineModeOfferBody => 'Geen internet of de verbinding is erg traag. Je kunt de offlinemodus aanzetten en tegen een bot spelen.';
+
+  @override
+  String get offlineModeOfferAction => 'Offline aanzetten';
+
+  @override
   String get gamesPlay => 'Spelen';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Een schijf die zijn start-hoek heeft verlaten, mag daar niet naar terug.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regels';

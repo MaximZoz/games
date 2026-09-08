@@ -88,6 +88,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get offlineModePopupSettings => 'הגדרות';
 
   @override
+  String get offlineModeOfferBody => 'אין אינטרנט או שהחיבור איטי מאוד. אפשר להפעיל מצב אופליין ולשחק מול בוט.';
+
+  @override
+  String get offlineModeOfferAction => 'הפעל אופליין';
+
+  @override
   String get gamesPlay => 'שחק';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'פינות: החיילים מתחילים בפינות נגדיות. זזים למשבצת פנויה סמוכה אופקית או אנכית, או קופצים מעל כל חייל בלי להוריד אותו. המטרה היא להעביר את כל החיילים לפינת היריב.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'חייל שעזב את פינת הפתיחה שלו אינו רשאי לחזור אליה.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
 
   @override
   String get rulesNardyTitle => 'שש-בש — חוקים';

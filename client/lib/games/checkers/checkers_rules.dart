@@ -49,6 +49,10 @@ List<String> checkersRuleLines({
     if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
     if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersIntro,
     checkersPlayLine(mode, l10n),
+    if (mode == CheckersEngine.modeCorners) ...[
+      l10n.rulesCheckersPlayCornersNoReturn,
+      l10n.rulesCheckersPlayCornersLeaveHome,
+    ],
     if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersWin,
   ];
 }

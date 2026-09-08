@@ -165,6 +165,35 @@ void main() {
     expect(mv!.from, const CheckersSquare(7, 7));
   });
 
+  test('уголки: вышедшая фишка не возвращается в дом', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
+    g.board = List<int>.filled(64, 0);
+    g.set(3, 2, CheckersEngine.whiteMan);
+    g.set(7, 7, CheckersEngine.blackMan);
+    g.turn = 0;
+    final dests = g.legalMoves().map((m) => m.to).toSet();
+    expect(dests.contains(const CheckersSquare(2, 2)), isFalse);
+    expect(dests.contains(const CheckersSquare(3, 3)), isTrue);
+  });
+
+  test('уголки: после 25 ходов фишки в доме — проигрыш', () {
+    final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
+    g.board = List<int>.filled(64, 0);
+    g.set(1, 1, CheckersEngine.whiteMan);
+    g.set(4, 4, CheckersEngine.whiteMan);
+    g.set(7, 7, CheckersEngine.blackMan);
+    g.seq = 48;
+    g.turn = 0;
+    g.apply(
+      0,
+      const CheckersMove(
+        from: CheckersSquare(4, 4),
+        to: CheckersSquare(4, 5),
+      ),
+    );
+    expect(g.winner, 1);
+  });
+
   test('уголки: бот ходит разными шашками', () {
     final g = CheckersEngine.newGame(CheckersEngine.modeCorners);
     final froms = <CheckersSquare>{};

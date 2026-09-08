@@ -88,6 +88,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offlineModePopupSettings => 'Paramètres';
 
   @override
+  String get offlineModeOfferBody => 'Pas d’internet ou connexion très lente. Vous pouvez activer le mode hors ligne et jouer contre un bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Activer hors ligne';
+
+  @override
   String get gamesPlay => 'Jouer';
 
   @override
@@ -747,6 +753,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesCheckersPlayCorners => 'Coins : les pions partent des coins opposés. On avance d’une case libre à l’horizontale ou à la verticale, ou on saute par-dessus n’importe quel pion sans le retirer. Le but est d’amener tous ses pions dans le coin adverse.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Un pion qui a quitté son coin de départ ne peut pas y revenir.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — règles';

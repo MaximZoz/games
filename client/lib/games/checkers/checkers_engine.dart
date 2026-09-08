@@ -91,6 +91,9 @@ class CheckersEngine {
   static const winnerDraw = -2;
   static const size = 8;
 
+  /// За столько своих ходов фишки должны покинуть стартовый угол.
+  static const cornersLeaveHomeMoves = 25;
+
   String mode;
   List<int> board;
   int turn;
@@ -353,12 +356,38 @@ class CheckersEngine {
     return out;
   }
 
+  static bool cornersOwnHome(int seat, int r, int c) {
+    if (seat == 0) return r >= 0 && r <= 2 && c >= 0 && c <= 2;
+    if (seat == 1) return r >= 5 && r <= 7 && c >= 5 && c <= 7;
+    return false;
+  }
+
+  /// Сколько ходов уже сделал [seat] после [seq] полуходов.
+  static int seatMoveCount(int seq, int seat) {
+    if (seat == 0) return (seq + 1) ~/ 2;
+    return seq ~/ 2;
+  }
+
+  bool cornersHasPiecesInOwnHome(int seat) {
+    for (var r = 0; r < size; r++) {
+      for (var c = 0; c < size; c++) {
+        if (owner(at(r, c)) == seat && cornersOwnHome(seat, r, c)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   List<CheckersMove> cornersMovesFrom(int r, int c) {
     final out = <CheckersMove>[];
     final from = CheckersSquare(r, c);
+    final seat = owner(at(r, c));
+    final leftHome = seat >= 0 && !cornersOwnHome(seat, r, c);
     for (final d in _ortho) {
       final nr = r + d[0], nc = c + d[1];
       if (at(nr, nc) == empty) {
+        if (leftHome && cornersOwnHome(seat, nr, nc)) continue;
         out.add(CheckersMove(from: from, to: CheckersSquare(nr, nc)));
       }
     }
@@ -374,6 +403,7 @@ class CheckersEngine {
         final land = CheckersSquare(lr, lc);
         if (seen.contains(land)) continue;
         seen.add(land);
+        if (leftHome && cornersOwnHome(seat, lr, lc)) continue;
         out.add(CheckersMove(from: from, to: land));
         queue.add(land);
       }
@@ -440,6 +470,14 @@ class CheckersEngine {
         contC = -1;
         return;
       }
+      if (seatMoveCount(seq, seat) >= cornersLeaveHomeMoves &&
+          cornersHasPiecesInOwnHome(seat)) {
+        winner = 1 - seat;
+        mustContinue = false;
+        contR = -1;
+        contC = -1;
+        return;
+      }
     } else if (chosen.jumped.isNotEmpty && !(isEnglish && promoted)) {
       final more = capturesFrom(chosen.to.r, chosen.to.c);
       if (more.isNotEmpty) {
@@ -464,6 +502,12 @@ class CheckersEngine {
       }
       if (cornersFilled(1)) {
         winner = 1;
+        return;
+      }
+      final justMoved = 1 - turn;
+      if (seatMoveCount(seq, justMoved) >= cornersLeaveHomeMoves &&
+          cornersHasPiecesInOwnHome(justMoved)) {
+        winner = 1 - justMoved;
         return;
       }
     }
