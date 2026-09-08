@@ -66,7 +66,7 @@ void main() {
     expect(fanSlotMoveDuration(instant: true), Duration.zero);
     expect(
       fanSlotMoveDuration(instant: false),
-      const Duration(milliseconds: 340),
+      const Duration(milliseconds: 180),
     );
   });
 

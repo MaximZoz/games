@@ -192,6 +192,13 @@ void main() {
       expect(durakSeatedTablePairInLayout(seated: true), isTrue);
       expect(durakSeatedTablePairInLayout(seated: false), isFalse);
       expect(
+        durakSeatedTablePairInLayout(
+          seated: false,
+          reserveForFlight: true,
+        ),
+        isTrue,
+      );
+      expect(
         durakSeatedTableSlotOpacity(seated: true, inFlight: true),
         1,
       );
@@ -199,6 +206,32 @@ void main() {
         durakSeatedTableSlotOpacity(seated: false, inFlight: true),
         0,
       );
+    });
+
+    test('посадка атаки совпадает с сеткой стола, не с «центром рядом»', () {
+      const center = Offset(200, 160);
+      final first = durakEstimateAttackLandRect(
+        tableCenter: center,
+        cardSize: card,
+        pairIndex: 0,
+        pairCount: 1,
+        compact: false,
+      );
+      final second = durakEstimateAttackLandRect(
+        tableCenter: center,
+        cardSize: card,
+        pairIndex: 1,
+        pairCount: 2,
+        compact: false,
+      );
+      expect(first.width, card.width);
+      expect(first.height, card.height);
+      expect(second.left, greaterThan(first.left));
+      expect(second.top, first.top);
+      final defend = durakEstimateDefenseLandRect(first);
+      expect(defend.left, first.left + kDurakDefendOffset.dx);
+      expect(defend.top, first.top + kDurakDefendOffset.dy);
+      expect(durakTablePairSlotWidth(card), card.width + 26);
     });
 
     test('запас снизу не съедает высоту одной пары', () {
