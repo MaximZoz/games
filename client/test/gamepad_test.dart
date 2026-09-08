@@ -56,9 +56,9 @@ void main() {
     final cursor = GamepadGridCursor(columns: 3, count: 9, index: 4);
     expect(cursor.move(GamepadAction.up), isTrue);
     expect(cursor.index, 1);
-    expect(cursor.move(GamepadAction.up), isTrue);
-    expect(cursor.index, 0);
     expect(cursor.move(GamepadAction.up), isFalse);
+    expect(cursor.index, 1);
+    expect(cursor.move(GamepadAction.left), isTrue);
     expect(cursor.index, 0);
     expect(cursor.move(GamepadAction.left), isFalse);
     expect(cursor.move(GamepadAction.right), isTrue);

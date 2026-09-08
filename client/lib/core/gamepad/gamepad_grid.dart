@@ -29,20 +29,16 @@ class GamepadGridCursor {
     final row = index ~/ columns;
     final col = index % columns;
     final rows = (count + columns - 1) ~/ columns;
-    var nextRow = row;
-    var nextCol = col;
-    switch (mapped) {
-      case GamepadAction.up:
-        nextRow = row - 1;
-      case GamepadAction.down:
-        nextRow = row + 1;
-      case GamepadAction.left:
-        nextCol = col - 1;
-      case GamepadAction.right:
-        nextCol = col + 1;
-      default:
-        return false;
-    }
+    final nextRow = switch (mapped) {
+      GamepadAction.up => row - 1,
+      GamepadAction.down => row + 1,
+      _ => row,
+    };
+    final nextCol = switch (mapped) {
+      GamepadAction.left => col - 1,
+      GamepadAction.right => col + 1,
+      _ => col,
+    };
     if (nextRow < 0 ||
         nextCol < 0 ||
         nextRow >= rows ||
