@@ -201,15 +201,19 @@ Set<PlayingCard> durakCardsGoneFromFan({
   };
 }
 
-/// Дырки веера: слот есть, лица нет (ход ещё летит / взятие садится).
+/// Дырки веера: слот есть, лица нет (взятие/добор садится).
+///
+/// Свой ход сразу убирает карту — веер схлопывается вместе с полётом,
+/// а не держит пустой слот до посадки.
 Set<PlayingCard> durakFanHoleCards({
   required Iterable<PlayingCard> playedAway,
   required Iterable<PlayingCard> flyingFromHand,
   required Iterable<PlayingCard> incomingFanCards,
 }) {
+  final gone = playedAway.toSet();
   return {
-    ...playedAway,
-    ...flyingFromHand,
+    for (final c in flyingFromHand)
+      if (!gone.contains(c)) c,
     ...incomingFanCards,
   };
 }
@@ -222,8 +226,10 @@ bool durakFanKeepsHoleSlot({
   required bool flyingFromHand,
 }) {
   if (incomingToFan) return true;
+  // Ход: слот сразу уходит, остальные карты едут одним твином.
+  if (markedPlayedAway) return false;
   if (!inLocalOrder) return false;
-  return markedPlayedAway || flyingFromHand;
+  return flyingFromHand;
 }
 
 /// Порядок веера: дырки своего хода не выкидываем, с сервера их не дописываем.

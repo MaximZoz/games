@@ -472,5 +472,48 @@ void main() {
         isTrue,
       );
     });
+
+    test('после «Беру» соперника сначала подпись, потом Готово', () {
+      expect(kDurakOpponentTakeHold, const Duration(seconds: 1));
+      expect(
+        durakShowOpponentTakeLabel(
+          takeFollow: true,
+          opponentIsDefender: true,
+          holdActive: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShowOpponentTakeLabel(
+          takeFollow: true,
+          opponentIsDefender: true,
+          holdActive: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShowOpponentTakeLabel(
+          takeFollow: true,
+          opponentIsDefender: false,
+          holdActive: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShowDoneAfterOpponentTake(
+          canDone: true,
+          takeLabelActive: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShowDoneAfterOpponentTake(
+          canDone: true,
+          takeLabelActive: false,
+        ),
+        isTrue,
+      );
+      expect(kDurakFanPlayCloseDuration.inMilliseconds, 180);
+    });
   });
 }

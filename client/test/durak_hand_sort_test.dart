@@ -596,7 +596,7 @@ void main() {
       expect(next, const [aceSpades, kingHearts]);
     });
 
-    test('до посадки дырка остаётся в том же месте веера', () {
+    test('после отпускания ход сразу схлопывает слот веера', () {
       expect(
         durakFanKeepsHoleSlot(
           inLocalOrder: true,
@@ -604,23 +604,48 @@ void main() {
           markedPlayedAway: true,
           flyingFromHand: true,
         ),
-        isTrue,
+        isFalse,
+      );
+      expect(
+        durakFanHoleCards(
+          playedAway: const [sixClubs],
+          flyingFromHand: const [sixClubs],
+          incomingFanCards: const [],
+        ),
+        isEmpty,
       );
       final holes = durakOrderedHandSlots(
-        prevOrder: const [sixClubs, aceSpades, kingHearts],
+        prevOrder: const [aceSpades, kingHearts],
         serverHand: const [aceSpades, kingHearts],
         pendingDeal: const {},
         leavingHand: {sixClubs},
-        holeCards: {sixClubs},
+        holeCards: durakFanHoleCards(
+          playedAway: const [sixClubs],
+          flyingFromHand: const [sixClubs],
+          incomingFanCards: const [],
+        ),
       );
-      expect(holes, const [sixClubs, aceSpades, kingHearts]);
-      final kept = durakMergeHandOrderAfterMove(
-        prevOrder: const [sixClubs, aceSpades, kingHearts],
-        serverHand: const [aceSpades, kingHearts],
-        pendingDeal: const {},
-        leavingHand: {sixClubs},
+      expect(holes, const [aceSpades, kingHearts]);
+    });
+
+    test('взятие держит дырку, пока карта садится в веер', () {
+      expect(
+        durakFanKeepsHoleSlot(
+          inLocalOrder: true,
+          incomingToFan: true,
+          markedPlayedAway: false,
+          flyingFromHand: true,
+        ),
+        isTrue,
       );
-      expect(kept, const [sixClubs, aceSpades, kingHearts]);
+      expect(
+        durakFanHoleCards(
+          playedAway: const [],
+          flyingFromHand: const [sixClubs],
+          incomingFanCards: const [sixClubs],
+        ),
+        contains(sixClubs),
+      );
     });
 
     test('после посадки устаревший снимок не возвращает карту в слоты', () {
