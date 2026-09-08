@@ -115,6 +115,27 @@ bool durakShouldHideRemoteTableCard({
   return true;
 }
 
+/// Карту из prev не сажаем, пока она в remote-полёте.
+///
+/// Иначе слот получает opacity 1, overlay ещё летит — вспышка на столе
+/// (подкид «появился, потом полетел»; карта мигает при переводе).
+bool durakShouldSeatPrevTableCard({required bool remoteFlying}) =>
+    !remoteFlying;
+
+/// FX стола ждём: свой ход, overlay или карта вытянута из веера.
+bool durakTableFxDeferred({
+  required bool fxScheduled,
+  required bool busy,
+  required bool localAttackHold,
+  required bool cardFlightActive,
+  required bool holdingFanCard,
+}) =>
+    fxScheduled ||
+    busy ||
+    localAttackHold ||
+    cardFlightActive ||
+    holdingFanCard;
+
 /// Скрытую на время busy карту пора снова показать: она уже своя или сидит.
 ///
 /// Не смотрим «уже была в prev»: после своего хода prev могут обновить
