@@ -1978,7 +1978,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Посадка своего подкида: ключ слота в уже перестроенной сетке.
   Rect _landRectForPendingAttack(DurakGameView view, Size screen) {
     final pending = _pendingAttackPlaceholders(view);
-    final idx = _serverPairsInLayout(view) + math.max(pending.length - 1, 0);
+    final lastPending = pending.isEmpty ? 0 : pending.length - 1;
+    final idx = _serverPairsInLayout(view) + lastPending;
     return globalRectOf(_tableAttackKeys.putIfAbsent(idx, GlobalKey.new)) ??
         globalRectOf(_pendingAttackLandKey) ??
         globalRectOf(_attackSlotKey) ??
@@ -1998,7 +1999,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         table?.center ?? Offset(screen.width / 2, screen.height * 0.42);
     final serverVisible = _serverPairsInLayout(view);
     final n = pairCount ?? (serverVisible + _optimisticAttacks.length);
-    final idx = pairIndex ?? math.max(n - 1, 0);
+    final idx = pairIndex ?? (n < 1 ? 0 : n - 1);
     return durakEstimateAttackLandRect(
       tableCenter: center,
       cardSize: _tableCardSize,
