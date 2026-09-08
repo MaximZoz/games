@@ -97,9 +97,36 @@ bool durakHideDeferredRemoteAttack({
   required bool optimistic,
   required bool localFlying,
   required bool fxDeferred,
+  bool seated = false,
 }) {
-  if (optimistic || localFlying || existedOnPrevTable) return false;
+  if (optimistic || localFlying || existedOnPrevTable || seated) return false;
   return fxDeferred;
+}
+
+/// Remote-id не должен прятать уже севшую / свою / летящую локально карту.
+bool durakShouldHideRemoteTableCard({
+  required bool markedRemoteFlying,
+  required bool seated,
+  required bool optimistic,
+  required bool localFlying,
+}) {
+  if (!markedRemoteFlying) return false;
+  if (seated || optimistic || localFlying) return false;
+  return true;
+}
+
+/// Скрытую на время busy карту пора снова показать: она уже своя или сидит.
+///
+/// Не смотрим «уже была в prev»: после своего хода prev могут обновить
+/// вместе с чужим подкидом, и тогда карта вспыхнет без полёта.
+bool durakShouldRevealDeferredRemoteCard({
+  required bool hiddenAsRemote,
+  required bool seated,
+  required bool optimistic,
+  required bool localFlying,
+}) {
+  if (!hiddenAsRemote) return false;
+  return seated || optimistic || localFlying;
 }
 
 /// Чья рука кинула новую атаку: подкид — thrower, иначе attacker.

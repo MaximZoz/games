@@ -115,6 +115,52 @@ void main() {
         isFalse,
       );
       expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: false,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+          seated: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldHideRemoteTableCard(
+          markedRemoteFlying: true,
+          seated: true,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldHideRemoteTableCard(
+          markedRemoteFlying: true,
+          seated: false,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShouldRevealDeferredRemoteCard(
+          hiddenAsRemote: true,
+          seated: false,
+          optimistic: true,
+          localFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShouldRevealDeferredRemoteCard(
+          hiddenAsRemote: true,
+          seated: false,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isFalse,
+      );
+      expect(
         durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
         2,
       );
