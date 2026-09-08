@@ -22,7 +22,7 @@ import (
 
 const (
 	accessTokenExpire  = 15 * time.Minute
-	refreshTokenExpire = 7 * 24 * time.Hour
+	refreshTokenExpire = 365 * 24 * time.Hour
 )
 
 type AuthHandler struct {

@@ -14,7 +14,7 @@ import io.flutter.plugin.common.MethodChannel
 /// Flutter [HapticFeedback] на Android — это View.performHapticFeedback
 /// (KEYBOARD_TAP / CLOCK_TICK). На большинстве телефонов мотор молчит,
 /// если в системе выключена «вибрация при касании».
-/// Здесь — настоящий [Vibrator] с USAGE_NOTIFICATION.
+/// Здесь — настоящий [Vibrator] с USAGE_TOUCH / USAGE_GAME (не notification).
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -31,10 +31,8 @@ class MainActivity : FlutterActivity() {
                             is Number -> value.toInt()
                             else -> 0
                         }
-                        n.coerceIn(0, 400).toLong()
+                        n.coerceIn(0, 800).toLong()
                     }.toLongArray()
-                    // Возвращаем реальный результат: на телефоне без мотора
-                    // Dart должен успеть уйти в HapticFeedback-фолбэк.
                     result.success(vibratePattern(pattern))
                 } catch (e: Throwable) {
                     result.error("vibrate", e.message, null)
@@ -46,25 +44,46 @@ class MainActivity : FlutterActivity() {
         val vibrator = defaultVibrator() ?: return false
         if (!vibrator.hasVibrator()) return false
         if (times.isEmpty() || times.sum() <= 0L) return false
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val effect = waveformEffect(vibrator, times)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val attrs = VibrationAttributes.Builder()
-                        .setUsage(VibrationAttributes.USAGE_NOTIFICATION)
-                        .build()
-                    vibrator.vibrate(effect, attrs)
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(effect, notificationAudioAttributes())
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(times, -1)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val effect = waveformEffect(vibrator, times)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (vibrateWithTouch(vibrator, effect)) return true
             }
+            if (vibrateWithGameAudio(vibrator, effect)) return true
+            return try {
+                vibrator.vibrate(effect)
+                true
+            } catch (_: Throwable) {
+                false
+            }
+        }
+        return try {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(times, -1)
             true
         } catch (_: Throwable) {
-            // OEM без мотора / запрет системы — не роняем Activity.
+            false
+        }
+    }
+
+    private fun vibrateWithTouch(vibrator: Vibrator, effect: VibrationEffect): Boolean {
+        return try {
+            val attrs = VibrationAttributes.Builder()
+                .setUsage(VibrationAttributes.USAGE_TOUCH)
+                .build()
+            vibrator.vibrate(effect, attrs)
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun vibrateWithGameAudio(vibrator: Vibrator, effect: VibrationEffect): Boolean {
+        return try {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(effect, gameAudioAttributes())
+            true
+        } catch (_: Throwable) {
             false
         }
     }
@@ -76,7 +95,6 @@ class MainActivity : FlutterActivity() {
             return VibrationEffect.createWaveform(times, -1)
         }
         val amplitudes = IntArray(times.size) { index ->
-            // Чётные шаги паттерна — паузы, нечётные — вибрация.
             if (index % 2 == 0) 0 else MAX_AMPLITUDE
         }
         return VibrationEffect.createWaveform(times, amplitudes, -1)
@@ -92,9 +110,9 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun notificationAudioAttributes(): AudioAttributes {
+    private fun gameAudioAttributes(): AudioAttributes {
         return AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
     }

@@ -79,6 +79,17 @@ void main() {
       expect(user, isNull);
     });
 
+    test('peekStoredUser не требует access token', () async {
+      final repo = AuthRepository();
+      await repo.init();
+      repo.prefs.setString('user', '{"id":"1","email":"a@b.c"}');
+      final user = await repo.peekStoredUser();
+      expect(user, isNotNull);
+      expect(user!.email, 'a@b.c');
+      final stored = await repo.getStoredUser();
+      expect(stored?.id, '1');
+    });
+
     test('logout clears storage', () async {
       final repo = AuthRepository();
       await repo.init();
