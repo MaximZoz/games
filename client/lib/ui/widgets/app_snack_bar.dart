@@ -16,6 +16,8 @@ void showAppSnackBar(
   AppSnackKind kind = AppSnackKind.info,
   Duration duration = const Duration(seconds: 3),
   IconData? icon,
+  String? actionLabel,
+  VoidCallback? onAction,
 }) {
   final text = message.trim();
   if (text.isEmpty) return;
@@ -42,6 +44,13 @@ void showAppSnackBar(
             message: text,
             kind: kind,
             icon: icon,
+            actionLabel: actionLabel,
+            onAction: onAction == null
+                ? null
+                : () {
+                    messenger.hideCurrentSnackBar();
+                    onAction();
+                  },
           ),
         ),
       );
@@ -56,11 +65,15 @@ class _AppSnackCard extends StatefulWidget {
     required this.message,
     required this.kind,
     this.icon,
+    this.actionLabel,
+    this.onAction,
   });
 
   final String message;
   final AppSnackKind kind;
   final IconData? icon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   State<_AppSnackCard> createState() => _AppSnackCardState();
@@ -209,6 +222,27 @@ class _AppSnackCardState extends State<_AppSnackCard>
                             ),
                           ),
                         ),
+                        if (widget.actionLabel != null &&
+                            widget.onAction != null) ...[
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: widget.onAction,
+                            style: TextButton.styleFrom(
+                              foregroundColor: style.accent,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: Text(
+                              widget.actionLabel!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

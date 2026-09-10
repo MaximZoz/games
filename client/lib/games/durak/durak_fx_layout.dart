@@ -422,6 +422,39 @@ bool durakRevealTableBeforeDismissOverlay({
 /// Взятие со стола не ставит pending — слот-дырка остаётся в [_handOrder].
 bool durakDealCardInFanLayout({required bool pendingDeal}) => !pendingDeal;
 
+/// После «Беру» соперника: секунда подписи, потом кнопка «Готово».
+const Duration kDurakOpponentTakeHold = Duration(seconds: 1);
+
+/// Веер после своего хода: дырка схлопывается одним коротким твином.
+const Duration kDurakFanPlayCloseDuration = Duration(milliseconds: 180);
+
+/// Добор в веер (колода / стол): тот же короткий твин, что после своего хода.
+const Duration kDurakFanIncomingDuration = kDurakFanPlayCloseDuration;
+
+/// Твин раскладки веера: быстрый при своём ходе и при входящих картах.
+Duration durakFanLayoutTweenDuration({
+  required bool compact,
+  required bool fastClose,
+}) =>
+    fastClose
+        ? kDurakFanPlayCloseDuration
+        : durakLayoutTweenDuration(compact: compact);
+
+/// Показать «Беру», пока держим паузу после взятия соперником.
+bool durakShowOpponentTakeLabel({
+  required bool takeFollow,
+  required bool opponentIsDefender,
+  required bool holdActive,
+}) =>
+    takeFollow && opponentIsDefender && holdActive;
+
+/// «Готово» — только после паузы «Беру».
+bool durakShowDoneAfterOpponentTake({
+  required bool canDone,
+  required bool takeLabelActive,
+}) =>
+    canDone && !takeLabelActive;
+
 /// Пауза после посадки отбоя, чтобы было видно чем отбились, затем стол в биту.
 const Duration kDurakBitoAfterDefensePause = Duration(milliseconds: 900);
 

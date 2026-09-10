@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Tah",
   "settingsHapticsTitle": "Vibrace",
   "settingsHapticsSubtitle": "Pouze upozornění: zprávy, žádosti, váš tah a časovač",
+  "settingsGamepadTitle": "Ovladač",
+  "settingsGamepadSubtitle": "Gamepad pro menu a partie",
+  "settingsGamepadConnected": "Připojeno: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.",
+  "settingsGamepadHelpNavigate": "Kříž / páčka — menu a kurzor na desce",
+  "settingsGamepadHelpConfirm": "A / Křížek — potvrdit nebo táhnout",
+  "settingsGamepadHelpBack": "B / Kroužek — zpět nebo zrušit výběr",
+  "settingsGamepadHelpTabs": "L1 / R1 — záložky menu",
+  "settingsGamepadHelpPlay": "Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby",
+  "settingsGamepadHelpCards": "V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne",
+  "settingsGamepadHelpKeyboard": "V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře",
+  "gamepadKeyboardTitle": "Klávesnice",
+  "gamepadKeyboardSpace": "Mezera",
+  "gamepadLegendConfirm": "Vybrat",
+  "gamepadLegendBack": "Zpět",
+  "gamepadLegendTabs": "Karty",
+  "gamepadLegendCycle": "Změnit",
+  "gamepadConnectedSnack": "Ovladač připojen: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Zprávy jen od přátel",
   "settingsFriendsOnlySubtitle": "Kdo není v přátelích, může posílat jen emoji. Pokud vadí spam, uživatele dočasně zablokujte.",
   "settingsNotifications": "Oznámení",
@@ -257,6 +289,28 @@
   "gamesNardy": "Vrhcáby",
   "gamesNardyModeShort": "Krátké",
   "gamesNardyModeLong": "Dlouhé",
+  "gamesCheckers": "Dáma",
+  "gamesCheckersModeRussian": "Ruské",
+  "gamesCheckersModeEnglish": "Anglické",
+  "gamesCheckersModeGiveaway": "Poddávaná",
+  "gamesCheckersModeCorners": "Rohy",
+  "rulesCheckersPlayers": "Hráči: 2.",
+  "rulesCheckersMode": "Režim: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Deska 8×8. Dva hráči.",
+  "rulesCheckersPlay": "Braní je povinné. Dáma i pěšec musí pokračovat, dokud z pole dopadu lze brát dál — zastavit uprostřed nelze. Při více směrech lze zvolit kterýkoli, ne nutně nejdelší. Pěšec na poslední řadě se stává dámou.",
+  "rulesCheckersPlayRussian": "Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné: nelze zastavit, pokud lze pokračovat, ale při více směrech zvolíte kterýkoli, ne nutně nejdelší. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.",
+  "rulesCheckersPlayEnglish": "Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.",
+  "rulesCheckersPlayGiveaway": "Poddávaná: stejné tahy jako v ruské dámě, ale cíl je opačný — odevzdat všechny kameny nebo zůstat bez tahu. Braní je stále povinné.",
+  "rulesCheckersPlayCorners": "Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.",
+  "rulesCheckersPlayCornersNoReturn": "Kámen, který už opustil svůj startovní roh, se do něj nesmí vrátit.",
+  "rulesCheckersPlayCornersLeaveHome": "Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.",
   "rulesNardyTitle": "Vrhcáby — pravidla",
   "rulesNardyPlayers": "Hráči: 2.",
   "rulesNardyMode": "Režim: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Hra proti botovi",
   "offlineModePopupBody": "Režim offline je zapnutý. Hrajte proti botovi bez sázek a odměn. Chaty, přátelé a lobby jsou skryté. Nákupy se uplatní v online režimu.",
   "offlineModePopupSettings": "Nastavení",
+  "offlineModeOfferBody": "Není internet nebo je spojení velmi pomalé. Můžete zapnout režim offline a hrát proti botovi.",
+  "offlineModeOfferAction": "Zapnout offline",
   "offlineModePopupTitle": "Režim offline",
   "offlinePlayAgain": "Znovu",
   "rulesAlternateStarts": "Kdo táhne první se střídá od partie k partii.",

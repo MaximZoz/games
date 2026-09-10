@@ -58,6 +58,64 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsHapticsSubtitle => 'เฉพาะการแจ้งเตือน: ข้อความ คำขอ ตาของคุณ และตัวจับเวลา';
 
   @override
+  String get settingsGamepadTitle => 'คอนโทรลเลอร์';
+
+  @override
+  String get settingsGamepadSubtitle => 'เกมแพดสำหรับเมนูและเกม';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'เชื่อมต่อแล้ว: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / กากบาท — ยืนยันหรือเดิน';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
+
+  @override
+  String get settingsGamepadHelpPlay => 'เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน';
+
+  @override
+  String get settingsGamepadHelpCards => 'ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด';
+
+  @override
+  String get gamepadKeyboardTitle => 'คีย์บอร์ด';
+
+  @override
+  String get gamepadKeyboardSpace => 'เว้นวรรค';
+
+  @override
+  String get gamepadLegendConfirm => 'เลือก';
+
+  @override
+  String get gamepadLegendBack => 'กลับ';
+
+  @override
+  String get gamepadLegendTabs => 'แท็บ';
+
+  @override
+  String get gamepadLegendCycle => 'เปลี่ยน';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'เชื่อมต่อคอนโทรลเลอร์แล้ว: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'โหมดเครือข่าย';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'การตั้งค่า';
+
+  @override
+  String get offlineModeOfferBody => 'ไม่มีอินเทอร์เน็ตหรือการเชื่อมต่อช้ามาก คุณสามารถเปิดโหมดออฟไลน์แล้วเล่นกับบอทได้';
+
+  @override
+  String get offlineModeOfferAction => 'เปิดออฟไลน์';
 
   @override
   String get gamesPlay => 'เล่น';
@@ -695,6 +759,64 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'ยาว';
+
+  @override
+  String get gamesCheckers => 'หมากฮอส';
+
+  @override
+  String get gamesCheckersModeRussian => 'รัสเซีย';
+
+  @override
+  String get gamesCheckersModeEnglish => 'อังกฤษ';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'กิฟอะเวย์';
+
+  @override
+  String get gamesCheckersModeCorners => 'มุม';
+
+  @override
+  String get rulesCheckersPlayers => 'ผู้เล่น: 2';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'โหมด: $mode';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'กระดาน 8×8 สองผู้เล่น';
+
+  @override
+  String get rulesCheckersPlay => 'ต้องกิน หากดามก้าหรือตัวธรรมดาลงช่องแล้วยังกินต่อได้ ห้ามหยุดกลางทาง ถ้ามีหลายทิศทางเลือกทิศใดก็ได้ ไม่บังคับทางที่กินมากสุด ตัวธรรมดาถึงแถวสุดท้ายเป็นดามก้า';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'หมากฮอสรัสเซีย: คนละ 12 ตัวบนช่องเข้ม ตัวธรรมดาเดินทแยงไปข้างหน้าและกินไปข้างหน้าหรือถอยหลัง ดामก้าบินได้ทุกช่อง ต้องกิน: ถ้ากินต่อได้ห้ามหยุด แต่ถ้ามีหลายทิศทางเลือกทิศใดก็ได้ ไม่บังคับทางที่ยาวสุด ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'หมากฮอสอังกฤษ: คนละ 12 ตัว ตัวธรรมดาเดินและกินทแยงไปข้างหน้าเท่านั้น ดามก้าเดินทแยงหนึ่งช่อง ต้องกิน ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'กิฟอะเวย์: เดินแบบหมากฮอสรัสเซีย แต่เป้าหมายกลับกัน คือยอมเสียหมากทั้งหมดหรือเดินไม่ได้ การกินยังบังคับ';
+
+  @override
+  String get rulesCheckersPlayCorners => 'มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'หมากที่ออกจากมุมเริ่มต้นแล้วห้ามกลับเข้าไป';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
 
   @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';

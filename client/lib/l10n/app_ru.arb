@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Ход",
   "settingsHapticsTitle": "Вибрация",
   "settingsHapticsSubtitle": "Только уведомления: сообщения, заявки, ваш ход и таймер",
+  "settingsGamepadTitle": "Контроллер",
+  "settingsGamepadSubtitle": "Геймпад для меню и партий",
+  "settingsGamepadConnected": "Подключён: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Геймпад не найден. Подключите контроллер и нажмите любую кнопку.",
+  "settingsGamepadHelpNavigate": "Крест / стик — меню и курсор на поле",
+  "settingsGamepadHelpConfirm": "A / Крест — выбрать или сходить",
+  "settingsGamepadHelpBack": "B / Круг — назад или снять выбор",
+  "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
+  "settingsGamepadHelpPlay": "Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды",
+  "settingsGamepadHelpCards": "В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать",
+  "settingsGamepadHelpKeyboard": "В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть",
+  "gamepadKeyboardTitle": "Клавиатура",
+  "gamepadKeyboardSpace": "Пробел",
+  "gamepadLegendConfirm": "Выбрать",
+  "gamepadLegendBack": "Назад",
+  "gamepadLegendTabs": "Вкладки",
+  "gamepadLegendCycle": "Сменить",
+  "gamepadConnectedSnack": "Контроллер подключён: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsOfflineModeTitle": "Режим сети",
   "settingsOfflineModeSubtitle": "Офлайн: игра с ботом сразу, без ставок и наград, без чатов и друзей. Покупки сохраняются и применяются в режиме онлайн. Онлайн — когда есть интернет или по настройке пользователя.",
   "settingsModeOnline": "Онлайн",
@@ -27,6 +59,8 @@
   "offlineModePopupTitle": "Офлайн режим",
   "offlineModePopupBody": "Включён офлайн режим. Играйте с ботом без ставок и наград. Чаты, друзья и лобби скрыты. Покупки применятся в режиме онлайн.",
   "offlineModePopupSettings": "Настройки",
+  "offlineModeOfferBody": "Нет интернета или связь очень слабая. Можно включить офлайн режим и играть с ботом.",
+  "offlineModeOfferAction": "Включить офлайн",
   "gamesPlay": "Играть",
   "offlineGameTitle": "Игра с ботом",
   "offlineGameHint": "Без ставок и наград · только офлайн",
@@ -309,6 +343,38 @@
   "gamesNardy": "Нарды",
   "gamesNardyModeShort": "Короткие",
   "gamesNardyModeLong": "Длинные",
+  "gamesCheckers": "Шашки",
+  "gamesCheckersModeRussian": "Русские",
+  "gamesCheckersModeEnglish": "Английские",
+  "gamesCheckersModeGiveaway": "Поддавки",
+  "gamesCheckersModeCorners": "Уголки",
+  "rulesCheckersPlayers": "Игроки: 2.",
+  "rulesCheckersMode": "Режим: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersTime": "Время на ход: {time}. Если время вышло — проигрыш.",
+  "@rulesCheckersTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.",
+  "rulesCheckersPlay": "Бой обязателен. Дамка и простая обязаны продолжать бой, пока с клетки приземления можно бить дальше — остановиться посередине нельзя. Если направлений несколько, можно выбрать любое, не обязательно самое длинное. Простая, дошедшая до последней линии, становится дамкой.",
+  "rulesCheckersWin": "В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.",
+  "rulesCheckersOfflineBot": "Офлайн: партия против бота.",
+  "rulesCheckersPlayRussian": "Русские шашки: у каждого 12 шашек на тёмных клетках. Простые ходят по диагонали вперёд, а бьют вперёд и назад. Дамка летает на любое число клеток. Бой обязателен: нельзя остановиться, если взятие можно продолжить, но если направлений несколько — выбираете любое, не обязательно самое длинное. Побеждает тот, кто съел все шашки соперника или лишил его ходов.",
+  "rulesCheckersPlayEnglish": "Английские шашки: у каждого 12 шашек. Простые ходят и бьют только вперёд по диагонали. Дамка ходит на одну клетку в любую сторону по диагонали. Бой обязателен. Побеждает тот, кто съел все шашки соперника или лишил его ходов.",
+  "rulesCheckersPlayGiveaway": "Поддавки: те же ходы, что в русских шашках, но цель обратная — отдать все свои шашки или остаться без хода. Бой по-прежнему обязателен.",
+  "rulesCheckersPlayCorners": "Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.",
+  "rulesCheckersPlayCornersNoReturn": "Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.",
+  "rulesCheckersPlayCornersLeaveHome": "Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.",
   "rulesNardyTitle": "Нарды — правила",
   "rulesNardyPlayers": "Игроки: 2.",
   "rulesNardyMode": "Режим: {mode}.",

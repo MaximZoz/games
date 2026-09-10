@@ -144,6 +144,15 @@ class UserGameSettings {
     gameMode: 'short',
   );
 
+  static const checkersDefaults = UserGameSettings(
+    gameType: 'checkers',
+    turnTimeSec: 60,
+    variant: 'russian',
+    stakeBronze: 2,
+    maxPlayers: 2,
+    gameMode: 'russian',
+  );
+
   static UserGameSettings defaultsFor(String gameType) {
     switch (gameType) {
       case 'durak':
@@ -154,6 +163,8 @@ class UserGameSettings {
         return unoDefaults;
       case 'nardy':
         return nardyDefaults;
+      case 'checkers':
+        return checkersDefaults;
       default:
         return defaults;
     }
@@ -251,6 +262,18 @@ class UserGameSettings {
         gameMode: mode,
       );
     }
+    if (gameType == 'checkers') {
+      final mode = gameMode == 'giveaway' ? 'giveaway' : 'russian';
+      return UserGameSettings(
+        gameType: 'checkers',
+        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        variant: mode,
+        gridSize: 8,
+        stakeBronze: stake < 2 ? 2 : stake,
+        maxPlayers: 2,
+        gameMode: mode,
+      );
+    }
     final rawVariant = json['variant'] as String?;
     final variant = rawVariant == null || rawVariant.isEmpty
         ? variantFromLegacyGrid(grid)
@@ -290,7 +313,12 @@ class UserGameSettings {
       out['deck_size'] = 108;
       out['max_players'] = maxPlayers;
       out['game_mode'] = 'classic';
-    } else if (gameType == 'nardy') {
+    } else if (gameType == 'nardy' || gameType == 'checkers') {
+      out['variant'] = gameMode;
+      out['grid_size'] = gameType == 'checkers' ? 8 : 3;
+      out['max_players'] = 2;
+      out['game_mode'] = gameMode;
+    } else if (gameType == 'checkers') {
       out['variant'] = gameMode;
       out['grid_size'] = 3;
       out['max_players'] = 2;
@@ -654,6 +682,8 @@ class LobbyItem {
   bool get isUno => gameType == 'uno';
 
   bool get isNardy => gameType == 'nardy';
+
+  bool get isCheckers => gameType == 'checkers';
 
   /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
   String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(

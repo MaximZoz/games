@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
@@ -86,10 +87,13 @@ final profileExtraProvider = Provider<AsyncValue<ProfileExtra?>>((ref) {
 
 class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   AuthStateNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _resumeObserver = _AuthResumeObserver(ensureSessionFresh);
+    WidgetsBinding.instance.addObserver(_resumeObserver);
     _loadUser();
   }
 
   final Ref _ref;
+  late final _AuthResumeObserver _resumeObserver;
 
   Future<void> _loadUser() async {
     final repo = _ref.read(authRepositoryProvider);
@@ -219,13 +223,30 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   }
 
   Future<void> refresh() async {
+    await ensureSessionFresh();
+  }
+
+  /// Обновить токены при возврате в приложение. Локальную сессию не сбрасываем.
+  Future<void> ensureSessionFresh() async {
     final repo = _ref.read(authRepositoryProvider);
     try {
-      final user = await repo.fetchCurrentUser();
-      state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      await repo.getAccessToken();
+      final fresh = await repo.fetchCurrentUser();
+      if (fresh != null) {
+        state = AsyncValue.data(fresh);
+        return;
+      }
+    } catch (_) {}
+    final cached = await repo.peekStoredUser();
+    if (cached != null) {
+      state = AsyncValue.data(cached);
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_resumeObserver);
+    super.dispose();
   }
 
   Future<void> updateDisplayName(String displayName) async {
@@ -310,5 +331,16 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
       }
       rethrow;
     }
+  }
+}
+
+class _AuthResumeObserver with WidgetsBindingObserver {
+  _AuthResumeObserver(this.onResumed);
+
+  final VoidCallback onResumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) onResumed();
   }
 }

@@ -58,6 +58,64 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Vain ilmoitukset: viestit, pyynnöt, vuorosi ja ajastin';
 
   @override
+  String get settingsGamepadTitle => 'Ohjain';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad valikoille ja peleille';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Yhdistetty: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Risti / tikku — valikot ja laudan kursori';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Risti — vahvista tai siirrä';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Ympyrä — takaisin tai poista valinta';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — valikon välilehdet';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee';
+
+  @override
+  String get gamepadKeyboardTitle => 'Näppäimistö';
+
+  @override
+  String get gamepadKeyboardSpace => 'Välilyönti';
+
+  @override
+  String get gamepadLegendConfirm => 'Valitse';
+
+  @override
+  String get gamepadLegendBack => 'Takaisin';
+
+  @override
+  String get gamepadLegendTabs => 'Välilehdet';
+
+  @override
+  String get gamepadLegendCycle => 'Vaihda';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Ohjain yhdistetty: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Verkkotila';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Asetukset';
+
+  @override
+  String get offlineModeOfferBody => 'Ei internetiä tai yhteys on hyvin hidas. Voit ottaa offline-tilan käyttöön ja pelata bottia vastaan.';
+
+  @override
+  String get offlineModeOfferAction => 'Siirry offlineen';
 
   @override
   String get gamesPlay => 'Pelaa';
@@ -695,6 +759,64 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Pitkä';
+
+  @override
+  String get gamesCheckers => 'Tammi';
+
+  @override
+  String get gamesCheckersModeRussian => 'Venäläinen';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Englantilainen';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Antodami';
+
+  @override
+  String get gamesCheckersModeCorners => 'Kulmat';
+
+  @override
+  String get rulesCheckersPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Lauta 8×8. Kaksi pelaajaa.';
+
+  @override
+  String get rulesCheckersPlay => 'Lyöminen on pakollista. Dama ja nappula jatkavat, jos laskeutumiruudusta voi lyödä lisää — kesken ei saa pysähtyä. Jos suuntia on useita, saa valita minkä tahansa, ei välttämättä pisintä. Viimeiselle riville päässyt nappula muuttuu damaksi.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista: jatka jos mahdollista, mutta suuntia voi olla useita ja saat valita minkä tahansa, ei välttämättä pisintä. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Nappula, joka on lähtenyt aloituskulmastaan, ei saa palata sinne.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — säännöt';

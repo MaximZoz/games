@@ -71,6 +71,8 @@ class DurakBot {
   bool _tryThrowOne(DurakGame game) {
     final ranks = game.tableRanks;
     final hand = List<PlayingCard>.from(game.hands[index]);
+    final deckLeft = game.deck.cards.length;
+    final defenderCards = game.hands[game.defenderIndex].length;
     hand.sort((a, b) {
       final at = a.suit == game.trump ? 1 : 0;
       final bt = b.suit == game.trump ? 1 : 0;
@@ -81,7 +83,8 @@ class DurakBot {
     if (maxToss <= 0) return false;
     for (final c in hand) {
       if (!ranks.contains(c.rank.value)) continue;
-      if (c.suit == game.trump) continue; // не разбрасываем козыри
+      final isTrump = c.suit == game.trump;
+      if (isTrump && (deckLeft > 6 || defenderCards > 3)) continue;
       if (game.canAttackWith(c, index)) {
         game.attack(c, playerIndex: index);
         return true;
@@ -150,11 +153,20 @@ class DurakBot {
 
   PlayingCard? _pickAttackCard(List<PlayingCard> hand, Suit trump) {
     if (hand.isEmpty) return null;
-    final nonTrump = hand.where((c) => c.suit != trump).toList()
-      ..sort((a, b) => a.rank.compareTo(b.rank));
-    if (nonTrump.isNotEmpty) return nonTrump.first;
-    final trumps = List<PlayingCard>.from(hand)
-      ..sort((a, b) => a.rank.compareTo(b.rank));
-    return trumps.first;
+    final counts = <int, int>{};
+    for (final c in hand) {
+      counts[c.rank.value] = (counts[c.rank.value] ?? 0) + 1;
+    }
+    final ranked = List<PlayingCard>.from(hand)
+      ..sort((a, b) {
+        final at = a.suit == trump ? 1 : 0;
+        final bt = b.suit == trump ? 1 : 0;
+        if (at != bt) return at.compareTo(bt);
+        final ac = counts[a.rank.value] ?? 0;
+        final bc = counts[b.rank.value] ?? 0;
+        if (ac != bc) return bc.compareTo(ac);
+        return a.rank.compareTo(b.rank);
+      });
+    return ranked.first;
   }
 }

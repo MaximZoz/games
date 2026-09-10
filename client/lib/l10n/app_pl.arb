@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Tura",
   "settingsHapticsTitle": "Wibracje",
   "settingsHapticsSubtitle": "Tylko powiadomienia: wiadomości, zaproszenia, twoja tura i timer",
+  "settingsGamepadTitle": "Kontroler",
+  "settingsGamepadSubtitle": "Gamepad do menu i partii",
+  "settingsGamepadConnected": "Połączono: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.",
+  "settingsGamepadHelpNavigate": "Krzyżak / drążek — menu i kursor na planszy",
+  "settingsGamepadHelpConfirm": "A / Krzyżyk — potwierdź lub wykonaj ruch",
+  "settingsGamepadHelpBack": "B / Kółko — wstecz lub odznacz",
+  "settingsGamepadHelpTabs": "L1 / R1 — karty menu",
+  "settingsGamepadHelpPlay": "Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak",
+  "settingsGamepadHelpCards": "W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera",
+  "settingsGamepadHelpKeyboard": "W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka",
+  "gamepadKeyboardTitle": "Klawiatura",
+  "gamepadKeyboardSpace": "Spacja",
+  "gamepadLegendConfirm": "Wybierz",
+  "gamepadLegendBack": "Wstecz",
+  "gamepadLegendTabs": "Karty",
+  "gamepadLegendCycle": "Zmień",
+  "gamepadConnectedSnack": "Kontroler połączony: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Wiadomości tylko od znajomych",
   "settingsFriendsOnlySubtitle": "Osoby spoza znajomych mogą wysyłać tylko emoji. Jeśli przeszkadza spam, tymczasowo zablokuj użytkownika.",
   "settingsNotifications": "Powiadomienia",
@@ -257,6 +289,28 @@
   "gamesNardy": "Nardy",
   "gamesNardyModeShort": "Krótkie",
   "gamesNardyModeLong": "Długie",
+  "gamesCheckers": "Warcaby",
+  "gamesCheckersModeRussian": "Rosyjskie",
+  "gamesCheckersModeEnglish": "Angielskie",
+  "gamesCheckersModeGiveaway": "Poddawki",
+  "gamesCheckersModeCorners": "Kąciki",
+  "rulesCheckersPlayers": "Gracze: 2.",
+  "rulesCheckersMode": "Tryb: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Plansza 8×8. Dwóch graczy.",
+  "rulesCheckersPlay": "Bicie jest obowiązkowe. Damka i pion muszą kontynuować bój, dopóki z pola lądowania można bić dalej — nie wolno stanąć w połowie. Przy kilku kierunkach można wybrać dowolny, niekoniecznie najdłuższy. Pion na ostatniej linii staje się damką.",
+  "rulesCheckersPlayRussian": "Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe: nie wolno przerwać, jeśli można kontynuować, ale przy kilku kierunkach wybierasz dowolny, niekoniecznie najdłuższy. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
+  "rulesCheckersPlayEnglish": "Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.",
+  "rulesCheckersPlayGiveaway": "Poddawki: te same ruchy co w warcabach rosyjskich, ale cel jest odwrotny — oddać wszystkie piony albo zostać bez ruchu. Bicie nadal jest obowiązkowe.",
+  "rulesCheckersPlayCorners": "Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.",
+  "rulesCheckersPlayCornersNoReturn": "Pion, który opuścił swój róg startowy, nie może do niego wrócić.",
+  "rulesCheckersPlayCornersLeaveHome": "Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.",
   "rulesNardyTitle": "Nardy — zasady",
   "rulesNardyPlayers": "Gracze: 2.",
   "rulesNardyMode": "Tryb: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Gra z botem",
   "offlineModePopupBody": "Tryb offline jest włączony. Graj z botem bez stawek i nagród. Czaty, znajomi i lobby są ukryte. Zakupy zostaną zastosowane w trybie online.",
   "offlineModePopupSettings": "Ustawienia",
+  "offlineModeOfferBody": "Brak internetu albo połączenie jest bardzo wolne. Możesz włączyć tryb offline i zagrać z botem.",
+  "offlineModeOfferAction": "Włącz offline",
   "offlineModePopupTitle": "Tryb offline",
   "offlinePlayAgain": "Jeszcze raz",
   "rulesAlternateStarts": "Kto zaczyna zmienia się z partii na partię.",

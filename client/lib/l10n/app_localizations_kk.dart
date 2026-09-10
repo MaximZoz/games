@@ -58,6 +58,64 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Тек хабарландырулар: хабарлар, өтінімдер, сіздің жүрісіңіз және таймер';
 
   @override
+  String get settingsGamepadTitle => 'Контроллер';
+
+  @override
+  String get settingsGamepadSubtitle => 'Мәзір мен партияларға арналған геймпад';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Қосылған: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Крест / стик — мәзір және тақтадағы курсор';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Крест — таңдау немесе жүру';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Шеңбер — артқа немесе таңдауды алу';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды';
+
+  @override
+  String get settingsGamepadHelpCards => 'Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу';
+
+  @override
+  String get gamepadKeyboardTitle => 'Пернетақта';
+
+  @override
+  String get gamepadKeyboardSpace => 'Бос орын';
+
+  @override
+  String get gamepadLegendConfirm => 'Таңдау';
+
+  @override
+  String get gamepadLegendBack => 'Артқа';
+
+  @override
+  String get gamepadLegendTabs => 'Қойындылар';
+
+  @override
+  String get gamepadLegendCycle => 'Өзгерту';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Контроллер қосылды: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Желі режимі';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Баптаулар';
+
+  @override
+  String get offlineModeOfferBody => 'Интернет жоқ немесе байланыс өте баяу. Офлайн режимді қосып, ботпен ойнауға болады.';
+
+  @override
+  String get offlineModeOfferAction => 'Офлайнды қосу';
 
   @override
   String get gamesPlay => 'Ойнау';
@@ -695,6 +759,64 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Ұзын';
+
+  @override
+  String get gamesCheckers => 'Дойбы';
+
+  @override
+  String get gamesCheckersModeRussian => 'Орысша';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Ағылшын';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Берілмелі';
+
+  @override
+  String get gamesCheckersModeCorners => 'Бұрыштар';
+
+  @override
+  String get rulesCheckersPlayers => 'Ойыншылар: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Тақта 8×8. Екі ойыншы.';
+
+  @override
+  String get rulesCheckersPlay => 'Ұру міндетті. Дамка мен жәй тас қону ұяшығынан әрі қарай ұруға болса, тоқтамай жалғастыруы керек. Бағыт бірнеше болса, кез келгенін таңдауға болады, ең ұзын жол міндетті емес. Соңғы қатарға жеткен жәй тас дамка болады.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Орыс дойбысы: әрқайсысында қара ұяшықтарда 12 тас. Жәй тастар қиғаш алға жүреді, алдыға да артқа да ұрады. Дамка кез келген ұяшыққа ұшады. Ұру міндетті: жалғастыруға болса тоқтауға болмайды, бірақ бағыт бірнеше болса кез келгенін таңдайсыз, ең ұзыны міндетті емес. Жеңу үшін қарсыластың барлық тасын алу немесе жүріссіз қалдыру керек.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Ағылшын дойбысы: әрқайсысында 12 тас. Жәй тастар тек қиғаш алға жүреді және ұрады. Дамка кез келген бағытта бір ұяшық жүреді. Ұру міндетті. Жеңу үшін қарсыластың барлық тасын алу немесе жүріссіз қалдыру керек.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Берілмелі: жүрістер орыс дойбысындағыдай, бірақ мақсат кері — барлық тасты беру немесе жүріссіз қалу. Ұру әлі де міндетті.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Бұрыштар: тастар қарама-қарсы бұрыштарда тұрады. Көрші бос ұяшыққа көлденең не тігінен жүреді немесе кез келген тастан секіріп өтеді, оны алмайды. Мақсат — барлық тасты қарсыластың бұрышына жеткізу.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Өз бастапқы бұрышынан шыққан тас оған қайта орала алмайды.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Үйде қалған тастар ойыншының алғашқы 25 жүрісінде шығуы тиіс.';
 
   @override
   String get rulesNardyTitle => 'Нарды — ережелер';

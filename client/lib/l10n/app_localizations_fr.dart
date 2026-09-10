@@ -58,6 +58,64 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alertes uniquement : messages, demandes, votre tour et le minuteur';
 
   @override
+  String get settingsGamepadTitle => 'Manette';
+
+  @override
+  String get settingsGamepadSubtitle => 'Manette pour les menus et les parties';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Connectée : $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Croix / stick — menus et curseur sur le plateau';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Croix — valider ou jouer';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Rond — retour ou désélection';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme';
+
+  @override
+  String get gamepadKeyboardTitle => 'Clavier';
+
+  @override
+  String get gamepadKeyboardSpace => 'Espace';
+
+  @override
+  String get gamepadLegendConfirm => 'Choisir';
+
+  @override
+  String get gamepadLegendBack => 'Retour';
+
+  @override
+  String get gamepadLegendTabs => 'Onglets';
+
+  @override
+  String get gamepadLegendCycle => 'Changer';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Manette connectée : $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Mode réseau';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Paramètres';
+
+  @override
+  String get offlineModeOfferBody => 'Pas d’internet ou connexion très lente. Vous pouvez activer le mode hors ligne et jouer contre un bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Activer hors ligne';
 
   @override
   String get gamesPlay => 'Jouer';
@@ -695,6 +759,64 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Long';
+
+  @override
+  String get gamesCheckers => 'Dames';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russes';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anglaises';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Donne';
+
+  @override
+  String get gamesCheckersModeCorners => 'Coins';
+
+  @override
+  String get rulesCheckersPlayers => 'Joueurs : 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode : $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Plateau 8×8. Deux joueurs.';
+
+  @override
+  String get rulesCheckersPlay => 'La prise est obligatoire. Dame et pion doivent continuer tant qu’un nouveau saut est possible depuis la case d’arrivée — on ne s’arrête pas au milieu. S’il y a plusieurs directions, on peut en choisir n’importe laquelle, pas forcément la plus longue. Un pion arrivé sur la dernière rangée devient dame.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dames russes : 12 pions chacun sur les cases sombres. Les pions avancent en diagonale et prennent en avant et en arrière. Les dames volent d’un nombre quelconque de cases. La prise est obligatoire : il faut continuer s’il reste un saut, mais on peut choisir n’importe quelle direction, pas forcément la plus longue. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dames anglaises : 12 pions chacun. Les pions n’avancent et ne prennent qu’en diagonale vers l’avant. Les dames avancent d’une case en diagonale. La prise est obligatoire. On gagne en prenant tous les pions ou en privant l’adversaire de coups.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Donne : les mêmes coups que les dames russes, mais le but est inverse — perdre tous ses pions ou n’avoir plus de coup. La prise reste obligatoire.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Coins : les pions partent des coins opposés. On avance d’une case libre à l’horizontale ou à la verticale, ou on saute par-dessus n’importe quel pion sans le retirer. Le but est d’amener tous ses pions dans le coin adverse.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Un pion qui a quitté son coin de départ ne peut pas y revenir.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — règles';

@@ -58,6 +58,64 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Apenas alertas: mensagens, pedidos, a sua vez e o temporizador';
 
   @override
+  String get settingsGamepadTitle => 'Controle';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad para menus e partidas';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Ligado: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Nenhum gamepad. Ligue um controle e pressione qualquer botão.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Cruz / stick — menus e cursor no tabuleiro';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Cruz — confirmar ou jogar';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Círculo — voltar ou desmarcar';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — abas do menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Cursor no tabuleiro e na mão: damas, jogo da velha, batalha naval, durak, uno, pôquer e gamão';
+
+  @override
+  String get settingsGamepadHelpCards => 'Nas cartas: cruz move a mão, A joga, X seleciona / Uno, Y pega, passa ou compra';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Num campo A abre o teclado do controle; X muda o layout, B apaga ou fecha';
+
+  @override
+  String get gamepadKeyboardTitle => 'Teclado';
+
+  @override
+  String get gamepadKeyboardSpace => 'Espaço';
+
+  @override
+  String get gamepadLegendConfirm => 'Escolher';
+
+  @override
+  String get gamepadLegendBack => 'Voltar';
+
+  @override
+  String get gamepadLegendTabs => 'Abas';
+
+  @override
+  String get gamepadLegendCycle => 'Mudar';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controle ligado: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Modo de rede';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Configurações';
+
+  @override
+  String get offlineModeOfferBody => 'Sem internet ou a ligação está muito lenta. Pode ativar o modo offline e jogar contra um bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Ativar offline';
 
   @override
   String get gamesPlay => 'Jogar';
@@ -695,6 +759,64 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Longo';
+
+  @override
+  String get gamesCheckers => 'Damas';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russas';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesas';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Damas loucas';
+
+  @override
+  String get gamesCheckersModeCorners => 'Cantos';
+
+  @override
+  String get rulesCheckersPlayers => 'Jogadores: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Tabuleiro 8×8. Dois jogadores.';
+
+  @override
+  String get rulesCheckersPlay => 'Capturar é obrigatório. Dama e peão devem continuar enquanto, da casa de chegada, ainda for possível capturar — não se para no meio. Se houver várias direções, pode escolher qualquer uma, não necessariamente a mais longa. Um peão na última fileira vira dama.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório: continue se ainda houver salto, mas pode escolher qualquer direção, não necessariamente a mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Uma peça que já saiu do canto inicial não pode voltar para ele.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.';
 
   @override
   String get rulesNardyTitle => 'Gamão — regras';

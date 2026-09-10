@@ -58,6 +58,64 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHapticsSubtitle => '通知のみ：メッセージ、リクエスト、手番、タイマー';
 
   @override
+  String get settingsGamepadTitle => 'コントローラー';
+
+  @override
+  String get settingsGamepadSubtitle => 'メニューと対局用のゲームパッド';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '接続中: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
+
+  @override
+  String get settingsGamepadHelpNavigate => '十字 / スティック — メニューと盤上のカーソル';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / × — 決定または着手';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / ○ — 戻るまたは選択解除';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
+
+  @override
+  String get settingsGamepadHelpPlay => '盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン';
+
+  @override
+  String get settingsGamepadHelpCards => 'カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる';
+
+  @override
+  String get gamepadKeyboardTitle => 'キーボード';
+
+  @override
+  String get gamepadKeyboardSpace => 'スペース';
+
+  @override
+  String get gamepadLegendConfirm => '決定';
+
+  @override
+  String get gamepadLegendBack => '戻る';
+
+  @override
+  String get gamepadLegendTabs => 'タブ';
+
+  @override
+  String get gamepadLegendCycle => '切替';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'コントローラー接続: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'ネットワークモード';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => '設定';
+
+  @override
+  String get offlineModeOfferBody => 'インターネットがないか、回線が非常に遅いです。オフラインモードをオンにしてボットと対戦できます。';
+
+  @override
+  String get offlineModeOfferAction => 'オフラインにする';
 
   @override
   String get gamesPlay => 'プレイ';
@@ -695,6 +759,64 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'ロング';
+
+  @override
+  String get gamesCheckers => 'チェッカー';
+
+  @override
+  String get gamesCheckersModeRussian => 'ロシア';
+
+  @override
+  String get gamesCheckersModeEnglish => 'イギリス';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'ギブアウェイ';
+
+  @override
+  String get gamesCheckersModeCorners => 'コーナー';
+
+  @override
+  String get rulesCheckersPlayers => 'プレイヤー: 2。';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'モード: $mode。';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => '盤は 8×8。2 人対戦。';
+
+  @override
+  String get rulesCheckersPlay => '取りは義務です。キングも駒も、着地マスからさらに取れるなら続けなければならず、途中で止められません。方向が複数あればどれを選んでもよく、最長である必要はありません。最終段に達した駒はキングになります。';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務：続けられるなら止められませんが、方向が複数ならどれでもよく最長である必要はありません。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'ギブアウェイ：動きはロシア式と同じだが、目的は逆。自分の駒をすべて失うか、手がなくなると勝ち。取りはやはり義務。';
+
+  @override
+  String get rulesCheckersPlayCorners => 'コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'スタートの隅を出た駒は、そこへ戻ってはいけません。';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。';
 
   @override
   String get rulesNardyTitle => 'バックギャモン — ルール';

@@ -58,6 +58,64 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Nur Hinweise: Nachrichten, Anfragen, Ihr Zug und der Timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad für Menüs und Partien';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Verbunden: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Kein Gamepad gefunden. Controller anschließen und eine Taste drücken.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kreuz / Stick — Menüs und Feldcursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kreuz — bestätigen oder ziehen';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kreis — zurück oder Auswahl aufheben';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — Menü-Tabs';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Feld- und Handcursor: Dame, Tic-Tac-Toe, Schiffe versenken, Durak, Uno, Poker und Backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Bei Karten: Kreuz bewegt die Hand, A spielt, X wählt / Uno, Y nimmt, passt oder zieht';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Im Textfeld öffnet A die Gamepad-Tastatur; X wechselt das Layout, B löscht oder schließt';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastatur';
+
+  @override
+  String get gamepadKeyboardSpace => 'Leer';
+
+  @override
+  String get gamepadLegendConfirm => 'Wählen';
+
+  @override
+  String get gamepadLegendBack => 'Zurück';
+
+  @override
+  String get gamepadLegendTabs => 'Tabs';
+
+  @override
+  String get gamepadLegendCycle => 'Ändern';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller verbunden: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Netzwerkmodus';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Einstellungen';
+
+  @override
+  String get offlineModeOfferBody => 'Kein Internet oder die Verbindung ist sehr langsam. Du kannst den Offline-Modus einschalten und gegen einen Bot spielen.';
+
+  @override
+  String get offlineModeOfferAction => 'Offline einschalten';
 
   @override
   String get gamesPlay => 'Spielen';
@@ -695,6 +759,64 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get gamesCheckers => 'Dame';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisch';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Englisch';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Verlierdame';
+
+  @override
+  String get gamesCheckersModeCorners => 'Ecken';
+
+  @override
+  String get rulesCheckersPlayers => 'Spieler: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Brett 8×8. Zwei Spieler.';
+
+  @override
+  String get rulesCheckersPlay => 'Schlagen ist Pflicht. Dame und Stein müssen weiterschlagen, solange vom Landefeld ein weiterer Schlag möglich ist — in der Mitte anhalten ist verboten. Gibt es mehrere Richtungen, darf jede gewählt werden, nicht zwingend die längste. Ein Stein auf der letzten Reihe wird zur Dame.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht: weiterzuschlagen, wenn möglich, aber bei mehreren Richtungen darf jede gewählt werden, nicht zwingend die längste. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Englisches Damespiel: je 12 Steine. Bauern ziehen und schlagen nur diagonal vorwärts. Damen ziehen ein Feld diagonal in jede Richtung. Schlagen ist Pflicht. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Verlierdame: dieselben Züge wie im russischen Damespiel, aber das Ziel ist umgekehrt — alle eigenen Steine abgeben oder keinen Zug mehr haben. Schlagen bleibt Pflicht.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Ecken: die Steine stehen in gegenüberliegenden Ecken. Ziehe auf ein benachbartes freies Feld waagerecht oder senkrecht oder springe über einen beliebigen Stein, ohne ihn zu schlagen. Ziel ist, alle eigenen Steine in die Ecke des Gegners zu bringen.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Ein Stein, der seine Start-Ecke verlassen hat, darf nicht dorthin zurückkehren.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — Regeln';

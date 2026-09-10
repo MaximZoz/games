@@ -115,26 +115,40 @@ func evaluate(g *Game, seat int) int {
 			switch {
 			case mine == 1:
 				// Одиночка под боем — риск тем выше, чем ближе к дому соперника.
-				score -= 12 + (Points-t)/3
+				score -= 16 + (Points-t)/2
 			case mine >= 2:
 				// Занятый пункт блокирует соперника, дом ценнее.
-				score += 8
+				score += 10
 				if t >= HomeStart {
-					score += 6
+					score += 8
 				}
+			}
+			if g.CountAt(opp, t) == 1 && mine == 0 {
+				score += 3
 			}
 		}
 		return score
 	}
+	leftOnHead := g.CountAt(seat, 0)
+	score -= leftOnHead * 22
+	laggard := -1
+	spread := 0
 	for t := 0; t < Points; t++ {
-		if g.CountAt(seat, t) == 0 {
+		n := g.CountAt(seat, t)
+		if n == 0 {
 			continue
 		}
+		if laggard < 0 {
+			laggard = t
+		}
+		spread++
 		if t >= HomeStart {
-			score += 6
+			score += 4
 		}
 	}
-	// Голова не должна простаивать до конца партии.
-	score -= g.CountAt(seat, 0) * 2
+	if laggard >= 0 {
+		score += laggard * 3
+	}
+	score += spread * 5
 	return score
 }

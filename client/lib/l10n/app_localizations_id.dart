@@ -58,6 +58,64 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Hanya notifikasi: pesan, permintaan, giliran Anda, dan timer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroler';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad untuk menu dan pertandingan';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Terhubung: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu dan kursor papan';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Silang — konfirmasi atau jalan';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Lingkaran — kembali atau batal pilih';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup';
+
+  @override
+  String get gamepadKeyboardTitle => 'Papan ketik';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spasi';
+
+  @override
+  String get gamepadLegendConfirm => 'Pilih';
+
+  @override
+  String get gamepadLegendBack => 'Kembali';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Ubah';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroler terhubung: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Mode jaringan';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Pengaturan';
+
+  @override
+  String get offlineModeOfferBody => 'Tidak ada internet atau koneksi sangat lambat. Anda bisa mengaktifkan mode offline dan bermain lawan bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Aktifkan offline';
 
   @override
   String get gamesPlay => 'Main';
@@ -695,6 +759,64 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Panjang';
+
+  @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rusia';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inggris';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get gamesCheckersModeCorners => 'Sudut';
+
+  @override
+  String get rulesCheckersPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Papan 8×8. Dua pemain.';
+
+  @override
+  String get rulesCheckersPlay => 'Makan wajib. Damka dan bidak harus lanjut selama dari petak mendarat masih bisa makan — tidak boleh berhenti di tengah. Jika ada beberapa arah, pilih yang mana saja, tidak wajib yang terpanjang. Bidak di baris terakhir menjadi damka.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib: lanjut jika masih bisa, tetapi jika ada beberapa arah pilih yang mana saja, tidak wajib yang terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Giveaway: langkahnya sama seperti dam Rusia, tetapi tujuannya terbalik — kehilangan semua buah atau kehabisan langkah. Makan tetap wajib.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Buah yang sudah meninggalkan sudut awalnya tidak boleh kembali ke sana.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — aturan';

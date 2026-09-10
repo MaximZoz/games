@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Giliran",
   "settingsHapticsTitle": "Getar",
   "settingsHapticsSubtitle": "Hanya notifikasi: pesan, permintaan, giliran Anda, dan timer",
+  "settingsGamepadTitle": "Kontroler",
+  "settingsGamepadSubtitle": "Gamepad untuk menu dan pertandingan",
+  "settingsGamepadConnected": "Terhubung: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.",
+  "settingsGamepadHelpNavigate": "D-pad / stick — menu dan kursor papan",
+  "settingsGamepadHelpConfirm": "A / Silang — konfirmasi atau jalan",
+  "settingsGamepadHelpBack": "B / Lingkaran — kembali atau batal pilih",
+  "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
+  "settingsGamepadHelpPlay": "Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon",
+  "settingsGamepadHelpCards": "Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi",
+  "settingsGamepadHelpKeyboard": "Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup",
+  "gamepadKeyboardTitle": "Papan ketik",
+  "gamepadKeyboardSpace": "Spasi",
+  "gamepadLegendConfirm": "Pilih",
+  "gamepadLegendBack": "Kembali",
+  "gamepadLegendTabs": "Tab",
+  "gamepadLegendCycle": "Ubah",
+  "gamepadConnectedSnack": "Kontroler terhubung: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Pesan hanya dari teman",
   "settingsFriendsOnlySubtitle": "Non-teman hanya bisa mengirim emoji. Jika spam jadi masalah, blokir pengguna sementara.",
   "settingsNotifications": "Notifikasi",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Pendek",
   "gamesNardyModeLong": "Panjang",
+  "gamesCheckers": "Dam",
+  "gamesCheckersModeRussian": "Rusia",
+  "gamesCheckersModeEnglish": "Inggris",
+  "gamesCheckersModeGiveaway": "Giveaway",
+  "gamesCheckersModeCorners": "Sudut",
+  "rulesCheckersPlayers": "Pemain: 2.",
+  "rulesCheckersMode": "Mode: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Papan 8×8. Dua pemain.",
+  "rulesCheckersPlay": "Makan wajib. Damka dan bidak harus lanjut selama dari petak mendarat masih bisa makan — tidak boleh berhenti di tengah. Jika ada beberapa arah, pilih yang mana saja, tidak wajib yang terpanjang. Bidak di baris terakhir menjadi damka.",
+  "rulesCheckersPlayRussian": "Dam Rusia: masing-masing 12 buah di petak gelap. Bidak maju diagonal dan makan maju atau mundur. Raja terbang berapa petak saja. Makan wajib: lanjut jika masih bisa, tetapi jika ada beberapa arah pilih yang mana saja, tidak wajib yang terpanjang. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.",
+  "rulesCheckersPlayEnglish": "Dam Inggris: masing-masing 12 buah. Bidak hanya maju dan makan diagonal ke depan. Raja maju satu petak diagonal. Makan wajib. Menang dengan memakan semua buah atau membuat lawan kehabisan langkah.",
+  "rulesCheckersPlayGiveaway": "Giveaway: langkahnya sama seperti dam Rusia, tetapi tujuannya terbalik — kehilangan semua buah atau kehabisan langkah. Makan tetap wajib.",
+  "rulesCheckersPlayCorners": "Sudut: buah mulai di sudut berlawanan. Bergerak ke petak kosong di samping secara horizontal atau vertikal, atau melompati buah apa pun tanpa mengambilnya. Tujuannya membawa semua buah ke sudut lawan.",
+  "rulesCheckersPlayCornersNoReturn": "Buah yang sudah meninggalkan sudut awalnya tidak boleh kembali ke sana.",
+  "rulesCheckersPlayCornersLeaveHome": "Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.",
   "rulesNardyTitle": "Backgammon — aturan",
   "rulesNardyPlayers": "Pemain: 2.",
   "rulesNardyMode": "Mode: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Main lawan bot",
   "offlineModePopupBody": "Mode offline aktif. Main bot tanpa taruhan dan hadiah. Obrolan, teman, dan lobi disembunyikan. Pembelian diterapkan di mode online.",
   "offlineModePopupSettings": "Pengaturan",
+  "offlineModeOfferBody": "Tidak ada internet atau koneksi sangat lambat. Anda bisa mengaktifkan mode offline dan bermain lawan bot.",
+  "offlineModeOfferAction": "Aktifkan offline",
   "offlineModePopupTitle": "Mode offline",
   "offlinePlayAgain": "Main lagi",
   "rulesAlternateStarts": "Siapa yang jalan duluan bergantian tiap partai.",

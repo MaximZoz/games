@@ -58,6 +58,64 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης';
 
   @override
+  String get settingsGamepadTitle => 'Χειριστήριο';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad για μενού και παρτίδες';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Συνδεδεμένο: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Σταυρός — επιβεβαίωση ή κίνηση';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Κύκλος — πίσω ή αποεπιλογή';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι';
+
+  @override
+  String get settingsGamepadHelpCards => 'Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει';
+
+  @override
+  String get gamepadKeyboardTitle => 'Πληκτρολόγιο';
+
+  @override
+  String get gamepadKeyboardSpace => 'Διάστημα';
+
+  @override
+  String get gamepadLegendConfirm => 'Επιλογή';
+
+  @override
+  String get gamepadLegendBack => 'Πίσω';
+
+  @override
+  String get gamepadLegendTabs => 'Καρτέλες';
+
+  @override
+  String get gamepadLegendCycle => 'Αλλαγή';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Συνδέθηκε χειριστήριο: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Λειτουργία δικτύου';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Ρυθμίσεις';
+
+  @override
+  String get offlineModeOfferBody => 'Δεν υπάρχει διαδίκτυο ή η σύνδεση είναι πολύ αργή. Μπορείτε να ενεργοποιήσετε τη λειτουργία εκτός σύνδεσης και να παίξετε με bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Ενεργοποίηση εκτός σύνδεσης';
 
   @override
   String get gamesPlay => 'Παίξτε';
@@ -695,6 +759,64 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Μακρύ';
+
+  @override
+  String get gamesCheckers => 'Ντάμα';
+
+  @override
+  String get gamesCheckersModeRussian => 'Ρωσικά';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Αγγλικά';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Παραχώρηση';
+
+  @override
+  String get gamesCheckersModeCorners => 'Γωνίες';
+
+  @override
+  String get rulesCheckersPlayers => 'Παίκτες: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Ταμπλό 8×8. Δύο παίκτες.';
+
+  @override
+  String get rulesCheckersPlay => 'Το χτύπημα είναι υποχρεωτικό. Ντάμα και απλό πρέπει να συνεχίζουν όσο από το τετράγωνο άφιξης υπάρχει νέο χτύπημα — δεν σταματούν στη μέση. Αν υπάρχουν πολλές κατευθύνσεις, διαλέγετε όποια θέλετε, όχι υποχρεωτικά τη μεγαλύτερη. Το απλό στην τελευταία γραμμή γίνεται ντάμα.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Ρωσική ντάμα: 12 πούλια ο καθένας στις σκούρες. Οι απλοί προχωρούν διαγώνια και χτυπούν μπρος και πίσω. Οι ντάμες πετούν όσες θέσεις θέλουν. Το χτύπημα είναι υποχρεωτικό: συνεχίζετε αν γίνεται, αλλά αν υπάρχουν πολλές κατευθύνσεις διαλέγετε όποια θέλετε, όχι υποχρεωτικά τη μεγαλύτερη. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Αγγλική ντάμα: 12 πούλια ο καθένας. Οι απλοί προχωρούν και χτυπούν μόνο διαγώνια μπροστά. Οι ντάμες κινούνται μία θέση διαγώνια. Το χτύπημα είναι υποχρεωτικό. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Παραχώρηση: οι ίδιες κινήσεις με τη ρωσική ντάμα, αλλά ο στόχος είναι αντίστροφος — να χάσεις όλα τα πούλια ή να μείνεις χωρίς κίνηση. Το χτύπημα παραμένει υποχρεωτικό.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Γωνίες: τα πούλια ξεκινούν στις απέναντι γωνίες. Πηγαίνετε σε διπλανή ελεύθερη θέση οριζόντια ή κάθετα ή πηδάτε πάνω από οποιοδήποτε πούλι χωρίς να το βγάλετε. Στόχος είναι να μεταφέρετε όλα τα πούλια στη γωνία του αντιπάλου.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Πούλι που έχει φύγει από την αρχική του γωνία δεν μπορεί να επιστρέψει εκεί.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
 
   @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';

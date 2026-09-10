@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Sıra",
   "settingsHapticsTitle": "Titreşim",
   "settingsHapticsSubtitle": "Yalnızca uyarılar: mesajlar, istekler, sıra ve süre",
+  "settingsGamepadTitle": "Kol",
+  "settingsGamepadSubtitle": "Menüler ve maçlar için gamepad",
+  "settingsGamepadConnected": "Bağlı: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.",
+  "settingsGamepadHelpNavigate": "Yön tuşları / çubuk — menü ve tahta imleci",
+  "settingsGamepadHelpConfirm": "A / Çarpı — onayla veya hamle yap",
+  "settingsGamepadHelpBack": "B / Daire — geri veya seçimi kaldır",
+  "settingsGamepadHelpTabs": "L1 / R1 — menü sekmeleri",
+  "settingsGamepadHelpPlay": "Tahta ve el imleci: dama, xox, amiral battı, durak, uno, poker ve tavla",
+  "settingsGamepadHelpCards": "Kartlarda: yön tuşları eli gezer, A oynar, X seçer / Uno, Y alır, geçer veya çeker",
+  "settingsGamepadHelpKeyboard": "Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır",
+  "gamepadKeyboardTitle": "Klavye",
+  "gamepadKeyboardSpace": "Boşluk",
+  "gamepadLegendConfirm": "Seç",
+  "gamepadLegendBack": "Geri",
+  "gamepadLegendTabs": "Sekmeler",
+  "gamepadLegendCycle": "Değiştir",
+  "gamepadConnectedSnack": "Kol bağlandı: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Yalnızca arkadaşlardan mesaj",
   "settingsFriendsOnlySubtitle": "Arkadaş olmayanlar yalnızca emoji gönderebilir. Spam sorunsa kullanıcıyı geçici olarak engelleyin.",
   "settingsNotifications": "Bildirimler",
@@ -257,6 +289,28 @@
   "gamesNardy": "Tavla",
   "gamesNardyModeShort": "Kısa",
   "gamesNardyModeLong": "Uzun",
+  "gamesCheckers": "Dama",
+  "gamesCheckersModeRussian": "Rus",
+  "gamesCheckersModeEnglish": "İngiliz",
+  "gamesCheckersModeGiveaway": "Teslim dama",
+  "gamesCheckersModeCorners": "Köşeler",
+  "rulesCheckersPlayers": "Oyuncular: 2.",
+  "rulesCheckersMode": "Mod: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Tahta 8×8. İki oyuncu.",
+  "rulesCheckersPlay": "Vuruş zorunludur. Damka ve taş, indiği kareden başka vuruş varsa duramaz. Birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Son sıraya ulaşan taş damka olur.",
+  "rulesCheckersPlayRussian": "Rus daması: her birinde koyu karelerde 12 taş. Piyonlar çapraz ileri gider, ileri ve geri vurur. Damkalar istediği kadar kare uçar. Vuruş zorunludur: devam edilebiliyorsa durulmaz, ama birden fazla yön varsa herhangi birini seçebilirsiniz; en uzunu şart değildir. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.",
+  "rulesCheckersPlayEnglish": "İngiliz daması: her birinde 12 taş. Piyonlar yalnızca çapraz ileri gider ve vurur. Damkalar çapraz bir kare gider. Vuruş zorunludur. Tüm taşları yiyen veya rakibi hamlesiz bırakan kazanır.",
+  "rulesCheckersPlayGiveaway": "Teslim dama: hamleler Rus damasıyla aynıdır, ama amaç tersidir — tüm taşlarını vermek veya hamlesiz kalmak. Vuruş yine zorunludur.",
+  "rulesCheckersPlayCorners": "Köşeler: taşlar karşı köşelerde durur. Yatay veya dikey komşu boş kareye gider ya da herhangi bir taşın üzerinden atlar, taşı almaz. Amaç tüm taşları rakibin köşesine taşımaktır.",
+  "rulesCheckersPlayCornersNoReturn": "Başlangıç köşesini terk eden taş oraya geri dönemez.",
+  "rulesCheckersPlayCornersLeaveHome": "Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.",
   "rulesNardyTitle": "Tavla — kurallar",
   "rulesNardyPlayers": "Oyuncular: 2.",
   "rulesNardyMode": "Mod: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Bota karşı oyun",
   "offlineModePopupBody": "Çevrimdışı mod açık. Bahis ve ödül olmadan botla oynayın. Sohbetler, arkadaşlar ve lobi gizlidir. Satın alımlar çevrimiçi modda uygulanır.",
   "offlineModePopupSettings": "Ayarlar",
+  "offlineModeOfferBody": "İnternet yok veya bağlantı çok yavaş. Çevrimdışı modu açıp botla oynayabilirsiniz.",
+  "offlineModeOfferAction": "Çevrimdışına geç",
   "offlineModePopupTitle": "Çevrimdışı mod",
   "offlinePlayAgain": "Tekrar",
   "rulesAlternateStarts": "İlk hamleyi kim yapacağı partiden partiye değişir.",

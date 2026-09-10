@@ -34,6 +34,8 @@ Key fanPeekOverlayKey(PlayingCard card) {
 
 /// Peek/hide — мгновенно. Не переключать Positioned ↔ AnimatedPositioned:
 /// на iOS старый слой остаётся в веере, overlay рисует вторую копию.
-Duration fanSlotMoveDuration({required bool instant}) {
-  return Duration(milliseconds: instant ? 0 : 340);
+///
+/// [moveMs] — схлопывание после хода: короткое, чтобы веер ехал вместе с полётом.
+Duration fanSlotMoveDuration({required bool instant, int moveMs = 180}) {
+  return Duration(milliseconds: instant ? 0 : moveMs);
 }

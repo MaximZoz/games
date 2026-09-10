@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Tur",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Endast aviseringar: meddelanden, förfrågningar, din tur och timern",
+  "settingsGamepadTitle": "Handkontroll",
+  "settingsGamepadSubtitle": "Gamepad för menyer och partier",
+  "settingsGamepadConnected": "Ansluten: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.",
+  "settingsGamepadHelpNavigate": "Styrkors / spak — menyer och brädcursor",
+  "settingsGamepadHelpConfirm": "A / Kors — bekräfta eller göra ett drag",
+  "settingsGamepadHelpBack": "B / Cirkel — tillbaka eller avmarkera",
+  "settingsGamepadHelpTabs": "L1 / R1 — menyflikar",
+  "settingsGamepadHelpPlay": "Markör på bräde och hand: dam, luffarschack, sänka skepp, durak, uno, poker och backgammon",
+  "settingsGamepadHelpCards": "I kort: styrkors flyttar handen, A spelar, X väljer / Uno, Y tar, passar eller drar",
+  "settingsGamepadHelpKeyboard": "I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger",
+  "gamepadKeyboardTitle": "Tangentbord",
+  "gamepadKeyboardSpace": "Mellanslag",
+  "gamepadLegendConfirm": "Välj",
+  "gamepadLegendBack": "Tillbaka",
+  "gamepadLegendTabs": "Flikar",
+  "gamepadLegendCycle": "Ändra",
+  "gamepadConnectedSnack": "Handkontroll ansluten: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Meddelanden endast från vänner",
   "settingsFriendsOnlySubtitle": "Icke-vänner kan bara skicka emojis. Vid spam, blockera användaren tillfälligt.",
   "settingsNotifications": "Aviseringar",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lång",
+  "gamesCheckers": "Damspel",
+  "gamesCheckersModeRussian": "Ryska",
+  "gamesCheckersModeEnglish": "Engelska",
+  "gamesCheckersModeGiveaway": "Ge-bort",
+  "gamesCheckersModeCorners": "Hörn",
+  "rulesCheckersPlayers": "Spelare: 2.",
+  "rulesCheckersMode": "Läge: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bräde 8×8. Två spelare.",
+  "rulesCheckersPlay": "Slag är obligatoriskt. Dam och bricka måste fortsätta så länge ett nytt hopp går från landningsrutan — man får inte stanna mitt i. Finns flera riktningar får du välja vilken som helst, inte nödvändigtvis den längsta. En bricka på sista raden blir dam.",
+  "rulesCheckersPlayRussian": "Ryskt damspel: 12 brickor var på mörka rutor. Bönder går snett framåt och slår framåt och bakåt. Damer flyger valfritt långt. Slag är obligatoriskt: du måste fortsätta om det går, men får välja valfri riktning — inte nödvändigtvis den längsta. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.",
+  "rulesCheckersPlayEnglish": "Engelskt damspel: 12 brickor var. Bönder går och slår endast snett framåt. Damer går ett fält snett åt valfritt håll. Slag är obligatoriskt. Vinn genom att slå alla brickor eller lämna motståndaren utan drag.",
+  "rulesCheckersPlayGiveaway": "Ge-bort: samma drag som ryskt damspel, men målet är omvänt — ge bort alla brickor eller bli utan drag. Slag är fortfarande obligatoriskt.",
+  "rulesCheckersPlayCorners": "Hörn: brickorna startar i motstående hörn. Gå till en tom grannruta vågrätt eller lodrätt, eller hoppa över valfri bricka utan att ta den. Målet är att flytta alla sina brickor till motståndarens hörn.",
+  "rulesCheckersPlayCornersNoReturn": "En bricka som har lämnat sitt starthörn får inte återvända dit.",
+  "rulesCheckersPlayCornersLeaveHome": "Brickor som fortfarande är hemma måste lämna hörnet inom spelarens 25 första drag.",
   "rulesNardyTitle": "Backgammon — regler",
   "rulesNardyPlayers": "Spelare: 2.",
   "rulesNardyMode": "Läge: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Spel mot bot",
   "offlineModePopupBody": "Offline-läge är på. Spela mot en bot utan insatser och belöningar. Chattar, vänner och lobby är dolda. Köp tillämpas i online-läge.",
   "offlineModePopupSettings": "Inställningar",
+  "offlineModeOfferBody": "Inget internet eller mycket långsam uppkoppling. Du kan slå på offline-läge och spela mot en bot.",
+  "offlineModeOfferAction": "Aktivera offline",
   "offlineModePopupTitle": "Offline-läge",
   "offlinePlayAgain": "Igen",
   "rulesAlternateStarts": "Vem som börjar växlar från parti till parti.",

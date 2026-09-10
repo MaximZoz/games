@@ -208,6 +208,60 @@ func TestNormalizeNardyGameSettings(t *testing.T) {
 	}
 }
 
+func TestNormalizeCheckersGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeCheckers,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		GameMode:    "giveaway",
+		MaxPlayers:  4,
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeCheckers || s.MaxPlayers != 2 ||
+		s.GameMode != "giveaway" || s.Variant != "giveaway" || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeCheckers,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		GameMode:    "unknown",
+		Variant:     "corners",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.GameMode != "russian" || s2.Variant != "russian" || s2.MaxPlayers != 2 {
+		t.Fatalf("mode=%s players=%d", s2.GameMode, s2.MaxPlayers)
+	}
+	s3, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeCheckers,
+		TurnTimeSec: 0,
+		StakeBronze: 2,
+		GameMode:    "english",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s3.GameMode != "english" || s3.Variant != "english" {
+		t.Fatalf("english must stay english: %+v", s3)
+	}
+	s4, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeCheckers,
+		TurnTimeSec: 60,
+		StakeBronze: 2,
+		GameMode:    "corners",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s4.GameMode != "corners" || s4.Variant != "corners" {
+		t.Fatalf("corners: %+v", s4)
+	}
+}
+
 func TestGameSettingsToJSON(t *testing.T) {
 	m := gameSettingsToJSON(store.UserGameSettings{
 		GameType:             "tictactoe",

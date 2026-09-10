@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Lượt",
   "settingsHapticsTitle": "Rung",
   "settingsHapticsSubtitle": "Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ",
+  "settingsGamepadTitle": "Tay cầm",
+  "settingsGamepadSubtitle": "Gamepad cho menu và ván đấu",
+  "settingsGamepadConnected": "Đã kết nối: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.",
+  "settingsGamepadHelpNavigate": "D-pad / stick — menu và con trỏ trên bàn",
+  "settingsGamepadHelpConfirm": "A / Chéo — xác nhận hoặc đi nước",
+  "settingsGamepadHelpBack": "B / Tròn — quay lại hoặc bỏ chọn",
+  "settingsGamepadHelpTabs": "L1 / R1 — tab menu",
+  "settingsGamepadHelpPlay": "Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược",
+  "settingsGamepadHelpCards": "Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc",
+  "settingsGamepadHelpKeyboard": "Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng",
+  "gamepadKeyboardTitle": "Bàn phím",
+  "gamepadKeyboardSpace": "Cách",
+  "gamepadLegendConfirm": "Chọn",
+  "gamepadLegendBack": "Quay lại",
+  "gamepadLegendTabs": "Tab",
+  "gamepadLegendCycle": "Đổi",
+  "gamepadConnectedSnack": "Đã kết nối tay cầm: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Chỉ nhận tin từ bạn bè",
   "settingsFriendsOnlySubtitle": "Người không phải bạn bè chỉ gửi được emoji. Nếu bị spam, hãy tạm chặn người đó.",
   "settingsNotifications": "Thông báo",
@@ -257,6 +289,28 @@
   "gamesNardy": "Cờ Backgammon",
   "gamesNardyModeShort": "Ngắn",
   "gamesNardyModeLong": "Dài",
+  "gamesCheckers": "Cờ đam",
+  "gamesCheckersModeRussian": "Nga",
+  "gamesCheckersModeEnglish": "Anh",
+  "gamesCheckersModeGiveaway": "Nhường",
+  "gamesCheckersModeCorners": "Góc",
+  "rulesCheckersPlayers": "Người chơi: 2.",
+  "rulesCheckersMode": "Chế độ: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bàn 8×8. Hai người chơi.",
+  "rulesCheckersPlay": "Bắt buộc ăn. Đam và quân thường phải ăn tiếp nếu từ ô đáp còn nhảy được — không được dừng giữa chừng. Có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Quân thường tới hàng cuối thành đam.",
+  "rulesCheckersPlayRussian": "Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn: còn nhảy được thì không được dừng, nhưng có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.",
+  "rulesCheckersPlayEnglish": "Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.",
+  "rulesCheckersPlayGiveaway": "Nhường: nước đi như cờ đam Nga nhưng mục tiêu ngược lại — mất hết quân hoặc hết nước đi. Vẫn bắt buộc ăn.",
+  "rulesCheckersPlayCorners": "Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.",
+  "rulesCheckersPlayCornersNoReturn": "Quân đã rời góc xuất phát thì không được quay lại đó.",
+  "rulesCheckersPlayCornersLeaveHome": "Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.",
   "rulesNardyTitle": "Cờ Backgammon — luật",
   "rulesNardyPlayers": "Người chơi: 2.",
   "rulesNardyMode": "Chế độ: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Chơi với bot",
   "offlineModePopupBody": "Chế độ ngoại tuyến đang bật. Chơi bot không cược và phần thưởng. Chat, bạn bè và sảnh bị ẩn. Giao dịch áp dụng ở chế độ trực tuyến.",
   "offlineModePopupSettings": "Cài đặt",
+  "offlineModeOfferBody": "Không có internet hoặc kết nối rất chậm. Bạn có thể bật chế độ ngoại tuyến và chơi với bot.",
+  "offlineModeOfferAction": "Bật ngoại tuyến",
   "offlineModePopupTitle": "Chế độ ngoại tuyến",
   "offlinePlayAgain": "Chơi lại",
   "rulesAlternateStarts": "Người đi trước luân phiên theo từng ván.",

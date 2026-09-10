@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Vez",
   "settingsHapticsTitle": "Vibração",
   "settingsHapticsSubtitle": "Apenas alertas: mensagens, pedidos, a sua vez e o temporizador",
+  "settingsGamepadTitle": "Controle",
+  "settingsGamepadSubtitle": "Gamepad para menus e partidas",
+  "settingsGamepadConnected": "Ligado: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nenhum gamepad. Ligue um controle e pressione qualquer botão.",
+  "settingsGamepadHelpNavigate": "Cruz / stick — menus e cursor no tabuleiro",
+  "settingsGamepadHelpConfirm": "A / Cruz — confirmar ou jogar",
+  "settingsGamepadHelpBack": "B / Círculo — voltar ou desmarcar",
+  "settingsGamepadHelpTabs": "L1 / R1 — abas do menu",
+  "settingsGamepadHelpPlay": "Cursor no tabuleiro e na mão: damas, jogo da velha, batalha naval, durak, uno, pôquer e gamão",
+  "settingsGamepadHelpCards": "Nas cartas: cruz move a mão, A joga, X seleciona / Uno, Y pega, passa ou compra",
+  "settingsGamepadHelpKeyboard": "Num campo A abre o teclado do controle; X muda o layout, B apaga ou fecha",
+  "gamepadKeyboardTitle": "Teclado",
+  "gamepadKeyboardSpace": "Espaço",
+  "gamepadLegendConfirm": "Escolher",
+  "gamepadLegendBack": "Voltar",
+  "gamepadLegendTabs": "Abas",
+  "gamepadLegendCycle": "Mudar",
+  "gamepadConnectedSnack": "Controle ligado: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Mensagens só de amigos",
   "settingsFriendsOnlySubtitle": "Quem não é amigo só pode enviar emojis. Se houver spam, bloqueie temporariamente o usuário.",
   "settingsNotifications": "Notificações",
@@ -257,6 +289,28 @@
   "gamesNardy": "Gamão",
   "gamesNardyModeShort": "Curto",
   "gamesNardyModeLong": "Longo",
+  "gamesCheckers": "Damas",
+  "gamesCheckersModeRussian": "Russas",
+  "gamesCheckersModeEnglish": "Inglesas",
+  "gamesCheckersModeGiveaway": "Damas loucas",
+  "gamesCheckersModeCorners": "Cantos",
+  "rulesCheckersPlayers": "Jogadores: 2.",
+  "rulesCheckersMode": "Modo: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Tabuleiro 8×8. Dois jogadores.",
+  "rulesCheckersPlay": "Capturar é obrigatório. Dama e peão devem continuar enquanto, da casa de chegada, ainda for possível capturar — não se para no meio. Se houver várias direções, pode escolher qualquer uma, não necessariamente a mais longa. Um peão na última fileira vira dama.",
+  "rulesCheckersPlayRussian": "Damas russas: 12 peças cada nas casas escuras. Os peões avançam na diagonal e capturam para a frente e para trás. As damas voam qualquer número de casas. Capturar é obrigatório: continue se ainda houver salto, mas pode escolher qualquer direção, não necessariamente a mais longa. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
+  "rulesCheckersPlayEnglish": "Damas inglesas: 12 peças cada. Os peões avançam e capturam só na diagonal para a frente. As damas andam uma casa na diagonal. Capturar é obrigatório. Ganha quem capturar todas as peças ou deixar o rival sem lances.",
+  "rulesCheckersPlayGiveaway": "Damas loucas: os mesmos lances das damas russas, mas o objetivo é o inverso — perder todas as peças ou ficar sem lances. Capturar continua obrigatório.",
+  "rulesCheckersPlayCorners": "Cantos: as peças começam em cantos opostos. Avance para uma casa livre vizinha na horizontal ou vertical, ou salte qualquer peça sem removê-la. O objetivo é levar todas as peças ao canto do rival.",
+  "rulesCheckersPlayCornersNoReturn": "Uma peça que já saiu do canto inicial não pode voltar para ele.",
+  "rulesCheckersPlayCornersLeaveHome": "As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.",
   "rulesNardyTitle": "Gamão — regras",
   "rulesNardyPlayers": "Jogadores: 2.",
   "rulesNardyMode": "Modo: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Jogo contra um bot",
   "offlineModePopupBody": "O modo offline está ativo. Jogue contra um bot sem apostas nem recompensas. Chats, amigos e lobby ficam ocultos. As compras são aplicadas no modo online.",
   "offlineModePopupSettings": "Configurações",
+  "offlineModeOfferBody": "Sem internet ou a ligação está muito lenta. Pode ativar o modo offline e jogar contra um bot.",
+  "offlineModeOfferAction": "Ativar offline",
   "offlineModePopupTitle": "Modo offline",
   "offlinePlayAgain": "De novo",
   "rulesAlternateStarts": "Quem joga primeiro alterna de partida para partida.",

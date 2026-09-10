@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Σειρά",
   "settingsHapticsTitle": "Δόνηση",
   "settingsHapticsSubtitle": "Μόνο ειδοποιήσεις: μηνύματα, αιτήματα, η σειρά σας και ο χρονομέτρης",
+  "settingsGamepadTitle": "Χειριστήριο",
+  "settingsGamepadSubtitle": "Gamepad για μενού και παρτίδες",
+  "settingsGamepadConnected": "Συνδεδεμένο: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.",
+  "settingsGamepadHelpNavigate": "Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα",
+  "settingsGamepadHelpConfirm": "A / Σταυρός — επιβεβαίωση ή κίνηση",
+  "settingsGamepadHelpBack": "B / Κύκλος — πίσω ή αποεπιλογή",
+  "settingsGamepadHelpTabs": "L1 / R1 — καρτέλες μενού",
+  "settingsGamepadHelpPlay": "Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι",
+  "settingsGamepadHelpCards": "Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει",
+  "settingsGamepadHelpKeyboard": "Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει",
+  "gamepadKeyboardTitle": "Πληκτρολόγιο",
+  "gamepadKeyboardSpace": "Διάστημα",
+  "gamepadLegendConfirm": "Επιλογή",
+  "gamepadLegendBack": "Πίσω",
+  "gamepadLegendTabs": "Καρτέλες",
+  "gamepadLegendCycle": "Αλλαγή",
+  "gamepadConnectedSnack": "Συνδέθηκε χειριστήριο: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Μηνύματα μόνο από φίλους",
   "settingsFriendsOnlySubtitle": "Οι μη φίλοι μπορούν να στέλνουν μόνο emoji. Αν υπάρχει spam, αποκλείστε προσωρινά τον χρήστη.",
   "settingsNotifications": "Ειδοποιήσεις",
@@ -257,6 +289,28 @@
   "gamesNardy": "Τάβλι",
   "gamesNardyModeShort": "Κοντό",
   "gamesNardyModeLong": "Μακρύ",
+  "gamesCheckers": "Ντάμα",
+  "gamesCheckersModeRussian": "Ρωσικά",
+  "gamesCheckersModeEnglish": "Αγγλικά",
+  "gamesCheckersModeGiveaway": "Παραχώρηση",
+  "gamesCheckersModeCorners": "Γωνίες",
+  "rulesCheckersPlayers": "Παίκτες: 2.",
+  "rulesCheckersMode": "Λειτουργία: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Ταμπλό 8×8. Δύο παίκτες.",
+  "rulesCheckersPlay": "Το χτύπημα είναι υποχρεωτικό. Ντάμα και απλό πρέπει να συνεχίζουν όσο από το τετράγωνο άφιξης υπάρχει νέο χτύπημα — δεν σταματούν στη μέση. Αν υπάρχουν πολλές κατευθύνσεις, διαλέγετε όποια θέλετε, όχι υποχρεωτικά τη μεγαλύτερη. Το απλό στην τελευταία γραμμή γίνεται ντάμα.",
+  "rulesCheckersPlayRussian": "Ρωσική ντάμα: 12 πούλια ο καθένας στις σκούρες. Οι απλοί προχωρούν διαγώνια και χτυπούν μπρος και πίσω. Οι ντάμες πετούν όσες θέσεις θέλουν. Το χτύπημα είναι υποχρεωτικό: συνεχίζετε αν γίνεται, αλλά αν υπάρχουν πολλές κατευθύνσεις διαλέγετε όποια θέλετε, όχι υποχρεωτικά τη μεγαλύτερη. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.",
+  "rulesCheckersPlayEnglish": "Αγγλική ντάμα: 12 πούλια ο καθένας. Οι απλοί προχωρούν και χτυπούν μόνο διαγώνια μπροστά. Οι ντάμες κινούνται μία θέση διαγώνια. Το χτύπημα είναι υποχρεωτικό. Κερδίζει όποιος φάει όλα τα πούλια ή αφήσει τον αντίπαλο χωρίς κινήσεις.",
+  "rulesCheckersPlayGiveaway": "Παραχώρηση: οι ίδιες κινήσεις με τη ρωσική ντάμα, αλλά ο στόχος είναι αντίστροφος — να χάσεις όλα τα πούλια ή να μείνεις χωρίς κίνηση. Το χτύπημα παραμένει υποχρεωτικό.",
+  "rulesCheckersPlayCorners": "Γωνίες: τα πούλια ξεκινούν στις απέναντι γωνίες. Πηγαίνετε σε διπλανή ελεύθερη θέση οριζόντια ή κάθετα ή πηδάτε πάνω από οποιοδήποτε πούλι χωρίς να το βγάλετε. Στόχος είναι να μεταφέρετε όλα τα πούλια στη γωνία του αντιπάλου.",
+  "rulesCheckersPlayCornersNoReturn": "Πούλι που έχει φύγει από την αρχική του γωνία δεν μπορεί να επιστρέψει εκεί.",
+  "rulesCheckersPlayCornersLeaveHome": "Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.",
   "rulesNardyTitle": "Τάβλι — κανόνες",
   "rulesNardyPlayers": "Παίκτες: 2.",
   "rulesNardyMode": "Λειτουργία: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Παιχνίδι με bot",
   "offlineModePopupBody": "Η λειτουργία εκτός σύνδεσης είναι ενεργή. Παίξτε με bot χωρίς πονταρίσματα και ανταμοιβές. Συνομιλίες, φίλοι και λόμπι είναι κρυφά. Οι αγορές εφαρμόζονται σε online λειτουργία.",
   "offlineModePopupSettings": "Ρυθμίσεις",
+  "offlineModeOfferBody": "Δεν υπάρχει διαδίκτυο ή η σύνδεση είναι πολύ αργή. Μπορείτε να ενεργοποιήσετε τη λειτουργία εκτός σύνδεσης και να παίξετε με bot.",
+  "offlineModeOfferAction": "Ενεργοποίηση εκτός σύνδεσης",
   "offlineModePopupTitle": "Λειτουργία εκτός σύνδεσης",
   "offlinePlayAgain": "Ξανά",
   "rulesAlternateStarts": "Ποιος παίζει πρώτος εναλλάσσεται από παρτίδα σε παρτίδα.",

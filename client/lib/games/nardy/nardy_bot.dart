@@ -41,18 +41,30 @@ int nardyEvaluate(NardyEngine game, int seat) {
     for (var t = 0; t < nardyPoints; t++) {
       final mine = game.countAt(seat, t);
       if (mine == 1) {
-        score -= 12 + (nardyPoints - t) ~/ 3;
+        score -= 16 + (nardyPoints - t) ~/ 2;
       } else if (mine >= 2) {
-        score += 8;
-        if (t >= nardyHomeStart) score += 6;
+        score += 10;
+        if (t >= nardyHomeStart) score += 8;
+      }
+      if (game.countAt(opp, t) == 1 && mine == 0) {
+        score += 3;
       }
     }
     return score;
   }
-  for (var t = nardyHomeStart; t < nardyPoints; t++) {
-    if (game.countAt(seat, t) > 0) score += 6;
+  final leftOnHead = game.countAt(seat, 0);
+  score -= leftOnHead * 22;
+  var laggard = -1;
+  var spread = 0;
+  for (var t = 0; t < nardyPoints; t++) {
+    final n = game.countAt(seat, t);
+    if (n == 0) continue;
+    laggard = laggard < 0 ? t : laggard;
+    spread++;
+    if (t >= nardyHomeStart) score += 4;
   }
-  score -= game.countAt(seat, 0) * 2;
+  if (laggard >= 0) score += laggard * 3;
+  score += spread * 5;
   return score;
 }
 

@@ -58,6 +58,64 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Tylko powiadomienia: wiadomości, zaproszenia, twoja tura i timer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroler';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad do menu i partii';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Połączono: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Krzyżak / drążek — menu i kursor na planszy';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Krzyżyk — potwierdź lub wykonaj ruch';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kółko — wstecz lub odznacz';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — karty menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak';
+
+  @override
+  String get settingsGamepadHelpCards => 'W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klawiatura';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spacja';
+
+  @override
+  String get gamepadLegendConfirm => 'Wybierz';
+
+  @override
+  String get gamepadLegendBack => 'Wstecz';
+
+  @override
+  String get gamepadLegendTabs => 'Karty';
+
+  @override
+  String get gamepadLegendCycle => 'Zmień';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroler połączony: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Tryb sieci';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Ustawienia';
+
+  @override
+  String get offlineModeOfferBody => 'Brak internetu albo połączenie jest bardzo wolne. Możesz włączyć tryb offline i zagrać z botem.';
+
+  @override
+  String get offlineModeOfferAction => 'Włącz offline';
 
   @override
   String get gamesPlay => 'Graj';
@@ -695,6 +759,64 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Długie';
+
+  @override
+  String get gamesCheckers => 'Warcaby';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rosyjskie';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Angielskie';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Poddawki';
+
+  @override
+  String get gamesCheckersModeCorners => 'Kąciki';
+
+  @override
+  String get rulesCheckersPlayers => 'Gracze: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Tryb: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Plansza 8×8. Dwóch graczy.';
+
+  @override
+  String get rulesCheckersPlay => 'Bicie jest obowiązkowe. Damka i pion muszą kontynuować bój, dopóki z pola lądowania można bić dalej — nie wolno stanąć w połowie. Przy kilku kierunkach można wybrać dowolny, niekoniecznie najdłuższy. Pion na ostatniej linii staje się damką.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Warcaby rosyjskie: po 12 pionów na ciemnych polach. Piony chodzą po skosie do przodu, a bicie jest do przodu i do tyłu. Damki latają na dowolną liczbę pól. Bicie jest obowiązkowe: nie wolno przerwać, jeśli można kontynuować, ale przy kilku kierunkach wybierasz dowolny, niekoniecznie najdłuższy. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Warcaby angielskie: po 12 pionów. Piony chodzą i biją tylko do przodu po skosie. Damki chodzą o jedno pole w dowolną stronę. Bicie jest obowiązkowe. Wygrywa ten, kto zbije wszystkie piony albo pozbawi przeciwnika ruchów.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Poddawki: te same ruchy co w warcabach rosyjskich, ale cel jest odwrotny — oddać wszystkie piony albo zostać bez ruchu. Bicie nadal jest obowiązkowe.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Kąciki: piony stoją w przeciwległych rogach. Chodzą na sąsiednie puste pole w poziomie lub pionie albo przeskakują dowolny pion, nie zbijając go. Cel to przenieść wszystkie swoje piony do rogu przeciwnika.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Pion, który opuścił swój róg startowy, nie może do niego wrócić.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.';
 
   @override
   String get rulesNardyTitle => 'Nardy — zasady';

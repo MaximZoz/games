@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Turno",
   "settingsHapticsTitle": "Vibrazione",
   "settingsHapticsSubtitle": "Solo avvisi: messaggi, richieste, il tuo turno e il timer",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad per menu e partite",
+  "settingsGamepadConnected": "Collegato: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Nessun gamepad. Collega un controller e premi un pulsante.",
+  "settingsGamepadHelpNavigate": "Croce / stick — menu e cursore sulla scacchiera",
+  "settingsGamepadHelpConfirm": "A / Croce — conferma o muovi",
+  "settingsGamepadHelpBack": "B / Cerchio — indietro o deseleziona",
+  "settingsGamepadHelpTabs": "L1 / R1 — schede del menu",
+  "settingsGamepadHelpPlay": "Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon",
+  "settingsGamepadHelpCards": "Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca",
+  "settingsGamepadHelpKeyboard": "In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude",
+  "gamepadKeyboardTitle": "Tastiera",
+  "gamepadKeyboardSpace": "Spazio",
+  "gamepadLegendConfirm": "Scegli",
+  "gamepadLegendBack": "Indietro",
+  "gamepadLegendTabs": "Schede",
+  "gamepadLegendCycle": "Cambia",
+  "gamepadConnectedSnack": "Controller collegato: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Messaggi solo dagli amici",
   "settingsFriendsOnlySubtitle": "Chi non è amico può inviare solo emoji. Se c’è spam, blocca temporaneamente l’utente.",
   "settingsNotifications": "Notifiche",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Corto",
   "gamesNardyModeLong": "Lungo",
+  "gamesCheckers": "Dama",
+  "gamesCheckersModeRussian": "Russe",
+  "gamesCheckersModeEnglish": "Inglesi",
+  "gamesCheckersModeGiveaway": "Dama pazza",
+  "gamesCheckersModeCorners": "Angoli",
+  "rulesCheckersPlayers": "Giocatori: 2.",
+  "rulesCheckersMode": "Modalità: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Scacchiera 8×8. Due giocatori.",
+  "rulesCheckersPlay": "La cattura è obbligatoria. Dama e pedina devono continuare finché dalla casa di arrivo si può catturare ancora: non ci si ferma a metà. Se ci sono più direzioni si può sceglierne una qualsiasi, non per forza la più lunga. Una pedina sull’ultima riga diventa dama.",
+  "rulesCheckersPlayRussian": "Dama russa: 12 pedine ciascuno sulle case scure. Le pedine avanzano in diagonale e catturano avanti e indietro. Le dame volano di quante case vogliono. La cattura è obbligatoria: si continua se possibile, ma si può scegliere qualsiasi direzione, non per forza la più lunga. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.",
+  "rulesCheckersPlayEnglish": "Dama inglese: 12 pedine ciascuno. Le pedine avanzano e catturano solo in diagonale in avanti. Le dame si muovono di una casa in diagonale. La cattura è obbligatoria. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.",
+  "rulesCheckersPlayGiveaway": "Dama pazza: stesse mosse della dama russa, ma l’obiettivo è inverso — perdere tutte le pedine o restare senza mosse. La cattura resta obbligatoria.",
+  "rulesCheckersPlayCorners": "Angoli: le pedine partono dagli angoli opposti. Si va in una casa libera adiacente in orizzontale o verticale, oppure si salta una pedina qualsiasi senza toglierla. L’obiettivo è portare tutte le pedine nell’angolo avversario.",
+  "rulesCheckersPlayCornersNoReturn": "Una pedina che ha lasciato il proprio angolo di partenza non può tornarvi.",
+  "rulesCheckersPlayCornersLeaveHome": "Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.",
   "rulesNardyTitle": "Backgammon — regole",
   "rulesNardyPlayers": "Giocatori: 2.",
   "rulesNardyMode": "Modalità: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Partita contro un bot",
   "offlineModePopupBody": "La modalità offline è attiva. Gioca contro un bot senza puntate né ricompense. Chat, amici e lobby sono nascosti. Gli acquisti si applicano in modalità online.",
   "offlineModePopupSettings": "Impostazioni",
+  "offlineModeOfferBody": "Niente internet o connessione molto lenta. Puoi attivare la modalità offline e giocare contro un bot.",
+  "offlineModeOfferAction": "Attiva offline",
   "offlineModePopupTitle": "Modalità offline",
   "offlinePlayAgain": "Ancora",
   "rulesAlternateStarts": "Chi muove per primo si alterna di partita in partita.",

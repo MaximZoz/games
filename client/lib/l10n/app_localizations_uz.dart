@@ -58,6 +58,64 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Faqat bildirishnomalar: xabarlar, so‘rovlar, yurishingiz va taymer';
 
   @override
+  String get settingsGamepadTitle => 'Kontroller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Menyu va o‘yinlar uchun geympad';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Ulangan: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Xrest / stik — menyu va doskadagi kursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Xrest — tanlash yoki yurish';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Doira — orqaga yoki tanlovni olish';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard';
+
+  @override
+  String get settingsGamepadHelpCards => 'Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klaviatura';
+
+  @override
+  String get gamepadKeyboardSpace => 'Probel';
+
+  @override
+  String get gamepadLegendConfirm => 'Tanlash';
+
+  @override
+  String get gamepadLegendBack => 'Orqaga';
+
+  @override
+  String get gamepadLegendTabs => 'Ichki oynalar';
+
+  @override
+  String get gamepadLegendCycle => 'O‘zgartirish';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroller ulandi: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Tarmoq rejimi';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Sozlamalar';
+
+  @override
+  String get offlineModeOfferBody => 'Internet yo‘q yoki aloqa juda sekin. Oflayn rejimni yoqib, bot bilan o‘ynashingiz mumkin.';
+
+  @override
+  String get offlineModeOfferAction => 'Oflaynni yoqish';
 
   @override
   String get gamesPlay => 'O‘ynash';
@@ -695,6 +759,64 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Uzun';
+
+  @override
+  String get gamesCheckers => 'Shashka';
+
+  @override
+  String get gamesCheckersModeRussian => 'Rus';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Ingliz';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Berilmali';
+
+  @override
+  String get gamesCheckersModeCorners => 'Burchaklar';
+
+  @override
+  String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Doska 8×8. Ikki o‘yinchi.';
+
+  @override
+  String get rulesCheckersPlay => 'Urish majburiy. Damka va oddiy tosh qo‘ngan katakdan yana ura olsa, to‘xtamasdan davom ettirishi shart. Yo‘nalishlar ko‘p bo‘lsa, istalganini tanlash mumkin, eng uzun yo‘l shart emas. Oxirgi qatorga yetgan oddiy tosh damkaga aylanadi.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Rus shashkasi: har kimda qora kataklarda 12 tosh. Oddiy toshlar oldinga diagonal yuradi, oldinga va orqaga ura oladi. Damka istalgan katakcha uchadi. Urish majburiy: davom ettirish mumkin bo‘lsa to‘xtab bo‘lmaydi, lekin yo‘nalishlar ko‘p bo‘lsa istalganini tanlaysiz, eng uzini shart emas. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Ingliz shashkasi: har kimda 12 tosh. Oddiy toshlar faqat oldinga diagonal yuradi va uradi. Damka istalgan tomonga bir katak yuradi. Urish majburiy. G‘olib — raqibning barcha toshini yegan yoki uni yurishsiz qoldirgan.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Berilmali: yurishlar rus shashkasidagidek, lekin maqsad teskarisi — barcha toshni berib qo‘yish yoki yurishsiz qolish. Urish baribir majburiy.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Burchaklar: toshlar qarama-qarshi burchaklarda turadi. Yonidagi bo‘sh katakcha gorizontal yoki vertikal yuradi yoki istalgan toshdan sakrab o‘tadi, uni olmaydi. Maqsad — barcha toshni raqib burchagiga o‘tkazish.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Boshlang‘ich burchagini tark etgan tosh u yerga qayta olmaydi.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Hali uydagi toshlar o‘yinchining dastlabki 25 yurishida uydan chiqishi kerak.';
 
   @override
   String get rulesNardyTitle => 'Narda — qoidalar';

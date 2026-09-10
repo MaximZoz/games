@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Хід",
   "settingsHapticsTitle": "Вібрація",
   "settingsHapticsSubtitle": "Лише сповіщення: повідомлення, заявки, ваш хід і таймер",
+  "settingsGamepadTitle": "Контролер",
+  "settingsGamepadSubtitle": "Геймпад для меню і партій",
+  "settingsGamepadConnected": "Підключено: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Геймпад не знайдено. Підключіть контролер і натисніть будь-яку кнопку.",
+  "settingsGamepadHelpNavigate": "Хрест / стік — меню і курсор на полі",
+  "settingsGamepadHelpConfirm": "A / Хрест — вибрати або сходити",
+  "settingsGamepadHelpBack": "B / Коло — назад або зняти вибір",
+  "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
+  "settingsGamepadHelpPlay": "Курсор на полі та в руці: шашки, хрестики-нулики, морський бій, дурень, уно, покер і нарди",
+  "settingsGamepadHelpCards": "У картах: хрест — рука, A — хід, X — вибрати / Уно, Y — взяти, бито або добрати",
+  "settingsGamepadHelpKeyboard": "У полі вводу A відкриває клавіатуру геймпада; X — розкладка, B — стерти або закрити",
+  "gamepadKeyboardTitle": "Клавіатура",
+  "gamepadKeyboardSpace": "Пробіл",
+  "gamepadLegendConfirm": "Вибрати",
+  "gamepadLegendBack": "Назад",
+  "gamepadLegendTabs": "Вкладки",
+  "gamepadLegendCycle": "Змінити",
+  "gamepadConnectedSnack": "Контролер підключено: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Повідомлення лише від друзів",
   "settingsFriendsOnlySubtitle": "Хто не в друзях, зможе надсилати лише емодзі. Якщо заважає спам — тимчасово заблокуйте користувача.",
   "settingsNotifications": "Сповіщення",
@@ -257,6 +289,28 @@
   "gamesNardy": "Нарди",
   "gamesNardyModeShort": "Короткі",
   "gamesNardyModeLong": "Довгі",
+  "gamesCheckers": "Шашки",
+  "gamesCheckersModeRussian": "Російські",
+  "gamesCheckersModeEnglish": "Англійські",
+  "gamesCheckersModeGiveaway": "Піддавки",
+  "gamesCheckersModeCorners": "Кутки",
+  "rulesCheckersPlayers": "Гравці: 2.",
+  "rulesCheckersMode": "Режим: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Дошка 8×8. Грають двоє.",
+  "rulesCheckersPlay": "Бій обов’язковий. Дамка і проста зобов’язані продовжувати бій, поки з клітини приземлення можна бити далі — зупинитися посередині не можна. Якщо напрямків кілька, можна обрати будь-який, не обов’язково найдовший. Проста, що дійшла до останньої лінії, стає дамкою.",
+  "rulesCheckersPlayRussian": "Російські шашки: у кожного 12 шашок на темних клітинах. Прості ходять по діагоналі вперед, а б’ють уперед і назад. Дамка літає на будь-яке число клітин. Бій обов’язковий: не можна зупинитися, якщо взяття можна продовжити, але якщо напрямків кілька — обираєте будь-який, не обов’язково найдовший. Перемагає той, хто з’їв усі шашки суперника або позбавив його ходів.",
+  "rulesCheckersPlayEnglish": "Англійські шашки: у кожного 12 шашок. Прості ходять і б’ють лише вперед по діагоналі. Дамка ходить на одну клітину в будь-який бік по діагоналі. Бій обов’язковий. Перемагає той, хто з’їв усі шашки суперника або позбавив його ходів.",
+  "rulesCheckersPlayGiveaway": "Піддавки: ті самі ходи, що в російських шашках, але мета зворотна — віддати всі свої шашки або залишитися без ходу. Бій усе одно обов’язковий.",
+  "rulesCheckersPlayCorners": "Кутки: шашки стоять у протилежних кутах. Ходять на сусідню вільну клітину по горизонталі чи вертикалі або перестрибують через будь-яку шашку, не знімаючи її. Мета — перевести всі свої шашки в кут суперника.",
+  "rulesCheckersPlayCornersNoReturn": "Фішка, яка вже залишила свій стартовий кут, не може повернутися до нього.",
+  "rulesCheckersPlayCornersLeaveHome": "Фішки, які ще не вийшли з дому, мають залишити його за перші 25 ходів гравця.",
   "rulesNardyTitle": "Нарди — правила",
   "rulesNardyPlayers": "Гравці: 2.",
   "rulesNardyMode": "Режим: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Гра з ботом",
   "offlineModePopupBody": "Увімкнено офлайн режим. Грайте з ботом без ставок і нагород. Чати, друзі та лобі приховані. Покупки застосуються в режимі онлайн.",
   "offlineModePopupSettings": "Налаштування",
+  "offlineModeOfferBody": "Немає інтернету або зв’язок дуже слабкий. Можна увімкнути офлайн режим і грати з ботом.",
+  "offlineModeOfferAction": "Увімкнути офлайн",
   "offlineModePopupTitle": "Офлайн режим",
   "offlinePlayAgain": "Ще раз",
   "rulesAlternateStarts": "Хто ходить першим чергується від партії до партії.",

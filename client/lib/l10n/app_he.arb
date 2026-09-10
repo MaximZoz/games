@@ -17,6 +17,38 @@
   "settingsSoundTurn": "תור",
   "settingsHapticsTitle": "רטט",
   "settingsHapticsSubtitle": "התראות בלבד: הודעות, בקשות, התור שלך והטיימר",
+  "settingsGamepadTitle": "בקר",
+  "settingsGamepadSubtitle": "גיימפד לתפריטים ולמשחקים",
+  "settingsGamepadConnected": "מחובר: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "לא נמצא גיימפד. חברו בקר ולחצו על כפתור.",
+  "settingsGamepadHelpNavigate": "חיצים / סטיק — תפריטים וסמן על הלוח",
+  "settingsGamepadHelpConfirm": "A / איקס — אישור או מהלך",
+  "settingsGamepadHelpBack": "B / עיגול — חזרה או ביטול בחירה",
+  "settingsGamepadHelpTabs": "L1 / R1 — לשוניות תפריט",
+  "settingsGamepadHelpPlay": "סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש",
+  "settingsGamepadHelpCards": "בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף",
+  "settingsGamepadHelpKeyboard": "בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר",
+  "gamepadKeyboardTitle": "מקלדת",
+  "gamepadKeyboardSpace": "רווח",
+  "gamepadLegendConfirm": "בחירה",
+  "gamepadLegendBack": "חזרה",
+  "gamepadLegendTabs": "לשוניות",
+  "gamepadLegendCycle": "שינוי",
+  "gamepadConnectedSnack": "בקר מחובר: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "הודעות מחברים בלבד",
   "settingsFriendsOnlySubtitle": "מי שאינם חברים יכולים לשלוח רק אימוג׳ים. אם יש ספאם, חסמו את המשתמש זמנית.",
   "settingsNotifications": "התראות",
@@ -257,6 +289,28 @@
   "gamesNardy": "שש-בש",
   "gamesNardyModeShort": "קצר",
   "gamesNardyModeLong": "ארוך",
+  "gamesCheckers": "דמקה",
+  "gamesCheckersModeRussian": "רוסית",
+  "gamesCheckersModeEnglish": "אנגלית",
+  "gamesCheckersModeGiveaway": "הפוכות",
+  "gamesCheckersModeCorners": "פינות",
+  "rulesCheckersPlayers": "שחקנים: 2.",
+  "rulesCheckersMode": "מצב: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "לוח 8×8. שני שחקנים.",
+  "rulesCheckersPlay": "אכילה חובה. מלכה וחייל חייבים להמשיך כל עוד מהמשבצת שנחתו עליה אפשר לאכול שוב — אסור לעצור באמצע. אם יש כמה כיוונים אפשר לבחור כל אחד, לא בהכרח את הארוך. חייל שהגיע לשורה האחרונה הופך למלכה.",
+  "rulesCheckersPlayRussian": "דמקה רוסית: 12 חיילים לכל אחד במשבצות כהות. חיילים זזים באלכסון קדימה ואוכלים קדימה ואחורה. מלכות עפות לכל מרחק. אכילה חובה: חייבים להמשיך אם אפשר, אבל אם יש כמה כיוונים אפשר לבחור כל אחד — לא בהכרח את הארוך. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.",
+  "rulesCheckersPlayEnglish": "דמקה אנגלית: 12 חיילים לכל אחד. חיילים זזים ואוכלים רק באלכסון קדימה. מלכות זזות משבצת אחת באלכסון. אכילה חובה. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.",
+  "rulesCheckersPlayGiveaway": "הפוכות: אותם מהלכים כמו בדמקה רוסית, אבל המטרה הפוכה — למסור את כל החיילים או להישאר בלי מהלכים. אכילה עדיין חובה.",
+  "rulesCheckersPlayCorners": "פינות: החיילים מתחילים בפינות נגדיות. זזים למשבצת פנויה סמוכה אופקית או אנכית, או קופצים מעל כל חייל בלי להוריד אותו. המטרה היא להעביר את כל החיילים לפינת היריב.",
+  "rulesCheckersPlayCornersNoReturn": "חייל שעזב את פינת הפתיחה שלו אינו רשאי לחזור אליה.",
+  "rulesCheckersPlayCornersLeaveHome": "חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.",
   "rulesNardyTitle": "שש-בש — חוקים",
   "rulesNardyPlayers": "שחקנים: 2.",
   "rulesNardyMode": "מצב: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "משחק מול בוט",
   "offlineModePopupBody": "מצב אופליין פעיל. שחקו מול בוט בלי הימורים ופרסים. צ׳אטים, חברים ולובי מוסתרים. רכישות יוחלו במצב אונליין.",
   "offlineModePopupSettings": "הגדרות",
+  "offlineModeOfferBody": "אין אינטרנט או שהחיבור איטי מאוד. אפשר להפעיל מצב אופליין ולשחק מול בוט.",
+  "offlineModeOfferAction": "הפעל אופליין",
   "offlineModePopupTitle": "מצב אופליין",
   "offlinePlayAgain": "שוב",
   "rulesAlternateStarts": "מי מתחיל מתחלף ממשחק למשחק.",

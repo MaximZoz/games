@@ -17,6 +17,38 @@
   "settingsSoundTurn": "चाल",
   "settingsHapticsTitle": "कंपन",
   "settingsHapticsSubtitle": "केवल सूचनाएँ: संदेश, अनुरोध, आपकी बारी और टाइमर",
+  "settingsGamepadTitle": "कंट्रोलर",
+  "settingsGamepadSubtitle": "मेनू और मैच के लिए गेमपैड",
+  "settingsGamepadConnected": "जुड़ा: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।",
+  "settingsGamepadHelpNavigate": "डी-पैड / स्टिक — मेनू और बोर्ड कर्सर",
+  "settingsGamepadHelpConfirm": "A / क्रॉस — पुष्टि या चाल",
+  "settingsGamepadHelpBack": "B / सर्कल — वापस या चयन हटाएँ",
+  "settingsGamepadHelpTabs": "L1 / R1 — मेनू टैब",
+  "settingsGamepadHelpPlay": "बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन",
+  "settingsGamepadHelpCards": "पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है",
+  "settingsGamepadHelpKeyboard": "टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है",
+  "gamepadKeyboardTitle": "कीबोर्ड",
+  "gamepadKeyboardSpace": "स्पेस",
+  "gamepadLegendConfirm": "चुनें",
+  "gamepadLegendBack": "वापस",
+  "gamepadLegendTabs": "टैब",
+  "gamepadLegendCycle": "बदलें",
+  "gamepadConnectedSnack": "कंट्रोलर जुड़ा: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "केवल मित्रों के संदेश",
   "settingsFriendsOnlySubtitle": "गैर-मित्र केवल इमोजी भेज सकते हैं। यदि स्पैम हो, तो उपयोगकर्ता को अस्थायी रूप से ब्लॉक करें।",
   "settingsNotifications": "सूचनाएँ",
@@ -257,6 +289,28 @@
   "gamesNardy": "बैकगैमन",
   "gamesNardyModeShort": "छोटा",
   "gamesNardyModeLong": "लंबा",
+  "gamesCheckers": "चेकर्स",
+  "gamesCheckersModeRussian": "रूसी",
+  "gamesCheckersModeEnglish": "अंग्रेज़ी",
+  "gamesCheckersModeGiveaway": "गिवअवे",
+  "gamesCheckersModeCorners": "कॉर्नर",
+  "rulesCheckersPlayers": "खिलाड़ी: 2.",
+  "rulesCheckersMode": "मोड: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "बोर्ड 8×8. दो खिलाड़ी.",
+  "rulesCheckersPlay": "मारना अनिवार्य है। रानी या मोहरा यदि आगे मार सकते हों तो बीच में नहीं रुक सकते। कई दिशाएँ हों तो कोई भी चुन सकते हैं, सबसे लंबी ज़रूरी नहीं। आख़िरी पंक्ति तक पहुँचा मोहरा रानी बन जाता है।",
+  "rulesCheckersPlayRussian": "रूसी चेकर्स: प्रत्येक के 12 मोहरे गहरे घरों पर। साधारण मोहरे तिरछे आगे चलते हैं और आगे-पीछे मारते हैं। रानी किसी भी दूरी तक उड़ती है। मारना अनिवार्य है: आगे मार सकें तो बीच में नहीं रुक सकते, लेकिन कई दिशाएँ हों तो कोई भी चुन सकते हैं — सबसे लंबी ज़रूरी नहीं। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।",
+  "rulesCheckersPlayEnglish": "अंग्रेज़ी चेकर्स: प्रत्येक के 12 मोहरे। साधारण मोहरे केवल तिरछे आगे चलते और मारते हैं। रानी किसी भी दिशा में एक घर चलती है। मारना अनिवार्य है। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।",
+  "rulesCheckersPlayGiveaway": "गिवअवे: चालें रूसी चेकर्स जैसी हैं, पर लक्ष्य उलटा है — अपने सारे मोहरे दे देना या बिना चाल के रह जाना। मारना फिर भी अनिवार्य है।",
+  "rulesCheckersPlayCorners": "कॉर्नर: मोहरे आमने-सामने के कोनों में शुरू होते हैं। क्षैतिज या ऊर्ध्व खाली पड़ोसी घर पर चलें, या किसी भी मोहरे के ऊपर कूदें बिना उसे हटाए। लक्ष्य अपने सारे मोहरे विरोधी के कोने में पहुँचाना है।",
+  "rulesCheckersPlayCornersNoReturn": "जो मोहरा अपने शुरुआती कोने से निकल चुका है, वह वहाँ वापस नहीं जा सकता।",
+  "rulesCheckersPlayCornersLeaveHome": "जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।",
   "rulesNardyTitle": "बैकगैमन — नियम",
   "rulesNardyPlayers": "खिलाड़ी: 2.",
   "rulesNardyMode": "मोड: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "बॉट के साथ खेल",
   "offlineModePopupBody": "ऑफ़लाइन मोड चालू है। बिना दांव और पुरस्कार के बॉट से खेलें। चैट, मित्र और लॉबी छिपे हैं। खरीदारी ऑनलाइन मोड में लागू होगी।",
   "offlineModePopupSettings": "सेटिंग्स",
+  "offlineModeOfferBody": "इंटरनेट नहीं है या कनेक्शन बहुत धीमा है। आप ऑफ़लाइन मोड चालू करके बॉट से खेल सकते हैं।",
+  "offlineModeOfferAction": "ऑफ़लाइन चालू करें",
   "offlineModePopupTitle": "ऑफ़लाइन मोड",
   "offlinePlayAgain": "फिर से",
   "rulesAlternateStarts": "कौन पहले चलता है, वह पार्टी दर पार्टी बदलता है।",

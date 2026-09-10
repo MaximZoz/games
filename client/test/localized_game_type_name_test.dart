@@ -23,6 +23,8 @@ void main() {
     expect(localizedGameTypeName('battleship', t), t.gamesBattleship);
     expect(localizedGameTypeName('nardy', t), t.gamesNardy);
     expect(localizedGameTypeName('nardy', t), isNot(t.gamesTicTacToe));
+    expect(localizedGameTypeName('checkers', t), t.gamesCheckers);
+    expect(localizeChatTitle('Шашки', t), t.gamesCheckers);
     expect(localizedGameTypeName('nardy', t), isNot('nardy'));
     expect(localizedGameTypeName('unknown-game', t), 'unknown-game');
     expect(localizedGameTypeName('unknown-game', t), isNot(t.gamesTicTacToe));
@@ -64,6 +66,14 @@ void main() {
         localizedGameModeLabel(
             gameType: 'nardy', variant: 'classic', l10n: t),
         isNot(t.gamesVariantClassic));
+    expect(
+        localizedGameModeLabel(
+            gameType: 'checkers', gameMode: 'giveaway', l10n: t),
+        t.gamesCheckersModeGiveaway);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'checkers', gameMode: 'russian', l10n: t),
+        t.gamesCheckersModeRussian);
   });
 
   test('лобби уно и нард не рисуют классику из variant', () {

@@ -115,6 +115,84 @@ void main() {
         isFalse,
       );
       expect(
+        durakHideDeferredRemoteAttack(
+          existedOnPrevTable: false,
+          optimistic: false,
+          localFlying: false,
+          fxDeferred: true,
+          seated: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldHideRemoteTableCard(
+          markedRemoteFlying: true,
+          seated: true,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldHideRemoteTableCard(
+          markedRemoteFlying: true,
+          seated: false,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShouldRevealDeferredRemoteCard(
+          hiddenAsRemote: true,
+          seated: false,
+          optimistic: true,
+          localFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakShouldRevealDeferredRemoteCard(
+          hiddenAsRemote: true,
+          seated: false,
+          optimistic: false,
+          localFlying: false,
+        ),
+        isFalse,
+      );
+      expect(durakShouldSeatPrevTableCard(remoteFlying: true), isFalse);
+      expect(durakShouldSeatPrevTableCard(remoteFlying: false), isTrue);
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: false,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: false,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakTableFxDeferred(
+          fxScheduled: true,
+          busy: false,
+          localAttackHold: false,
+          cardFlightActive: false,
+          holdingFanCard: false,
+        ),
+        isTrue,
+      );
+      expect(
         durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
         2,
       );
@@ -192,6 +270,20 @@ void main() {
       expect(durakSeatedTablePairInLayout(seated: true), isTrue);
       expect(durakSeatedTablePairInLayout(seated: false), isFalse);
       expect(
+        durakSeatedTablePairInLayout(
+          seated: false,
+          reserveForFlight: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakSeatedTablePairInLayout(
+          seated: false,
+          keepVisible: true,
+        ),
+        isTrue,
+      );
+      expect(
         durakSeatedTableSlotOpacity(seated: true, inFlight: true),
         1,
       );
@@ -199,6 +291,56 @@ void main() {
         durakSeatedTableSlotOpacity(seated: false, inFlight: true),
         0,
       );
+      expect(
+        durakSeatedTableSlotOpacity(seated: false, inFlight: false),
+        1,
+      );
+      expect(
+        durakTableSlotBlankUntilLand(seated: false, inFlight: false),
+        isFalse,
+      );
+      expect(durakPinExistingTablePair(settledCount: 1, layoutCount: 2), isTrue);
+      expect(
+        durakPinExistingTablePair(settledCount: 1, layoutCount: 1),
+        isFalse,
+      );
+      expect(
+        durakPinExistingTablePair(settledCount: 2, layoutCount: 3),
+        isFalse,
+      );
+      final pinned0 = durakPinnedFirstPairLeft(cardSize: card, maxWidth: 400);
+      final alone = (400 - durakTablePairSlotWidth(card)) / 2;
+      expect(pinned0, alone);
+      expect(
+        durakPinnedSecondPairLeft(cardSize: card, maxWidth: 400),
+        greaterThan(pinned0),
+      );
+    });
+
+    test('посадка атаки совпадает с сеткой стола, не с «центром рядом»', () {
+      const center = Offset(200, 160);
+      final first = durakEstimateAttackLandRect(
+        tableCenter: center,
+        cardSize: card,
+        pairIndex: 0,
+        pairCount: 1,
+        compact: false,
+      );
+      final second = durakEstimateAttackLandRect(
+        tableCenter: center,
+        cardSize: card,
+        pairIndex: 1,
+        pairCount: 2,
+        compact: false,
+      );
+      expect(first.width, card.width);
+      expect(first.height, card.height);
+      expect(second.left, greaterThan(first.left));
+      expect(second.top, first.top);
+      final defend = durakEstimateDefenseLandRect(first);
+      expect(defend.left, first.left + kDurakDefendOffset.dx);
+      expect(defend.top, first.top + kDurakDefendOffset.dy);
+      expect(durakTablePairSlotWidth(card), card.width + 26);
     });
 
     test('запас снизу не съедает высоту одной пары', () {

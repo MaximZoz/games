@@ -58,6 +58,64 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Только уведомления: сообщения, заявки, ваш ход и таймер';
 
   @override
+  String get settingsGamepadTitle => 'Контроллер';
+
+  @override
+  String get settingsGamepadSubtitle => 'Геймпад для меню и партий';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Подключён: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Крест / стик — меню и курсор на поле';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Крест — выбрать или сходить';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Круг — назад или снять выбор';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды';
+
+  @override
+  String get settingsGamepadHelpCards => 'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть';
+
+  @override
+  String get gamepadKeyboardTitle => 'Клавиатура';
+
+  @override
+  String get gamepadKeyboardSpace => 'Пробел';
+
+  @override
+  String get gamepadLegendConfirm => 'Выбрать';
+
+  @override
+  String get gamepadLegendBack => 'Назад';
+
+  @override
+  String get gamepadLegendTabs => 'Вкладки';
+
+  @override
+  String get gamepadLegendCycle => 'Сменить';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Контроллер подключён: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Режим сети';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Настройки';
+
+  @override
+  String get offlineModeOfferBody => 'Нет интернета или связь очень слабая. Можно включить офлайн режим и играть с ботом.';
+
+  @override
+  String get offlineModeOfferAction => 'Включить офлайн';
 
   @override
   String get gamesPlay => 'Играть';
@@ -695,6 +759,64 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Длинные';
+
+  @override
+  String get gamesCheckers => 'Шашки';
+
+  @override
+  String get gamesCheckersModeRussian => 'Русские';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Английские';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Поддавки';
+
+  @override
+  String get gamesCheckersModeCorners => 'Уголки';
+
+  @override
+  String get rulesCheckersPlayers => 'Игроки: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.';
+
+  @override
+  String get rulesCheckersPlay => 'Бой обязателен. Дамка и простая обязаны продолжать бой, пока с клетки приземления можно бить дальше — остановиться посередине нельзя. Если направлений несколько, можно выбрать любое, не обязательно самое длинное. Простая, дошедшая до последней линии, становится дамкой.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Русские шашки: у каждого 12 шашек на тёмных клетках. Простые ходят по диагонали вперёд, а бьют вперёд и назад. Дамка летает на любое число клеток. Бой обязателен: нельзя остановиться, если взятие можно продолжить, но если направлений несколько — выбираете любое, не обязательно самое длинное. Побеждает тот, кто съел все шашки соперника или лишил его ходов.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Английские шашки: у каждого 12 шашек. Простые ходят и бьют только вперёд по диагонали. Дамка ходит на одну клетку в любую сторону по диагонали. Бой обязателен. Побеждает тот, кто съел все шашки соперника или лишил его ходов.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Поддавки: те же ходы, что в русских шашках, но цель обратная — отдать все свои шашки или остаться без хода. Бой по-прежнему обязателен.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.';
 
   @override
   String get rulesNardyTitle => 'Нарды — правила';

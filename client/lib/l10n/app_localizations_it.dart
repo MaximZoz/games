@@ -58,6 +58,64 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Solo avvisi: messaggi, richieste, il tuo turno e il timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad per menu e partite';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Collegato: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Nessun gamepad. Collega un controller e premi un pulsante.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Croce / stick — menu e cursore sulla scacchiera';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Croce — conferma o muovi';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Cerchio — indietro o deseleziona';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — schede del menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastiera';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spazio';
+
+  @override
+  String get gamepadLegendConfirm => 'Scegli';
+
+  @override
+  String get gamepadLegendBack => 'Indietro';
+
+  @override
+  String get gamepadLegendTabs => 'Schede';
+
+  @override
+  String get gamepadLegendCycle => 'Cambia';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller collegato: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Modalità di rete';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Impostazioni';
+
+  @override
+  String get offlineModeOfferBody => 'Niente internet o connessione molto lenta. Puoi attivare la modalità offline e giocare contro un bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Attiva offline';
 
   @override
   String get gamesPlay => 'Gioca';
@@ -695,6 +759,64 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Lungo';
+
+  @override
+  String get gamesCheckers => 'Dama';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russe';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Inglesi';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Dama pazza';
+
+  @override
+  String get gamesCheckersModeCorners => 'Angoli';
+
+  @override
+  String get rulesCheckersPlayers => 'Giocatori: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modalità: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Scacchiera 8×8. Due giocatori.';
+
+  @override
+  String get rulesCheckersPlay => 'La cattura è obbligatoria. Dama e pedina devono continuare finché dalla casa di arrivo si può catturare ancora: non ci si ferma a metà. Se ci sono più direzioni si può sceglierne una qualsiasi, non per forza la più lunga. Una pedina sull’ultima riga diventa dama.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Dama russa: 12 pedine ciascuno sulle case scure. Le pedine avanzano in diagonale e catturano avanti e indietro. Le dame volano di quante case vogliono. La cattura è obbligatoria: si continua se possibile, ma si può scegliere qualsiasi direzione, non per forza la più lunga. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Dama inglese: 12 pedine ciascuno. Le pedine avanzano e catturano solo in diagonale in avanti. Le dame si muovono di una casa in diagonale. La cattura è obbligatoria. Vince chi cattura tutte le pedine o lascia l’avversario senza mosse.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Dama pazza: stesse mosse della dama russa, ma l’obiettivo è inverso — perdere tutte le pedine o restare senza mosse. La cattura resta obbligatoria.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Angoli: le pedine partono dagli angoli opposti. Si va in una casa libera adiacente in orizzontale o verticale, oppure si salta una pedina qualsiasi senza toglierla. L’obiettivo è portare tutte le pedine nell’angolo avversario.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Una pedina che ha lasciato il proprio angolo di partenza non può tornarvi.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regole';

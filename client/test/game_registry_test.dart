@@ -10,10 +10,21 @@ void main() {
     expect(gameRegistry.contains('poker'), isTrue);
     expect(gameRegistry.contains('uno'), isTrue);
     expect(gameRegistry.contains('nardy'), isTrue);
+    expect(gameRegistry.contains('checkers'), isTrue);
+    expect(gameRegistry.contains('connect4'), isFalse);
     expect(gameRegistry.contains('chess'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
-    expect(gameRegistry.all.map((g) => g.id).toList(),
-        containsAll(['tictactoe', 'durak', 'battleship', 'uno', 'poker', 'nardy']));
+    expect(
+        gameRegistry.all.map((g) => g.id).toList(),
+        containsAll([
+          'tictactoe',
+          'durak',
+          'battleship',
+          'uno',
+          'poker',
+          'nardy',
+          'checkers',
+        ]));
   });
 
   test('normalize unknown falls back to tictactoe', () {
@@ -51,6 +62,8 @@ void main() {
     expect(poker.supportsDrawOffer(2), isTrue);
     expect(poker.supportsDrawOffer(6), isFalse);
     expect(gameRegistry['uno']!.supportsDrawOffer(2), isFalse);
+    expect(gameRegistry['nardy']!.supportsDrawOffer(2), isFalse);
+    expect(gameRegistry['checkers']!.supportsDrawOffer(2), isTrue);
   });
 
   test('offline supported for tictactoe, durak, battleship, poker', () {
@@ -63,5 +76,8 @@ void main() {
     expect(gameRegistry['poker']!.offlinePath, '/games/poker/offline');
     expect(gameRegistry['uno']!.supportsOffline, isTrue);
     expect(gameRegistry['uno']!.offlinePath, '/games/uno/offline');
+    expect(gameRegistry['nardy']!.supportsOffline, isTrue);
+    expect(gameRegistry['checkers']!.supportsOffline, isTrue);
+    expect(gameRegistry['checkers']!.offlinePath, '/games/checkers/offline');
   });
 }

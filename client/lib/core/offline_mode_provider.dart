@@ -11,6 +11,7 @@ import 'package:multigames_client/core/offline_reachability.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _keyOfflinePreference = 'offline_mode_preference';
+const _keyLastOfflineOfferMs = 'offline_mode_last_offer_ms';
 
 /// Ручной выбор в настройках.
 enum OfflinePreference {
@@ -39,6 +40,7 @@ class OfflineModeState {
     required this.preference,
     required this.deviceOnline,
     required this.serverReachable,
+    this.slowNetwork = false,
   });
 
   final OfflinePreference preference;
@@ -49,12 +51,19 @@ class OfflineModeState {
   /// Probe `/api/start` успешен.
   final bool serverReachable;
 
+  /// Сеть есть, но ответы стабильно медленные (VPN / плохой канал).
+  final bool slowNetwork;
+
   /// Можно работать с API.
   bool get hasNetwork => deviceOnline && serverReachable;
 
-  /// Эффективный офлайн: ручной офлайн или нет сети/сервера.
-  bool get isOffline =>
-      preference == OfflinePreference.offline || !hasNetwork;
+  /// Офлайн только по явному выбору пользователя — сеть сама не переключает.
+  bool get isOffline => preference == OfflinePreference.offline;
+
+  /// Долго нет сети или она слишком медленная — можно предложить офлайн.
+  bool get shouldOfferOffline =>
+      preference == OfflinePreference.online &&
+      (!hasNetwork || slowNetwork);
 
   OnlineUnavailableReason get onlineUnavailableReason {
     if (!deviceOnline) return OnlineUnavailableReason.noInternet;
@@ -66,11 +75,13 @@ class OfflineModeState {
     OfflinePreference? preference,
     bool? deviceOnline,
     bool? serverReachable,
+    bool? slowNetwork,
   }) {
     return OfflineModeState(
       preference: preference ?? this.preference,
       deviceOnline: deviceOnline ?? this.deviceOnline,
       serverReachable: serverReachable ?? this.serverReachable,
+      slowNetwork: slowNetwork ?? this.slowNetwork,
     );
   }
 }
@@ -148,13 +159,30 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
   void _publishReachability() {
     if (_disposed) return;
     if (state.deviceOnline == _reachability.deviceOnline &&
-        state.serverReachable == _reachability.serverReachable) {
+        state.serverReachable == _reachability.serverReachable &&
+        state.slowNetwork == _reachability.slowNetwork) {
       return;
     }
     state = state.copyWith(
       deviceOnline: _reachability.deviceOnline,
       serverReachable: _reachability.serverReachable,
+      slowNetwork: _reachability.slowNetwork,
     );
+  }
+
+  static const offerCooldown = Duration(hours: 6);
+
+  /// Слот на всплывашку: не чаще [offerCooldown] и только при плохой сети.
+  Future<bool> consumeOfflineOffer() async {
+    if (!state.shouldOfferOffline) return false;
+    final prefs = await SharedPreferences.getInstance();
+    final last = prefs.getInt(_keyLastOfflineOfferMs) ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (last > 0 && now - last < offerCooldown.inMilliseconds) {
+      return false;
+    }
+    await prefs.setInt(_keyLastOfflineOfferMs, now);
+    return true;
   }
 
   void _scheduleNextProbe() {
@@ -225,13 +253,16 @@ class OfflineModeNotifier extends StateNotifier<OfflineModeState> {
       return;
     }
     try {
+      final started = DateTime.now();
       final res = await http
           .get(Uri.parse('$apiBaseUrl/api/start'))
           .timeout(OfflineReachability.probeTimeout);
       if (gen != _probeGen || _disposed) return;
       final ok = res.statusCode >= 200 && res.statusCode < 500;
       if (ok) {
-        _reachability.onProbeSuccess();
+        _reachability.onProbeSuccess(
+          elapsed: DateTime.now().difference(started),
+        );
       } else {
         _reachability.onProbeFailure(immediate: immediateFailure);
       }

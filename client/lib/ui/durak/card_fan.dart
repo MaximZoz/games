@@ -23,6 +23,7 @@ class CardFan extends StatefulWidget {
     this.legalCards,
     this.emphasizeLegal = true,
     this.selectedCards,
+    this.cursorCard,
     this.hiddenCards,
     this.onTap,
     this.onLongPress,
@@ -36,6 +37,7 @@ class CardFan extends StatefulWidget {
     this.arc,
     this.spacing,
     this.animateLayout = true,
+    this.layoutDuration,
     this.fillWidth = false,
   });
 
@@ -47,6 +49,9 @@ class CardFan extends StatefulWidget {
   /// Подсветка/dim по [legalCards]. Выкл. — ограничение хода без визуального акцента.
   final bool emphasizeLegal;
   final Set<PlayingCard>? selectedCards;
+
+  /// Карта под курсором геймпада — та же подсветка, что у выбранной.
+  final PlayingCard? cursorCard;
   final Set<PlayingCard>? hiddenCards;
   final ValueChanged<PlayingCard>? onTap;
   final ValueChanged<PlayingCard>? onLongPress;
@@ -75,6 +80,9 @@ class CardFan extends StatefulWidget {
 
   /// Плавная перестановка слотов (сортировка). Выкл. — без «плывущего» веера после хода.
   final bool animateLayout;
+
+  /// Длительность твина слотов. По умолчанию — быстрое схлопывание после хода.
+  final Duration? layoutDuration;
 
   /// Карты от левого края на всю ширину (без пустоты слева под крестиком).
   final bool fillWidth;
@@ -657,7 +665,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
       widget.legalCards == null || widget.legalCards!.contains(card);
 
   bool _isSelected(PlayingCard card) =>
-      widget.selectedCards?.contains(card) == true;
+      widget.selectedCards?.contains(card) == true || widget.cursorCard == card;
 
   double _cardLeft(int i, int n, double baseSpacing, double totalW) {
     if (widget.fillWidth) {
@@ -1343,9 +1351,10 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
           : () => widget.onLongPress?.call(card),
       child: RepaintBoundary(child: face),
     );
+    final moveMs = widget.layoutDuration?.inMilliseconds ?? 180;
     final scaled = AnimatedScale(
       scale: scale,
-      duration: Duration(milliseconds: instantSlot ? 0 : 280),
+      duration: Duration(milliseconds: instantSlot ? 0 : moveMs),
       curve: kDurakLayoutCurve,
       child: Transform.rotate(
         angle: angle,
@@ -1357,7 +1366,7 @@ class CardFanState extends State<CardFan> with TickerProviderStateMixin {
 
     return AnimatedPositioned(
       key: fanSlotPaintKey(card: card, hidden: false),
-      duration: fanSlotMoveDuration(instant: instantSlot),
+      duration: fanSlotMoveDuration(instant: instantSlot, moveMs: moveMs),
       curve: kDurakLayoutCurve,
       left: left,
       top: top,

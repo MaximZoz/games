@@ -58,6 +58,64 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Pouze upozornění: zprávy, žádosti, váš tah a časovač';
 
   @override
+  String get settingsGamepadTitle => 'Ovladač';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad pro menu a partie';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Připojeno: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kříž / páčka — menu a kurzor na desce';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Křížek — potvrdit nebo táhnout';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Kroužek — zpět nebo zrušit výběr';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby';
+
+  @override
+  String get settingsGamepadHelpCards => 'V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klávesnice';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mezera';
+
+  @override
+  String get gamepadLegendConfirm => 'Vybrat';
+
+  @override
+  String get gamepadLegendBack => 'Zpět';
+
+  @override
+  String get gamepadLegendTabs => 'Karty';
+
+  @override
+  String get gamepadLegendCycle => 'Změnit';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Ovladač připojen: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Režim sítě';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Nastavení';
+
+  @override
+  String get offlineModeOfferBody => 'Není internet nebo je spojení velmi pomalé. Můžete zapnout režim offline a hrát proti botovi.';
+
+  @override
+  String get offlineModeOfferAction => 'Zapnout offline';
 
   @override
   String get gamesPlay => 'Hrát';
@@ -695,6 +759,64 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Dlouhé';
+
+  @override
+  String get gamesCheckers => 'Dáma';
+
+  @override
+  String get gamesCheckersModeRussian => 'Ruské';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anglické';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Poddávaná';
+
+  @override
+  String get gamesCheckersModeCorners => 'Rohy';
+
+  @override
+  String get rulesCheckersPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Deska 8×8. Dva hráči.';
+
+  @override
+  String get rulesCheckersPlay => 'Braní je povinné. Dáma i pěšec musí pokračovat, dokud z pole dopadu lze brát dál — zastavit uprostřed nelze. Při více směrech lze zvolit kterýkoli, ne nutně nejdelší. Pěšec na poslední řadě se stává dámou.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Ruská dáma: po 12 kamenech na tmavých polích. Pěšci táhnou šikmo vpřed a berou vpřed i vzad. Dámy létají libovolně daleko. Braní je povinné: nelze zastavit, pokud lze pokračovat, ale při více směrech zvolíte kterýkoli, ne nutně nejdelší. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Anglická dáma: po 12 kamenech. Pěšci táhnou a berou jen šikmo vpřed. Dámy jdou o jedno pole šikmo. Braní je povinné. Vyhrává ten, kdo sebere všechny kameny nebo soupeře zbaví tahů.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Poddávaná: stejné tahy jako v ruské dámě, ale cíl je opačný — odevzdat všechny kameny nebo zůstat bez tahu. Braní je stále povinné.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Rohy: kameny začínají v protilehlých rozích. Táhne se na sousední volné pole vodorovně nebo svisle, nebo se přeskočí libovolný kámen bez braní. Cíl je převést všechny své kameny do soupeřova rohu.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Kámen, který už opustil svůj startovní roh, se do něj nesmí vrátit.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
 
   @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';

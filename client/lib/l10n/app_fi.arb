@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Vuoro",
   "settingsHapticsTitle": "Tärinä",
   "settingsHapticsSubtitle": "Vain ilmoitukset: viestit, pyynnöt, vuorosi ja ajastin",
+  "settingsGamepadTitle": "Ohjain",
+  "settingsGamepadSubtitle": "Gamepad valikoille ja peleille",
+  "settingsGamepadConnected": "Yhdistetty: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.",
+  "settingsGamepadHelpNavigate": "Risti / tikku — valikot ja laudan kursori",
+  "settingsGamepadHelpConfirm": "A / Risti — vahvista tai siirrä",
+  "settingsGamepadHelpBack": "B / Ympyrä — takaisin tai poista valinta",
+  "settingsGamepadHelpTabs": "L1 / R1 — valikon välilehdet",
+  "settingsGamepadHelpPlay": "Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon",
+  "settingsGamepadHelpCards": "Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa",
+  "settingsGamepadHelpKeyboard": "Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee",
+  "gamepadKeyboardTitle": "Näppäimistö",
+  "gamepadKeyboardSpace": "Välilyönti",
+  "gamepadLegendConfirm": "Valitse",
+  "gamepadLegendBack": "Takaisin",
+  "gamepadLegendTabs": "Välilehdet",
+  "gamepadLegendCycle": "Vaihda",
+  "gamepadConnectedSnack": "Ohjain yhdistetty: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Viestit vain kavereilta",
   "settingsFriendsOnlySubtitle": "Muut kuin kaverit voivat lähettää vain emojeja. Jos spam häiritsee, estä käyttäjä tilapäisesti.",
   "settingsNotifications": "Ilmoitukset",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Lyhyt",
   "gamesNardyModeLong": "Pitkä",
+  "gamesCheckers": "Tammi",
+  "gamesCheckersModeRussian": "Venäläinen",
+  "gamesCheckersModeEnglish": "Englantilainen",
+  "gamesCheckersModeGiveaway": "Antodami",
+  "gamesCheckersModeCorners": "Kulmat",
+  "rulesCheckersPlayers": "Pelaajat: 2.",
+  "rulesCheckersMode": "Tila: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Lauta 8×8. Kaksi pelaajaa.",
+  "rulesCheckersPlay": "Lyöminen on pakollista. Dama ja nappula jatkavat, jos laskeutumiruudusta voi lyödä lisää — kesken ei saa pysähtyä. Jos suuntia on useita, saa valita minkä tahansa, ei välttämättä pisintä. Viimeiselle riville päässyt nappula muuttuu damaksi.",
+  "rulesCheckersPlayRussian": "Venäläinen tammi: kummallakin 12 nappulaa tummilla ruuduilla. Sotilaat kulkevat vinottain eteen ja lyövät eteen ja taakse. Damat lentävät vapaasti. Lyöminen on pakollista: jatka jos mahdollista, mutta suuntia voi olla useita ja saat valita minkä tahansa, ei välttämättä pisintä. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
+  "rulesCheckersPlayEnglish": "Englantilainen tammi: kummallakin 12 nappulaa. Sotilaat kulkevat ja lyövät vain vinottain eteen. Damat siirtyvät yhden ruudun vinottain. Lyöminen on pakollista. Voitto tulee, kun vastustajan nappulat on lyöty tai hänellä ei ole siirtoja.",
+  "rulesCheckersPlayGiveaway": "Antodami: samat siirrot kuin venäläisessä tammessa, mutta tavoite on päinvastainen — luovuttaa kaikki nappulat tai jäädä ilman siirtoja. Lyöminen on silti pakollista.",
+  "rulesCheckersPlayCorners": "Kulmat: nappulat alkavat vastakkaisista kulmista. Siirry viereiseen tyhjään ruutuun vaaka- tai pystysuoraan tai hyppää minkä tahansa nappulan yli poistamatta sitä. Tavoite on viedä kaikki omat nappulat vastustajan kulmaan.",
+  "rulesCheckersPlayCornersNoReturn": "Nappula, joka on lähtenyt aloituskulmastaan, ei saa palata sinne.",
+  "rulesCheckersPlayCornersLeaveHome": "Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.",
   "rulesNardyTitle": "Backgammon — säännöt",
   "rulesNardyPlayers": "Pelaajat: 2.",
   "rulesNardyMode": "Tila: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Peli bottia vastaan",
   "offlineModePopupBody": "Offline-tila on päällä. Pelaa botia vastaan ilman panoksia ja palkintoja. Chatit, ystävät ja lobby on piilotettu. Ostokset otetaan käyttöön online-tilassa.",
   "offlineModePopupSettings": "Asetukset",
+  "offlineModeOfferBody": "Ei internetiä tai yhteys on hyvin hidas. Voit ottaa offline-tilan käyttöön ja pelata bottia vastaan.",
+  "offlineModeOfferAction": "Siirry offlineen",
   "offlineModePopupTitle": "Offline-tila",
   "offlinePlayAgain": "Uudelleen",
   "rulesAlternateStarts": "Kuka aloittaa vuorottelee peleistä toiseen.",

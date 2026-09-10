@@ -58,6 +58,64 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHapticsSubtitle => 'التنبيهات فقط: الرسائل والطلبات ودورَك والمؤقت';
 
   @override
+  String get settingsGamepadTitle => 'وحدة التحكم';
+
+  @override
+  String get settingsGamepadSubtitle => 'لوحة ألعاب للقوائم والمباريات';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'متصل: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'الأسهم / العصا — القوائم ومؤشر اللوحة';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / تقاطع — تأكيد أو تنفيذ نقلة';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / دائرة — رجوع أو إلغاء التحديد';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — تبويبات القائمة';
+
+  @override
+  String get settingsGamepadHelpPlay => 'مؤشر اللوحة واليد: الضامة، إكس أو، السفن، الدوراك، أونو، البوكر والنرد';
+
+  @override
+  String get settingsGamepadHelpCards => 'في الورق: الأسهم تحرّك اليد، A يلعب، X يختار / أونو، Y يأخذ أو يسحب';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق';
+
+  @override
+  String get gamepadKeyboardTitle => 'لوحة المفاتيح';
+
+  @override
+  String get gamepadKeyboardSpace => 'مسافة';
+
+  @override
+  String get gamepadLegendConfirm => 'اختيار';
+
+  @override
+  String get gamepadLegendBack => 'رجوع';
+
+  @override
+  String get gamepadLegendTabs => 'تبويبات';
+
+  @override
+  String get gamepadLegendCycle => 'تغيير';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'تم توصيل وحدة التحكم: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'وضع الشبكة';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'الإعدادات';
+
+  @override
+  String get offlineModeOfferBody => 'لا يوجد إنترنت أو الاتصال ضعيف جداً. يمكنك تفعيل وضع عدم الاتصال واللعب ضد بوت.';
+
+  @override
+  String get offlineModeOfferAction => 'تفعيل عدم الاتصال';
 
   @override
   String get gamesPlay => 'العب';
@@ -695,6 +759,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'طويلة';
+
+  @override
+  String get gamesCheckers => 'الضامة';
+
+  @override
+  String get gamesCheckersModeRussian => 'روسية';
+
+  @override
+  String get gamesCheckersModeEnglish => 'إنجليزية';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'الضامة العكسية';
+
+  @override
+  String get gamesCheckersModeCorners => 'الزوايا';
+
+  @override
+  String get rulesCheckersPlayers => 'اللاعبون: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'رقعة 8×8. لاعبان.';
+
+  @override
+  String get rulesCheckersPlay => 'الأكل إلزامي. يجب على الملكة والجندي مواصلة الأكل ما دام من مربع الهبوط يمكن القفز مجددًا — لا يجوز التوقف في المنتصف. إن تعددت الاتجاهات يمكن اختيار أي منها وليس بالضرورة الأطول. الجندي الذي يصل الصف الأخير يصبح ملكة.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'الضامة الروسية: 12 قطعة لكل لاعب على المربعات الداكنة. الجنود يتحركون قطريًا للأمام ويأكلون للأمام والخلف. الملكة تطير أي عدد من المربعات. الأكل إلزامي: يجب المواصلة إن أمكن، ويمكن اختيار أي اتجاه وليس بالضرورة الأطول. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'الضامة الإنجليزية: 12 قطعة لكل لاعب. الجنود يتحركون ويأكلون قطريًا للأمام فقط. الملكة تتحرك مربعًا واحدًا قطريًا. الأكل إلزامي. يفوز من يأكل كل القطع أو يترك الخصم بلا حركات.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'الضامة العكسية: نفس حركات الضامة الروسية لكن الهدف معكوس — أن تخسر كل قطعك أو تبقى بلا حركة. الأكل ما زال إلزاميًا.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'الزوايا: القطع تبدأ في الزوايا المتقابلة. تتحرك إلى مربع فارغ مجاور أفقيًا أو عموديًا أو تقفز فوق أي قطعة دون إزالتها. الهدف نقل كل قطعك إلى زاوية الخصم.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'القطعة التي غادرت زاويتها الأولى لا يمكنها العودة إليها.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'يجب أن تغادر القطع التي ما زالت في البيت خلال أول 25 نقلة للاعب.';
 
   @override
   String get rulesNardyTitle => 'النرد — القواعد';

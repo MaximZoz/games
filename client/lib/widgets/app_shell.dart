@@ -7,6 +7,7 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
@@ -270,6 +271,31 @@ class AppShell extends ConsumerWidget {
         ref.read(pendingPurchaseFlushNoticeProvider.notifier).state = null;
       },
     );
+    ref.listen<OfflineModeState>(offlineModeProvider, (prev, next) {
+      if (next.isOffline) return;
+      if (!next.shouldOfferOffline) return;
+      if (prev != null && prev.shouldOfferOffline) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!context.mounted) return;
+        final ok = await ref
+            .read(offlineModeProvider.notifier)
+            .consumeOfflineOffer();
+        if (!ok || !context.mounted) return;
+        final l10n = context.l10n;
+        showAppSnackBar(
+          context,
+          message: l10n.offlineModeOfferBody,
+          actionLabel: l10n.offlineModeOfferAction,
+          onAction: () {
+            ref
+                .read(offlineModeProvider.notifier)
+                .setPreference(OfflinePreference.offline);
+          },
+          duration: const Duration(seconds: 8),
+          icon: Icons.wifi_off_rounded,
+        );
+      });
+    });
     // Данные и ассеты для офлайна: держим в памяти + прогрев при онлайне.
     if (isAuthorized) {
       ref.watch(offlineWarmupProvider);
@@ -793,6 +819,14 @@ class AppShell extends ConsumerWidget {
         );
       }
     }
+
+    GamepadNav.switchTab = (delta) {
+      final n = navItems.length;
+      if (n <= 0) return;
+      var next = (selectedIndex + delta) % n;
+      if (next < 0) next += n;
+      navigateWithPrefetch(next);
+    };
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
     // показывал предыдущую вкладку, пока новая не растрировалась.

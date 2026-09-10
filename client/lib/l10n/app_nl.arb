@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Beurt",
   "settingsHapticsTitle": "Trillen",
   "settingsHapticsSubtitle": "Alleen meldingen: berichten, verzoeken, jouw beurt en de timer",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad voor menu's en partijen",
+  "settingsGamepadConnected": "Verbonden: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Geen gamepad. Sluit een controller aan en druk op een knop.",
+  "settingsGamepadHelpNavigate": "Kruis / stick — menu's en bordcursor",
+  "settingsGamepadHelpConfirm": "A / Kruis — bevestigen of zetten",
+  "settingsGamepadHelpBack": "B / Cirkel — terug of deselecteren",
+  "settingsGamepadHelpTabs": "L1 / R1 — menutabbladen",
+  "settingsGamepadHelpPlay": "Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon",
+  "settingsGamepadHelpCards": "Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt",
+  "settingsGamepadHelpKeyboard": "In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit",
+  "gamepadKeyboardTitle": "Toetsenbord",
+  "gamepadKeyboardSpace": "Spatie",
+  "gamepadLegendConfirm": "Kiezen",
+  "gamepadLegendBack": "Terug",
+  "gamepadLegendTabs": "Tabbladen",
+  "gamepadLegendCycle": "Wijzigen",
+  "gamepadConnectedSnack": "Controller verbonden: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Berichten alleen van vrienden",
   "settingsFriendsOnlySubtitle": "Niet-vrienden kunnen alleen emoji’s sturen. Bij spam blokkeer je de gebruiker tijdelijk.",
   "settingsNotifications": "Meldingen",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dammen",
+  "gamesCheckersModeRussian": "Russisch",
+  "gamesCheckersModeEnglish": "Engels",
+  "gamesCheckersModeGiveaway": "Geefdam",
+  "gamesCheckersModeCorners": "Hoeken",
+  "rulesCheckersPlayers": "Spelers: 2.",
+  "rulesCheckersMode": "Modus: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bord 8×8. Twee spelers.",
+  "rulesCheckersPlay": "Slaan is verplicht. Dam en schijf moeten doorgaan zolang vanaf het landingsveld nog een slag kan — stoppen halverwege mag niet. Bij meerdere richtingen mag je elke kiezen, niet per se de langste. Een schijf op de laatste rij wordt dam.",
+  "rulesCheckersPlayRussian": "Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht: doorgaan als het kan, maar bij meerdere richtingen mag je elke kiezen, niet per se de langste. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
+  "rulesCheckersPlayEnglish": "Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.",
+  "rulesCheckersPlayGiveaway": "Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.",
+  "rulesCheckersPlayCorners": "Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.",
+  "rulesCheckersPlayCornersNoReturn": "Een schijf die zijn start-hoek heeft verlaten, mag daar niet naar terug.",
+  "rulesCheckersPlayCornersLeaveHome": "Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.",
   "rulesNardyTitle": "Backgammon — regels",
   "rulesNardyPlayers": "Spelers: 2.",
   "rulesNardyMode": "Modus: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Spel tegen bot",
   "offlineModePopupBody": "Offlinemodus is aan. Speel tegen een bot zonder inzetten of beloningen. Chats, vrienden en lobby zijn verborgen. Aankopen worden in onlinemodus toegepast.",
   "offlineModePopupSettings": "Instellingen",
+  "offlineModeOfferBody": "Geen internet of de verbinding is erg traag. Je kunt de offlinemodus aanzetten en tegen een bot spelen.",
+  "offlineModeOfferAction": "Offline aanzetten",
   "offlineModePopupTitle": "Offlinemodus",
   "offlinePlayAgain": "Opnieuw",
   "rulesAlternateStarts": "Wie eerst zet wisselt van partij tot partij.",

@@ -17,6 +17,38 @@
   "settingsSoundTurn": "ตา",
   "settingsHapticsTitle": "การสั่น",
   "settingsHapticsSubtitle": "เฉพาะการแจ้งเตือน: ข้อความ คำขอ ตาของคุณ และตัวจับเวลา",
+  "settingsGamepadTitle": "คอนโทรลเลอร์",
+  "settingsGamepadSubtitle": "เกมแพดสำหรับเมนูและเกม",
+  "settingsGamepadConnected": "เชื่อมต่อแล้ว: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้",
+  "settingsGamepadHelpNavigate": "ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน",
+  "settingsGamepadHelpConfirm": "A / กากบาท — ยืนยันหรือเดิน",
+  "settingsGamepadHelpBack": "B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก",
+  "settingsGamepadHelpTabs": "L1 / R1 — แท็บเมนู",
+  "settingsGamepadHelpPlay": "เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน",
+  "settingsGamepadHelpCards": "ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว",
+  "settingsGamepadHelpKeyboard": "ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด",
+  "gamepadKeyboardTitle": "คีย์บอร์ด",
+  "gamepadKeyboardSpace": "เว้นวรรค",
+  "gamepadLegendConfirm": "เลือก",
+  "gamepadLegendBack": "กลับ",
+  "gamepadLegendTabs": "แท็บ",
+  "gamepadLegendCycle": "เปลี่ยน",
+  "gamepadConnectedSnack": "เชื่อมต่อคอนโทรลเลอร์แล้ว: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "ข้อความจากเพื่อนเท่านั้น",
   "settingsFriendsOnlySubtitle": "ผู้ที่ไม่ใช่เพื่อนส่งได้เฉพาะอีโมจิ หากถูกรบกวน ให้บล็อกผู้ใช้นั้นชั่วคราว",
   "settingsNotifications": "การแจ้งเตือน",
@@ -257,6 +289,28 @@
   "gamesNardy": "แบ็กแกมมอน",
   "gamesNardyModeShort": "สั้น",
   "gamesNardyModeLong": "ยาว",
+  "gamesCheckers": "หมากฮอส",
+  "gamesCheckersModeRussian": "รัสเซีย",
+  "gamesCheckersModeEnglish": "อังกฤษ",
+  "gamesCheckersModeGiveaway": "กิฟอะเวย์",
+  "gamesCheckersModeCorners": "มุม",
+  "rulesCheckersPlayers": "ผู้เล่น: 2",
+  "rulesCheckersMode": "โหมด: {mode}",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "กระดาน 8×8 สองผู้เล่น",
+  "rulesCheckersPlay": "ต้องกิน หากดามก้าหรือตัวธรรมดาลงช่องแล้วยังกินต่อได้ ห้ามหยุดกลางทาง ถ้ามีหลายทิศทางเลือกทิศใดก็ได้ ไม่บังคับทางที่กินมากสุด ตัวธรรมดาถึงแถวสุดท้ายเป็นดามก้า",
+  "rulesCheckersPlayRussian": "หมากฮอสรัสเซีย: คนละ 12 ตัวบนช่องเข้ม ตัวธรรมดาเดินทแยงไปข้างหน้าและกินไปข้างหน้าหรือถอยหลัง ดामก้าบินได้ทุกช่อง ต้องกิน: ถ้ากินต่อได้ห้ามหยุด แต่ถ้ามีหลายทิศทางเลือกทิศใดก็ได้ ไม่บังคับทางที่ยาวสุด ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้",
+  "rulesCheckersPlayEnglish": "หมากฮอสอังกฤษ: คนละ 12 ตัว ตัวธรรมดาเดินและกินทแยงไปข้างหน้าเท่านั้น ดามก้าเดินทแยงหนึ่งช่อง ต้องกิน ชนะเมื่อกินหมดหรือคู่ต่อสู้เดินไม่ได้",
+  "rulesCheckersPlayGiveaway": "กิฟอะเวย์: เดินแบบหมากฮอสรัสเซีย แต่เป้าหมายกลับกัน คือยอมเสียหมากทั้งหมดหรือเดินไม่ได้ การกินยังบังคับ",
+  "rulesCheckersPlayCorners": "มุม: หมากเริ่มที่มุมตรงข้าม เดินไปช่องว่างข้างเคียงในแนวตั้งหรือแนวนอน หรือกระโดดข้ามหมากใดก็ได้โดยไม่กิน เป้าหมายคือย้ายหมากทั้งหมดไปมุมฝ่ายตรงข้าม",
+  "rulesCheckersPlayCornersNoReturn": "หมากที่ออกจากมุมเริ่มต้นแล้วห้ามกลับเข้าไป",
+  "rulesCheckersPlayCornersLeaveHome": "หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น",
   "rulesNardyTitle": "แบ็กแกมมอน — กติกา",
   "rulesNardyPlayers": "ผู้เล่น: 2 คน",
   "rulesNardyMode": "โหมด: {mode}",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "เล่นกับบอท",
   "offlineModePopupBody": "โหมดออฟไลน์เปิดอยู่ เล่นกับบอทโดยไม่มีเดิมพันและรางวัล แชท เพื่อน และล็อบบี้ถูกซ่อน การซื้อจะใช้ในโหมดออนไลน์",
   "offlineModePopupSettings": "การตั้งค่า",
+  "offlineModeOfferBody": "ไม่มีอินเทอร์เน็ตหรือการเชื่อมต่อช้ามาก คุณสามารถเปิดโหมดออฟไลน์แล้วเล่นกับบอทได้",
+  "offlineModeOfferAction": "เปิดออฟไลน์",
   "offlineModePopupTitle": "โหมดออฟไลน์",
   "offlinePlayAgain": "อีกครั้ง",
   "rulesAlternateStarts": "ผู้เริ่มก่อนจะสลับกันในแต่ละเกม",

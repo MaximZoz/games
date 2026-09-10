@@ -58,6 +58,64 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alleen meldingen: berichten, verzoeken, jouw beurt en de timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad voor menu\'s en partijen';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Verbonden: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kruis / stick — menu\'s en bordcursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kruis — bevestigen of zetten';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Cirkel — terug of deselecteren';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit';
+
+  @override
+  String get gamepadKeyboardTitle => 'Toetsenbord';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spatie';
+
+  @override
+  String get gamepadLegendConfirm => 'Kiezen';
+
+  @override
+  String get gamepadLegendBack => 'Terug';
+
+  @override
+  String get gamepadLegendTabs => 'Tabbladen';
+
+  @override
+  String get gamepadLegendCycle => 'Wijzigen';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller verbonden: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Netwerkmodus';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Instellingen';
+
+  @override
+  String get offlineModeOfferBody => 'Geen internet of de verbinding is erg traag. Je kunt de offlinemodus aanzetten en tegen een bot spelen.';
+
+  @override
+  String get offlineModeOfferAction => 'Offline aanzetten';
 
   @override
   String get gamesPlay => 'Spelen';
@@ -695,6 +759,64 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get gamesCheckers => 'Dammen';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisch';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engels';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Geefdam';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hoeken';
+
+  @override
+  String get rulesCheckersPlayers => 'Spelers: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bord 8×8. Twee spelers.';
+
+  @override
+  String get rulesCheckersPlay => 'Slaan is verplicht. Dam en schijf moeten doorgaan zolang vanaf het landingsveld nog een slag kan — stoppen halverwege mag niet. Bij meerdere richtingen mag je elke kiezen, niet per se de langste. Een schijf op de laatste rij wordt dam.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisch dammen: ieder 12 schijven op donkere velden. Mannen lopen schuin vooruit en slaan voor- en achteruit. Dames vliegen willekeurig ver. Slaan is verplicht: doorgaan als het kan, maar bij meerdere richtingen mag je elke kiezen, niet per se de langste. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engels dammen: ieder 12 schijven. Mannen lopen en slaan alleen schuin vooruit. Dames zetten één veld schuin. Slaan is verplicht. Win door alle schijven te slaan of de tegenstander zonder zetten te laten.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Geefdam: dezelfde zetten als Russisch dammen, maar het doel is omgekeerd — al je schijven kwijtraken of geen zet meer hebben. Slaan blijft verplicht.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hoeken: de schijven starten in tegenoverliggende hoeken. Zet naar een leeg buurveld horizontaal of verticaal, of spring over een willekeurige schijf zonder die te slaan. Het doel is al je schijven naar de hoek van de tegenstander te brengen.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Een schijf die zijn start-hoek heeft verlaten, mag daar niet naar terug.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regels';

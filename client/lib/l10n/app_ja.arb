@@ -17,6 +17,38 @@
   "settingsSoundTurn": "手番",
   "settingsHapticsTitle": "振動",
   "settingsHapticsSubtitle": "通知のみ：メッセージ、リクエスト、手番、タイマー",
+  "settingsGamepadTitle": "コントローラー",
+  "settingsGamepadSubtitle": "メニューと対局用のゲームパッド",
+  "settingsGamepadConnected": "接続中: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "ゲームパッドがありません。接続していずれかのボタンを押してください。",
+  "settingsGamepadHelpNavigate": "十字 / スティック — メニューと盤上のカーソル",
+  "settingsGamepadHelpConfirm": "A / × — 決定または着手",
+  "settingsGamepadHelpBack": "B / ○ — 戻るまたは選択解除",
+  "settingsGamepadHelpTabs": "L1 / R1 — タブ切替",
+  "settingsGamepadHelpPlay": "盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン",
+  "settingsGamepadHelpCards": "カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー",
+  "settingsGamepadHelpKeyboard": "入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる",
+  "gamepadKeyboardTitle": "キーボード",
+  "gamepadKeyboardSpace": "スペース",
+  "gamepadLegendConfirm": "決定",
+  "gamepadLegendBack": "戻る",
+  "gamepadLegendTabs": "タブ",
+  "gamepadLegendCycle": "切替",
+  "gamepadConnectedSnack": "コントローラー接続: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "フレンドからのメッセージのみ",
   "settingsFriendsOnlySubtitle": "フレンド以外は絵文字のみ送信できます。迷惑行為がある場合は一時的にブロックしてください。",
   "settingsNotifications": "通知",
@@ -257,6 +289,28 @@
   "gamesNardy": "バックギャモン",
   "gamesNardyModeShort": "ショート",
   "gamesNardyModeLong": "ロング",
+  "gamesCheckers": "チェッカー",
+  "gamesCheckersModeRussian": "ロシア",
+  "gamesCheckersModeEnglish": "イギリス",
+  "gamesCheckersModeGiveaway": "ギブアウェイ",
+  "gamesCheckersModeCorners": "コーナー",
+  "rulesCheckersPlayers": "プレイヤー: 2。",
+  "rulesCheckersMode": "モード: {mode}。",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "盤は 8×8。2 人対戦。",
+  "rulesCheckersPlay": "取りは義務です。キングも駒も、着地マスからさらに取れるなら続けなければならず、途中で止められません。方向が複数あればどれを選んでもよく、最長である必要はありません。最終段に達した駒はキングになります。",
+  "rulesCheckersPlayRussian": "ロシア式チェッカー：各12個を暗いマスに置く。駒は斜め前に進み、前後に取る。キングは任意のマス数を飛ぶ。取りは義務：続けられるなら止められませんが、方向が複数ならどれでもよく最長である必要はありません。相手の駒をすべて取るか、相手に手をなくせば勝ち。",
+  "rulesCheckersPlayEnglish": "イギリス式チェッカー：各12個。駒は斜め前にだけ進み取る。キングは斜め1マス。取りは義務。相手の駒をすべて取るか、相手に手をなくせば勝ち。",
+  "rulesCheckersPlayGiveaway": "ギブアウェイ：動きはロシア式と同じだが、目的は逆。自分の駒をすべて失うか、手がなくなると勝ち。取りはやはり義務。",
+  "rulesCheckersPlayCorners": "コーナー：駒は対角の隅に置く。縦横の隣の空きマスへ進むか、どの駒でも飛び越え（取らない）。自分の駒をすべて相手の隅へ運ぶ。",
+  "rulesCheckersPlayCornersNoReturn": "スタートの隅を出た駒は、そこへ戻ってはいけません。",
+  "rulesCheckersPlayCornersLeaveHome": "まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。",
   "rulesNardyTitle": "バックギャモン — ルール",
   "rulesNardyPlayers": "プレイヤー: 2人。",
   "rulesNardyMode": "モード: {mode}。",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "ボット対戦",
   "offlineModePopupBody": "オフラインモードがオンです。賭け金や報酬なしでボットと対戦できます。チャット、友達、ロビーは非表示です。購入はオンラインモードで適用されます。",
   "offlineModePopupSettings": "設定",
+  "offlineModeOfferBody": "インターネットがないか、回線が非常に遅いです。オフラインモードをオンにしてボットと対戦できます。",
+  "offlineModeOfferAction": "オフラインにする",
   "offlineModePopupTitle": "オフラインモード",
   "offlinePlayAgain": "もう一度",
   "rulesAlternateStarts": "先手は対局ごとに交代します。",

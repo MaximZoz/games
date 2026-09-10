@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Tur",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Kun notifikationer: beskeder, anmodninger, din tur og timeren",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad til menuer og partier",
+  "settingsGamepadConnected": "Forbundet: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Ingen gamepad. Tilslut en controller og tryk på en knap.",
+  "settingsGamepadHelpNavigate": "Kors / stick — menuer og brætmarkør",
+  "settingsGamepadHelpConfirm": "A / Kors — bekræft eller træk",
+  "settingsGamepadHelpBack": "B / Cirkel — tilbage eller fravælg",
+  "settingsGamepadHelpTabs": "L1 / R1 — menufaner",
+  "settingsGamepadHelpPlay": "Markør på bræt og hånd: dam, kryds og bolle, sænk skibene, durak, uno, poker og backgammon",
+  "settingsGamepadHelpCards": "I kort: kors flytter hånden, A spiller, X vælger / Uno, Y tager, passer eller trækker",
+  "settingsGamepadHelpKeyboard": "I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker",
+  "gamepadKeyboardTitle": "Tastatur",
+  "gamepadKeyboardSpace": "Mellemrum",
+  "gamepadLegendConfirm": "Vælg",
+  "gamepadLegendBack": "Tilbage",
+  "gamepadLegendTabs": "Faner",
+  "gamepadLegendCycle": "Skift",
+  "gamepadConnectedSnack": "Controller forbundet: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Beskeder kun fra venner",
   "settingsFriendsOnlySubtitle": "Ikke-venner kan kun sende emojis. Ved spam, bloker brugeren midlertidigt.",
   "settingsNotifications": "Notifikationer",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kort",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dam",
+  "gamesCheckersModeRussian": "Russisk",
+  "gamesCheckersModeEnglish": "Engelsk",
+  "gamesCheckersModeGiveaway": "Givspil",
+  "gamesCheckersModeCorners": "Hjørner",
+  "rulesCheckersPlayers": "Spillere: 2.",
+  "rulesCheckersMode": "Tilstand: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Bræt 8×8. To spillere.",
+  "rulesCheckersPlay": "Slag er pligt. Dame og brik skal fortsætte, så længe et nyt hop er muligt fra landingsfeltet — man må ikke stoppe midt i. Er der flere retninger, må du vælge en hvilken som helst, ikke nødvendigvis den længste. En brik på sidste række bliver dame.",
+  "rulesCheckersPlayRussian": "Russisk dam: 12 brikker hver på mørke felter. Bønder går skråt frem og slår frem og tilbage. Damer flyver frit. Slag er pligt: du skal fortsætte hvis det kan, men må vælge en hvilken som helst retning — ikke nødvendigvis den længste. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.",
+  "rulesCheckersPlayEnglish": "Engelsk dam: 12 brikker hver. Bønder går og slår kun skråt frem. Damer går ét felt skråt i alle retninger. Slag er pligt. Vind ved at slå alle brikker eller efterlade modstanderen uden træk.",
+  "rulesCheckersPlayGiveaway": "Givspil: samme træk som russisk dam, men målet er omvendt — afgive alle brikker eller stå uden træk. Slag er stadig pligt.",
+  "rulesCheckersPlayCorners": "Hjørner: brikkerne starter i modsatte hjørner. Gå til et ledigt nabofelt vandret eller lodret, eller hop over en hvilken som helst brik uden at fjerne den. Målet er at flytte alle sine brikker til modstanderens hjørne.",
+  "rulesCheckersPlayCornersNoReturn": "En brik, der har forladt sit start-hjørne, må ikke vende tilbage dertil.",
+  "rulesCheckersPlayCornersLeaveHome": "Brikker, der stadig er i hjemmet, skal forlade det inden for spillerens første 25 træk.",
   "rulesNardyTitle": "Backgammon — regler",
   "rulesNardyPlayers": "Spillere: 2.",
   "rulesNardyMode": "Tilstand: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Spil mod bot",
   "offlineModePopupBody": "Offline-tilstand er slået til. Spil mod en bot uden indsatser og belønninger. Chats, venner og lobby er skjult. Køb anvendes i online-tilstand.",
   "offlineModePopupSettings": "Indstillinger",
+  "offlineModeOfferBody": "Ingen internetforbindelse, eller den er meget langsom. Du kan slå offline-tilstand til og spille mod en bot.",
+  "offlineModeOfferAction": "Gå offline",
   "offlineModePopupTitle": "Offline-tilstand",
   "offlinePlayAgain": "Igen",
   "rulesAlternateStarts": "Hvem der trækker først skifter fra parti til parti.",

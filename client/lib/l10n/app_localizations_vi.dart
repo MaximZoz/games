@@ -58,6 +58,64 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Chỉ thông báo: tin nhắn, lời mời, lượt của bạn và đồng hồ';
 
   @override
+  String get settingsGamepadTitle => 'Tay cầm';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad cho menu và ván đấu';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Đã kết nối: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu và con trỏ trên bàn';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Chéo — xác nhận hoặc đi nước';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Tròn — quay lại hoặc bỏ chọn';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược';
+
+  @override
+  String get settingsGamepadHelpCards => 'Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng';
+
+  @override
+  String get gamepadKeyboardTitle => 'Bàn phím';
+
+  @override
+  String get gamepadKeyboardSpace => 'Cách';
+
+  @override
+  String get gamepadLegendConfirm => 'Chọn';
+
+  @override
+  String get gamepadLegendBack => 'Quay lại';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Đổi';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Đã kết nối tay cầm: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Chế độ mạng';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Cài đặt';
+
+  @override
+  String get offlineModeOfferBody => 'Không có internet hoặc kết nối rất chậm. Bạn có thể bật chế độ ngoại tuyến và chơi với bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Bật ngoại tuyến';
 
   @override
   String get gamesPlay => 'Chơi';
@@ -695,6 +759,64 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Dài';
+
+  @override
+  String get gamesCheckers => 'Cờ đam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Nga';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Anh';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Nhường';
+
+  @override
+  String get gamesCheckersModeCorners => 'Góc';
+
+  @override
+  String get rulesCheckersPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Bàn 8×8. Hai người chơi.';
+
+  @override
+  String get rulesCheckersPlay => 'Bắt buộc ăn. Đam và quân thường phải ăn tiếp nếu từ ô đáp còn nhảy được — không được dừng giữa chừng. Có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Quân thường tới hàng cuối thành đam.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Cờ đam Nga: mỗi bên 12 quân trên ô tối. Quân thường đi chéo tiến, ăn tiến hoặc lùi. Đam bay bao nhiêu ô tùy ý. Bắt buộc ăn: còn nhảy được thì không được dừng, nhưng có nhiều hướng thì chọn hướng nào cũng được, không bắt buộc đường dài nhất. Thắng khi ăn hết quân đối thủ hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Cờ đam Anh: mỗi bên 12 quân. Quân thường chỉ đi và ăn chéo tiến. Đam đi một ô chéo. Bắt buộc ăn. Thắng khi ăn hết quân hoặc để đối thủ hết nước.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Nhường: nước đi như cờ đam Nga nhưng mục tiêu ngược lại — mất hết quân hoặc hết nước đi. Vẫn bắt buộc ăn.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Góc: quân bắt đầu ở hai góc đối diện. Đi tới ô trống kề ngang hoặc dọc, hoặc nhảy qua quân bất kỳ mà không bắt. Mục tiêu là đưa hết quân mình sang góc đối thủ.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'Quân đã rời góc xuất phát thì không được quay lại đó.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
 
   @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';

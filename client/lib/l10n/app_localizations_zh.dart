@@ -58,6 +58,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHapticsSubtitle => '仅提醒：消息、请求、你的回合和计时器';
 
   @override
+  String get settingsGamepadTitle => '手柄';
+
+  @override
+  String get settingsGamepadSubtitle => '用手柄操作菜单和对局';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '已连接：$name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
+
+  @override
+  String get settingsGamepadHelpNavigate => '方向键 / 摇杆 — 菜单和棋盘光标';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / 叉 — 确认或落子';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / 圈 — 返回或取消选择';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
+
+  @override
+  String get settingsGamepadHelpPlay => '棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆';
+
+  @override
+  String get settingsGamepadHelpCards => '卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭';
+
+  @override
+  String get gamepadKeyboardTitle => '键盘';
+
+  @override
+  String get gamepadKeyboardSpace => '空格';
+
+  @override
+  String get gamepadLegendConfirm => '选择';
+
+  @override
+  String get gamepadLegendBack => '返回';
+
+  @override
+  String get gamepadLegendTabs => '标签';
+
+  @override
+  String get gamepadLegendCycle => '切换';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return '手柄已连接：$name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => '网络模式';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => '设置';
+
+  @override
+  String get offlineModeOfferBody => '没有网络或连接非常慢。可以开启离线模式与机器人对战。';
+
+  @override
+  String get offlineModeOfferAction => '开启离线';
 
   @override
   String get gamesPlay => '开始';
@@ -695,6 +759,64 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => '长盘';
+
+  @override
+  String get gamesCheckers => '国际跳棋';
+
+  @override
+  String get gamesCheckersModeRussian => '俄式';
+
+  @override
+  String get gamesCheckersModeEnglish => '英式';
+
+  @override
+  String get gamesCheckersModeGiveaway => '让子跳棋';
+
+  @override
+  String get gamesCheckersModeCorners => '角落棋';
+
+  @override
+  String get rulesCheckersPlayers => '玩家：2 人。';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => '8×8 棋盘，两人对抗。';
+
+  @override
+  String get rulesCheckersPlay => '必须吃子。王或兵只要从落点还能再跳吃，就必须继续，不能中途停下。若有多个方向，可任选其一，不必走最长路线。到达底线的兵升为王。';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => '俄式跳棋：各 12 枚棋子放在深色格。兵斜向前走，可向前或向后跳吃。王可飞任意格。必须吃子：还能再跳则不能停下，但有多个方向时可任选，不必走最长。吃光对方棋子或让对方无子可走即胜。';
+
+  @override
+  String get rulesCheckersPlayEnglish => '英式跳棋：各 12 枚。兵只能斜向前走和跳吃。王斜走一格。必须吃子。吃光对方棋子或让对方无子可走即胜。';
+
+  @override
+  String get rulesCheckersPlayGiveaway => '让子跳棋：走法与俄式相同，但目标相反——送掉全部己方棋子或让自己无子可走。仍必须吃子。';
+
+  @override
+  String get rulesCheckersPlayCorners => '角落棋：棋子从对角摆起。可走到相邻空格（横或竖），或跳过任意棋子但不吃子。目标是把己方棋子全部走到对方角落。';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => '已经离开己方起始角落的棋子不得再回到该角落。';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => '仍留在家里的棋子必须在该玩家前 25 步内离开家。';
 
   @override
   String get rulesNardyTitle => '西洋双陆 — 规则';

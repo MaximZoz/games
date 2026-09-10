@@ -58,6 +58,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHapticsSubtitle => '알림만: 메시지, 요청, 내 차례, 타이머';
 
   @override
+  String get settingsGamepadTitle => '컨트롤러';
+
+  @override
+  String get settingsGamepadSubtitle => '메뉴와 대국용 게임패드';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return '연결됨: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
+
+  @override
+  String get settingsGamepadHelpNavigate => '십자 / 스틱 — 메뉴와 보드 커서';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / 십자 — 확인 또는 수 두기';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / 원 — 뒤로 또는 선택 해제';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
+
+  @override
+  String get settingsGamepadHelpPlay => '보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이';
+
+  @override
+  String get settingsGamepadHelpCards => '카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기';
+
+  @override
+  String get gamepadKeyboardTitle => '키보드';
+
+  @override
+  String get gamepadKeyboardSpace => '스페이스';
+
+  @override
+  String get gamepadLegendConfirm => '선택';
+
+  @override
+  String get gamepadLegendBack => '뒤로';
+
+  @override
+  String get gamepadLegendTabs => '탭';
+
+  @override
+  String get gamepadLegendCycle => '변경';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return '컨트롤러 연결됨: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => '네트워크 모드';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => '설정';
+
+  @override
+  String get offlineModeOfferBody => '인터넷이 없거나 연결이 매우 느립니다. 오프라인 모드를 켜고 봇과 플레이할 수 있습니다.';
+
+  @override
+  String get offlineModeOfferAction => '오프라인 켜기';
 
   @override
   String get gamesPlay => '플레이';
@@ -695,6 +759,64 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => '롱';
+
+  @override
+  String get gamesCheckers => '체커';
+
+  @override
+  String get gamesCheckersModeRussian => '러시아';
+
+  @override
+  String get gamesCheckersModeEnglish => '영국식';
+
+  @override
+  String get gamesCheckersModeGiveaway => '기브어웨이';
+
+  @override
+  String get gamesCheckersModeCorners => '코너';
+
+  @override
+  String get rulesCheckersPlayers => '플레이어: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => '보드 8×8. 2인 대전.';
+
+  @override
+  String get rulesCheckersPlay => '잡기는 필수입니다. 킹과 졸은 착지한 칸에서 더 잡을 수 있으면 반드시 이어가야 하며 중간에 멈출 수 없습니다. 방향이 여러 개면 아무거나 골라도 되고 가장 긴 경로일 필요는 없습니다. 마지막 줄에 오른 졸은 킹이 됩니다.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => '러시아 체커: 각자 어두운 칸에 12개. 졸은 대각선 앞으로 움직이고 앞뒤로 잡습니다. 킹은 원하는 칸만큼 날아갑니다. 잡기는 필수입니다. 더 잡을 수 있으면 멈춰서는 안 되지만, 방향이 여러 개면 아무거나 골라도 되고 가장 긴 경로일 필요는 없습니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
+
+  @override
+  String get rulesCheckersPlayEnglish => '영국식 체커: 각자 12개. 졸은 대각선 앞으로만 움직이고 잡습니다. 킹은 대각선 한 칸입니다. 잡기는 필수입니다. 상대 말을 모두 잡거나 상대가 둘 곳이 없으면 승리합니다.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => '기브어웨이: 수는 러시아 체커와 같지만 목표는 반대입니다. 자기 말을 모두 잃거나 둘 곳이 없으면 이깁니다. 잡기는 여전히 필수입니다.';
+
+  @override
+  String get rulesCheckersPlayCorners => '코너: 말은 맞은편 모서리에서 시작합니다. 가로 또는 세로로 빈 칸으로 가거나, 어떤 말이든 넘기만 하고 잡지는 않습니다. 목표는 자기 말을 모두 상대 모서리로 옮기는 것입니다.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => '시작 모서리를 떠난 말은 그곳으로 돌아갈 수 없습니다.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
 
   @override
   String get rulesNardyTitle => '백개먼 — 규칙';

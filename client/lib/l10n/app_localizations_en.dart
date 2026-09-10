@@ -58,6 +58,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Alerts only: messages, requests, your turn, and the timer';
 
   @override
+  String get settingsGamepadTitle => 'Controller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad for menus and matches';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Connected: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'No gamepad found. Connect a controller and press any button.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'D-pad / stick — menus and the board cursor';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Cross — confirm or make a move';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Circle — back or deselect';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Board and hand cursor: checkers, tic-tac-toe, battleship, durak, uno, poker and backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'In card games: D-pad moves the hand, A plays, X selects / Uno, Y takes, passes or draws';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes';
+
+  @override
+  String get gamepadKeyboardTitle => 'Keyboard';
+
+  @override
+  String get gamepadKeyboardSpace => 'Space';
+
+  @override
+  String get gamepadLegendConfirm => 'Select';
+
+  @override
+  String get gamepadLegendBack => 'Back';
+
+  @override
+  String get gamepadLegendTabs => 'Tabs';
+
+  @override
+  String get gamepadLegendCycle => 'Change';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Controller connected: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Network mode';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Settings';
+
+  @override
+  String get offlineModeOfferBody => 'No internet or the connection is very slow. You can turn on offline mode and play against a bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Go offline';
 
   @override
   String get gamesPlay => 'Play';
@@ -695,6 +759,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Long';
+
+  @override
+  String get gamesCheckers => 'Checkers';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russian';
+
+  @override
+  String get gamesCheckersModeEnglish => 'English';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Giveaway';
+
+  @override
+  String get gamesCheckersModeCorners => 'Corners';
+
+  @override
+  String get rulesCheckersPlayers => 'Players: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Time per move: $time. If time runs out — you lose.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'An 8×8 board, 12 pieces each on dark squares. Men move forward diagonally and capture in any direction. Kings fly along the diagonal.';
+
+  @override
+  String get rulesCheckersPlay => 'Captures are mandatory. A king or man must keep capturing while a further jump is possible from the landing square — you cannot stop mid-sequence. If several directions are available, you may choose any of them; the longest capture is not required. A man that reaches the last rank becomes a king.';
+
+  @override
+  String get rulesCheckersWin => 'In Russian draughts you win by capturing all opposing pieces or leaving the opponent with no move. In giveaway the player who cannot move wins.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Offline: a game against the bot.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russian draughts: 12 pieces each on dark squares. Men move diagonally forward and capture forward or backward. Kings fly any number of squares. Captures are mandatory: you must continue if another jump is possible, but you may choose any direction — not necessarily the longest. Win by capturing all enemy pieces or leaving the opponent with no moves.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'English draughts: 12 pieces each. Men move and capture only diagonally forward. Kings move one square diagonally in any direction. Captures are mandatory. Win by capturing all enemy pieces or leaving the opponent with no moves.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Giveaway: the same moves as Russian draughts, but the goal is reversed — lose all your pieces or be left with no moves. Captures are still mandatory.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Corners: pieces start in opposite corners. Move to an adjacent empty square horizontally or vertically, or jump over any piece without removing it. The goal is to move all your pieces into the opponent’s corner.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'A piece that has left its starting corner may not return there.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Pieces still in the home corner must leave it within the player’s first 25 moves.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — rules';

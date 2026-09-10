@@ -338,6 +338,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serveNardy(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/checkers/") {
+		h.serveCheckers(w, r)
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
 	parts := strings.Split(path, "/")
 
@@ -1250,7 +1254,14 @@ func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestri
 			return cell
 		}
 	}
-	// 4. Предпочтение центру (для нечётных сеток)
+	// 4. Своя угроза (winLen-1), затем блок чужой.
+	if threat := botBestThreat(board, moves, turn, gridSize); threat >= 0 {
+		return threat
+	}
+	if threat := botBestThreat(board, moves, opponent, gridSize); threat >= 0 {
+		return threat
+	}
+	// 5. Предпочтение центру (для нечётных сеток)
 	centerIdxs := centerCellIndices(gridSize)
 	for _, ci := range centerIdxs {
 		for _, m := range moves {
@@ -1259,8 +1270,88 @@ func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestri
 			}
 		}
 	}
-	// 5. Случайный ход
-	return moves[rand.Intn(len(moves))]
+	// 6. Клетка с наибольшим числом линий
+	bestCell, bestScore := moves[0], -1
+	for _, cell := range moves {
+		s := botCellLineScore(gridSize, cell)
+		if s > bestScore {
+			bestScore = s
+			bestCell = cell
+		}
+	}
+	return bestCell
+}
+
+func botBestThreat(board []string, moves []int, mark string, gridSize int) int {
+	wl := winLength(gridSize)
+	best, bestScore := -1, 0
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = mark
+		n := countOpenThreats(cp, mark, gridSize, wl)
+		if n > bestScore {
+			bestScore = n
+			best = cell
+		}
+	}
+	if bestScore <= 0 {
+		return -1
+	}
+	return best
+}
+
+func countOpenThreats(board []string, mark string, gridSize, winLen int) int {
+	n := 0
+	dirs := [][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+	for r := 0; r < gridSize; r++ {
+		for c := 0; c < gridSize; c++ {
+			for _, d := range dirs {
+				own, empty := 0, 0
+				ok := true
+				for k := 0; k < winLen; k++ {
+					rr, cc := r+d[0]*k, c+d[1]*k
+					if rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize {
+						ok = false
+						break
+					}
+					v := board[rr*gridSize+cc]
+					if v == mark {
+						own++
+					} else if v == "" {
+						empty++
+					} else {
+						ok = false
+						break
+					}
+				}
+				if ok && own == winLen-1 && empty == 1 {
+					n++
+				}
+			}
+		}
+	}
+	return n
+}
+
+func botCellLineScore(gridSize, cell int) int {
+	r, c := cell/gridSize, cell%gridSize
+	score := 0
+	if r > 0 && r < gridSize-1 {
+		score++
+	}
+	if c > 0 && c < gridSize-1 {
+		score++
+	}
+	score += gridSize - absIntLocal(r-gridSize/2) - absIntLocal(c-gridSize/2)
+	return score
+}
+
+func absIntLocal(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 func botMinimax(board []string, botMark string, firstMoveRestriction bool) int {
@@ -1351,6 +1442,15 @@ func minimaxMin(board []string, opponent string, botMark string, firstMoveRestri
 	return best
 }
 
+func intInSlice(xs []int, v int) bool {
+	for _, x := range xs {
+		if x == v {
+			return true
+		}
+	}
+	return false
+}
+
 func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[string]string) bool {
 	time.Sleep(1 * time.Second) // Задержка хода бота для естественности
 	cfg, variant := resolveVariantConfig(m["variant"], func() int {
@@ -1367,11 +1467,10 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 		return false
 	}
 	cell := -1
-	// Для классики — умный ход; иначе случайный легальный.
-	if variant == gameengine.VariantClassic {
+	if variant != gameengine.VariantUltimate {
 		cell = botPickCellSmart(st.Board, cfg.GridSize, st.Turn, false)
 	}
-	if cell < 0 {
+	if cell < 0 || !intInSlice(legal, cell) {
 		cell = legal[rand.Intn(len(legal))]
 	}
 	res, err := eng.ApplyMove(st, cell)

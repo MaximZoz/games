@@ -12,6 +12,7 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 
 import 'core/ios_viewport_sync.dart';
 import 'core/android_notify_bridge.dart';
+import 'core/gamepad/gamepad_host.dart';
 import 'core/local_notify.dart';
 import 'core/haptics.dart';
 import 'core/settings_provider.dart';
@@ -228,7 +229,9 @@ class MultiGamesApp extends ConsumerWidget {
                   color: AppColors.surfaceUnified,
                   child: CssSafeArea(
                     child: FakeKeyboardInset(
-                      child: child ?? const SizedBox.shrink(),
+                      child: GamepadHost(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),

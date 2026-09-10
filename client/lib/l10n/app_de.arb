@@ -17,6 +17,38 @@
   "settingsSoundTurn": "Zug",
   "settingsHapticsTitle": "Vibration",
   "settingsHapticsSubtitle": "Nur Hinweise: Nachrichten, Anfragen, Ihr Zug und der Timer",
+  "settingsGamepadTitle": "Controller",
+  "settingsGamepadSubtitle": "Gamepad für Menüs und Partien",
+  "settingsGamepadConnected": "Verbunden: {name}",
+  "@settingsGamepadConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsGamepadDisconnected": "Kein Gamepad gefunden. Controller anschließen und eine Taste drücken.",
+  "settingsGamepadHelpNavigate": "Kreuz / Stick — Menüs und Feldcursor",
+  "settingsGamepadHelpConfirm": "A / Kreuz — bestätigen oder ziehen",
+  "settingsGamepadHelpBack": "B / Kreis — zurück oder Auswahl aufheben",
+  "settingsGamepadHelpTabs": "L1 / R1 — Menü-Tabs",
+  "settingsGamepadHelpPlay": "Feld- und Handcursor: Dame, Tic-Tac-Toe, Schiffe versenken, Durak, Uno, Poker und Backgammon",
+  "settingsGamepadHelpCards": "Bei Karten: Kreuz bewegt die Hand, A spielt, X wählt / Uno, Y nimmt, passt oder zieht",
+  "settingsGamepadHelpKeyboard": "Im Textfeld öffnet A die Gamepad-Tastatur; X wechselt das Layout, B löscht oder schließt",
+  "gamepadKeyboardTitle": "Tastatur",
+  "gamepadKeyboardSpace": "Leer",
+  "gamepadLegendConfirm": "Wählen",
+  "gamepadLegendBack": "Zurück",
+  "gamepadLegendTabs": "Tabs",
+  "gamepadLegendCycle": "Ändern",
+  "gamepadConnectedSnack": "Controller verbunden: {name}",
+  "@gamepadConnectedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsFriendsOnlyTitle": "Nachrichten nur von Freunden",
   "settingsFriendsOnlySubtitle": "Nicht-Freunde können nur Emojis senden. Bei Spam den Nutzer vorübergehend blockieren.",
   "settingsNotifications": "Benachrichtigungen",
@@ -257,6 +289,28 @@
   "gamesNardy": "Backgammon",
   "gamesNardyModeShort": "Kurz",
   "gamesNardyModeLong": "Lang",
+  "gamesCheckers": "Dame",
+  "gamesCheckersModeRussian": "Russisch",
+  "gamesCheckersModeEnglish": "Englisch",
+  "gamesCheckersModeGiveaway": "Verlierdame",
+  "gamesCheckersModeCorners": "Ecken",
+  "rulesCheckersPlayers": "Spieler: 2.",
+  "rulesCheckersMode": "Modus: {mode}.",
+  "@rulesCheckersMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesCheckersIntro": "Brett 8×8. Zwei Spieler.",
+  "rulesCheckersPlay": "Schlagen ist Pflicht. Dame und Stein müssen weiterschlagen, solange vom Landefeld ein weiterer Schlag möglich ist — in der Mitte anhalten ist verboten. Gibt es mehrere Richtungen, darf jede gewählt werden, nicht zwingend die längste. Ein Stein auf der letzten Reihe wird zur Dame.",
+  "rulesCheckersPlayRussian": "Russisches Damespiel: je 12 Steine auf dunklen Feldern. Bauern ziehen diagonal vorwärts und schlagen vorwärts und rückwärts. Damen fliegen beliebig weit. Schlagen ist Pflicht: weiterzuschlagen, wenn möglich, aber bei mehreren Richtungen darf jede gewählt werden, nicht zwingend die längste. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
+  "rulesCheckersPlayEnglish": "Englisches Damespiel: je 12 Steine. Bauern ziehen und schlagen nur diagonal vorwärts. Damen ziehen ein Feld diagonal in jede Richtung. Schlagen ist Pflicht. Es gewinnt, wer alle Steine schlägt oder den Gegner bewegungsunfähig macht.",
+  "rulesCheckersPlayGiveaway": "Verlierdame: dieselben Züge wie im russischen Damespiel, aber das Ziel ist umgekehrt — alle eigenen Steine abgeben oder keinen Zug mehr haben. Schlagen bleibt Pflicht.",
+  "rulesCheckersPlayCorners": "Ecken: die Steine stehen in gegenüberliegenden Ecken. Ziehe auf ein benachbartes freies Feld waagerecht oder senkrecht oder springe über einen beliebigen Stein, ohne ihn zu schlagen. Ziel ist, alle eigenen Steine in die Ecke des Gegners zu bringen.",
+  "rulesCheckersPlayCornersNoReturn": "Ein Stein, der seine Start-Ecke verlassen hat, darf nicht dorthin zurückkehren.",
+  "rulesCheckersPlayCornersLeaveHome": "Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.",
   "rulesNardyTitle": "Backgammon — Regeln",
   "rulesNardyPlayers": "Spieler: 2.",
   "rulesNardyMode": "Modus: {mode}.",
@@ -1303,6 +1357,8 @@
   "offlineGameTitle": "Spiel gegen Bot",
   "offlineModePopupBody": "Der Offline-Modus ist aktiv. Spiele gegen einen Bot ohne Einsätze und Belohnungen. Chats, Freunde und Lobby sind ausgeblendet. Käufe werden im Online-Modus angewendet.",
   "offlineModePopupSettings": "Einstellungen",
+  "offlineModeOfferBody": "Kein Internet oder die Verbindung ist sehr langsam. Du kannst den Offline-Modus einschalten und gegen einen Bot spielen.",
+  "offlineModeOfferAction": "Offline einschalten",
   "offlineModePopupTitle": "Offline-Modus",
   "offlinePlayAgain": "Nochmal",
   "rulesAlternateStarts": "Wer zuerst zieht, wechselt von Partie zu Partie.",

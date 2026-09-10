@@ -58,6 +58,64 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsHapticsSubtitle => 'Kun varsler: meldinger, forespørsler, din tur og timeren';
 
   @override
+  String get settingsGamepadTitle => 'Kontroller';
+
+  @override
+  String get settingsGamepadSubtitle => 'Gamepad for menyer og partier';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'Tilkoblet: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'Ingen gamepad. Koble til en kontroller og trykk på en knapp.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'Kors / spak — menyer og brettmarkør';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / Kors — bekreft eller trekk';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / Sirkel — tilbake eller fjern valg';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — menyfaner';
+
+  @override
+  String get settingsGamepadHelpPlay => 'Markør på brett og hånd: dam, tre på rad, senk skipene, durak, uno, poker og backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X velger / Uno, Y tar, passer eller trekker';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'I et felt åpner A gamepad-tastaturet; X bytter oppsett, B sletter eller lukker';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastatur';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mellomrom';
+
+  @override
+  String get gamepadLegendConfirm => 'Velg';
+
+  @override
+  String get gamepadLegendBack => 'Tilbake';
+
+  @override
+  String get gamepadLegendTabs => 'Faner';
+
+  @override
+  String get gamepadLegendCycle => 'Endre';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'Kontroller tilkoblet: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'Nettverksmodus';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'Innstillinger';
+
+  @override
+  String get offlineModeOfferBody => 'Ingen internett, eller forbindelsen er veldig treg. Du kan slå på offline-modus og spille mot en bot.';
+
+  @override
+  String get offlineModeOfferAction => 'Slå på offline';
 
   @override
   String get gamesPlay => 'Spill';
@@ -695,6 +759,64 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'Lang';
+
+  @override
+  String get gamesCheckers => 'Dam';
+
+  @override
+  String get gamesCheckersModeRussian => 'Russisk';
+
+  @override
+  String get gamesCheckersModeEnglish => 'Engelsk';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'Gi-bort';
+
+  @override
+  String get gamesCheckersModeCorners => 'Hjørner';
+
+  @override
+  String get rulesCheckersPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'Brett 8×8. To spillere.';
+
+  @override
+  String get rulesCheckersPlay => 'Slag er plikt. Dame og brikke må fortsette så lenge et nytt hopp går fra landingsfeltet — du kan ikke stanse midt i. Finnes flere retninger kan du velge hvilken som helst, ikke nødvendigvis den lengste. En brikke på siste rad blir dame.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'Russisk dam: 12 brikker hver på mørke felt. Bønder går skrått frem og slår frem og tilbake. Damer flyr fritt. Slag er plikt: du må fortsette hvis det går, men kan velge hvilken som helst retning — ikke nødvendigvis den lengste. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'Engelsk dam: 12 brikker hver. Bønder går og slår bare skrått frem. Damer går ett felt skrått i alle retninger. Slag er plikt. Vinn ved å slå alle brikker eller etterlate motstanderen uten trekk.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'Gi-bort: samme trekk som russisk dam, men målet er omvendt — gi bort alle brikker eller stå uten trekk. Slag er fortsatt plikt.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'Hjørner: brikkene starter i motstående hjørner. Gå til et tomt nabo-felt vannrett eller loddrett, eller hopp over en hvilken som helst brikke uten å fjerne den. Målet er å flytte alle brikkene til motstanderens hjørne.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'En brikke som har forlatt start-hjørnet sitt, kan ikke returnere dit.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'Brikker som fortsatt er i hjemmet, må forlate det i spillerens 25 første trekk.';
 
   @override
   String get rulesNardyTitle => 'Backgammon — regler';

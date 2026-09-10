@@ -251,6 +251,114 @@ abstract class AppLocalizations {
   /// **'Только уведомления: сообщения, заявки, ваш ход и таймер'**
   String get settingsHapticsSubtitle;
 
+  /// No description provided for @settingsGamepadTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер'**
+  String get settingsGamepadTitle;
+
+  /// No description provided for @settingsGamepadSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Геймпад для меню и партий'**
+  String get settingsGamepadSubtitle;
+
+  /// No description provided for @settingsGamepadConnected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подключён: {name}'**
+  String settingsGamepadConnected(String name);
+
+  /// No description provided for @settingsGamepadDisconnected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.'**
+  String get settingsGamepadDisconnected;
+
+  /// No description provided for @settingsGamepadHelpNavigate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крест / стик — меню и курсор на поле'**
+  String get settingsGamepadHelpNavigate;
+
+  /// No description provided for @settingsGamepadHelpConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'A / Крест — выбрать или сходить'**
+  String get settingsGamepadHelpConfirm;
+
+  /// No description provided for @settingsGamepadHelpBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'B / Круг — назад или снять выбор'**
+  String get settingsGamepadHelpBack;
+
+  /// No description provided for @settingsGamepadHelpTabs.
+  ///
+  /// In ru, this message translates to:
+  /// **'L1 / R1 — вкладки меню'**
+  String get settingsGamepadHelpTabs;
+
+  /// No description provided for @settingsGamepadHelpPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды'**
+  String get settingsGamepadHelpPlay;
+
+  /// No description provided for @settingsGamepadHelpCards.
+  ///
+  /// In ru, this message translates to:
+  /// **'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать'**
+  String get settingsGamepadHelpCards;
+
+  /// No description provided for @settingsGamepadHelpKeyboard.
+  ///
+  /// In ru, this message translates to:
+  /// **'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть'**
+  String get settingsGamepadHelpKeyboard;
+
+  /// No description provided for @gamepadKeyboardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клавиатура'**
+  String get gamepadKeyboardTitle;
+
+  /// No description provided for @gamepadKeyboardSpace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пробел'**
+  String get gamepadKeyboardSpace;
+
+  /// No description provided for @gamepadLegendConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать'**
+  String get gamepadLegendConfirm;
+
+  /// No description provided for @gamepadLegendBack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get gamepadLegendBack;
+
+  /// No description provided for @gamepadLegendTabs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вкладки'**
+  String get gamepadLegendTabs;
+
+  /// No description provided for @gamepadLegendCycle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сменить'**
+  String get gamepadLegendCycle;
+
+  /// No description provided for @gamepadConnectedSnack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер подключён: {name}'**
+  String gamepadConnectedSnack(String name);
+
   /// No description provided for @settingsOfflineModeTitle.
   ///
   /// In ru, this message translates to:
@@ -310,6 +418,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Настройки'**
   String get offlineModePopupSettings;
+
+  /// No description provided for @offlineModeOfferBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет интернета или связь очень слабая. Можно включить офлайн режим и играть с ботом.'**
+  String get offlineModeOfferBody;
+
+  /// No description provided for @offlineModeOfferAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включить офлайн'**
+  String get offlineModeOfferAction;
 
   /// No description provided for @gamesPlay.
   ///
@@ -1480,6 +1600,114 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Длинные'**
   String get gamesNardyModeLong;
+
+  /// No description provided for @gamesCheckers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шашки'**
+  String get gamesCheckers;
+
+  /// No description provided for @gamesCheckersModeRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские'**
+  String get gamesCheckersModeRussian;
+
+  /// No description provided for @gamesCheckersModeEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские'**
+  String get gamesCheckersModeEnglish;
+
+  /// No description provided for @gamesCheckersModeGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки'**
+  String get gamesCheckersModeGiveaway;
+
+  /// No description provided for @gamesCheckersModeCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки'**
+  String get gamesCheckersModeCorners;
+
+  /// No description provided for @rulesCheckersPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesCheckersPlayers;
+
+  /// No description provided for @rulesCheckersMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesCheckersMode(String mode);
+
+  /// No description provided for @rulesCheckersTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время на ход: {time}. Если время вышло — проигрыш.'**
+  String rulesCheckersTime(String time);
+
+  /// No description provided for @rulesCheckersIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доска 8×8, у каждого по 12 шашек на тёмных клетках. Простая ходит вперёд по диагонали, бьёт в любую сторону. Дамка летает по диагонали.'**
+  String get rulesCheckersIntro;
+
+  /// No description provided for @rulesCheckersPlay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бой обязателен. Дамка и простая обязаны продолжать бой, пока с клетки приземления можно бить дальше — остановиться посередине нельзя. Если направлений несколько, можно выбрать любое, не обязательно самое длинное. Простая, дошедшая до последней линии, становится дамкой.'**
+  String get rulesCheckersPlay;
+
+  /// No description provided for @rulesCheckersWin.
+  ///
+  /// In ru, this message translates to:
+  /// **'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.'**
+  String get rulesCheckersWin;
+
+  /// No description provided for @rulesCheckersOfflineBot.
+  ///
+  /// In ru, this message translates to:
+  /// **'Офлайн: партия против бота.'**
+  String get rulesCheckersOfflineBot;
+
+  /// No description provided for @rulesCheckersPlayRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русские шашки: у каждого 12 шашек на тёмных клетках. Простые ходят по диагонали вперёд, а бьют вперёд и назад. Дамка летает на любое число клеток. Бой обязателен: нельзя остановиться, если взятие можно продолжить, но если направлений несколько — выбираете любое, не обязательно самое длинное. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayRussian;
+
+  /// No description provided for @rulesCheckersPlayEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английские шашки: у каждого 12 шашек. Простые ходят и бьют только вперёд по диагонали. Дамка ходит на одну клетку в любую сторону по диагонали. Бой обязателен. Побеждает тот, кто съел все шашки соперника или лишил его ходов.'**
+  String get rulesCheckersPlayEnglish;
+
+  /// No description provided for @rulesCheckersPlayGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддавки: те же ходы, что в русских шашках, но цель обратная — отдать все свои шашки или остаться без хода. Бой по-прежнему обязателен.'**
+  String get rulesCheckersPlayGiveaway;
+
+  /// No description provided for @rulesCheckersPlayCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уголки: шашки стоят в противоположных углах. Ходят на соседнюю свободную клетку по горизонтали или вертикали либо перепрыгивают через любую шашку, не снимая её. Цель — перевести все свои шашки в угол соперника.'**
+  String get rulesCheckersPlayCorners;
+
+  /// No description provided for @rulesCheckersPlayCornersNoReturn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фишка, которая уже покинула свой стартовый угол, не может вернуться в него.'**
+  String get rulesCheckersPlayCornersNoReturn;
+
+  /// No description provided for @rulesCheckersPlayCornersLeaveHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.'**
+  String get rulesCheckersPlayCornersLeaveHome;
 
   /// No description provided for @rulesNardyTitle.
   ///

@@ -58,6 +58,64 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsHapticsSubtitle => 'केवल सूचनाएँ: संदेश, अनुरोध, आपकी बारी और टाइमर';
 
   @override
+  String get settingsGamepadTitle => 'कंट्रोलर';
+
+  @override
+  String get settingsGamepadSubtitle => 'मेनू और मैच के लिए गेमपैड';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'जुड़ा: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'डी-पैड / स्टिक — मेनू और बोर्ड कर्सर';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / क्रॉस — पुष्टि या चाल';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / सर्कल — वापस या चयन हटाएँ';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
+
+  @override
+  String get settingsGamepadHelpPlay => 'बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन';
+
+  @override
+  String get settingsGamepadHelpCards => 'पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है';
+
+  @override
+  String get gamepadKeyboardTitle => 'कीबोर्ड';
+
+  @override
+  String get gamepadKeyboardSpace => 'स्पेस';
+
+  @override
+  String get gamepadLegendConfirm => 'चुनें';
+
+  @override
+  String get gamepadLegendBack => 'वापस';
+
+  @override
+  String get gamepadLegendTabs => 'टैब';
+
+  @override
+  String get gamepadLegendCycle => 'बदलें';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'कंट्रोलर जुड़ा: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'नेटवर्क मोड';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'सेटिंग्स';
+
+  @override
+  String get offlineModeOfferBody => 'इंटरनेट नहीं है या कनेक्शन बहुत धीमा है। आप ऑफ़लाइन मोड चालू करके बॉट से खेल सकते हैं।';
+
+  @override
+  String get offlineModeOfferAction => 'ऑफ़लाइन चालू करें';
 
   @override
   String get gamesPlay => 'खेलें';
@@ -695,6 +759,64 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'लंबा';
+
+  @override
+  String get gamesCheckers => 'चेकर्स';
+
+  @override
+  String get gamesCheckersModeRussian => 'रूसी';
+
+  @override
+  String get gamesCheckersModeEnglish => 'अंग्रेज़ी';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'गिवअवे';
+
+  @override
+  String get gamesCheckersModeCorners => 'कॉर्नर';
+
+  @override
+  String get rulesCheckersPlayers => 'खिलाड़ी: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'मोड: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'बोर्ड 8×8. दो खिलाड़ी.';
+
+  @override
+  String get rulesCheckersPlay => 'मारना अनिवार्य है। रानी या मोहरा यदि आगे मार सकते हों तो बीच में नहीं रुक सकते। कई दिशाएँ हों तो कोई भी चुन सकते हैं, सबसे लंबी ज़रूरी नहीं। आख़िरी पंक्ति तक पहुँचा मोहरा रानी बन जाता है।';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'रूसी चेकर्स: प्रत्येक के 12 मोहरे गहरे घरों पर। साधारण मोहरे तिरछे आगे चलते हैं और आगे-पीछे मारते हैं। रानी किसी भी दूरी तक उड़ती है। मारना अनिवार्य है: आगे मार सकें तो बीच में नहीं रुक सकते, लेकिन कई दिशाएँ हों तो कोई भी चुन सकते हैं — सबसे लंबी ज़रूरी नहीं। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'अंग्रेज़ी चेकर्स: प्रत्येक के 12 मोहरे। साधारण मोहरे केवल तिरछे आगे चलते और मारते हैं। रानी किसी भी दिशा में एक घर चलती है। मारना अनिवार्य है। जीत तब जब सारे मोहरे खा लिए जाएँ या विरोधी के पास चाल न हो।';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'गिवअवे: चालें रूसी चेकर्स जैसी हैं, पर लक्ष्य उलटा है — अपने सारे मोहरे दे देना या बिना चाल के रह जाना। मारना फिर भी अनिवार्य है।';
+
+  @override
+  String get rulesCheckersPlayCorners => 'कॉर्नर: मोहरे आमने-सामने के कोनों में शुरू होते हैं। क्षैतिज या ऊर्ध्व खाली पड़ोसी घर पर चलें, या किसी भी मोहरे के ऊपर कूदें बिना उसे हटाए। लक्ष्य अपने सारे मोहरे विरोधी के कोने में पहुँचाना है।';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'जो मोहरा अपने शुरुआती कोने से निकल चुका है, वह वहाँ वापस नहीं जा सकता।';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।';
 
   @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';

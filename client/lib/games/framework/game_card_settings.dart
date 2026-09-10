@@ -91,6 +91,15 @@ UserGameSettings gameCardSettings({
         maxPlayers: 2,
         gameMode: gameMode,
       );
+    case 'checkers':
+      return UserGameSettings(
+        gameType: 'checkers',
+        turnTimeSec: turnTimeSec,
+        variant: gameMode,
+        stakeBronze: stakeBronze,
+        maxPlayers: 2,
+        gameMode: gameMode,
+      );
     default:
       return UserGameSettings(
         gameType: gameType,

@@ -58,6 +58,64 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsHapticsSubtitle => 'התראות בלבד: הודעות, בקשות, התור שלך והטיימר';
 
   @override
+  String get settingsGamepadTitle => 'בקר';
+
+  @override
+  String get settingsGamepadSubtitle => 'גיימפד לתפריטים ולמשחקים';
+
+  @override
+  String settingsGamepadConnected(String name) {
+    return 'מחובר: $name';
+  }
+
+  @override
+  String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
+
+  @override
+  String get settingsGamepadHelpNavigate => 'חיצים / סטיק — תפריטים וסמן על הלוח';
+
+  @override
+  String get settingsGamepadHelpConfirm => 'A / איקס — אישור או מהלך';
+
+  @override
+  String get settingsGamepadHelpBack => 'B / עיגול — חזרה או ביטול בחירה';
+
+  @override
+  String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
+
+  @override
+  String get settingsGamepadHelpPlay => 'סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש';
+
+  @override
+  String get settingsGamepadHelpCards => 'בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר';
+
+  @override
+  String get gamepadKeyboardTitle => 'מקלדת';
+
+  @override
+  String get gamepadKeyboardSpace => 'רווח';
+
+  @override
+  String get gamepadLegendConfirm => 'בחירה';
+
+  @override
+  String get gamepadLegendBack => 'חזרה';
+
+  @override
+  String get gamepadLegendTabs => 'לשוניות';
+
+  @override
+  String get gamepadLegendCycle => 'שינוי';
+
+  @override
+  String gamepadConnectedSnack(String name) {
+    return 'בקר מחובר: $name';
+  }
+
+  @override
   String get settingsOfflineModeTitle => 'מצב רשת';
 
   @override
@@ -86,6 +144,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get offlineModePopupSettings => 'הגדרות';
+
+  @override
+  String get offlineModeOfferBody => 'אין אינטרנט או שהחיבור איטי מאוד. אפשר להפעיל מצב אופליין ולשחק מול בוט.';
+
+  @override
+  String get offlineModeOfferAction => 'הפעל אופליין';
 
   @override
   String get gamesPlay => 'שחק';
@@ -695,6 +759,64 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get gamesNardyModeLong => 'ארוך';
+
+  @override
+  String get gamesCheckers => 'דמקה';
+
+  @override
+  String get gamesCheckersModeRussian => 'רוסית';
+
+  @override
+  String get gamesCheckersModeEnglish => 'אנגלית';
+
+  @override
+  String get gamesCheckersModeGiveaway => 'הפוכות';
+
+  @override
+  String get gamesCheckersModeCorners => 'פינות';
+
+  @override
+  String get rulesCheckersPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesCheckersMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String rulesCheckersTime(String time) {
+    return 'Время на ход: $time. Если время вышло — проигрыш.';
+  }
+
+  @override
+  String get rulesCheckersIntro => 'לוח 8×8. שני שחקנים.';
+
+  @override
+  String get rulesCheckersPlay => 'אכילה חובה. מלכה וחייל חייבים להמשיך כל עוד מהמשבצת שנחתו עליה אפשר לאכול שוב — אסור לעצור באמצע. אם יש כמה כיוונים אפשר לבחור כל אחד, לא בהכרח את הארוך. חייל שהגיע לשורה האחרונה הופך למלכה.';
+
+  @override
+  String get rulesCheckersWin => 'В русских шашках побеждает тот, кто съел все шашки соперника или лишил его хода. В поддавках наоборот: кто не может ходить — выигрывает.';
+
+  @override
+  String get rulesCheckersOfflineBot => 'Офлайн: партия против бота.';
+
+  @override
+  String get rulesCheckersPlayRussian => 'דמקה רוסית: 12 חיילים לכל אחד במשבצות כהות. חיילים זזים באלכסון קדימה ואוכלים קדימה ואחורה. מלכות עפות לכל מרחק. אכילה חובה: חייבים להמשיך אם אפשר, אבל אם יש כמה כיוונים אפשר לבחור כל אחד — לא בהכרח את הארוך. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayEnglish => 'דמקה אנגלית: 12 חיילים לכל אחד. חיילים זזים ואוכלים רק באלכסון קדימה. מלכות זזות משבצת אחת באלכסון. אכילה חובה. מנצח מי שאכל את כל החיילים או השאיר את היריב בלי מהלכים.';
+
+  @override
+  String get rulesCheckersPlayGiveaway => 'הפוכות: אותם מהלכים כמו בדמקה רוסית, אבל המטרה הפוכה — למסור את כל החיילים או להישאר בלי מהלכים. אכילה עדיין חובה.';
+
+  @override
+  String get rulesCheckersPlayCorners => 'פינות: החיילים מתחילים בפינות נגדיות. זזים למשבצת פנויה סמוכה אופקית או אנכית, או קופצים מעל כל חייל בלי להוריד אותו. המטרה היא להעביר את כל החיילים לפינת היריב.';
+
+  @override
+  String get rulesCheckersPlayCornersNoReturn => 'חייל שעזב את פינת הפתיחה שלו אינו רשאי לחזור אליה.';
+
+  @override
+  String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
 
   @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
