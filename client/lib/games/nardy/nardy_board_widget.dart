@@ -19,6 +19,7 @@ const Color _kOppCheckerEdge = Color(0xFFC2560E);
 
 const Color _kSelected = Color(0xFF56E39F);
 const Color _kTarget = Color(0xFF56E39F);
+const Color _kCursor = Color(0xFF7EE0FF);
 
 /// Куда вернётся шашка при отмене хода.
 const Color _kUndoTarget = Color(0xFFFFC46B);
@@ -40,6 +41,7 @@ class NardyBoard extends StatefulWidget {
     required this.onDragStart,
     required this.onDragEnd,
     this.dragCancel,
+    this.cursorTrack,
   });
 
   final NardyGameView game;
@@ -73,6 +75,9 @@ class NardyBoard extends StatefulWidget {
 
   /// Перенос отменён (жест прерван).
   final VoidCallback? dragCancel;
+
+  /// Пункт под курсором геймпада: дорожка, [nardyBarTrack] или [nardyPoints].
+  final int? cursorTrack;
 
   static const Duration moveDuration = Duration(milliseconds: 420);
 
@@ -128,6 +133,7 @@ class _NardyBoardState extends State<NardyBoard> {
                     painter: _BoardPainter(
                       geometry: geometry,
                       selectedTrack: widget.selectedTrack,
+                      cursorTrack: widget.cursorTrack,
                       targetTracks: widget.targetTracks,
                       undoTracks: widget.undoTracks,
                       canBearOff: widget.canBearOff,
@@ -346,6 +352,7 @@ class _BoardPainter extends CustomPainter {
   const _BoardPainter({
     required this.geometry,
     required this.selectedTrack,
+    required this.cursorTrack,
     required this.targetTracks,
     required this.undoTracks,
     required this.canBearOff,
@@ -354,6 +361,7 @@ class _BoardPainter extends CustomPainter {
 
   final NardyBoardGeometry geometry;
   final int? selectedTrack;
+  final int? cursorTrack;
   final Set<int> targetTracks;
   final Set<int> undoTracks;
   final bool canBearOff;
@@ -418,6 +426,15 @@ class _BoardPainter extends CustomPainter {
           ..color = _kSelected,
       );
     }
+    if (cursorTrack == track) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2
+          ..color = _kCursor,
+      );
+    }
     if (targetTracks.contains(track)) {
       final marker = Offset(
         rect.center.dx,
@@ -445,12 +462,22 @@ class _BoardPainter extends CustomPainter {
           ..color = _kSelected,
       );
     }
+    if (cursorTrack == nardyBarTrack) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2
+          ..color = _kCursor,
+      );
+    }
   }
 
   void _paintTray(Canvas canvas) {
     for (final mine in [true, false]) {
       final rect = geometry.trayHalf(mine: mine).deflate(2);
       final highlight = mine && canBearOff;
+      final cursor = mine && cursorTrack == nardyPoints;
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(8)),
         Paint()
@@ -462,8 +489,12 @@ class _BoardPainter extends CustomPainter {
         RRect.fromRectAndRadius(rect, const Radius.circular(8)),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = highlight ? 2 : 1
-          ..color = highlight ? _kTarget : _kBoardFrame,
+          ..strokeWidth = (highlight || cursor) ? 2 : 1
+          ..color = cursor
+              ? _kCursor
+              : highlight
+                  ? _kTarget
+                  : _kBoardFrame,
       );
     }
   }
@@ -471,6 +502,7 @@ class _BoardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BoardPainter old) =>
       old.selectedTrack != selectedTrack ||
+      old.cursorTrack != cursorTrack ||
       old.canBearOff != canBearOff ||
       old.showBar != showBar ||
       !setEquals(old.targetTracks, targetTracks) ||

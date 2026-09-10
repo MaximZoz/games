@@ -84,7 +84,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — schede del menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'In dama, tris e battaglia navale il cursore si sposta sulle caselle';
+  String get settingsGamepadHelpPlay => 'Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastiera';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spazio';
+
+  @override
+  String get gamepadLegendConfirm => 'Scegli';
+
+  @override
+  String get gamepadLegendBack => 'Indietro';
+
+  @override
+  String get gamepadLegendTabs => 'Schede';
+
+  @override
+  String get gamepadLegendCycle => 'Cambia';
 
   @override
   String gamepadConnectedSnack(String name) {

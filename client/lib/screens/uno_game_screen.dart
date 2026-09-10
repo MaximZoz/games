@@ -4,6 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
@@ -62,6 +67,8 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool _dealing = false;
   bool _dealAnimated = false;
   bool _colorDialogOpen = false;
+  int _gamepadHandIndex = 0;
+  int _gamepadColorIndex = 0;
   bool _bindingsInitialized = false;
   bool _observeEntered = false;
   bool _balanceGainPlayed = false;
@@ -551,11 +558,43 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
 
   Future<UnoColor?> _showColorPicker() async {
     _colorDialogOpen = true;
+    _gamepadColorIndex = 0;
+    const colors = [
+      UnoColor.red,
+      UnoColor.yellow,
+      UnoColor.green,
+      UnoColor.blue,
+    ];
     final result = await showDialog<UnoColor>(
       context: context,
       builder: (dialogContext) {
         final compact = MediaQuery.sizeOf(dialogContext).width < 380;
-        return AlertDialog(
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            return GamepadScope(
+              onAction: (action) {
+                if (action == GamepadAction.shoulderL ||
+                    action == GamepadAction.shoulderR) {
+                  return false;
+                }
+                if (action.isDirection) {
+                  setSheet(() {
+                    _gamepadColorIndex =
+                        cycleIndex(_gamepadColorIndex, colors.length, action);
+                  });
+                  return true;
+                }
+                if (action == GamepadAction.confirm) {
+                  Navigator.of(dialogContext).pop(colors[_gamepadColorIndex]);
+                  return true;
+                }
+                if (action == GamepadAction.cancel) {
+                  Navigator.of(dialogContext).pop();
+                  return true;
+                }
+                return true;
+              },
+              child: AlertDialog(
           title: Text(dialogContext.l10n.unoChooseColor),
           content: ConstrainedBox(
             constraints: BoxConstraints(
@@ -568,31 +607,31 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
-                  for (final color in const [
-                    UnoColor.red,
-                    UnoColor.yellow,
-                    UnoColor.green,
-                    UnoColor.blue,
-                  ])
+                  for (var i = 0; i < colors.length; i++)
                     Semantics(
-                      label: _colorName(color),
+                      label: _colorName(colors[i]),
                       button: true,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(18),
-                        onTap: () => Navigator.of(dialogContext).pop(color),
+                        onTap: () => Navigator.of(dialogContext).pop(colors[i]),
                         child: Container(
                           width: compact ? 88 : 112,
                           height: compact ? 58 : 70,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: _colorValue(color),
+                            color: _colorValue(colors[i]),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white70, width: 2),
+                            border: Border.all(
+                              color: i == _gamepadColorIndex
+                                  ? Colors.white
+                                  : Colors.white70,
+                              width: i == _gamepadColorIndex ? 4 : 2,
+                            ),
                           ),
                           child: Text(
-                            _colorName(color),
+                            _colorName(colors[i]),
                             style: TextStyle(
-                              color: color == UnoColor.yellow
+                              color: colors[i] == UnoColor.yellow
                                   ? Colors.black
                                   : Colors.white,
                               fontWeight: FontWeight.w800,
@@ -611,6 +650,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
               child: Text(dialogContext.l10n.commonCancel),
             ),
           ],
+        ),
+            );
+          },
         );
       },
     );
@@ -1308,7 +1350,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     // Нижняя зона (веер) исключена — полоса свайпа/крестика не перехватывает
     // крайнюю левую карту, как в дураке.
     final swipeBottomExclude = MediaQuery.sizeOf(context).height * 0.42;
-    return SwipeBackScope.gameBoard(
+    return GamepadScope(
+      onAction: (action) {
+        final current = ref.read(unoGameProvider(widget.gameId)).valueOrNull;
+        if (current == null) return false;
+        return _onGamepad(current, action);
+      },
+      child: SwipeBackScope.gameBoard(
       onBack: _onClose,
       bottomInset: swipeBottomExclude,
       child: Scaffold(
@@ -1396,7 +1444,67 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           ),
         ),
       ),
+    ),
     );
+  }
+
+  List<UnoCard> _gamepadHand(UnoGameView game) => _dealing
+      ? game.myHand.take(_dealHeroShown).toList(growable: false)
+      : unoVisibleHand(game.myHand, {..._hiddenHandIds, ..._pendingDrawnIds});
+
+  bool _onGamepad(UnoGameView game, GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (game.isOver) return false;
+    final hand = _gamepadHand(game);
+    if (hand.isNotEmpty) {
+      _gamepadHandIndex = _gamepadHandIndex.clamp(0, hand.length - 1);
+    }
+    if (action.isDirection) {
+      if (hand.isEmpty) return true;
+      setState(() {
+        _gamepadHandIndex = cycleIndex(_gamepadHandIndex, hand.length, action);
+      });
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_busy) return true;
+      if (game.mustChooseColor) {
+        unawaited(_choosePendingColor());
+        return true;
+      }
+      if (hand.isEmpty || !game.isMyTurn) return true;
+      unawaited(_playCard(game, hand[_gamepadHandIndex]));
+      return true;
+    }
+    if (action == GamepadAction.actionY) {
+      if (_busy) return true;
+      if (game.canKeepOrPlayDrawn) {
+        unawaited(_move(UnoActionType.keep));
+      } else if (_canTakeFromDeck(game)) {
+        unawaited(_draw(game));
+      }
+      return true;
+    }
+    if (action == GamepadAction.actionX) {
+      if (_busy) return true;
+      if (game.unoCallReady) {
+        unawaited(_move(UnoActionType.callUno));
+      } else if (game.canChallengeWd4) {
+        unawaited(_move(UnoActionType.challengeWd4));
+      } else if (game.unoCatchReady) {
+        final target = _unoChallengeTarget(game);
+        if (target != null) {
+          unawaited(
+            _move(UnoActionType.challengeUno, targetUserId: target),
+          );
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   Widget _buildGame(UnoGameView game) {
@@ -1878,7 +1986,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           runSpacing: 7,
           children: [
             if (canDraw)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: FilledButton.icon(
                 onPressed: unoDrawControlEnabled(busy: _busy, canTake: true)
                     ? () => _draw(game)
                     : null,
@@ -1886,22 +1996,31 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
+              ),
             if (game.canKeepOrPlayDrawn)
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: OutlinedButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.keep),
                 style: outlined,
                 icon: const Icon(Icons.pan_tool_alt_rounded),
                 label: Text(context.l10n.unoKeep),
               ),
+              ),
             if (canCallUno)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: FilledButton.icon(
                 onPressed: _busy ? null : () => _move(UnoActionType.callUno),
                 style: _unoActionStyle(),
                 icon: const Icon(Icons.campaign_rounded),
                 label: Text(context.l10n.unoSayUno),
               ),
+              ),
             if (game.unoCatchReady && challengeTarget != null)
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: OutlinedButton.icon(
                 onPressed: _busy
                     ? null
                     : () => _move(
@@ -1912,15 +2031,21 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.notification_important_rounded),
                 label: Text(context.l10n.unoChallengeUno),
               ),
+              ),
             if (game.canChallengeWd4) ...[
-              OutlinedButton.icon(
+              GamepadHinted(
+                action: GamepadAction.actionX,
+                child: OutlinedButton.icon(
                 onPressed:
                     _busy ? null : () => _move(UnoActionType.challengeWd4),
                 style: outlined,
                 icon: const Icon(Icons.gavel_rounded),
                 label: Text(context.l10n.unoChallengeWd4),
               ),
-              FilledButton.icon(
+              ),
+              GamepadHinted(
+                action: GamepadAction.actionY,
+                child: FilledButton.icon(
                 onPressed: unoDrawControlEnabled(
                   busy: _busy,
                   canTake: _canTakeFromDeck(game),
@@ -1931,13 +2056,17 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 icon: const Icon(Icons.add_card_rounded),
                 label: Text(context.l10n.unoDraw),
               ),
+              ),
             ],
             if (game.mustChooseColor)
-              FilledButton.icon(
+              GamepadHinted(
+                action: GamepadAction.confirm,
+                child: FilledButton.icon(
                 onPressed: _busy ? null : _choosePendingColor,
                 style: filled,
                 icon: const Icon(Icons.palette_rounded),
                 label: Text(context.l10n.unoChooseColor),
+              ),
               ),
           ],
         ),
@@ -2025,7 +2154,9 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                           child: UnoCardWidget(
                             card: hand[i],
                             size: cardSize,
-                            highlighted: _canPlayCard(game, hand[i]),
+                            highlighted: _canPlayCard(game, hand[i]) ||
+                                (GamepadService.instance.isRecentlyActive &&
+                                    i == _gamepadHandIndex),
                           ),
                         ),
                       ),

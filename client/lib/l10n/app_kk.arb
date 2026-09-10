@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Крест — таңдау немесе жүру",
   "settingsGamepadHelpBack": "B / Шеңбер — артқа немесе таңдауды алу",
   "settingsGamepadHelpTabs": "L1 / R1 — мәзір қойындылары",
-  "settingsGamepadHelpPlay": "Дойбыда, крестик-ноликте және теңіз шайқасында курсор ұяшықтармен жүреді",
+  "settingsGamepadHelpPlay": "Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды",
+  "settingsGamepadHelpCards": "Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу",
+  "settingsGamepadHelpKeyboard": "Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу",
+  "gamepadKeyboardTitle": "Пернетақта",
+  "gamepadKeyboardSpace": "Бос орын",
+  "gamepadLegendConfirm": "Таңдау",
+  "gamepadLegendBack": "Артқа",
+  "gamepadLegendTabs": "Қойындылар",
+  "gamepadLegendCycle": "Өзгерту",
   "gamepadConnectedSnack": "Контроллер қосылды: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

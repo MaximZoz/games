@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Cruz — confirmar ou jogar",
   "settingsGamepadHelpBack": "B / Círculo — voltar ou desmarcar",
   "settingsGamepadHelpTabs": "L1 / R1 — abas do menu",
-  "settingsGamepadHelpPlay": "Em damas, jogo da velha e batalha naval o cursor percorre as casas",
+  "settingsGamepadHelpPlay": "Cursor no tabuleiro e na mão: damas, jogo da velha, batalha naval, durak, uno, pôquer e gamão",
+  "settingsGamepadHelpCards": "Nas cartas: cruz move a mão, A joga, X seleciona / Uno, Y pega, passa ou compra",
+  "settingsGamepadHelpKeyboard": "Num campo A abre o teclado do controle; X muda o layout, B apaga ou fecha",
+  "gamepadKeyboardTitle": "Teclado",
+  "gamepadKeyboardSpace": "Espaço",
+  "gamepadLegendConfirm": "Escolher",
+  "gamepadLegendBack": "Voltar",
+  "gamepadLegendTabs": "Abas",
+  "gamepadLegendCycle": "Mudar",
   "gamepadConnectedSnack": "Controle ligado: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

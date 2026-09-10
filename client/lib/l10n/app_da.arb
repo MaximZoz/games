@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Kors — bekræft eller træk",
   "settingsGamepadHelpBack": "B / Cirkel — tilbage eller fravælg",
   "settingsGamepadHelpTabs": "L1 / R1 — menufaner",
-  "settingsGamepadHelpPlay": "I dam, kryds og bolle og sænk skibe flytter markøren over felterne",
+  "settingsGamepadHelpPlay": "Markør på bræt og hånd: dam, kryds og bolle, sænk skibene, durak, uno, poker og backgammon",
+  "settingsGamepadHelpCards": "I kort: kors flytter hånden, A spiller, X vælger / Uno, Y tager, passer eller trækker",
+  "settingsGamepadHelpKeyboard": "I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker",
+  "gamepadKeyboardTitle": "Tastatur",
+  "gamepadKeyboardSpace": "Mellemrum",
+  "gamepadLegendConfirm": "Vælg",
+  "gamepadLegendBack": "Tilbage",
+  "gamepadLegendTabs": "Faner",
+  "gamepadLegendCycle": "Skift",
   "gamepadConnectedSnack": "Controller forbundet: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

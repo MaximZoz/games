@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Croce — conferma o muovi",
   "settingsGamepadHelpBack": "B / Cerchio — indietro o deseleziona",
   "settingsGamepadHelpTabs": "L1 / R1 — schede del menu",
-  "settingsGamepadHelpPlay": "In dama, tris e battaglia navale il cursore si sposta sulle caselle",
+  "settingsGamepadHelpPlay": "Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon",
+  "settingsGamepadHelpCards": "Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca",
+  "settingsGamepadHelpKeyboard": "In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude",
+  "gamepadKeyboardTitle": "Tastiera",
+  "gamepadKeyboardSpace": "Spazio",
+  "gamepadLegendConfirm": "Scegli",
+  "gamepadLegendBack": "Indietro",
+  "gamepadLegendTabs": "Schede",
+  "gamepadLegendCycle": "Cambia",
   "gamepadConnectedSnack": "Controller collegato: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

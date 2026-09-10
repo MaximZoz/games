@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / 叉 — 确认或落子",
   "settingsGamepadHelpBack": "B / 圈 — 返回或取消选择",
   "settingsGamepadHelpTabs": "L1 / R1 — 切换标签",
-  "settingsGamepadHelpPlay": "在跳棋、井字棋和海战棋中，光标在格子上移动",
+  "settingsGamepadHelpPlay": "棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆",
+  "settingsGamepadHelpCards": "卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌",
+  "settingsGamepadHelpKeyboard": "在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭",
+  "gamepadKeyboardTitle": "键盘",
+  "gamepadKeyboardSpace": "空格",
+  "gamepadLegendConfirm": "选择",
+  "gamepadLegendBack": "返回",
+  "gamepadLegendTabs": "标签",
+  "gamepadLegendCycle": "切换",
   "gamepadConnectedSnack": "手柄已连接：{name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

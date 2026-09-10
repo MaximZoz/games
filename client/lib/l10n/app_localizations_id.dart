@@ -84,7 +84,31 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'Di dam, tic-tac-toe, dan kapal perang kursor bergerak di kotak';
+  String get settingsGamepadHelpPlay => 'Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup';
+
+  @override
+  String get gamepadKeyboardTitle => 'Papan ketik';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spasi';
+
+  @override
+  String get gamepadLegendConfirm => 'Pilih';
+
+  @override
+  String get gamepadLegendBack => 'Kembali';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Ubah';
 
   @override
   String gamepadConnectedSnack(String name) {

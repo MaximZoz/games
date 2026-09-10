@@ -4,6 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
+import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/core/sfx.dart';
@@ -55,6 +61,7 @@ class PokerGameScreen extends ConsumerStatefulWidget {
 class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
     with TickerProviderStateMixin {
   bool _busy = false;
+  int _gamepadActionIndex = 0;
   /// Ход ушёл на сервер — не возвращать «Фолд», пока снимок не подтвердит.
   bool _hideActionsUntilSync = false;
   final GameTurnActionLock _turnAction = GameTurnActionLock();
@@ -585,7 +592,38 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           return StatefulBuilder(
             builder: (ctx, setSheet) {
               final divisions = math.max(1, ((maxTo - minTo) / step).ceil());
-              return SafeArea(
+              void nudge(int delta) {
+                setSheet(() {
+                  value = (value + delta * step).clamp(minTo, maxTo);
+                });
+              }
+              return GamepadScope(
+                onAction: (action) {
+                  if (action == GamepadAction.shoulderL ||
+                      action == GamepadAction.shoulderR) {
+                    return false;
+                  }
+                  if (action == GamepadAction.left ||
+                      action == GamepadAction.down) {
+                    nudge(-1);
+                    return true;
+                  }
+                  if (action == GamepadAction.right ||
+                      action == GamepadAction.up) {
+                    nudge(1);
+                    return true;
+                  }
+                  if (action == GamepadAction.confirm) {
+                    Navigator.of(ctx).pop(value);
+                    return true;
+                  }
+                  if (action == GamepadAction.cancel) {
+                    Navigator.of(ctx).pop();
+                    return true;
+                  }
+                  return true;
+                },
+                child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: GradientCard(
@@ -666,6 +704,7 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
                     ),
                   ),
                 ),
+              ),
               );
             },
           );
@@ -1038,7 +1077,13 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
             return 0;
           }));
 
-    return SwipeBackScope.gameBoard(
+    return GamepadScope(
+      onAction: (action) {
+        final current = ref.read(pokerGameProvider(widget.gameId)).valueOrNull;
+        if (current == null) return false;
+        return _onGamepad(current, action);
+      },
+      child: SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -1109,7 +1154,51 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
           ),
         ),
       ),
+    ),
     );
+  }
+
+  List<String> _gamepadActions(PokerGameView game) {
+    return [
+      if (game.canDo(PokerActionType.fold)) PokerActionType.fold,
+      if (game.canDo(PokerActionType.check)) PokerActionType.check,
+      if (game.canDo(PokerActionType.call)) PokerActionType.call,
+      if (game.canDo(PokerActionType.raise)) PokerActionType.raise,
+      if (game.canDo(PokerActionType.allIn)) PokerActionType.allIn,
+    ];
+  }
+
+  bool _onGamepad(PokerGameView game, GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (game.isOver) return false;
+    final actions = _gamepadActions(game);
+    if (actions.isNotEmpty) {
+      _gamepadActionIndex = _gamepadActionIndex.clamp(0, actions.length - 1);
+    }
+    if (action.isDirection) {
+      if (actions.isEmpty) return true;
+      setState(() {
+        _gamepadActionIndex =
+            cycleIndex(_gamepadActionIndex, actions.length, action);
+      });
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_busy || _turnAction.held || actions.isEmpty || !game.isMyTurn) {
+        return true;
+      }
+      final chosen = actions[_gamepadActionIndex];
+      if (chosen == PokerActionType.raise) {
+        unawaited(_openRaiseSheet(game));
+      } else {
+        unawaited(_move(chosen));
+      }
+      return true;
+    }
+    return false;
   }
 
   Widget _buildContent(PokerGameView game, bool narrow) {
@@ -2915,60 +3004,86 @@ class _PokerGameScreenState extends ConsumerState<PokerGameScreen>
   }
 
   Widget _buildActionBar(PokerGameView game, {double buttonHeight = 48}) {
-    final canFold = game.canDo(PokerActionType.fold);
-    final canCheck = game.canDo(PokerActionType.check);
-    final canCall = game.canDo(PokerActionType.call);
-    final canRaise = game.canDo(PokerActionType.raise);
-    final canAllIn = game.canDo(PokerActionType.allIn);
+    final actions = _gamepadActions(game);
+    final cursor = GamepadService.instance.isRecentlyActive
+        ? _gamepadActionIndex.clamp(0, math.max(0, actions.length - 1))
+        : -1;
     final l10n = context.l10n;
 
+    Widget actionAt(String type, Widget button) {
+      final i = actions.indexOf(type);
+      final highlighted = i >= 0 && i == cursor;
+      return GamepadHinted(
+        action: GamepadAction.confirm,
+        child: wrapGamepadCursor(
+          child: button,
+          highlighted: highlighted,
+        ),
+      );
+    }
+
     final buttons = <Widget>[
-      if (canFold)
-        _actionButton(
-          label: l10n.pokerFold,
-          color: const Color(0xFFB0384A),
-          height: buttonHeight,
-          onTap: (_busy || _turnAction.held)
-              ? null
-              : () => unawaited(_move(PokerActionType.fold)),
+      if (game.canDo(PokerActionType.fold))
+        actionAt(
+          PokerActionType.fold,
+          _actionButton(
+            label: l10n.pokerFold,
+            color: const Color(0xFFB0384A),
+            height: buttonHeight,
+            onTap: (_busy || _turnAction.held)
+                ? null
+                : () => unawaited(_move(PokerActionType.fold)),
+          ),
         ),
-      if (canCheck)
-        _actionButton(
-          label: l10n.pokerCheck,
-          height: buttonHeight,
-          color: const Color(0xFF3E7CB1),
-          onTap: (_busy || _turnAction.held)
-              ? null
-              : () => unawaited(_move(PokerActionType.check)),
+      if (game.canDo(PokerActionType.check))
+        actionAt(
+          PokerActionType.check,
+          _actionButton(
+            label: l10n.pokerCheck,
+            height: buttonHeight,
+            color: const Color(0xFF3E7CB1),
+            onTap: (_busy || _turnAction.held)
+                ? null
+                : () => unawaited(_move(PokerActionType.check)),
+          ),
         ),
-      if (canCall)
-        _actionButton(
-          label: game.callAmount > 0
-              ? l10n.pokerCall(game.callAmount)
-              : l10n.pokerCallShort,
-          height: buttonHeight,
-          color: const Color(0xFF3E7CB1),
-          onTap: (_busy || _turnAction.held)
-              ? null
-              : () => unawaited(_move(PokerActionType.call)),
+      if (game.canDo(PokerActionType.call))
+        actionAt(
+          PokerActionType.call,
+          _actionButton(
+            label: game.callAmount > 0
+                ? l10n.pokerCall(game.callAmount)
+                : l10n.pokerCallShort,
+            height: buttonHeight,
+            color: const Color(0xFF3E7CB1),
+            onTap: (_busy || _turnAction.held)
+                ? null
+                : () => unawaited(_move(PokerActionType.call)),
+          ),
         ),
-      if (canRaise)
-        _actionButton(
-          label: l10n.pokerRaise,
-          height: buttonHeight,
-          color: AppColors.accentStart,
-          onTap: (_busy || _turnAction.held)
-              ? null
-              : () => unawaited(_openRaiseSheet(game)),
+      if (game.canDo(PokerActionType.raise))
+        actionAt(
+          PokerActionType.raise,
+          _actionButton(
+            label: l10n.pokerRaise,
+            height: buttonHeight,
+            color: AppColors.accentStart,
+            onTap: (_busy || _turnAction.held)
+                ? null
+                : () => unawaited(_openRaiseSheet(game)),
+          ),
         ),
-      if (canAllIn)
-        _actionButton(
-          label: l10n.pokerAllIn,
-          height: buttonHeight,
-          color: const Color(0xFFC9782B),
-          onTap: (_busy || _turnAction.held)
-              ? null
-              : () => unawaited(_move(PokerActionType.allIn)),
+      if (game.canDo(PokerActionType.allIn))
+        actionAt(
+          PokerActionType.allIn,
+          _actionButton(
+            label: l10n.pokerAllIn,
+            height: buttonHeight,
+            color: const Color(0xFFC9782B),
+            onTap: (_busy || _turnAction.held)
+                ? null
+                : () => unawaited(_move(PokerActionType.allIn)),
+          ),
         ),
     ];
 

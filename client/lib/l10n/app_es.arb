@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Cruz — confirmar o mover",
   "settingsGamepadHelpBack": "B / Círculo — atrás o quitar selección",
   "settingsGamepadHelpTabs": "L1 / R1 — pestañas del menú",
-  "settingsGamepadHelpPlay": "En damas, tres en raya y hundir la flota el cursor recorre las casillas",
+  "settingsGamepadHelpPlay": "Cursor de tablero y mano: damas, tres en raya, hundir la flota, durak, uno, póker y backgammon",
+  "settingsGamepadHelpCards": "En cartas: cruceta mueve la mano, A juega, X selecciona / Uno, Y toma, pasa o roba",
+  "settingsGamepadHelpKeyboard": "En un campo A abre el teclado del mando; X cambia el diseño, B borra o cierra",
+  "gamepadKeyboardTitle": "Teclado",
+  "gamepadKeyboardSpace": "Espacio",
+  "gamepadLegendConfirm": "Elegir",
+  "gamepadLegendBack": "Atrás",
+  "gamepadLegendTabs": "Pestañas",
+  "gamepadLegendCycle": "Cambiar",
   "gamepadConnectedSnack": "Mando conectado: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

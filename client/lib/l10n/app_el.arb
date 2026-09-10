@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Σταυρός — επιβεβαίωση ή κίνηση",
   "settingsGamepadHelpBack": "B / Κύκλος — πίσω ή αποεπιλογή",
   "settingsGamepadHelpTabs": "L1 / R1 — καρτέλες μενού",
-  "settingsGamepadHelpPlay": "Στη ντάμα, τρίλιζα και ναυμαχία ο δρομέας κινείται στα τετράγωνα",
+  "settingsGamepadHelpPlay": "Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι",
+  "settingsGamepadHelpCards": "Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει",
+  "settingsGamepadHelpKeyboard": "Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει",
+  "gamepadKeyboardTitle": "Πληκτρολόγιο",
+  "gamepadKeyboardSpace": "Διάστημα",
+  "gamepadLegendConfirm": "Επιλογή",
+  "gamepadLegendBack": "Πίσω",
+  "gamepadLegendTabs": "Καρτέλες",
+  "gamepadLegendCycle": "Αλλαγή",
   "gamepadConnectedSnack": "Συνδέθηκε χειριστήριο: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

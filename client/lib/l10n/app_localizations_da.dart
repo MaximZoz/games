@@ -84,7 +84,31 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menufaner';
 
   @override
-  String get settingsGamepadHelpPlay => 'I dam, kryds og bolle og sænk skibe flytter markøren over felterne';
+  String get settingsGamepadHelpPlay => 'Markør på bræt og hånd: dam, kryds og bolle, sænk skibene, durak, uno, poker og backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X vælger / Uno, Y tager, passer eller trækker';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker';
+
+  @override
+  String get gamepadKeyboardTitle => 'Tastatur';
+
+  @override
+  String get gamepadKeyboardSpace => 'Mellemrum';
+
+  @override
+  String get gamepadLegendConfirm => 'Vælg';
+
+  @override
+  String get gamepadLegendBack => 'Tilbage';
+
+  @override
+  String get gamepadLegendTabs => 'Faner';
+
+  @override
+  String get gamepadLegendCycle => 'Skift';
 
   @override
   String gamepadConnectedSnack(String name) {

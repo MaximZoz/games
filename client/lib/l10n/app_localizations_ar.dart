@@ -84,7 +84,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — تبويبات القائمة';
 
   @override
-  String get settingsGamepadHelpPlay => 'في الضامة وإكس-أو والبحرية يتحرك المؤشر على الخانات';
+  String get settingsGamepadHelpPlay => 'مؤشر اللوحة واليد: الضامة، إكس أو، السفن، الدوراك، أونو، البوكر والنرد';
+
+  @override
+  String get settingsGamepadHelpCards => 'في الورق: الأسهم تحرّك اليد، A يلعب، X يختار / أونو، Y يأخذ أو يسحب';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق';
+
+  @override
+  String get gamepadKeyboardTitle => 'لوحة المفاتيح';
+
+  @override
+  String get gamepadKeyboardSpace => 'مسافة';
+
+  @override
+  String get gamepadLegendConfirm => 'اختيار';
+
+  @override
+  String get gamepadLegendBack => 'رجوع';
+
+  @override
+  String get gamepadLegendTabs => 'تبويبات';
+
+  @override
+  String get gamepadLegendCycle => 'تغيير';
 
   @override
   String gamepadConnectedSnack(String name) {

@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Kors — bekräfta eller göra ett drag",
   "settingsGamepadHelpBack": "B / Cirkel — tillbaka eller avmarkera",
   "settingsGamepadHelpTabs": "L1 / R1 — menyflikar",
-  "settingsGamepadHelpPlay": "I dam, luffarschack och sänka skepp flyttar markören över rutorna",
+  "settingsGamepadHelpPlay": "Markör på bräde och hand: dam, luffarschack, sänka skepp, durak, uno, poker och backgammon",
+  "settingsGamepadHelpCards": "I kort: styrkors flyttar handen, A spelar, X väljer / Uno, Y tar, passar eller drar",
+  "settingsGamepadHelpKeyboard": "I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger",
+  "gamepadKeyboardTitle": "Tangentbord",
+  "gamepadKeyboardSpace": "Mellanslag",
+  "gamepadLegendConfirm": "Välj",
+  "gamepadLegendBack": "Tillbaka",
+  "gamepadLegendTabs": "Flikar",
+  "gamepadLegendCycle": "Ändra",
   "gamepadConnectedSnack": "Handkontroll ansluten: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

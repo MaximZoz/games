@@ -84,7 +84,31 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — karty menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'W warcabach, kółku i krzyżyku oraz statkach kursor chodzi po polach';
+  String get settingsGamepadHelpPlay => 'Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak';
+
+  @override
+  String get settingsGamepadHelpCards => 'W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka';
+
+  @override
+  String get gamepadKeyboardTitle => 'Klawiatura';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spacja';
+
+  @override
+  String get gamepadLegendConfirm => 'Wybierz';
+
+  @override
+  String get gamepadLegendBack => 'Wstecz';
+
+  @override
+  String get gamepadLegendTabs => 'Karty';
+
+  @override
+  String get gamepadLegendCycle => 'Zmień';
 
   @override
   String gamepadConnectedSnack(String name) {

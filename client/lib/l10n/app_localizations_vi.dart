@@ -84,7 +84,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'Trong cờ đam, cờ caro và hải chiến con trỏ đi theo ô';
+  String get settingsGamepadHelpPlay => 'Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược';
+
+  @override
+  String get settingsGamepadHelpCards => 'Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng';
+
+  @override
+  String get gamepadKeyboardTitle => 'Bàn phím';
+
+  @override
+  String get gamepadKeyboardSpace => 'Cách';
+
+  @override
+  String get gamepadLegendConfirm => 'Chọn';
+
+  @override
+  String get gamepadLegendBack => 'Quay lại';
+
+  @override
+  String get gamepadLegendTabs => 'Tab';
+
+  @override
+  String get gamepadLegendCycle => 'Đổi';
 
   @override
   String gamepadConnectedSnack(String name) {

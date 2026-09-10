@@ -15,6 +15,11 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/keep_soft_keyboard.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
@@ -152,6 +157,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
   static const Color _composerIconPurple = Color(0xFF8B5CF6);
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   String? _highlightedMessageID;
+  int _gamepadMessageIndex = 0;
   bool _jumpingToMessage = false;
 
   /// Всплывашка «Вставить» для скопированной invite-ссылки.
@@ -1127,7 +1133,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required AlignmentGeometry alignment,
     required Widget child,
   }) {
-    final highlighted = _highlightedMessageID == message.id;
+    final gamepadHit = GamepadService.instance.isRecentlyActive &&
+        _messages.isNotEmpty &&
+        _messages[_gamepadMessageIndex.clamp(0, _messages.length - 1)].id ==
+            message.id;
+    final highlighted = _highlightedMessageID == message.id || gamepadHit;
     return KeyedSubtree(
       key: _keyForMessage(message.id),
       child: Dismissible(
@@ -3052,7 +3062,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         !(widget.inSplitView && !widget.fromFriends && !widget.fromGames) &&
             !_leavingToChats;
 
-    return Scaffold(
+    return GamepadScope(
+      onAction: _onGamepad,
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       // Если клавиатуру уже вычел AppShell, второй раз нельзя: композер
       // уезжает выше клавиатуры, а сообщения схлопываются в ноль.
@@ -3496,7 +3508,67 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           ),
         ),
       ),
+    ),
     );
+  }
+
+  bool _onGamepad(GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (isEditableTextFocused()) {
+      if (action == GamepadAction.confirm &&
+          !GamepadKeyboardController.instance.visible) {
+        GamepadKeyboardController.instance.show();
+        return true;
+      }
+      return false;
+    }
+    if (_messages.isNotEmpty) {
+      _gamepadMessageIndex =
+          _gamepadMessageIndex.clamp(0, _messages.length - 1);
+    }
+    if (action == GamepadAction.up || action == GamepadAction.down) {
+      if (_messages.isEmpty) return true;
+      setState(() {
+        // Список reverse: вверх — к более новым (конец массива).
+        _gamepadMessageIndex = cycleIndex(
+          _gamepadMessageIndex,
+          _messages.length,
+          action == GamepadAction.up
+              ? GamepadAction.right
+              : GamepadAction.left,
+        );
+      });
+      final id = _messages[_gamepadMessageIndex].id;
+      final ctx = _keyForMessage(id).currentContext;
+      if (ctx != null && ctx.mounted) {
+        unawaited(
+          Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.35,
+            duration: const Duration(milliseconds: 140),
+          ),
+        );
+      }
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_messages.isEmpty) {
+        _composerFocusNode.requestFocus();
+        GamepadKeyboardController.instance.show();
+        return true;
+      }
+      unawaited(_showMessageActions(_messages[_gamepadMessageIndex]));
+      return true;
+    }
+    if (action == GamepadAction.actionY || action == GamepadAction.menu) {
+      _composerFocusNode.requestFocus();
+      GamepadKeyboardController.instance.show();
+      return true;
+    }
+    return false;
   }
 
   String _replyAuthorLabel(ChatMessageItem message) {

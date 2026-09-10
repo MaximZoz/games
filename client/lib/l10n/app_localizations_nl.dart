@@ -84,7 +84,31 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
 
   @override
-  String get settingsGamepadHelpPlay => 'Bij dammen, boter-kaas-eieren en zeeslag beweegt de cursor over vakjes';
+  String get settingsGamepadHelpPlay => 'Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit';
+
+  @override
+  String get gamepadKeyboardTitle => 'Toetsenbord';
+
+  @override
+  String get gamepadKeyboardSpace => 'Spatie';
+
+  @override
+  String get gamepadLegendConfirm => 'Kiezen';
+
+  @override
+  String get gamepadLegendBack => 'Terug';
+
+  @override
+  String get gamepadLegendTabs => 'Tabbladen';
+
+  @override
+  String get gamepadLegendCycle => 'Wijzigen';
 
   @override
   String gamepadConnectedSnack(String name) {

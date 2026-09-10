@@ -84,7 +84,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
 
   @override
-  String get settingsGamepadHelpPlay => 'Aux dames, morpion et bataille navale le curseur se déplace sur les cases';
+  String get settingsGamepadHelpPlay => 'Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon';
+
+  @override
+  String get settingsGamepadHelpCards => 'Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche';
+
+  @override
+  String get settingsGamepadHelpKeyboard => 'Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme';
+
+  @override
+  String get gamepadKeyboardTitle => 'Clavier';
+
+  @override
+  String get gamepadKeyboardSpace => 'Espace';
+
+  @override
+  String get gamepadLegendConfirm => 'Choisir';
+
+  @override
+  String get gamepadLegendBack => 'Retour';
+
+  @override
+  String get gamepadLegendTabs => 'Onglets';
+
+  @override
+  String get gamepadLegendCycle => 'Changer';
 
   @override
   String gamepadConnectedSnack(String name) {

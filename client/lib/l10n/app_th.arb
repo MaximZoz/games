@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / กากบาท — ยืนยันหรือเดิน",
   "settingsGamepadHelpBack": "B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก",
   "settingsGamepadHelpTabs": "L1 / R1 — แท็บเมนู",
-  "settingsGamepadHelpPlay": "ในหมากฮอส โอเอกซ์ และเรือรบ เคอร์เซอร์เลื่อนตามช่อง",
+  "settingsGamepadHelpPlay": "เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน",
+  "settingsGamepadHelpCards": "ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว",
+  "settingsGamepadHelpKeyboard": "ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด",
+  "gamepadKeyboardTitle": "คีย์บอร์ด",
+  "gamepadKeyboardSpace": "เว้นวรรค",
+  "gamepadLegendConfirm": "เลือก",
+  "gamepadLegendBack": "กลับ",
+  "gamepadLegendTabs": "แท็บ",
+  "gamepadLegendCycle": "เปลี่ยน",
   "gamepadConnectedSnack": "เชื่อมต่อคอนโทรลเลอร์แล้ว: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

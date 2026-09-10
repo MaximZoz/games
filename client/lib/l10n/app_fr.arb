@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Croix — valider ou jouer",
   "settingsGamepadHelpBack": "B / Rond — retour ou désélection",
   "settingsGamepadHelpTabs": "L1 / R1 — onglets du menu",
-  "settingsGamepadHelpPlay": "Aux dames, morpion et bataille navale le curseur se déplace sur les cases",
+  "settingsGamepadHelpPlay": "Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon",
+  "settingsGamepadHelpCards": "Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche",
+  "settingsGamepadHelpKeyboard": "Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme",
+  "gamepadKeyboardTitle": "Clavier",
+  "gamepadKeyboardSpace": "Espace",
+  "gamepadLegendConfirm": "Choisir",
+  "gamepadLegendBack": "Retour",
+  "gamepadLegendTabs": "Onglets",
+  "gamepadLegendCycle": "Changer",
   "gamepadConnectedSnack": "Manette connectée : {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

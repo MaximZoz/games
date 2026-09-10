@@ -84,7 +84,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
 
   @override
-  String get settingsGamepadHelpPlay => '체커, 틱택토, 배틀십에서 커서가 칸을 이동합니다';
+  String get settingsGamepadHelpPlay => '보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이';
+
+  @override
+  String get settingsGamepadHelpCards => '카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우';
+
+  @override
+  String get settingsGamepadHelpKeyboard => '입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기';
+
+  @override
+  String get gamepadKeyboardTitle => '키보드';
+
+  @override
+  String get gamepadKeyboardSpace => '스페이스';
+
+  @override
+  String get gamepadLegendConfirm => '선택';
+
+  @override
+  String get gamepadLegendBack => '뒤로';
+
+  @override
+  String get gamepadLegendTabs => '탭';
+
+  @override
+  String get gamepadLegendCycle => '변경';
 
   @override
   String gamepadConnectedSnack(String name) {

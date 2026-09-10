@@ -32,7 +32,15 @@
   "settingsGamepadHelpConfirm": "A / Крест — выбрать или сходить",
   "settingsGamepadHelpBack": "B / Круг — назад или снять выбор",
   "settingsGamepadHelpTabs": "L1 / R1 — вкладки меню",
-  "settingsGamepadHelpPlay": "В шашках, крестиках-ноликах и морском бое курсор ходит по клеткам",
+  "settingsGamepadHelpPlay": "Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды",
+  "settingsGamepadHelpCards": "В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать",
+  "settingsGamepadHelpKeyboard": "В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть",
+  "gamepadKeyboardTitle": "Клавиатура",
+  "gamepadKeyboardSpace": "Пробел",
+  "gamepadLegendConfirm": "Выбрать",
+  "gamepadLegendBack": "Назад",
+  "gamepadLegendTabs": "Вкладки",
+  "gamepadLegendCycle": "Сменить",
   "gamepadConnectedSnack": "Контроллер подключён: {name}",
   "@gamepadConnectedSnack": {
     "placeholders": {

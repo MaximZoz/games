@@ -66,3 +66,15 @@ class GamepadGridCursor {
     }
   }
 }
+
+/// Цикл по списку (рука карт, кнопки покера).
+int cycleIndex(int index, int count, GamepadAction action) {
+  if (count <= 0) return 0;
+  if (action == GamepadAction.left || action == GamepadAction.up) {
+    return (index - 1 + count) % count;
+  }
+  if (action == GamepadAction.right || action == GamepadAction.down) {
+    return (index + 1) % count;
+  }
+  return index.clamp(0, count - 1);
+}
