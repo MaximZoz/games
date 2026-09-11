@@ -72,6 +72,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
 
   @override
+  String get settingsGamepadGenericName => '컨트롤러';
+
+  @override
   String get settingsGamepadHelpNavigate => '메뉴';
 
   @override

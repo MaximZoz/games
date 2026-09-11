@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.",
+  "settingsGamepadGenericName": "Kontroller",
   "settingsGamepadHelpNavigate": "Menyu",
   "settingsGamepadHelpConfirm": "Tanlash",
   "settingsGamepadHelpBack": "Orqaga",

@@ -72,6 +72,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
 
   @override
+  String get settingsGamepadGenericName => 'คอนโทรลเลอร์';
+
+  @override
   String get settingsGamepadHelpNavigate => 'เมนู';
 
   @override

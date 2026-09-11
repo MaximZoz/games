@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Геймпад не найден. Подключите контроллер и нажмите любую кнопку.",
+  "settingsGamepadGenericName": "Контроллер",
   "settingsGamepadHelpNavigate": "Меню",
   "settingsGamepadHelpConfirm": "Выбрать",
   "settingsGamepadHelpBack": "Назад",

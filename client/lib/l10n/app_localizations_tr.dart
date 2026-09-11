@@ -72,6 +72,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontrolcü';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menü';
 
   @override

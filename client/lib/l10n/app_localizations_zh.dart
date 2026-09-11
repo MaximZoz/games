@@ -72,6 +72,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
 
   @override
+  String get settingsGamepadGenericName => '手柄';
+
+  @override
   String get settingsGamepadHelpNavigate => '菜单';
 
   @override

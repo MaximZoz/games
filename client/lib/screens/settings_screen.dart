@@ -208,15 +208,24 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
-                    child: ValueListenableBuilder(
-                      valueListenable: GamepadService.instance.devices,
-                      builder: (context, pads, _) {
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([
+                        GamepadService.instance.devices,
+                        GamepadService.instance.activityTick,
+                      ]),
+                      builder: (context, _) {
+                        final pads = GamepadService.instance.devices.value;
                         final enabled = ref.watch(gamepadEnabledProvider);
                         final family = pads.isEmpty
                             ? GamepadFamily.xbox
                             : gamepadFamilyFromName(pads.first.name);
+                        final padName = pads.isEmpty
+                            ? ''
+                            : (pads.first.id == GamepadService.keyPadId
+                                ? l10n.settingsGamepadGenericName
+                                : pads.first.name);
                         final connected = pads.isNotEmpty
-                            ? l10n.settingsGamepadConnected(pads.first.name)
+                            ? l10n.settingsGamepadConnected(padName)
                             : l10n.settingsGamepadDisconnected;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

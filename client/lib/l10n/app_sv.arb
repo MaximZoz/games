@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.",
+  "settingsGamepadGenericName": "Kontroll",
   "settingsGamepadHelpNavigate": "Meny",
   "settingsGamepadHelpConfirm": "Välj",
   "settingsGamepadHelpBack": "Tillbaka",

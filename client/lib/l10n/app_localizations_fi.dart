@@ -72,6 +72,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
 
   @override
+  String get settingsGamepadGenericName => 'Ohjain';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Valikko';
 
   @override

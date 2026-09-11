@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.",
+  "settingsGamepadGenericName": "Χειριστήριο",
   "settingsGamepadHelpNavigate": "Μενού",
   "settingsGamepadHelpConfirm": "Επιλογή",
   "settingsGamepadHelpBack": "Πίσω",

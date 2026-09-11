@@ -72,6 +72,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
 
   @override
+  String get settingsGamepadGenericName => 'Контроллер';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Мәзір';
 
   @override

@@ -7,6 +7,7 @@ import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.view.InputDevice
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -38,6 +39,39 @@ class MainActivity : FlutterActivity() {
                     result.error("vibrate", e.message, null)
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, GAMEPAD_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                if (call.method != "listDevices") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                try {
+                    result.success(listGamepads())
+                } catch (e: Throwable) {
+                    result.error("gamepad", e.message, null)
+                }
+            }
+    }
+
+    private fun listGamepads(): List<Map<String, Any>> {
+        val out = ArrayList<Map<String, Any>>()
+        for (id in InputDevice.getDeviceIds()) {
+            val device = InputDevice.getDevice(id) ?: continue
+            if (device.isVirtual) continue
+            val sources = device.sources
+            val gamepad = sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+            val joystick = sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
+            if (!gamepad && !joystick) continue
+            val name = device.name?.trim().orEmpty().ifEmpty { "Gamepad" }
+            out.add(
+                hashMapOf(
+                    "id" to "android-$id",
+                    "name" to name,
+                    "index" to id,
+                ),
+            )
+        }
+        return out
     }
 
     private fun vibratePattern(times: LongArray): Boolean {
@@ -119,6 +153,7 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL = "zozu/haptics"
+        private const val GAMEPAD_CHANNEL = "zozu/gamepad"
         private const val MAX_AMPLITUDE = 255
     }
 }

@@ -21,6 +21,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() {
     GamepadDispatcher.reset();
+    GamepadService.debugPollNative = false;
+    GamepadService.instance.reset();
+    GamepadService.debugPollNative = false;
+  });
+
+  tearDown(() {
     GamepadService.instance.reset();
   });
 
@@ -263,6 +269,20 @@ void main() {
     expect(currentGamepadFamily(), GamepadFamily.xbox);
   });
 
+  test('кнопка геймпада считает контроллер найденным, стрелки — нет', () {
+    expect(isDedicatedGamepadKey(LogicalKeyboardKey.arrowDown), isFalse);
+    expect(isDedicatedGamepadKey(LogicalKeyboardKey.enter), isFalse);
+    expect(isDedicatedGamepadKey(LogicalKeyboardKey.escape), isFalse);
+    expect(isDedicatedGamepadKey(LogicalKeyboardKey.gameButtonA), isTrue);
+    expect(isDedicatedGamepadKey(LogicalKeyboardKey.gameButtonLeft1), isTrue);
+    final service = GamepadService.instance;
+    service.start();
+    expect(gamepadConnected(), isFalse);
+    service.noteDedicatedGamepadKey();
+    expect(gamepadConnected(), isTrue);
+    expect(service.devices.value.single.id, GamepadService.keyPadId);
+  });
+
   testWidgets('B закрывает диалог из GamepadHost над навигатором',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -418,5 +438,27 @@ void main() {
     expect(find.text('Вкладки'), findsOneWidget);
     expect(find.text('Карты'), findsOneWidget);
     expect(find.text('Клавиатура'), findsWidgets);
+  });
+
+  testWidgets('настройки после кнопки геймпада больше не пишут «не найден»',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.noteDedicatedGamepadKey();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Геймпад не найден'), findsNothing);
+    expect(find.textContaining('Подключён'), findsOneWidget);
+    expect(find.text('Выбрать'), findsOneWidget);
   });
 }

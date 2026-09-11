@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "未检测到手柄。请连接并按下任意键。",
+  "settingsGamepadGenericName": "手柄",
   "settingsGamepadHelpNavigate": "菜单",
   "settingsGamepadHelpConfirm": "选择",
   "settingsGamepadHelpBack": "返回",

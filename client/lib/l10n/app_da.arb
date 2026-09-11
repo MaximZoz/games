@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Ingen gamepad. Tilslut en controller og tryk på en knap.",
+  "settingsGamepadGenericName": "Controller",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Vælg",
   "settingsGamepadHelpBack": "Tilbage",

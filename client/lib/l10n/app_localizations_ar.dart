@@ -72,6 +72,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.';
 
   @override
+  String get settingsGamepadGenericName => 'وحدة التحكم';
+
+  @override
   String get settingsGamepadHelpNavigate => 'قائمة';
 
   @override

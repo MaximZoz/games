@@ -72,6 +72,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
 
   @override
+  String get settingsGamepadGenericName => 'コントローラー';
+
+  @override
   String get settingsGamepadHelpNavigate => 'メニュー';
 
   @override

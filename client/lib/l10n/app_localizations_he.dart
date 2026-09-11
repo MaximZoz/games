@@ -72,6 +72,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
 
   @override
+  String get settingsGamepadGenericName => 'בקר';
+
+  @override
   String get settingsGamepadHelpNavigate => 'תפריט';
 
   @override

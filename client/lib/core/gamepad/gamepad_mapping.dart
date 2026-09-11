@@ -53,6 +53,41 @@ GamepadAction? gamepadActionFromStick({
   return y < 0 ? GamepadAction.up : GamepadAction.down;
 }
 
+/// Настоящие кнопки геймпада, не стрелки/Enter клавиатуры.
+bool isDedicatedGamepadKey(LogicalKeyboardKey key) {
+  return key == LogicalKeyboardKey.gameButtonA ||
+      key == LogicalKeyboardKey.gameButtonB ||
+      key == LogicalKeyboardKey.gameButtonC ||
+      key == LogicalKeyboardKey.gameButtonX ||
+      key == LogicalKeyboardKey.gameButtonY ||
+      key == LogicalKeyboardKey.gameButtonZ ||
+      key == LogicalKeyboardKey.gameButtonLeft1 ||
+      key == LogicalKeyboardKey.gameButtonLeft2 ||
+      key == LogicalKeyboardKey.gameButtonRight1 ||
+      key == LogicalKeyboardKey.gameButtonRight2 ||
+      key == LogicalKeyboardKey.gameButtonThumbLeft ||
+      key == LogicalKeyboardKey.gameButtonThumbRight ||
+      key == LogicalKeyboardKey.gameButtonStart ||
+      key == LogicalKeyboardKey.gameButtonSelect ||
+      key == LogicalKeyboardKey.gameButtonMode ||
+      key == LogicalKeyboardKey.gameButton1 ||
+      key == LogicalKeyboardKey.gameButton2 ||
+      key == LogicalKeyboardKey.gameButton3 ||
+      key == LogicalKeyboardKey.gameButton4 ||
+      key == LogicalKeyboardKey.gameButton5 ||
+      key == LogicalKeyboardKey.gameButton6 ||
+      key == LogicalKeyboardKey.gameButton7 ||
+      key == LogicalKeyboardKey.gameButton8 ||
+      key == LogicalKeyboardKey.gameButton9 ||
+      key == LogicalKeyboardKey.gameButton10 ||
+      key == LogicalKeyboardKey.gameButton11 ||
+      key == LogicalKeyboardKey.gameButton12 ||
+      key == LogicalKeyboardKey.gameButton13 ||
+      key == LogicalKeyboardKey.gameButton14 ||
+      key == LogicalKeyboardKey.gameButton15 ||
+      key == LogicalKeyboardKey.gameButton16;
+}
+
 /// Клавиши и кнопки геймпада, которые Android/десктоп шлют как [KeyEvent].
 GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
   if (key == LogicalKeyboardKey.arrowUp) {

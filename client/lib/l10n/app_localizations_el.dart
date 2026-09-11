@@ -72,6 +72,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
 
   @override
+  String get settingsGamepadGenericName => 'Χειριστήριο';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Μενού';
 
   @override
