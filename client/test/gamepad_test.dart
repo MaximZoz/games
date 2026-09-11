@@ -15,6 +15,7 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -367,5 +368,55 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(value, isTrue);
+  });
+
+  testWidgets('настройки без геймпада не показывают клавиши', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Геймпад не найден'), findsOneWidget);
+    expect(find.text('Меню'), findsNothing);
+    expect(find.text('Карты'), findsNothing);
+    expect(find.text('Клавиатура'), findsNothing);
+  });
+
+  testWidgets('настройки с геймпадом показывают короткое управление',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'DualSense Wireless Controller', index: 0),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Геймпад не найден'), findsNothing);
+    expect(find.textContaining('DualSense'), findsOneWidget);
+    expect(find.text('Меню'), findsOneWidget);
+    expect(find.text('Выбрать'), findsOneWidget);
+    expect(find.text('Назад'), findsOneWidget);
+    expect(find.text('Вкладки'), findsOneWidget);
+    expect(find.text('Карты'), findsOneWidget);
+    expect(find.text('Клавиатура'), findsWidgets);
   });
 }
