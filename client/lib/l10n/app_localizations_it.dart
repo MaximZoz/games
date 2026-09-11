@@ -72,25 +72,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nessun gamepad. Collega un controller e premi un pulsante.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Croce / stick — menu e cursore sulla scacchiera';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Croce — conferma o muovi';
+  String get settingsGamepadHelpConfirm => 'Scegli';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cerchio — indietro o deseleziona';
+  String get settingsGamepadHelpBack => 'Indietro';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — schede del menu';
+  String get settingsGamepadHelpTabs => 'Schede';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca';
+  String get settingsGamepadHelpCards => 'Carte';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude';
+  String get settingsGamepadHelpKeyboard => 'Tastiera';
 
   @override
   String get gamepadKeyboardTitle => 'Tastiera';

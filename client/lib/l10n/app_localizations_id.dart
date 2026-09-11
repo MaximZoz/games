@@ -72,25 +72,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu dan kursor papan';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Silang — konfirmasi atau jalan';
+  String get settingsGamepadHelpConfirm => 'Pilih';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Lingkaran — kembali atau batal pilih';
+  String get settingsGamepadHelpBack => 'Kembali';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi';
+  String get settingsGamepadHelpCards => 'Kartu';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup';
+  String get settingsGamepadHelpKeyboard => 'Papan ketik';
 
   @override
   String get gamepadKeyboardTitle => 'Papan ketik';

@@ -72,25 +72,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Croix / stick — menus et curseur sur le plateau';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Croix — valider ou jouer';
+  String get settingsGamepadHelpConfirm => 'Choisir';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Rond — retour ou désélection';
+  String get settingsGamepadHelpBack => 'Retour';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
+  String get settingsGamepadHelpTabs => 'Onglets';
 
   @override
   String get settingsGamepadHelpPlay => 'Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche';
+  String get settingsGamepadHelpCards => 'Cartes';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme';
+  String get settingsGamepadHelpKeyboard => 'Clavier';
 
   @override
   String get gamepadKeyboardTitle => 'Clavier';

@@ -15,6 +15,7 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -248,6 +249,94 @@ void main() {
     expect(tapped, 1);
   });
 
+  test('подсказки только при подключённом геймпаде', () {
+    final service = GamepadService.instance;
+    service.start();
+    service.markActive();
+    expect(gamepadConnected(), isFalse);
+    expect(gamepadHintsWanted(), isFalse);
+    service.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    expect(gamepadConnected(), isTrue);
+    expect(gamepadHintsWanted(), isTrue);
+    expect(currentGamepadFamily(), GamepadFamily.xbox);
+  });
+
+  testWidgets('B закрывает диалог из GamepadHost над навигатором',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => GamepadHost(
+            child: child ?? const SizedBox.shrink(),
+          ),
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    autofocus: true,
+                    onPressed: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (_) => const AlertDialog(
+                          content: Text('dlg'),
+                        ),
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(find.text('dlg'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pumpAndSettle();
+    expect(find.text('dlg'), findsNothing);
+  });
+
+  testWidgets('оверлей не показывает легенду над вкладками', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: FilledButton(
+                  autofocus: true,
+                  onPressed: () {},
+                  child: const Text('OK'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Вкладки'), findsNothing);
+    expect(find.text('Сменить'), findsNothing);
+  });
+
   testWidgets('GamepadHost по A переключает сфокусированный Switch',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -279,5 +368,55 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(value, isTrue);
+  });
+
+  testWidgets('настройки без геймпада не показывают клавиши', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Геймпад не найден'), findsOneWidget);
+    expect(find.text('Меню'), findsNothing);
+    expect(find.text('Карты'), findsNothing);
+    expect(find.text('Клавиатура'), findsNothing);
+  });
+
+  testWidgets('настройки с геймпадом показывают короткое управление',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'DualSense Wireless Controller', index: 0),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Геймпад не найден'), findsNothing);
+    expect(find.textContaining('DualSense'), findsOneWidget);
+    expect(find.text('Меню'), findsOneWidget);
+    expect(find.text('Выбрать'), findsOneWidget);
+    expect(find.text('Назад'), findsOneWidget);
+    expect(find.text('Вкладки'), findsOneWidget);
+    expect(find.text('Карты'), findsOneWidget);
+    expect(find.text('Клавиатура'), findsWidgets);
   });
 }

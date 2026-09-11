@@ -72,25 +72,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।';
 
   @override
-  String get settingsGamepadHelpNavigate => 'डी-पैड / स्टिक — मेनू और बोर्ड कर्सर';
+  String get settingsGamepadHelpNavigate => 'मेनू';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / क्रॉस — पुष्टि या चाल';
+  String get settingsGamepadHelpConfirm => 'चुनें';
 
   @override
-  String get settingsGamepadHelpBack => 'B / सर्कल — वापस या चयन हटाएँ';
+  String get settingsGamepadHelpBack => 'वापस';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
+  String get settingsGamepadHelpTabs => 'टैब';
 
   @override
   String get settingsGamepadHelpPlay => 'बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन';
 
   @override
-  String get settingsGamepadHelpCards => 'पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है';
+  String get settingsGamepadHelpCards => 'पत्ते';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है';
+  String get settingsGamepadHelpKeyboard => 'कीबोर्ड';
 
   @override
   String get gamepadKeyboardTitle => 'कीबोर्ड';

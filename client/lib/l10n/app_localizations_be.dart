@@ -72,25 +72,25 @@ class AppLocalizationsBe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад не знойдзены. Падключыце кантролер і націсніце любую кнопку.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Крыж / стык — меню і курсор на полі';
+  String get settingsGamepadHelpNavigate => 'Меню';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Крыж — выбраць або зрабіць ход';
+  String get settingsGamepadHelpConfirm => 'Выбраць';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Круг — назад або зняць выбар';
+  String get settingsGamepadHelpBack => 'Назад';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — укладкі меню';
+  String get settingsGamepadHelpTabs => 'Укладкі';
 
   @override
   String get settingsGamepadHelpPlay => 'Курсор на полі і ў руцэ: шашкі, крыжыкі-нулікі, марскі бой, дурань, уно, покер і нарды';
 
   @override
-  String get settingsGamepadHelpCards => 'У картах: крыж — рука, A — ход, X — выбраць / Уно, Y — узяць, біта або дабраць';
+  String get settingsGamepadHelpCards => 'Карты';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'У полі ўводу A адкрывае клавіятуру геймпада; X — раскладка, B — сцерці або закрыць';
+  String get settingsGamepadHelpKeyboard => 'Клавіятура';
 
   @override
   String get gamepadKeyboardTitle => 'Клавіятура';

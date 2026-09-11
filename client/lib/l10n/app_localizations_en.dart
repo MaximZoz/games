@@ -72,25 +72,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No gamepad found. Connect a controller and press any button.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menus and the board cursor';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cross — confirm or make a move';
+  String get settingsGamepadHelpConfirm => 'Select';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Circle — back or deselect';
+  String get settingsGamepadHelpBack => 'Back';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
+  String get settingsGamepadHelpTabs => 'Tabs';
 
   @override
   String get settingsGamepadHelpPlay => 'Board and hand cursor: checkers, tic-tac-toe, battleship, durak, uno, poker and backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'In card games: D-pad moves the hand, A plays, X selects / Uno, Y takes, passes or draws';
+  String get settingsGamepadHelpCards => 'Cards';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes';
+  String get settingsGamepadHelpKeyboard => 'Keyboard';
 
   @override
   String get gamepadKeyboardTitle => 'Keyboard';

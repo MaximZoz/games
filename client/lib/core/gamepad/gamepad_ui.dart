@@ -56,32 +56,94 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
   }
 }
 
+/// После смены вкладки — первый видимый блок новой страницы.
+void scheduleFocusFirstVisibleGamepadTarget() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    focusFirstVisibleGamepadTarget();
+  });
+}
+
+bool focusFirstVisibleGamepadTarget() {
+  final root = FocusManager.instance.rootScope;
+  if (root.nextFocus() &&
+      isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
+    _ensureVisible(FocusManager.instance.primaryFocus);
+    return true;
+  }
+  final start = FocusManager.instance.primaryFocus;
+  for (var i = 0; i < 80; i++) {
+    final node = FocusManager.instance.primaryFocus;
+    if (isGamepadFocusVisible(node)) {
+      _ensureVisible(node);
+      return true;
+    }
+    if (node == null || node == root) {
+      if (!root.nextFocus()) break;
+      continue;
+    }
+    if (!node.nextFocus()) break;
+    if (FocusManager.instance.primaryFocus == start) break;
+  }
+  return false;
+}
+
+bool isGamepadFocusVisible(FocusNode? node) {
+  if (node == null || !node.canRequestFocus) return false;
+  if (node == FocusManager.instance.rootScope) return false;
+  final ctx = node.context;
+  if (ctx == null || !ctx.mounted) return false;
+  final ro = ctx.findRenderObject();
+  if (ro is! RenderBox || !ro.hasSize || !ro.attached) return false;
+  if (ro.size.width < 2 || ro.size.height < 2) return false;
+  var hidden = false;
+  ctx.visitAncestorElements((el) {
+    final w = el.widget;
+    if (w is Offstage && w.offstage) {
+      hidden = true;
+      return false;
+    }
+    if (w is Visibility && !w.visible) {
+      hidden = true;
+      return false;
+    }
+    return true;
+  });
+  return !hidden;
+}
+
 bool _switchTab(int delta) {
   final tab = GamepadNav.switchTab;
   if (tab == null) return false;
   tab(delta);
+  scheduleFocusFirstVisibleGamepadTarget();
   return true;
 }
 
 bool _moveFocus(TraversalDirection direction) {
-  final node = FocusManager.instance.primaryFocus;
+  final start = FocusManager.instance.primaryFocus;
   final root = FocusManager.instance.rootScope;
-  if (node == null || node == root || node.context == null) {
-    return root.nextFocus();
+  if (start == null || start == root || start.context == null) {
+    return focusFirstVisibleGamepadTarget();
   }
-  if (node.focusInDirection(direction)) {
-    _ensureVisible(FocusManager.instance.primaryFocus);
-    return true;
+  for (var i = 0; i < 40; i++) {
+    final node = FocusManager.instance.primaryFocus;
+    if (node == null || node == root || node.context == null) {
+      return focusFirstVisibleGamepadTarget();
+    }
+    final stepped = node.focusInDirection(direction) ||
+        ((direction == TraversalDirection.down ||
+                direction == TraversalDirection.right)
+            ? node.nextFocus()
+            : node.previousFocus());
+    if (!stepped) break;
+    final next = FocusManager.instance.primaryFocus;
+    if (next == start) break;
+    if (isGamepadFocusVisible(next)) {
+      _ensureVisible(next);
+      return true;
+    }
   }
-  final fallback = direction == TraversalDirection.down ||
-          direction == TraversalDirection.right
-      ? node.nextFocus()
-      : node.previousFocus();
-  if (fallback) {
-    _ensureVisible(FocusManager.instance.primaryFocus);
-    return true;
-  }
-  return root.nextFocus();
+  return focusFirstVisibleGamepadTarget();
 }
 
 void _ensureVisible(FocusNode? node) {
@@ -97,9 +159,13 @@ void _ensureVisible(FocusNode? node) {
 }
 
 bool _activateFocused() {
-  final ctx = FocusManager.instance.primaryFocus?.context;
+  final node = FocusManager.instance.primaryFocus;
+  if (!isGamepadFocusVisible(node)) {
+    return focusFirstVisibleGamepadTarget();
+  }
+  final ctx = node!.context;
   if (ctx == null) {
-    return FocusManager.instance.rootScope.nextFocus();
+    return focusFirstVisibleGamepadTarget();
   }
   if (isEditableTextFocused()) {
     GamepadKeyboardController.instance.show();
@@ -110,7 +176,7 @@ bool _activateFocused() {
     Actions.maybeInvoke<ActivateIntent>(ctx, const ActivateIntent());
     return true;
   }
-  final ink = ctx.findAncestorWidgetOfExactType<InkWell>();
+  final ink = _inkWellInBlock(ctx);
   if (ink?.onTap != null) {
     ink!.onTap!();
     return true;
@@ -123,6 +189,27 @@ bool _activateFocused() {
   return false;
 }
 
+/// Только InkWell текущего блока, не родитель из другой карточки.
+InkWell? _inkWellInBlock(BuildContext ctx) {
+  if (ctx.widget is InkWell) {
+    return ctx.widget as InkWell;
+  }
+  InkWell? found;
+  var depth = 0;
+  ctx.visitAncestorElements((el) {
+    depth++;
+    if (depth > 8) return false;
+    final w = el.widget;
+    if (w is Offstage || w is Scaffold || w is Navigator) return false;
+    if (w is InkWell) {
+      found = w;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
 bool _toggleSwitchOrCheckbox(BuildContext ctx) {
   Switch? sw;
   Checkbox? box;
@@ -132,7 +219,10 @@ bool _toggleSwitchOrCheckbox(BuildContext ctx) {
   }
 
   pick(ctx.widget);
+  var depth = 0;
   ctx.visitAncestorElements((el) {
+    depth++;
+    if (depth > 6) return false;
     pick(el.widget);
     return sw == null && box == null;
   });
@@ -194,10 +284,33 @@ bool _focusTextField() {
 }
 
 bool _popRoute(BuildContext context) {
-  final nav = Navigator.maybeOf(context);
+  final nav = _navigatorForGamepad(context);
   if (nav != null && nav.canPop()) {
     nav.maybePop();
     return true;
   }
   return false;
+}
+
+/// GamepadHost сидит в `MaterialApp.builder` — предка-Navigator нет.
+NavigatorState? _navigatorForGamepad(BuildContext hostContext) {
+  final focusCtx = FocusManager.instance.primaryFocus?.context;
+  if (focusCtx != null && focusCtx.mounted) {
+    final nav = Navigator.maybeOf(focusCtx);
+    if (nav != null) return nav;
+  }
+  NavigatorState? best;
+  void visit(Element el) {
+    if (el is StatefulElement && el.state is NavigatorState) {
+      final nav = el.state as NavigatorState;
+      if (nav.mounted && nav.canPop()) {
+        best = nav;
+      }
+    }
+    el.visitChildren(visit);
+  }
+
+  hostContext.visitChildElements(visit);
+  if (best != null) return best;
+  return Navigator.maybeOf(hostContext);
 }

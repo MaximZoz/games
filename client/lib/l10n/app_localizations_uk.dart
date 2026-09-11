@@ -72,25 +72,25 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад не знайдено. Підключіть контролер і натисніть будь-яку кнопку.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Хрест / стік — меню і курсор на полі';
+  String get settingsGamepadHelpNavigate => 'Меню';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Хрест — вибрати або сходити';
+  String get settingsGamepadHelpConfirm => 'Вибрати';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Коло — назад або зняти вибір';
+  String get settingsGamepadHelpBack => 'Назад';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+  String get settingsGamepadHelpTabs => 'Вкладки';
 
   @override
   String get settingsGamepadHelpPlay => 'Курсор на полі та в руці: шашки, хрестики-нулики, морський бій, дурень, уно, покер і нарди';
 
   @override
-  String get settingsGamepadHelpCards => 'У картах: хрест — рука, A — хід, X — вибрати / Уно, Y — взяти, бито або добрати';
+  String get settingsGamepadHelpCards => 'Карти';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'У полі вводу A відкриває клавіатуру геймпада; X — розкладка, B — стерти або закрити';
+  String get settingsGamepadHelpKeyboard => 'Клавіатура';
 
   @override
   String get gamepadKeyboardTitle => 'Клавіатура';

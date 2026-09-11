@@ -72,25 +72,25 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Xrest / stik — menyu va doskadagi kursor';
+  String get settingsGamepadHelpNavigate => 'Menyu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Xrest — tanlash yoki yurish';
+  String get settingsGamepadHelpConfirm => 'Tanlash';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Doira — orqaga yoki tanlovni olish';
+  String get settingsGamepadHelpBack => 'Orqaga';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
+  String get settingsGamepadHelpTabs => 'Ichki oynalar';
 
   @override
   String get settingsGamepadHelpPlay => 'Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish';
+  String get settingsGamepadHelpCards => 'Kartalar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish';
+  String get settingsGamepadHelpKeyboard => 'Klaviatura';
 
   @override
   String get gamepadKeyboardTitle => 'Klaviatura';
