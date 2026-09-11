@@ -72,25 +72,25 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Krzyżak / drążek — menu i kursor na planszy';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Krzyżyk — potwierdź lub wykonaj ruch';
+  String get settingsGamepadHelpConfirm => 'Wybierz';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kółko — wstecz lub odznacz';
+  String get settingsGamepadHelpBack => 'Wstecz';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — karty menu';
+  String get settingsGamepadHelpTabs => 'Karty';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak';
 
   @override
-  String get settingsGamepadHelpCards => 'W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera';
+  String get settingsGamepadHelpCards => 'Karty';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka';
+  String get settingsGamepadHelpKeyboard => 'Klawiatura';
 
   @override
   String get gamepadKeyboardTitle => 'Klawiatura';

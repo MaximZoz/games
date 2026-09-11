@@ -72,25 +72,25 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
 
   @override
-  String get settingsGamepadHelpNavigate => 'ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน';
+  String get settingsGamepadHelpNavigate => 'เมนู';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / กากบาท — ยืนยันหรือเดิน';
+  String get settingsGamepadHelpConfirm => 'เลือก';
 
   @override
-  String get settingsGamepadHelpBack => 'B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก';
+  String get settingsGamepadHelpBack => 'กลับ';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
+  String get settingsGamepadHelpTabs => 'แท็บ';
 
   @override
   String get settingsGamepadHelpPlay => 'เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน';
 
   @override
-  String get settingsGamepadHelpCards => 'ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว';
+  String get settingsGamepadHelpCards => 'ไพ่';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด';
+  String get settingsGamepadHelpKeyboard => 'คีย์บอร์ด';
 
   @override
   String get gamepadKeyboardTitle => 'คีย์บอร์ด';

@@ -72,25 +72,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
 
   @override
-  String get settingsGamepadHelpNavigate => '십자 / 스틱 — 메뉴와 보드 커서';
+  String get settingsGamepadHelpNavigate => '메뉴';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 십자 — 확인 또는 수 두기';
+  String get settingsGamepadHelpConfirm => '선택';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 원 — 뒤로 또는 선택 해제';
+  String get settingsGamepadHelpBack => '뒤로';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
+  String get settingsGamepadHelpTabs => '탭';
 
   @override
   String get settingsGamepadHelpPlay => '보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이';
 
   @override
-  String get settingsGamepadHelpCards => '카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우';
+  String get settingsGamepadHelpCards => '카드';
 
   @override
-  String get settingsGamepadHelpKeyboard => '입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기';
+  String get settingsGamepadHelpKeyboard => '키보드';
 
   @override
   String get gamepadKeyboardTitle => '키보드';

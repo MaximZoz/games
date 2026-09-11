@@ -72,25 +72,25 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kříž / páčka — menu a kurzor na desce';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Křížek — potvrdit nebo táhnout';
+  String get settingsGamepadHelpConfirm => 'Vybrat';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kroužek — zpět nebo zrušit výběr';
+  String get settingsGamepadHelpBack => 'Zpět';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
+  String get settingsGamepadHelpTabs => 'Karty';
 
   @override
   String get settingsGamepadHelpPlay => 'Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby';
 
   @override
-  String get settingsGamepadHelpCards => 'V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne';
+  String get settingsGamepadHelpCards => 'Karty';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře';
+  String get settingsGamepadHelpKeyboard => 'Klávesnice';
 
   @override
   String get gamepadKeyboardTitle => 'Klávesnice';

@@ -72,25 +72,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu và con trỏ trên bàn';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Chéo — xác nhận hoặc đi nước';
+  String get settingsGamepadHelpConfirm => 'Chọn';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Tròn — quay lại hoặc bỏ chọn';
+  String get settingsGamepadHelpBack => 'Quay lại';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược';
 
   @override
-  String get settingsGamepadHelpCards => 'Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc';
+  String get settingsGamepadHelpCards => 'Bài';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng';
+  String get settingsGamepadHelpKeyboard => 'Bàn phím';
 
   @override
   String get gamepadKeyboardTitle => 'Bàn phím';

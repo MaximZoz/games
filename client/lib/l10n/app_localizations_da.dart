@@ -72,25 +72,25 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Tilslut en controller og tryk på en knap.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kors / stick — menuer og brætmarkør';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kors — bekræft eller træk';
+  String get settingsGamepadHelpConfirm => 'Vælg';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — tilbage eller fravælg';
+  String get settingsGamepadHelpBack => 'Tilbage';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menufaner';
+  String get settingsGamepadHelpTabs => 'Faner';
 
   @override
   String get settingsGamepadHelpPlay => 'Markør på bræt og hånd: dam, kryds og bolle, sænk skibene, durak, uno, poker og backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X vælger / Uno, Y tager, passer eller trækker';
+  String get settingsGamepadHelpCards => 'Kort';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker';
+  String get settingsGamepadHelpKeyboard => 'Tastatur';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';

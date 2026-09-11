@@ -72,25 +72,25 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Risti / tikku — valikot ja laudan kursori';
+  String get settingsGamepadHelpNavigate => 'Valikko';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Risti — vahvista tai siirrä';
+  String get settingsGamepadHelpConfirm => 'Valitse';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Ympyrä — takaisin tai poista valinta';
+  String get settingsGamepadHelpBack => 'Takaisin';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — valikon välilehdet';
+  String get settingsGamepadHelpTabs => 'Välilehdet';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa';
+  String get settingsGamepadHelpCards => 'Kortit';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee';
+  String get settingsGamepadHelpKeyboard => 'Näppäimistö';
 
   @override
   String get gamepadKeyboardTitle => 'Näppäimistö';

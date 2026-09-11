@@ -72,25 +72,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
 
   @override
-  String get settingsGamepadHelpNavigate => '十字 / スティック — メニューと盤上のカーソル';
+  String get settingsGamepadHelpNavigate => 'メニュー';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / × — 決定または着手';
+  String get settingsGamepadHelpConfirm => '決定';
 
   @override
-  String get settingsGamepadHelpBack => 'B / ○ — 戻るまたは選択解除';
+  String get settingsGamepadHelpBack => '戻る';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
+  String get settingsGamepadHelpTabs => 'タブ';
 
   @override
   String get settingsGamepadHelpPlay => '盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン';
 
   @override
-  String get settingsGamepadHelpCards => 'カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー';
+  String get settingsGamepadHelpCards => 'カード';
 
   @override
-  String get settingsGamepadHelpKeyboard => '入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる';
+  String get settingsGamepadHelpKeyboard => 'キーボード';
 
   @override
   String get gamepadKeyboardTitle => 'キーボード';

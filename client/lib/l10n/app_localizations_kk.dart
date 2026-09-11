@@ -72,25 +72,25 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Крест / стик — мәзір және тақтадағы курсор';
+  String get settingsGamepadHelpNavigate => 'Мәзір';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Крест — таңдау немесе жүру';
+  String get settingsGamepadHelpConfirm => 'Таңдау';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Шеңбер — артқа немесе таңдауды алу';
+  String get settingsGamepadHelpBack => 'Артқа';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
+  String get settingsGamepadHelpTabs => 'Қойындылар';
 
   @override
   String get settingsGamepadHelpPlay => 'Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды';
 
   @override
-  String get settingsGamepadHelpCards => 'Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу';
+  String get settingsGamepadHelpCards => 'Карталар';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу';
+  String get settingsGamepadHelpKeyboard => 'Пернетақта';
 
   @override
   String get gamepadKeyboardTitle => 'Пернетақта';

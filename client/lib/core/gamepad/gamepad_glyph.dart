@@ -3,9 +3,7 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
-import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
-import 'package:multigames_client/ui/responsive.dart';
 
 /// Кружок / капсула с подписью кнопки текущего геймпада.
 class GamepadGlyph extends StatelessWidget {
@@ -125,6 +123,38 @@ class GamepadHintLabel extends StatelessWidget {
   }
 }
 
+/// Короткая пара «клавиша + действие» без растягивания на всю ширину.
+class GamepadHintChip extends StatelessWidget {
+  const GamepadHintChip({
+    super.key,
+    required this.action,
+    required this.text,
+    this.family,
+  });
+
+  final GamepadAction action;
+  final String text;
+  final GamepadFamily? family;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GamepadGlyph(action: action, family: family, size: 18),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Нижняя полоска подсказок и бейдж на сфокусированном элементе.
 class GamepadHintsOverlay extends StatefulWidget {
   const GamepadHintsOverlay({super.key});
@@ -160,107 +190,54 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
     if (GamepadKeyboardController.instance.visible) {
       return const SizedBox.shrink();
     }
-    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations);
-    if (l10n == null) return const SizedBox.shrink();
     final family = currentGamepadFamily();
-    final focusBadge = _focusBadge(context, family);
-    final bottomPad = MediaQuery.paddingOf(context).bottom;
-    final navGap = isNarrow(context) ? 58.0 : 10.0;
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          if (focusBadge != null) focusBadge,
-          Positioned(
-            left: 10,
-            right: 10,
-            bottom: bottomPad + navGap,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Material(
-                  color: AppColors.surfaceCard.withValues(alpha: 0.94),
-                  elevation: 6,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 4,
-                      children: [
-                        _legendItem(
-                          GamepadAction.confirm,
-                          l10n.gamepadLegendConfirm,
-                          family,
-                        ),
-                        _legendItem(
-                          GamepadAction.cancel,
-                          l10n.gamepadLegendBack,
-                          family,
-                        ),
-                        _legendItem(
-                          GamepadAction.left,
-                          l10n.gamepadLegendCycle,
-                          family,
-                        ),
-                        _legendItem(
-                          GamepadAction.shoulderL,
-                          l10n.gamepadLegendTabs,
-                          family,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    final highlight = _focusHighlight(context, family);
+    if (highlight == null) return const SizedBox.shrink();
+    return IgnorePointer(child: highlight);
   }
 
-  Widget _legendItem(
-    GamepadAction action,
-    String text,
-    GamepadFamily family,
-  ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GamepadGlyph(action: action, family: family, size: 18),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget? _focusBadge(BuildContext context, GamepadFamily family) {
+  Widget? _focusHighlight(BuildContext context, GamepadFamily family) {
     final node = FocusManager.instance.primaryFocus;
     final ctx = node?.context;
     if (ctx == null || !ctx.mounted) return null;
     if (node == FocusManager.instance.rootScope) return null;
     final box = ctx.findRenderObject();
     if (box is! RenderBox || !box.hasSize || !box.attached) return null;
-    final origin = box.localToGlobal(Offset.zero);
-    return Positioned(
-      left: (origin.dx + box.size.width - 10).clamp(4.0, MediaQuery.sizeOf(context).width - 28),
-      top: (origin.dy - 8).clamp(4.0, MediaQuery.sizeOf(context).height - 28),
-      child: GamepadGlyph(
-        action: GamepadAction.confirm,
-        family: family,
-        size: 20,
-      ),
+    final overlayBox = context.findRenderObject();
+    if (overlayBox is! RenderBox || !overlayBox.hasSize) return null;
+    final size = MediaQuery.sizeOf(context);
+    if (box.size.width > size.width * 0.94 &&
+        box.size.height > size.height * 0.45) {
+      return null;
+    }
+    if (box.size.width < 8 || box.size.height < 8) return null;
+    final topLeft = overlayBox.globalToLocal(box.localToGlobal(Offset.zero));
+    const pad = 3.0;
+    return Stack(
+      children: [
+        Positioned(
+          left: topLeft.dx - pad,
+          top: topLeft.dy - pad,
+          width: box.size.width + pad * 2,
+          height: box.size.height + pad * 2,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.accentStart, width: 2),
+            ),
+          ),
+        ),
+        Positioned(
+          left: (topLeft.dx + box.size.width - 10)
+              .clamp(4.0, size.width - 28),
+          top: (topLeft.dy - 8).clamp(4.0, size.height - 28),
+          child: GamepadGlyph(
+            action: GamepadAction.confirm,
+            family: family,
+            size: 20,
+          ),
+        ),
+      ],
     );
   }
 }

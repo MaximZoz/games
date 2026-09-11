@@ -72,25 +72,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'الأسهم / العصا — القوائم ومؤشر اللوحة';
+  String get settingsGamepadHelpNavigate => 'قائمة';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / تقاطع — تأكيد أو تنفيذ نقلة';
+  String get settingsGamepadHelpConfirm => 'اختيار';
 
   @override
-  String get settingsGamepadHelpBack => 'B / دائرة — رجوع أو إلغاء التحديد';
+  String get settingsGamepadHelpBack => 'رجوع';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — تبويبات القائمة';
+  String get settingsGamepadHelpTabs => 'تبويبات';
 
   @override
   String get settingsGamepadHelpPlay => 'مؤشر اللوحة واليد: الضامة، إكس أو، السفن، الدوراك، أونو، البوكر والنرد';
 
   @override
-  String get settingsGamepadHelpCards => 'في الورق: الأسهم تحرّك اليد، A يلعب، X يختار / أونو، Y يأخذ أو يسحب';
+  String get settingsGamepadHelpCards => 'أوراق';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق';
+  String get settingsGamepadHelpKeyboard => 'لوحة';
 
   @override
   String get gamepadKeyboardTitle => 'لوحة المفاتيح';

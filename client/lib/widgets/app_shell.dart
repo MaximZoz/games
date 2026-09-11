@@ -7,7 +7,12 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
@@ -826,6 +831,7 @@ class AppShell extends ConsumerWidget {
       var next = (selectedIndex + delta) % n;
       if (next < 0) next += n;
       navigateWithPrefetch(next);
+      scheduleFocusFirstVisibleGamepadTarget();
     };
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не
@@ -1098,7 +1104,10 @@ class AppShell extends ConsumerWidget {
                                 railVisible: railVisible,
                               ),
                             ),
-                            child: NavigationRail(
+                            child: _GamepadTabShoulders(
+                              axis: Axis.vertical,
+                              child: ExcludeFocus(
+                              child: NavigationRail(
                       selectedIndex: selectedIndex,
                       onDestinationSelected: navigateWithPrefetch,
                       backgroundColor: Colors.transparent,
@@ -1125,10 +1134,12 @@ class AppShell extends ConsumerWidget {
                           label: Text(item.label),
                         );
                       }).toList(),
+                              ),
                             ),
                           ),
                         ),
                       ),
+                    ),
                     ),
                     Expanded(
                       child: SizedBox.expand(child: branchHost),
@@ -1384,6 +1395,63 @@ class _AppUpdateBanner extends StatelessWidget {
 }
 
 /// Нижняя панель: только иконки + одна подпись по центру с двумя линиями.
+/// LB/RB (или L1/R1, L/R) по краям панели вкладок — только если пад подключён.
+class _GamepadTabShoulders extends StatelessWidget {
+  const _GamepadTabShoulders({
+    required this.child,
+    required this.axis,
+  });
+
+  final Widget child;
+  final Axis axis;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: GamepadService.instance.devices,
+      builder: (context, _) {
+        if (!gamepadConnected()) return child;
+        const glyphSize = 18.0;
+        final left = Padding(
+          padding: axis == Axis.horizontal
+              ? const EdgeInsets.only(left: 2, right: 4)
+              : const EdgeInsets.only(top: 6, bottom: 4),
+          child: const GamepadGlyph(
+            action: GamepadAction.shoulderL,
+            size: glyphSize,
+          ),
+        );
+        final right = Padding(
+          padding: axis == Axis.horizontal
+              ? const EdgeInsets.only(left: 4, right: 2)
+              : const EdgeInsets.only(top: 4, bottom: 6),
+          child: const GamepadGlyph(
+            action: GamepadAction.shoulderR,
+            size: glyphSize,
+          ),
+        );
+        if (axis == Axis.horizontal) {
+          return Row(
+            children: [
+              left,
+              Expanded(child: child),
+              right,
+            ],
+          );
+        }
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            child,
+            Positioned(top: 6, child: left),
+            Positioned(bottom: 6, child: right),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _MobileBottomNav extends StatelessWidget {
   const _MobileBottomNav({
     super.key,
@@ -1418,30 +1486,35 @@ class _MobileBottomNav extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              for (var i = 0; i < navItems.length; i++)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onTap(i),
-                    customBorder: const CircleBorder(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Center(
-                        child: _navIcon(
-                          navItems[i],
-                          unreadChats,
-                          incomingFriends,
-                          gamesMyTurn,
-                          gameInvitesCount,
-                          homeBadgeCount,
-                          selected: i == safeIndex,
+          _GamepadTabShoulders(
+            axis: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < navItems.length; i++)
+                  Expanded(
+                    child: ExcludeFocus(
+                      child: InkWell(
+                        onTap: () => onTap(i),
+                        customBorder: const CircleBorder(),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Center(
+                            child: _navIcon(
+                              navItems[i],
+                              unreadChats,
+                              incomingFriends,
+                              gamesMyTurn,
+                              gameInvitesCount,
+                              homeBadgeCount,
+                              selected: i == safeIndex,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           // Симметричная подпись: линия — текст — линия (тот же стиль, что splash).

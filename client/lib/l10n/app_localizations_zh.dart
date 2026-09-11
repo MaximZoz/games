@@ -72,25 +72,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
 
   @override
-  String get settingsGamepadHelpNavigate => '方向键 / 摇杆 — 菜单和棋盘光标';
+  String get settingsGamepadHelpNavigate => '菜单';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 叉 — 确认或落子';
+  String get settingsGamepadHelpConfirm => '选择';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 圈 — 返回或取消选择';
+  String get settingsGamepadHelpBack => '返回';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
+  String get settingsGamepadHelpTabs => '标签';
 
   @override
   String get settingsGamepadHelpPlay => '棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆';
 
   @override
-  String get settingsGamepadHelpCards => '卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌';
+  String get settingsGamepadHelpCards => '卡牌';
 
   @override
-  String get settingsGamepadHelpKeyboard => '在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭';
+  String get settingsGamepadHelpKeyboard => '键盘';
 
   @override
   String get gamepadKeyboardTitle => '键盘';

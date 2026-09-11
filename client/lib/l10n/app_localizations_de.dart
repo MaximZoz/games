@@ -72,25 +72,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Kein Gamepad gefunden. Controller anschließen und eine Taste drücken.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kreuz / Stick — Menüs und Feldcursor';
+  String get settingsGamepadHelpNavigate => 'Menü';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kreuz — bestätigen oder ziehen';
+  String get settingsGamepadHelpConfirm => 'Wählen';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kreis — zurück oder Auswahl aufheben';
+  String get settingsGamepadHelpBack => 'Zurück';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — Menü-Tabs';
+  String get settingsGamepadHelpTabs => 'Tabs';
 
   @override
   String get settingsGamepadHelpPlay => 'Feld- und Handcursor: Dame, Tic-Tac-Toe, Schiffe versenken, Durak, Uno, Poker und Backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Bei Karten: Kreuz bewegt die Hand, A spielt, X wählt / Uno, Y nimmt, passt oder zieht';
+  String get settingsGamepadHelpCards => 'Karten';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Im Textfeld öffnet A die Gamepad-Tastatur; X wechselt das Layout, B löscht oder schließt';
+  String get settingsGamepadHelpKeyboard => 'Tastatur';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';

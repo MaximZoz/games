@@ -72,25 +72,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No hay mando. Conéctalo y pulsa cualquier botón.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Cruz / stick — menús y cursor en el tablero';
+  String get settingsGamepadHelpNavigate => 'Menú';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cruz — confirmar o mover';
+  String get settingsGamepadHelpConfirm => 'Elegir';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Círculo — atrás o quitar selección';
+  String get settingsGamepadHelpBack => 'Atrás';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — pestañas del menú';
+  String get settingsGamepadHelpTabs => 'Pestañas';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor de tablero y mano: damas, tres en raya, hundir la flota, durak, uno, póker y backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'En cartas: cruceta mueve la mano, A juega, X selecciona / Uno, Y toma, pasa o roba';
+  String get settingsGamepadHelpCards => 'Cartas';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'En un campo A abre el teclado del mando; X cambia el diseño, B borra o cierra';
+  String get settingsGamepadHelpKeyboard => 'Teclado';
 
   @override
   String get gamepadKeyboardTitle => 'Teclado';

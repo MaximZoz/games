@@ -72,25 +72,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Yön tuşları / çubuk — menü ve tahta imleci';
+  String get settingsGamepadHelpNavigate => 'Menü';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Çarpı — onayla veya hamle yap';
+  String get settingsGamepadHelpConfirm => 'Seç';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Daire — geri veya seçimi kaldır';
+  String get settingsGamepadHelpBack => 'Geri';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menü sekmeleri';
+  String get settingsGamepadHelpTabs => 'Sekmeler';
 
   @override
   String get settingsGamepadHelpPlay => 'Tahta ve el imleci: dama, xox, amiral battı, durak, uno, poker ve tavla';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartlarda: yön tuşları eli gezer, A oynar, X seçer / Uno, Y alır, geçer veya çeker';
+  String get settingsGamepadHelpCards => 'Kartlar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır';
+  String get settingsGamepadHelpKeyboard => 'Klavye';
 
   @override
   String get gamepadKeyboardTitle => 'Klavye';

@@ -248,6 +248,94 @@ void main() {
     expect(tapped, 1);
   });
 
+  test('подсказки только при подключённом геймпаде', () {
+    final service = GamepadService.instance;
+    service.start();
+    service.markActive();
+    expect(gamepadConnected(), isFalse);
+    expect(gamepadHintsWanted(), isFalse);
+    service.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    expect(gamepadConnected(), isTrue);
+    expect(gamepadHintsWanted(), isTrue);
+    expect(currentGamepadFamily(), GamepadFamily.xbox);
+  });
+
+  testWidgets('B закрывает диалог из GamepadHost над навигатором',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => GamepadHost(
+            child: child ?? const SizedBox.shrink(),
+          ),
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    autofocus: true,
+                    onPressed: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (_) => const AlertDialog(
+                          content: Text('dlg'),
+                        ),
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(find.text('dlg'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pumpAndSettle();
+    expect(find.text('dlg'), findsNothing);
+  });
+
+  testWidgets('оверлей не показывает легенду над вкладками', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: FilledButton(
+                  autofocus: true,
+                  onPressed: () {},
+                  child: const Text('OK'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Вкладки'), findsNothing);
+    expect(find.text('Сменить'), findsNothing);
+  });
+
   testWidgets('GamepadHost по A переключает сфокусированный Switch',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

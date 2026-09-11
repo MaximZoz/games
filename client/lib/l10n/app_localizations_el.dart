@@ -72,25 +72,25 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα';
+  String get settingsGamepadHelpNavigate => 'Μενού';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Σταυρός — επιβεβαίωση ή κίνηση';
+  String get settingsGamepadHelpConfirm => 'Επιλογή';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Κύκλος — πίσω ή αποεπιλογή';
+  String get settingsGamepadHelpBack => 'Πίσω';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
+  String get settingsGamepadHelpTabs => 'Καρτέλες';
 
   @override
   String get settingsGamepadHelpPlay => 'Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι';
 
   @override
-  String get settingsGamepadHelpCards => 'Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει';
+  String get settingsGamepadHelpCards => 'Χαρτιά';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει';
+  String get settingsGamepadHelpKeyboard => 'Πληκτρολόγιο';
 
   @override
   String get gamepadKeyboardTitle => 'Πληκτρολόγιο';

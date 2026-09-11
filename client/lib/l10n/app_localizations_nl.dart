@@ -72,25 +72,25 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kruis / stick — menu\'s en bordcursor';
+  String get settingsGamepadHelpNavigate => 'Menu';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kruis — bevestigen of zetten';
+  String get settingsGamepadHelpConfirm => 'Kiezen';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — terug of deselecteren';
+  String get settingsGamepadHelpBack => 'Terug';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
+  String get settingsGamepadHelpTabs => 'Tabbladen';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt';
+  String get settingsGamepadHelpCards => 'Kaarten';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit';
+  String get settingsGamepadHelpKeyboard => 'Toetsenbord';
 
   @override
   String get gamepadKeyboardTitle => 'Toetsenbord';

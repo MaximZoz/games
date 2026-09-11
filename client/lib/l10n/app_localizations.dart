@@ -278,25 +278,25 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpNavigate.
   ///
   /// In ru, this message translates to:
-  /// **'Крест / стик — меню и курсор на поле'**
+  /// **'Меню'**
   String get settingsGamepadHelpNavigate;
 
   /// No description provided for @settingsGamepadHelpConfirm.
   ///
   /// In ru, this message translates to:
-  /// **'A / Крест — выбрать или сходить'**
+  /// **'Выбрать'**
   String get settingsGamepadHelpConfirm;
 
   /// No description provided for @settingsGamepadHelpBack.
   ///
   /// In ru, this message translates to:
-  /// **'B / Круг — назад или снять выбор'**
+  /// **'Назад'**
   String get settingsGamepadHelpBack;
 
   /// No description provided for @settingsGamepadHelpTabs.
   ///
   /// In ru, this message translates to:
-  /// **'L1 / R1 — вкладки меню'**
+  /// **'Вкладки'**
   String get settingsGamepadHelpTabs;
 
   /// No description provided for @settingsGamepadHelpPlay.
@@ -308,13 +308,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpCards.
   ///
   /// In ru, this message translates to:
-  /// **'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать'**
+  /// **'Карты'**
   String get settingsGamepadHelpCards;
 
   /// No description provided for @settingsGamepadHelpKeyboard.
   ///
   /// In ru, this message translates to:
-  /// **'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть'**
+  /// **'Клавиатура'**
   String get settingsGamepadHelpKeyboard;
 
   /// No description provided for @gamepadKeyboardTitle.

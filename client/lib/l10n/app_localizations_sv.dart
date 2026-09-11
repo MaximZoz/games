@@ -72,25 +72,25 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Styrkors / spak — menyer och brädcursor';
+  String get settingsGamepadHelpNavigate => 'Meny';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kors — bekräfta eller göra ett drag';
+  String get settingsGamepadHelpConfirm => 'Välj';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — tillbaka eller avmarkera';
+  String get settingsGamepadHelpBack => 'Tillbaka';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyflikar';
+  String get settingsGamepadHelpTabs => 'Flikar';
 
   @override
   String get settingsGamepadHelpPlay => 'Markör på bräde och hand: dam, luffarschack, sänka skepp, durak, uno, poker och backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'I kort: styrkors flyttar handen, A spelar, X väljer / Uno, Y tar, passar eller drar';
+  String get settingsGamepadHelpCards => 'Kort';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger';
+  String get settingsGamepadHelpKeyboard => 'Tangentbord';
 
   @override
   String get gamepadKeyboardTitle => 'Tangentbord';

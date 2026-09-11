@@ -129,8 +129,11 @@ GamepadButtonLook gamepadButtonLook(
   }
 }
 
-bool gamepadHintsWanted() {
+/// Контроллер реально в списке устройств — не «недавно нажимали».
+bool gamepadConnected() {
   final service = GamepadService.instance;
-  if (!service.isRunning) return false;
-  return service.devices.value.isNotEmpty || service.isRecentlyActive;
+  return service.isRunning && service.devices.value.isNotEmpty;
 }
+
+/// Подсказки и глифы только при подключённом геймпаде.
+bool gamepadHintsWanted() => gamepadConnected();

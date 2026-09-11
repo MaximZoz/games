@@ -72,25 +72,25 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'חיצים / סטיק — תפריטים וסמן על הלוח';
+  String get settingsGamepadHelpNavigate => 'תפריט';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / איקס — אישור או מהלך';
+  String get settingsGamepadHelpConfirm => 'בחירה';
 
   @override
-  String get settingsGamepadHelpBack => 'B / עיגול — חזרה או ביטול בחירה';
+  String get settingsGamepadHelpBack => 'חזרה';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
+  String get settingsGamepadHelpTabs => 'לשוניות';
 
   @override
   String get settingsGamepadHelpPlay => 'סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש';
 
   @override
-  String get settingsGamepadHelpCards => 'בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף';
+  String get settingsGamepadHelpCards => 'קלפים';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר';
+  String get settingsGamepadHelpKeyboard => 'מקלדת';
 
   @override
   String get gamepadKeyboardTitle => 'מקלדת';
