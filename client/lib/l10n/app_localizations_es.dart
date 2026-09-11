@@ -72,6 +72,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No hay mando. Conéctalo y pulsa cualquier botón.';
 
   @override
+  String get settingsGamepadGenericName => 'Mando';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menú';
 
   @override

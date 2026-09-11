@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Geen gamepad. Sluit een controller aan en druk op een knop.",
+  "settingsGamepadGenericName": "Controller",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Kiezen",
   "settingsGamepadHelpBack": "Terug",

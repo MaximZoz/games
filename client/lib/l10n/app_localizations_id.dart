@@ -72,6 +72,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontroler';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

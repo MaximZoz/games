@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "לא נמצא גיימפד. חברו בקר ולחצו על כפתור.",
+  "settingsGamepadGenericName": "בקר",
   "settingsGamepadHelpNavigate": "תפריט",
   "settingsGamepadHelpConfirm": "בחירה",
   "settingsGamepadHelpBack": "חזרה",

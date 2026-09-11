@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.",
+  "settingsGamepadGenericName": "Контроллер",
   "settingsGamepadHelpNavigate": "Мәзір",
   "settingsGamepadHelpConfirm": "Таңдау",
   "settingsGamepadHelpBack": "Артқа",

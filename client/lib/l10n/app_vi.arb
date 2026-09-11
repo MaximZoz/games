@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.",
+  "settingsGamepadGenericName": "Tay cầm",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Chọn",
   "settingsGamepadHelpBack": "Quay lại",

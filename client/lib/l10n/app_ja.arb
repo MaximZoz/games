@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "ゲームパッドがありません。接続していずれかのボタンを押してください。",
+  "settingsGamepadGenericName": "コントローラー",
   "settingsGamepadHelpNavigate": "メニュー",
   "settingsGamepadHelpConfirm": "決定",
   "settingsGamepadHelpBack": "戻る",

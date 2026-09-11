@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "No hay mando. Conéctalo y pulsa cualquier botón.",
+  "settingsGamepadGenericName": "Mando",
   "settingsGamepadHelpNavigate": "Menú",
   "settingsGamepadHelpConfirm": "Elegir",
   "settingsGamepadHelpBack": "Atrás",

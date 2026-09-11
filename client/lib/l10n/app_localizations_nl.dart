@@ -72,6 +72,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
 
   @override
+  String get settingsGamepadGenericName => 'Controller';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

@@ -72,6 +72,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
 
   @override
+  String get settingsGamepadGenericName => 'Tay cầm';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

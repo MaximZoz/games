@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้",
+  "settingsGamepadGenericName": "คอนโทรลเลอร์",
   "settingsGamepadHelpNavigate": "เมนู",
   "settingsGamepadHelpConfirm": "เลือก",
   "settingsGamepadHelpBack": "กลับ",

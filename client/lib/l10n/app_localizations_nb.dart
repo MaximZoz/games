@@ -72,6 +72,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Koble til en kontroller og trykk på en knapp.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontroller';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Meny';
 
   @override

@@ -72,6 +72,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
 
   @override
+  String get settingsGamepadGenericName => 'Manette';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

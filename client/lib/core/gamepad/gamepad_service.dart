@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
+import 'package:multigames_client/core/gamepad/gamepad_native.dart';
 import 'package:multigames_client/core/gamepad/gamepad_poller.dart';
 
 /// Глобальный ввод с геймпада и клавиш, которые контроллер эмулирует.
@@ -27,8 +29,15 @@ class GamepadService {
   DateTime? lastActiveAt;
   bool _running = false;
   bool _keyHandlerAttached = false;
+  Timer? _nativePoll;
+  bool _nativePollScheduled = false;
 
   static const recentWindow = Duration(minutes: 10);
+  static const keyPadId = 'key-pad';
+
+  /// В виджетах-тестах выключаем, чтобы не оставлять периодический Timer.
+  @visibleForTesting
+  static bool debugPollNative = true;
 
   bool get isRunning => _running;
 
@@ -49,11 +58,24 @@ class GamepadService {
       HardwareKeyboard.instance.addHandler(_onKey);
       _keyHandlerAttached = true;
     }
+    _nativePoll?.cancel();
+    _nativePoll = null;
+    if (debugPollNative &&
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      _nativePoll = Timer.periodic(const Duration(seconds: 2), (_) {
+        unawaited(_refreshNativeDevices());
+      });
+      unawaited(_refreshNativeDevices());
+    }
   }
 
   void stop() {
     if (!_running && !_keyHandlerAttached) return;
     _running = false;
+    _nativePoll?.cancel();
+    _nativePoll = null;
+    _nativePollScheduled = false;
     _poller.stop();
     if (_keyHandlerAttached) {
       HardwareKeyboard.instance.removeHandler(_onKey);
@@ -83,6 +105,7 @@ class GamepadService {
     devices.value = const [];
     lastActiveAt = null;
     activityTick.value = 0;
+    debugPollNative = true;
     GamepadKeyboardController.instance.hide();
   }
 
@@ -104,14 +127,66 @@ class GamepadService {
       return false;
     }
     if (event is KeyRepeatEvent && !action.isDirection) return false;
+    final fromPad = isDedicatedGamepadKey(event.logicalKey);
+    if (fromPad) {
+      _rememberKeyGamepad();
+      unawaited(_refreshNativeDevices());
+    }
     _emit(
       GamepadActionEvent(
         action: action,
-        source: 'key',
-        deviceName: 'Keyboard',
+        source: fromPad ? 'pad' : 'key',
+        deviceName: fromPad ? 'Gamepad' : 'Keyboard',
       ),
     );
     return true;
+  }
+
+  void _rememberKeyGamepad() {
+    if (devices.value.isNotEmpty) return;
+    devices.value = const [
+      GamepadDevice(id: keyPadId, name: 'Gamepad', index: 0),
+    ];
+  }
+
+  Future<void> _refreshNativeDevices() async {
+    if (!_running || _nativePollScheduled) return;
+    _nativePollScheduled = true;
+    try {
+      final listed = await listNativeGamepads();
+      if (!_running) return;
+      if (listed.isNotEmpty) {
+        if (!_sameDevices(devices.value, listed)) {
+          devices.value = listed;
+        }
+        return;
+      }
+      if (kIsWeb) return;
+      final current = devices.value;
+      if (current.isEmpty) return;
+      final onlyKey = current.every((d) => d.id == keyPadId);
+      if (onlyKey && isRecentlyActive) return;
+      if (onlyKey || current.any((d) => d.id.startsWith('android-'))) {
+        devices.value = const [];
+      }
+    } finally {
+      _nativePollScheduled = false;
+    }
+  }
+
+  static bool _sameDevices(List<GamepadDevice> a, List<GamepadDevice> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  /// Для тестов: кнопка геймпада без полного KeyEvent.
+  @visibleForTesting
+  void noteDedicatedGamepadKey() {
+    _rememberKeyGamepad();
+    markActive();
   }
 }
 

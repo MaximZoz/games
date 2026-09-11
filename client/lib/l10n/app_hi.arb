@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।",
+  "settingsGamepadGenericName": "कंट्रोलर",
   "settingsGamepadHelpNavigate": "मेनू",
   "settingsGamepadHelpConfirm": "चुनें",
   "settingsGamepadHelpBack": "वापस",

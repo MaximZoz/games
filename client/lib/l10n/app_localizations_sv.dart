@@ -72,6 +72,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontroll';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Meny';
 
   @override

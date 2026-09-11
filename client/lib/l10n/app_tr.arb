@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.",
+  "settingsGamepadGenericName": "Kontrolcü",
   "settingsGamepadHelpNavigate": "Menü",
   "settingsGamepadHelpConfirm": "Seç",
   "settingsGamepadHelpBack": "Geri",

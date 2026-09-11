@@ -72,6 +72,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontroler';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

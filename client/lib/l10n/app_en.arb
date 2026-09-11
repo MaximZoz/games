@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "No gamepad found. Connect a controller and press any button.",
+  "settingsGamepadGenericName": "Controller",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Select",
   "settingsGamepadHelpBack": "Back",

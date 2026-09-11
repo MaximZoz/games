@@ -72,6 +72,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
 
   @override
+  String get settingsGamepadGenericName => 'Kontroller';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menyu';
 
   @override

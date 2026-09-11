@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.",
+  "settingsGamepadGenericName": "Ovladač",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Vybrat",
   "settingsGamepadHelpBack": "Zpět",

@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.",
+  "settingsGamepadGenericName": "وحدة التحكم",
   "settingsGamepadHelpNavigate": "قائمة",
   "settingsGamepadHelpConfirm": "اختيار",
   "settingsGamepadHelpBack": "رجوع",

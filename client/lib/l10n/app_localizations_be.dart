@@ -72,6 +72,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад не знойдзены. Падключыце кантролер і націсніце любую кнопку.';
 
   @override
+  String get settingsGamepadGenericName => 'Кантролер';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Меню';
 
   @override

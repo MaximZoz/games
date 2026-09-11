@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Aucune manette. Branchez-en une et appuyez sur un bouton.",
+  "settingsGamepadGenericName": "Manette",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Choisir",
   "settingsGamepadHelpBack": "Retour",

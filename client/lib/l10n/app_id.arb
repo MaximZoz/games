@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.",
+  "settingsGamepadGenericName": "Kontroler",
   "settingsGamepadHelpNavigate": "Menu",
   "settingsGamepadHelpConfirm": "Pilih",
   "settingsGamepadHelpBack": "Kembali",

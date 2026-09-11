@@ -275,6 +275,12 @@ abstract class AppLocalizations {
   /// **'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.'**
   String get settingsGamepadDisconnected;
 
+  /// No description provided for @settingsGamepadGenericName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер'**
+  String get settingsGamepadGenericName;
+
   /// No description provided for @settingsGamepadHelpNavigate.
   ///
   /// In ru, this message translates to:

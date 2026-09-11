@@ -72,6 +72,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
 
   @override
+  String get settingsGamepadGenericName => 'Ovladač';
+
+  @override
   String get settingsGamepadHelpNavigate => 'Menu';
 
   @override

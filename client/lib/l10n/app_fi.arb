@@ -28,6 +28,7 @@
     }
   },
   "settingsGamepadDisconnected": "Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.",
+  "settingsGamepadGenericName": "Ohjain",
   "settingsGamepadHelpNavigate": "Valikko",
   "settingsGamepadHelpConfirm": "Valitse",
   "settingsGamepadHelpBack": "Takaisin",
