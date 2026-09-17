@@ -163,6 +163,71 @@ void main() {
       expect(durakShouldSeatPrevTableCard(remoteFlying: true), isFalse);
       expect(durakShouldSeatPrevTableCard(remoteFlying: false), isTrue);
       expect(
+        durakTableCardAlreadyVisible(
+          seated: true,
+          existedOnKnownTable: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableCardAlreadyVisible(
+          seated: false,
+          existedOnKnownTable: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakTableCardAlreadyVisible(
+          seated: false,
+          existedOnKnownTable: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldClearSeatedOnEmptyTable(
+          hidingTable: false,
+          takeHold: false,
+          localPlayActive: true,
+        ),
+        isFalse,
+      );
+      expect(
+        durakShouldClearSeatedOnEmptyTable(
+          hidingTable: false,
+          takeHold: false,
+          localPlayActive: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepVisibleCardInPrevTable(
+          remoteFlying: true,
+          seated: true,
+        ),
+        isTrue,
+      );
+      expect(
+        durakKeepVisibleCardInPrevTable(
+          remoteFlying: true,
+          seated: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakSeatUnhiddenTableCard(
+          remoteFlying: true,
+          localFlying: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakSeatUnhiddenTableCard(
+          remoteFlying: false,
+          localFlying: false,
+        ),
+        isTrue,
+      );
+      expect(
         durakTableFxDeferred(
           fxScheduled: false,
           busy: false,

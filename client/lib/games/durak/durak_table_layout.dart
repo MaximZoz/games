@@ -91,6 +91,13 @@ bool durakKeepServerTablePair({
   return !optimistic && !flyingToTable && !remoteFlying;
 }
 
+/// Карта уже лежит на столе — не прятать как «новый remote».
+bool durakTableCardAlreadyVisible({
+  required bool seated,
+  required bool existedOnKnownTable,
+}) =>
+    seated || existedOnKnownTable;
+
 /// Новую чужую атаку прячем, пока busy/replay не успели запустить полёт.
 bool durakHideDeferredRemoteAttack({
   required bool existedOnPrevTable,
@@ -99,9 +106,39 @@ bool durakHideDeferredRemoteAttack({
   required bool fxDeferred,
   bool seated = false,
 }) {
-  if (optimistic || localFlying || existedOnPrevTable || seated) return false;
+  if (optimistic ||
+      localFlying ||
+      durakTableCardAlreadyVisible(
+        seated: seated,
+        existedOnKnownTable: existedOnPrevTable,
+      )) {
+    return false;
+  }
   return fxDeferred;
 }
+
+/// Пустой кадр сервера не сбрасывает seated, пока свой ход ещё на столе.
+bool durakShouldClearSeatedOnEmptyTable({
+  required bool hidingTable,
+  required bool takeHold,
+  required bool localPlayActive,
+}) =>
+    !hidingTable && !takeHold && !localPlayActive;
+
+/// В prev оставляем севшую карту, даже если id ещё в remote-наборе.
+bool durakKeepVisibleCardInPrevTable({
+  required bool remoteFlying,
+  required bool seated,
+}) =>
+    seated || !remoteFlying;
+
+/// После hide/schedule сажаем всё, что уже не летит — иначе следующий
+/// кадр снова пометит карту remote и погасит слот в 0.
+bool durakSeatUnhiddenTableCard({
+  required bool remoteFlying,
+  required bool localFlying,
+}) =>
+    !remoteFlying && !localFlying;
 
 /// Remote-id не должен прятать уже севшую / свою / летящую локально карту.
 bool durakShouldHideRemoteTableCard({
