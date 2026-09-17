@@ -2127,13 +2127,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _flyingToTable.isNotEmpty ||
       _flightLockTable;
 
-  /// Свой overlay, busy или карта вытянута из веера — чужой FX стола ждёт.
+  /// Свой overlay или busy — чужой FX стола ждёт.
+  /// Подъём карты из веера не держит FX: соперник должен лететь сразу.
   bool get _tableFxDeferred => durakTableFxDeferred(
         fxScheduled: _fxScheduled,
         busy: _busy,
         localAttackHold: _localAttackHold,
         cardFlightActive: _cardFlightActive,
-        holdingFanCard: _holdingFanCard,
       );
 
   bool get _localAttackHold => durakHoldTableFxForLocalAttack(
@@ -6532,7 +6532,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final focus =
         _activeCard ?? (_selected.isNotEmpty ? _selected.first : null);
     // Подсказки при подъёме: все бьющиеся атаки + слот перевода в сетке.
-    final lifting = _flightLockTable || (!_busy && _activeCard != null);
+    final lifting = _flightLockTable ||
+        (!_busy && (_activeCard != null || _holdingFanCard));
     final highlightAttack = lifting && _highlightAttackSlot(view);
     final int defendPairIndex;
     if (_flightLockTable && _flightDefendIdx != null) {
@@ -6677,12 +6678,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 attackKey: _attackKeyFor(pendingAttacks[i]),
               ),
             ),
-        // Слот атаки/перевода — только при подъёме карты (как раньше):
-        // иначе карта летит в «зарезервированный» центр/слот, а после
-        // посадки сетка перестраивается и карта «прыгает» на место.
-        // topLeft как у атаки в _AnimatedTablePair (не Center).
-        if (hold == null && showTableDropSlot)
-          KeyedSubtree(
+      ],
+    ];
+    // Подсказка перевода/атаки — оверлей, не ячейка ряда: иначе 2→3→2
+    // дёргает лежащие карты влево-вправо и даёт моргание при переводе.
+    final dropHint = hold == null &&
+            showTableDropSlot &&
+            !durakDropHintOccupiesPairSlot()
+        ? KeyedSubtree(
             key: _attackSlotKey,
             child: SizedBox(
               width: cardSize.width + 18,
@@ -6697,9 +6700,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 ),
               ),
             ),
-          ),
-      ],
-    ];
+          )
+        : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -6792,6 +6794,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       animateSlots: !_suppressFanLayoutAnim &&
                           hold == null &&
                           !_hidingTable,
+                      dropHint: dropHint,
                     ),
                   ),
                 ),
@@ -6881,6 +6884,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     required Size cardSize,
     required double maxWidth,
     bool animateSlots = true,
+    Widget? dropHint,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
     final n = items.length;
@@ -6912,6 +6916,25 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
           width: pairW,
           height: pairH,
           child: items[i],
+        ),
+      );
+    }
+    if (dropHint != null) {
+      final hintAt = durakTablePairSlotOrigin(
+        maxWidth: maxWidth,
+        cardSize: cardSize,
+        pairIndex: n,
+        pairCount: n + 1,
+        compact: _fit.compact,
+        cols: cols,
+      );
+      slots.add(
+        Positioned(
+          left: hintAt.dx,
+          top: hintAt.dy,
+          width: pairW,
+          height: pairH,
+          child: dropHint,
         ),
       );
     }
