@@ -34,7 +34,10 @@ android {
 
     defaultConfig {
         // applicationId задаётся в productFlavors (prod / dev).
-        minSdk = flutter.minSdkVersion
+        // Play Automatic Protection требует minSdk >= 24.
+        // Flutter 3.27 даёт flutter.minSdkVersion = 21 — upload падает:
+        // "Play automatic protection requires a minimum SDK version of 24".
+        minSdk = 24
         // Play с 31.08.2026 принимает только targetSdk >= 36 (Android 16).
         // Flutter 3.27.4 даёт flutter.targetSdkVersion = 35 — из-за этого
         // r0adkll/upload-google-play падает: "Target SDK of artifact is too low".

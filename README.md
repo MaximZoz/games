@@ -394,7 +394,7 @@ cp deploy.dev.env.example deploy.dev.env
 
 На push в `develop` гоняется **Deploy Fly** (DEV): `flyctl` ставится с GitHub Releases (`v0.4.97`) с повторами, не через `setup-flyctl@v1`. Workflow `CI` (analyze/test) стартует при влитии в `main` и вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
 
-**Android → Play Internal** (при изменениях в `client/**`): workflow **Android Play Internal** собирает signed AAB и заливает в Internal testing — `develop` → flavor **dev** (`com.zozugames.app.dev` + DEV API), `main` → flavor **prod** (`com.zozugames.app` + prod API). Оба приложения ставятся на телефон рядом. AAB должен быть с `targetSdk = 36` (требование Play с 31.08.2026; Flutter 3.27 сам даёт 35). Нужны секреты keystore + Play service account и **второе** приложение в Play для `.dev` — см. `docs/ANDROID_PLAY_INTERNAL.md`.
+**Android → Play Internal** (при изменениях в `client/**`): workflow **Android Play Internal** собирает signed AAB и заливает в Internal testing — `develop` → flavor **dev** (`com.zozugames.app.dev` + DEV API), `main` → flavor **prod** (`com.zozugames.app` + prod API). Оба приложения ставятся на телефон рядом. AAB должен быть с `targetSdk = 36` (требование Play с 31.08.2026; Flutter 3.27 сам даёт 35) и `minSdk = 24` (Play Automatic Protection; Flutter 3.27 сам даёт 21). Нужны секреты keystore + Play service account и **второе** приложение в Play для `.dev` — см. `docs/ANDROID_PLAY_INTERNAL.md`.
 
 Windows:
 
