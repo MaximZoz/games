@@ -375,7 +375,56 @@ void main() {
         ),
         isFalse,
       );
-      expect(durakRevealTableBeforeDismissOverlay(tableCardVisible: true), isTrue);
+      expect(kDurakMyTurnIdleHintDelay, const Duration(seconds: 5));
+      expect(
+        durakMyTurnIdleHintVisible(
+          isMyTurn: true,
+          holdingFanCard: false,
+          idleElapsed: true,
+          gameOver: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakMyTurnIdleHintVisible(
+          isMyTurn: true,
+          holdingFanCard: false,
+          idleElapsed: false,
+          gameOver: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakMyTurnIdleHintVisible(
+          isMyTurn: true,
+          holdingFanCard: true,
+          idleElapsed: true,
+          gameOver: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakFirstLeadBannerVisible(
+          firstRound: true,
+          tableEmpty: true,
+          firstLeadArmed: true,
+          holdingFanCard: false,
+          gameOver: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakFirstLeadBannerVisible(
+          firstRound: true,
+          tableEmpty: true,
+          firstLeadArmed: true,
+          holdingFanCard: true,
+          gameOver: false,
+        ),
+        isFalse,
+      );
+      expect(
+          durakRevealTableBeforeDismissOverlay(tableCardVisible: true), isTrue);
       expect(
         durakRevealTableBeforeDismissOverlay(tableCardVisible: false),
         isFalse,
@@ -443,7 +492,8 @@ void main() {
     });
 
     test('в биту — только после посадки отбоя', () {
-      expect(kDurakBitoAfterDefensePause.inMilliseconds, greaterThanOrEqualTo(800));
+      expect(kDurakBitoAfterDefensePause.inMilliseconds,
+          greaterThanOrEqualTo(800));
       expect(
         durakTableReadyForBitoFlight(
           remoteFlying: true,
