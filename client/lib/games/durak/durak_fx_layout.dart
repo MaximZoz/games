@@ -405,7 +405,7 @@ bool durakActionChromeVisible({
     liveCanShow && !holdingFanCard;
 
 /// «Ваш ход» — только после паузы, пока карту не взяли из веера.
-const Duration kDurakMyTurnIdleHintDelay = Duration(seconds: 5);
+const Duration kDurakMyTurnIdleHintDelay = Duration(seconds: 10);
 
 bool durakMyTurnIdleHintVisible({
   required bool isMyTurn,
@@ -416,6 +416,14 @@ bool durakMyTurnIdleHintVisible({
   if (gameOver || !isMyTurn || holdingFanCard) return false;
   return idleElapsed;
 }
+
+/// Часы «ваш ход» привязаны только к смене хода, не к phase/attacker.
+bool durakMyTurnIdleClockActive({
+  required bool isMyTurn,
+  required bool gameOver,
+  required bool localPlayActive,
+}) =>
+    isMyTurn && !gameOver && !localPlayActive;
 
 bool durakFirstLeadBannerVisible({
   required bool firstRound,

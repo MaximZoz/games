@@ -375,7 +375,7 @@ void main() {
         ),
         isFalse,
       );
-      expect(kDurakMyTurnIdleHintDelay, const Duration(seconds: 5));
+      expect(kDurakMyTurnIdleHintDelay, const Duration(seconds: 10));
       expect(
         durakMyTurnIdleHintVisible(
           isMyTurn: true,
@@ -400,6 +400,22 @@ void main() {
           holdingFanCard: true,
           idleElapsed: true,
           gameOver: false,
+        ),
+        isFalse,
+      );
+      expect(
+        durakMyTurnIdleClockActive(
+          isMyTurn: true,
+          gameOver: false,
+          localPlayActive: false,
+        ),
+        isTrue,
+      );
+      expect(
+        durakMyTurnIdleClockActive(
+          isMyTurn: true,
+          gameOver: false,
+          localPlayActive: true,
         ),
         isFalse,
       );
