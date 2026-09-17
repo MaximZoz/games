@@ -122,19 +122,23 @@ bool durakShouldHideRemoteTableCard({
 bool durakShouldSeatPrevTableCard({required bool remoteFlying}) =>
     !remoteFlying;
 
-/// FX стола ждём: свой ход, overlay или карта вытянута из веера.
+/// FX стола ждём только на свой ход / overlay.
+///
+/// Карта, вытянутая из веера, сюда не входит: иначе чужой подкид/перевод
+/// не виден, пока игрок держит карту.
 bool durakTableFxDeferred({
   required bool fxScheduled,
   required bool busy,
   required bool localAttackHold,
   required bool cardFlightActive,
-  required bool holdingFanCard,
 }) =>
-    fxScheduled ||
-    busy ||
-    localAttackHold ||
-    cardFlightActive ||
-    holdingFanCard;
+    fxScheduled || busy || localAttackHold || cardFlightActive;
+
+/// Подсказку перевода/атаки не кладём в ряд пар.
+///
+/// Иначе 2 карты + слот = 3 ячейки, на drop слот на кадр пропадает —
+/// лежащие карты едут влево-вправо, а при переводе ещё и моргают.
+bool durakDropHintOccupiesPairSlot() => false;
 
 /// Скрытую на время busy карту пора снова показать: она уже своя или сидит.
 ///

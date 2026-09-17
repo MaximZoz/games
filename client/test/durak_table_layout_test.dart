@@ -168,17 +168,6 @@ void main() {
           busy: false,
           localAttackHold: false,
           cardFlightActive: false,
-          holdingFanCard: true,
-        ),
-        isTrue,
-      );
-      expect(
-        durakTableFxDeferred(
-          fxScheduled: false,
-          busy: false,
-          localAttackHold: false,
-          cardFlightActive: false,
-          holdingFanCard: false,
         ),
         isFalse,
       );
@@ -188,10 +177,10 @@ void main() {
           busy: false,
           localAttackHold: false,
           cardFlightActive: false,
-          holdingFanCard: false,
         ),
         isTrue,
       );
+      expect(durakDropHintOccupiesPairSlot(), isFalse);
       expect(
         durakRemoteAttackFromSeat(attackerIndex: 0, throwerIndex: 2),
         2,
