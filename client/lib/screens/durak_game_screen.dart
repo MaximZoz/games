@@ -2064,6 +2064,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       pairCount: n,
       compact: _fit.compact,
       cols: _tableCols,
+      maxWidth: table?.width,
     );
   }
 
@@ -6610,13 +6611,6 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     // При «Взять» рисуем снимок стола — сервер уже пустой, карты улетают по одной.
     final hold = _takeTableHold;
     final sourceTable = hold ?? view.table;
-    var settledVisible = 0;
-    for (final p in sourceTable) {
-      final atk = p.attack.toPlayingCard();
-      if (_isSeatedTableCard(atk) && !_isRemoteTableCardHidden(atk)) {
-        settledVisible++;
-      }
-    }
     final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < sourceTable.length; i++)
@@ -6795,10 +6789,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       items: tableItems,
                       cardSize: cardSize,
                       maxWidth: tableMaxW,
-                      pinFirstSlot: durakPinExistingTablePair(
-                        settledCount: settledVisible,
-                        layoutCount: tableItems.length,
-                      ),
+                      animateSlots: !_suppressFanLayoutAnim &&
+                          hold == null &&
+                          !_hidingTable,
                     ),
                   ),
                 ),
@@ -6880,98 +6873,54 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       durakTableStackHeight(cardSize, rowCount, compact: _fit.compact);
 
   /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
-  /// При 3+ рядах — передние ряды наезжают на задние: виден только угол карты.
+  ///
+  /// Сразу финальная сетка: лежащие карты одним твином едут на место,
+  /// новая летит в уже правильный слот — без второго рывка после посадки.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
     required double maxWidth,
-    bool pinFirstSlot = false,
+    bool animateSlots = true,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
     final n = items.length;
-    final pairW = durakTablePairSlotWidth(cardSize);
-    const baseGap = 10.0;
     const cols = _tableCols;
+    final rows = (n + cols - 1) ~/ cols;
+    final totalH = _tableStackHeight(cardSize, rows);
+    final duration =
+        animateSlots ? kDurakTablePairSlideDuration : Duration.zero;
+    final pairW = durakTablePairSlotWidth(cardSize);
+    final pairH = durakTablePairHeight(cardSize);
 
-    // Перевод/подкид: лежащая карта остаётся в центре, новый слот справа.
-    if (pinFirstSlot && n == 2) {
-      final left0 = durakPinnedFirstPairLeft(
-        cardSize: cardSize,
+    final slots = <Widget>[];
+    for (var i = 0; i < n; i++) {
+      final origin = durakTablePairSlotOrigin(
         maxWidth: maxWidth,
-        gap: baseGap,
-      );
-      final left1 = durakPinnedSecondPairLeft(
         cardSize: cardSize,
-        maxWidth: maxWidth,
-        gap: baseGap,
+        pairIndex: i,
+        pairCount: n,
+        compact: _fit.compact,
+        cols: cols,
       );
-      return SizedBox(
-        width: maxWidth,
-        height: durakTablePairHeight(cardSize),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(left: left0, top: 0, child: items[0]),
-            Positioned(left: left1, top: 0, child: items[1]),
-          ],
+      slots.add(
+        AnimatedPositioned(
+          key: ValueKey('table-slot-${items[i].key ?? i}'),
+          duration: duration,
+          curve: kDurakLayoutCurve,
+          left: origin.dx,
+          top: origin.dy,
+          width: pairW,
+          height: pairH,
+          child: items[i],
         ),
       );
     }
-
-    final rows = <List<Widget>>[
-      for (var i = 0; i < n; i += cols) items.skip(i).take(cols).toList(),
-    ];
-
-    final maxRowLen = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
-    // Нужная ширина с нормальным зазором.
-    final neededW = maxRowLen * pairW + (maxRowLen - 1) * baseGap;
-    // Если не влезает — отрицательный gap (одна пара на другую), без scale-прыжка.
-    double gap = baseGap;
-    if (neededW > maxWidth && maxRowLen > 1) {
-      gap = ((maxWidth - maxRowLen * pairW) / (maxRowLen - 1))
-          .clamp(-(pairW * 0.55), baseGap);
-    }
-
-    Widget rowAt(int r) => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < rows[r].length; i++) ...[
-              if (i > 0) SizedBox(width: gap),
-              rows[r][i],
-            ],
-          ],
-        );
-
-    // 1–2 ряда — обычная колонка с зазором; в альбоме уже со второго ряда
-    // нужен наезд «кромкой», иначе стол не помещается по высоте.
-    if (!durakTableUsesRowStack(rows.length, compact: _fit.compact)) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var r = 0; r < rows.length; r++) ...[
-            if (r > 0) const SizedBox(height: 10),
-            rowAt(r),
-          ],
-        ],
-      );
-    }
-
-    // 3+ ряда: 2-й наезжает на 1-й (виден ранг+масть); 3-й — обычный зазор.
-    final totalH = _tableStackHeight(cardSize, rows.length);
     return SizedBox(
+      width: maxWidth,
       height: totalH,
-      width: double.infinity,
       child: Stack(
         clipBehavior: Clip.none,
-        children: [
-          for (var r = 0; r < rows.length; r++)
-            Positioned(
-              top: _tableRowTop(cardSize, r, rows.length),
-              left: 0,
-              right: 0,
-              child: rowAt(r),
-            ),
-        ],
+        children: slots,
       ),
     );
   }

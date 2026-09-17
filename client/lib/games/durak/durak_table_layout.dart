@@ -177,43 +177,48 @@ bool durakSeatedTablePairInLayout({
 }) =>
     seated || reserveForFlight || keepVisible;
 
-/// Одна севшая пара + новый слот (перевод/подкид): не центровать заново.
-/// Иначе лежащая карта прыгает влево и выглядит как моргание.
-bool durakPinExistingTablePair({
-  required int settledCount,
-  required int layoutCount,
-}) =>
-    settledCount == 1 && layoutCount == 2;
+/// Сдвиг уже лежащих пар в финальную сетку — один твин, без второго рывка.
+const Duration kDurakTablePairSlideDuration = Duration(milliseconds: 180);
 
-/// Левый край первой пары: как у одиночной карты по центру, со сдвигом
-/// только если вторая пара не влезает в [maxWidth].
-double durakPinnedFirstPairLeft({
+/// Зазор в ряду: если пары не влезают, наезжают, без scale.
+double durakTableEffectiveGap({
   required Size cardSize,
+  required int rowLen,
   required double maxWidth,
   double gap = 10,
 }) {
+  if (rowLen <= 1) return gap;
   final pairW = durakTablePairSlotWidth(cardSize);
-  final natural = (maxWidth - pairW) / 2;
-  final second = natural + pairW + gap;
-  if (second + pairW <= maxWidth) return natural;
-  final overflow = second + pairW - maxWidth;
-  return natural - overflow;
+  final neededW = rowLen * pairW + (rowLen - 1) * gap;
+  if (neededW <= maxWidth) return gap;
+  return ((maxWidth - rowLen * pairW) / (rowLen - 1))
+      .clamp(-(pairW * 0.55), gap);
 }
 
-/// Левый край второй пары при закреплённой первой.
-double durakPinnedSecondPairLeft({
-  required Size cardSize,
+/// Локальный origin слота пары в финальной сетке (как посадка overlay).
+Offset durakTablePairSlotOrigin({
   required double maxWidth,
+  required Size cardSize,
+  required int pairIndex,
+  required int pairCount,
+  required bool compact,
+  int cols = 2,
   double gap = 10,
 }) {
-  final pairW = durakTablePairSlotWidth(cardSize);
-  return durakPinnedFirstPairLeft(
-        cardSize: cardSize,
-        maxWidth: maxWidth,
-        gap: gap,
-      ) +
-      pairW +
-      gap;
+  final n = pairCount < 1 ? 1 : pairCount;
+  final rows = (n + cols - 1) ~/ cols;
+  final stackH = durakTableStackHeight(cardSize, rows, compact: compact);
+  final card = durakEstimateAttackLandRect(
+    tableCenter: Offset(maxWidth / 2, stackH / 2),
+    cardSize: cardSize,
+    pairIndex: pairIndex,
+    pairCount: n,
+    compact: compact,
+    cols: cols,
+    gap: gap,
+    maxWidth: maxWidth,
+  );
+  return Offset(card.left - 4, card.top);
 }
 
 /// Финальный rect атаки в сетке стола — тот же расчёт, что у рядов.
@@ -225,6 +230,7 @@ Rect durakEstimateAttackLandRect({
   required bool compact,
   int cols = 2,
   double gap = 10,
+  double? maxWidth,
 }) {
   final n = pairCount < 1 ? 1 : pairCount;
   final idx = pairIndex < 0 ? 0 : (pairIndex > n - 1 ? n - 1 : pairIndex);
@@ -233,9 +239,17 @@ Rect durakEstimateAttackLandRect({
   final row = idx ~/ cols;
   final rowLen =
       (row * cols + cols <= n) ? cols : (n - row * cols).clamp(1, cols);
-  final rowWidth = rowLen * pairW + (rowLen - 1) * gap;
+  final usedGap = maxWidth == null
+      ? gap
+      : durakTableEffectiveGap(
+          cardSize: cardSize,
+          rowLen: rowLen,
+          maxWidth: maxWidth,
+          gap: gap,
+        );
+  final rowWidth = rowLen * pairW + (rowLen - 1) * usedGap;
   final rowLeft = tableCenter.dx - rowWidth / 2;
-  final pairLeft = rowLeft + col * (pairW + gap);
+  final pairLeft = rowLeft + col * (pairW + usedGap);
   final rows = (n + cols - 1) ~/ cols;
   final colH = durakTableStackHeight(cardSize, rows, compact: compact);
   final pairTop = tableCenter.dy -
