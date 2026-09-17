@@ -299,21 +299,49 @@ void main() {
         durakTableSlotBlankUntilLand(seated: false, inFlight: false),
         isFalse,
       );
-      expect(durakPinExistingTablePair(settledCount: 1, layoutCount: 2), isTrue);
+      expect(kDurakTablePairSlideDuration, const Duration(milliseconds: 180));
+      const maxW = 400.0;
+      final one = durakTablePairSlotOrigin(
+        maxWidth: maxW,
+        cardSize: card,
+        pairIndex: 0,
+        pairCount: 1,
+        compact: false,
+      );
+      final two0 = durakTablePairSlotOrigin(
+        maxWidth: maxW,
+        cardSize: card,
+        pairIndex: 0,
+        pairCount: 2,
+        compact: false,
+      );
+      final two1 = durakTablePairSlotOrigin(
+        maxWidth: maxW,
+        cardSize: card,
+        pairIndex: 1,
+        pairCount: 2,
+        compact: false,
+      );
+      // Сразу финальная сетка: первая едет влево, вторая — не «справа от центра».
+      expect(two0.dx, lessThan(one.dx));
+      expect(two1.dx, greaterThan(two0.dx));
+      expect(two0.dy, one.dy);
+      expect(two1.dy, two0.dy);
       expect(
-        durakPinExistingTablePair(settledCount: 1, layoutCount: 1),
-        isFalse,
+        durakTableEffectiveGap(
+          cardSize: card,
+          rowLen: 2,
+          maxWidth: 400,
+        ),
+        10,
       );
       expect(
-        durakPinExistingTablePair(settledCount: 2, layoutCount: 3),
-        isFalse,
-      );
-      final pinned0 = durakPinnedFirstPairLeft(cardSize: card, maxWidth: 400);
-      final alone = (400 - durakTablePairSlotWidth(card)) / 2;
-      expect(pinned0, alone);
-      expect(
-        durakPinnedSecondPairLeft(cardSize: card, maxWidth: 400),
-        greaterThan(pinned0),
+        durakTableEffectiveGap(
+          cardSize: card,
+          rowLen: 2,
+          maxWidth: durakTablePairSlotWidth(card) * 2 - 8,
+        ),
+        lessThan(10),
       );
     });
 
