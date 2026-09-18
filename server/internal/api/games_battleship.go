@@ -1343,7 +1343,10 @@ func (h *GamesHandler) finishBattleshipGame(ctx context.Context, gameID string, 
 	m["setup_deadline"] = "0"
 
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])
-	h.settleBattleshipCoins(ctx, m, stakeBronze)
+	settled, _ := h.Rdb.HSetNX(ctx, key, "coins_settled", "1").Result()
+	if settled {
+		h.settleBattleshipCoins(ctx, m, stakeBronze)
+	}
 	for _, uid := range []string{m["p1_user_id"], m["p2_user_id"]} {
 		if uid == "" || isBot(uid) {
 			continue

@@ -28,6 +28,7 @@ import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_repository.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_sfx.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -373,6 +374,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   String _statusText(NardyGameView game) {
     final l10n = context.l10n;
     if (game.isOver) {
+      if (game.isDraw) return l10n.gameDraw;
       if (game.myIndex < 0) return l10n.gameOverNeutral;
       if (game.iWon) {
         if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
@@ -1084,13 +1086,23 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   }
 
   Widget _buildStatusLine(NardyGameView game, bool myTurn) {
+    final rewardChip = stakeFinishRewardChip(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: game.iWon,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         GameStatusWithReward(
           statusText: _statusText(game),
-          showReward: game.isOver && game.stakeBronze > 0,
-          rewardBronze: game.iWon ? game.stakeBronze : -game.stakeBronze,
+          showReward: stakeShowFinishReward(
+            stakeBronze: game.stakeBronze,
+            isOver: game.isOver,
+            isDraw: game.isDraw,
+            rewardChip: rewardChip,
+          ),
+          rewardBronze: rewardChip,
           rewardKey: _rewardKey,
           fontSize: 14,
           wrap: true,

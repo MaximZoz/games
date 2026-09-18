@@ -255,6 +255,24 @@ void main() {
     });
     expect(view.iLostOnTimeout, isTrue);
     expect(view.iWon, isFalse);
+    expect(view.isDraw, isFalse);
+  });
+
+  test('UnoGameView isDraw when over without winners', () {
+    final view = UnoGameView.fromJson({
+      'id': 'g-draw',
+      'players': [
+        {'user_id': 'me', 'seat': 0, 'hand': [], 'hand_count': 3, 'score': 20},
+        {'user_id': 'opp', 'seat': 1, 'hand': [], 'hand_count': 3, 'score': 20},
+      ],
+      'my_index': 0,
+      'status': 'over',
+      'winner_user_ids': [],
+      'stake_bronze': 10,
+    });
+    expect(view.isOver, isTrue);
+    expect(view.iWon, isFalse);
+    expect(view.isDraw, isTrue);
   });
 
   test('shouldPlayUnoCallSfx plays once per new call_uno event', () {
