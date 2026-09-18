@@ -43,6 +43,52 @@ void main() {
     });
   });
 
+  group('stakeLostOnFinish / stakeFinishRewardChip', () {
+    test('ничья не списывает ставку и не показывает чип', () {
+      expect(
+        stakeLostOnFinish(stakeBronze: 50, isDraw: true, iWon: false),
+        0,
+      );
+      expect(
+        stakeFinishRewardChip(stakeBronze: 50, isDraw: true, iWon: false),
+        0,
+      );
+      expect(
+        stakeShowFinishReward(
+          stakeBronze: 50,
+          isOver: true,
+          isDraw: true,
+          rewardChip: 0,
+        ),
+        isFalse,
+      );
+    });
+
+    test('поражение списывает ставку, победа даёт чистый плюс', () {
+      expect(
+        stakeLostOnFinish(stakeBronze: 50, isDraw: false, iWon: false),
+        50,
+      );
+      expect(
+        stakeFinishRewardChip(
+          stakeBronze: 50,
+          isDraw: false,
+          iWon: false,
+        ),
+        -50,
+      );
+      expect(
+        stakeFinishRewardChip(
+          stakeBronze: 50,
+          isDraw: false,
+          iWon: true,
+          netProfit: 50,
+        ),
+        50,
+      );
+    });
+  });
+
   group('pokerPlaceCredit', () {
     test('банк сохраняется для 2–6 игроков', () {
       for (final n in [2, 3, 4, 5, 6]) {

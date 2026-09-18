@@ -213,6 +213,10 @@ class NardyGameView {
   bool get isLong => nardyNormalizeMode(gameMode) == nardyModeLong;
   int get opponentIndex => myIndex == 0 ? 1 : 0;
   bool get iWon => isOver && myIndex >= 0 && winnerIndex == myIndex;
+
+  /// Партия кончилась без победителя — ничья, ставка возвращается.
+  bool get isDraw =>
+      isOver && winnerIndex < 0 && winnerUserId.trim().isEmpty;
   bool get isMars => winKind == 'mars';
 
   bool get hasBotOpponent => playerIds.any((id) => id.startsWith('bot:'));

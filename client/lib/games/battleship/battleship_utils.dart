@@ -356,6 +356,9 @@ List<List<int>> generateRandomBattleshipShips([int? seed]) {
   return defaultBattleshipShips();
 }
 
+/// Пульс попадания/промаха. Свой выстрел держит поле соперника столько же.
+const Duration kBattleshipShotPulse = Duration(milliseconds: 520);
+
 /// После своего выстрела: попадание — сразу ещё один выстрел; промах/конец — ход отдан.
 ///
 /// [shotCell] — клетка, которую послали мы. После промаха бот может сходить
@@ -364,6 +367,18 @@ bool battleshipKeepAttacking(BattleshipGameView view, {int? shotCell}) {
   if (view.isOver || !view.isMyTurn) return false;
   if (shotCell != null) return view.myHits.contains(shotCell);
   return view.lastShotHit;
+}
+
+/// Какое поле оставить, когда пульс своего выстрела уже кончился.
+///
+/// `false` — поле соперника (ещё наш ход или ждём ответ бота).
+/// `null` — как по ходу: после промаха в PvP это своё поле.
+bool? battleshipBoardAfterLocalShot({
+  required bool keepAttacking,
+  required bool vsBot,
+}) {
+  if (keepAttacking || vsBot) return false;
+  return null;
 }
 
 /// Клетка уже стреляная, в полёте или потоплена — повторный выстрел нельзя.

@@ -22,6 +22,7 @@ import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -744,13 +745,23 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   Widget _buildStatusLine(CheckersGameView game, bool myTurn) {
+    final rewardChip = stakeFinishRewardChip(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: game.iWon,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         GameStatusWithReward(
           statusText: _statusText(game),
-          showReward: game.isOver && game.stakeBronze > 0 && !game.isDraw,
-          rewardBronze: game.iWon ? game.stakeBronze : -game.stakeBronze,
+          showReward: stakeShowFinishReward(
+            stakeBronze: game.stakeBronze,
+            isOver: game.isOver,
+            isDraw: game.isDraw,
+            rewardChip: rewardChip,
+          ),
+          rewardBronze: rewardChip,
           rewardKey: _rewardKey,
           fontSize: 14,
           wrap: true,

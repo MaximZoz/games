@@ -5007,7 +5007,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _lockMidFinishOutcome(view);
       final credit = _rewardCredit(view);
       final displayReward = _rewardBronze(view);
-      final lost = (credit <= 0 && view.stakeBronze > 0) ? view.stakeBronze : 0;
+      final lost = stakeLostOnFinish(
+        stakeBronze: view.stakeBronze,
+        isDraw: view.isDraw,
+        iWon: credit > 0,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         clearBlockingGamePin(ref, ifGameId: widget.gameId);
@@ -5046,9 +5050,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final credit = _rewardCredit(view);
       // В «+N» — чистый плюс к доматчевому балансу (как в крестиках).
       final displayReward = _rewardBronze(view);
-      final lost = (!view.isDraw && credit <= 0 && view.stakeBronze > 0)
-          ? view.stakeBronze
-          : 0;
+      final lost = stakeLostOnFinish(
+        stakeBronze: view.stakeBronze,
+        isDraw: view.isDraw,
+        iWon: credit > 0,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _snapVisualToServer();

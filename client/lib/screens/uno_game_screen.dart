@@ -15,6 +15,7 @@ import 'package:multigames_client/core/sfx.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/game_balance_settle.dart';
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/games/game_eliminate.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
@@ -1056,7 +1057,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
     final iWon = game.iWon;
     final credit = iWon ? game.stakeBronze * humans : 0;
     final display = iWon ? game.stakeBronze * (humans > 1 ? humans - 1 : 0) : 0;
-    final lost = !iWon && game.stakeBronze > 0 ? game.stakeBronze : 0;
+    final lost = stakeLostOnFinish(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: iWon,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(() async {
@@ -1579,14 +1584,23 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   }
 
   Widget _buildHeader(UnoGameView game) {
+    final humans = game.players.where((p) => !p.isBot).length;
+    final rewardChip = stakeFinishRewardChip(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: game.iWon,
+      netProfit: game.stakeBronze * (humans > 1 ? humans - 1 : 0),
+    );
     final status = game.isOver
-        ? (game.iWon
-            ? (game.isTimeout
-                ? context.l10n.gameYouWonOpponentTimeout
-                : context.l10n.unoYouWon)
-            : (game.iLostOnTimeout
-                ? context.l10n.unoYouLostTimeout
-                : context.l10n.unoYouLost))
+        ? (game.isDraw
+            ? context.l10n.gameDraw
+            : game.iWon
+                ? (game.isTimeout
+                    ? context.l10n.gameYouWonOpponentTimeout
+                    : context.l10n.unoYouWon)
+                : (game.iLostOnTimeout
+                    ? context.l10n.unoYouLostTimeout
+                    : context.l10n.unoYouLost))
         : _statusHint(game);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1595,13 +1609,13 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
           height: _fit.compact ? 32 : 40,
           child: GameStatusWithReward(
             statusText: status,
-            showReward: game.isOver && game.stakeBronze > 0,
-            rewardBronze: game.iWon
-                ? game.stakeBronze *
-                    (game.players.where((p) => !p.isBot).length > 1
-                        ? game.players.where((p) => !p.isBot).length - 1
-                        : 0)
-                : -game.stakeBronze,
+            showReward: stakeShowFinishReward(
+              stakeBronze: game.stakeBronze,
+              isOver: game.isOver,
+              isDraw: game.isDraw,
+              rewardChip: rewardChip,
+            ),
+            rewardBronze: rewardChip,
             rewardKey: _rewardKey,
             maxLines: 2,
           ),
