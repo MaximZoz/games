@@ -13,6 +13,10 @@ const _keyAccessToken = 'access_token';
 const _keyRefreshToken = 'refresh_token';
 const _keyUser = 'user';
 
+/// Refresh 401/403 — сессия мертва, не временный сбой БД.
+bool authRefreshIsDeadSession(int statusCode) =>
+    statusCode == 401 || statusCode == 403;
+
 class AuthUser {
   final String id;
   final String email;
@@ -185,6 +189,9 @@ class AuthRepository {
   String? _memoryRefreshToken;
   AuthUser? _memoryUser;
   Future<String?>? _refreshInFlight;
+
+  /// Когда refresh вернул 401/403 — UI должен снять локальную сессию.
+  void Function()? onSessionInvalidated;
 
   SharedPreferences get prefs {
     final p = _prefs;
@@ -607,6 +614,10 @@ class AuthRepository {
     if (_isJwtExpired(token)) {
       final refreshed = await _refreshAccessToken();
       if (refreshed != null && refreshed.isNotEmpty) return refreshed;
+      // Сессию уже сняли (401 refresh) — не отдаём протухший JWT в WS/API.
+      if (_memoryAccessToken == null || _memoryAccessToken!.isEmpty) {
+        return null;
+      }
       // Временный сбой refresh — не разлогиниваем, отдаём текущий токен.
       return token;
     }
@@ -801,8 +812,7 @@ class AuthRepository {
 
     token = await _refreshAccessToken();
     if (token == null || token.isEmpty) {
-      // Logout уже вызван только при 401/403 refresh.
-      // Сеть/503 — токены на месте, не притворяемся «сессия истекла».
+      // 401 refresh уже снял сессию. Сеть/503 — токены на месте.
       final still = await getAccessToken();
       if (still == null || still.isEmpty) {
         throw AuthException(401, LocaleService.l10n.sessionExpired);
@@ -1031,9 +1041,9 @@ class AuthRepository {
       return null;
     }
 
-    // Истёкший refresh или 401 не выкидывают из аккаунта: локальная сессия
-    // остаётся, пока пользователь сам не нажмёт «Выйти».
-    if (response.statusCode == 401 || response.statusCode == 403) {
+    if (authRefreshIsDeadSession(response.statusCode)) {
+      await logout();
+      onSessionInvalidated?.call();
       return null;
     }
     if (response.statusCode == 502 || response.statusCode == 503) {
