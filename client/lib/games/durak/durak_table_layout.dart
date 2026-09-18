@@ -95,8 +95,9 @@ bool durakKeepServerTablePair({
 bool durakTableCardAlreadyVisible({
   required bool seated,
   required bool existedOnKnownTable,
+  bool alreadyShown = false,
 }) =>
-    seated || existedOnKnownTable;
+    seated || existedOnKnownTable || alreadyShown;
 
 /// Новую чужую атаку прячем, пока busy/replay не успели запустить полёт.
 bool durakHideDeferredRemoteAttack({
@@ -105,12 +106,14 @@ bool durakHideDeferredRemoteAttack({
   required bool localFlying,
   required bool fxDeferred,
   bool seated = false,
+  bool alreadyShown = false,
 }) {
   if (optimistic ||
       localFlying ||
       durakTableCardAlreadyVisible(
         seated: seated,
         existedOnKnownTable: existedOnPrevTable,
+        alreadyShown: alreadyShown,
       )) {
     return false;
   }
@@ -129,8 +132,9 @@ bool durakShouldClearSeatedOnEmptyTable({
 bool durakKeepVisibleCardInPrevTable({
   required bool remoteFlying,
   required bool seated,
+  bool alreadyShown = false,
 }) =>
-    seated || !remoteFlying;
+    seated || alreadyShown || !remoteFlying;
 
 /// После hide/schedule сажаем всё, что уже не летит — иначе следующий
 /// кадр снова пометит карту remote и погасит слот в 0.
@@ -146,9 +150,10 @@ bool durakShouldHideRemoteTableCard({
   required bool seated,
   required bool optimistic,
   required bool localFlying,
+  bool alreadyShown = false,
 }) {
   if (!markedRemoteFlying) return false;
-  if (seated || optimistic || localFlying) return false;
+  if (seated || optimistic || localFlying || alreadyShown) return false;
   return true;
 }
 
@@ -156,8 +161,30 @@ bool durakShouldHideRemoteTableCard({
 ///
 /// Иначе слот получает opacity 1, overlay ещё летит — вспышка на столе
 /// (подкид «появился, потом полетел»; карта мигает при переводе).
-bool durakShouldSeatPrevTableCard({required bool remoteFlying}) =>
-    !remoteFlying;
+bool durakShouldSeatPrevTableCard({
+  required bool remoteFlying,
+  bool alreadyShown = false,
+}) =>
+    alreadyShown || !remoteFlying;
+
+/// Чужой полёт только для новой карты. Уже лежавшую при своём переводе
+/// не переигрываем — иначе слот гаснет и карта «пропадает, потом появляется».
+bool durakShouldScheduleRemoteTableFlight({
+  required bool existedOnPrevTable,
+  required bool seated,
+  required bool optimistic,
+  required bool localFlying,
+  bool alreadyShown = false,
+}) {
+  if (optimistic ||
+      localFlying ||
+      seated ||
+      alreadyShown ||
+      existedOnPrevTable) {
+    return false;
+  }
+  return true;
+}
 
 /// FX стола ждём только на свой ход / overlay.
 ///
@@ -186,9 +213,10 @@ bool durakShouldRevealDeferredRemoteCard({
   required bool seated,
   required bool optimistic,
   required bool localFlying,
+  bool alreadyShown = false,
 }) {
   if (!hiddenAsRemote) return false;
-  return seated || optimistic || localFlying;
+  return seated || optimistic || localFlying || alreadyShown;
 }
 
 /// Чья рука кинула новую атаку: подкид — thrower, иначе attacker.
