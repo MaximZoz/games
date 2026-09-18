@@ -11,6 +11,15 @@ import 'package:multigames_client/core/realtime_visibility_stub.dart'
 import 'package:multigames_client/core/realtime_ws.dart';
 
 /// Сразу в поток, без post-frame: иначе следующий emitNow затирает инвайт.
+/// Без живого токена не долбим /api/ws — после логина провайдер пересоберётся.
+bool shouldReconnectRealtime({
+  required bool disposed,
+  required bool hidden,
+  required bool hasAccessToken,
+}) {
+  return !disposed && !hidden && hasAccessToken;
+}
+
 bool shouldEmitRealtimeImmediately(String type) {
   switch (type) {
     case 'game_state':
@@ -74,14 +83,18 @@ final realtimeEventsProvider = StreamProvider.autoDispose<Map<String, dynamic>>(
     socket = null;
 
     final token = await ref.read(authRepositoryProvider).getAccessToken();
-    if (token == null || token.isEmpty) {
-      scheduleReconnect();
+    if (!shouldReconnectRealtime(
+      disposed: disposed,
+      hidden: disconnectedDueToVisibility,
+      hasAccessToken: token != null && token.isNotEmpty,
+    )) {
       return;
     }
+    final accessToken = token!;
 
     final uri = buildWebSocketUri(
       '/api/ws',
-      queryParameters: {'access_token': token},
+      queryParameters: {'access_token': accessToken},
     );
     final nextSocket = connectRealtimeSocket(uri);
     socket = nextSocket;
