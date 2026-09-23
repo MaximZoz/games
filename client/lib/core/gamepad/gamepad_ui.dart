@@ -67,42 +67,47 @@ void scheduleFocusFirstVisibleGamepadTarget() {
 }
 
 bool focusFirstVisibleGamepadTarget() {
-  final root = FocusManager.instance.rootScope;
-  bool tryNext(FocusNode node) {
-    if (node.context == null) return false;
-    return node.nextFocus();
+  FocusNode? first;
+  void walk(FocusNode node) {
+    if (first != null) return;
+    if (node.context != null && isGamepadFocusVisible(node)) {
+      first = node;
+      return;
+    }
+    for (final child in List<FocusNode>.from(node.children)) {
+      walk(child);
+    }
   }
 
-  if (tryNext(root) &&
-      isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
-    _ensureVisible(FocusManager.instance.primaryFocus);
-    return true;
-  }
-  final start = FocusManager.instance.primaryFocus;
-  for (var i = 0; i < 80; i++) {
-    final node = FocusManager.instance.primaryFocus;
-    if (isGamepadFocusVisible(node)) {
-      _ensureVisible(node);
-      return true;
-    }
-    if (node == null || node == root) {
-      if (!tryNext(root)) break;
-      continue;
-    }
-    if (!tryNext(node)) break;
-    if (FocusManager.instance.primaryFocus == start) break;
-  }
-  return false;
+  walk(FocusManager.instance.rootScope);
+  if (first == null) return false;
+  first!.requestFocus();
+  _ensureVisible(first);
+  return true;
 }
 
 bool isGamepadFocusVisible(FocusNode? node) {
   if (node == null || !node.canRequestFocus) return false;
   if (node == FocusManager.instance.rootScope) return false;
+  // FocusScope — контейнер, не карточка: иначе A «нажимает» пустую область,
+  // а обводка садится на чужой виджет той же ячейки IndexedStack.
+  if (node is FocusScopeNode) return false;
   final ctx = node.context;
   if (ctx == null || !ctx.mounted) return false;
   final ro = ctx.findRenderObject();
   if (ro is! RenderBox || !ro.hasSize || !ro.attached) return false;
   if (ro.size.width < 2 || ro.size.height < 2) return false;
+  final label = node.debugLabel;
+  if (label == 'Navigator' || label == 'Navigator State') return false;
+  final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
+  if (!inBlock) {
+    final mq = MediaQuery.maybeOf(ctx);
+    if (mq != null &&
+        ro.size.width > mq.size.width * 0.94 &&
+        ro.size.height > mq.size.height * 0.45) {
+      return false;
+    }
+  }
   var hidden = false;
   ctx.visitAncestorElements((el) {
     final w = el.widget;

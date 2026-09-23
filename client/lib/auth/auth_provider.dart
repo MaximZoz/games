@@ -253,7 +253,9 @@ class AuthStateNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
 
   @override
   void dispose() {
-    _ref.read(authRepositoryProvider).onSessionInvalidated = null;
+    try {
+      _ref.read(authRepositoryProvider).onSessionInvalidated = null;
+    } catch (_) {}
     WidgetsBinding.instance.removeObserver(_resumeObserver);
     super.dispose();
   }

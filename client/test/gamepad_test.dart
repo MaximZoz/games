@@ -539,11 +539,14 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: GamepadHost(
             child: Center(
-              child: HomeActionCard(
-                icon: Icons.storefront_rounded,
-                title: 'Магазин',
-                subtitle: 'Смайлы, ставки, коллекции',
-                onTap: () => shop++,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: HomeActionCard(
+                  icon: Icons.storefront_rounded,
+                  title: 'Магазин',
+                  subtitle: 'Смайлы, ставки, коллекции',
+                  onTap: () => shop++,
+                ),
               ),
             ),
           ),
@@ -613,11 +616,14 @@ void main() {
                     child: TickerMode(
                       enabled: true,
                       child: Center(
-                        child: HomeActionCard(
-                          icon: Icons.storefront_rounded,
-                          title: 'Магазин',
-                          subtitle: 'Смайлы, ставки, коллекции',
-                          onTap: () => shop++,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: HomeActionCard(
+                            icon: Icons.storefront_rounded,
+                            title: 'Магазин',
+                            subtitle: 'Смайлы, ставки, коллекции',
+                            onTap: () => shop++,
+                          ),
                         ),
                       ),
                     ),

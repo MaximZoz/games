@@ -28,6 +28,7 @@ class GamepadFocusBlock extends StatelessWidget {
       child: Focus(
         autofocus: autofocus,
         canRequestFocus: onActivate != null,
+        debugLabel: 'GamepadFocusBlock',
         skipTraversal: onActivate == null,
         descendantsAreFocusable: false,
         descendantsAreTraversable: false,
