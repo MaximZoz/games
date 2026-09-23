@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/animated_border_box.dart';
 
@@ -27,12 +28,16 @@ class HomeActionCard extends StatelessWidget {
     final iconSize = dense ? 40.0 : 48.0;
     final padH = dense ? 12.0 : 18.0;
     final padV = dense ? 10.0 : 16.0;
-    return AnimatedBorderBox(
+    return GamepadFocusBlock(
+      radius: dense ? 18 : 22,
+      onActivate: onTap,
+      child: AnimatedBorderBox(
       padding: EdgeInsets.zero,
       borderRadius: dense ? 18 : 22,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          canRequestFocus: false,
           onTap: onTap,
           borderRadius: BorderRadius.circular(dense ? 16 : 20),
           child: Padding(
@@ -112,6 +117,7 @@ class HomeActionCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -13,6 +13,8 @@ import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
@@ -460,5 +462,203 @@ void main() {
     expect(find.textContaining('Геймпад не найден'), findsNothing);
     expect(find.textContaining('Подключён'), findsOneWidget);
     expect(find.text('Выбрать'), findsOneWidget);
+  });
+
+  testWidgets('скрытая ветка IndexedStack не видима для геймпада',
+      (tester) async {
+    final hidden = FocusNode();
+    addTearDown(hidden.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndexedStack(
+            index: 0,
+            children: [
+              const SizedBox(width: 200, height: 200),
+              Focus(
+                focusNode: hidden,
+                child: ListTile(
+                  title: const Text('player2'),
+                  onTap: () {},
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    hidden.requestFocus();
+    await tester.pump();
+    expect(hidden.hasFocus, isTrue);
+    expect(isGamepadFocusVisible(hidden), isFalse);
+  });
+
+  testWidgets('A не открывает скрытый чат IndexedStack', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var chat = 0;
+    final chatFocus = FocusNode();
+    addTearDown(chatFocus.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: IndexedStack(
+                index: 0,
+                children: [
+                  const SizedBox.expand(),
+                  ListTile(
+                    focusNode: chatFocus,
+                    title: const Text('player2'),
+                    onTap: () => chat++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    chatFocus.requestFocus();
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(chat, 0);
+  });
+
+  testWidgets('A на карточке главной вызывает только её onTap', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var shop = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: HomeActionCard(
+                  icon: Icons.storefront_rounded,
+                  title: 'Магазин',
+                  subtitle: 'Смайлы, ставки, коллекции',
+                  onTap: () => shop++,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(shop, 1);
+  });
+
+  testWidgets('Offstage+TickerMode чат не видим для геймпада', (tester) async {
+    final hidden = FocusNode();
+    addTearDown(hidden.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: IndexedStack(
+            index: 0,
+            children: [
+              const SizedBox.expand(),
+              Offstage(
+                offstage: true,
+                child: TickerMode(
+                  enabled: false,
+                  child: ExcludeFocus(
+                    child: ListTile(
+                      focusNode: hidden,
+                      title: const Text('player2'),
+                      onTap: () {},
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    hidden.requestFocus();
+    await tester.pump();
+    expect(isGamepadFocusVisible(hidden), isFalse);
+  });
+
+  testWidgets('A на магазине не открывает скрытый чат той же ячейки',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var shop = 0;
+    var chat = 0;
+    final chatFocus = FocusNode();
+    addTearDown(chatFocus.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: IndexedStack(
+                index: 0,
+                children: [
+                  ExcludeFocus(
+                    excluding: false,
+                    child: TickerMode(
+                      enabled: true,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: HomeActionCard(
+                            icon: Icons.storefront_rounded,
+                            title: 'Магазин',
+                            subtitle: 'Смайлы, ставки, коллекции',
+                            onTap: () => shop++,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ExcludeFocus(
+                    child: TickerMode(
+                      enabled: false,
+                      child: Offstage(
+                        offstage: true,
+                        child: ListTile(
+                          focusNode: chatFocus,
+                          title: const Text('player2'),
+                          onTap: () => chat++,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    chatFocus.requestFocus();
+    await tester.pump();
+    expect(isGamepadFocusVisible(chatFocus), isFalse);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(chat, 0);
+    expect(shop, 1);
   });
 }

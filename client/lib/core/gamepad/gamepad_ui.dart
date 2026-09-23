@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
@@ -11,7 +13,8 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     return _switchTab(action == GamepadAction.shoulderL ? -1 : 1);
   }
 
-  if (isEditableTextFocused()) {
+  if (isEditableTextFocused() &&
+      isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
     if (action == GamepadAction.cancel) {
       if (GamepadKeyboardController.instance.visible) {
         GamepadKeyboardController.instance.hide();
@@ -64,37 +67,47 @@ void scheduleFocusFirstVisibleGamepadTarget() {
 }
 
 bool focusFirstVisibleGamepadTarget() {
-  final root = FocusManager.instance.rootScope;
-  if (root.nextFocus() &&
-      isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
-    _ensureVisible(FocusManager.instance.primaryFocus);
-    return true;
-  }
-  final start = FocusManager.instance.primaryFocus;
-  for (var i = 0; i < 80; i++) {
-    final node = FocusManager.instance.primaryFocus;
-    if (isGamepadFocusVisible(node)) {
-      _ensureVisible(node);
-      return true;
+  FocusNode? first;
+  void walk(FocusNode node) {
+    if (first != null) return;
+    if (node.context != null && isGamepadFocusVisible(node)) {
+      first = node;
+      return;
     }
-    if (node == null || node == root) {
-      if (!root.nextFocus()) break;
-      continue;
+    for (final child in List<FocusNode>.from(node.children)) {
+      walk(child);
     }
-    if (!node.nextFocus()) break;
-    if (FocusManager.instance.primaryFocus == start) break;
   }
-  return false;
+
+  walk(FocusManager.instance.rootScope);
+  if (first == null) return false;
+  first!.requestFocus();
+  _ensureVisible(first);
+  return true;
 }
 
 bool isGamepadFocusVisible(FocusNode? node) {
   if (node == null || !node.canRequestFocus) return false;
   if (node == FocusManager.instance.rootScope) return false;
+  // FocusScope — контейнер, не карточка: иначе A «нажимает» пустую область,
+  // а обводка садится на чужой виджет той же ячейки IndexedStack.
+  if (node is FocusScopeNode) return false;
   final ctx = node.context;
   if (ctx == null || !ctx.mounted) return false;
   final ro = ctx.findRenderObject();
   if (ro is! RenderBox || !ro.hasSize || !ro.attached) return false;
   if (ro.size.width < 2 || ro.size.height < 2) return false;
+  final label = node.debugLabel;
+  if (label == 'Navigator' || label == 'Navigator State') return false;
+  final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
+  if (!inBlock) {
+    final mq = MediaQuery.maybeOf(ctx);
+    if (mq != null &&
+        ro.size.width > mq.size.width * 0.94 &&
+        ro.size.height > mq.size.height * 0.45) {
+      return false;
+    }
+  }
   var hidden = false;
   ctx.visitAncestorElements((el) {
     final w = el.widget;
@@ -106,9 +119,46 @@ bool isGamepadFocusVisible(FocusNode? node) {
       hidden = true;
       return false;
     }
+    if (w is TickerMode && !w.enabled) {
+      hidden = true;
+      return false;
+    }
+    if (w is ExcludeFocus && w.excluding) {
+      hidden = true;
+      return false;
+    }
+    if (w is IgnorePointer && w.ignoring) {
+      hidden = true;
+      return false;
+    }
     return true;
   });
-  return !hidden;
+  if (hidden) return false;
+  RenderObject child = ro;
+  var parent = ro.parent;
+  while (parent != null) {
+    if (parent is RenderOffstage && parent.offstage) return false;
+    if (parent is RenderIndexedStack &&
+        !_isIndexedStackChildDisplayed(parent, child)) {
+      return false;
+    }
+    child = parent;
+    parent = parent.parent;
+  }
+  return true;
+}
+
+bool _isIndexedStackChildDisplayed(
+  RenderIndexedStack stack,
+  RenderObject child,
+) {
+  final index = stack.index;
+  if (index == null) return false;
+  var displayed = stack.firstChild;
+  for (var i = 0; i < index && displayed != null; i++) {
+    displayed = stack.childAfter(displayed);
+  }
+  return identical(displayed, child);
 }
 
 bool _switchTab(int delta) {
@@ -169,6 +219,11 @@ bool _activateFocused() {
   }
   if (isEditableTextFocused()) {
     GamepadKeyboardController.instance.show();
+    return true;
+  }
+  final block = GamepadFocusBlock.maybeOf(ctx);
+  if (block?.onActivate != null) {
+    block!.onActivate!();
     return true;
   }
   if (_toggleSwitchOrCheckbox(ctx)) return true;
