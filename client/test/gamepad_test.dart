@@ -661,4 +661,116 @@ void main() {
     expect(chat, 0);
     expect(shop, 1);
   });
+
+  testWidgets('скрытый GamepadScope не перехватывает A', (tester) async {
+    var hidden = 0;
+    var visible = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: IndexedStack(
+          index: 0,
+          children: [
+            GamepadScope(
+              onAction: (action) {
+                if (action == GamepadAction.confirm) {
+                  visible++;
+                  return true;
+                }
+                return false;
+              },
+              child: const SizedBox(width: 40, height: 40),
+            ),
+            ExcludeFocus(
+              child: TickerMode(
+                enabled: false,
+                child: Offstage(
+                  offstage: true,
+                  child: GamepadScope(
+                    onAction: (action) {
+                      if (action == GamepadAction.confirm) {
+                        hidden++;
+                        return true;
+                      }
+                      return false;
+                    },
+                    child: const SizedBox(width: 40, height: 40),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(GamepadDispatcher.dispatch(GamepadAction.confirm), isTrue);
+    expect(hidden, 0);
+    expect(visible, 1);
+  });
+
+  testWidgets('скрытый GamepadScope чата не открывает диалог с главной',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var shop = 0;
+    var chat = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: IndexedStack(
+                index: 0,
+                children: [
+                  ExcludeFocus(
+                    excluding: false,
+                    child: TickerMode(
+                      enabled: true,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: HomeActionCard(
+                            icon: Icons.storefront_rounded,
+                            title: 'Магазин',
+                            subtitle: 'Смайлы, ставки, коллекции',
+                            onTap: () => shop++,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ExcludeFocus(
+                    child: TickerMode(
+                      enabled: false,
+                      child: Offstage(
+                        offstage: true,
+                        child: GamepadScope(
+                          onAction: (action) {
+                            if (action == GamepadAction.confirm) {
+                              chat++;
+                              return true;
+                            }
+                            return false;
+                          },
+                          child: const SizedBox(width: 80, height: 40),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(chat, 0);
+    expect(shop, 1);
+  });
 }

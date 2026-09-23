@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Экран партии: верните `true`, если действие обработано.
 class GamepadScope extends StatefulWidget {
@@ -30,7 +31,10 @@ class _GamepadScopeState extends State<GamepadScope> {
     super.dispose();
   }
 
-  bool _handle(GamepadAction action) => widget.onAction(action);
+  bool _handle(GamepadAction action) {
+    if (!mounted || !isGamepadContextOnstage(context)) return false;
+    return widget.onAction(action);
+  }
 
   @override
   Widget build(BuildContext context) => widget.child;
