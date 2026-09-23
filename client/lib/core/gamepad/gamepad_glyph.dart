@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Кружок / капсула с подписью кнопки текущего геймпада.
@@ -198,11 +200,12 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
 
   Widget? _focusHighlight(BuildContext context, GamepadFamily family) {
     final node = FocusManager.instance.primaryFocus;
-    final ctx = node?.context;
+    if (!isGamepadFocusVisible(node)) return null;
+    final ctx = node!.context;
     if (ctx == null || !ctx.mounted) return null;
-    if (node == FocusManager.instance.rootScope) return null;
-    final box = ctx.findRenderObject();
-    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
+    final box = _highlightBox(ctx);
+    if (box == null) return null;
     final overlayBox = context.findRenderObject();
     if (overlayBox is! RenderBox || !overlayBox.hasSize) return null;
     final size = MediaQuery.sizeOf(context);
@@ -215,18 +218,19 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
     const pad = 3.0;
     return Stack(
       children: [
-        Positioned(
-          left: topLeft.dx - pad,
-          top: topLeft.dy - pad,
-          width: box.size.width + pad * 2,
-          height: box.size.height + pad * 2,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accentStart, width: 2),
+        if (!inBlock)
+          Positioned(
+            left: topLeft.dx - pad,
+            top: topLeft.dy - pad,
+            width: box.size.width + pad * 2,
+            height: box.size.height + pad * 2,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accentStart, width: 2),
+              ),
             ),
           ),
-        ),
         Positioned(
           left: (topLeft.dx + box.size.width - 10)
               .clamp(4.0, size.width - 28),
@@ -239,5 +243,29 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
         ),
       ],
     );
+  }
+
+  RenderBox? _highlightBox(BuildContext ctx) {
+    RenderBox? preferred;
+    ctx.visitAncestorElements((el) {
+      if (el.widget is InkWell || el.widget is GamepadFocusScope) {
+        final ro = el.renderObject;
+        if (ro is RenderBox && ro.hasSize && ro.attached) {
+          preferred = ro;
+          return false;
+        }
+      }
+      return true;
+    });
+    final own = ctx.findRenderObject();
+    if (own is! RenderBox || !own.hasSize || !own.attached) {
+      return preferred;
+    }
+    if (preferred != null &&
+        preferred!.size.height >= own.size.height &&
+        preferred!.size.width >= own.size.width) {
+      return preferred;
+    }
+    return own;
   }
 }

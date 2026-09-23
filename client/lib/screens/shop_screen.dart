@@ -47,7 +47,8 @@ class ShopScreen extends ConsumerWidget {
     ];
 
     Widget mobileList(BuildContext context) {
-      return Align(
+      return FocusScope(
+        child: Align(
         alignment: Alignment.topCenter,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -66,6 +67,7 @@ class ShopScreen extends ConsumerWidget {
               ],
             ),
           ),
+        ),
         ),
       );
     }
