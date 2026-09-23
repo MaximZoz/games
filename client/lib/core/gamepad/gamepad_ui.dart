@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
@@ -108,57 +108,7 @@ bool isGamepadFocusVisible(FocusNode? node) {
       return false;
     }
   }
-  var hidden = false;
-  ctx.visitAncestorElements((el) {
-    final w = el.widget;
-    if (w is Offstage && w.offstage) {
-      hidden = true;
-      return false;
-    }
-    if (w is Visibility && !w.visible) {
-      hidden = true;
-      return false;
-    }
-    if (w is TickerMode && !w.enabled) {
-      hidden = true;
-      return false;
-    }
-    if (w is ExcludeFocus && w.excluding) {
-      hidden = true;
-      return false;
-    }
-    if (w is IgnorePointer && w.ignoring) {
-      hidden = true;
-      return false;
-    }
-    return true;
-  });
-  if (hidden) return false;
-  RenderObject child = ro;
-  var parent = ro.parent;
-  while (parent != null) {
-    if (parent is RenderOffstage && parent.offstage) return false;
-    if (parent is RenderIndexedStack &&
-        !_isIndexedStackChildDisplayed(parent, child)) {
-      return false;
-    }
-    child = parent;
-    parent = parent.parent;
-  }
-  return true;
-}
-
-bool _isIndexedStackChildDisplayed(
-  RenderIndexedStack stack,
-  RenderObject child,
-) {
-  final index = stack.index;
-  if (index == null) return false;
-  var displayed = stack.firstChild;
-  for (var i = 0; i < index && displayed != null; i++) {
-    displayed = stack.childAfter(displayed);
-  }
-  return identical(displayed, child);
+  return isGamepadContextOnstage(ctx);
 }
 
 bool _switchTab(int delta) {
