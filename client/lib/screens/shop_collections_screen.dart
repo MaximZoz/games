@@ -327,9 +327,10 @@ class _ShopCollectionGroupScreenState
     } catch (_) {}
   }
 
-  Future<void> _buy(ShopItem item) async {
+  Future<void> _buy(ShopItem item, {bool confirm = true}) async {
     if (_buyInFlight.contains(item.code) || item.owned) return;
     final l10n = context.l10n;
+    if (confirm) {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -354,6 +355,7 @@ class _ShopCollectionGroupScreenState
       ),
     );
     if (ok != true || !mounted) return;
+    }
 
     _buyInFlight.add(item.code);
     setState(() {
@@ -512,25 +514,10 @@ class _ShopCollectionGroupScreenState
         animatedName: item.animatedName ?? 'sparkles',
         fallback: item.emoji,
         subtitle: collectionItemSubtitle(item.dailyBronze),
-        bottomAction: item.owned
+        onBuy: item.owned
             ? null
-            : Builder(
-                builder: (dialogContext) => GamepadFocusBlock(
-                  autofocus: true,
-                  radius: 16,
-                  onActivate: () {
-                    Navigator.of(dialogContext).pop();
-                    unawaited(_buy(item));
-                  },
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                      unawaited(_buy(item));
-                    },
-                    child: Text(context.l10n.shopBuy),
-                  ),
-                ),
-              ),
+            : () => unawaited(_buy(item, confirm: false)),
+        buyLabel: context.l10n.shopBuy,
       ),
     );
   }

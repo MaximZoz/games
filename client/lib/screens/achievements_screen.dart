@@ -248,7 +248,7 @@ class _AchievementCard extends StatelessWidget {
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
     return GamepadFocusBlock(
-      radius: 18,
+      radius: AppRadius.card + 2,
       onActivate: onClaim,
       child: GradientCard(
       margin: EdgeInsets.zero,

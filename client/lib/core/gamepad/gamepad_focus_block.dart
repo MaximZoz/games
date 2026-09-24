@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
@@ -99,8 +101,6 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
           ]),
           builder: (context, _) {
             final show = _focus.hasPrimaryFocus && gamepadConnected();
-            // Рамка карточки: внешний радиус = radius + borderWidth.
-            final outerRadius = widget.radius + widget.borderWidth;
             return Stack(
               clipBehavior: Clip.none,
               children: [
@@ -108,23 +108,12 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
                 if (show)
                   Positioned.fill(
                     child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: widget.shape == GamepadHighlightShape.circle
-                            ? BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.accentStart,
-                                  width: widget.borderWidth,
-                                ),
-                              )
-                            : BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.circular(outerRadius),
-                                border: Border.all(
-                                  color: AppColors.accentStart,
-                                  width: widget.borderWidth,
-                                ),
-                              ),
+                      child: CustomPaint(
+                        painter: _GamepadFocusOutlinePainter(
+                          radius: widget.radius,
+                          borderWidth: widget.borderWidth,
+                          shape: widget.shape,
+                        ),
                       ),
                     ),
                   ),
@@ -134,6 +123,51 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
         ),
       ),
     );
+  }
+}
+
+/// Обводка по контуру рамки: один RRect, без стыков сторон BoxDecoration.
+class _GamepadFocusOutlinePainter extends CustomPainter {
+  const _GamepadFocusOutlinePainter({
+    required this.radius,
+    required this.borderWidth,
+    required this.shape,
+  });
+
+  final double radius;
+  final double borderWidth;
+  final GamepadHighlightShape shape;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.accentStart
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth
+      ..strokeJoin = StrokeJoin.round
+      ..isAntiAlias = true;
+    final inset = borderWidth / 2;
+    if (shape == GamepadHighlightShape.circle) {
+      final r = math.max(0.0, math.min(size.width, size.height) / 2 - inset);
+      canvas.drawCircle(Offset(size.width / 2, size.height / 2), r, paint);
+      return;
+    }
+    final corner = math.max(0.0, radius - inset);
+    final rrect = RRect.fromLTRBR(
+      inset,
+      inset,
+      size.width - inset,
+      size.height - inset,
+      Radius.circular(corner),
+    );
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GamepadFocusOutlinePainter oldDelegate) {
+    return oldDelegate.radius != radius ||
+        oldDelegate.borderWidth != borderWidth ||
+        oldDelegate.shape != shape;
   }
 }
 
