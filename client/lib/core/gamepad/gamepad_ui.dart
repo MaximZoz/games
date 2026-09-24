@@ -122,6 +122,14 @@ bool _switchTab(int delta) {
 bool _moveFocus(TraversalDirection direction) {
   final start = FocusManager.instance.primaryFocus;
   final root = FocusManager.instance.rootScope;
+  final blocks = _visibleGamepadFocusBlocks();
+  final onBlock = start?.context != null &&
+      GamepadFocusBlock.maybeOf(start!.context!) != null;
+  final startUsable =
+      start != null && start != root && isGamepadFocusVisible(start);
+  if (onBlock || (blocks.isNotEmpty && !startUsable)) {
+    if (_moveGamepadBlock(direction, blocks)) return true;
+  }
   if (start == null || start == root || start.context == null) {
     return focusFirstVisibleGamepadTarget();
   }
@@ -143,7 +151,116 @@ bool _moveFocus(TraversalDirection direction) {
       return true;
     }
   }
+  if (_moveGamepadBlock(direction, _visibleGamepadFocusBlocks())) {
+    return true;
+  }
   return focusFirstVisibleGamepadTarget();
+}
+
+List<FocusNode> _visibleGamepadFocusBlocks() {
+  final out = <FocusNode>[];
+  void walk(FocusNode node) {
+    if (node.debugLabel == 'GamepadFocusBlock' &&
+        isGamepadFocusVisible(node)) {
+      out.add(node);
+    }
+    for (final child in List<FocusNode>.from(node.children)) {
+      walk(child);
+    }
+  }
+
+  walk(FocusManager.instance.rootScope);
+  return out;
+}
+
+bool _moveGamepadBlock(
+  TraversalDirection direction,
+  List<FocusNode> blocks,
+) {
+  if (blocks.isEmpty) return false;
+  final current = FocusManager.instance.primaryFocus;
+  final index = _indexOfGamepadBlock(blocks, current);
+  final FocusNode next;
+  if (index < 0) {
+    next = (direction == TraversalDirection.up ||
+            direction == TraversalDirection.left)
+        ? blocks.last
+        : blocks.first;
+  } else {
+    next = _neighborGamepadBlock(blocks, index, direction);
+  }
+  next.requestFocus();
+  _ensureVisible(next);
+  return true;
+}
+
+int _indexOfGamepadBlock(List<FocusNode> blocks, FocusNode? current) {
+  if (current == null) return -1;
+  final direct = blocks.indexOf(current);
+  if (direct >= 0) return direct;
+  final ctx = current.context;
+  if (ctx == null) return -1;
+  final scope = GamepadFocusBlock.maybeOf(ctx);
+  if (scope == null) return -1;
+  return blocks.indexWhere((node) {
+    final nodeCtx = node.context;
+    return nodeCtx != null &&
+        identical(GamepadFocusBlock.maybeOf(nodeCtx), scope);
+  });
+}
+
+FocusNode _neighborGamepadBlock(
+  List<FocusNode> blocks,
+  int index,
+  TraversalDirection direction,
+) {
+  final current = blocks[index];
+  final curRect = _focusRect(current);
+  if (curRect != null) {
+    FocusNode? best;
+    var bestScore = double.infinity;
+    for (final node in blocks) {
+      if (identical(node, current)) continue;
+      final rect = _focusRect(node);
+      if (rect == null) continue;
+      final dx = rect.center.dx - curRect.center.dx;
+      final dy = rect.center.dy - curRect.center.dy;
+      final ok = switch (direction) {
+        TraversalDirection.down => dy > 8,
+        TraversalDirection.up => dy < -8,
+        TraversalDirection.right => dx > 8,
+        TraversalDirection.left => dx < -8,
+      };
+      if (!ok) continue;
+      final primary = direction == TraversalDirection.down ||
+              direction == TraversalDirection.up
+          ? dy.abs()
+          : dx.abs();
+      final secondary = direction == TraversalDirection.down ||
+              direction == TraversalDirection.up
+          ? dx.abs()
+          : dy.abs();
+      final score = secondary * 3 + primary;
+      if (score < bestScore) {
+        bestScore = score;
+        best = node;
+      }
+    }
+    if (best != null) return best;
+  }
+  final delta = direction == TraversalDirection.down ||
+          direction == TraversalDirection.right
+      ? 1
+      : -1;
+  return blocks[(index + delta) % blocks.length];
+}
+
+Rect? _focusRect(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null) return null;
+  final ro = ctx.findRenderObject();
+  if (ro is! RenderBox || !ro.hasSize || !ro.attached) return null;
+  return ro.localToGlobal(Offset.zero) & ro.size;
 }
 
 void _ensureVisible(FocusNode? node) {

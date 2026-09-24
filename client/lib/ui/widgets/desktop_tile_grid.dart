@@ -36,38 +36,40 @@ class DesktopTileGrid extends StatelessWidget {
       return mobileBuilder(context);
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final contentWidth = (constraints.maxWidth - padding.horizontal)
-            .clamp(0.0, maxContentWidth);
-        final crossAxisCount =
-            (contentWidth / (maxCellWidth + gap)).floor().clamp(1, maxColumns);
-        final itemWidth =
-            (contentWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
+    return FocusScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentWidth = (constraints.maxWidth - padding.horizontal)
+              .clamp(0.0, maxContentWidth);
+          final crossAxisCount =
+              (contentWidth / (maxCellWidth + gap)).floor().clamp(1, maxColumns);
+          final itemWidth =
+              (contentWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
 
-        return SingleChildScrollView(
-          padding: padding,
-          physics: physics,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: contentWidth,
-              child: Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                alignment: WrapAlignment.center,
-                children: [
-                  for (var i = 0; i < itemCount; i++)
-                    SizedBox(
-                      width: itemWidth,
-                      child: itemBuilder(context, i),
-                    ),
-                ],
+          return SingleChildScrollView(
+            padding: padding,
+            physics: physics,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: contentWidth,
+                child: Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    for (var i = 0; i < itemCount; i++)
+                      SizedBox(
+                        width: itemWidth,
+                        child: itemBuilder(context, i),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
