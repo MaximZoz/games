@@ -120,10 +120,14 @@ GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
     return GamepadAction.actionY;
   }
   if (key == LogicalKeyboardKey.gameButtonLeft1 ||
+      key == LogicalKeyboardKey.gameButtonLeft2 ||
+      key == LogicalKeyboardKey.gameButton5 ||
       key == LogicalKeyboardKey.pageUp) {
     return GamepadAction.shoulderL;
   }
   if (key == LogicalKeyboardKey.gameButtonRight1 ||
+      key == LogicalKeyboardKey.gameButtonRight2 ||
+      key == LogicalKeyboardKey.gameButton6 ||
       key == LogicalKeyboardKey.pageDown) {
     return GamepadAction.shoulderR;
   }
@@ -134,4 +138,43 @@ GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
     return GamepadAction.select;
   }
   return null;
+}
+
+/// Android [KeyEvent] keyCode → действие. Дубль HardwareKeyboard.
+GamepadAction? gamepadActionFromAndroidKeyCode(int keyCode) {
+  switch (keyCode) {
+    case 19: // KEYCODE_DPAD_UP
+      return GamepadAction.up;
+    case 20: // KEYCODE_DPAD_DOWN
+      return GamepadAction.down;
+    case 21: // KEYCODE_DPAD_LEFT
+      return GamepadAction.left;
+    case 22: // KEYCODE_DPAD_RIGHT
+      return GamepadAction.right;
+    case 23: // KEYCODE_DPAD_CENTER
+    case 66: // KEYCODE_ENTER
+    case 96: // KEYCODE_BUTTON_A
+      return GamepadAction.confirm;
+    case 4: // KEYCODE_BACK
+    case 97: // KEYCODE_BUTTON_B
+      return GamepadAction.cancel;
+    case 99: // KEYCODE_BUTTON_X
+      return GamepadAction.actionX;
+    case 100: // KEYCODE_BUTTON_Y
+      return GamepadAction.actionY;
+    case 102: // KEYCODE_BUTTON_L1
+    case 104: // KEYCODE_BUTTON_L2
+    case 192: // KEYCODE_BUTTON_5
+      return GamepadAction.shoulderL;
+    case 103: // KEYCODE_BUTTON_R1
+    case 105: // KEYCODE_BUTTON_R2
+    case 193: // KEYCODE_BUTTON_6
+      return GamepadAction.shoulderR;
+    case 108: // KEYCODE_BUTTON_START
+      return GamepadAction.menu;
+    case 109: // KEYCODE_BUTTON_SELECT
+      return GamepadAction.select;
+    default:
+      return null;
+  }
 }

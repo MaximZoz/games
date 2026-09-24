@@ -8,6 +8,7 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Хаб «Монеты»: вход, друг и задания.
@@ -30,8 +31,7 @@ class CoinsScreen extends ConsumerWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),

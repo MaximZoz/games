@@ -18,6 +18,8 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -137,8 +139,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -213,10 +214,14 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
     final price = groupItems
         .map((e) => e.priceBronze)
         .fold<int>(groupItems.first.priceBronze, math.min);
-    return Material(
+    return GamepadFocusBlock(
+      radius: 16,
+      onActivate: () => context.push('/shop/emojis/$group'),
+      child: Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
+        canRequestFocus: false,
         borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/shop/emojis/$group'),
         child: Container(
@@ -264,6 +269,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -410,12 +416,20 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         formatRewardBronze(item.priceBronze),
       ),
       bottomAction: Builder(
-        builder: (dialogContext) => FilledButton(
-          onPressed: () {
+        builder: (dialogContext) => GamepadFocusBlock(
+          autofocus: true,
+          radius: 16,
+          onActivate: () {
             Navigator.of(dialogContext).pop();
             unawaited(_buy(item));
           },
-          child: Text(context.l10n.shopBuy),
+          child: FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              unawaited(_buy(item));
+            },
+            child: Text(context.l10n.shopBuy),
+          ),
         ),
       ),
     );
@@ -459,8 +473,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -608,7 +621,10 @@ class _EmojiBuyTile extends StatelessWidget {
     final name = (item.animatedName ?? '').trim();
     final fallback = item.emoji ?? '🙂';
 
-    return Material(
+    return GamepadFocusBlock(
+      radius: 18,
+      onActivate: onPreview,
+      child: Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(18),
       // Не клипаем жёстко содержимое: Lottie/emoji часто чуть выходят за бокс.
@@ -626,6 +642,7 @@ class _EmojiBuyTile extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
+                  canRequestFocus: false,
                   onTap: onPreview,
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
@@ -673,6 +690,7 @@ class _EmojiBuyTile extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             InkWell(
+              canRequestFocus: false,
               onTap: busy ? null : onBuy,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
@@ -700,6 +718,7 @@ class _EmojiBuyTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

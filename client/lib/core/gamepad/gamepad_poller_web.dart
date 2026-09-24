@@ -91,7 +91,11 @@ class WebGamepadPoller implements GamepadPoller {
           x: axes[2].toDartDouble,
           y: axes[3].toDartDouble,
         );
-        if (right != null) heldDirections.add(right);
+        if (right == GamepadAction.up) {
+          heldDirections.add(GamepadAction.scrollUp);
+        } else if (right == GamepadAction.down) {
+          heldDirections.add(GamepadAction.scrollDown);
+        }
       }
 
       final tracker = _repeat.putIfAbsent(index, GamepadRepeatTracker.new);

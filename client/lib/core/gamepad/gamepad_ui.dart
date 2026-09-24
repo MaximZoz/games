@@ -6,12 +6,18 @@ import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
+/// Правый стик / статистика: страница скролла.
+bool scrollGamepadByPage(int direction) => _scrollPage(direction);
+
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
   unfocusOffstagePrimaryFocus();
   if (action == GamepadAction.shoulderL ||
       action == GamepadAction.shoulderR) {
     return _switchTab(action == GamepadAction.shoulderL ? -1 : 1);
+  }
+  if (action.isScroll) {
+    return _scrollPage(action == GamepadAction.scrollUp ? -1 : 1);
   }
 
   if (isEditableTextFocused() &&
@@ -37,9 +43,17 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
       return _moveFocus(TraversalDirection.down);
     case GamepadAction.left:
       if (_nudgeFocused(-1)) return true;
+      if (!_hasHorizontalNeighbor(TraversalDirection.left) &&
+          _switchTab(-1)) {
+        return true;
+      }
       return _moveFocus(TraversalDirection.left);
     case GamepadAction.right:
       if (_nudgeFocused(1)) return true;
+      if (!_hasHorizontalNeighbor(TraversalDirection.right) &&
+          _switchTab(1)) {
+        return true;
+      }
       return _moveFocus(TraversalDirection.right);
     case GamepadAction.confirm:
       return _activateFocused();
@@ -55,6 +69,8 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     case GamepadAction.actionY:
     case GamepadAction.shoulderL:
     case GamepadAction.shoulderR:
+    case GamepadAction.scrollUp:
+    case GamepadAction.scrollDown:
     case GamepadAction.select:
       return false;
   }
@@ -123,6 +139,74 @@ bool _switchTab(int delta) {
   if (tab == null) return false;
   tab(delta);
   return true;
+}
+
+bool _hasHorizontalNeighbor(TraversalDirection direction) {
+  final blocks = _visibleGamepadFocusBlocks();
+  if (blocks.length < 2) return false;
+  final current = FocusManager.instance.primaryFocus;
+  final index = _indexOfGamepadBlock(blocks, current);
+  if (index < 0) return false;
+  final curRect = _focusRect(blocks[index]);
+  if (curRect == null) return false;
+  for (final node in blocks) {
+    if (identical(node, blocks[index])) continue;
+    final rect = _focusRect(node);
+    if (rect == null) continue;
+    final dx = rect.center.dx - curRect.center.dx;
+    if (direction == TraversalDirection.right && dx > 8) return true;
+    if (direction == TraversalDirection.left && dx < -8) return true;
+  }
+  return false;
+}
+
+bool _scrollPage(int direction) {
+  final ctx = FocusManager.instance.primaryFocus?.context;
+  final pos = ctx == null
+      ? null
+      : Scrollable.maybeOf(ctx)?.position;
+  final fallback = _nearestScrollPosition();
+  final position = pos ?? fallback;
+  if (position == null || !position.hasPixels || !position.hasContentDimensions) {
+    return false;
+  }
+  final viewport = position.viewportDimension;
+  if (viewport <= 0) return false;
+  final delta = viewport * 0.72 * direction;
+  final next = (position.pixels + delta).clamp(
+    position.minScrollExtent,
+    position.maxScrollExtent,
+  );
+  if ((next - position.pixels).abs() < 1) return false;
+  position.animateTo(
+    next,
+    duration: const Duration(milliseconds: 160),
+    curve: Curves.easeOut,
+  );
+  return true;
+}
+
+ScrollPosition? _nearestScrollPosition() {
+  ScrollPosition? found;
+  void walk(Element el) {
+    if (found != null) return;
+    final ro = el.renderObject;
+    if (ro is RenderBox && ro.hasSize && ro.attached) {
+      final ctx = el;
+      if (isGamepadContextOnstage(ctx)) {
+        final pos = Scrollable.maybeOf(ctx)?.position;
+        if (pos != null && pos.maxScrollExtent > pos.minScrollExtent) {
+          found = pos;
+          return;
+        }
+      }
+    }
+    el.visitChildren(walk);
+  }
+
+  final root = WidgetsBinding.instance.rootElement;
+  root?.visitChildren(walk);
+  return found;
 }
 
 bool _moveFocus(TraversalDirection direction) {

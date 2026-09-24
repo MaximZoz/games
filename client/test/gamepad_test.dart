@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
@@ -1057,5 +1058,87 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
     expect(gamepadConnected(), isTrue);
+  });
+
+  test('Android L1/R1 и D-pad мапятся в плечи и крест', () {
+    expect(gamepadActionFromAndroidKeyCode(102), GamepadAction.shoulderL);
+    expect(gamepadActionFromAndroidKeyCode(103), GamepadAction.shoulderR);
+    expect(gamepadActionFromAndroidKeyCode(19), GamepadAction.up);
+    expect(gamepadActionFromAndroidKeyCode(22), GamepadAction.right);
+    expect(gamepadActionFromKey(LogicalKeyboardKey.gameButton5), GamepadAction.shoulderL);
+    expect(gamepadActionFromKey(LogicalKeyboardKey.gameButton6), GamepadAction.shoulderR);
+  });
+
+  testWidgets('влево/вправо сразу листают вкладки без предварительного вверх',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (delta) => tabs += delta;
+    addTearDown(() => GamepadNav.switchTab = null);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: ListView(
+                children: [
+                  HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'x',
+                    onTap: () {},
+                  ),
+                  HomeActionCard(
+                    icon: Icons.monetization_on_rounded,
+                    title: 'Монеты',
+                    subtitle: 'x',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.right);
+    await tester.pump();
+    expect(tabs, 1);
+    GamepadService.instance.emit(GamepadAction.left);
+    await tester.pump();
+    expect(tabs, 0);
+  });
+
+  testWidgets('кнопка назад — квадрат 40 с круглой обводкой', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var back = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: GamepadBackButton(onPressed: () => back++),
+              ),
+              body: const SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final box = tester.getSize(find.byType(GamepadFocusBlock));
+    expect(box.width, 40);
+    expect(box.height, 40);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(back, 1);
   });
 }

@@ -15,6 +15,8 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -95,9 +97,14 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(l10n.commonCancel),
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.shopBuy),
+            GamepadFocusBlock(
+              autofocus: true,
+              radius: 16,
+              onActivate: () => Navigator.of(dialogContext).pop(true),
+              child: FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.shopBuy),
+              ),
             ),
           ],
         );
@@ -166,8 +173,7 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -250,7 +256,10 @@ class _ShopItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Container(
+    return GamepadFocusBlock(
+      radius: 16,
+      onActivate: item.owned || busy ? null : onBuy,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
@@ -328,6 +337,7 @@ class _ShopItemCard extends StatelessWidget {
               child: Text(busy ? '…' : l10n.shopBuy),
             ),
         ],
+      ),
       ),
     );
   }

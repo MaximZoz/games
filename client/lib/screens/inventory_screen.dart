@@ -23,6 +23,8 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/utils/user_error.dart';
 
@@ -373,8 +375,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -468,6 +469,16 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
                                     subtitle: context.l10n
                                         .inventoryEmojiLeft(it.quantity),
+                                    onTap: () => showCollectionFullscreen(
+                                      context,
+                                      title: catalogTitle(
+                                        it.code,
+                                        fallback: it.title,
+                                        l10n: context.l10n,
+                                      ),
+                                      animatedName: it.animatedName ?? 'smile',
+                                      fallback: it.emoji,
+                                    ),
                                   ),
                               ],
                             ),
@@ -860,7 +871,10 @@ class _CollectionInvTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GamepadFocusBlock(
+      radius: 14,
+      onActivate: onOpen,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(14),
@@ -972,6 +986,7 @@ class _CollectionInvTile extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -1046,15 +1061,20 @@ class _InvTile extends StatelessWidget {
     required this.leading,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final Widget leading;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GamepadFocusBlock(
+      radius: 14,
+      onActivate: onTap,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(14),
@@ -1088,6 +1108,7 @@ class _InvTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

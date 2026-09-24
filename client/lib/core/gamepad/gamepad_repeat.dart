@@ -22,7 +22,7 @@ class GamepadRepeatTracker {
   }) {
     final out = <GamepadAction>[];
     for (final action in pressedNow) {
-      if (!action.isDirection) {
+      if (!action.isDirection && !action.isScroll) {
         out.add(action);
       }
     }

@@ -15,6 +15,8 @@ import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/framed_avatar.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class AchievementsScreen extends ConsumerStatefulWidget {
@@ -167,8 +169,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -246,7 +247,10 @@ class _AchievementCard extends StatelessWidget {
     final l10n = context.l10n;
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
-    return GradientCard(
+    return GamepadFocusBlock(
+      radius: 18,
+      onActivate: onClaim,
+      child: GradientCard(
       margin: EdgeInsets.zero,
       animate: false,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -376,6 +380,7 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
         ],
+      ),
       ),
     );
   }
