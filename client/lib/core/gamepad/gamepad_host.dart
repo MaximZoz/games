@@ -66,6 +66,9 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
         event.action == GamepadAction.shoulderR) {
       if (handleGamepadUiAction(context, event.action)) return;
     }
+    if (event.action.isScroll) {
+      if (handleGamepadUiAction(context, event.action)) return;
+    }
     if (GamepadDispatcher.dispatch(event.action)) return;
     handleGamepadUiAction(context, event.action);
   }

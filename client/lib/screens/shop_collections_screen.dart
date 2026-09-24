@@ -16,6 +16,8 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -107,8 +109,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -180,17 +181,23 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       (sum, e) => sum + e.dailyBronze,
     );
     final ownedCount = groupItems.where((e) => e.owned).length;
-    return Material(
+    Future<void> openSet() async {
+      await context.push('/shop/collections/$set');
+      if (!mounted) return;
+      ref.invalidate(shopCatalogProvider);
+      await _reloadSilent();
+    }
+
+    return GamepadFocusBlock(
+      radius: 16,
+      onActivate: () => unawaited(openSet()),
+      child: Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
+        canRequestFocus: false,
         borderRadius: BorderRadius.circular(16),
-        onTap: () async {
-          await context.push('/shop/collections/$set');
-          if (!mounted) return;
-          ref.invalidate(shopCatalogProvider);
-          await _reloadSilent();
-        },
+        onTap: () => unawaited(openSet()),
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
           decoration: BoxDecoration(
@@ -268,6 +275,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -424,8 +432,7 @@ class _ShopCollectionGroupScreenState
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -508,12 +515,20 @@ class _ShopCollectionGroupScreenState
         bottomAction: item.owned
             ? null
             : Builder(
-                builder: (dialogContext) => FilledButton(
-                  onPressed: () {
+                builder: (dialogContext) => GamepadFocusBlock(
+                  autofocus: true,
+                  radius: 16,
+                  onActivate: () {
                     Navigator.of(dialogContext).pop();
                     unawaited(_buy(item));
                   },
-                  child: Text(context.l10n.shopBuy),
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      unawaited(_buy(item));
+                    },
+                    child: Text(context.l10n.shopBuy),
+                  ),
                 ),
               ),
       ),
@@ -585,7 +600,10 @@ class _CollectionShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GamepadFocusBlock(
+      radius: 18,
+      onActivate: onPreview,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
@@ -595,6 +613,7 @@ class _CollectionShopCard extends StatelessWidget {
       child: Row(
         children: [
           InkWell(
+            canRequestFocus: false,
             onTap: onPreview,
             borderRadius: BorderRadius.circular(12),
             child: ShopAnimatedEmoji(
@@ -647,6 +666,7 @@ class _CollectionShopCard extends StatelessWidget {
               child: Text(busy ? '…' : context.l10n.shopBuy),
             ),
         ],
+      ),
       ),
     );
   }

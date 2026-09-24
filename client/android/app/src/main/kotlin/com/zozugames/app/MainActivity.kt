@@ -8,9 +8,12 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import kotlin.math.abs
 
 /// Flutter [HapticFeedback] на Android — это View.performHapticFeedback
 /// (KEYBOARD_TAP / CLOCK_TICK). На большинстве телефонов мотор молчит,
@@ -39,8 +42,11 @@ class MainActivity : FlutterActivity() {
                     result.error("vibrate", e.message, null)
                 }
             }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, GAMEPAD_CHANNEL)
-            .setMethodCallHandler { call, result ->
+        gamepadChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            GAMEPAD_CHANNEL,
+        )
+        gamepadChannel?.setMethodCallHandler { call, result ->
                 if (call.method != "listDevices") {
                     result.notImplemented()
                     return@setMethodCallHandler
@@ -51,6 +57,80 @@ class MainActivity : FlutterActivity() {
                     result.error("gamepad", e.message, null)
                 }
             }
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (event.isFromSource(InputDevice.SOURCE_JOYSTICK) ||
+            event.isFromSource(InputDevice.SOURCE_GAMEPAD)
+        ) {
+            sendGamepadMotion(event)
+        }
+        return super.dispatchGenericMotionEvent(event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.device?.isGamepadLike() == true || event.isGamepadButton) {
+            try {
+                gamepadChannel?.invokeMethod(
+                    "key",
+                    hashMapOf(
+                        "keyCode" to event.keyCode,
+                        "down" to (event.action == KeyEvent.ACTION_DOWN),
+                        "repeat" to event.repeatCount,
+                    ),
+                )
+            } catch (_: Throwable) {
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun sendGamepadMotion(event: MotionEvent) {
+        val device = event.device
+        val rx = pickAxis(event, MotionEvent.AXIS_Z, MotionEvent.AXIS_RX)
+        val ry = pickAxis(event, MotionEvent.AXIS_RZ, MotionEvent.AXIS_RY)
+        try {
+            gamepadChannel?.invokeMethod(
+                "motion",
+                hashMapOf(
+                    "id" to "android-${device?.id ?: 0}",
+                    "name" to (device?.name?.trim().orEmpty().ifEmpty { "Gamepad" }),
+                    "lx" to event.getAxisValue(MotionEvent.AXIS_X),
+                    "ly" to event.getAxisValue(MotionEvent.AXIS_Y),
+                    "rx" to rx,
+                    "ry" to ry,
+                    "hx" to event.getAxisValue(MotionEvent.AXIS_HAT_X),
+                    "hy" to event.getAxisValue(MotionEvent.AXIS_HAT_Y),
+                ),
+            )
+        } catch (_: Throwable) {
+        }
+    }
+
+    private fun pickAxis(event: MotionEvent, a: Int, b: Int): Float {
+        val va = event.getAxisValue(a)
+        val vb = event.getAxisValue(b)
+        return if (abs(va) >= abs(vb)) va else vb
+    }
+
+    private val KeyEvent.isGamepadButton: Boolean
+        get() = keyCode == KeyEvent.KEYCODE_BUTTON_A ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_B ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_X ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_Y ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_L1 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_R1 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_L2 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_R2 ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_START ||
+            keyCode == KeyEvent.KEYCODE_BUTTON_SELECT ||
+            keyCode in KeyEvent.KEYCODE_BUTTON_1..KeyEvent.KEYCODE_BUTTON_16
+
+    private fun InputDevice.isGamepadLike(): Boolean {
+        if (isVirtual) return false
+        val sources = sources
+        return sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
+            sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
     }
 
     private fun listGamepads(): List<Map<String, Any>> {
@@ -156,4 +236,6 @@ class MainActivity : FlutterActivity() {
         private const val GAMEPAD_CHANNEL = "zozu/gamepad"
         private const val MAX_AMPLITUDE = 255
     }
+
+    private var gamepadChannel: MethodChannel? = null
 }

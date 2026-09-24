@@ -19,6 +19,8 @@ class GamepadFocusRegistry {
   static void reset() => _nodes.clear();
 }
 
+enum GamepadHighlightShape { roundedRect, circle }
+
 /// Карточка/блок, по которому ходит геймпад: одна цель, обводка по рамке.
 class GamepadFocusBlock extends StatefulWidget {
   const GamepadFocusBlock({
@@ -28,6 +30,8 @@ class GamepadFocusBlock extends StatefulWidget {
     this.radius = 22,
     this.borderWidth = 2,
     this.autofocus = false,
+    this.focusable = true,
+    this.shape = GamepadHighlightShape.roundedRect,
   });
 
   final Widget child;
@@ -35,6 +39,8 @@ class GamepadFocusBlock extends StatefulWidget {
   final double radius;
   final double borderWidth;
   final bool autofocus;
+  final bool focusable;
+  final GamepadHighlightShape shape;
 
   static GamepadFocusScope? maybeOf(BuildContext context) {
     return context.findAncestorWidgetOfExactType<GamepadFocusScope>();
@@ -52,8 +58,8 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     super.initState();
     _focus = FocusNode(
       debugLabel: 'GamepadFocusBlock',
-      canRequestFocus: widget.onActivate != null,
-      skipTraversal: widget.onActivate == null,
+      canRequestFocus: widget.focusable,
+      skipTraversal: !widget.focusable,
       descendantsAreFocusable: false,
       descendantsAreTraversable: false,
     );
@@ -63,8 +69,8 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   @override
   void didUpdateWidget(GamepadFocusBlock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _focus.canRequestFocus = widget.onActivate != null;
-    _focus.skipTraversal = widget.onActivate == null;
+    _focus.canRequestFocus = widget.focusable;
+    _focus.skipTraversal = !widget.focusable;
   }
 
   @override
@@ -81,8 +87,8 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       child: Focus(
         focusNode: _focus,
         autofocus: widget.autofocus,
-        canRequestFocus: widget.onActivate != null,
-        skipTraversal: widget.onActivate == null,
+        canRequestFocus: widget.focusable,
+        skipTraversal: !widget.focusable,
         descendantsAreFocusable: false,
         descendantsAreTraversable: false,
         child: ListenableBuilder(
@@ -103,13 +109,22 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
                   Positioned.fill(
                     child: IgnorePointer(
                       child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(outerRadius),
-                          border: Border.all(
-                            color: AppColors.accentStart,
-                            width: widget.borderWidth,
-                          ),
-                        ),
+                        decoration: widget.shape == GamepadHighlightShape.circle
+                            ? BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.accentStart,
+                                  width: widget.borderWidth,
+                                ),
+                              )
+                            : BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.circular(outerRadius),
+                                border: Border.all(
+                                  color: AppColors.accentStart,
+                                  width: widget.borderWidth,
+                                ),
+                              ),
                       ),
                     ),
                   ),

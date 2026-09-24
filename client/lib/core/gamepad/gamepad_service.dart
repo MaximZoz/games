@@ -32,6 +32,9 @@ class GamepadService {
   bool _keyHandlerAttached = false;
   Timer? _nativePoll;
   bool _nativePollScheduled = false;
+  AndroidGamepadBridge? _androidBridge;
+  GamepadAction? _lastEmitted;
+  DateTime? _lastEmittedAt;
 
   static const recentWindow = Duration(minutes: 10);
   static const keyPadId = 'key-pad';
@@ -64,6 +67,13 @@ class GamepadService {
     if (debugPollNative &&
         !kIsWeb &&
         defaultTargetPlatform == TargetPlatform.android) {
+      _androidBridge ??= AndroidGamepadBridge(
+        onEvent: _emit,
+        onDevices: (next) {
+          if (next.isNotEmpty) devices.value = List<GamepadDevice>.from(next);
+        },
+      );
+      _androidBridge?.start();
       _nativePoll = Timer.periodic(const Duration(seconds: 2), (_) {
         unawaited(_refreshNativeDevices());
       });
@@ -77,6 +87,8 @@ class GamepadService {
     _nativePoll?.cancel();
     _nativePoll = null;
     _nativePollScheduled = false;
+    _androidBridge?.stop();
+    _androidBridge = null;
     _poller.stop();
     if (_keyHandlerAttached) {
       HardwareKeyboard.instance.removeHandler(_onKey);
@@ -106,12 +118,23 @@ class GamepadService {
     devices.value = const [];
     lastActiveAt = null;
     activityTick.value = 0;
+    _lastEmitted = null;
+    _lastEmittedAt = null;
     debugPollNative = true;
     GamepadKeyboardController.instance.hide();
   }
 
   void _emit(GamepadActionEvent event) {
     markActive();
+    final now = DateTime.now();
+    final lastAt = _lastEmittedAt;
+    if (lastAt != null &&
+        _lastEmitted == event.action &&
+        now.difference(lastAt) < const Duration(milliseconds: 28)) {
+      return;
+    }
+    _lastEmitted = event.action;
+    _lastEmittedAt = now;
     if (!_events.hasListener) return;
     _events.add(event);
   }
@@ -134,7 +157,7 @@ class GamepadService {
     unfocusOffstagePrimaryFocus();
     final fromPad = isDedicatedGamepadKey(event.logicalKey);
     // D-pad на Android приходит как стрелки — без этого обводка не вспыхнет.
-    if (fromPad || action.isDirection) {
+    if (fromPad || action.isDirection || shoulder) {
       _rememberKeyGamepad();
     }
     if (fromPad) {

@@ -75,7 +75,9 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '◆', color: Color(0xFF5B6478)),
       };
     case GamepadFamily.nintendo:
@@ -99,7 +101,9 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '+', color: Color(0xFF5B6478)),
       };
     case GamepadFamily.xbox:
@@ -123,7 +127,9 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '+', color: Color(0xFF5B6478)),
       };
   }

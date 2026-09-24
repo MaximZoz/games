@@ -11,6 +11,8 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/balance_gain_animation.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class CoinsLoginScreen extends ConsumerStatefulWidget {
@@ -121,8 +123,7 @@ class _CoinsLoginScreenState extends ConsumerState<CoinsLoginScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -200,17 +201,21 @@ class _LoginRewardsBody extends StatelessWidget {
           compactTile: useTiles,
         );
 
-    final claimButton = SizedBox(
-      key: claimButtonKey,
-      width: useTiles ? 320 : double.infinity,
-      child: FilledButton.icon(
-        onPressed: canClaim ? onClaim : null,
-        icon: const Icon(Icons.card_giftcard, size: 18),
-        label: Text(
-          status.available ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
-        ),
-        style: AppButtonStyles.of(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    final claimButton = GamepadFocusBlock(
+      radius: 16,
+      onActivate: canClaim ? onClaim : null,
+      child: SizedBox(
+        key: claimButtonKey,
+        width: useTiles ? 320 : double.infinity,
+        child: FilledButton.icon(
+          onPressed: canClaim ? onClaim : null,
+          icon: const Icon(Icons.card_giftcard, size: 18),
+          label: Text(
+            status.available ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
+          ),
+          style: AppButtonStyles.of(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
         ),
       ),
     );

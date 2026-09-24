@@ -9,6 +9,8 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 class CoinsFriendScreen extends ConsumerStatefulWidget {
@@ -34,8 +36,7 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -170,7 +171,7 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                       .withValues(alpha: 0.45),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: SelectableText(
+                                child: Text(
                                   referralUrl,
                                   style: const TextStyle(
                                     fontSize: 12.5,
@@ -180,31 +181,41 @@ class _CoinsFriendScreenState extends ConsumerState<CoinsFriendScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.icon(
-                                  onPressed: () async {
-                                    await Clipboard.setData(
-                                      ClipboardData(text: referralUrl),
-                                    );
-                                    if (!mounted) return;
-                                    setState(() => _linkCopied = true);
-                                  },
-                                  icon: Icon(
-                                    _linkCopied
-                                        ? Icons.check_rounded
-                                        : Icons.link_rounded,
-                                    size: 18,
-                                  ),
-                                  label: Text(
-                                    _linkCopied
-                                        ? l10n.commonCopied
-                                        : l10n.coinsCopyLink,
-                                  ),
-                                  style: AppButtonStyles.of(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
+                              GamepadFocusBlock(
+                                radius: 16,
+                                onActivate: () async {
+                                  await Clipboard.setData(
+                                    ClipboardData(text: referralUrl),
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _linkCopied = true);
+                                },
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () async {
+                                      await Clipboard.setData(
+                                        ClipboardData(text: referralUrl),
+                                      );
+                                      if (!mounted) return;
+                                      setState(() => _linkCopied = true);
+                                    },
+                                    icon: Icon(
+                                      _linkCopied
+                                          ? Icons.check_rounded
+                                          : Icons.link_rounded,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      _linkCopied
+                                          ? l10n.commonCopied
+                                          : l10n.coinsCopyLink,
+                                    ),
+                                    style: AppButtonStyles.of(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
