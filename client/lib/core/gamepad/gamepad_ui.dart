@@ -8,6 +8,7 @@ import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
+  unfocusOffstagePrimaryFocus();
   if (action == GamepadAction.shoulderL ||
       action == GamepadAction.shoulderR) {
     return _switchTab(action == GamepadAction.shoulderL ? -1 : 1);
@@ -67,6 +68,12 @@ void scheduleFocusFirstVisibleGamepadTarget() {
 }
 
 bool focusFirstVisibleGamepadTarget() {
+  final blocks = _visibleGamepadFocusBlocks();
+  if (blocks.isNotEmpty) {
+    blocks.first.requestFocus();
+    _ensureVisible(blocks.first);
+    return true;
+  }
   FocusNode? first;
   void walk(FocusNode node) {
     if (first != null) return;
@@ -153,18 +160,40 @@ bool _moveFocus(TraversalDirection direction) {
 }
 
 List<FocusNode> _visibleGamepadFocusBlocks() {
+  final seen = <FocusNode>{};
   final out = <FocusNode>[];
-  void walk(FocusNode node) {
-    if (node.debugLabel == 'GamepadFocusBlock' &&
-        isGamepadFocusVisible(node)) {
-      out.add(node);
+
+  void consider(FocusNode node) {
+    if (!seen.add(node)) return;
+    if (!isGamepadFocusVisible(node)) return;
+    final ctx = node.context;
+    if (ctx == null) return;
+    if (!GamepadFocusRegistry.nodes.contains(node) &&
+        GamepadFocusBlock.maybeOf(ctx) == null) {
+      return;
     }
+    out.add(node);
+  }
+
+  for (final node in GamepadFocusRegistry.nodes) {
+    consider(node);
+  }
+  void walk(FocusNode node) {
+    consider(node);
     for (final child in List<FocusNode>.from(node.children)) {
       walk(child);
     }
   }
 
   walk(FocusManager.instance.rootScope);
+  out.sort((a, b) {
+    final ra = _focusRect(a);
+    final rb = _focusRect(b);
+    if (ra == null || rb == null) return 0;
+    final dy = ra.center.dy - rb.center.dy;
+    if (dy.abs() > 8) return dy.compareTo(0);
+    return ra.center.dx.compareTo(rb.center.dx);
+  });
   return out;
 }
 

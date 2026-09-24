@@ -3,8 +3,24 @@ import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
+/// Живые [FocusNode] карточек — без `debugLabel` (в релизе его нет).
+class GamepadFocusRegistry {
+  GamepadFocusRegistry._();
+
+  static final Set<FocusNode> _nodes = <FocusNode>{};
+
+  static List<FocusNode> get nodes => List<FocusNode>.unmodifiable(_nodes);
+
+  static void register(FocusNode node) => _nodes.add(node);
+
+  static void unregister(FocusNode node) => _nodes.remove(node);
+
+  @visibleForTesting
+  static void reset() => _nodes.clear();
+}
+
 /// Карточка/блок, по которому ходит геймпад: одна цель, обводка по рамке.
-class GamepadFocusBlock extends StatelessWidget {
+class GamepadFocusBlock extends StatefulWidget {
   const GamepadFocusBlock({
     super.key,
     required this.child,
@@ -25,50 +41,79 @@ class GamepadFocusBlock extends StatelessWidget {
   }
 
   @override
+  State<GamepadFocusBlock> createState() => _GamepadFocusBlockState();
+}
+
+class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
+  late final FocusNode _focus;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus = FocusNode(
+      debugLabel: 'GamepadFocusBlock',
+      canRequestFocus: widget.onActivate != null,
+      skipTraversal: widget.onActivate == null,
+      descendantsAreFocusable: false,
+      descendantsAreTraversable: false,
+    );
+    GamepadFocusRegistry.register(_focus);
+  }
+
+  @override
+  void didUpdateWidget(GamepadFocusBlock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _focus.canRequestFocus = widget.onActivate != null;
+    _focus.skipTraversal = widget.onActivate == null;
+  }
+
+  @override
+  void dispose() {
+    GamepadFocusRegistry.unregister(_focus);
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GamepadFocusScope(
-      onActivate: onActivate,
+      onActivate: widget.onActivate,
       child: Focus(
-        autofocus: autofocus,
-        canRequestFocus: onActivate != null,
-        debugLabel: 'GamepadFocusBlock',
-        skipTraversal: onActivate == null,
+        focusNode: _focus,
+        autofocus: widget.autofocus,
+        canRequestFocus: widget.onActivate != null,
+        skipTraversal: widget.onActivate == null,
         descendantsAreFocusable: false,
         descendantsAreTraversable: false,
-        child: Builder(
-          builder: (context) {
-            return ListenableBuilder(
-              listenable: Listenable.merge([
-                GamepadService.instance.devices,
-                GamepadService.instance.activityTick,
-              ]),
-              builder: (context, _) {
-                final focused = Focus.of(context).hasPrimaryFocus;
-                final show = focused && gamepadConnected();
-                // Рамка карточки: внешний радиус = radius + borderWidth.
-                final outerRadius = radius + borderWidth;
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    child,
-                    if (show)
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(outerRadius),
-                              border: Border.all(
-                                color: AppColors.accentStart,
-                                width: borderWidth,
-                              ),
-                            ),
+        child: ListenableBuilder(
+          listenable: Listenable.merge([
+            GamepadService.instance.devices,
+            GamepadService.instance.activityTick,
+            _focus,
+          ]),
+          builder: (context, _) {
+            final show = _focus.hasPrimaryFocus && gamepadConnected();
+            // Рамка карточки: внешний радиус = radius + borderWidth.
+            final outerRadius = widget.radius + widget.borderWidth;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                widget.child,
+                if (show)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(outerRadius),
+                          border: Border.all(
+                            color: AppColors.accentStart,
+                            width: widget.borderWidth,
                           ),
                         ),
                       ),
-                  ],
-                );
-              },
+                    ),
+                  ),
+              ],
             );
           },
         ),

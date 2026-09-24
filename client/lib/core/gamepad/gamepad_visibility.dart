@@ -58,3 +58,13 @@ bool isIndexedStackChildDisplayed(
   }
   return identical(displayed, child);
 }
+
+/// Скрытая ветка IndexedStack может оставить primaryFocus на поле чата.
+void unfocusOffstagePrimaryFocus() {
+  final node = FocusManager.instance.primaryFocus;
+  if (node == null || node == FocusManager.instance.rootScope) return;
+  final ctx = node.context;
+  if (ctx == null || !ctx.mounted) return;
+  if (isGamepadContextOnstage(ctx)) return;
+  node.unfocus();
+}
