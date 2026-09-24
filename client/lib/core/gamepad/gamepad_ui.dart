@@ -115,7 +115,6 @@ bool _switchTab(int delta) {
   final tab = GamepadNav.switchTab;
   if (tab == null) return false;
   tab(delta);
-  scheduleFocusFirstVisibleGamepadTarget();
   return true;
 }
 
@@ -123,12 +122,8 @@ bool _moveFocus(TraversalDirection direction) {
   final start = FocusManager.instance.primaryFocus;
   final root = FocusManager.instance.rootScope;
   final blocks = _visibleGamepadFocusBlocks();
-  final onBlock = start?.context != null &&
-      GamepadFocusBlock.maybeOf(start!.context!) != null;
-  final startUsable =
-      start != null && start != root && isGamepadFocusVisible(start);
-  if (onBlock || (blocks.isNotEmpty && !startUsable)) {
-    if (_moveGamepadBlock(direction, blocks)) return true;
+  if (blocks.isNotEmpty && _moveGamepadBlock(direction, blocks)) {
+    return true;
   }
   if (start == null || start == root || start.context == null) {
     return focusFirstVisibleGamepadTarget();

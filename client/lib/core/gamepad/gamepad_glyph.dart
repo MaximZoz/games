@@ -203,7 +203,10 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
     if (!isGamepadFocusVisible(node)) return null;
     final ctx = node!.context;
     if (ctx == null || !ctx.mounted) return null;
-    final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
+    if (GamepadFocusBlock.maybeOf(ctx) != null) return null;
+    if (ctx.findAncestorWidgetOfExactType<SnackBar>() != null) {
+      return null;
+    }
     final box = _highlightBox(ctx);
     if (box == null) return null;
     final overlayBox = context.findRenderObject();
@@ -218,8 +221,7 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
     const pad = 3.0;
     return Stack(
       children: [
-        if (!inBlock)
-          Positioned(
+        Positioned(
             left: topLeft.dx - pad,
             top: topLeft.dy - pad,
             width: box.size.width + pad * 2,
