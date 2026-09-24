@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -640,7 +643,15 @@ class ToolbarBalanceChip extends StatelessWidget {
       context: context,
       builder: (ctx) {
         final dialogL10n = ctx.l10n;
-        return AlertDialog(
+        void close() {
+          if (Navigator.of(ctx).canPop()) {
+            Navigator.of(ctx).pop();
+          }
+        }
+
+        return wrapGamepadDismissDialog(
+          onDismiss: close,
+          child: AlertDialog(
           title: Text(dialogL10n.balanceTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -692,6 +703,7 @@ class ToolbarBalanceChip extends StatelessWidget {
               );
             }).toList(),
           ),
+        ),
         );
       },
     );
@@ -699,9 +711,15 @@ class ToolbarBalanceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return GamepadFocusBlock(
+      chrome: GamepadChromeSlot.balance,
+      radius: 999,
+      borderWidth: 2.2,
+      onActivate: () => _showBalancePopup(context, bronze),
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
+        canRequestFocus: false,
         onTap: () => _showBalancePopup(context, bronze),
         borderRadius: BorderRadius.circular(999),
         child: Container(
@@ -730,6 +748,7 @@ class ToolbarBalanceChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

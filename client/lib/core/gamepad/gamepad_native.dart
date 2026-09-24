@@ -48,6 +48,10 @@ class AndroidGamepadBridge {
   double _ry = 0;
   double _hx = 0;
   double _hy = 0;
+  double _lt = 0;
+  double _rt = 0;
+  bool _ltHeld = false;
+  bool _rtHeld = false;
   String _id = '';
   String _name = 'Gamepad';
   bool _listening = false;
@@ -79,6 +83,8 @@ class AndroidGamepadBridge {
       _ry = (args['ry'] as num?)?.toDouble() ?? 0;
       _hx = (args['hx'] as num?)?.toDouble() ?? 0;
       _hy = (args['hy'] as num?)?.toDouble() ?? 0;
+      _lt = (args['lt'] as num?)?.toDouble() ?? 0;
+      _rt = (args['rt'] as num?)?.toDouble() ?? 0;
       final devices = <GamepadDevice>[
         GamepadDevice(
           id: _id.isEmpty ? 'android-pad' : _id,
@@ -111,6 +117,7 @@ class AndroidGamepadBridge {
 
   void _tick() {
     final held = <GamepadAction>{};
+    final pressedNow = <GamepadAction>{};
     final hat = gamepadActionFromStick(x: _hx, y: _hy, deadzone: 0.5);
     if (hat != null) held.add(hat);
     final left = gamepadActionFromStick(x: _lx, y: _ly);
@@ -118,9 +125,15 @@ class AndroidGamepadBridge {
     final right = gamepadActionFromStick(x: 0, y: _ry);
     if (right == GamepadAction.up) held.add(GamepadAction.scrollUp);
     if (right == GamepadAction.down) held.add(GamepadAction.scrollDown);
+    final lt = _lt >= 0.55;
+    if (lt && !_ltHeld) pressedNow.add(GamepadAction.triggerL);
+    _ltHeld = lt;
+    final rt = _rt >= 0.55;
+    if (rt && !_rtHeld) pressedNow.add(GamepadAction.triggerR);
+    _rtHeld = rt;
     final emits = _repeat.tick(
       heldDirections: held,
-      pressedNow: const {},
+      pressedNow: pressedNow,
       now: DateTime.now(),
     );
     for (final action in emits) {

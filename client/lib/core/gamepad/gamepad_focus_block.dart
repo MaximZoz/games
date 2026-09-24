@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -34,6 +35,7 @@ class GamepadFocusBlock extends StatefulWidget {
     this.autofocus = false,
     this.focusable = true,
     this.shape = GamepadHighlightShape.roundedRect,
+    this.chrome,
   });
 
   final Widget child;
@@ -43,6 +45,7 @@ class GamepadFocusBlock extends StatefulWidget {
   final bool autofocus;
   final bool focusable;
   final GamepadHighlightShape shape;
+  final GamepadChromeSlot? chrome;
 
   static GamepadFocusScope? maybeOf(BuildContext context) {
     return context.findAncestorWidgetOfExactType<GamepadFocusScope>();
@@ -66,6 +69,10 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       descendantsAreTraversable: false,
     );
     GamepadFocusRegistry.register(_focus);
+    final chrome = widget.chrome;
+    if (chrome != null) {
+      GamepadChromeRegistry.register(chrome, _focus);
+    }
   }
 
   @override
@@ -73,10 +80,21 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     super.didUpdateWidget(oldWidget);
     _focus.canRequestFocus = widget.focusable;
     _focus.skipTraversal = !widget.focusable;
+    if (oldWidget.chrome != widget.chrome) {
+      if (oldWidget.chrome != null) {
+        GamepadChromeRegistry.unregister(oldWidget.chrome!, _focus);
+      }
+      if (widget.chrome != null) {
+        GamepadChromeRegistry.register(widget.chrome!, _focus);
+      }
+    }
   }
 
   @override
   void dispose() {
+    if (widget.chrome != null) {
+      GamepadChromeRegistry.unregister(widget.chrome!, _focus);
+    }
     GamepadFocusRegistry.unregister(_focus);
     _focus.dispose();
     super.dispose();

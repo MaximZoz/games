@@ -15,11 +15,14 @@ import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
+import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -31,6 +34,7 @@ void main() {
     GamepadDispatcher.reset();
     GamepadFocusRegistry.reset();
     GamepadPagerRegistry.reset();
+    GamepadChromeRegistry.reset();
     GamepadService.debugPollNative = false;
     GamepadService.instance.reset();
     GamepadService.debugPollNative = false;
@@ -52,7 +56,8 @@ void main() {
     expect(gamepadActionFromStandardButton(14), GamepadAction.left);
     expect(gamepadActionFromStandardButton(15), GamepadAction.right);
     expect(gamepadActionFromStandardButton(9), GamepadAction.menu);
-    expect(gamepadActionFromStandardButton(7), isNull);
+    expect(gamepadActionFromStandardButton(6), GamepadAction.triggerL);
+    expect(gamepadActionFromStandardButton(7), GamepadAction.triggerR);
   });
 
   test('стик выбирает большую ось и игнорирует мёртвую зону', () {
@@ -1066,6 +1071,16 @@ void main() {
   test('Android L1/R1 и D-pad мапятся в плечи и крест', () {
     expect(gamepadActionFromAndroidKeyCode(102), GamepadAction.shoulderL);
     expect(gamepadActionFromAndroidKeyCode(103), GamepadAction.shoulderR);
+    expect(gamepadActionFromAndroidKeyCode(104), GamepadAction.triggerL);
+    expect(gamepadActionFromAndroidKeyCode(105), GamepadAction.triggerR);
+    expect(
+      gamepadActionFromKey(LogicalKeyboardKey.gameButtonLeft2),
+      GamepadAction.triggerL,
+    );
+    expect(
+      gamepadActionFromKey(LogicalKeyboardKey.gameButtonRight2),
+      GamepadAction.triggerR,
+    );
     expect(gamepadActionFromAndroidKeyCode(19), GamepadAction.up);
     expect(gamepadActionFromAndroidKeyCode(22), GamepadAction.right);
     expect(gamepadActionFromKey(LogicalKeyboardKey.gameButton5), GamepadAction.shoulderL);
@@ -1252,6 +1267,169 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(back, 1);
+  });
+
+  testWidgets('эксклюзивный диалог: A подтверждает, B и LB не трогают фон',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    var confirmed = 0;
+    var dismissed = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: GamepadScope(
+              exclusive: true,
+              onAction: (action) {
+                if (action == GamepadAction.confirm) {
+                  confirmed++;
+                } else {
+                  dismissed++;
+                }
+                return true;
+              },
+              child: const Scaffold(body: SizedBox.expand()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    expect(dismissed, 1);
+    expect(tabs, 0);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(dismissed, 2);
+    expect(tabs, 0);
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(confirmed, 1);
+  });
+
+  testWidgets('диалог покупки: A покупает, B закрывает только диалог',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var bought = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () async {
+                        bought = await showGamepadConfirmDialog(
+                          context: context,
+                          title: 'Купить',
+                          message: 'Товар',
+                          confirmLabel: 'Купить',
+                        );
+                      },
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Товар'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pumpAndSettle();
+    expect(find.text('Товар'), findsNothing);
+    expect(bought, isFalse);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(bought, isTrue);
+    expect(find.text('Товар'), findsNothing);
+  });
+
+  testWidgets('LT фокусирует баланс, вниз — карточки; RT — выход',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var cards = 0;
+    var logout = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                title: const ToolbarBalanceChip(bronze: 12),
+                actions: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: GamepadFocusBlock(
+                      chrome: GamepadChromeSlot.logout,
+                      shape: GamepadHighlightShape.circle,
+                      radius: 20,
+                      onActivate: () => logout++,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ],
+              ),
+              body: ListView(
+                children: [
+                  HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'x',
+                    onTap: () => cards++,
+                  ),
+                  HomeActionCard(
+                    icon: Icons.monetization_on_rounded,
+                    title: 'Монеты',
+                    subtitle: 'x',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.triggerL);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(FocusManager.instance.primaryFocus!.context!),
+      isNotNull,
+    );
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(cards, 1);
+    GamepadService.instance.emit(GamepadAction.triggerR);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(logout, 1);
   });
 }
 

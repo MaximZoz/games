@@ -9,10 +9,14 @@ class GamepadScope extends StatefulWidget {
     super.key,
     required this.onAction,
     required this.child,
+    this.exclusive = false,
   });
 
   final GamepadActionHandler onAction;
   final Widget child;
+
+  /// Диалог забирает весь ввод: LB/RB не листают вкладки, B не закрывает фон.
+  final bool exclusive;
 
   @override
   State<GamepadScope> createState() => _GamepadScopeState();
@@ -22,7 +26,7 @@ class _GamepadScopeState extends State<GamepadScope> {
   @override
   void initState() {
     super.initState();
-    GamepadDispatcher.push(_handle);
+    GamepadDispatcher.push(_handle, exclusive: widget.exclusive);
   }
 
   @override

@@ -101,6 +101,14 @@ class MainActivity : FlutterActivity() {
                     "ry" to ry,
                     "hx" to event.getAxisValue(MotionEvent.AXIS_HAT_X),
                     "hy" to event.getAxisValue(MotionEvent.AXIS_HAT_Y),
+                    "lt" to maxOf(
+                        event.getAxisValue(MotionEvent.AXIS_LTRIGGER),
+                        event.getAxisValue(MotionEvent.AXIS_BRAKE),
+                    ),
+                    "rt" to maxOf(
+                        event.getAxisValue(MotionEvent.AXIS_RTRIGGER),
+                        event.getAxisValue(MotionEvent.AXIS_GAS),
+                    ),
                 ),
             )
         } catch (_: Throwable) {
