@@ -17,6 +17,7 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -331,30 +332,18 @@ class _ShopCollectionGroupScreenState
     if (_buyInFlight.contains(item.code) || item.owned) return;
     final l10n = context.l10n;
     if (confirm) {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.shopBuyCollectionTitle),
-        content: Text(
-          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
-          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
-          '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
-          '${l10n.shopBuyOnce}\n'
-          '${l10n.shopSellRefund}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.shopBuy),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
+      final ok = await showGamepadConfirmDialog(
+        context: context,
+        title: l10n.shopBuyCollectionTitle,
+        message:
+            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+            '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
+            '${l10n.shopBuyOnce}\n'
+            '${l10n.shopSellRefund}',
+        confirmLabel: l10n.shopBuy,
+      );
+      if (!ok || !mounted) return;
     }
 
     _buyInFlight.add(item.code);
@@ -516,7 +505,7 @@ class _ShopCollectionGroupScreenState
         subtitle: collectionItemSubtitle(item.dailyBronze),
         onBuy: item.owned
             ? null
-            : () => unawaited(_buy(item, confirm: false)),
+            : () => unawaited(_buy(item)),
         buyLabel: context.l10n.shopBuy,
       ),
     );

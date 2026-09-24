@@ -19,6 +19,10 @@ GamepadAction? gamepadActionFromStandardButton(int index) {
       return GamepadAction.shoulderL;
     case 5:
       return GamepadAction.shoulderR;
+    case 6:
+      return GamepadAction.triggerL;
+    case 7:
+      return GamepadAction.triggerR;
     case 8:
       return GamepadAction.select;
     case 9:
@@ -120,16 +124,20 @@ GamepadAction? gamepadActionFromKey(LogicalKeyboardKey key) {
     return GamepadAction.actionY;
   }
   if (key == LogicalKeyboardKey.gameButtonLeft1 ||
-      key == LogicalKeyboardKey.gameButtonLeft2 ||
       key == LogicalKeyboardKey.gameButton5 ||
       key == LogicalKeyboardKey.pageUp) {
     return GamepadAction.shoulderL;
   }
   if (key == LogicalKeyboardKey.gameButtonRight1 ||
-      key == LogicalKeyboardKey.gameButtonRight2 ||
       key == LogicalKeyboardKey.gameButton6 ||
       key == LogicalKeyboardKey.pageDown) {
     return GamepadAction.shoulderR;
+  }
+  if (key == LogicalKeyboardKey.gameButtonLeft2) {
+    return GamepadAction.triggerL;
+  }
+  if (key == LogicalKeyboardKey.gameButtonRight2) {
+    return GamepadAction.triggerR;
   }
   if (key == LogicalKeyboardKey.gameButtonStart) {
     return GamepadAction.menu;
@@ -163,13 +171,15 @@ GamepadAction? gamepadActionFromAndroidKeyCode(int keyCode) {
     case 100: // KEYCODE_BUTTON_Y
       return GamepadAction.actionY;
     case 102: // KEYCODE_BUTTON_L1
-    case 104: // KEYCODE_BUTTON_L2
     case 192: // KEYCODE_BUTTON_5
       return GamepadAction.shoulderL;
     case 103: // KEYCODE_BUTTON_R1
-    case 105: // KEYCODE_BUTTON_R2
     case 193: // KEYCODE_BUTTON_6
       return GamepadAction.shoulderR;
+    case 104: // KEYCODE_BUTTON_L2
+      return GamepadAction.triggerL;
+    case 105: // KEYCODE_BUTTON_R2
+      return GamepadAction.triggerR;
     case 108: // KEYCODE_BUTTON_START
       return GamepadAction.menu;
     case 109: // KEYCODE_BUTTON_SELECT

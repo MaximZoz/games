@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
@@ -332,30 +333,15 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   Future<bool> _confirmBuy(ShopItem item) async {
     final l10n = context.l10n;
-    final result = await showDialog<bool>(
+    return showGamepadConfirmDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.shopBuyEmojiTitle),
-          content: Text(
-            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
-            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
-            '${l10n.shopEmojiUses}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.shopBuy),
-            ),
-          ],
-        );
-      },
+      title: l10n.shopBuyEmojiTitle,
+      message:
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+          '${l10n.shopEmojiUses}',
+      confirmLabel: l10n.shopBuy,
     );
-    return result == true;
   }
 
   void _showPurchased(ShopItem item) {
@@ -417,7 +403,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       subtitle: context.l10n.shopEmojiPriceUses(
         formatRewardBronze(item.priceBronze),
       ),
-      onBuy: () => unawaited(_buy(item, confirm: false)),
+      onBuy: () => unawaited(_buy(item)),
       buyLabel: context.l10n.shopBuy,
     );
   }

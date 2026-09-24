@@ -12,6 +12,8 @@ enum GamepadAction {
   actionY,
   shoulderL,
   shoulderR,
+  triggerL,
+  triggerR,
   menu,
   select,
 }

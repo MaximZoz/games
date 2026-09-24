@@ -91,7 +91,6 @@ Future<void> showCollectionFullscreen(
       }
 
       void buy() {
-        close();
         onBuy?.call();
       }
 
@@ -112,8 +111,11 @@ Future<void> showCollectionFullscreen(
             }
             return true;
           }
-          if (actionEvent.isDirection || actionEvent.isScroll) {
-            // Стики и стрелки не листают витрину за превью.
+          if (actionEvent.isDirection ||
+              actionEvent.isScroll ||
+              actionEvent == GamepadAction.triggerL ||
+              actionEvent == GamepadAction.triggerR) {
+            // Стики, триггеры и стрелки не трогают витрину за превью.
             return true;
           }
           if (actionEvent == GamepadAction.shoulderL ||

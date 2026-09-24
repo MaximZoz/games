@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
@@ -19,6 +20,12 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
   }
   if (action.isScroll) {
     return _scrollPage(action == GamepadAction.scrollUp ? -1 : 1);
+  }
+  if (action == GamepadAction.triggerL) {
+    return GamepadChromeRegistry.focus(GamepadChromeSlot.balance);
+  }
+  if (action == GamepadAction.triggerR) {
+    return GamepadChromeRegistry.focus(GamepadChromeSlot.logout);
   }
 
   if (isEditableTextFocused() &&
@@ -62,6 +69,8 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     case GamepadAction.actionY:
     case GamepadAction.shoulderL:
     case GamepadAction.shoulderR:
+    case GamepadAction.triggerL:
+    case GamepadAction.triggerR:
     case GamepadAction.scrollUp:
     case GamepadAction.scrollDown:
     case GamepadAction.select:

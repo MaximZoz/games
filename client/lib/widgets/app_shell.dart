@@ -8,7 +8,9 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/app_update_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
@@ -1031,15 +1033,33 @@ class AppShell extends ConsumerWidget {
                                       );
                                     },
                                   ),
-                                IconButton(
-                                  icon: const Icon(Icons.logout),
-                                  onPressed: () async {
-                                    await ref
-                                        .read(authStateProvider.notifier)
-                                        .logout();
-                                  },
-                                  tooltip: context.l10n.logoutTooltip,
-                                  visualDensity: VisualDensity.compact,
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: GamepadFocusBlock(
+                                    chrome: GamepadChromeSlot.logout,
+                                    shape: GamepadHighlightShape.circle,
+                                    radius: 20,
+                                    borderWidth: 2,
+                                    onActivate: () {
+                                      unawaited(
+                                        ref
+                                            .read(authStateProvider.notifier)
+                                            .logout(),
+                                      );
+                                    },
+                                    child: IconButton(
+                                      icon: const Icon(Icons.logout),
+                                      onPressed: () async {
+                                        await ref
+                                            .read(authStateProvider.notifier)
+                                            .logout();
+                                      },
+                                      tooltip: context.l10n.logoutTooltip,
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  ),
                                 ),
                               ],
                             );

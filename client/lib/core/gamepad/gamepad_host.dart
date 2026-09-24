@@ -61,6 +61,11 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
 
   void _onEvent(GamepadActionEvent event) {
     if (!mounted) return;
+    // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
+    if (GamepadDispatcher.hasExclusive) {
+      GamepadDispatcher.dispatch(event.action);
+      return;
+    }
     // LB/RB сразу листают вкладки — не ждут закрытия тоста/скоупа партии.
     if (event.action == GamepadAction.shoulderL ||
         event.action == GamepadAction.shoulderR) {

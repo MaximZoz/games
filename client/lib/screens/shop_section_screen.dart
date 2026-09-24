@@ -16,7 +16,7 @@ import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
-import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -83,30 +83,15 @@ class _ShopSectionScreenState extends ConsumerState<ShopSectionScreen> {
 
   Future<bool> _confirmBuy(ShopItem item) async {
     final isStake = item.kind == 'stake_unlock';
-    final result = await showDialog<bool>(
+    final l10n = context.l10n;
+    return showGamepadConfirmDialog(
       context: context,
-      builder: (dialogContext) {
-        final l10n = context.l10n;
-        return AlertDialog(
-          title: Text(isStake ? l10n.shopBuyStakeTitle : l10n.shopBuyTitle),
-          content: Text(
-            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
-            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.commonCancel),
-            ),
-            GamepadBuyButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              label: l10n.shopBuy,
-            ),
-          ],
-        );
-      },
+      title: isStake ? l10n.shopBuyStakeTitle : l10n.shopBuyTitle,
+      message:
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}',
+      confirmLabel: l10n.shopBuy,
     );
-    return result == true;
   }
 
   Future<void> _buy(ShopItem item) async {
