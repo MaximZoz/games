@@ -28,6 +28,9 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
   @override
   void initState() {
     super.initState();
+    // Слушаем и стартуем сразу: иначе первый кадр глотает LB/RB и крест.
+    _listen();
+    _service.start();
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncEnabled());
   }
 

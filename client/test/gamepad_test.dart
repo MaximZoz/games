@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
@@ -15,6 +16,7 @@ import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -24,6 +26,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() {
     GamepadDispatcher.reset();
+    GamepadFocusRegistry.reset();
     GamepadService.debugPollNative = false;
     GamepadService.instance.reset();
     GamepadService.debugPollNative = false;
@@ -960,5 +963,99 @@ void main() {
     GamepadService.instance.emit(GamepadAction.shoulderL);
     await tester.pump();
     expect(tabs, 2);
+  });
+
+  testWidgets('скрытое поле чата не глотает LB/RB и крест по карточкам',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    var first = 0;
+    var second = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    final hidden = FocusNode();
+    addTearDown(hidden.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: IndexedStack(
+                index: 0,
+                children: [
+                  ListView(
+                    children: [
+                      HomeActionCard(
+                        icon: Icons.emoji_events_rounded,
+                        title: 'Достижения',
+                        subtitle: 'Ваши результаты',
+                        onTap: () => first++,
+                      ),
+                      const SizedBox(height: 12),
+                      HomeActionCard(
+                        icon: Icons.monetization_on_rounded,
+                        title: 'Монеты',
+                        subtitle: 'Баланс',
+                        onTap: () => second++,
+                      ),
+                    ],
+                  ),
+                  Offstage(
+                    offstage: true,
+                    child: TickerMode(
+                      enabled: false,
+                      child: TextField(focusNode: hidden),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    hidden.requestFocus();
+    await tester.pump();
+    expect(isEditableTextFocused(), isFalse);
+    expect(isGamepadContextOnstage(hidden.context!), isFalse);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.gameButtonRight1);
+    await tester.pump();
+    expect(tabs, 1);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(first, 1);
+    expect(second, 0);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(second, 1);
+  });
+
+  testWidgets('стрелка D-pad сразу считает геймпад подключённым',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const GamepadHost(child: SizedBox.expand()),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(gamepadConnected(), isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(gamepadConnected(), isTrue);
   });
 }

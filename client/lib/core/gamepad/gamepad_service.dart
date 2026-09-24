@@ -9,6 +9,7 @@ import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_native.dart';
 import 'package:multigames_client/core/gamepad/gamepad_poller.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Глобальный ввод с геймпада и клавиш, которые контроллер эмулирует.
 class GamepadService {
@@ -119,7 +120,10 @@ class GamepadService {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
     final action = gamepadActionFromKey(event.logicalKey);
     if (action == null) return false;
-    if (isEditableTextFocused()) {
+    final shoulder = action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR;
+    // Плечи всегда листают вкладки — даже если фокус застрял в поле.
+    if (!shoulder && isEditableTextFocused()) {
       if (action == GamepadAction.cancel && event is KeyDownEvent) {
         FocusManager.instance.primaryFocus?.unfocus();
         return true;
@@ -127,9 +131,13 @@ class GamepadService {
       return false;
     }
     if (event is KeyRepeatEvent && !action.isDirection) return false;
+    unfocusOffstagePrimaryFocus();
     final fromPad = isDedicatedGamepadKey(event.logicalKey);
-    if (fromPad) {
+    // D-pad на Android приходит как стрелки — без этого обводка не вспыхнет.
+    if (fromPad || action.isDirection) {
       _rememberKeyGamepad();
+    }
+    if (fromPad) {
       unawaited(_refreshNativeDevices());
     }
     _emit(
@@ -194,6 +202,7 @@ bool isEditableTextFocused() {
   final node = FocusManager.instance.primaryFocus;
   final ctx = node?.context;
   if (ctx == null) return false;
+  if (!isGamepadContextOnstage(ctx)) return false;
   if (ctx.widget is EditableText) return true;
   return ctx.findAncestorStateOfType<EditableTextState>() != null;
 }
