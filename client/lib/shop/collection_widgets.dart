@@ -6,6 +6,9 @@ import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 
@@ -74,59 +77,102 @@ Future<void> showCollectionFullscreen(
   String? fallback,
   String? subtitle,
   Widget? bottomAction,
+  VoidCallback? onBuy,
+  String? buyLabel,
 }) {
   return showDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.86),
     builder: (dialogContext) {
-      return Dialog.fullscreen(
-        backgroundColor: Colors.black,
-        child: SafeArea(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(dialogContext).pop(),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ShopAnimatedEmoji(
-                    animatedName: animatedName,
-                    size: 180,
-                    fallback: fallback,
-                    animate: true,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+      void close() {
+        if (Navigator.of(dialogContext).canPop()) {
+          Navigator.of(dialogContext).pop();
+        }
+      }
+
+      void buy() {
+        close();
+        onBuy?.call();
+      }
+
+      final action = onBuy == null
+          ? bottomAction
+          : GamepadBuyButton(
+              onPressed: buy,
+              label: buyLabel ?? context.l10n.shopBuy,
+            );
+
+      return GamepadScope(
+        onAction: (actionEvent) {
+          if (actionEvent == GamepadAction.confirm) {
+            if (onBuy != null) {
+              buy();
+            } else {
+              close();
+            }
+            return true;
+          }
+          if (actionEvent.isDirection || actionEvent.isScroll) {
+            // Стики и стрелки не листают витрину за превью.
+            return true;
+          }
+          if (actionEvent == GamepadAction.shoulderL ||
+              actionEvent == GamepadAction.shoulderR) {
+            return false;
+          }
+          // B, X, Y и остальные кнопки закрывают просмотр.
+          close();
+          return true;
+        },
+        child: Dialog.fullscreen(
+          backgroundColor: Colors.black,
+          child: SafeArea(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: close,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ShopAnimatedEmoji(
+                      animatedName: animatedName,
+                      size: 180,
+                      fallback: fallback,
+                      animate: true,
                     ),
-                  ),
-                  if ((subtitle ?? '').trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        subtitle!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 14,
-                        ),
+                    const SizedBox(height: 20),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    if ((subtitle ?? '').trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          subtitle!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (action != null) ...[
+                      const SizedBox(height: 24),
+                      GestureDetector(
+                        onTap: () {},
+                        child: action,
+                      ),
+                    ],
                   ],
-                  if (bottomAction != null) ...[
-                    const SizedBox(height: 24),
-                    GestureDetector(
-                      onTap: () {},
-                      child: bottomAction,
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),

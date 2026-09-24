@@ -13,6 +13,8 @@ import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
 import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
+import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
+import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
@@ -28,6 +30,7 @@ void main() {
   setUp(() {
     GamepadDispatcher.reset();
     GamepadFocusRegistry.reset();
+    GamepadPagerRegistry.reset();
     GamepadService.debugPollNative = false;
     GamepadService.instance.reset();
     GamepadService.debugPollNative = false;
@@ -1069,7 +1072,7 @@ void main() {
     expect(gamepadActionFromKey(LogicalKeyboardKey.gameButton6), GamepadAction.shoulderR);
   });
 
-  testWidgets('влево/вправо сразу листают вкладки без предварительного вверх',
+  testWidgets('стики и стрелки не листают вкладки, только LB/RB',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     var tabs = 0;
@@ -1106,10 +1109,119 @@ void main() {
     await tester.pump();
     GamepadService.instance.emit(GamepadAction.right);
     await tester.pump();
-    expect(tabs, 1);
     GamepadService.instance.emit(GamepadAction.left);
     await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
     expect(tabs, 0);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(tabs, 1);
+  });
+
+  test('правый стик листает зарегистрированную страницу', () {
+    final pager = _TestGamepadPager();
+    GamepadPagerRegistry.register(pager);
+    addTearDown(() => GamepadPagerRegistry.unregister(pager));
+    expect(scrollGamepadByPage(1), isTrue);
+    expect(pager.delta, 1);
+    expect(scrollGamepadByPage(-1), isTrue);
+    expect(pager.delta, 0);
+  });
+
+  testWidgets('вниз с последней карточки листает страницу, не вкладку',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    final pager = _TestGamepadPager();
+    GamepadPagerRegistry.register(pager);
+    addTearDown(() => GamepadPagerRegistry.unregister(pager));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: HomeActionCard(
+                icon: Icons.emoji_emotions_outlined,
+                title: 'Смайл',
+                subtitle: 'один',
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    expect(pager.delta, 1);
+    expect(tabs, 0);
+    GamepadService.instance.emit(GamepadAction.scrollDown);
+    await tester.pump();
+    expect(pager.delta, 2);
+  });
+
+  testWidgets('в превью A покупает, B закрывает', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var bought = 0;
+    var closed = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: GamepadScope(
+              onAction: (action) {
+                if (action == GamepadAction.confirm) {
+                  bought++;
+                  return true;
+                }
+                if (action.isDirection || action.isScroll) return true;
+                if (action == GamepadAction.shoulderL ||
+                    action == GamepadAction.shoulderR) {
+                  return false;
+                }
+                closed++;
+                return true;
+              },
+              child: Scaffold(
+                body: Center(
+                  child: GamepadBuyButton(
+                    onPressed: () => bought++,
+                    label: 'Купить',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(bought, 1);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    expect(closed, 1);
+    GamepadService.instance.emit(GamepadAction.actionX);
+    await tester.pump();
+    expect(closed, 2);
+    final outline = tester.getSize(find.byType(GamepadFocusBlock));
+    final button = tester.getSize(find.byType(FilledButton));
+    expect(outline.width, greaterThan(button.width + 8));
+    expect(outline.height, greaterThan(button.height + 8));
   });
 
   testWidgets('кнопка назад — квадрат 40 с круглой обводкой', (tester) async {
@@ -1141,4 +1253,14 @@ void main() {
     await tester.pump();
     expect(back, 1);
   });
+}
+
+class _TestGamepadPager implements GamepadPager {
+  int delta = 0;
+
+  @override
+  bool page(int value) {
+    delta += value;
+    return true;
+  }
 }

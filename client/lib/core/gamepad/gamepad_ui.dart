@@ -3,6 +3,7 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
+import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
@@ -43,17 +44,9 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
       return _moveFocus(TraversalDirection.down);
     case GamepadAction.left:
       if (_nudgeFocused(-1)) return true;
-      if (!_hasHorizontalNeighbor(TraversalDirection.left) &&
-          _switchTab(-1)) {
-        return true;
-      }
       return _moveFocus(TraversalDirection.left);
     case GamepadAction.right:
       if (_nudgeFocused(1)) return true;
-      if (!_hasHorizontalNeighbor(TraversalDirection.right) &&
-          _switchTab(1)) {
-        return true;
-      }
       return _moveFocus(TraversalDirection.right);
     case GamepadAction.confirm:
       return _activateFocused();
@@ -78,8 +71,20 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
 
 /// После смены вкладки — первый видимый блок новой страницы.
 void scheduleFocusFirstVisibleGamepadTarget() {
+  scheduleFocusEdgeGamepadTarget(last: false);
+}
+
+/// После перелистывания страницы — первый или последний видимый блок.
+void scheduleFocusEdgeGamepadTarget({required bool last}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    focusFirstVisibleGamepadTarget();
+    final blocks = _visibleGamepadFocusBlocks();
+    if (blocks.isEmpty) {
+      focusFirstVisibleGamepadTarget();
+      return;
+    }
+    final node = last ? blocks.last : blocks.first;
+    node.requestFocus();
+    _ensureVisible(node);
   });
 }
 
@@ -141,26 +146,8 @@ bool _switchTab(int delta) {
   return true;
 }
 
-bool _hasHorizontalNeighbor(TraversalDirection direction) {
-  final blocks = _visibleGamepadFocusBlocks();
-  if (blocks.length < 2) return false;
-  final current = FocusManager.instance.primaryFocus;
-  final index = _indexOfGamepadBlock(blocks, current);
-  if (index < 0) return false;
-  final curRect = _focusRect(blocks[index]);
-  if (curRect == null) return false;
-  for (final node in blocks) {
-    if (identical(node, blocks[index])) continue;
-    final rect = _focusRect(node);
-    if (rect == null) continue;
-    final dx = rect.center.dx - curRect.center.dx;
-    if (direction == TraversalDirection.right && dx > 8) return true;
-    if (direction == TraversalDirection.left && dx < -8) return true;
-  }
-  return false;
-}
-
 bool _scrollPage(int direction) {
+  if (GamepadPagerRegistry.page(direction)) return true;
   final ctx = FocusManager.instance.primaryFocus?.context;
   final pos = ctx == null
       ? null
@@ -183,6 +170,7 @@ bool _scrollPage(int direction) {
     duration: const Duration(milliseconds: 160),
     curve: Curves.easeOut,
   );
+  scheduleFocusEdgeGamepadTarget(last: direction < 0);
   return true;
 }
 
@@ -256,6 +244,7 @@ List<FocusNode> _visibleGamepadFocusBlocks() {
         GamepadFocusBlock.maybeOf(ctx) == null) {
       return;
     }
+    if (!_isFocusInView(node)) return;
     out.add(node);
   }
 
@@ -288,18 +277,27 @@ bool _moveGamepadBlock(
   if (blocks.isEmpty) return false;
   final current = FocusManager.instance.primaryFocus;
   final index = _indexOfGamepadBlock(blocks, current);
-  final FocusNode next;
   if (index < 0) {
-    next = (direction == TraversalDirection.up ||
+    final next = (direction == TraversalDirection.up ||
             direction == TraversalDirection.left)
         ? blocks.last
         : blocks.first;
-  } else {
-    next = _neighborGamepadBlock(blocks, index, direction);
+    next.requestFocus();
+    _ensureVisible(next);
+    return true;
   }
-  next.requestFocus();
-  _ensureVisible(next);
-  return true;
+  final neighbor = _neighborGamepadBlock(blocks, index, direction);
+  if (neighbor != null) {
+    neighbor.requestFocus();
+    _ensureVisible(neighbor);
+    return true;
+  }
+  final pageDelta = switch (direction) {
+    TraversalDirection.down || TraversalDirection.right => 1,
+    TraversalDirection.up || TraversalDirection.left => -1,
+  };
+  if (GamepadPagerRegistry.page(pageDelta)) return true;
+  return false;
 }
 
 int _indexOfGamepadBlock(List<FocusNode> blocks, FocusNode? current) {
@@ -317,50 +315,60 @@ int _indexOfGamepadBlock(List<FocusNode> blocks, FocusNode? current) {
   });
 }
 
-FocusNode _neighborGamepadBlock(
+FocusNode? _neighborGamepadBlock(
   List<FocusNode> blocks,
   int index,
   TraversalDirection direction,
 ) {
   final current = blocks[index];
   final curRect = _focusRect(current);
-  if (curRect != null) {
-    FocusNode? best;
-    var bestScore = double.infinity;
-    for (final node in blocks) {
-      if (identical(node, current)) continue;
-      final rect = _focusRect(node);
-      if (rect == null) continue;
-      final dx = rect.center.dx - curRect.center.dx;
-      final dy = rect.center.dy - curRect.center.dy;
-      final ok = switch (direction) {
-        TraversalDirection.down => dy > 8,
-        TraversalDirection.up => dy < -8,
-        TraversalDirection.right => dx > 8,
-        TraversalDirection.left => dx < -8,
-      };
-      if (!ok) continue;
-      final primary = direction == TraversalDirection.down ||
-              direction == TraversalDirection.up
-          ? dy.abs()
-          : dx.abs();
-      final secondary = direction == TraversalDirection.down ||
-              direction == TraversalDirection.up
-          ? dx.abs()
-          : dy.abs();
-      final score = secondary * 3 + primary;
-      if (score < bestScore) {
-        bestScore = score;
-        best = node;
-      }
+  if (curRect == null) return null;
+  FocusNode? best;
+  var bestScore = double.infinity;
+  for (final node in blocks) {
+    if (identical(node, current)) continue;
+    final rect = _focusRect(node);
+    if (rect == null) continue;
+    final dx = rect.center.dx - curRect.center.dx;
+    final dy = rect.center.dy - curRect.center.dy;
+    final ok = switch (direction) {
+      TraversalDirection.down => dy > 8,
+      TraversalDirection.up => dy < -8,
+      TraversalDirection.right => dx > 8,
+      TraversalDirection.left => dx < -8,
+    };
+    if (!ok) continue;
+    final primary = direction == TraversalDirection.down ||
+            direction == TraversalDirection.up
+        ? dy.abs()
+        : dx.abs();
+    final secondary = direction == TraversalDirection.down ||
+            direction == TraversalDirection.up
+        ? dx.abs()
+        : dy.abs();
+    final score = secondary * 3 + primary;
+    if (score < bestScore) {
+      bestScore = score;
+      best = node;
     }
-    if (best != null) return best;
   }
-  final delta = direction == TraversalDirection.down ||
-          direction == TraversalDirection.right
-      ? 1
-      : -1;
-  return blocks[(index + delta) % blocks.length];
+  return best;
+}
+
+bool _isFocusInView(FocusNode node) {
+  final rect = _focusRect(node);
+  if (rect == null) return false;
+  final ctx = node.context;
+  if (ctx == null) return false;
+  final scrollable = Scrollable.maybeOf(ctx);
+  final box = scrollable?.context.findRenderObject();
+  if (box is RenderBox && box.hasSize && box.attached) {
+    final view = box.localToGlobal(Offset.zero) & box.size;
+    return rect.overlaps(view.deflate(2));
+  }
+  final mq = MediaQuery.maybeOf(ctx);
+  if (mq == null) return true;
+  return rect.overlaps(Offset.zero & mq.size);
 }
 
 Rect? _focusRect(FocusNode node) {

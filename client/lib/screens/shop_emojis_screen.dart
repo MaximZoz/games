@@ -367,10 +367,12 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     );
   }
 
-  Future<void> _buy(ShopItem item) async {
+  Future<void> _buy(ShopItem item, {bool confirm = true}) async {
     if (_buyInFlight.contains(item.code)) return;
-    final ok = await _confirmBuy(item);
-    if (!ok || !mounted) return;
+    if (confirm) {
+      final ok = await _confirmBuy(item);
+      if (!ok || !mounted) return;
+    }
 
     _buyInFlight.add(item.code);
     setState(() {});
@@ -415,23 +417,8 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       subtitle: context.l10n.shopEmojiPriceUses(
         formatRewardBronze(item.priceBronze),
       ),
-      bottomAction: Builder(
-        builder: (dialogContext) => GamepadFocusBlock(
-          autofocus: true,
-          radius: 16,
-          onActivate: () {
-            Navigator.of(dialogContext).pop();
-            unawaited(_buy(item));
-          },
-          child: FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              unawaited(_buy(item));
-            },
-            child: Text(context.l10n.shopBuy),
-          ),
-        ),
-      ),
+      onBuy: () => unawaited(_buy(item, confirm: false)),
+      buyLabel: context.l10n.shopBuy,
     );
   }
 
