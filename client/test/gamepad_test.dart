@@ -10,6 +10,7 @@ import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
 import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
+import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
@@ -883,5 +884,81 @@ void main() {
     await tester.pump();
     expect(chat, 0);
     expect(shop, 1);
+  });
+
+  testWidgets('первый вниз без фокуса берёт первую карточку, второй — следующую',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var first = 0;
+    var second = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: ListView(
+                children: [
+                  HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'Ваши результаты',
+                    onTap: () => first++,
+                  ),
+                  const SizedBox(height: 12),
+                  HomeActionCard(
+                    icon: Icons.monetization_on_rounded,
+                    title: 'Монеты',
+                    subtitle: 'Баланс',
+                    onTap: () => second++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(first, 1);
+    expect(second, 0);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(second, 1);
+  });
+
+  testWidgets('LB/RB листают вкладки даже если GamepadScope всё перехватывает',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: GamepadScope(
+              onAction: (_) => true,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.shoulderL);
+    await tester.pump();
+    expect(tabs, 2);
   });
 }

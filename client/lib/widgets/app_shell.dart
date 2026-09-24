@@ -12,7 +12,6 @@ import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
-import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/core/offline_warmup.dart';
@@ -831,7 +830,6 @@ class AppShell extends ConsumerWidget {
       var next = (selectedIndex + delta) % n;
       if (next < 0) next += n;
       navigateWithPrefetch(next);
-      scheduleFocusFirstVisibleGamepadTarget();
     };
 
     // IndexedStack веток shell: непрозрачный слой, чтобы Impeller не

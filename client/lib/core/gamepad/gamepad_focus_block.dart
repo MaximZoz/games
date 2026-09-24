@@ -3,19 +3,21 @@ import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Карточка/блок, по которому ходит геймпад: одна цель, обводка по всей рамке.
+/// Карточка/блок, по которому ходит геймпад: одна цель, обводка по рамке.
 class GamepadFocusBlock extends StatelessWidget {
   const GamepadFocusBlock({
     super.key,
     required this.child,
     this.onActivate,
     this.radius = 22,
+    this.borderWidth = 2,
     this.autofocus = false,
   });
 
   final Widget child;
   final VoidCallback? onActivate;
   final double radius;
+  final double borderWidth;
   final bool autofocus;
 
   static GamepadFocusScope? maybeOf(BuildContext context) {
@@ -43,25 +45,28 @@ class GamepadFocusBlock extends StatelessWidget {
               builder: (context, _) {
                 final focused = Focus.of(context).hasPrimaryFocus;
                 final show = focused && gamepadConnected();
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 80),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(
-                      color: show ? AppColors.accentStart : Colors.transparent,
-                      width: 2.2,
-                    ),
-                    boxShadow: show
-                        ? [
-                            BoxShadow(
-                              color:
-                                  AppColors.accentStart.withValues(alpha: 0.28),
-                              blurRadius: 8,
+                // Рамка карточки: внешний радиус = radius + borderWidth.
+                final outerRadius = radius + borderWidth;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    child,
+                    if (show)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.circular(outerRadius),
+                              border: Border.all(
+                                color: AppColors.accentStart,
+                                width: borderWidth,
+                              ),
                             ),
-                          ]
-                        : null,
-                  ),
-                  child: child,
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
             );
