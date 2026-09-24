@@ -112,22 +112,24 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: tiles
-            ? DesktopTileGrid(
-                itemCount: cards.length,
-                maxCellWidth: dense ? 240 : 320,
-                maxContentWidth: 1100,
-                maxColumns: 3,
-                padding: EdgeInsets.fromLTRB(
-                  dense ? 10 : 16,
-                  dense ? 4 : 8,
-                  dense ? 10 : 16,
-                  dense ? 10 : 16,
-                ),
-                itemBuilder: (_, i) => cards[i],
-                mobileBuilder: mobileList,
-              )
-            : mobileList(context),
+        child: FocusScope(
+          child: tiles
+              ? DesktopTileGrid(
+                  itemCount: cards.length,
+                  maxCellWidth: dense ? 240 : 320,
+                  maxContentWidth: 1100,
+                  maxColumns: 3,
+                  padding: EdgeInsets.fromLTRB(
+                    dense ? 10 : 16,
+                    dense ? 4 : 8,
+                    dense ? 10 : 16,
+                    dense ? 10 : 16,
+                  ),
+                  itemBuilder: (_, i) => cards[i],
+                  mobileBuilder: mobileList,
+                )
+              : mobileList(context),
+        ),
       ),
     );
   }

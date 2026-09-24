@@ -44,6 +44,7 @@ class CoinsScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
+          child: FocusScope(
           child: Align(
             alignment: Alignment.topCenter,
             child: SingleChildScrollView(
@@ -88,6 +89,7 @@ class CoinsScreen extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ),

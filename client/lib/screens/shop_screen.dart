@@ -93,6 +93,7 @@ class ShopScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
+          child: FocusScope(
           child: tiles
               ? DesktopTileGrid(
                   itemCount: cards.length,
@@ -109,6 +110,7 @@ class ShopScreen extends ConsumerWidget {
                   mobileBuilder: mobileList,
                 )
               : mobileList(context),
+          ),
         ),
       ),
     );

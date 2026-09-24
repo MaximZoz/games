@@ -561,6 +561,117 @@ void main() {
     expect(shop, 1);
   });
 
+  testWidgets('крест вниз ходит по карточкам и A жмёт текущую', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var first = 0;
+    var second = 0;
+    var third = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: FocusScope(
+                child: ListView(
+                  children: [
+                    HomeActionCard(
+                      icon: Icons.emoji_events_rounded,
+                      title: 'Достижения',
+                      subtitle: 'Ваши результаты',
+                      onTap: () => first++,
+                    ),
+                    const SizedBox(height: 12),
+                    HomeActionCard(
+                      icon: Icons.monetization_on_rounded,
+                      title: 'Монеты',
+                      subtitle: 'Баланс',
+                      onTap: () => second++,
+                    ),
+                    const SizedBox(height: 12),
+                    HomeActionCard(
+                      icon: Icons.storefront_rounded,
+                      title: 'Магазин',
+                      subtitle: 'Смайлы',
+                      onTap: () => third++,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(first, 0);
+    expect(second, 1);
+    expect(third, 0);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(third, 1);
+  });
+
+  testWidgets('крест в сетке ходит вправо и вниз по блокам', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final taps = <int>[];
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: FocusScope(
+                child: SizedBox(
+                  width: 400,
+                  child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (var i = 0; i < 4; i++)
+                      SizedBox(
+                        width: 180,
+                        child: HomeActionCard(
+                          icon: Icons.storefront_rounded,
+                          title: 'Карточка $i',
+                          subtitle: 'блок',
+                          onTap: () => taps.add(i),
+                        ),
+                      ),
+                  ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.right);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(taps, [1]);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(taps, [1, 3]);
+  });
+
   testWidgets('Offstage+TickerMode чат не видим для геймпада', (tester) async {
     final hidden = FocusNode();
     addTearDown(hidden.dispose);
