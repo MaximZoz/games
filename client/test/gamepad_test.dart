@@ -1594,6 +1594,10 @@ void main() {
         ),
       ),
     );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
     await tester.pump();
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
@@ -1656,6 +1660,10 @@ void main() {
         ),
       ),
     );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
     await tester.pump();
     expect(find.text('Уже получено'), findsOneWidget);
     expect(focusFirstVisibleGamepadTarget(), isTrue);
