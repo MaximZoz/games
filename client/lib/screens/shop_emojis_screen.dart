@@ -492,18 +492,8 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                             (outer.maxHeight - pad.vertical).clamp(1.0, 4000.0);
                         final cols =
                             shopTileColumns(context, maxWidth: innerW);
-                        var rows = shopTileRows(context, maxHeight: innerH);
-                        var pageSize = (cols * rows).clamp(1, 48);
-                        if (fillTiles) {
-                          const minCell = 72.0;
-                          final maxCols =
-                              (innerW / minCell).floor().clamp(3, 8);
-                          final maxRows =
-                              (innerH / minCell).floor().clamp(2, 6);
-                          if (emojis.length <= maxCols * maxRows) {
-                            pageSize = emojis.length;
-                          }
-                        }
+                        final rows = shopTileRows(context, maxHeight: innerH);
+                        final pageSize = (cols * rows).clamp(1, 48);
                         final pageCount = emojis.isEmpty
                             ? 0
                             : ((emojis.length + pageSize - 1) / pageSize)
@@ -532,7 +522,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                     final pageRows = (pageItems.length /
                                             pageCols)
                                         .ceil()
-                                        .clamp(1, fillTiles ? 8 : 3);
+                                        .clamp(1, rows);
                                     const gap = 8.0;
                                     final cellW = (constraints.maxWidth -
                                             gap * (pageCols - 1)) /
@@ -540,13 +530,14 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                     final cellH = (constraints.maxHeight -
                                             gap * (pageRows - 1)) /
                                         pageRows;
-                                    final ratio = cellH <= 0
-                                        ? 0.78
-                                        : (cellW / cellH).clamp(
-                                            fillTiles ? 0.45 : 0.55,
-                                            1.15,
-                                          );
+                                    final rawRatio =
+                                        cellH <= 0 ? 0.78 : cellW / cellH;
+                                    // В альбоме не зажимаем ratio — иначе ряд обрезается.
+                                    final ratio = fillTiles
+                                        ? rawRatio
+                                        : rawRatio.clamp(0.55, 1.15);
                                     return GridView.builder(
+                                      clipBehavior: Clip.hardEdge,
                                       physics:
                                           const NeverScrollableScrollPhysics(),
                                       gridDelegate:

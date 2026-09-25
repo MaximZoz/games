@@ -1609,6 +1609,67 @@ void main() {
     expect(outline.height, closeTo(button.height, 1));
   });
 
+  testWidgets('кнопка «Уже получено» совпадает с рамкой FilledButton.icon',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: GamepadFocusBlock(
+                  autofocus: true,
+                  radius: AppRadius.button,
+                  borderWidth: 2.2,
+                  child: Builder(
+                    builder: (context) {
+                      final on = GamepadFocusBlock.watchOf(context)
+                              ?.highlighted ??
+                          false;
+                      return FilledButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.card_giftcard, size: 18),
+                        label: const Text('Уже получено'),
+                        style: AppButtonStyles.of(
+                          minimumSize: const Size(320, 44),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          radius: AppRadius.button,
+                        ).copyWith(
+                          side: WidgetStatePropertyAll(
+                            on
+                                ? BorderSide.none
+                                : const BorderSide(
+                                    color: AppColors.buttonBorder,
+                                  ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Уже получено'), findsOneWidget);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    final outline = tester.getSize(find.byType(GamepadFocusBlock));
+    final button = tester.getSize(
+      find.ancestor(
+        of: find.text('Уже получено'),
+        matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
+      ).first,
+    );
+    expect(outline.width, closeTo(button.width, 1));
+    expect(outline.height, closeTo(button.height, 1));
+  });
+
   test('токен exclusive снимается и не глушит ввод', () {
     var hits = 0;
     bool handler(GamepadAction action) {

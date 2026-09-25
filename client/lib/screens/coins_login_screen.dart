@@ -201,21 +201,45 @@ class _LoginRewardsBody extends StatelessWidget {
           compactTile: useTiles,
         );
 
-    final claimButton = GamepadFocusBlock(
-      radius: 16,
-      onActivate: canClaim ? onClaim : null,
-      child: SizedBox(
-        key: claimButtonKey,
-        width: useTiles ? 320 : double.infinity,
-        child: FilledButton.icon(
-          onPressed: canClaim ? onClaim : null,
-          icon: const Icon(Icons.card_giftcard, size: 18),
-          label: Text(
-            status.available ? l10n.coinsClaimReward : l10n.coinsAlreadyClaimed,
-          ),
-          style: AppButtonStyles.of(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
+    final claimButton = Align(
+      alignment: Alignment.center,
+      child: GamepadFocusBlock(
+        radius: AppRadius.button,
+        borderWidth: 2.2,
+        onActivate: canClaim ? onClaim : null,
+        child: Builder(
+          builder: (context) {
+            final on =
+                GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
+            final button = FilledButton.icon(
+              key: claimButtonKey,
+              onPressed: canClaim ? onClaim : () {},
+              icon: const Icon(Icons.card_giftcard, size: 18),
+              label: Text(
+                status.available
+                    ? l10n.coinsClaimReward
+                    : l10n.coinsAlreadyClaimed,
+              ),
+              style: AppButtonStyles.of(
+                minimumSize: Size(useTiles ? 320 : 44, 44),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                radius: AppRadius.button,
+              ).copyWith(
+                side: WidgetStatePropertyAll(
+                  on
+                      ? BorderSide.none
+                      : const BorderSide(color: AppColors.buttonBorder),
+                ),
+              ),
+            );
+            if (useTiles) return button;
+            return SizedBox(width: double.infinity, child: button);
+          },
         ),
       ),
     );
