@@ -225,12 +225,17 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         canRequestFocus: false,
         borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/shop/emojis/$group'),
-        child: Container(
+        child: Builder(
+          builder: (inner) {
+            return Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: GamepadFocusBlock.frameColor(
+                inner,
+                Colors.black.withValues(alpha: 0.06),
+              ),
             ),
           ),
           child: Row(
@@ -269,6 +274,8 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
               ),
             ],
           ),
+            );
+          },
         ),
       ),
       ),
@@ -602,12 +609,19 @@ class _EmojiBuyTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       // Не клипаем жёстко содержимое: Lottie/emoji часто чуть выходят за бокс.
       clipBehavior: Clip.none,
-      child: Container(
+      child: Builder(
+        builder: (inner) {
+          return Container(
         padding: const EdgeInsets.fromLTRB(6, 6, 6, 5),
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          border: Border.all(
+            color: GamepadFocusBlock.frameColor(
+              inner,
+              Colors.black.withValues(alpha: 0.06),
+            ),
+          ),
         ),
         child: Column(
           children: [
@@ -691,6 +705,8 @@ class _EmojiBuyTile extends StatelessWidget {
             ),
           ],
         ),
+      );
+        },
       ),
       ),
     );

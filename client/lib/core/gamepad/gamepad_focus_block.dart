@@ -51,6 +51,18 @@ class GamepadFocusBlock extends StatefulWidget {
     return context.findAncestorWidgetOfExactType<GamepadFocusScope>();
   }
 
+  /// Из `build`: подписка на фокус, чтобы рамка карточки скрывалась сразу.
+  static GamepadFocusScope? watchOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<GamepadFocusScope>();
+  }
+
+  /// Цвет рамки карточки: при фокусе геймпада её рисует обводка блока.
+  static Color frameColor(BuildContext context, Color color) {
+    final scope = watchOf(context) ?? maybeOf(context);
+    if (scope != null && scope.highlighted) return Colors.transparent;
+    return color;
+  }
+
   @override
   State<GamepadFocusBlock> createState() => _GamepadFocusBlockState();
 }
@@ -102,24 +114,25 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
 
   @override
   Widget build(BuildContext context) {
-    return GamepadFocusScope(
-      onActivate: widget.onActivate,
-      child: Focus(
-        focusNode: _focus,
-        autofocus: widget.autofocus,
-        canRequestFocus: widget.focusable,
-        skipTraversal: !widget.focusable,
-        descendantsAreFocusable: false,
-        descendantsAreTraversable: false,
-        child: ListenableBuilder(
-          listenable: Listenable.merge([
-            GamepadService.instance.devices,
-            GamepadService.instance.activityTick,
-            _focus,
-          ]),
-          builder: (context, _) {
-            final show = _focus.hasPrimaryFocus && gamepadConnected();
-            return Stack(
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        GamepadService.instance.devices,
+        GamepadService.instance.activityTick,
+        _focus,
+      ]),
+      builder: (context, _) {
+        final show = _focus.hasPrimaryFocus && gamepadConnected();
+        return GamepadFocusScope(
+          onActivate: widget.onActivate,
+          highlighted: show,
+          child: Focus(
+            focusNode: _focus,
+            autofocus: widget.autofocus,
+            canRequestFocus: widget.focusable,
+            skipTraversal: !widget.focusable,
+            descendantsAreFocusable: false,
+            descendantsAreTraversable: false,
+            child: Stack(
               clipBehavior: Clip.none,
               children: [
                 widget.child,
@@ -136,10 +149,10 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
                     ),
                   ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -193,13 +206,16 @@ class GamepadFocusScope extends InheritedWidget {
   const GamepadFocusScope({
     super.key,
     required this.onActivate,
+    required this.highlighted,
     required super.child,
   });
 
   final VoidCallback? onActivate;
+  final bool highlighted;
 
   @override
   bool updateShouldNotify(GamepadFocusScope oldWidget) {
-    return onActivate != oldWidget.onActivate;
+    return onActivate != oldWidget.onActivate ||
+        highlighted != oldWidget.highlighted;
   }
 }

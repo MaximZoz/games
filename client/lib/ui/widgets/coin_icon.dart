@@ -1,9 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -711,45 +715,66 @@ class ToolbarBalanceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GamepadFocusBlock(
+    final chip = GamepadFocusBlock(
       chrome: GamepadChromeSlot.balance,
       radius: 999,
       borderWidth: 2.2,
       onActivate: () => _showBalancePopup(context, bronze),
       child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        canRequestFocus: false,
-        onTap: () => _showBalancePopup(context, bronze),
-        borderRadius: BorderRadius.circular(999),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: AppColors.accentSoft.withValues(alpha: 0.8),
-              width: 1,
-            ),
-          ),
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.centerLeft,
-            child: BalanceDisplay(
-              bronze: bronze,
-              coinSize: coinSize,
-              fontSize: 12,
-              spacing: 4,
-              fontWeight: FontWeight.w600,
-              animate: true,
-              forceShow: forceShow,
-              coinKeys: coinKeys,
-            ),
+        color: Colors.transparent,
+        child: InkWell(
+          canRequestFocus: false,
+          onTap: () => _showBalancePopup(context, bronze),
+          borderRadius: BorderRadius.circular(999),
+          child: Builder(
+            builder: (context) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: GamepadFocusBlock.frameColor(
+                      context,
+                      AppColors.accentSoft.withValues(alpha: 0.8),
+                    ),
+                    width: 1,
+                  ),
+                ),
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.centerLeft,
+                  child: BalanceDisplay(
+                    bronze: bronze,
+                    coinSize: coinSize,
+                    fontSize: 12,
+                    spacing: 4,
+                    fontWeight: FontWeight.w600,
+                    animate: true,
+                    forceShow: forceShow,
+                    coinKeys: coinKeys,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
-      ),
+    );
+    return ListenableBuilder(
+      listenable: GamepadService.instance.devices,
+      builder: (context, _) {
+        if (!gamepadConnected()) return chip;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const GamepadGlyph(action: GamepadAction.triggerL, size: 16),
+            const SizedBox(width: 6),
+            chip,
+          ],
+        );
+      },
     );
   }
 }

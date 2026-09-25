@@ -240,12 +240,19 @@ class _ShopItemCard extends StatelessWidget {
     return GamepadFocusBlock(
       radius: 16,
       onActivate: item.owned || busy ? null : onBuy,
-      child: Container(
+      child: Builder(
+        builder: (inner) {
+          return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(
+          color: GamepadFocusBlock.frameColor(
+            inner,
+            Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -319,6 +326,8 @@ class _ShopItemCard extends StatelessWidget {
             ),
         ],
       ),
+      );
+        },
       ),
     );
   }

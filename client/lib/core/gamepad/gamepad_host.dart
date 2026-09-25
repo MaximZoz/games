@@ -63,7 +63,15 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     if (!mounted) return;
     // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
     if (GamepadDispatcher.hasExclusive) {
-      GamepadDispatcher.dispatch(event.action);
+      if (GamepadDispatcher.dispatch(event.action)) return;
+      // Скоуп уже снят (диалог закрыли в этом же кадре) — обычный ввод.
+    }
+    // Любой попап без exclusive: стик/кнопка закрывает его, вкладки не листаем.
+    if (isGamepadPopupOpen(context)) {
+      if (event.action != GamepadAction.shoulderL &&
+          event.action != GamepadAction.shoulderR) {
+        dismissGamepadPopup(context);
+      }
       return;
     }
     // LB/RB сразу листают вкладки — не ждут закрытия тоста/скоупа партии.

@@ -247,10 +247,8 @@ class _AchievementCard extends StatelessWidget {
     final l10n = context.l10n;
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
-    return GamepadFocusBlock(
-      radius: AppRadius.card + 2,
-      onActivate: onClaim,
-      child: GradientCard(
+    final claimable = !item.isLocked && !item.isClaimed;
+    final card = GradientCard(
       margin: EdgeInsets.zero,
       animate: false,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -359,29 +357,56 @@ class _AchievementCard extends StatelessWidget {
               ),
             )
           else
-            FilledButton(
-              onPressed: onClaim,
-              style: AppButtonStyles.of(
-                minimumSize: const Size(double.infinity, 44),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                alignment: Alignment.center,
-                textStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-              child: Text(
-                item.hasFrameReward
-                    ? l10n.achievementsOpenFrame
-                    : l10n.inventoryClaim,
+            GamepadFocusBlock(
+              radius: AppRadius.button,
+              borderWidth: 2.2,
+              onActivate: onClaim,
+              child: Builder(
+                builder: (context) {
+                  final on =
+                      GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
+                  return FilledButton(
+                    onPressed: onClaim,
+                    style: AppButtonStyles.of(
+                      minimumSize: const Size(double.infinity, 44),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      radius: AppRadius.button,
+                      alignment: Alignment.center,
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
+                        decoration: TextDecoration.none,
+                      ),
+                    ).copyWith(
+                      side: WidgetStatePropertyAll(
+                        on
+                            ? BorderSide.none
+                            : const BorderSide(color: AppColors.buttonBorder),
+                      ),
+                    ),
+                    child: Text(
+                      item.hasFrameReward
+                          ? l10n.achievementsOpenFrame
+                          : l10n.inventoryClaim,
+                    ),
+                  );
+                },
               ),
             ),
         ],
       ),
-      ),
+    );
+    if (claimable) return card;
+    return GamepadFocusBlock(
+      radius: AppRadius.card + 2,
+      onActivate: onClaim,
+      child: card,
     );
   }
 }

@@ -531,12 +531,44 @@ bool _focusTextField() {
 }
 
 bool _popRoute(BuildContext context) {
+  if (dismissGamepadPopup(context)) return true;
   final nav = _navigatorForGamepad(context);
   if (nav != null && nav.canPop()) {
     nav.maybePop();
     return true;
   }
   return false;
+}
+
+/// Сверху диалог / меню, а не страница магазина или партии.
+bool isGamepadPopupOpen(BuildContext context) {
+  final nav = _navigatorForGamepad(context);
+  if (nav == null || !nav.canPop()) return false;
+  var popup = false;
+  nav.popUntil((route) {
+    popup = route is PopupRoute;
+    return true;
+  });
+  return popup;
+}
+
+/// Закрывает один попап. Страницы стека не трогает.
+bool dismissGamepadPopup(BuildContext context) {
+  final nav = _navigatorForGamepad(context);
+  if (nav == null || !nav.canPop()) return false;
+  var dismissed = false;
+  nav.popUntil((route) {
+    if (dismissed) return true;
+    if (route is PopupRoute) {
+      dismissed = true;
+      return false;
+    }
+    return true;
+  });
+  if (dismissed) {
+    scheduleFocusFirstVisibleGamepadTarget();
+  }
+  return dismissed;
 }
 
 /// GamepadHost сидит в `MaterialApp.builder` — предка-Navigator нет.

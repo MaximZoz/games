@@ -15,10 +15,14 @@ Future<bool> showGamepadConfirmDialog({
   final result = await showDialog<bool>(
     context: context,
     builder: (dialogContext) {
+      var closed = false;
       void close([bool ok = false]) {
-        if (Navigator.of(dialogContext).canPop()) {
-          Navigator.of(dialogContext).pop(ok);
-        }
+        if (closed) return;
+        closed = true;
+        final nav = Navigator.of(dialogContext);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (nav.canPop()) nav.pop(ok);
+        });
       }
 
       return GamepadScope(
@@ -56,10 +60,13 @@ Widget wrapGamepadDismissDialog({
   required VoidCallback onDismiss,
   required Widget child,
 }) {
+  var closed = false;
   return GamepadScope(
     exclusive: true,
     onAction: (_) {
-      onDismiss();
+      if (closed) return true;
+      closed = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => onDismiss());
       return true;
     },
     child: child,
