@@ -247,7 +247,6 @@ class _AchievementCard extends StatelessWidget {
     final l10n = context.l10n;
     final progressText = '${item.progress}/${item.target}';
     final frameCode = item.rewardItemCode;
-    final claimable = !item.isLocked && !item.isClaimed;
     final card = GradientCard(
       margin: EdgeInsets.zero,
       animate: false,
@@ -346,67 +345,75 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
           ] else if (item.isClaimed)
-            Text(
-              item.hasFrameReward
+            _actionButton(
+              label: item.hasFrameReward
                   ? l10n.achievementsFrameClaimed
                   : l10n.achievementsClaimed,
-              style: TextStyle(
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
+              foreground: Colors.green.shade700,
             )
           else
-            GamepadFocusBlock(
-              radius: AppRadius.button,
-              borderWidth: 2.2,
-              onActivate: onClaim,
-              child: Builder(
-                builder: (context) {
-                  final on =
-                      GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
-                  return FilledButton(
-                    onPressed: onClaim,
-                    style: AppButtonStyles.of(
-                      minimumSize: const Size(double.infinity, 44),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      radius: AppRadius.button,
-                      alignment: Alignment.center,
-                      textStyle: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                        decoration: TextDecoration.none,
-                      ),
-                    ).copyWith(
-                      side: WidgetStatePropertyAll(
-                        on
-                            ? BorderSide.none
-                            : const BorderSide(color: AppColors.buttonBorder),
-                      ),
-                    ),
-                    child: Text(
-                      item.hasFrameReward
-                          ? l10n.achievementsOpenFrame
-                          : l10n.inventoryClaim,
-                    ),
-                  );
-                },
-              ),
+            _actionButton(
+              label: item.hasFrameReward
+                  ? l10n.achievementsOpenFrame
+                  : l10n.inventoryClaim,
+              onPressed: onClaim,
             ),
         ],
       ),
     );
-    if (claimable) return card;
+    if (item.isLocked) {
+      return GamepadFocusBlock(
+        radius: AppRadius.card + 2,
+        onActivate: onClaim,
+        child: card,
+      );
+    }
+    return card;
+  }
+
+  Widget _actionButton({
+    required String label,
+    Color? foreground,
+    VoidCallback? onPressed,
+  }) {
     return GamepadFocusBlock(
-      radius: AppRadius.card + 2,
-      onActivate: onClaim,
-      child: card,
+      radius: AppRadius.button,
+      borderWidth: 2.2,
+      onActivate: onPressed,
+      child: Builder(
+        builder: (context) {
+          final on = GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
+          return FilledButton(
+            onPressed: onPressed ?? () {},
+            style: AppButtonStyles.of(
+              minimumSize: const Size(double.infinity, 44),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              radius: AppRadius.button,
+              alignment: Alignment.center,
+              foregroundColor: foreground,
+              textStyle: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+                decoration: TextDecoration.none,
+                color: foreground,
+              ),
+            ).copyWith(
+              side: WidgetStatePropertyAll(
+                on
+                    ? BorderSide.none
+                    : const BorderSide(color: AppColors.buttonBorder),
+              ),
+            ),
+            child: Text(label),
+          );
+        },
+      ),
     );
   }
 }

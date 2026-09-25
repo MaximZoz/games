@@ -25,6 +25,12 @@ class GamepadChromeRegistry {
     return true;
   }
 
+  /// Баланс и выход — только LT/RT, не крест и не левый стик.
+  static bool isChrome(FocusNode? node) {
+    if (node == null) return false;
+    return _nodes.containsValue(node);
+  }
+
   @visibleForTesting
   static void reset() => _nodes.clear();
 }

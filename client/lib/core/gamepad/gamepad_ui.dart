@@ -209,12 +209,20 @@ ScrollPosition? _nearestScrollPosition() {
 bool _moveFocus(TraversalDirection direction) {
   final start = FocusManager.instance.primaryFocus;
   final root = FocusManager.instance.rootScope;
+  // С шапки стик/крест уводят в контент, а не на соседний LT/RT.
+  if (GamepadChromeRegistry.isChrome(start)) {
+    return focusFirstVisibleGamepadTarget();
+  }
   final blocks = _visibleGamepadFocusBlocks();
   if (blocks.isNotEmpty && _moveGamepadBlock(direction, blocks)) {
     return true;
   }
   if (start == null || start == root || start.context == null) {
     return focusFirstVisibleGamepadTarget();
+  }
+  // У края списка остаёмся на месте, не прыгаем на первый элемент.
+  if (_indexOfGamepadBlock(blocks, start) >= 0) {
+    return true;
   }
   for (var i = 0; i < 40; i++) {
     final node = FocusManager.instance.primaryFocus;
@@ -229,6 +237,7 @@ bool _moveFocus(TraversalDirection direction) {
     if (!stepped) break;
     final next = FocusManager.instance.primaryFocus;
     if (next == start) break;
+    if (GamepadChromeRegistry.isChrome(next)) continue;
     if (isGamepadFocusVisible(next)) {
       _ensureVisible(next);
       return true;
@@ -237,7 +246,7 @@ bool _moveFocus(TraversalDirection direction) {
   if (_moveGamepadBlock(direction, _visibleGamepadFocusBlocks())) {
     return true;
   }
-  return focusFirstVisibleGamepadTarget();
+  return blocks.isEmpty ? focusFirstVisibleGamepadTarget() : true;
 }
 
 List<FocusNode> _visibleGamepadFocusBlocks() {
@@ -246,6 +255,7 @@ List<FocusNode> _visibleGamepadFocusBlocks() {
 
   void consider(FocusNode node) {
     if (!seen.add(node)) return;
+    if (GamepadChromeRegistry.isChrome(node)) return;
     if (!isGamepadFocusVisible(node)) return;
     final ctx = node.context;
     if (ctx == null) return;
@@ -287,6 +297,8 @@ bool _moveGamepadBlock(
   final current = FocusManager.instance.primaryFocus;
   final index = _indexOfGamepadBlock(blocks, current);
   if (index < 0) {
+    // Сфокусированный блок мог выпасть из «видимых» — не прыгаем на первый.
+    if (_isContentGamepadBlock(current)) return true;
     final next = (direction == TraversalDirection.up ||
             direction == TraversalDirection.left)
         ? blocks.last
@@ -306,7 +318,14 @@ bool _moveGamepadBlock(
     TraversalDirection.up || TraversalDirection.left => -1,
   };
   if (GamepadPagerRegistry.page(pageDelta)) return true;
-  return false;
+  return true;
+}
+
+bool _isContentGamepadBlock(FocusNode? node) {
+  if (node == null || GamepadChromeRegistry.isChrome(node)) return false;
+  if (GamepadFocusRegistry.nodes.contains(node)) return true;
+  final ctx = node.context;
+  return ctx != null && GamepadFocusBlock.maybeOf(ctx) != null;
 }
 
 int _indexOfGamepadBlock(List<FocusNode> blocks, FocusNode? current) {
@@ -365,6 +384,7 @@ FocusNode? _neighborGamepadBlock(
 }
 
 bool _isFocusInView(FocusNode node) {
+  if (identical(node, FocusManager.instance.primaryFocus)) return true;
   final rect = _focusRect(node);
   if (rect == null) return false;
   final ctx = node.context;
