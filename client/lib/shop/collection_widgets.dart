@@ -84,10 +84,14 @@ Future<void> showCollectionFullscreen(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.86),
     builder: (dialogContext) {
+      var closed = false;
       void close() {
-        if (Navigator.of(dialogContext).canPop()) {
-          Navigator.of(dialogContext).pop();
-        }
+        if (closed) return;
+        closed = true;
+        final nav = Navigator.of(dialogContext);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (nav.canPop()) nav.pop();
+        });
       }
 
       void buy() {
@@ -102,6 +106,7 @@ Future<void> showCollectionFullscreen(
             );
 
       return GamepadScope(
+        exclusive: true,
         onAction: (actionEvent) {
           if (actionEvent == GamepadAction.confirm) {
             if (onBuy != null) {

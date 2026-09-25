@@ -1033,33 +1033,50 @@ class AppShell extends ConsumerWidget {
                                       );
                                     },
                                   ),
-                                SizedBox(
-                                  width: 40,
-                                  height: 40,
-                                  child: GamepadFocusBlock(
-                                    chrome: GamepadChromeSlot.logout,
-                                    shape: GamepadHighlightShape.circle,
-                                    radius: 20,
-                                    borderWidth: 2,
-                                    onActivate: () {
-                                      unawaited(
-                                        ref
-                                            .read(authStateProvider.notifier)
-                                            .logout(),
-                                      );
-                                    },
-                                    child: IconButton(
-                                      icon: const Icon(Icons.logout),
-                                      onPressed: () async {
-                                        await ref
-                                            .read(authStateProvider.notifier)
-                                            .logout();
-                                      },
-                                      tooltip: context.l10n.logoutTooltip,
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                  ),
+                                ListenableBuilder(
+                                  listenable: GamepadService.instance.devices,
+                                  builder: (context, _) {
+                                    final button = SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: GamepadFocusBlock(
+                                        chrome: GamepadChromeSlot.logout,
+                                        shape: GamepadHighlightShape.circle,
+                                        radius: 20,
+                                        borderWidth: 2,
+                                        onActivate: () {
+                                          unawaited(
+                                            ref
+                                                .read(authStateProvider.notifier)
+                                                .logout(),
+                                          );
+                                        },
+                                        child: IconButton(
+                                          icon: const Icon(Icons.logout),
+                                          onPressed: () async {
+                                            await ref
+                                                .read(authStateProvider.notifier)
+                                                .logout();
+                                          },
+                                          tooltip: context.l10n.logoutTooltip,
+                                          visualDensity: VisualDensity.compact,
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                      ),
+                                    );
+                                    if (!gamepadConnected()) return button;
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        button,
+                                        const SizedBox(width: 4),
+                                        const GamepadGlyph(
+                                          action: GamepadAction.triggerR,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ],
                             );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1235,8 +1237,8 @@ void main() {
     expect(closed, 2);
     final outline = tester.getSize(find.byType(GamepadFocusBlock));
     final button = tester.getSize(find.byType(FilledButton));
-    expect(outline.width, greaterThan(button.width + 8));
-    expect(outline.height, greaterThan(button.height + 8));
+    expect(outline.width, closeTo(button.width, 1));
+    expect(outline.height, closeTo(button.height, 1));
   });
 
   testWidgets('кнопка назад — квадрат 40 с круглой обводкой', (tester) async {
@@ -1430,6 +1432,149 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(logout, 1);
+  });
+
+  test('токен exclusive снимается и не глушит ввод', () {
+    var hits = 0;
+    bool handler(GamepadAction action) {
+      hits++;
+      return true;
+    }
+
+    final id = GamepadDispatcher.push(handler, exclusive: true);
+    expect(GamepadDispatcher.hasExclusive, isTrue);
+    expect(GamepadDispatcher.dispatch(GamepadAction.confirm), isTrue);
+    expect(hits, 1);
+    GamepadDispatcher.remove(id);
+    expect(GamepadDispatcher.hasExclusive, isFalse);
+    expect(GamepadDispatcher.dispatch(GamepadAction.confirm), isFalse);
+  });
+
+  testWidgets('после закрытия диалога геймпад снова листает вкладки',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () {
+                        unawaited(
+                          showGamepadConfirmDialog(
+                            context: context,
+                            title: 'Купить',
+                            message: 'Товар',
+                            confirmLabel: 'Купить',
+                          ),
+                        );
+                      },
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Товар'), findsOneWidget);
+    expect(GamepadDispatcher.hasExclusive, isTrue);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pumpAndSettle();
+    expect(find.text('Товар'), findsNothing);
+    expect(GamepadDispatcher.hasExclusive, isFalse);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(tabs, 1);
+  });
+
+  testWidgets('стик закрывает обычный диалог и не глушит вкладки',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (ctx) => const AlertDialog(
+                            title: Text('Баланс'),
+                            content: Text('монеты'),
+                          ),
+                        );
+                      },
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('монеты'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pumpAndSettle();
+    expect(find.text('монеты'), findsNothing);
+    expect(GamepadDispatcher.hasExclusive, isFalse);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(tabs, 1);
+  });
+
+  testWidgets('exclusive без обработки не глушит вкладки', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    final leaked = GamepadDispatcher.push((_) => false, exclusive: true);
+    addTearDown(() => GamepadDispatcher.remove(leaked));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(GamepadDispatcher.hasExclusive, isTrue);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(tabs, 1);
   });
 }
 

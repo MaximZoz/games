@@ -23,15 +23,20 @@ class GamepadScope extends StatefulWidget {
 }
 
 class _GamepadScopeState extends State<GamepadScope> {
+  int? _token;
+
   @override
   void initState() {
     super.initState();
-    GamepadDispatcher.push(_handle, exclusive: widget.exclusive);
+    _token = GamepadDispatcher.push(_handle, exclusive: widget.exclusive);
   }
 
   @override
   void dispose() {
-    GamepadDispatcher.remove(_handle);
+    final token = _token;
+    if (token != null) {
+      GamepadDispatcher.remove(token);
+    }
     super.dispose();
   }
 

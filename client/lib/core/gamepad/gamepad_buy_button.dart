@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 
-/// Кнопка «Купить»: фиолетовая рамка снаружи, сама кнопка не наезжает на неё.
+/// Кнопка «Купить»: фиолетовая обводка лежит на рамке кнопки.
 class GamepadBuyButton extends StatelessWidget {
   const GamepadBuyButton({
     super.key,
@@ -18,26 +19,30 @@ class GamepadBuyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GamepadFocusBlock(
       autofocus: autofocus,
-      radius: 22,
+      radius: AppRadius.button,
       borderWidth: 2.2,
       onActivate: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: FilledButton(
-          onPressed: onPressed,
-          style: FilledButton.styleFrom(
-            elevation: 0,
-            shadowColor: Colors.transparent,
-            minimumSize: const Size(168, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      child: Builder(
+        builder: (context) {
+          final on = GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
+          return FilledButton(
+            onPressed: onPressed,
+            style: AppButtonStyles.of(
+              minimumSize: const Size(168, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              radius: AppRadius.button,
+            ).copyWith(
+              side: WidgetStatePropertyAll(
+                on
+                    ? BorderSide.none
+                    : const BorderSide(color: AppColors.buttonBorder),
+              ),
             ),
-          ),
-          child: Text(label),
-        ),
+            child: Text(label),
+          );
+        },
       ),
     );
   }
