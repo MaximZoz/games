@@ -24,6 +24,7 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/settings_provider.dart';
@@ -1432,6 +1433,180 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(logout, 1);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.up);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(cards, 2);
+    expect(logout, 1);
+  });
+
+  testWidgets('крест не заходит на баланс и выход, только LT/RT',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var logout = 0;
+    var cards = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                title: const ToolbarBalanceChip(bronze: 12),
+                actions: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: GamepadFocusBlock(
+                      chrome: GamepadChromeSlot.logout,
+                      shape: GamepadHighlightShape.circle,
+                      radius: 20,
+                      onActivate: () => logout++,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ],
+              ),
+              body: ListView(
+                children: [
+                  HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'x',
+                    onTap: () => cards++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.up);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(cards, 1);
+    expect(logout, 0);
+    GamepadService.instance.emit(GamepadAction.triggerR);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(logout, 1);
+  });
+
+  testWidgets('вниз с последней карточки не прыгает на первую',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var first = 0;
+    var last = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              body: ListView(
+                children: [
+                  HomeActionCard(
+                    icon: Icons.emoji_events_rounded,
+                    title: 'Достижения',
+                    subtitle: 'x',
+                    onTap: () => first++,
+                  ),
+                  HomeActionCard(
+                    icon: Icons.monetization_on_rounded,
+                    title: 'Монеты',
+                    subtitle: 'x',
+                    onTap: () => last++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(first, 0, reason: 'после одного вниз должны быть на второй');
+    expect(last, 1);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(first, 0);
+    expect(last, 2);
+  });
+
+  testWidgets('кнопка «Получено» совпадает с рамкой FilledButton',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: GamepadFocusBlock(
+                  autofocus: true,
+                  radius: AppRadius.button,
+                  borderWidth: 2.2,
+                  child: Builder(
+                    builder: (context) {
+                      final on = GamepadFocusBlock.watchOf(context)
+                              ?.highlighted ??
+                          false;
+                      return FilledButton(
+                        onPressed: () {},
+                        style: AppButtonStyles.of(
+                          minimumSize: const Size(180, 44),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          radius: AppRadius.button,
+                        ).copyWith(
+                          side: WidgetStatePropertyAll(
+                            on
+                                ? BorderSide.none
+                                : const BorderSide(
+                                    color: AppColors.buttonBorder,
+                                  ),
+                          ),
+                        ),
+                        child: const Text('Получено'),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    final outline = tester.getSize(find.byType(GamepadFocusBlock));
+    final button = tester.getSize(find.byType(FilledButton));
+    expect(outline.width, closeTo(button.width, 1));
+    expect(outline.height, closeTo(button.height, 1));
   });
 
   test('токен exclusive снимается и не глушит ввод', () {
