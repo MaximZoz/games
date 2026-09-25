@@ -34,6 +34,7 @@ class GamepadFocusBlock extends StatefulWidget {
     this.borderWidth = 2,
     this.autofocus = false,
     this.focusable = true,
+    this.outlined = true,
     this.shape = GamepadHighlightShape.roundedRect,
     this.chrome,
   });
@@ -44,6 +45,10 @@ class GamepadFocusBlock extends StatefulWidget {
   final double borderWidth;
   final bool autofocus;
   final bool focusable;
+
+  /// Рисовать фиолетовую обводку поверх ребёнка.
+  /// Для [FilledButton] лучше `false` и [buttonSide] — рамка самой кнопки.
+  final bool outlined;
   final GamepadHighlightShape shape;
   final GamepadChromeSlot? chrome;
 
@@ -61,6 +66,17 @@ class GamepadFocusBlock extends StatefulWidget {
     final scope = watchOf(context) ?? maybeOf(context);
     if (scope != null && scope.highlighted) return Colors.transparent;
     return color;
+  }
+
+  /// Рамка кнопки: при фокусе геймпада та же [OutlinedBorder], только цвет.
+  static BorderSide buttonSide(
+    BuildContext context, {
+    double width = 2.2,
+  }) {
+    final on = watchOf(context)?.highlighted ?? false;
+    return on
+        ? BorderSide(color: AppColors.accentStart, width: width)
+        : const BorderSide(color: AppColors.buttonBorder);
   }
 
   @override
@@ -132,24 +148,25 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
             skipTraversal: !widget.focusable,
             descendantsAreFocusable: false,
             descendantsAreTraversable: false,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                widget.child,
-                if (show)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: _GamepadFocusOutlinePainter(
-                          radius: widget.radius,
-                          borderWidth: widget.borderWidth,
-                          shape: widget.shape,
+            child: !widget.outlined || !show
+                ? widget.child
+                : Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      widget.child,
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _GamepadFocusOutlinePainter(
+                              radius: widget.radius,
+                              borderWidth: widget.borderWidth,
+                              shape: widget.shape,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-              ],
-            ),
           ),
         );
       },

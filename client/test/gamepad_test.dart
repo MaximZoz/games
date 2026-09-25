@@ -1566,13 +1566,11 @@ void main() {
               body: Center(
                 child: GamepadFocusBlock(
                   autofocus: true,
+                  outlined: false,
                   radius: AppRadius.button,
                   borderWidth: 2.2,
                   child: Builder(
                     builder: (context) {
-                      final on = GamepadFocusBlock.watchOf(context)
-                              ?.highlighted ??
-                          false;
                       return FilledButton(
                         onPressed: () {},
                         style: AppButtonStyles.of(
@@ -1582,11 +1580,7 @@ void main() {
                           radius: AppRadius.button,
                         ).copyWith(
                           side: WidgetStatePropertyAll(
-                            on
-                                ? BorderSide.none
-                                : const BorderSide(
-                                    color: AppColors.buttonBorder,
-                                  ),
+                            GamepadFocusBlock.buttonSide(context),
                           ),
                         ),
                         child: const Text('Получено'),
@@ -1607,6 +1601,13 @@ void main() {
     final button = tester.getSize(find.byType(FilledButton));
     expect(outline.width, closeTo(button.width, 1));
     expect(outline.height, closeTo(button.height, 1));
+    final style = tester
+        .widget<FilledButton>(find.byType(FilledButton))
+        .style;
+    expect(
+      style?.side?.resolve({}),
+      const BorderSide(color: AppColors.accentStart, width: 2.2),
+    );
   });
 
   testWidgets('кнопка «Уже получено» совпадает с рамкой FilledButton.icon',
@@ -1618,35 +1619,35 @@ void main() {
           home: GamepadHost(
             child: Scaffold(
               body: Center(
-                child: GamepadFocusBlock(
-                  autofocus: true,
-                  radius: AppRadius.button,
-                  borderWidth: 2.2,
-                  child: Builder(
-                    builder: (context) {
-                      final on = GamepadFocusBlock.watchOf(context)
-                              ?.highlighted ??
-                          false;
-                      return FilledButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.card_giftcard, size: 18),
-                        label: const Text('Уже получено'),
-                        style: AppButtonStyles.of(
-                          minimumSize: const Size(320, 44),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          radius: AppRadius.button,
-                        ).copyWith(
-                          side: WidgetStatePropertyAll(
-                            on
-                                ? BorderSide.none
-                                : const BorderSide(
-                                    color: AppColors.buttonBorder,
-                                  ),
+                child: SizedBox(
+                  width: 400,
+                  child: GamepadFocusBlock(
+                    autofocus: true,
+                    outlined: false,
+                    radius: AppRadius.button,
+                    borderWidth: 2.2,
+                    child: Builder(
+                      builder: (context) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.card_giftcard, size: 18),
+                            label: const Text('Уже получено'),
+                            style: AppButtonStyles.of(
+                              minimumSize: const Size(44, 44),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              radius: AppRadius.button,
+                            ).copyWith(
+                              side: WidgetStatePropertyAll(
+                                GamepadFocusBlock.buttonSide(context),
+                              ),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -1660,14 +1661,20 @@ void main() {
     expect(focusFirstVisibleGamepadTarget(), isTrue);
     await tester.pump();
     final outline = tester.getSize(find.byType(GamepadFocusBlock));
-    final button = tester.getSize(
-      find.ancestor(
-        of: find.text('Уже получено'),
-        matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
-      ).first,
+    final buttonFinder = find.ancestor(
+      of: find.text('Уже получено'),
+      matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
     );
+    final button = tester.getSize(buttonFinder.first);
     expect(outline.width, closeTo(button.width, 1));
     expect(outline.height, closeTo(button.height, 1));
+    expect(outline.width, closeTo(400, 1));
+    final style =
+        tester.widget<ButtonStyleButton>(buttonFinder.first).style;
+    expect(
+      style?.side?.resolve({}),
+      const BorderSide(color: AppColors.accentStart, width: 2.2),
+    );
   });
 
   test('токен exclusive снимается и не глушит ввод', () {

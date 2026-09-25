@@ -121,14 +121,13 @@ int shopTileColumns(BuildContext context, {double? maxWidth}) {
 const shopEmojiMinCellHeight = 124.0;
 
 /// Ряды смайликов на одной странице.
-/// На десктопе всегда 3×3 и прокрутка страницами; заполнение высоты —
-/// только телефон в альбоме (иначе карточки раздуваются и скролл ломается).
+/// На десктопе всегда 3×3 и прокрутка страницами.
+/// На телефоне в альбоме — всегда 2 ряда на всю страницу: три ряда
+/// обрезаются шапкой, рейлом и safe area даже если «по экрану» влезают.
 int shopTileRows(BuildContext context, {double? maxHeight}) {
   if (isPhoneLandscape(context)) {
-    final h = maxHeight ?? MediaQuery.sizeOf(context).height;
-    // 3 ряда только если каждый целиком влезает, иначе 2 ряда на страницу.
-    final fit3 = h >= shopEmojiMinCellHeight * 3 + 16;
-    return fit3 ? 3 : 2;
+    // maxHeight оставляем в сигнатуре: сетка передаёт реальную высоту.
+    return maxHeight != null && maxHeight < shopEmojiMinCellHeight ? 1 : 2;
   }
   return 3;
 }
