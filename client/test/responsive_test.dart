@@ -109,7 +109,27 @@ void main() {
       ),
     );
     expect(cols, greaterThanOrEqualTo(4));
-    expect(rows, greaterThanOrEqualTo(2));
+    expect(rows, 2);
     expect(fill, isTrue);
+  });
+
+  testWidgets('shop tiles: 3 ряда в альбоме только если ячейки влезают',
+      (tester) async {
+    late int shortRows;
+    late int tallRows;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(800, 360)),
+        child: Builder(
+          builder: (context) {
+            shortRows = shopTileRows(context, maxHeight: 280);
+            tallRows = shopTileRows(context, maxHeight: 420);
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    expect(shortRows, 2);
+    expect(tallRows, 3);
   });
 }
