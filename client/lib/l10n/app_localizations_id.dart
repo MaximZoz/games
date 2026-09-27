@@ -822,6 +822,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Seri jika posisi terulang tiga kali, atau 15 langkah tiap sisi hanya dam tanpa makan — termasuk 2 lawan 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Seri jika posisi tiga kali, 40 langkah tanpa makan atau pion, atau satu dam lawan satu dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Seri jika posisi tiga kali atau 15 langkah dam tanpa makan.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Seri jika posisi tiga kali atau 25 langkah tiap sisi tak menambah buah di sudut tujuan.';
+
+  @override
+  String get checkersDrawRepetition => 'Seri — posisi terulang tiga kali';
+
+  @override
+  String get checkersDrawNoProgress => 'Seri — langkah tidak menuju kemenangan';
+
+  @override
+  String get checkersDrawInsufficient => 'Seri — material tidak cukup untuk menang';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — aturan';
 
   @override

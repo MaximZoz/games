@@ -1715,6 +1715,48 @@ abstract class AppLocalizations {
   /// **'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.'**
   String get rulesCheckersPlayCornersLeaveHome;
 
+  /// No description provided for @rulesCheckersDrawRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — в том числе когда остались по две дамки и ходы идут «ради ходов».'**
+  String get rulesCheckersDrawRussian;
+
+  /// No description provided for @rulesCheckersDrawEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды, если 40 ходов не было взятия и хода простой, или если осталось по одной дамке — сил для победы нет.'**
+  String get rulesCheckersDrawEnglish;
+
+  /// No description provided for @rulesCheckersDrawGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — ходы «ради ходов» не считаются прогрессом.'**
+  String get rulesCheckersDrawGiveaway;
+
+  /// No description provided for @rulesCheckersDrawCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.'**
+  String get rulesCheckersDrawCorners;
+
+  /// No description provided for @checkersDrawRepetition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — позиция повторилась трижды'**
+  String get checkersDrawRepetition;
+
+  /// No description provided for @checkersDrawNoProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — ходы не ведут к победе'**
+  String get checkersDrawNoProgress;
+
+  /// No description provided for @checkersDrawInsufficient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — недостаточно сил для победы'**
+  String get checkersDrawInsufficient;
+
   /// No description provided for @rulesNardyTitle.
   ///
   /// In ru, this message translates to:

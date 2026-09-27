@@ -822,6 +822,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।';
 
   @override
+  String get rulesCheckersDrawRussian => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, या प्रत्येक ओर के 15 चालें बिना मार के केवल किंग हों — दो-दो किंग सहित।';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'तीन बार स्थिति, 40 चाल बिना मार/साधारण, या एक-एक किंग हो तो ड्रॉ।';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'तीन बार स्थिति या 15 किंग-चाल बिना मार तो ड्रॉ।';
+
+  @override
+  String get rulesCheckersDrawCorners => 'तीन बार स्थिति या प्रत्येक ओर 25 चाल लक्ष्य कोने में मोहरा न जोड़ें तो ड्रॉ।';
+
+  @override
+  String get checkersDrawRepetition => 'ड्रॉ — स्थिति तीन बार दोहराई गई';
+
+  @override
+  String get checkersDrawNoProgress => 'ड्रॉ — चालें जीत तक नहीं पहुँचतीं';
+
+  @override
+  String get checkersDrawInsufficient => 'ड्रॉ — जीत के लिए पर्याप्त मोहरे नहीं';
+
+  @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';
 
   @override

@@ -822,6 +822,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。';
 
   @override
+  String get rulesCheckersDrawRussian => '同一局面が3回、または双方15手がキングのみで駒取りなし（2対2を含む）なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawEnglish => '同一局面3回、40手で取りもマンも動かない、またはキング1対1なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '同一局面3回、または双方15手がキングのみで取りなしなら引き分け。';
+
+  @override
+  String get rulesCheckersDrawCorners => '同一局面3回、または双方25手で目標隅に駒が増えなければ引き分け。';
+
+  @override
+  String get checkersDrawRepetition => '引き分け — 同一局面が3回';
+
+  @override
+  String get checkersDrawNoProgress => '引き分け — 勝ちに向かわない手';
+
+  @override
+  String get checkersDrawInsufficient => '引き分け — 勝ち切る駒が足りない';
+
+  @override
   String get rulesNardyTitle => 'バックギャモン — ルール';
 
   @override

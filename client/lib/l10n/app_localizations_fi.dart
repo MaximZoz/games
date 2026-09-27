@@ -822,6 +822,27 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin on vain kuningattaria ilman lyöntiä — myös 2 vs 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Tasapeli kolminkertaisesta toistosta, 40 siirrosta ilman lyöntiä tai sotilasta, tai kuningatar vastaan kuningatar.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Tasapeli kolminkertaisesta toistosta tai 15 kuningatarsiirrosta ilman lyöntiä.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Tasapeli kolminkertaisesta toistosta tai jos 25 siirtoa kummaltakin ei lisää nappuloita maalikulmaan.';
+
+  @override
+  String get checkersDrawRepetition => 'Tasapeli — asema toistui kolmesti';
+
+  @override
+  String get checkersDrawNoProgress => 'Tasapeli — siirrot eivät johda voittoon';
+
+  @override
+  String get checkersDrawInsufficient => 'Tasapeli — voittoon ei ole tarpeeksi voimaa';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — säännöt';
 
   @override

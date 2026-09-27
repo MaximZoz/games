@@ -822,6 +822,27 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Hali uydagi toshlar o‘yinchining dastlabki 25 yurishida uydan chiqishi kerak.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Durang: pozitsiya uch marta takrorlansa yoki 15 yurish davomida faqat farzin yurib, olish bo‘lmasa.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Durang: pozitsiya uch marta takrorlansa, 40 yurishda olish yoki oddiy yurish bo‘lmasa, yoki har tomonda bitta farzin qolsa.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Durang: pozitsiya uch marta takrorlansa yoki 15 yurish faqat farzin bo‘lsa.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Durang: pozitsiya uch marta takrorlansa yoki har tomonning 25 yurishi maqsad burchagiga tosh qo‘shmasa.';
+
+  @override
+  String get checkersDrawRepetition => 'Durang — pozitsiya uch marta takrorlandi';
+
+  @override
+  String get checkersDrawNoProgress => 'Durang — yurishlar g‘alabaga olib kelmaydi';
+
+  @override
+  String get checkersDrawInsufficient => 'Durang — g‘alaba uchun kuch yetarli emas';
+
+  @override
   String get rulesNardyTitle => 'Narda — qoidalar';
 
   @override

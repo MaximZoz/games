@@ -822,6 +822,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Pieces still in the home corner must leave it within the player’s first 25 moves.';
 
   @override
+  String get rulesCheckersDrawRussian => 'A draw if the same position occurs three times, or if 15 moves by each side are only king moves without a capture — including two kings against two kings shuffling for no win.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'A draw if the same position occurs three times, if 40 moves pass without a capture or a man moving, or if only one king remains on each side.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'A draw if the same position occurs three times, or if 15 moves by each side are only king moves without a capture — shuffling does not count as progress.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'A draw if the same position occurs three times, or if 25 moves by each side add no extra pieces to the target corner.';
+
+  @override
+  String get checkersDrawRepetition => 'Draw — the position repeated three times';
+
+  @override
+  String get checkersDrawNoProgress => 'Draw — the moves do not lead to a win';
+
+  @override
+  String get checkersDrawInsufficient => 'Draw — not enough material to win';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — rules';
 
   @override

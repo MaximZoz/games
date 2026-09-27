@@ -384,6 +384,7 @@ func (h *GamesHandler) checkersView(ctx context.Context, state *checkers.Game, v
 		"winner_index":   state.Winner,
 		"winner_user_id": winnerID,
 		"is_draw":        state.Winner == checkers.WinnerDraw,
+		"draw_reason":    state.DrawReason,
 		"is_forfeit":     m["forfeit"] == "1" && over,
 		"is_timeout":     m["timeout"] == "1",
 		"draw_offer_by":  m["draw_offer_by"],

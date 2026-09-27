@@ -822,6 +822,27 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
 
   @override
+  String get rulesCheckersDrawRussian => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน รวมถึงคิงสองตัวต่อสองตัว';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'เสมอหากซ้ำสามครั้ง ครบ 40 ตาไม่กินและไม่เดินหมากธรรมดา หรือเหลือคิงฝ่ายละตัว';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'เสมอหากซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน';
+
+  @override
+  String get rulesCheckersDrawCorners => 'เสมอหากซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่เพิ่มหมากในมุมเป้าหมาย';
+
+  @override
+  String get checkersDrawRepetition => 'เสมอ — ตำแหน่งซ้ำสามครั้ง';
+
+  @override
+  String get checkersDrawNoProgress => 'เสมอ — หมากไม่นำไปสู่ชัยชนะ';
+
+  @override
+  String get checkersDrawInsufficient => 'เสมอ — หมากไม่พอสำหรับชนะ';
+
+  @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
 
   @override

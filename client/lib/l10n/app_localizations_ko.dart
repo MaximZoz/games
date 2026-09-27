@@ -822,6 +822,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
 
   @override
+  String get rulesCheckersDrawRussian => '같은 국면이 세 번이거나, 양쪽 15수가 킹만 움직이고 잡기가 없으면(2대2 포함) 무승부.';
+
+  @override
+  String get rulesCheckersDrawEnglish => '같은 국면 3회, 40수 동안 잡기나 졸 이동이 없거나 킹 1대1이면 무승부.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '같은 국면 3회 또는 양쪽 15수가 킹만이고 잡기가 없으면 무승부.';
+
+  @override
+  String get rulesCheckersDrawCorners => '같은 국면 3회이거나 양쪽 25수 동안 목표 구석에 말이 늘지 않으면 무승부.';
+
+  @override
+  String get checkersDrawRepetition => '무승부 — 같은 국면이 세 번';
+
+  @override
+  String get checkersDrawNoProgress => '무승부 — 승리로 이어지지 않는 수';
+
+  @override
+  String get checkersDrawInsufficient => '무승부 — 이길 전력이 부족함';
+
+  @override
   String get rulesNardyTitle => '백개먼 — 규칙';
 
   @override

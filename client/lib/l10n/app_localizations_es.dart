@@ -822,6 +822,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Las fichas que aún no han salido de casa deben abandonarla en los primeros 25 movimientos del jugador.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Tablas si la posición se repite tres veces o si 15 jugadas de cada lado son solo damas sin captura, también con dos damas por bando.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Tablas si la posición se repite tres veces, tras 40 jugadas sin captura ni peón, o con una dama contra una dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Tablas si la posición se repite tres veces o tras 15 jugadas de damas sin captura.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Tablas si la posición se repite tres veces o si 25 jugadas de cada lado no añaden fichas a la esquina objetivo.';
+
+  @override
+  String get checkersDrawRepetition => 'Tablas — la posición se repitió tres veces';
+
+  @override
+  String get checkersDrawNoProgress => 'Tablas — las jugadas no llevan a la victoria';
+
+  @override
+  String get checkersDrawInsufficient => 'Tablas — material insuficiente para ganar';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — reglas';
 
   @override

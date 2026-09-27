@@ -822,6 +822,27 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany jsou jen dámy bez braní — i dvě dámy proti dvěma.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remíza při trojím opakování, po 40 tazích bez braní a pěšce, nebo dáma proti dámě.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remíza při trojím opakování nebo 15 tazích dámami bez braní.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remíza při trojím opakování nebo 25 tazích každé strany bez dalšího kamene v cílovém rohu.';
+
+  @override
+  String get checkersDrawRepetition => 'Remíza — pozice se třikrát opakovala';
+
+  @override
+  String get checkersDrawNoProgress => 'Remíza — tahy nevedou k výhře';
+
+  @override
+  String get checkersDrawInsufficient => 'Remíza — málo materiálu k výhře';
+
+  @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';
 
   @override

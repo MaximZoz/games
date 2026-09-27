@@ -822,6 +822,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'يجب أن تغادر القطع التي ما زالت في البيت خلال أول 25 نقلة للاعب.';
 
   @override
+  String get rulesCheckersDrawRussian => 'تعادل إذا تكرر الوضع ثلاث مرات أو إذا سارت 15 نقلة لكل جانب بالدامات فقط دون أسر، بما في ذلك داميتان ضد داميتين.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'تعادل إذا تكرر الوضع ثلاثًا، أو مرّت 40 نقلة دون أسر أو جندي، أو بقيت دامة ضد دامة.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'تعادل إذا تكرر الوضع ثلاثًا أو سارت 15 نقلة بالدامات دون أسر.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'تعادل إذا تكرر الوضع ثلاثًا أو لم تُضف 25 نقلة لكل جانب حجارة إلى الركن الهدف.';
+
+  @override
+  String get checkersDrawRepetition => 'تعادل — تكرر الوضع ثلاث مرات';
+
+  @override
+  String get checkersDrawNoProgress => 'تعادل — النقلات لا تؤدي إلى الفوز';
+
+  @override
+  String get checkersDrawInsufficient => 'تعادل — لا تكفي القطع للفوز';
+
+  @override
   String get rulesNardyTitle => 'النرد — القواعد';
 
   @override

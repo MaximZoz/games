@@ -822,6 +822,27 @@ class AppLocalizationsBe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Фішкі, якія яшчэ не выйшлі з дома, павінны пакінуць яго за першыя 25 хадоў гульца.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Нічыя, калі пазіцыя паўтарылася тройчы або 15 хадоў запар хадзілі толькі дамкі без ўзяцця — у тым ліку па дзве дамкі.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Нічыя, калі пазіцыя паўтарылася тройчы, калі 40 хадоў не было ўзяцця і ходу простай, або засталося па адной дамцы.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Нічыя, калі пазіцыя паўтарылася тройчы або 15 хадоў запар хадзілі толькі дамкі без ўзяцця.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Нічыя, калі пазіцыя паўтарылася тройчы або 25 хадоў кожнага не дадалі шашак у мэтавы кут.';
+
+  @override
+  String get checkersDrawRepetition => 'Нічыя — пазіцыя паўтарылася тройчы';
+
+  @override
+  String get checkersDrawNoProgress => 'Нічыя — хады не вядуць да перамогі';
+
+  @override
+  String get checkersDrawInsufficient => 'Нічыя — недастаткова сіл для перамогі';
+
+  @override
   String get rulesNardyTitle => 'Нарды — правілы';
 
   @override

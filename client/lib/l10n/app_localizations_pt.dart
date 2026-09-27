@@ -822,6 +822,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Empate se a posição se repetir três vezes ou se 15 lances de cada lado forem só damas sem captura, inclusive duas damas contra duas.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Empate se a posição se repetir três vezes, após 40 lances sem captura nem peão, ou com uma dama contra uma dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Empate se a posição se repetir três vezes ou após 15 lances de damas sem captura.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Empate se a posição se repetir três vezes ou se 25 lances de cada lado não acrescentarem peças ao canto alvo.';
+
+  @override
+  String get checkersDrawRepetition => 'Empate — posição repetida três vezes';
+
+  @override
+  String get checkersDrawNoProgress => 'Empate — os lances não levam à vitória';
+
+  @override
+  String get checkersDrawInsufficient => 'Empate — material insuficiente para vencer';
+
+  @override
   String get rulesNardyTitle => 'Gamão — regras';
 
   @override

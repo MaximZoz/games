@@ -27,17 +27,13 @@ void main() {
         CheckersEngine.modeCorners);
     expect(CheckersEngine.nextMode(CheckersEngine.modeCorners),
         CheckersEngine.modeRussian);
-    expect(
-        checkersModeLabel(CheckersEngine.modeRussian, t),
+    expect(checkersModeLabel(CheckersEngine.modeRussian, t),
         t.gamesCheckersModeRussian);
-    expect(
-        checkersModeLabel(CheckersEngine.modeEnglish, t),
+    expect(checkersModeLabel(CheckersEngine.modeEnglish, t),
         t.gamesCheckersModeEnglish);
-    expect(
-        checkersModeLabel(CheckersEngine.modeGiveaway, t),
+    expect(checkersModeLabel(CheckersEngine.modeGiveaway, t),
         t.gamesCheckersModeGiveaway);
-    expect(
-        checkersModeLabel(CheckersEngine.modeCorners, t),
+    expect(checkersModeLabel(CheckersEngine.modeCorners, t),
         t.gamesCheckersModeCorners);
     expect(t.gamesCheckersModeGiveaway, 'Поддавки');
     expect(t.gamesCheckersModeCorners, 'Уголки');
@@ -56,8 +52,10 @@ void main() {
     expect(russian, contains(t.rulesCheckersPlay));
     expect(t.rulesCheckersPlay, contains('продолжать бой'));
     expect(t.rulesCheckersPlay, contains('любое'));
-    expect(t.rulesCheckersPlayRussian, contains('не обязательно самое длинное'));
+    expect(
+        t.rulesCheckersPlayRussian, contains('не обязательно самое длинное'));
     expect(russian, contains(t.rulesCheckersWin));
+    expect(russian, contains(t.rulesCheckersDrawRussian));
 
     final giveaway = checkersRuleLines(
       gameMode: CheckersEngine.modeGiveaway,
@@ -65,9 +63,11 @@ void main() {
       stakeBronze: 0,
       l10n: t,
     );
-    expect(giveaway, contains(t.rulesCheckersMode(t.gamesCheckersModeGiveaway)));
+    expect(
+        giveaway, contains(t.rulesCheckersMode(t.gamesCheckersModeGiveaway)));
     expect(giveaway, contains(t.rulesCheckersPlayGiveaway));
     expect(giveaway, contains(t.rulesCheckersWin));
+    expect(giveaway, contains(t.rulesCheckersDrawGiveaway));
 
     final english = checkersRuleLines(
       gameMode: CheckersEngine.modeEnglish,
@@ -76,6 +76,7 @@ void main() {
       l10n: t,
     );
     expect(english, contains(t.rulesCheckersPlayEnglish));
+    expect(english, contains(t.rulesCheckersDrawEnglish));
 
     final corners = checkersRuleLines(
       gameMode: CheckersEngine.modeCorners,
@@ -86,6 +87,7 @@ void main() {
     expect(corners, contains(t.rulesCheckersPlayCorners));
     expect(corners, contains(t.rulesCheckersPlayCornersNoReturn));
     expect(corners, contains(t.rulesCheckersPlayCornersLeaveHome));
+    expect(corners, contains(t.rulesCheckersDrawCorners));
     expect(corners, contains(t.rulesCheckersMode(t.gamesCheckersModeCorners)));
 
     final offline = checkersRuleLines(

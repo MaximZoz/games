@@ -822,6 +822,27 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή αν για 15 κινήσεις ανά πλευρά κινούνται μόνο ντάμες χωρίς πάρσιμο.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ισοπαλία σε τριπλή επανάληψη, μετά από 40 κινήσεις χωρίς πάρσιμο ή πιόνι, ή μία ντάμα εναντίον μίας.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ισοπαλία σε τριπλή επανάληψη ή 15 κινήσεις ντάμας χωρίς πάρσιμο.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ισοπαλία σε τριπλή επανάληψη ή 25 κινήσεις ανά πλευρά χωρίς νέο πούλι στη γωνία-στόχο.';
+
+  @override
+  String get checkersDrawRepetition => 'Ισοπαλία — η θέση επαναλήφθηκε τρεις φορές';
+
+  @override
+  String get checkersDrawNoProgress => 'Ισοπαλία — οι κινήσεις δεν οδηγούν σε νίκη';
+
+  @override
+  String get checkersDrawInsufficient => 'Ισοπαλία — ανεπαρκές υλικό για νίκη';
+
+  @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';
 
   @override

@@ -822,6 +822,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté ne sont que des dames sans prise — y compris deux dames contre deux.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Nulle si la position se répète trois fois, après 40 coups sans prise ni pion, ou s’il reste une dame contre une dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Nulle si la position se répète trois fois ou après 15 coups de dames sans prise.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Nulle si la position se répète trois fois ou si 25 coups de chaque côté n’ajoutent aucune pièce au coin cible.';
+
+  @override
+  String get checkersDrawRepetition => 'Nulle — position répétée trois fois';
+
+  @override
+  String get checkersDrawNoProgress => 'Nulle — les coups n’aboutissent pas à une victoire';
+
+  @override
+  String get checkersDrawInsufficient => 'Nulle — matériel insuffisant pour gagner';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — règles';
 
   @override

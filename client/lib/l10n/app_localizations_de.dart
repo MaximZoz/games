@@ -822,6 +822,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis, wenn dieselbe Stellung dreimal entsteht oder 15 Züge lang nur Damen ohne Schlag ziehen — auch bei zwei Damen gegen zwei Damen.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis bei dreifacher Stellungswiederholung, 40 Zügen ohne Schlag und Bauerzug, oder einer Dame gegen eine Dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis bei dreifacher Wiederholung oder 15 Damen-Zügen ohne Schlag — Züge ohne Fortschritt zählen nicht.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis bei dreifacher Wiederholung oder 25 Zügen pro Seite ohne weiteren Stein in der Zielecke.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — Stellung dreimal wiederholt';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — Züge führen nicht zum Sieg';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — nicht genug Material zum Sieg';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — Regeln';
 
   @override
