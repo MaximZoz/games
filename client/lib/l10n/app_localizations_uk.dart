@@ -822,6 +822,27 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Фішки, які ще не вийшли з дому, мають залишити його за перші 25 ходів гравця.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Нічия, якщо позиція повторилася тричі або 15 ходів поспіль ходили лише дамки без взяття — зокрема коли лишилося по дві дамки.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Нічия, якщо позиція повторилася тричі, якщо 40 ходів не було взяття і ходу простої, або лишилося по одній дамці.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Нічия, якщо позиція повторилася тричі або 15 ходів поспіль ходили лише дамки без взяття.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Нічия, якщо позиція повторилася тричі або 25 ходів кожної сторони не додали шашок у цільовий кут.';
+
+  @override
+  String get checkersDrawRepetition => 'Нічия — позиція повторилася тричі';
+
+  @override
+  String get checkersDrawNoProgress => 'Нічия — ходи не ведуть до перемоги';
+
+  @override
+  String get checkersDrawInsufficient => 'Нічия — недостатньо сил для перемоги';
+
+  @override
   String get rulesNardyTitle => 'Нарди — правила';
 
   @override

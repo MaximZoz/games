@@ -408,3 +408,92 @@ func TestEncodeDecode(t *testing.T) {
 		t.Fatal("roundtrip legal mismatch")
 	}
 }
+
+func emptyBoard(mode string) *Game {
+	g := NewGame(mode)
+	for i := range g.Board {
+		g.Board[i] = Empty
+	}
+	return g
+}
+
+func TestDrawTwoKingsEachNoProgress(t *testing.T) {
+	g := emptyBoard(ModeRussian)
+	g.set(0, 1, WhiteKing)
+	g.set(0, 3, WhiteKing)
+	g.set(7, 0, BlackKing)
+	g.set(7, 2, BlackKing)
+	g.Turn = 0
+	g.NoProgress = RussianNoProgressPlies - 1
+	if err := g.Apply(0, Move{From: Square{0, 1}, To: Square{1, 2}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Winner != WinnerDraw || g.DrawReason != DrawReasonNoProgress {
+		t.Fatalf("winner=%d reason=%q", g.Winner, g.DrawReason)
+	}
+}
+
+func TestCaptureResetsNoProgress(t *testing.T) {
+	g := emptyBoard(ModeRussian)
+	g.set(3, 2, WhiteMan)
+	g.set(4, 3, BlackMan)
+	g.set(7, 0, BlackMan)
+	g.Turn = 0
+	g.NoProgress = 20
+	if err := g.Apply(0, g.LegalMoves()[0]); err != nil {
+		t.Fatal(err)
+	}
+	if g.NoProgress != 0 || g.Winner != WinnerNone {
+		t.Fatalf("progress=%d winner=%d", g.NoProgress, g.Winner)
+	}
+}
+
+func TestEnglishLoneKingsDraw(t *testing.T) {
+	g := emptyBoard(ModeEnglish)
+	g.set(3, 2, WhiteKing)
+	g.set(5, 4, BlackKing)
+	g.Turn = 0
+	if err := g.Apply(0, Move{From: Square{3, 2}, To: Square{4, 1}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Winner != WinnerDraw || g.DrawReason != DrawReasonInsufficient {
+		t.Fatalf("winner=%d reason=%q", g.Winner, g.DrawReason)
+	}
+}
+
+func TestThreefoldDraw(t *testing.T) {
+	g := emptyBoard(ModeRussian)
+	g.set(3, 2, WhiteKing)
+	g.set(5, 4, BlackKing)
+	g.Turn = 0
+	if g.PosCounts == nil {
+		g.PosCounts = map[string]int{}
+	}
+	g.PosCounts[g.positionKey()] = 2
+	g.checkAutomaticDraw()
+	if g.Winner != WinnerDraw || g.DrawReason != DrawReasonRepetition {
+		t.Fatalf("winner=%d reason=%q", g.Winner, g.DrawReason)
+	}
+}
+
+func TestCornersNoProgressDraw(t *testing.T) {
+	g := emptyBoard(ModeCorners)
+	g.set(3, 3, WhiteMan)
+	g.set(4, 4, BlackMan)
+	g.Turn = 0
+	g.NoProgress = CornersNoProgressPlies - 1
+	if err := g.Apply(0, Move{From: Square{3, 3}, To: Square{3, 2}}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Winner != WinnerDraw || g.DrawReason != DrawReasonNoProgress {
+		t.Fatalf("winner=%d reason=%q", g.Winner, g.DrawReason)
+	}
+}
+
+func TestAgreeDrawReason(t *testing.T) {
+	g := NewGame(ModeRussian)
+	g.AgreeDraw()
+	if g.Winner != WinnerDraw || g.DrawReason != DrawReasonAgreed {
+		t.Fatalf("winner=%d reason=%q", g.Winner, g.DrawReason)
+	}
+}

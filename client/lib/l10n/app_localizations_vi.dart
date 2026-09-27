@@ -822,6 +822,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên chỉ đi đam mà không ăn — kể cả 2 đam đấu 2 đam.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Hòa nếu lặp thế ba lần, 40 nước không ăn và không đi tốt, hoặc mỗi bên còn một đam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Hòa nếu lặp thế ba lần hoặc 15 nước mỗi bên chỉ đi đam không ăn.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Hòa nếu lặp thế ba lần hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
+
+  @override
+  String get checkersDrawRepetition => 'Hòa — thế cờ lặp ba lần';
+
+  @override
+  String get checkersDrawNoProgress => 'Hòa — nước đi không dẫn tới thắng';
+
+  @override
+  String get checkersDrawInsufficient => 'Hòa — không đủ quân để thắng';
+
+  @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';
 
   @override

@@ -822,6 +822,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis, gdy pozycja powtórzy się trzykrotnie albo przez 15 ruchów każdej strony chodzą tylko damki bez bicia — także 2 na 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis przy trzykrotnym powtórzeniu, po 40 ruchach bez bicia i ruchu piona albo przy jednej damce na damkę.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis przy trzykrotnym powtórzeniu albo 15 ruchach damkami bez bicia.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis przy trzykrotnym powtórzeniu albo 25 ruchach każdej strony bez nowej figury w docelowym rogu.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — pozycja powtórzyła się trzykrotnie';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — ruchy nie prowadzą do zwycięstwa';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — za mało sił do zwycięstwa';
+
+  @override
   String get rulesNardyTitle => 'Nardy — zasady';
 
   @override

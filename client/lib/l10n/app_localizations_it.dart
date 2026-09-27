@@ -822,6 +822,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Patta se la posizione si ripete tre volte o se per 15 mosse per parte muovono solo le dame senza catture, anche due dame contro due.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Patta se la posizione si ripete tre volte, dopo 40 mosse senza cattura o pedina, o con una dama contro una dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Patta se la posizione si ripete tre volte o dopo 15 mosse di dame senza catture.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Patta se la posizione si ripete tre volte o se 25 mosse per parte non aggiungono pedine all’angolo obiettivo.';
+
+  @override
+  String get checkersDrawRepetition => 'Patta — posizione ripetuta tre volte';
+
+  @override
+  String get checkersDrawNoProgress => 'Patta — le mosse non portano alla vittoria';
+
+  @override
+  String get checkersDrawInsufficient => 'Patta — materiale insufficiente per vincere';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regole';
 
   @override

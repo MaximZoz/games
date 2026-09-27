@@ -822,6 +822,27 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brickor som fortfarande är hemma måste lämna hörnet inom spelarens 25 första drag.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remi om samma ställning uppstår tre gånger, eller om 15 drag per sida bara är damdrag utan slag — även två damer mot två.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remi vid trefaldig upprepning, 40 drag utan slag eller bondedrag, eller en dam mot en dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remi vid trefaldig upprepning eller 15 damdrag utan slag.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remi vid trefaldig upprepning eller 25 drag per sida utan extra bricka i målhörnet.';
+
+  @override
+  String get checkersDrawRepetition => 'Remi — ställningen upprepades tre gånger';
+
+  @override
+  String get checkersDrawNoProgress => 'Remi — dragen leder inte till vinst';
+
+  @override
+  String get checkersDrawInsufficient => 'Remi — otillräckligt material för vinst';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override

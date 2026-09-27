@@ -205,7 +205,18 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   String _statusText(CheckersGameView game) {
     final l10n = context.l10n;
     if (game.isOver) {
-      if (game.isDraw) return l10n.gameDraw;
+      if (game.isDraw) {
+        switch (game.drawReason) {
+          case CheckersEngine.drawReasonRepetition:
+            return l10n.checkersDrawRepetition;
+          case CheckersEngine.drawReasonNoProgress:
+            return l10n.checkersDrawNoProgress;
+          case CheckersEngine.drawReasonInsufficient:
+            return l10n.checkersDrawInsufficient;
+          default:
+            return l10n.gameDraw;
+        }
+      }
       if (game.myIndex < 0) return l10n.gameOverNeutral;
       if (game.iWon) {
         if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
@@ -265,8 +276,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
           ? context.l10n.gameAcceptDrawConfirm
           : context.l10n.gameOfferDrawConfirm,
       cancelLabel: context.l10n.commonCancel,
-      confirmLabel:
-          accept ? context.l10n.gameDraw : context.l10n.gameOfferDraw,
+      confirmLabel: accept ? context.l10n.gameDraw : context.l10n.gameOfferDraw,
     );
     if (!ok || !mounted) return;
     try {

@@ -822,6 +822,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Pozisyon üç kez tekrarlanırsa veya her taraftan 15 hamle sadece dama ve temassızsa — iki dama iki damaya karşı dahil — beraberlik.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Pozisyon üç kez tekrarlanırsa, 40 hamle yeme ve piyon yoksa veya her tarafta bir dama kalırsa beraberlik.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Pozisyon üç kez tekrarlanırsa veya 15 hamle sadece dama ve yemesizse beraberlik.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 25 hamlesi hedef köşeye taş eklemezse beraberlik.';
+
+  @override
+  String get checkersDrawRepetition => 'Beraberlik — pozisyon üç kez tekrarlandı';
+
+  @override
+  String get checkersDrawNoProgress => 'Beraberlik — hamleler zafere götürmüyor';
+
+  @override
+  String get checkersDrawInsufficient => 'Beraberlik — kazanacak güç yok';
+
+  @override
   String get rulesNardyTitle => 'Tavla — kurallar';
 
   @override

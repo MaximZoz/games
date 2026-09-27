@@ -822,6 +822,27 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
 
   @override
+  String get rulesCheckersDrawRussian => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים לכל צד הם רק מלכות בלי הכאה — גם שתיים מול שתיים.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'תיקו בחזרה משולשת, אחרי 40 מהלכים בלי הכאה או חייל, או מלכה מול מלכה.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'תיקו בחזרה משולשת או 15 מהלכי מלכות בלי הכאה.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'תיקו בחזרה משולשת או 25 מהלכים לכל צד בלי עוד חייל בפינת היעד.';
+
+  @override
+  String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';
+
+  @override
+  String get checkersDrawNoProgress => 'תיקו — המהלכים לא מובילים לניצחון';
+
+  @override
+  String get checkersDrawInsufficient => 'תיקו — אין מספיק כוח לניצחון';
+
+  @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
 
   @override

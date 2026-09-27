@@ -822,6 +822,27 @@ class AppLocalizationsNb extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brikker som fortsatt er i hjemmet, må forlate det i spillerens 25 første trekk.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis hvis stillingen gjentas tre ganger, eller hvis 15 trekk per side bare er dame-trekk uten slag — også to damer mot to.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis ved tredobbelt gjentakelse, 40 trekk uten slag eller bonde-trekk, eller én dame mot én dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis ved tredobbelt gjentakelse eller 15 dame-trekk uten slag.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis ved tredobbelt gjentakelse eller 25 trekk per side uten ekstra brikke i målhjørnet.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — stillingen gjentatt tre ganger';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — trekkene fører ikke til seier';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — ikke nok materiale til seier';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override

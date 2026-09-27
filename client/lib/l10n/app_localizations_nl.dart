@@ -822,6 +822,27 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remise als dezelfde stelling driemaal voorkomt, of als 15 zetten per kant alleen dammen zonder slaan zijn — ook twee dammen tegen twee.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remise bij drievoudige herhaling, 40 zetten zonder slaan of schijfzet, of één dam tegen één dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remise bij drievoudige herhaling of 15 damzetten zonder slaan.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remise bij drievoudige herhaling of 25 zetten per kant zonder extra schijf in de doelhoek.';
+
+  @override
+  String get checkersDrawRepetition => 'Remise — stelling driemaal herhaald';
+
+  @override
+  String get checkersDrawNoProgress => 'Remise — zetten leiden niet tot winst';
+
+  @override
+  String get checkersDrawInsufficient => 'Remise — onvoldoende materiaal voor winst';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regels';
 
   @override

@@ -52,7 +52,11 @@ List<String> checkersRuleLines({
     if (mode == CheckersEngine.modeCorners) ...[
       l10n.rulesCheckersPlayCornersNoReturn,
       l10n.rulesCheckersPlayCornersLeaveHome,
+      l10n.rulesCheckersDrawCorners,
     ],
     if (mode != CheckersEngine.modeCorners) l10n.rulesCheckersWin,
+    if (mode == CheckersEngine.modeEnglish) l10n.rulesCheckersDrawEnglish,
+    if (mode == CheckersEngine.modeGiveaway) l10n.rulesCheckersDrawGiveaway,
+    if (mode == CheckersEngine.modeRussian) l10n.rulesCheckersDrawRussian,
   ];
 }
