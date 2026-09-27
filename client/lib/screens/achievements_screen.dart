@@ -377,12 +377,12 @@ class _AchievementCard extends StatelessWidget {
     VoidCallback? onPressed,
   }) {
     return GamepadFocusBlock(
+      outlined: false,
       radius: AppRadius.button,
       borderWidth: 2.2,
       onActivate: onPressed,
       child: Builder(
         builder: (context) {
-          final on = GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
           return FilledButton(
             onPressed: onPressed ?? () {},
             style: AppButtonStyles.of(
@@ -405,9 +405,7 @@ class _AchievementCard extends StatelessWidget {
               ),
             ).copyWith(
               side: WidgetStatePropertyAll(
-                on
-                    ? BorderSide.none
-                    : const BorderSide(color: AppColors.buttonBorder),
+                GamepadFocusBlock.buttonSide(context),
               ),
             ),
             child: Text(label),

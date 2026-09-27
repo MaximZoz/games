@@ -498,56 +498,30 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                             ? 0
                             : ((emojis.length + pageSize - 1) / pageSize)
                                 .floor();
-                        return DesktopContentFrame(
-                          maxWidth: fillTiles
-                              ? double.infinity
-                              : (isWide(context) ? 720 : double.infinity),
-                          child: VerticalPagedSlider(
-                            pageCount: pageCount,
-                            itemBuilder: (context, page) {
-                              final start = page * pageSize;
-                              final end = math.min(
-                                start + pageSize,
-                                emojis.length,
-                              );
-                              final pageItems = emojis.sublist(start, end);
-                              return Padding(
-                                padding: pad,
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final pageCols = shopTileColumns(
-                                      context,
-                                      maxWidth: constraints.maxWidth,
-                                    );
-                                    final pageRows = (pageItems.length /
-                                            pageCols)
-                                        .ceil()
-                                        .clamp(1, rows);
-                                    const gap = 8.0;
-                                    final cellW = (constraints.maxWidth -
-                                            gap * (pageCols - 1)) /
-                                        pageCols;
-                                    final cellH = (constraints.maxHeight -
-                                            gap * (pageRows - 1)) /
-                                        pageRows;
-                                    final rawRatio =
-                                        cellH <= 0 ? 0.78 : cellW / cellH;
-                                    // В альбоме не зажимаем ratio — иначе ряд обрезается.
-                                    final ratio = fillTiles
-                                        ? rawRatio
-                                        : rawRatio.clamp(0.55, 1.15);
-                                    return GridView.builder(
-                                      clipBehavior: Clip.hardEdge,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: pageCols,
-                                        mainAxisSpacing: gap,
-                                        crossAxisSpacing: gap,
-                                        childAspectRatio: ratio,
-                                      ),
+                        final slider = VerticalPagedSlider(
+                          pageCount: pageCount,
+                          itemBuilder: (context, page) {
+                            final start = page * pageSize;
+                            final end = math.min(
+                              start + pageSize,
+                              emojis.length,
+                            );
+                            final pageItems = emojis.sublist(start, end);
+                            return Padding(
+                              padding: pad,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final pageCols = shopTileColumns(
+                                    context,
+                                    maxWidth: constraints.maxWidth,
+                                  );
+                                  const gap = 8.0;
+                                  if (fillTiles) {
+                                    return ShopFillGrid(
+                                      columns: pageCols,
+                                      rows: rows,
                                       itemCount: pageItems.length,
+                                      gap: gap,
                                       itemBuilder: (context, index) {
                                         final item = pageItems[index];
                                         return _EmojiBuyTile(
@@ -560,11 +534,56 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                         );
                                       },
                                     );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
+                                  }
+                                  final pageRows = (pageItems.length /
+                                          pageCols)
+                                      .ceil()
+                                      .clamp(1, rows);
+                                  final cellW = (constraints.maxWidth -
+                                          gap * (pageCols - 1)) /
+                                      pageCols;
+                                  final cellH = (constraints.maxHeight -
+                                          gap * (pageRows - 1)) /
+                                      pageRows;
+                                  final rawRatio =
+                                      cellH <= 0 ? 0.78 : cellW / cellH;
+                                  final ratio = rawRatio.clamp(0.55, 1.15);
+                                  return GridView.builder(
+                                    clipBehavior: Clip.hardEdge,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: pageCols,
+                                      mainAxisSpacing: gap,
+                                      crossAxisSpacing: gap,
+                                      childAspectRatio: ratio,
+                                    ),
+                                    itemCount: pageItems.length,
+                                    itemBuilder: (context, index) {
+                                      final item = pageItems[index];
+                                      return _EmojiBuyTile(
+                                        item: item,
+                                        busy: _buyInFlight
+                                            .contains(item.code),
+                                        onPreview: () =>
+                                            _openPreview(item),
+                                        onBuy: () => _buy(item),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        );
+                        return DesktopContentFrame(
+                          maxWidth: fillTiles
+                              ? double.infinity
+                              : (isWide(context) ? 720 : double.infinity),
+                          child: fillTiles
+                              ? SizedBox.expand(child: slider)
+                              : slider,
                         );
                       },
                     ),

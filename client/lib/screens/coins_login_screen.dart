@@ -201,17 +201,16 @@ class _LoginRewardsBody extends StatelessWidget {
           compactTile: useTiles,
         );
 
-    final claimButton = Align(
-      alignment: Alignment.center,
-      child: GamepadFocusBlock(
-        radius: AppRadius.button,
-        borderWidth: 2.2,
-        onActivate: canClaim ? onClaim : null,
-        child: Builder(
-          builder: (context) {
-            final on =
-                GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
-            final button = FilledButton.icon(
+    final claimButton = GamepadFocusBlock(
+      outlined: false,
+      radius: AppRadius.button,
+      borderWidth: 2.2,
+      onActivate: canClaim ? onClaim : null,
+      child: Builder(
+        builder: (context) {
+          return SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
               key: claimButtonKey,
               onPressed: canClaim ? onClaim : () {},
               icon: const Icon(Icons.card_giftcard, size: 18),
@@ -221,7 +220,7 @@ class _LoginRewardsBody extends StatelessWidget {
                     : l10n.coinsAlreadyClaimed,
               ),
               style: AppButtonStyles.of(
-                minimumSize: Size(useTiles ? 320 : 44, 44),
+                minimumSize: const Size(44, 44),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -231,16 +230,12 @@ class _LoginRewardsBody extends StatelessWidget {
                 radius: AppRadius.button,
               ).copyWith(
                 side: WidgetStatePropertyAll(
-                  on
-                      ? BorderSide.none
-                      : const BorderSide(color: AppColors.buttonBorder),
+                  GamepadFocusBlock.buttonSide(context),
                 ),
               ),
-            );
-            if (useTiles) return button;
-            return SizedBox(width: double.infinity, child: button);
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
 
