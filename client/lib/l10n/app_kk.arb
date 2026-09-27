@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Дайын",
   "nardyAutoConfirm": "Авторастау",
   "nardyAutoConfirmHint": "Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді",
+  "nardyLayoutToggle": "Орналастыруды ауыстыру",
   "nardyNoMoves": "Жүріс жоқ",
   "nardyYourRoll": "Сіздің лақтыруыңыз",
   "nardyPipsShort": "Қалды:",

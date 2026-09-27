@@ -1799,6 +1799,12 @@ abstract class AppLocalizations {
   /// **'После всех ходов сразу передать ход сопернику'**
   String get nardyAutoConfirmHint;
 
+  /// No description provided for @nardyLayoutToggle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поменять раскладку'**
+  String get nardyLayoutToggle;
+
   /// No description provided for @nardyNoMoves.
   ///
   /// In ru, this message translates to:

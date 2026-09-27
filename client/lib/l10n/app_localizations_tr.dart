@@ -866,6 +866,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
 
   @override
+  String get nardyLayoutToggle => 'Dizilimi değiştir';
+
+  @override
   String get nardyNoMoves => 'Hamle yok';
 
   @override

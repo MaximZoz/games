@@ -866,6 +866,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Пасля ўсіх хадоў адразу перадаць ход суперніку';
 
   @override
+  String get nardyLayoutToggle => 'Змяніць раскладку';
+
+  @override
   String get nardyNoMoves => 'Хадоў няма';
 
   @override

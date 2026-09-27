@@ -397,6 +397,7 @@
   "nardyDoneTurn": "Готово",
   "nardyAutoConfirm": "Автоподтверждение",
   "nardyAutoConfirmHint": "После всех ходов сразу передать ход сопернику",
+  "nardyLayoutToggle": "Поменять раскладку",
   "nardyNoMoves": "Ходов нет",
   "nardyYourRoll": "Ваш бросок",
   "nardyPipsShort": "Осталось:",

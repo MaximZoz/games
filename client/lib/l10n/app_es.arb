@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Listo",
   "nardyAutoConfirm": "Autoconfirmar",
   "nardyAutoConfirmHint": "Pasa el turno automáticamente tras todos los movimientos",
+  "nardyLayoutToggle": "Cambiar disposición",
   "nardyNoMoves": "Sin jugadas",
   "nardyYourRoll": "Tu tirada",
   "nardyPipsShort": "Quedan:",

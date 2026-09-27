@@ -866,6 +866,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα';
 
   @override
+  String get nardyLayoutToggle => 'Αλλαγή διάταξης';
+
+  @override
   String get nardyNoMoves => 'Καμία κίνηση';
 
   @override

@@ -866,6 +866,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
 
   @override
+  String get nardyLayoutToggle => 'Đổi cách xếp';
+
+  @override
   String get nardyNoMoves => 'Không có nước đi';
 
   @override

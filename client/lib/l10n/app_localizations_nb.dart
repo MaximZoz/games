@@ -866,6 +866,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Etter alle trekk går turen automatisk videre';
 
   @override
+  String get nardyLayoutToggle => 'Bytt oppstilling';
+
+  @override
   String get nardyNoMoves => 'Ingen trekk';
 
   @override

@@ -866,6 +866,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nardyAutoConfirmHint => 'सभी चालों के बाद बारी अपने आप चली जाएगी';
 
   @override
+  String get nardyLayoutToggle => 'खांचे बदलें';
+
+  @override
   String get nardyNoMoves => 'कोई चाल नहीं';
 
   @override

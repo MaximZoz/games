@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Klaar",
   "nardyAutoConfirm": "Auto-bevestigen",
   "nardyAutoConfirmHint": "Geef de beurt automatisch door na alle zetten",
+  "nardyLayoutToggle": "Opstelling wisselen",
   "nardyNoMoves": "Geen zetten",
   "nardyYourRoll": "Jouw worp",
   "nardyPipsShort": "Resterend:",

@@ -866,6 +866,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nardyAutoConfirmHint => 'تمرير الدور تلقائياً بعد كل النقلات';
 
   @override
+  String get nardyLayoutToggle => 'تغيير الترتيب';
+
+  @override
   String get nardyNoMoves => 'لا توجد نقلات';
 
   @override

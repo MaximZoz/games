@@ -866,6 +866,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді';
 
   @override
+  String get nardyLayoutToggle => 'Орналастыруды ауыстыру';
+
+  @override
   String get nardyNoMoves => 'Жүріс жоқ';
 
   @override

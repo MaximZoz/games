@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Bitti",
   "nardyAutoConfirm": "Otomatik onay",
   "nardyAutoConfirmHint": "Tüm hamlelerden sonra sıra otomatik geçer",
+  "nardyLayoutToggle": "Dizilimi değiştir",
   "nardyNoMoves": "Hamle yok",
   "nardyYourRoll": "Zarınız",
   "nardyPipsShort": "Kalan:",

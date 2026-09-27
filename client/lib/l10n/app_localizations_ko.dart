@@ -866,6 +866,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get nardyAutoConfirmHint => '모든 수를 두면 차례가 자동으로 넘어갑니다';
 
   @override
+  String get nardyLayoutToggle => '배치 바꾸기';
+
+  @override
   String get nardyNoMoves => '둘 수 없음';
 
   @override

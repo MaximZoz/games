@@ -866,6 +866,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Passe le tour automatiquement après tous les coups';
 
   @override
+  String get nardyLayoutToggle => 'Changer la disposition';
+
+  @override
   String get nardyNoMoves => 'Aucun coup';
 
   @override

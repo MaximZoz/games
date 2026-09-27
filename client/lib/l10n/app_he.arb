@@ -333,6 +333,7 @@
   "nardyDoneTurn": "סיום",
   "nardyAutoConfirm": "אישור אוטומטי",
   "nardyAutoConfirmHint": "לאחר כל המהלכים התור עובר ליריב",
+  "nardyLayoutToggle": "החלפת סידור",
   "nardyNoMoves": "אין מהלכים",
   "nardyYourRoll": "ההטלה שלך",
   "nardyPipsShort": "נותרו:",

@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Klar",
   "nardyAutoConfirm": "Autobekräfta",
   "nardyAutoConfirmHint": "Efter alla drag går turen vidare automatiskt",
+  "nardyLayoutToggle": "Byt uppställning",
   "nardyNoMoves": "Inga drag",
   "nardyYourRoll": "Ditt slag",
   "nardyPipsShort": "Kvar:",

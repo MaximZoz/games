@@ -333,6 +333,7 @@
   "nardyDoneTurn": "完了",
   "nardyAutoConfirm": "自動確定",
   "nardyAutoConfirmHint": "すべての手のあと、自動で相手の番になります",
+  "nardyLayoutToggle": "配置を変える",
   "nardyNoMoves": "動かせません",
   "nardyYourRoll": "あなたの出目",
   "nardyPipsShort": "残り:",

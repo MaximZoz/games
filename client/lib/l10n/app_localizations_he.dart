@@ -866,6 +866,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get nardyAutoConfirmHint => 'לאחר כל המהלכים התור עובר ליריב';
 
   @override
+  String get nardyLayoutToggle => 'החלפת סידור';
+
+  @override
   String get nardyNoMoves => 'אין מהלכים';
 
   @override

@@ -42,6 +42,7 @@ class NardyBoard extends StatefulWidget {
     required this.onDragEnd,
     this.dragCancel,
     this.cursorTrack,
+    this.homeOnRight = false,
   });
 
   final NardyGameView game;
@@ -79,6 +80,9 @@ class NardyBoard extends StatefulWidget {
   /// Пункт под курсором геймпада: дорожка, [nardyBarTrack] или [nardyPoints].
   final int? cursorTrack;
 
+  /// Дом справа внизу — зеркальная раскладка в коротких и длинных.
+  final bool homeOnRight;
+
   static const Duration moveDuration = Duration(milliseconds: 420);
 
   @override
@@ -99,7 +103,11 @@ class _NardyBoardState extends State<NardyBoard> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        final geometry = NardyBoardGeometry(size: size, showBar: _showBar);
+        final geometry = NardyBoardGeometry(
+          size: size,
+          showBar: _showBar,
+          homeOnRight: widget.homeOnRight,
+        );
         final mySeat = game.myIndex < 0 ? 0 : game.myIndex;
         final oppSeat = game.myIndex < 0 ? 1 : game.opponentIndex;
         final diameter = geometry.checkerSize;
@@ -297,7 +305,8 @@ class _NardyBoardState extends State<NardyBoard> {
 
   int _toMyTrack(int oppTrack, {required bool mine}) {
     if (mine || game.myIndex < 0) return oppTrack;
-    final point = nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
+    final point =
+        nardyTrackToBoard(game.gameMode, game.opponentIndex, oppTrack);
     final track = nardyBoardToTrack(game.gameMode, game.myIndex, point);
     return track < 0 ? oppTrack : track;
   }
@@ -380,7 +389,10 @@ class _BoardPainter extends CustomPainter {
     final rect = geometry.trackRect(track);
     if (rect.isEmpty) return;
     final top = NardyBoardLayout.isTopRow(track);
-    final column = NardyBoardLayout.columnOf(track);
+    final column = nardyVisualColumn(
+      track,
+      homeOnRight: geometry.homeOnRight,
+    );
     final base = column.isEven ? _kPointLight : _kPointDark;
     var fill = NardyBoardLayout.isHome(track)
         ? Color.alphaBlend(_kHomeTint.withValues(alpha: 0.22), base)

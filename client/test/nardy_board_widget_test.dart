@@ -151,6 +151,45 @@ void main() {
     }
   });
 
+  testWidgets('раскладка дом справа зеркалит шашки в коротких и длинных',
+      (tester) async {
+    for (final mode in [nardyModeLong, nardyModeShort]) {
+      final engine = NardyEngine.newGame(mode);
+      final tracker = NardyCheckerTracker();
+      Widget board({required bool homeOnRight}) => NardyBoard(
+            game: _view(engine),
+            tracker: tracker,
+            selectedTrack: null,
+            targetTracks: const {},
+            canBearOff: false,
+            undoTracks: const {},
+            homeOnRight: homeOnRight,
+            onTrackTap: (_) {},
+            onBarTap: () {},
+            onBearOffTap: () {},
+            canDragFrom: (_) => false,
+            onDragStart: (_) {},
+            onDragEnd: (_) {},
+          );
+
+      await tester.pumpWidget(_wrap(board(homeOnRight: false)));
+      await tester.pumpAndSettle();
+      Offset firstLeft() {
+        final widget = tester.widget<AnimatedPositioned>(
+          find.byType(AnimatedPositioned).first,
+        );
+        return Offset(widget.left ?? 0, widget.top ?? 0);
+      }
+
+      final left = firstLeft();
+      await tester.pumpWidget(_wrap(board(homeOnRight: true)));
+      await tester.pumpAndSettle();
+      final right = firstLeft();
+      expect(right.dx, isNot(closeTo(left.dx, 1)),
+          reason: 'mode $mode: шашки должны зеркально переехать');
+    }
+  });
+
   testWidgets('бросок кубиков проигрывает анимацию', (tester) async {
     await tester.pumpWidget(_wrap(
       const NardyDiceRow(rolled: [3, 5], remaining: [3, 5], rollKey: 'r1'),
@@ -162,7 +201,8 @@ void main() {
 
     // Новый бросок — новая прокрутка.
     await tester.pumpWidget(_wrap(
-      const NardyDiceRow(rolled: [6, 6, 6, 6], remaining: [6, 6, 6, 6], rollKey: 'r2'),
+      const NardyDiceRow(
+          rolled: [6, 6, 6, 6], remaining: [6, 6, 6, 6], rollKey: 'r2'),
     ));
     await tester.pump();
     expect(tester.hasRunningAnimations, isTrue);
@@ -170,7 +210,8 @@ void main() {
 
     // Тот же бросок — заново не крутим.
     await tester.pumpWidget(_wrap(
-      const NardyDiceRow(rolled: [6, 6, 6, 6], remaining: [6, 6], rollKey: 'r2'),
+      const NardyDiceRow(
+          rolled: [6, 6, 6, 6], remaining: [6, 6], rollKey: 'r2'),
     ));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();

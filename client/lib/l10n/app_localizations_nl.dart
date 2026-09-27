@@ -866,6 +866,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
 
   @override
+  String get nardyLayoutToggle => 'Opstelling wisselen';
+
+  @override
   String get nardyNoMoves => 'Geen zetten';
 
   @override

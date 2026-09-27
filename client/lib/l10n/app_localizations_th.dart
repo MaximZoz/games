@@ -866,6 +866,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
 
   @override
+  String get nardyLayoutToggle => 'เปลี่ยนการจัดเรียง';
+
+  @override
   String get nardyNoMoves => 'ไม่มีตาเดิน';
 
   @override

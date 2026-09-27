@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Terminé",
   "nardyAutoConfirm": "Auto-confirmation",
   "nardyAutoConfirmHint": "Passe le tour automatiquement après tous les coups",
+  "nardyLayoutToggle": "Changer la disposition",
   "nardyNoMoves": "Aucun coup",
   "nardyYourRoll": "Votre lancer",
   "nardyPipsShort": "Reste :",

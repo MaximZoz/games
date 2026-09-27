@@ -333,6 +333,7 @@
   "nardyDoneTurn": "เสร็จ",
   "nardyAutoConfirm": "ยืนยันอัตโนมัติ",
   "nardyAutoConfirmHint": "เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที",
+  "nardyLayoutToggle": "เปลี่ยนการจัดเรียง",
   "nardyNoMoves": "ไม่มีตาเดิน",
   "nardyYourRoll": "การทอยของคุณ",
   "nardyPipsShort": "เหลือ:",
