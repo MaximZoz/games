@@ -49,12 +49,9 @@ void main() {
     );
     expect(russian, contains(t.rulesCheckersPlayers));
     expect(russian, contains(t.rulesCheckersMode(t.gamesCheckersModeRussian)));
-    expect(russian, contains(t.rulesCheckersPlay));
-    expect(t.rulesCheckersPlay, contains('продолжать бой'));
-    expect(t.rulesCheckersPlay, contains('любое'));
+    expect(russian, contains(t.rulesCheckersPlayRussian));
     expect(
         t.rulesCheckersPlayRussian, contains('не обязательно самое длинное'));
-    expect(russian, contains(t.rulesCheckersWin));
     expect(russian, contains(t.rulesCheckersDrawRussian));
 
     final giveaway = checkersRuleLines(
@@ -66,7 +63,6 @@ void main() {
     expect(
         giveaway, contains(t.rulesCheckersMode(t.gamesCheckersModeGiveaway)));
     expect(giveaway, contains(t.rulesCheckersPlayGiveaway));
-    expect(giveaway, contains(t.rulesCheckersWin));
     expect(giveaway, contains(t.rulesCheckersDrawGiveaway));
 
     final english = checkersRuleLines(
@@ -104,6 +100,40 @@ void main() {
     );
   });
 
+  test('правила каждого режима не смешивают чужие ходы, победу и ничью', () {
+    final t = l10n();
+    for (final mode in CheckersEngine.allModes) {
+      final lines = checkersRuleLines(
+        gameMode: mode,
+        turnTimeSec: 60,
+        stakeBronze: 0,
+        l10n: t,
+      );
+      expect(lines, contains(checkersPlayLine(mode, t)));
+      expect(lines, contains(checkersDrawLine(mode, t)));
+      expect(lines, isNot(contains(t.rulesCheckersWin)));
+      expect(lines, isNot(contains(t.rulesCheckersIntro)));
+      for (final other in CheckersEngine.allModes.where((m) => m != mode)) {
+        expect(lines, isNot(contains(checkersPlayLine(other, t))),
+            reason: '$mode не должен содержать игру $other');
+        expect(lines, isNot(contains(checkersDrawLine(other, t))),
+            reason: '$mode не должен содержать ничью $other');
+      }
+      if (mode != CheckersEngine.modeCorners) {
+        expect(lines, isNot(contains(t.rulesCheckersPlayCornersNoReturn)));
+        expect(lines, isNot(contains(t.rulesCheckersPlayCornersLeaveHome)));
+      }
+    }
+    expect(
+      checkersPlayLine(CheckersEngine.modeEnglish, t),
+      isNot(contains('В поддавках')),
+    );
+    expect(
+      checkersPlayLine(CheckersEngine.modeEnglish, t),
+      isNot(contains('В русских')),
+    );
+  });
+
   testWidgets('диалог правил шашек использует общий заголовок', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -137,6 +167,47 @@ void main() {
 
     expect(find.text('Правила игры'), findsOneWidget);
     expect(find.textContaining('Игроки: 2.'), findsOneWidget);
-    expect(find.textContaining('Русские'), findsOneWidget);
+    expect(find.textContaining('Режим: Русские.'), findsOneWidget);
+    expect(find.textContaining('Русские шашки'), findsOneWidget);
+    expect(find.textContaining('В поддавках наоборот'), findsNothing);
+  });
+
+  testWidgets('диалог правил английских шашек без русских и поддавков',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: TextButton(
+                onPressed: () => showGameRulesDialog(
+                  context: context,
+                  content: rulesTextLines(
+                    checkersRuleLines(
+                      gameMode: CheckersEngine.modeEnglish,
+                      turnTimeSec: 60,
+                      stakeBronze: 0,
+                      l10n: context.l10n,
+                    ),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Режим: Английские.'), findsOneWidget);
+    expect(find.textContaining('Английские шашки'), findsOneWidget);
+    expect(find.textContaining('В русских шашках'), findsNothing);
+    expect(find.textContaining('В поддавках наоборот'), findsNothing);
+    expect(find.textContaining('Уголки:'), findsNothing);
   });
 }
