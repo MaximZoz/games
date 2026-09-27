@@ -333,6 +333,7 @@
   "nardyDoneTurn": "完成",
   "nardyAutoConfirm": "自动确认",
   "nardyAutoConfirmHint": "走完所有步后自动把回合交给对手",
+  "nardyLayoutToggle": "更换布局",
   "nardyNoMoves": "无棋可走",
   "nardyYourRoll": "你的掷骰",
   "nardyPipsShort": "剩余：",

@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Гатова",
   "nardyAutoConfirm": "Аўтапацвярджэнне",
   "nardyAutoConfirmHint": "Пасля ўсіх хадоў адразу перадаць ход суперніку",
+  "nardyLayoutToggle": "Змяніць раскладку",
   "nardyNoMoves": "Хадоў няма",
   "nardyYourRoll": "Ваш кідок",
   "nardyPipsShort": "Засталося:",

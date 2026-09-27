@@ -866,6 +866,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
 
   @override
+  String get nardyLayoutToggle => 'Ubah susunan';
+
+  @override
   String get nardyNoMoves => 'Tidak ada langkah';
 
   @override

@@ -333,6 +333,7 @@
   "nardyDoneTurn": "हो गया",
   "nardyAutoConfirm": "स्वतः पुष्टि",
   "nardyAutoConfirmHint": "सभी चालों के बाद बारी अपने आप चली जाएगी",
+  "nardyLayoutToggle": "खांचे बदलें",
   "nardyNoMoves": "कोई चाल नहीं",
   "nardyYourRoll": "आपका पासा",
   "nardyPipsShort": "शेष:",

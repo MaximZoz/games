@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Έτοιμο",
   "nardyAutoConfirm": "Αυτόματη επιβεβαίωση",
   "nardyAutoConfirmHint": "Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα",
+  "nardyLayoutToggle": "Αλλαγή διάταξης",
   "nardyNoMoves": "Καμία κίνηση",
   "nardyYourRoll": "Η ζαριά σας",
   "nardyPipsShort": "Απομένουν:",

@@ -866,6 +866,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
 
   @override
+  String get nardyLayoutToggle => 'Změnit rozložení';
+
+  @override
   String get nardyNoMoves => 'Žádné tahy';
 
   @override

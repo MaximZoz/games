@@ -333,6 +333,7 @@
   "nardyDoneTurn": "تم",
   "nardyAutoConfirm": "تأكيد تلقائي",
   "nardyAutoConfirmHint": "تمرير الدور تلقائياً بعد كل النقلات",
+  "nardyLayoutToggle": "تغيير الترتيب",
   "nardyNoMoves": "لا توجد نقلات",
   "nardyYourRoll": "رميتك",
   "nardyPipsShort": "المتبقي:",

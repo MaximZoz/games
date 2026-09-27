@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Færdig",
   "nardyAutoConfirm": "Autobekræft",
   "nardyAutoConfirmHint": "Giv turen videre automatisk efter alle træk",
+  "nardyLayoutToggle": "Skift opstilling",
   "nardyNoMoves": "Ingen træk",
   "nardyYourRoll": "Dit slag",
   "nardyPipsShort": "Tilbage:",

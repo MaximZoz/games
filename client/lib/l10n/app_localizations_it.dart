@@ -866,6 +866,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Dopo tutte le mosse il turno passa automaticamente';
 
   @override
+  String get nardyLayoutToggle => 'Cambia disposizione';
+
+  @override
   String get nardyNoMoves => 'Nessuna mossa';
 
   @override

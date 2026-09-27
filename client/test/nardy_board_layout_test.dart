@@ -48,8 +48,7 @@ void main() {
     final engine = NardyEngine.newGame(nardyModeShort);
     final view = _viewFrom(engine);
 
-    int atColumn(List<int> row, int column) =>
-        view.myCountAt(row[column]);
+    int atColumn(List<int> row, int column) => view.myCountAt(row[column]);
 
     test('слева сверху 2, справа сверху 5', () {
       expect(atColumn(NardyBoardLayout.topRow, 0), 2);
@@ -70,7 +69,8 @@ void main() {
         );
       }
       for (var column = 0; column < NardyBoardLayout.quadrant; column++) {
-        expect(NardyBoardLayout.isHome(NardyBoardLayout.topRow[column]), isFalse);
+        expect(
+            NardyBoardLayout.isHome(NardyBoardLayout.topRow[column]), isFalse);
       }
     });
 
@@ -147,6 +147,27 @@ void main() {
       expect(geometry.barRect.width, greaterThan(0));
     });
 
+    test('дом справа зеркалит колонки, касание остаётся на своём пункте', () {
+      final flipped = NardyBoardGeometry(
+        size: const Size(700, 480),
+        showBar: true,
+        homeOnRight: true,
+      );
+      expect(nardyVisualColumn(0, homeOnRight: false), 0);
+      expect(nardyVisualColumn(0, homeOnRight: true), 11);
+      expect(nardyVisualColumn(23, homeOnRight: false), 0);
+      expect(nardyVisualColumn(23, homeOnRight: true), 11);
+      expect(
+        nardyVisualTracks(homeOnRight: true).first,
+        NardyBoardLayout.topRow.last,
+      );
+      final left = geometry.trackRect(0);
+      final right = flipped.trackRect(0);
+      expect(right.left, greaterThan(left.left));
+      expect(flipped.trackAt(right.center), 0);
+      expect(flipped.trackAt(flipped.trackRect(23).center), 23);
+    });
+
     test('шашки в стопке не выходят за пункт', () {
       const track = 3;
       final rect = geometry.trackRect(track);
@@ -200,8 +221,8 @@ void main() {
       });
 
       test('$label: чем выше стопка, тем плотнее и мельче шашки', () {
-        expect(geometry.stackStep(15),
-            lessThanOrEqualTo(geometry.stackStep(6)));
+        expect(
+            geometry.stackStep(15), lessThanOrEqualTo(geometry.stackStep(6)));
         expect(geometry.stackCheckerSize(15),
             lessThanOrEqualTo(geometry.stackCheckerSize(6)));
         // Низкая стопка рисуется шашками обычного размера.
@@ -322,5 +343,4 @@ void main() {
       expect(nardyBottomPanelHeight(isOver: true), isNull);
     });
   });
-
 }

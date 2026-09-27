@@ -866,6 +866,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
 
   @override
+  String get nardyLayoutToggle => 'Vaihda asettelu';
+
+  @override
   String get nardyNoMoves => 'Ei siirtoja';
 
   @override

@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Fertig",
   "nardyAutoConfirm": "Auto-Bestätigung",
   "nardyAutoConfirmHint": "Zug nach allen Zügen automatisch übergeben",
+  "nardyLayoutToggle": "Aufstellung wechseln",
   "nardyNoMoves": "Kein Zug möglich",
   "nardyYourRoll": "Dein Wurf",
   "nardyPipsShort": "Rest:",

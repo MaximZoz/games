@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Hotovo",
   "nardyAutoConfirm": "Automaticky",
   "nardyAutoConfirmHint": "Po všech tazích ihned předat tah soupeři",
+  "nardyLayoutToggle": "Změnit rozložení",
   "nardyNoMoves": "Žádné tahy",
   "nardyYourRoll": "Váš hod",
   "nardyPipsShort": "Zbývá:",

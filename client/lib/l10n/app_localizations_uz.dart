@@ -866,6 +866,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
 
   @override
+  String get nardyLayoutToggle => 'Joylashuvni almashtirish';
+
+  @override
   String get nardyNoMoves => 'Yurish yo‘q';
 
   @override

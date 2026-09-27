@@ -866,6 +866,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nardyAutoConfirmHint => 'После всех ходов сразу передать ход сопернику';
 
   @override
+  String get nardyLayoutToggle => 'Поменять раскладку';
+
+  @override
   String get nardyNoMoves => 'Ходов нет';
 
   @override

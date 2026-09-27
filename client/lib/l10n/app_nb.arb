@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Ferdig",
   "nardyAutoConfirm": "Autobekreft",
   "nardyAutoConfirmHint": "Etter alle trekk går turen automatisk videre",
+  "nardyLayoutToggle": "Bytt oppstilling",
   "nardyNoMoves": "Ingen trekk",
   "nardyYourRoll": "Ditt kast",
   "nardyPipsShort": "Igjen:",

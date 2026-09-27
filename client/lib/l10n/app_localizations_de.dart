@@ -866,6 +866,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Zug nach allen Zügen automatisch übergeben';
 
   @override
+  String get nardyLayoutToggle => 'Aufstellung wechseln';
+
+  @override
   String get nardyNoMoves => 'Kein Zug möglich';
 
   @override

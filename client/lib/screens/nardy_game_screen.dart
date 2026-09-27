@@ -22,6 +22,7 @@ import 'package:multigames_client/games/nardy/nardy_board_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
 import 'package:multigames_client/games/nardy/nardy_dice_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
+import 'package:multigames_client/games/nardy/nardy_layout_toggle.dart';
 import 'package:multigames_client/games/nardy/nardy_move_planner.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
@@ -70,8 +71,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   Timer? _rematchPollTimer;
   ProviderSubscription<AsyncValue<Map<String, dynamic>>>? _realtimeSubscription;
 
-  bool get _isOffline =>
-      OfflineNardyRegistry.instance.isOffline(widget.gameId);
+  bool get _isOffline => OfflineNardyRegistry.instance.isOffline(widget.gameId);
 
   @override
   void initState() {
@@ -797,90 +797,92 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     return GamepadScope(
       onAction: (action) {
         final raw = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
-        final current =
-            _optimisticGame?.id == raw?.id ? _optimisticGame : raw;
+        final current = _optimisticGame?.id == raw?.id ? _optimisticGame : raw;
         if (current == null) return false;
         return _onGamepad(current, action);
       },
       child: SwipeBackScope.gameBoard(
-      onBack: _onClosePressed,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+        onBack: _onClosePressed,
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          leading: buildGameAppBarLeading(
-            onClose: _busy ? null : () => unawaited(_onClosePressed()),
-          ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NardyGameIcon(
-                size: narrow ? 20 : 22,
-                color: AppColors.accentStart,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  context.l10n.gamesNardy,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          centerTitle: true,
-          actions: buildGameAppBarActions(
-            context: context,
-            onSurrender: game == null || game.isOver
-                ? null
-                : () => unawaited(_confirmSurrender()),
-            surrenderTooltip: context.l10n.gameSurrender,
-            onShowRules: () => showGameRulesDialog(
-              context: context,
-              content: rulesTextLines(nardyRuleLines(
-                gameMode: game?.gameMode ?? nardyModeShort,
-                turnTimeSec: game?.turnTimeSec ?? 0,
-                stakeBronze: game?.stakeBronze ?? 0,
-                offline: _isOffline,
-                l10n: context.l10n,
-              )),
-              closeLabel: context.l10n.commonClose,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            toolbarHeight: gameToolbarHeight(context),
+            leadingWidth: gameAppBarLeadingWidth(),
+            leading: buildGameAppBarLeading(
+              onClose: _busy ? null : () => unawaited(_onClosePressed()),
             ),
-            rulesTooltip: context.l10n.gamesRulesTitle,
-          ),
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: gameAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              data: (game) => _buildGame(
-                _optimisticGame?.id == game.id ? _optimisticGame! : game,
-                me,
-              ),
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NardyGameIcon(
+                  size: narrow ? 20 : 22,
                   color: AppColors.accentStart,
                 ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    context.l10n.gamesNardy,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            centerTitle: true,
+            actions: buildGameAppBarActions(
+              context: context,
+              onSurrender: game == null || game.isOver
+                  ? null
+                  : () => unawaited(_confirmSurrender()),
+              surrenderTooltip: context.l10n.gameSurrender,
+              onShowRules: () => showGameRulesDialog(
+                context: context,
+                content: rulesTextLines(nardyRuleLines(
+                  gameMode: game?.gameMode ?? nardyModeShort,
+                  turnTimeSec: game?.turnTimeSec ?? 0,
+                  stakeBronze: game?.stakeBronze ?? 0,
+                  offline: _isOffline,
+                  l10n: context.l10n,
+                )),
+                closeLabel: context.l10n.commonClose,
               ),
-              error: (e, _) => Center(
-                child: Text(
-                  formatUserError(e, fallback: context.l10n.commonGenericError),
-                  style: const TextStyle(color: Colors.red),
+              rulesTooltip: context.l10n.gamesRulesTitle,
+            ),
+          ),
+          body: GradientBackground(
+            child: SafeArea(
+              child: gameAsync.when(
+                skipLoadingOnReload: true,
+                skipLoadingOnRefresh: true,
+                data: (game) => _buildGame(
+                  _optimisticGame?.id == game.id ? _optimisticGame! : game,
+                  me,
+                ),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accentStart,
+                  ),
+                ),
+                error: (e, _) => Center(
+                  child: Text(
+                    formatUserError(e,
+                        fallback: context.l10n.commonGenericError),
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 
   List<int> _gamepadTracks(NardyGameView game) => [
-        ...NardyBoardLayout.allTracks,
+        ...nardyVisualTracks(
+          homeOnRight: ref.read(nardyHomeOnRightProvider),
+        ),
         if (!game.isLong) nardyBarTrack,
         nardyPoints,
       ];
@@ -963,6 +965,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final selected = _selectedTrack;
     final canBearOff =
         selected != null && _targetTo(game, selected, nardyPoints) != null;
+    final homeOnRight = ref.watch(nardyHomeOnRightProvider);
     const barHeight = 26.0;
     const barGap = 6.0;
     return LayoutBuilder(
@@ -984,6 +987,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
                 game: game,
                 tracker: _tracker,
                 selectedTrack: selected,
+                homeOnRight: homeOnRight,
                 cursorTrack: GamepadService.instance.isRecentlyActive
                     ? _gamepadTracks(game)[_gamepadSlot.clamp(
                         0,
@@ -1074,13 +1078,22 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final mine = game.me;
     final opp = game.opponent;
     if (mine == null || opp == null) return const SizedBox.shrink();
+    const toggleGap = 6.0;
     return SizedBox(
       width: width,
-      child: NardyPipsBar(
-        myPips: mine.pips,
-        oppPips: opp.pips,
-        myTurn: game.isMyTurn,
-        isOver: game.isOver,
+      child: Row(
+        children: [
+          Expanded(
+            child: NardyPipsBar(
+              myPips: mine.pips,
+              oppPips: opp.pips,
+              myTurn: game.isMyTurn,
+              isOver: game.isOver,
+            ),
+          ),
+          const SizedBox(width: toggleGap),
+          const NardyLayoutToggleButton(),
+        ],
       ),
     );
   }
@@ -1115,8 +1128,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               turnDeadline: game.turnDeadline,
               isMyTurn: myTurn,
               turnTimeSec: game.turnTimeSec,
-              onExpired: () =>
-                  ref.invalidate(nardyGameProvider(widget.gameId)),
+              onExpired: () => ref.invalidate(nardyGameProvider(widget.gameId)),
               labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
             ),
           ),
@@ -1181,34 +1193,34 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       child: GamepadHinted(
         action: GamepadAction.confirm,
         child: InkWell(
-        onTap: () =>
-            unawaited(ref.read(nardyAutoConfirmProvider.notifier).set(!value)),
-        borderRadius: BorderRadius.circular(8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: Checkbox(
-                value: value,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-                activeColor: AppColors.accentStart,
-                onChanged: (v) => unawaited(
-                  ref.read(nardyAutoConfirmProvider.notifier).set(v ?? false),
+          onTap: () => unawaited(
+              ref.read(nardyAutoConfirmProvider.notifier).set(!value)),
+          borderRadius: BorderRadius.circular(8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: Checkbox(
+                  value: value,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  activeColor: AppColors.accentStart,
+                  onChanged: (v) => unawaited(
+                    ref.read(nardyAutoConfirmProvider.notifier).set(v ?? false),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              l10n.nardyAutoConfirm,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
+              Text(
+                l10n.nardyAutoConfirm,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

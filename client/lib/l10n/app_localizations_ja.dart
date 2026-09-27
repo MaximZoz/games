@@ -866,6 +866,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
 
   @override
+  String get nardyLayoutToggle => '配置を変える';
+
+  @override
   String get nardyNoMoves => '動かせません';
 
   @override

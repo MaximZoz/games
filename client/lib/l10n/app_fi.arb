@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Valmis",
   "nardyAutoConfirm": "Autovahvistus",
   "nardyAutoConfirmHint": "Siirron jälkeen vuoro siirtyy automaattisesti",
+  "nardyLayoutToggle": "Vaihda asettelu",
   "nardyNoMoves": "Ei siirtoja",
   "nardyYourRoll": "Sinun heittosi",
   "nardyPipsShort": "Jäljellä:",

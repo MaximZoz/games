@@ -866,6 +866,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Giv turen videre automatisk efter alle træk';
 
   @override
+  String get nardyLayoutToggle => 'Skift opstilling';
+
+  @override
   String get nardyNoMoves => 'Ingen træk';
 
   @override

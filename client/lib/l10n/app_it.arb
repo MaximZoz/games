@@ -333,6 +333,7 @@
   "nardyDoneTurn": "Fatto",
   "nardyAutoConfirm": "Conferma auto",
   "nardyAutoConfirmHint": "Dopo tutte le mosse il turno passa automaticamente",
+  "nardyLayoutToggle": "Cambia disposizione",
   "nardyNoMoves": "Nessuna mossa",
   "nardyYourRoll": "Il tuo lancio",
   "nardyPipsShort": "Restano:",

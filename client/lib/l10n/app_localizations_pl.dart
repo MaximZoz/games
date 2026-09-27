@@ -866,6 +866,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get nardyAutoConfirmHint => 'Po wszystkich ruchach tura przechodzi automatycznie';
 
   @override
+  String get nardyLayoutToggle => 'Zmień układ';
+
+  @override
   String get nardyNoMoves => 'Brak ruchów';
 
   @override
