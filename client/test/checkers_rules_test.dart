@@ -167,7 +167,8 @@ void main() {
 
     expect(find.text('Правила игры'), findsOneWidget);
     expect(find.textContaining('Игроки: 2.'), findsOneWidget);
-    expect(find.textContaining('Русские'), findsOneWidget);
+    expect(find.textContaining('Режим: Русские.'), findsOneWidget);
+    expect(find.textContaining('Русские шашки'), findsOneWidget);
     expect(find.textContaining('В поддавках наоборот'), findsNothing);
   });
 
