@@ -22,6 +22,7 @@ import 'package:multigames_client/games/nardy/nardy_board_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_checker_tracker.dart';
 import 'package:multigames_client/games/nardy/nardy_dice_widget.dart';
 import 'package:multigames_client/games/nardy/nardy_engine.dart';
+import 'package:multigames_client/games/nardy/nardy_layout_toggle.dart';
 import 'package:multigames_client/games/nardy/nardy_move_planner.dart';
 import 'package:multigames_client/games/nardy/nardy_offline_session.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
@@ -977,7 +978,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildPipsBar(game, size.width, homeOnRight: homeOnRight),
+            _buildPipsBar(game, size.width),
             const SizedBox(height: barGap),
             SizedBox(
               width: size.width,
@@ -1073,15 +1074,10 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       _buildOpponentCard(game, me);
 
   /// Полоса «осталось» на двоих — по ширине доски.
-  Widget _buildPipsBar(
-    NardyGameView game,
-    double width, {
-    required bool homeOnRight,
-  }) {
+  Widget _buildPipsBar(NardyGameView game, double width) {
     final mine = game.me;
     final opp = game.opponent;
     if (mine == null || opp == null) return const SizedBox.shrink();
-    const toggleSize = 26.0;
     const toggleGap = 6.0;
     return SizedBox(
       width: width,
@@ -1096,40 +1092,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
             ),
           ),
           const SizedBox(width: toggleGap),
-          Tooltip(
-            message: context.l10n.nardyLayoutToggle,
-            child: Semantics(
-              button: true,
-              label: context.l10n.nardyLayoutToggle,
-              child: Material(
-                color: AppColors.surfaceCard.withValues(alpha: 0.72),
-                shape: CircleBorder(
-                  side: BorderSide(
-                    color: AppColors.accentStart.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: InkWell(
-                  onTap: () => unawaited(
-                    ref
-                        .read(nardyHomeOnRightProvider.notifier)
-                        .set(!homeOnRight),
-                  ),
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
-                    width: toggleSize,
-                    height: toggleSize,
-                    child: Icon(
-                      Icons.swap_horiz_rounded,
-                      size: 18,
-                      color: homeOnRight
-                          ? AppColors.accentStart
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const NardyLayoutToggleButton(),
         ],
       ),
     );
