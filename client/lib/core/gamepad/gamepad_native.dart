@@ -105,7 +105,7 @@ class AndroidGamepadBridge {
       final action = gamepadActionFromAndroidKeyCode(
         (args['keyCode'] as num?)?.toInt() ?? 0,
       );
-      if (action == null || action.isDirection) return;
+      if (action == null) return;
       onEvent(
         GamepadActionEvent(
           action: action,
@@ -124,7 +124,12 @@ class AndroidGamepadBridge {
     if (hat != null) held.add(hat);
     final left = gamepadActionFromStick(x: _lx, y: _ly);
     if (left != null) held.add(left);
-    final scroll = gamepadScrollFromStick(x: _rx, y: _ry);
+    final scroll = gamepadIndependentScroll(
+      leftX: _lx,
+      leftY: _ly,
+      rightX: _rx,
+      rightY: _ry,
+    );
     if (scroll != null) held.add(scroll);
     final lt = _lt >= 0.55;
     if (lt && !_ltHeld) pressedNow.add(GamepadAction.triggerL);

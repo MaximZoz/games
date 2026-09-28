@@ -87,6 +87,33 @@ void main() {
       gamepadScrollFromStick(x: 0.1, y: -0.9),
       GamepadAction.scrollUp,
     );
+    expect(
+      gamepadIndependentScroll(
+        leftX: -0.9,
+        leftY: 0.1,
+        rightX: -0.9,
+        rightY: 0.1,
+      ),
+      isNull,
+    );
+    expect(
+      gamepadIndependentScroll(
+        leftX: -0.9,
+        leftY: 0.1,
+        rightX: 0.9,
+        rightY: 0.1,
+      ),
+      GamepadAction.scrollRight,
+    );
+    expect(
+      gamepadIndependentScroll(
+        leftX: 0.1,
+        leftY: 0.1,
+        rightX: -0.9,
+        rightY: 0.1,
+      ),
+      GamepadAction.scrollLeft,
+    );
   });
 
   test('клавиши и game-button ключи мапятся', () {
@@ -2210,10 +2237,70 @@ void main() {
     GamepadService.instance.emit(GamepadAction.left);
     await tester.pump();
     expect(controller.selection.baseOffset, 2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
     GamepadService.instance.emit(GamepadAction.scrollLeft);
     await tester.pump();
     expect(controller.selection.baseOffset, 1);
     GamepadService.instance.emit(GamepadAction.scrollRight);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
+  });
+
+  testWidgets(
+      'стрелки не двигают каретку, даже если сервис геймпада остановлен',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final focus = FocusNode();
+    final controller = TextEditingController(text: 'abcd');
+    addTearDown(focus.dispose);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: GamepadFieldBlock(
+                autofocus: true,
+                inputFocus: focus,
+                child: TextField(
+                  focusNode: focus,
+                  controller: controller,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    focus.requestFocus();
+    await tester.pump();
+    controller.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pump();
+    GamepadService.instance.stop();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pump();
     expect(controller.selection.baseOffset, 2);
   });

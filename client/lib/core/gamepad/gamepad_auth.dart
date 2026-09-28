@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_arrows.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -29,7 +30,17 @@ class GamepadFieldBlock extends StatelessWidget {
         inputFocus.requestFocus();
         GamepadKeyboardController.instance.show();
       },
-      child: child,
+      child: ListenableBuilder(
+        listenable: GamepadKeyboardController.instance,
+        builder: (context, _) {
+          return Shortcuts(
+            shortcuts: GamepadKeyboardController.instance.visible
+                ? gamepadKeyboardTextShortcuts
+                : const <ShortcutActivator, Intent>{},
+            child: child,
+          );
+        },
+      ),
     );
   }
 }

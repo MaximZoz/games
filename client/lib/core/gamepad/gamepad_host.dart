@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_arrows.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -109,7 +110,10 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
         final kb = GamepadKeyboardController.instance.visible;
         return Stack(
           children: [
-            widget.child,
+            Shortcuts(
+              shortcuts: kb ? gamepadKeyboardTextShortcuts : const {},
+              child: widget.child,
+            ),
             if (!kb) const GamepadHintsOverlay(),
             if (kb)
               Align(
