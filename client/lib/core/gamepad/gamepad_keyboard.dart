@@ -19,10 +19,20 @@ class GamepadKeyboardController extends ChangeNotifier {
   bool get visible => _visible;
 
   void show() {
+    hideSoftKeyboard();
     if (_visible) return;
     _visible = true;
-    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     notifyListeners();
+  }
+
+  /// Системная клавиатура не должна перекрывать панель геймпада.
+  static void hideSoftKeyboard() {
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (instance._visible) {
+        SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+      }
+    });
   }
 
   void hide() {
@@ -306,6 +316,7 @@ class _KbKeyTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
+        canRequestFocus: false,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           height: 40,

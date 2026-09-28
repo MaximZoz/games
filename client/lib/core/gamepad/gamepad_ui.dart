@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+
+/// Поле ввода при живом геймпаде — только экранная клавиатура контроллера.
+void syncGamepadKeyboardForFocus() {
+  if (!gamepadHintsWanted()) return;
+  if (isEditableTextFocused()) {
+    GamepadKeyboardController.instance.show();
+    return;
+  }
+  GamepadKeyboardController.instance.hide();
+}
 
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {

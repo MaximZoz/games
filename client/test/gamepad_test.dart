@@ -248,6 +248,53 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('при живом геймпаде тап по полю открывает клавиатуру геймпада',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(
+              body: Center(child: TextField()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.markActive();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    expect(find.byType(GamepadKeyboardPanel), findsOneWidget);
+  });
+
+  testWidgets('без геймпада тап по полю не открывает клавиатуру геймпада',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(
+              body: Center(child: TextField()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.byType(GamepadKeyboardPanel), findsNothing);
+  });
+
   testWidgets('GamepadHost по A переключает сфокусированный Switch',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

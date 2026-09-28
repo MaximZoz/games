@@ -31,15 +31,25 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
   @override
   void initState() {
     super.initState();
+    FocusManager.instance.addListener(_syncKeyboard);
+    _service.activityTick.addListener(_syncKeyboard);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncEnabled());
   }
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_syncKeyboard);
+    _service.activityTick.removeListener(_syncKeyboard);
     _sub?.cancel();
     _service.devices.removeListener(_onDevices);
     _service.stop();
     super.dispose();
+  }
+
+  void _syncKeyboard() {
+    if (!mounted) return;
+    if (!ref.read(gamepadEnabledProvider)) return;
+    syncGamepadKeyboardForFocus();
   }
 
   void _syncEnabled() {
@@ -84,6 +94,7 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
       );
     }
     _announced.removeWhere((id) => pads.every((p) => p.id != id));
+    _syncKeyboard();
   }
 
   @override
