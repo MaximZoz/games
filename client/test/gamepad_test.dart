@@ -2203,6 +2203,8 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(GamepadKeyboardController.instance.visible, isTrue);
+    focus.requestFocus();
+    await tester.pump();
     controller.selection = const TextSelection.collapsed(offset: 2);
     await tester.pump();
     GamepadService.instance.emit(GamepadAction.left);

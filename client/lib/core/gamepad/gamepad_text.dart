@@ -8,10 +8,20 @@ class GamepadTextEditing {
   static EditableTextState? currentState() {
     final ctx = FocusManager.instance.primaryFocus?.context;
     if (ctx == null) return null;
-    if (ctx.widget is EditableText) {
-      return ctx.findAncestorStateOfType<EditableTextState>();
+    final up = ctx.findAncestorStateOfType<EditableTextState>();
+    if (up != null) return up;
+    EditableTextState? down;
+    void walk(Element el) {
+      if (down != null) return;
+      if (el is StatefulElement && el.state is EditableTextState) {
+        down = el.state as EditableTextState;
+        return;
+      }
+      el.visitChildren(walk);
     }
-    return ctx.findAncestorStateOfType<EditableTextState>();
+
+    ctx.visitChildElements(walk);
+    return down;
   }
 
   static TextEditingValue? applyInsert(TextEditingValue value, String text) {
