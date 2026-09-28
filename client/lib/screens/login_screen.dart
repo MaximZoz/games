@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -41,6 +42,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _emailFocus.skipTraversal = true;
+    _passwordFocus.skipTraversal = true;
     _emailFocus.addListener(_onInputFocusChanged);
     _passwordFocus.addListener(_onInputFocusChanged);
   }
@@ -168,67 +171,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      TextFormField(
-                        controller: _emailController,
-                        focusNode: _emailFocus,
-                        textInputAction: TextInputAction.next,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                        decoration: InputDecoration(
-                          labelText: l10n.loginEmailLabel,
-                          hintText: l10n.loginEmailLabel,
-                          prefixIcon: const Icon(Icons.person_outline_rounded),
+                      GamepadFieldBlock(
+                        autofocus: true,
+                        inputFocus: _emailFocus,
+                        child: TextFormField(
+                          controller: _emailController,
+                          focusNode: _emailFocus,
+                          textInputAction: TextInputAction.next,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          decoration: InputDecoration(
+                            labelText: l10n.loginEmailLabel,
+                            hintText: l10n.loginEmailLabel,
+                            prefixIcon: const Icon(Icons.person_outline_rounded),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return l10n.loginEmailRequired;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return l10n.loginEmailRequired;
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        focusNode: _passwordFocus,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: l10n.loginPasswordLabel,
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
+                      GamepadFieldBlock(
+                        inputFocus: _passwordFocus,
+                        child: TextFormField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocus,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: InputDecoration(
+                            labelText: l10n.loginPasswordLabel,
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_rounded
+                                    : Icons.visibility_rounded,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                             ),
                           ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return l10n.loginPasswordRequired;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return l10n.loginPasswordRequired;
-                          }
-                          return null;
-                        },
                       ),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          onPressed: () => context.push(
+                        child: GamepadActionBlock(
+                          outlined: true,
+                          radius: AppRadius.button,
+                          onActivate: () => context.push(
                             appendAuthQuery(
                               '/forgot-password',
                               redirect: _redirect,
                               email: _emailController.text.trim(),
                             ),
                           ),
-                          child: Text(l10n.loginForgotPassword),
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            onPressed: () => context.push(
+                              appendAuthQuery(
+                                '/forgot-password',
+                                redirect: _redirect,
+                                email: _emailController.text.trim(),
+                              ),
+                            ),
+                            child: Text(l10n.loginForgotPassword),
+                          ),
                         ),
                       ),
                       if (_errorMessage != null) ...[
@@ -239,28 +260,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ],
                       const SizedBox(height: 16),
-                      AppButton(
-                        onPressed: _submit,
-                        label: l10n.loginSubmit,
-                        isLoading: _isLoading,
-                        expanded: true,
-                      ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textSecondary,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                      GamepadActionBlock(
+                        outlined: true,
+                        radius: AppRadius.button,
+                        onActivate: _submit,
+                        child: AppButton(
+                          onPressed: _submit,
+                          label: l10n.loginSubmit,
+                          isLoading: _isLoading,
+                          expanded: true,
                         ),
-                        onPressed: () => context.push(
+                      ),
+                      GamepadActionBlock(
+                        outlined: true,
+                        radius: AppRadius.button,
+                        onActivate: () => context.push(
                           appendAuthQuery(
                             '/register',
                             redirect: _redirect,
                             ref: _ref,
                           ),
                         ),
-                        child: Text(l10n.loginNoAccount),
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                          onPressed: () => context.push(
+                            appendAuthQuery(
+                              '/register',
+                              redirect: _redirect,
+                              ref: _ref,
+                            ),
+                          ),
+                          child: Text(l10n.loginNoAccount),
+                        ),
                       ),
                       OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],

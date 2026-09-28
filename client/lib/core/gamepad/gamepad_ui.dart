@@ -8,6 +8,17 @@ import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
+/// Скрыть клавиатуру геймпада и вернуть фокус на рамку поля.
+void dismissGamepadKeyboard() {
+  GamepadKeyboardController.instance.hide();
+  final primary = FocusManager.instance.primaryFocus;
+  final ctx = primary?.context;
+  if (ctx == null || !isEditableTextFocused()) return;
+  final scope = GamepadFocusBlock.maybeOf(ctx);
+  primary!.unfocus();
+  scope?.focusNode.requestFocus();
+}
+
 /// Правый стик / статистика: страница скролла.
 bool scrollGamepadByPage(int direction) => _scrollPage(direction);
 
@@ -32,7 +43,7 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
       isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
     if (action == GamepadAction.cancel) {
       if (GamepadKeyboardController.instance.visible) {
-        GamepadKeyboardController.instance.hide();
+        dismissGamepadKeyboard();
         return true;
       }
       FocusManager.instance.primaryFocus?.unfocus();
@@ -123,6 +134,14 @@ bool focusFirstVisibleGamepadTarget() {
   return true;
 }
 
+/// Карточка входа с рейлом не занимает 94% ширины, но это всё равно весь блок.
+bool isGamepadFormCardBox(Size box, Size screen) {
+  if (box.width > screen.width * 0.94 && box.height > screen.height * 0.45) {
+    return true;
+  }
+  return box.width > screen.width * 0.55 && box.height > screen.height * 0.32;
+}
+
 bool isGamepadFocusVisible(FocusNode? node) {
   if (node == null || !node.canRequestFocus) return false;
   if (node == FocusManager.instance.rootScope) return false;
@@ -139,9 +158,7 @@ bool isGamepadFocusVisible(FocusNode? node) {
   final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
   if (!inBlock) {
     final mq = MediaQuery.maybeOf(ctx);
-    if (mq != null &&
-        ro.size.width > mq.size.width * 0.94 &&
-        ro.size.height > mq.size.height * 0.45) {
+    if (mq != null && isGamepadFormCardBox(ro.size, mq.size)) {
       return false;
     }
   }

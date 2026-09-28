@@ -157,7 +157,11 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
       _activate(_current);
       return true;
     }
-    if (action == GamepadAction.cancel || action == GamepadAction.actionY) {
+    if (action == GamepadAction.cancel) {
+      widget.onClose();
+      return true;
+    }
+    if (action == GamepadAction.actionY) {
       if (!GamepadTextEditing.backspace()) {
         widget.onClose();
       }

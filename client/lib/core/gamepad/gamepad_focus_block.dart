@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
@@ -35,6 +36,9 @@ class GamepadFocusBlock extends StatefulWidget {
     this.autofocus = false,
     this.focusable = true,
     this.outlined = true,
+    this.descendantsFocusable = false,
+    this.attachKeyboard = false,
+    this.inputFocus,
     this.shape = GamepadHighlightShape.roundedRect,
     this.chrome,
   });
@@ -49,6 +53,13 @@ class GamepadFocusBlock extends StatefulWidget {
   /// Рисовать фиолетовую обводку поверх ребёнка.
   /// Для [FilledButton] лучше `false` и [buttonSide] — рамка самой кнопки.
   final bool outlined;
+
+  /// Поле ввода внутри блока может получить фокус (клавиатура геймпада).
+  final bool descendantsFocusable;
+
+  /// При наведении открыть экранную клавиатуру геймпада.
+  final bool attachKeyboard;
+  final FocusNode? inputFocus;
   final GamepadHighlightShape shape;
   final GamepadChromeSlot? chrome;
 
@@ -85,6 +96,22 @@ class GamepadFocusBlock extends StatefulWidget {
 
 class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   late final FocusNode _focus;
+  bool _keyboardAttached = false;
+
+  void _syncKeyboard(bool show) {
+    if (!widget.attachKeyboard) return;
+    if (show && !_keyboardAttached) {
+      _keyboardAttached = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !widget.attachKeyboard) return;
+        widget.inputFocus?.requestFocus();
+        GamepadKeyboardController.instance.show();
+      });
+    } else if (!show && _keyboardAttached) {
+      _keyboardAttached = false;
+      GamepadKeyboardController.instance.hide();
+    }
+  }
 
   @override
   void initState() {
@@ -93,7 +120,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       debugLabel: 'GamepadFocusBlock',
       canRequestFocus: widget.focusable,
       skipTraversal: !widget.focusable,
-      descendantsAreFocusable: false,
+      descendantsAreFocusable: widget.descendantsFocusable,
       descendantsAreTraversable: false,
     );
     GamepadFocusRegistry.register(_focus);
@@ -108,6 +135,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     super.didUpdateWidget(oldWidget);
     _focus.canRequestFocus = widget.focusable;
     _focus.skipTraversal = !widget.focusable;
+    _focus.descendantsAreFocusable = widget.descendantsFocusable;
     if (oldWidget.chrome != widget.chrome) {
       if (oldWidget.chrome != null) {
         GamepadChromeRegistry.unregister(oldWidget.chrome!, _focus);
@@ -137,16 +165,18 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
         _focus,
       ]),
       builder: (context, _) {
-        final show = _focus.hasPrimaryFocus && gamepadConnected();
+        final show = _focus.hasFocus && gamepadConnected();
+        _syncKeyboard(show);
         return GamepadFocusScope(
           onActivate: widget.onActivate,
           highlighted: show,
+          focusNode: _focus,
           child: Focus(
             focusNode: _focus,
             autofocus: widget.autofocus,
             canRequestFocus: widget.focusable,
             skipTraversal: !widget.focusable,
-            descendantsAreFocusable: false,
+            descendantsAreFocusable: widget.descendantsFocusable,
             descendantsAreTraversable: false,
             child: !widget.outlined || !show
                 ? widget.child
@@ -224,15 +254,18 @@ class GamepadFocusScope extends InheritedWidget {
     super.key,
     required this.onActivate,
     required this.highlighted,
+    required this.focusNode,
     required super.child,
   });
 
   final VoidCallback? onActivate;
   final bool highlighted;
+  final FocusNode focusNode;
 
   @override
   bool updateShouldNotify(GamepadFocusScope oldWidget) {
     return onActivate != oldWidget.onActivate ||
-        highlighted != oldWidget.highlighted;
+        highlighted != oldWidget.highlighted ||
+        focusNode != oldWidget.focusNode;
   }
 }

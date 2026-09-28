@@ -9,6 +9,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
 import 'package:multigames_client/auth/google_native_sign_in.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/widgets/oauth_redirect.dart';
@@ -134,45 +135,41 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
               const SizedBox(height: 16),
               for (var i = 0; i < providers.length; i++) ...[
                 if (i > 0) const SizedBox(height: 10),
-                SizedBox(
-                  height: 48,
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    style: AppButtonStyles.of(
-                      minimumSize: const Size(double.infinity, 48),
-                      maximumSize: const Size(double.infinity, 48),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                    ),
-                    onPressed: _busyProvider != null
-                        ? null
-                        : () {
-                            final p = providers[i];
-                            if (kIsWeb) {
-                              if (isStandalonePwa) {
-                                _startStandalonePwaOAuth(p, repo);
-                              } else {
-                                _startWebNavigate(p, repo);
-                              }
-                            } else {
-                              _startNative(context, p);
-                            }
-                          },
-                    child: _busyProvider == providers[i]
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            _label(l10n, providers[i]),
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                GamepadActionBlock(
+                  outlined: true,
+                  radius: AppRadius.button,
+                  onActivate: _busyProvider != null
+                      ? () {}
+                      : () => _startProvider(context, providers[i], repo),
+                  child: SizedBox(
+                    height: 48,
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      style: AppButtonStyles.of(
+                        minimumSize: const Size(double.infinity, 48),
+                        maximumSize: const Size(double.infinity, 48),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                      ),
+                      onPressed: _busyProvider != null
+                          ? null
+                          : () => _startProvider(context, providers[i], repo),
+                      child: _busyProvider == providers[i]
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              _label(l10n, providers[i]),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
+                    ),
                   ),
                 ),
               ],
@@ -181,6 +178,22 @@ class _OAuthButtonsState extends ConsumerState<OAuthButtons>
         );
       },
     );
+  }
+
+  void _startProvider(
+    BuildContext context,
+    String provider,
+    AuthRepository repo,
+  ) {
+    if (kIsWeb) {
+      if (isStandalonePwa) {
+        _startStandalonePwaOAuth(provider, repo);
+      } else {
+        _startWebNavigate(provider, repo);
+      }
+    } else {
+      _startNative(context, provider);
+    }
   }
 
   String _label(AppLocalizations l10n, String provider) {

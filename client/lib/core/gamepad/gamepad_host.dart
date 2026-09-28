@@ -103,7 +103,7 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: GamepadKeyboardPanel(
-                  onClose: GamepadKeyboardController.instance.hide,
+                  onClose: dismissGamepadKeyboard,
                 ),
               ),
           ],

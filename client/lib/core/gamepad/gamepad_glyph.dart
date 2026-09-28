@@ -207,9 +207,11 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
   Widget? _focusHighlight(BuildContext context, GamepadFamily family) {
     final node = FocusManager.instance.primaryFocus;
     if (!isGamepadFocusVisible(node)) return null;
+    if (node is FocusScopeNode) return null;
     final ctx = node!.context;
     if (ctx == null || !ctx.mounted) return null;
     if (GamepadFocusBlock.maybeOf(ctx) != null) return null;
+    if (isEditableTextFocused()) return null;
     if (ctx.findAncestorWidgetOfExactType<SnackBar>() != null) {
       return null;
     }
@@ -218,8 +220,7 @@ class _GamepadHintsOverlayState extends State<GamepadHintsOverlay> {
     final overlayBox = context.findRenderObject();
     if (overlayBox is! RenderBox || !overlayBox.hasSize) return null;
     final size = MediaQuery.sizeOf(context);
-    if (box.size.width > size.width * 0.94 &&
-        box.size.height > size.height * 0.45) {
+    if (isGamepadFormCardBox(box.size, size)) {
       return null;
     }
     if (box.size.width < 8 || box.size.height < 8) return null;
