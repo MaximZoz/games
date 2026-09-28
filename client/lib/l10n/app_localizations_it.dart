@@ -72,25 +72,46 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nessun gamepad. Collega un controller e premi un pulsante.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Croce / stick — menu e cursore sulla scacchiera';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Croce — conferma o muovi';
+  String get settingsGamepadHelpNavigate => 'Navigazione';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cerchio — indietro o deseleziona';
+  String get settingsGamepadHelpConfirm => 'Scegli';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — schede del menu';
+  String get settingsGamepadHelpBack => 'Indietro';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Schede';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursore su scacchiera e mano: dama, tris, battaglia navale, durak, uno, poker e backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Nelle carte: croce muove la mano, A gioca, X seleziona / Uno, Y prende, passa o pesca';
+  String get settingsGamepadHelpCards => 'Carte';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'In un campo A apre la tastiera del gamepad; X cambia layout, B cancella o chiude';
+  String get settingsGamepadHelpKeyboard => 'Tastiera';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Esci';
+
+  @override
+  String get settingsGamepadHelpPage => 'Pagina';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Schema Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Schema PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Schema Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Tastiera';
@@ -819,6 +840,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Patta se la posizione si ripete tre volte o se per 15 mosse per parte muovono solo le dame senza catture, anche due dame contro due.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Patta se la posizione si ripete tre volte, dopo 40 mosse senza cattura o pedina, o con una dama contro una dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Patta se la posizione si ripete tre volte o dopo 15 mosse di dame senza catture.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Patta se la posizione si ripete tre volte o se 25 mosse per parte non aggiungono pedine all’angolo obiettivo.';
+
+  @override
+  String get checkersDrawRepetition => 'Patta — posizione ripetuta tre volte';
+
+  @override
+  String get checkersDrawNoProgress => 'Patta — le mosse non portano alla vittoria';
+
+  @override
+  String get checkersDrawInsufficient => 'Patta — materiale insufficiente per vincere';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regole';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Dopo tutte le mosse il turno passa automaticamente';
+
+  @override
+  String get nardyLayoutToggle => 'Cambia disposizione';
 
   @override
   String get nardyNoMoves => 'Nessuna mossa';

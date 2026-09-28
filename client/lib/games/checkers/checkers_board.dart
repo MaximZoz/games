@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/checkers/checkers_board_layout.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
+import 'package:multigames_client/games/checkers/checkers_piece_tracker.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
@@ -10,13 +11,9 @@ const Color _kDarkSquare = Color(0xFFB58863);
 const Color _kSelectTint = Color(0xFF65A30D);
 const Color _kOriginTint = Color(0xFFCA8A04);
 const Color _kCaptureDot = Color(0xFFDC2626);
-const Color _kWhitePiece = Color(0xFFF8F4EA);
-const Color _kWhiteEdge = Color(0xFFD6C7A1);
-const Color _kBlackPiece = Color(0xFF3B2414);
-const Color _kBlackEdge = Color(0xFF1A1008);
 
-/// Доска 8×8: клетки рисуются одной сеткой, чтобы не было щелей и кривых квадратов.
-class CheckersBoard extends StatelessWidget {
+/// Доска 8×8: клетки одной сеткой, шашки едут плавно.
+class CheckersBoard extends StatefulWidget {
   const CheckersBoard({
     super.key,
     required this.game,
@@ -32,8 +29,20 @@ class CheckersBoard extends StatelessWidget {
   final void Function(int r, int c) onSquareTap;
   final CheckersSquare? cursor;
 
+  static const Curve moveCurve = Curves.easeInOutCubic;
+
+  @override
+  State<CheckersBoard> createState() => _CheckersBoardState();
+}
+
+class _CheckersBoardState extends State<CheckersBoard> {
+  final CheckersPieceTracker _tracker = CheckersPieceTracker();
+
   @override
   Widget build(BuildContext context) {
+    final game = widget.game;
+    final flip = widget.flip;
+    final selected = widget.selected;
     final targets = <CheckersSquare>{
       if (selected != null)
         for (final m in game.legalMoves)
@@ -47,6 +56,19 @@ class CheckersBoard extends StatelessWidget {
     final origins = <CheckersSquare>{
       for (final m in game.legalMoves) m.from,
     };
+    final spots = _tracker.spotsFor(
+      game.board,
+      lastFromR: game.lastFromR,
+      lastFromC: game.lastFromC,
+      lastToR: game.lastToR,
+      lastToC: game.lastToC,
+    );
+    final duration = checkersMoveDuration(
+      fromR: game.lastFromR,
+      fromC: game.lastFromC,
+      toR: game.lastToR,
+      toC: game.lastToC,
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final side = constraints.biggest.shortestSide;
@@ -64,7 +86,7 @@ class CheckersBoard extends StatelessWidget {
                       painter: _CheckersBoardPainter(
                         flip: flip,
                         selected: selected,
-                        cursor: cursor,
+                        cursor: widget.cursor,
                         targets: targets,
                         captureTargets: captureTargets,
                         origins: origins,
@@ -75,13 +97,13 @@ class CheckersBoard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  for (var visR = 0; visR < CheckersEngine.size; visR++)
-                    for (var visC = 0; visC < CheckersEngine.size; visC++)
-                      _pieceLayer(
-                        side: side,
-                        visR: visR,
-                        visC: visC,
-                      ),
+                  for (final spot in spots)
+                    _animatedPiece(
+                      side: side,
+                      spot: spot,
+                      flip: flip,
+                      duration: duration,
+                    ),
                   Positioned.fill(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
@@ -92,7 +114,7 @@ class CheckersBoard extends StatelessWidget {
                           dy: details.localPosition.dy,
                           flip: flip,
                         );
-                        if (sq != null) onSquareTap(sq.r, sq.c);
+                        if (sq != null) widget.onSquareTap(sq.r, sq.c);
                       },
                     ),
                   ),
@@ -105,27 +127,26 @@ class CheckersBoard extends StatelessWidget {
     );
   }
 
-  Widget _pieceLayer({
+  Widget _animatedPiece({
     required double side,
-    required int visR,
-    required int visC,
+    required CheckersPieceSpot spot,
+    required bool flip,
+    required Duration duration,
   }) {
-    final sq = checkersBoardSquare(visR: visR, visC: visC, flip: flip);
-    final piece = sq.r * CheckersEngine.size + sq.c < game.board.length
-        ? game.board[sq.r * CheckersEngine.size + sq.c]
-        : 0;
-    if (piece <= 0) return const SizedBox.shrink();
+    final visR = flip ? CheckersEngine.size - 1 - spot.r : spot.r;
+    final visC = flip ? CheckersEngine.size - 1 - spot.c : spot.c;
     final rect = checkersCellRect(side, visR, visC);
-    return Positioned(
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
+    final pad = rect.shortestSide * 0.08;
+    return AnimatedPositioned(
+      key: ValueKey('checkers-piece-${spot.id}'),
+      duration: duration,
+      curve: CheckersBoard.moveCurve,
+      left: rect.left + pad,
+      top: rect.top + pad,
+      width: rect.width - pad * 2,
+      height: rect.height - pad * 2,
       child: IgnorePointer(
-        child: Padding(
-          padding: EdgeInsets.all(rect.shortestSide * 0.11),
-          child: _CheckersPiece(piece: piece),
-        ),
+        child: CheckersPieceView(piece: spot.piece),
       ),
     );
   }
@@ -195,8 +216,9 @@ class _CheckersBoardPainter extends CustomPainter {
             dot / 2,
             Paint()
               ..isAntiAlias = true
-              ..color = (captureTargets.contains(sq) ? _kCaptureDot : _kSelectTint)
-                  .withValues(alpha: 0.78),
+              ..color =
+                  (captureTargets.contains(sq) ? _kCaptureDot : _kSelectTint)
+                      .withValues(alpha: 0.78),
           );
         }
       }
@@ -217,48 +239,126 @@ class _CheckersBoardPainter extends CustomPainter {
       !setEquals(oldDelegate.origins, origins);
 }
 
-class _CheckersPiece extends StatelessWidget {
-  const _CheckersPiece({required this.piece});
+/// Точёная шашка: обод, канавка, блик; у дамки — корона.
+class CheckersPieceView extends StatelessWidget {
+  const CheckersPieceView({super.key, required this.piece});
 
   final int piece;
 
   @override
   Widget build(BuildContext context) {
-    final white = piece == CheckersEngine.whiteMan ||
-        piece == CheckersEngine.whiteKing;
-    final king = CheckersEngine.isKing(piece);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crown = constraints.biggest.shortestSide * 0.42;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: white ? _kWhitePiece : _kBlackPiece,
-            border: Border.all(
-              color: white ? _kWhiteEdge : _kBlackEdge,
-              width: 1.5,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 2,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: king
-              ? Center(
-                  child: Icon(
-                    Icons.workspace_premium_rounded,
-                    size: crown.clamp(10, 22),
-                    color: white
-                        ? const Color(0xFFB45309)
-                        : const Color(0xFFFBBF24),
-                  ),
-                )
-              : null,
-        );
-      },
+    return CustomPaint(
+      painter: CheckersPiecePainter(piece: piece),
+      child: const SizedBox.expand(),
     );
   }
+}
+
+class CheckersPiecePainter extends CustomPainter {
+  CheckersPiecePainter({required this.piece});
+
+  final int piece;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final white =
+        piece == CheckersEngine.whiteMan || piece == CheckersEngine.whiteKing;
+    final king = CheckersEngine.isKing(piece);
+    final s = size.shortestSide;
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = s * 0.46;
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(c.dx, c.dy + r * 0.18),
+        width: r * 1.72,
+        height: r * 0.42,
+      ),
+      Paint()
+        ..color = const Color(0x55000000)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2),
+    );
+
+    final body = white
+        ? const [Color(0xFFFFF8EC), Color(0xFFE8D7B4), Color(0xFFC9B48A)]
+        : const [Color(0xFF5A3A28), Color(0xFF2A1810), Color(0xFF140C08)];
+    final rim = white ? const Color(0xFFB8956A) : const Color(0xFF8A5A2B);
+    final groove = white ? const Color(0x66A07848) : const Color(0x88E8C878);
+    final shine = white ? const Color(0xCCFFFFFF) : const Color(0x66F5E6C8);
+
+    canvas.drawCircle(
+      Offset(c.dx, c.dy + r * 0.06),
+      r * 0.96,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [body[1], body[2]],
+          radius: 0.85,
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.35, -0.4),
+          radius: 0.95,
+          colors: [body[0], body[1], body[2]],
+          stops: const [0.0, 0.55, 1.0],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.045
+        ..color = rim,
+    );
+    canvas.drawCircle(
+      c,
+      r * 0.68,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.035
+        ..color = groove,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(c.dx - r * 0.22, c.dy - r * 0.28),
+        width: r * 0.7,
+        height: r * 0.32,
+      ),
+      Paint()..color = shine,
+    );
+
+    if (!king) return;
+    final gold = white ? const Color(0xFFD97706) : const Color(0xFFFBBF24);
+    final crownR = r * 0.42;
+    final path = Path()
+      ..moveTo(c.dx - crownR, c.dy + crownR * 0.15)
+      ..lineTo(c.dx - crownR * 0.72, c.dy - crownR * 0.55)
+      ..lineTo(c.dx - crownR * 0.28, c.dy - crownR * 0.08)
+      ..lineTo(c.dx, c.dy - crownR * 0.72)
+      ..lineTo(c.dx + crownR * 0.28, c.dy - crownR * 0.08)
+      ..lineTo(c.dx + crownR * 0.72, c.dy - crownR * 0.55)
+      ..lineTo(c.dx + crownR, c.dy + crownR * 0.15)
+      ..close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = gold
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = white ? const Color(0xFF92400E) : const Color(0xFFFDE68A)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.025,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CheckersPiecePainter oldDelegate) =>
+      oldDelegate.piece != piece;
 }

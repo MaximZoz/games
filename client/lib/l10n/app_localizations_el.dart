@@ -72,25 +72,46 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Δεν βρέθηκε gamepad. Συνδέστε χειριστήριο και πατήστε ένα κουμπί.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Σταυρός / μοχλός — μενού και δρομέας στη σκακιέρα';
+  String get settingsGamepadGenericName => 'Χειριστήριο';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Σταυρός — επιβεβαίωση ή κίνηση';
+  String get settingsGamepadHelpNavigate => 'Πλοήγηση';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Κύκλος — πίσω ή αποεπιλογή';
+  String get settingsGamepadHelpConfirm => 'Επιλογή';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — καρτέλες μενού';
+  String get settingsGamepadHelpBack => 'Πίσω';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Καρτέλες';
 
   @override
   String get settingsGamepadHelpPlay => 'Δρομέας σε ταμπλό και χέρι: ντάμα, τρίλιζα, ναυμαχία, ντουράκ, ούνο, πόκερ και τάβλι';
 
   @override
-  String get settingsGamepadHelpCards => 'Στα χαρτιά: σταυρός μετακινεί το χέρι, A παίζει, X επιλέγει / Uno, Y παίρνει ή τραβάει';
+  String get settingsGamepadHelpCards => 'Χαρτιά';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Σε πεδίο το A ανοίγει το πληκτρολόγιο του χειριστηρίου· X αλλάζει διάταξη, B σβήνει ή κλείνει';
+  String get settingsGamepadHelpKeyboard => 'Πληκτρολόγιο';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Υπόλοιπο';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Έξοδος';
+
+  @override
+  String get settingsGamepadHelpPage => 'Σελίδα';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Διάταξη Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Διάταξη PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Διάταξη Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Πληκτρολόγιο';
@@ -819,6 +840,27 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή αν για 15 κινήσεις ανά πλευρά κινούνται μόνο ντάμες χωρίς πάρσιμο.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ισοπαλία σε τριπλή επανάληψη, μετά από 40 κινήσεις χωρίς πάρσιμο ή πιόνι, ή μία ντάμα εναντίον μίας.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ισοπαλία σε τριπλή επανάληψη ή 15 κινήσεις ντάμας χωρίς πάρσιμο.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ισοπαλία σε τριπλή επανάληψη ή 25 κινήσεις ανά πλευρά χωρίς νέο πούλι στη γωνία-στόχο.';
+
+  @override
+  String get checkersDrawRepetition => 'Ισοπαλία — η θέση επαναλήφθηκε τρεις φορές';
+
+  @override
+  String get checkersDrawNoProgress => 'Ισοπαλία — οι κινήσεις δεν οδηγούν σε νίκη';
+
+  @override
+  String get checkersDrawInsufficient => 'Ισοπαλία — ανεπαρκές υλικό για νίκη';
+
+  @override
   String get rulesNardyTitle => 'Τάβλι — κανόνες';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Μετά από όλες τις κινήσεις ο γύρος περνά αυτόματα';
+
+  @override
+  String get nardyLayoutToggle => 'Αλλαγή διάταξης';
 
   @override
   String get nardyNoMoves => 'Καμία κίνηση';

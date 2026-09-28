@@ -9,8 +9,6 @@ import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/settings_provider.dart';
-import 'package:multigames_client/l10n/l10n.dart';
-import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 
 /// Слушает геймпад, отдаёт ввод партии или фокусу оболочки.
 class GamepadHost extends ConsumerStatefulWidget {
@@ -24,7 +22,6 @@ class GamepadHost extends ConsumerStatefulWidget {
 
 class _GamepadHostState extends ConsumerState<GamepadHost> {
   StreamSubscription<GamepadActionEvent>? _sub;
-  final Set<String> _announced = {};
 
   GamepadService get _service => GamepadService.instance;
 
@@ -33,6 +30,10 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     super.initState();
     FocusManager.instance.addListener(_syncKeyboard);
     _service.activityTick.addListener(_syncKeyboard);
+    _service.devices.addListener(_syncKeyboard);
+    // Слушаем и стартуем сразу: иначе первый кадр глотает LB/RB и крест.
+    _listen();
+    _service.start();
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncEnabled());
   }
 
@@ -40,8 +41,8 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
   void dispose() {
     FocusManager.instance.removeListener(_syncKeyboard);
     _service.activityTick.removeListener(_syncKeyboard);
+    _service.devices.removeListener(_syncKeyboard);
     _sub?.cancel();
-    _service.devices.removeListener(_onDevices);
     _service.stop();
     super.dispose();
   }
@@ -61,7 +62,6 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     } else {
       _sub?.cancel();
       _sub = null;
-      _service.devices.removeListener(_onDevices);
       _service.stop();
       GamepadKeyboardController.instance.hide();
     }
@@ -69,32 +69,33 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
 
   void _listen() {
     _sub ??= _service.events.listen(_onEvent);
-    _service.devices.removeListener(_onDevices);
-    _service.devices.addListener(_onDevices);
   }
 
   void _onEvent(GamepadActionEvent event) {
     if (!mounted) return;
-    if (GamepadDispatcher.dispatch(event.action)) return;
-    handleGamepadUiAction(context, event.action);
-  }
-
-  void _onDevices() {
-    if (!mounted) return;
-    final pads = _service.devices.value;
-    for (final pad in pads) {
-      if (_announced.contains(pad.id)) continue;
-      _announced.add(pad.id);
-      final l10n = context.l10n;
-      showAppSnackBar(
-        context,
-        message: l10n.gamepadConnectedSnack(pad.name),
-        kind: AppSnackKind.success,
-        icon: Icons.sports_esports_outlined,
-      );
+    // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
+    if (GamepadDispatcher.hasExclusive) {
+      if (GamepadDispatcher.dispatch(event.action)) return;
+      // Скоуп уже снят (диалог закрыли в этом же кадре) — обычный ввод.
     }
-    _announced.removeWhere((id) => pads.every((p) => p.id != id));
-    _syncKeyboard();
+    // Любой попап без exclusive: стик/кнопка закрывает его, вкладки не листаем.
+    if (isGamepadPopupOpen(context)) {
+      if (event.action != GamepadAction.shoulderL &&
+          event.action != GamepadAction.shoulderR) {
+        dismissGamepadPopup(context);
+      }
+      return;
+    }
+    // LB/RB сразу листают вкладки — не ждут закрытия тоста/скоупа партии.
+    if (event.action == GamepadAction.shoulderL ||
+        event.action == GamepadAction.shoulderR) {
+      if (handleGamepadUiAction(context, event.action)) return;
+    }
+    if (GamepadDispatcher.dispatch(event.action)) return;
+    if (event.action.isScroll) {
+      if (handleGamepadUiAction(context, event.action)) return;
+    }
+    handleGamepadUiAction(context, event.action);
   }
 
   @override
@@ -114,7 +115,7 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: GamepadKeyboardPanel(
-                  onClose: GamepadKeyboardController.instance.hide,
+                  onClose: dismissGamepadKeyboard,
                 ),
               ),
           ],

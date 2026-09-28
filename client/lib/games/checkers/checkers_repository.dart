@@ -139,6 +139,7 @@ class CheckersGameView {
     required this.winnerIndex,
     required this.winnerUserId,
     required this.isDraw,
+    this.drawReason = '',
     this.isForfeit = false,
     this.isTimeout = false,
     this.drawOfferBy,
@@ -169,6 +170,7 @@ class CheckersGameView {
   final int winnerIndex;
   final String winnerUserId;
   final bool isDraw;
+  final String drawReason;
   final bool isForfeit;
   final bool isTimeout;
   final String? drawOfferBy;
@@ -206,8 +208,8 @@ class CheckersGameView {
       players: playersRaw is List
           ? playersRaw
               .whereType<Map>()
-              .map((e) =>
-                  CheckersPlayerView.fromJson(e.cast<String, dynamic>()))
+              .map(
+                  (e) => CheckersPlayerView.fromJson(e.cast<String, dynamic>()))
               .toList()
           : const [],
       playerIds: json['player_ids'] is List
@@ -228,6 +230,7 @@ class CheckersGameView {
       winnerIndex: (json['winner_index'] as num?)?.toInt() ?? -1,
       winnerUserId: (json['winner_user_id'] ?? '').toString(),
       isDraw: json['is_draw'] == true,
+      drawReason: (json['draw_reason'] ?? '').toString(),
       isForfeit: json['is_forfeit'] == true,
       isTimeout: json['is_timeout'] == true,
       drawOfferBy: (json['draw_offer_by'] ?? '').toString().trim().isEmpty

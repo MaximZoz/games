@@ -22,6 +22,7 @@ import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show ActiveGameItem, GamesException;
+import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -204,7 +205,18 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   String _statusText(CheckersGameView game) {
     final l10n = context.l10n;
     if (game.isOver) {
-      if (game.isDraw) return l10n.gameDraw;
+      if (game.isDraw) {
+        switch (game.drawReason) {
+          case CheckersEngine.drawReasonRepetition:
+            return l10n.checkersDrawRepetition;
+          case CheckersEngine.drawReasonNoProgress:
+            return l10n.checkersDrawNoProgress;
+          case CheckersEngine.drawReasonInsufficient:
+            return l10n.checkersDrawInsufficient;
+          default:
+            return l10n.gameDraw;
+        }
+      }
       if (game.myIndex < 0) return l10n.gameOverNeutral;
       if (game.iWon) {
         if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
@@ -264,8 +276,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
           ? context.l10n.gameAcceptDrawConfirm
           : context.l10n.gameOfferDrawConfirm,
       cancelLabel: context.l10n.commonCancel,
-      confirmLabel:
-          accept ? context.l10n.gameDraw : context.l10n.gameOfferDraw,
+      confirmLabel: accept ? context.l10n.gameDraw : context.l10n.gameOfferDraw,
     );
     if (!ok || !mounted) return;
     try {
@@ -744,13 +755,23 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   Widget _buildStatusLine(CheckersGameView game, bool myTurn) {
+    final rewardChip = stakeFinishRewardChip(
+      stakeBronze: game.stakeBronze,
+      isDraw: game.isDraw,
+      iWon: game.iWon,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         GameStatusWithReward(
           statusText: _statusText(game),
-          showReward: game.isOver && game.stakeBronze > 0 && !game.isDraw,
-          rewardBronze: game.iWon ? game.stakeBronze : -game.stakeBronze,
+          showReward: stakeShowFinishReward(
+            stakeBronze: game.stakeBronze,
+            isOver: game.isOver,
+            isDraw: game.isDraw,
+            rewardChip: rewardChip,
+          ),
+          rewardBronze: rewardChip,
           rewardKey: _rewardKey,
           fontSize: 14,
           wrap: true,

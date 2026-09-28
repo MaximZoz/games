@@ -296,6 +296,11 @@ func SettleStakePotByShares(
 	return nil
 }
 
+// StakePotRefundsEveryone — ничья или нет победителей: ставка возвращается каждому.
+func StakePotRefundsEveryone(isDraw bool, winnerIDs []string) bool {
+	return isDraw || len(winnerIDs) == 0
+}
+
 // SettleStakePot — общий банк stake×N игроков (крестики / дурак multi).
 // Ничья или пустой список победителей при isDraw: возврат stake каждому человеку.
 // Иначе весь банк делится между winnerIDs (1 победитель → stake×N).
@@ -314,7 +319,7 @@ func SettleStakePot(
 	if isBotFn == nil {
 		isBotFn = func(string) bool { return false }
 	}
-	if isDraw || len(winnerIDs) == 0 {
+	if StakePotRefundsEveryone(isDraw, winnerIDs) {
 		for _, pid := range playerIDs {
 			if isBotFn(pid) {
 				continue

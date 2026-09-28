@@ -27,6 +27,18 @@ const (
 
 	// CornersLeaveHomeMoves — за столько своих ходов фишки должны покинуть дом.
 	CornersLeaveHomeMoves = 25
+
+	// Ничьи по принятым правилам: 15 ходов каждой стороны только дамками
+	// без взятий (русские / поддавки), 40 таких ходов в английских (WCDF),
+	// 25 ходов каждой стороны без прогресса в угол в уголках.
+	RussianNoProgressPlies = 30
+	EnglishNoProgressPlies = 80
+	CornersNoProgressPlies = 50
+
+	DrawReasonRepetition   = "repetition"
+	DrawReasonNoProgress   = "no_progress"
+	DrawReasonInsufficient = "insufficient"
+	DrawReasonAgreed       = "agreed"
 )
 
 var (
@@ -74,10 +86,13 @@ type Game struct {
 	ContR            int     `json:"cont_r"`
 	ContC            int     `json:"cont_c"`
 	MustContinue     bool    `json:"must_continue"`
-	LastFromR        int     `json:"last_from_r"`
-	LastFromC        int     `json:"last_from_c"`
-	LastToR          int     `json:"last_to_r"`
-	LastToC          int     `json:"last_to_c"`
+	LastFromR        int            `json:"last_from_r"`
+	LastFromC        int            `json:"last_from_c"`
+	LastToR          int            `json:"last_to_r"`
+	LastToC          int            `json:"last_to_c"`
+	NoProgress       int            `json:"no_progress"`
+	PosCounts        map[string]int `json:"pos_counts,omitempty"`
+	DrawReason       string         `json:"draw_reason,omitempty"`
 }
 
 // NewGame — стартовая расстановка.
@@ -138,6 +153,12 @@ func (g *Game) Clone() *Game {
 	}
 	cp := *g
 	cp.Board = append([]int(nil), g.Board...)
+	if g.PosCounts != nil {
+		cp.PosCounts = make(map[string]int, len(g.PosCounts))
+		for k, v := range g.PosCounts {
+			cp.PosCounts[k] = v
+		}
+	}
 	return &cp
 }
 
@@ -474,6 +495,12 @@ func (g *Game) Apply(seat int, mv Move) error {
 		return ErrIllegalMove
 	}
 	piece := g.at(chosen.From.R, chosen.From.C)
+	captured := !g.isCorners() && len(chosen.Jumped) > 0
+	manMoved := !isKing(piece)
+	cornersBefore := 0
+	if g.isCorners() {
+		cornersBefore = g.cornersTargetCount(seat)
+	}
 	g.set(chosen.From.R, chosen.From.C, Empty)
 	if !g.isCorners() {
 		for _, j := range chosen.Jumped {
@@ -510,7 +537,7 @@ func (g *Game) Apply(seat int, mv Move) error {
 			g.ContR, g.ContC = -1, -1
 			return nil
 		}
-	} else if len(chosen.Jumped) > 0 && !(g.isEnglish() && promoted) {
+	} else if captured && !(g.isEnglish() && promoted) {
 		more := g.capturesFrom(chosen.To.R, chosen.To.C)
 		if len(more) > 0 {
 			g.MustContinue = true
@@ -521,11 +548,19 @@ func (g *Game) Apply(seat int, mv Move) error {
 	g.MustContinue = false
 	g.ContR, g.ContC = -1, -1
 	g.Turn = 1 - g.Turn
+	cornersProgress := g.isCorners() && g.cornersTargetCount(seat) > cornersBefore
+	g.noteProgress(
+		!g.isCorners() && (captured || manMoved || promoted),
+		cornersProgress,
+	)
 	g.resolveEnd()
 	return nil
 }
 
 func (g *Game) resolveEnd() {
+	if g.IsOver() {
+		return
+	}
 	if g.isCorners() {
 		if g.cornersFilled(0) {
 			g.Winner = 0
@@ -573,6 +608,7 @@ func (g *Game) AgreeDraw() {
 		return
 	}
 	g.Winner = WinnerDraw
+	g.DrawReason = DrawReasonAgreed
 	g.Seq++
 }
 

@@ -72,25 +72,46 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad nenalezen. Připojte ovladač a stiskněte libovolné tlačítko.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kříž / páčka — menu a kurzor na desce';
+  String get settingsGamepadGenericName => 'Ovladač';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Křížek — potvrdit nebo táhnout';
+  String get settingsGamepadHelpNavigate => 'Navigace';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kroužek — zpět nebo zrušit výběr';
+  String get settingsGamepadHelpConfirm => 'Vybrat';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — záložky menu';
+  String get settingsGamepadHelpBack => 'Zpět';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Karty';
 
   @override
   String get settingsGamepadHelpPlay => 'Kurzor na desce a v ruce: dáma, piškvorky, lodě, durak, uno, poker a vrhcáby';
 
   @override
-  String get settingsGamepadHelpCards => 'V kartách: křížek posouvá ruku, A hraje, X vybere / Uno, Y vezme, přenechá nebo lízne';
+  String get settingsGamepadHelpCards => 'Karty';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'V poli A otevře klávesnici gamepadu; X změní rozložení, B smaže nebo zavře';
+  String get settingsGamepadHelpKeyboard => 'Klávesnice';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Zůstatek';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Odhlásit';
+
+  @override
+  String get settingsGamepadHelpPage => 'Stránka';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Rozložení Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Rozložení PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Rozložení Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Klávesnice';
@@ -819,6 +840,27 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany jsou jen dámy bez braní — i dvě dámy proti dvěma.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remíza při trojím opakování, po 40 tazích bez braní a pěšce, nebo dáma proti dámě.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remíza při trojím opakování nebo 15 tazích dámami bez braní.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remíza při trojím opakování nebo 25 tazích každé strany bez dalšího kamene v cílovém rohu.';
+
+  @override
+  String get checkersDrawRepetition => 'Remíza — pozice se třikrát opakovala';
+
+  @override
+  String get checkersDrawNoProgress => 'Remíza — tahy nevedou k výhře';
+
+  @override
+  String get checkersDrawInsufficient => 'Remíza — málo materiálu k výhře';
+
+  @override
   String get rulesNardyTitle => 'Vrhcáby — pravidla';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Po všech tazích ihned předat tah soupeři';
+
+  @override
+  String get nardyLayoutToggle => 'Změnit rozložení';
 
   @override
   String get nardyNoMoves => 'Žádné tahy';

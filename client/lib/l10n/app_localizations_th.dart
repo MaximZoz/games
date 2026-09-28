@@ -72,25 +72,46 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ไม่พบเกมแพด เชื่อมต่อคอนโทรลเลอร์แล้วกดปุ่มใดก็ได้';
 
   @override
-  String get settingsGamepadHelpNavigate => 'ปุ่มทิศทาง / สติ๊ก — เมนูและเคอร์เซอร์บนกระดาน';
+  String get settingsGamepadGenericName => 'คอนโทรลเลอร์';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / กากบาท — ยืนยันหรือเดิน';
+  String get settingsGamepadHelpNavigate => 'นำทาง';
 
   @override
-  String get settingsGamepadHelpBack => 'B / วงกลม — ย้อนกลับหรือยกเลิกการเลือก';
+  String get settingsGamepadHelpConfirm => 'เลือก';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — แท็บเมนู';
+  String get settingsGamepadHelpBack => 'กลับ';
+
+  @override
+  String get settingsGamepadHelpTabs => 'แท็บ';
 
   @override
   String get settingsGamepadHelpPlay => 'เคอร์เซอร์บนกระดานและไพ่ในมือ: หมากฮอส โอเอกซ์ เรือรบ ดูรัก อุโน โป๊กเกอร์ และแบ็กแกมมอน';
 
   @override
-  String get settingsGamepadHelpCards => 'ในไพ่: ปุ่มทิศทางเลื่อนมือ A ลงไพ่ X เลือก / อูโน Y หยิบ ผ่าน หรือจั่ว';
+  String get settingsGamepadHelpCards => 'ไพ่';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'ในช่องข้อความ A เปิดคีย์บอร์ดเกมแพด X เปลี่ยนเลย์เอาต์ B ลบหรือปิด';
+  String get settingsGamepadHelpKeyboard => 'คีย์บอร์ด';
+
+  @override
+  String get settingsGamepadHelpBalance => 'ยอดเงิน';
+
+  @override
+  String get settingsGamepadHelpLogout => 'ออก';
+
+  @override
+  String get settingsGamepadHelpPage => 'หน้า';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'ปุ่ม Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'ปุ่ม PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'ปุ่ม Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'คีย์บอร์ด';
@@ -819,6 +840,27 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
 
   @override
+  String get rulesCheckersDrawRussian => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน รวมถึงคิงสองตัวต่อสองตัว';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'เสมอหากซ้ำสามครั้ง ครบ 40 ตาไม่กินและไม่เดินหมากธรรมดา หรือเหลือคิงฝ่ายละตัว';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'เสมอหากซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน';
+
+  @override
+  String get rulesCheckersDrawCorners => 'เสมอหากซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่เพิ่มหมากในมุมเป้าหมาย';
+
+  @override
+  String get checkersDrawRepetition => 'เสมอ — ตำแหน่งซ้ำสามครั้ง';
+
+  @override
+  String get checkersDrawNoProgress => 'เสมอ — หมากไม่นำไปสู่ชัยชนะ';
+
+  @override
+  String get checkersDrawInsufficient => 'เสมอ — หมากไม่พอสำหรับชนะ';
+
+  @override
   String get rulesNardyTitle => 'แบ็กแกมมอน — กติกา';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'เมื่อเดินครบทุกตา จะส่งตาให้อีกฝ่ายทันที';
+
+  @override
+  String get nardyLayoutToggle => 'เปลี่ยนการจัดเรียง';
 
   @override
   String get nardyNoMoves => 'ไม่มีตาเดิน';

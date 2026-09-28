@@ -72,25 +72,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'ゲームパッドがありません。接続していずれかのボタンを押してください。';
 
   @override
-  String get settingsGamepadHelpNavigate => '十字 / スティック — メニューと盤上のカーソル';
+  String get settingsGamepadGenericName => 'コントローラー';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / × — 決定または着手';
+  String get settingsGamepadHelpNavigate => '移動';
 
   @override
-  String get settingsGamepadHelpBack => 'B / ○ — 戻るまたは選択解除';
+  String get settingsGamepadHelpConfirm => '決定';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — タブ切替';
+  String get settingsGamepadHelpBack => '戻る';
+
+  @override
+  String get settingsGamepadHelpTabs => 'タブ';
 
   @override
   String get settingsGamepadHelpPlay => '盤と手札のカーソル：チェッカー、三目並べ、戦艦、ドゥラク、ウノ、ポーカー、バックギャモン';
 
   @override
-  String get settingsGamepadHelpCards => 'カードでは十字で手札、Aで出す、Xで選択／ウノ、Yで取る・パス・ドロー';
+  String get settingsGamepadHelpCards => 'カード';
 
   @override
-  String get settingsGamepadHelpKeyboard => '入力欄でAはゲームパッドキーボードを開く。Xで配列切替、Bで削除または閉じる';
+  String get settingsGamepadHelpKeyboard => 'キーボード';
+
+  @override
+  String get settingsGamepadHelpBalance => '残高';
+
+  @override
+  String get settingsGamepadHelpLogout => 'ログアウト';
+
+  @override
+  String get settingsGamepadHelpPage => 'ページ';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox配列';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation配列';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo配列';
 
   @override
   String get gamepadKeyboardTitle => 'キーボード';
@@ -819,6 +840,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'まだ家に残っている駒は、そのプレイヤーの最初の25手以内に出なければなりません。';
 
   @override
+  String get rulesCheckersDrawRussian => '同一局面が3回、または双方15手がキングのみで駒取りなし（2対2を含む）なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawEnglish => '同一局面3回、40手で取りもマンも動かない、またはキング1対1なら引き分け。';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '同一局面3回、または双方15手がキングのみで取りなしなら引き分け。';
+
+  @override
+  String get rulesCheckersDrawCorners => '同一局面3回、または双方25手で目標隅に駒が増えなければ引き分け。';
+
+  @override
+  String get checkersDrawRepetition => '引き分け — 同一局面が3回';
+
+  @override
+  String get checkersDrawNoProgress => '引き分け — 勝ちに向かわない手';
+
+  @override
+  String get checkersDrawInsufficient => '引き分け — 勝ち切る駒が足りない';
+
+  @override
   String get rulesNardyTitle => 'バックギャモン — ルール';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'すべての手のあと、自動で相手の番になります';
+
+  @override
+  String get nardyLayoutToggle => '配置を変える';
 
   @override
   String get nardyNoMoves => '動かせません';

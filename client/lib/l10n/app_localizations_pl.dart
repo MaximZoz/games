@@ -72,25 +72,46 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nie znaleziono gamepada. Podłącz kontroler i naciśnij dowolny przycisk.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Krzyżak / drążek — menu i kursor na planszy';
+  String get settingsGamepadGenericName => 'Kontroler';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Krzyżyk — potwierdź lub wykonaj ruch';
+  String get settingsGamepadHelpNavigate => 'Nawigacja';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kółko — wstecz lub odznacz';
+  String get settingsGamepadHelpConfirm => 'Wybierz';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — karty menu';
+  String get settingsGamepadHelpBack => 'Wstecz';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Karty';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursor na planszy i w ręce: warcaby, kółko i krzyżyk, statki, durak, uno, poker i tryktrak';
 
   @override
-  String get settingsGamepadHelpCards => 'W kartach: krzyżak przesuwa rękę, A zagrywa, X wybiera / Uno, Y bierze, spasowuje lub dobiera';
+  String get settingsGamepadHelpCards => 'Karty';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'W polu A otwiera klawiaturę pada; X zmienia układ, B kasuje lub zamyka';
+  String get settingsGamepadHelpKeyboard => 'Klawiatura';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Wyloguj';
+
+  @override
+  String get settingsGamepadHelpPage => 'Strona';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Układ Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Układ PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Układ Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Klawiatura';
@@ -819,6 +840,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis, gdy pozycja powtórzy się trzykrotnie albo przez 15 ruchów każdej strony chodzą tylko damki bez bicia — także 2 na 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis przy trzykrotnym powtórzeniu, po 40 ruchach bez bicia i ruchu piona albo przy jednej damce na damkę.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis przy trzykrotnym powtórzeniu albo 15 ruchach damkami bez bicia.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis przy trzykrotnym powtórzeniu albo 25 ruchach każdej strony bez nowej figury w docelowym rogu.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — pozycja powtórzyła się trzykrotnie';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — ruchy nie prowadzą do zwycięstwa';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — za mało sił do zwycięstwa';
+
+  @override
   String get rulesNardyTitle => 'Nardy — zasady';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Po wszystkich ruchach tura przechodzi automatycznie';
+
+  @override
+  String get nardyLayoutToggle => 'Zmień układ';
 
   @override
   String get nardyNoMoves => 'Brak ruchów';

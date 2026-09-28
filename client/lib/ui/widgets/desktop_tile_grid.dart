@@ -36,38 +36,40 @@ class DesktopTileGrid extends StatelessWidget {
       return mobileBuilder(context);
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final contentWidth = (constraints.maxWidth - padding.horizontal)
-            .clamp(0.0, maxContentWidth);
-        final crossAxisCount =
-            (contentWidth / (maxCellWidth + gap)).floor().clamp(1, maxColumns);
-        final itemWidth =
-            (contentWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
+    return FocusScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentWidth = (constraints.maxWidth - padding.horizontal)
+              .clamp(0.0, maxContentWidth);
+          final crossAxisCount =
+              (contentWidth / (maxCellWidth + gap)).floor().clamp(1, maxColumns);
+          final itemWidth =
+              (contentWidth - gap * (crossAxisCount - 1)) / crossAxisCount;
 
-        return SingleChildScrollView(
-          padding: padding,
-          physics: physics,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: contentWidth,
-              child: Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                alignment: WrapAlignment.center,
-                children: [
-                  for (var i = 0; i < itemCount; i++)
-                    SizedBox(
-                      width: itemWidth,
-                      child: itemBuilder(context, i),
-                    ),
-                ],
+          return SingleChildScrollView(
+            padding: padding,
+            physics: physics,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: contentWidth,
+                child: Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    for (var i = 0; i < itemCount; i++)
+                      SizedBox(
+                        width: itemWidth,
+                        child: itemBuilder(context, i),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -106,6 +108,59 @@ class DesktopContentFrame extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Сетка на всю доступную высоту: [rows] одинаковых рядов без обрезки.
+class ShopFillGrid extends StatelessWidget {
+  const ShopFillGrid({
+    super.key,
+    required this.columns,
+    required this.rows,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.gap = 8,
+  });
+
+  final int columns;
+  final int rows;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cols = columns.clamp(1, 12);
+    final rowCount = rows.clamp(1, 6);
+    return Column(
+      children: [
+        for (var r = 0; r < rowCount; r++) ...[
+          if (r > 0) SizedBox(height: gap),
+          Expanded(
+            child: Row(
+              children: [
+                for (var c = 0; c < cols; c++) ...[
+                  if (c > 0) SizedBox(width: gap),
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        final index = r * cols + c;
+                        if (index >= itemCount) {
+                          return const SizedBox.shrink();
+                        }
+                        return ClipRect(
+                          child: itemBuilder(context, index),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

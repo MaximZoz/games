@@ -587,16 +587,13 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 playerCount: playersN,
                 winnerCount: 1,
               );
-              final settledCredit = iWonEarly
-                  ? pot
-                  : isDraw
-                      ? game.stakeBronze
-                      : 0;
+              final settledCredit = iWonEarly ? pot : 0;
               final settledReward = iWonEarly ? netProfit : 0;
-              final settledLost =
-                  (!iWonEarly && !isDraw && game.stakeBronze > 0)
-                      ? game.stakeBronze
-                      : 0;
+              final settledLost = stakeLostOnFinish(
+                stakeBronze: game.stakeBronze,
+                isDraw: isDraw,
+                iWon: iWonEarly,
+              );
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
                 // Партия окончена — снять active/observation/пин, иначе
@@ -735,19 +732,23 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                 ? game.playerUserIds.length
                 : (game.maxPlayers > 2 ? game.maxPlayers : 2);
             final iLost = isOver && !iWon && !isDraw && game.stakeBronze > 0;
-            final showRewardChip = isOver &&
-                game.stakeBronze > 0 &&
+            final rewardBronze = stakeFinishRewardChip(
+              stakeBronze: game.stakeBronze,
+              isDraw: isDraw,
+              iWon: iWon,
+              netProfit: stakeWinnerNetProfit(
+                stake: game.stakeBronze,
+                playerCount: playersNForReward,
+                winnerCount: 1,
+              ),
+            );
+            final showRewardChip = stakeShowFinishReward(
+                  stakeBronze: game.stakeBronze,
+                  isOver: isOver,
+                  isDraw: isDraw,
+                  rewardChip: rewardBronze,
+                ) &&
                 (iWon || (iLost && _lossChipRevealed));
-            // Чистый выигрыш / проигрыш ставки (как меняется баланс до матча).
-            final rewardBronze = iWon
-                ? stakeWinnerNetProfit(
-                    stake: game.stakeBronze,
-                    playerCount: playersNForReward,
-                    winnerCount: 1,
-                  )
-                : iLost
-                    ? -game.stakeBronze
-                    : 0;
             final isDesktop = isWide(context);
             final narrow = isNarrow(context);
             final phoneLandscape = isPhoneLandscape(context);

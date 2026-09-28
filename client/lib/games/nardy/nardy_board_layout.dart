@@ -36,6 +36,25 @@ class NardyBoardLayout {
     if (top >= 0) return top;
     return bottomRow.indexOf(track);
   }
+
+  /// Колонок в ряду.
+  static const int columns = 12;
+}
+
+/// Зеркало раскладки: дом игрока справа внизу, голова — справа сверху.
+int nardyVisualColumn(int track, {required bool homeOnRight}) {
+  final col = NardyBoardLayout.columnOf(track);
+  if (col < 0) return col;
+  return homeOnRight ? NardyBoardLayout.columns - 1 - col : col;
+}
+
+/// Пункты слева направо, сверху вниз — как на экране.
+List<int> nardyVisualTracks({required bool homeOnRight}) {
+  if (!homeOnRight) return NardyBoardLayout.allTracks;
+  return [
+    ...NardyBoardLayout.topRow.reversed,
+    ...NardyBoardLayout.bottomRow.reversed,
+  ];
 }
 
 /// Куда встанет шашка с пункта [from] кубиком [die]; `>= 24` — снятие.
@@ -56,6 +75,7 @@ class NardyBoardGeometry {
   NardyBoardGeometry({
     required this.size,
     required this.showBar,
+    this.homeOnRight = false,
   });
 
   /// Полный размер виджета доски.
@@ -63,6 +83,9 @@ class NardyBoardGeometry {
 
   /// Показывать центральный бар (только короткие нарды).
   final bool showBar;
+
+  /// Дом игрока справа внизу — зеркальная раскладка фишек.
+  final bool homeOnRight;
 
   /// Доля ширины под зону снятых шашек.
   static const double _trayFraction = 0.075;
@@ -90,7 +113,7 @@ class NardyBoardGeometry {
 
   /// Прямоугольник пункта дорожки.
   Rect trackRect(int track) {
-    final column = NardyBoardLayout.columnOf(track);
+    final column = nardyVisualColumn(track, homeOnRight: homeOnRight);
     if (column < 0) return Rect.zero;
     final top = NardyBoardLayout.isTopRow(track);
     var x = _padding + column * columnWidth;
@@ -213,5 +236,4 @@ Size nardyFitBoard(Size available) {
 /// Пока партия идёт — фиксированная, иначе доска прыгает при появлении кнопок.
 /// После партии `null`: «Повторить» и «Другой соперник» встают колонкой и в
 /// фиксированный слот не помещаются — панель берёт высоту по содержимому.
-double? nardyBottomPanelHeight({required bool isOver}) =>
-    isOver ? null : 148.0;
+double? nardyBottomPanelHeight({required bool isOver}) => isOver ? null : 148.0;

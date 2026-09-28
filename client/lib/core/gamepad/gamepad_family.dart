@@ -68,6 +68,10 @@ GamepadButtonLook gamepadButtonLook(
           const GamepadButtonLook(label: 'L1', color: Color(0xFF5B6478)),
         GamepadAction.shoulderR =>
           const GamepadButtonLook(label: 'R1', color: Color(0xFF5B6478)),
+        GamepadAction.triggerL =>
+          const GamepadButtonLook(label: 'L2', color: Color(0xFF5B6478)),
+        GamepadAction.triggerR =>
+          const GamepadButtonLook(label: 'R2', color: Color(0xFF5B6478)),
         GamepadAction.menu =>
           const GamepadButtonLook(label: 'OPT', color: Color(0xFF5B6478)),
         GamepadAction.select =>
@@ -75,7 +79,9 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '◆', color: Color(0xFF5B6478)),
       };
     case GamepadFamily.nintendo:
@@ -92,6 +98,10 @@ GamepadButtonLook gamepadButtonLook(
           const GamepadButtonLook(label: 'L', color: Color(0xFF5B6478)),
         GamepadAction.shoulderR =>
           const GamepadButtonLook(label: 'R', color: Color(0xFF5B6478)),
+        GamepadAction.triggerL =>
+          const GamepadButtonLook(label: 'ZL', color: Color(0xFF5B6478)),
+        GamepadAction.triggerR =>
+          const GamepadButtonLook(label: 'ZR', color: Color(0xFF5B6478)),
         GamepadAction.menu =>
           const GamepadButtonLook(label: '+', color: Color(0xFF5B6478)),
         GamepadAction.select =>
@@ -99,7 +109,9 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '+', color: Color(0xFF5B6478)),
       };
     case GamepadFamily.xbox:
@@ -116,6 +128,10 @@ GamepadButtonLook gamepadButtonLook(
           const GamepadButtonLook(label: 'LB', color: Color(0xFF5B6478)),
         GamepadAction.shoulderR =>
           const GamepadButtonLook(label: 'RB', color: Color(0xFF5B6478)),
+        GamepadAction.triggerL =>
+          const GamepadButtonLook(label: 'LT', color: Color(0xFF5B6478)),
+        GamepadAction.triggerR =>
+          const GamepadButtonLook(label: 'RT', color: Color(0xFF5B6478)),
         GamepadAction.menu =>
           const GamepadButtonLook(label: '≡', color: Color(0xFF5B6478)),
         GamepadAction.select =>
@@ -123,14 +139,19 @@ GamepadButtonLook gamepadButtonLook(
         GamepadAction.up ||
         GamepadAction.down ||
         GamepadAction.left ||
-        GamepadAction.right =>
+        GamepadAction.right ||
+        GamepadAction.scrollUp ||
+        GamepadAction.scrollDown =>
           const GamepadButtonLook(label: '+', color: Color(0xFF5B6478)),
       };
   }
 }
 
-bool gamepadHintsWanted() {
+/// Контроллер реально в списке устройств — не «недавно нажимали».
+bool gamepadConnected() {
   final service = GamepadService.instance;
-  if (!service.isRunning) return false;
-  return service.devices.value.isNotEmpty || service.isRecentlyActive;
+  return service.isRunning && service.devices.value.isNotEmpty;
 }
+
+/// Подсказки и глифы только при подключённом геймпаде.
+bool gamepadHintsWanted() => gamepadConnected();

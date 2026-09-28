@@ -275,28 +275,34 @@ abstract class AppLocalizations {
   /// **'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.'**
   String get settingsGamepadDisconnected;
 
+  /// No description provided for @settingsGamepadGenericName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроллер'**
+  String get settingsGamepadGenericName;
+
   /// No description provided for @settingsGamepadHelpNavigate.
   ///
   /// In ru, this message translates to:
-  /// **'Крест / стик — меню и курсор на поле'**
+  /// **'Навигация'**
   String get settingsGamepadHelpNavigate;
 
   /// No description provided for @settingsGamepadHelpConfirm.
   ///
   /// In ru, this message translates to:
-  /// **'A / Крест — выбрать или сходить'**
+  /// **'Выбрать'**
   String get settingsGamepadHelpConfirm;
 
   /// No description provided for @settingsGamepadHelpBack.
   ///
   /// In ru, this message translates to:
-  /// **'B / Круг — назад или снять выбор'**
+  /// **'Назад'**
   String get settingsGamepadHelpBack;
 
   /// No description provided for @settingsGamepadHelpTabs.
   ///
   /// In ru, this message translates to:
-  /// **'L1 / R1 — вкладки меню'**
+  /// **'Вкладки'**
   String get settingsGamepadHelpTabs;
 
   /// No description provided for @settingsGamepadHelpPlay.
@@ -308,14 +314,50 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpCards.
   ///
   /// In ru, this message translates to:
-  /// **'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать'**
+  /// **'Карты'**
   String get settingsGamepadHelpCards;
 
   /// No description provided for @settingsGamepadHelpKeyboard.
   ///
   /// In ru, this message translates to:
-  /// **'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть'**
+  /// **'Клавиатура'**
   String get settingsGamepadHelpKeyboard;
+
+  /// No description provided for @settingsGamepadHelpBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс'**
+  String get settingsGamepadHelpBalance;
+
+  /// No description provided for @settingsGamepadHelpLogout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выход'**
+  String get settingsGamepadHelpLogout;
+
+  /// No description provided for @settingsGamepadHelpPage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Страница'**
+  String get settingsGamepadHelpPage;
+
+  /// No description provided for @settingsGamepadLayoutXbox.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Xbox'**
+  String get settingsGamepadLayoutXbox;
+
+  /// No description provided for @settingsGamepadLayoutPlayStation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка PlayStation'**
+  String get settingsGamepadLayoutPlayStation;
+
+  /// No description provided for @settingsGamepadLayoutNintendo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Nintendo'**
+  String get settingsGamepadLayoutNintendo;
 
   /// No description provided for @gamepadKeyboardTitle.
   ///
@@ -1709,6 +1751,48 @@ abstract class AppLocalizations {
   /// **'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.'**
   String get rulesCheckersPlayCornersLeaveHome;
 
+  /// No description provided for @rulesCheckersDrawRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — в том числе когда остались по две дамки и ходы идут «ради ходов».'**
+  String get rulesCheckersDrawRussian;
+
+  /// No description provided for @rulesCheckersDrawEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды, если 40 ходов не было взятия и хода простой, или если осталось по одной дамке — сил для победы нет.'**
+  String get rulesCheckersDrawEnglish;
+
+  /// No description provided for @rulesCheckersDrawGiveaway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — ходы «ради ходов» не считаются прогрессом.'**
+  String get rulesCheckersDrawGiveaway;
+
+  /// No description provided for @rulesCheckersDrawCorners.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.'**
+  String get rulesCheckersDrawCorners;
+
+  /// No description provided for @checkersDrawRepetition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — позиция повторилась трижды'**
+  String get checkersDrawRepetition;
+
+  /// No description provided for @checkersDrawNoProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — ходы не ведут к победе'**
+  String get checkersDrawNoProgress;
+
+  /// No description provided for @checkersDrawInsufficient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья — недостаточно сил для победы'**
+  String get checkersDrawInsufficient;
+
   /// No description provided for @rulesNardyTitle.
   ///
   /// In ru, this message translates to:
@@ -1792,6 +1876,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'После всех ходов сразу передать ход сопернику'**
   String get nardyAutoConfirmHint;
+
+  /// No description provided for @nardyLayoutToggle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поменять раскладку'**
+  String get nardyLayoutToggle;
 
   /// No description provided for @nardyNoMoves.
   ///

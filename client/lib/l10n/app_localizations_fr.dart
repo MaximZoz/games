@@ -72,25 +72,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Aucune manette. Branchez-en une et appuyez sur un bouton.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Croix / stick — menus et curseur sur le plateau';
+  String get settingsGamepadGenericName => 'Manette';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Croix — valider ou jouer';
+  String get settingsGamepadHelpNavigate => 'Naviguer';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Rond — retour ou désélection';
+  String get settingsGamepadHelpConfirm => 'Choisir';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — onglets du menu';
+  String get settingsGamepadHelpBack => 'Retour';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Onglets';
 
   @override
   String get settingsGamepadHelpPlay => 'Curseur plateau et main : dames, morpion, bataille navale, durak, uno, poker et backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Aux cartes : croix = main, A joue, X sélectionne / Uno, Y prend, passe ou pioche';
+  String get settingsGamepadHelpCards => 'Cartes';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Dans un champ, A ouvre le clavier manette ; X change la disposition, B efface ou ferme';
+  String get settingsGamepadHelpKeyboard => 'Clavier';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Solde';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Déconnexion';
+
+  @override
+  String get settingsGamepadHelpPage => 'Page';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Disposition Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Disposition PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Disposition Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Clavier';
@@ -819,6 +840,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté ne sont que des dames sans prise — y compris deux dames contre deux.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Nulle si la position se répète trois fois, après 40 coups sans prise ni pion, ou s’il reste une dame contre une dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Nulle si la position se répète trois fois ou après 15 coups de dames sans prise.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Nulle si la position se répète trois fois ou si 25 coups de chaque côté n’ajoutent aucune pièce au coin cible.';
+
+  @override
+  String get checkersDrawRepetition => 'Nulle — position répétée trois fois';
+
+  @override
+  String get checkersDrawNoProgress => 'Nulle — les coups n’aboutissent pas à une victoire';
+
+  @override
+  String get checkersDrawInsufficient => 'Nulle — matériel insuffisant pour gagner';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — règles';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Passe le tour automatiquement après tous les coups';
+
+  @override
+  String get nardyLayoutToggle => 'Changer la disposition';
 
   @override
   String get nardyNoMoves => 'Aucun coup';

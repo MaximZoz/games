@@ -102,6 +102,38 @@ void main() {
       expect(again, original);
     });
 
+    test('toJson checkers roundtrip сохраняет все режимы', () {
+      for (final mode in ['russian', 'english', 'giveaway', 'corners']) {
+        final original = UserGameSettings(
+          gameType: 'checkers',
+          turnTimeSec: 60,
+          variant: mode,
+          gridSize: 8,
+          stakeBronze: 10,
+          maxPlayers: 2,
+          gameMode: mode,
+        );
+        final again = UserGameSettings.fromJson(original.toJson());
+        expect(again.gameMode, mode, reason: mode);
+        expect(again.variant, mode, reason: mode);
+      }
+    });
+
+    test('fromJson checkers читает english и corners из variant', () {
+      final english = UserGameSettings.fromJson({
+        'game_type': 'checkers',
+        'variant': 'english',
+        'stake_bronze': 10,
+      });
+      expect(english.gameMode, 'english');
+      final corners = UserGameSettings.fromJson({
+        'game_type': 'checkers',
+        'game_mode': 'corners',
+        'stake_bronze': 10,
+      });
+      expect(corners.gameMode, 'corners');
+    });
+
     test('copyWith and equality', () {
       const a = UserGameSettings.defaults;
       final b = a.copyWith(variant: 'multi4', swapRule: true);

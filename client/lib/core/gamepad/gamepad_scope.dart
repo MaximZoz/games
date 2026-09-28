@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Экран партии: верните `true`, если действие обработано.
 class GamepadScope extends StatefulWidget {
@@ -8,29 +9,41 @@ class GamepadScope extends StatefulWidget {
     super.key,
     required this.onAction,
     required this.child,
+    this.exclusive = false,
   });
 
   final GamepadActionHandler onAction;
   final Widget child;
+
+  /// Диалог забирает весь ввод: LB/RB не листают вкладки, B не закрывает фон.
+  final bool exclusive;
 
   @override
   State<GamepadScope> createState() => _GamepadScopeState();
 }
 
 class _GamepadScopeState extends State<GamepadScope> {
+  int? _token;
+
   @override
   void initState() {
     super.initState();
-    GamepadDispatcher.push(_handle);
+    _token = GamepadDispatcher.push(_handle, exclusive: widget.exclusive);
   }
 
   @override
   void dispose() {
-    GamepadDispatcher.remove(_handle);
+    final token = _token;
+    if (token != null) {
+      GamepadDispatcher.remove(token);
+    }
     super.dispose();
   }
 
-  bool _handle(GamepadAction action) => widget.onAction(action);
+  bool _handle(GamepadAction action) {
+    if (!mounted || !isGamepadContextOnstage(context)) return false;
+    return widget.onAction(action);
+  }
 
   @override
   Widget build(BuildContext context) => widget.child;

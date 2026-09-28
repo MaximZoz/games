@@ -72,25 +72,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад не найден. Подключите контроллер и нажмите любую кнопку.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Крест / стик — меню и курсор на поле';
+  String get settingsGamepadGenericName => 'Контроллер';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Крест — выбрать или сходить';
+  String get settingsGamepadHelpNavigate => 'Навигация';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Круг — назад или снять выбор';
+  String get settingsGamepadHelpConfirm => 'Выбрать';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — вкладки меню';
+  String get settingsGamepadHelpBack => 'Назад';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Вкладки';
 
   @override
   String get settingsGamepadHelpPlay => 'Курсор на поле и в руке: шашки, крестики-нолики, морской бой, дурак, уно, покер и нарды';
 
   @override
-  String get settingsGamepadHelpCards => 'В картах: крест — рука, A — ход, X — выбрать / Уно, Y — взять, бито или добрать';
+  String get settingsGamepadHelpCards => 'Карты';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'В поле ввода A открывает клавиатуру геймпада; X — раскладка, B — стереть или закрыть';
+  String get settingsGamepadHelpKeyboard => 'Клавиатура';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Баланс';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Выход';
+
+  @override
+  String get settingsGamepadHelpPage => 'Страница';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Раскладка Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Раскладка PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Раскладка Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Клавиатура';
@@ -819,6 +840,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Фишки, которые ещё не вышли из дома, должны покинуть его за первые 25 ходов игрока.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — в том числе когда остались по две дамки и ходы идут «ради ходов».';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ничья, если позиция повторилась трижды, если 40 ходов не было взятия и хода простой, или если осталось по одной дамке — сил для победы нет.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — ходы «ради ходов» не считаются прогрессом.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.';
+
+  @override
+  String get checkersDrawRepetition => 'Ничья — позиция повторилась трижды';
+
+  @override
+  String get checkersDrawNoProgress => 'Ничья — ходы не ведут к победе';
+
+  @override
+  String get checkersDrawInsufficient => 'Ничья — недостаточно сил для победы';
+
+  @override
   String get rulesNardyTitle => 'Нарды — правила';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'После всех ходов сразу передать ход сопернику';
+
+  @override
+  String get nardyLayoutToggle => 'Поменять раскладку';
 
   @override
   String get nardyNoMoves => 'Ходов нет';

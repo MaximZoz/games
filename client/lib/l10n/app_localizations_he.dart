@@ -72,25 +72,46 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'לא נמצא גיימפד. חברו בקר ולחצו על כפתור.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'חיצים / סטיק — תפריטים וסמן על הלוח';
+  String get settingsGamepadGenericName => 'בקר';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / איקס — אישור או מהלך';
+  String get settingsGamepadHelpNavigate => 'ניווט';
 
   @override
-  String get settingsGamepadHelpBack => 'B / עיגול — חזרה או ביטול בחירה';
+  String get settingsGamepadHelpConfirm => 'בחירה';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — לשוניות תפריט';
+  String get settingsGamepadHelpBack => 'חזרה';
+
+  @override
+  String get settingsGamepadHelpTabs => 'לשוניות';
 
   @override
   String get settingsGamepadHelpPlay => 'סמן על הלוח וביד: דמקה, איקס-עיגול, קרב אוניות, דוראק, אונו, פוקר ושש-בש';
 
   @override
-  String get settingsGamepadHelpCards => 'בקלפים: חיצים מזיזים את היד, A משחק, X בוחר / אונו, Y לוקח או שולף';
+  String get settingsGamepadHelpCards => 'קלפים';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'בשדה טקסט A פותח מקלדת גיימפד; X מחליף פריסה, B מוחק או סוגר';
+  String get settingsGamepadHelpKeyboard => 'מקלדת';
+
+  @override
+  String get settingsGamepadHelpBalance => 'יתרה';
+
+  @override
+  String get settingsGamepadHelpLogout => 'יציאה';
+
+  @override
+  String get settingsGamepadHelpPage => 'עמוד';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'פריסת Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'פריסת PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'פריסת Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'מקלדת';
@@ -819,6 +840,27 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
 
   @override
+  String get rulesCheckersDrawRussian => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים לכל צד הם רק מלכות בלי הכאה — גם שתיים מול שתיים.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'תיקו בחזרה משולשת, אחרי 40 מהלכים בלי הכאה או חייל, או מלכה מול מלכה.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'תיקו בחזרה משולשת או 15 מהלכי מלכות בלי הכאה.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'תיקו בחזרה משולשת או 25 מהלכים לכל צד בלי עוד חייל בפינת היעד.';
+
+  @override
+  String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';
+
+  @override
+  String get checkersDrawNoProgress => 'תיקו — המהלכים לא מובילים לניצחון';
+
+  @override
+  String get checkersDrawInsufficient => 'תיקו — אין מספיק כוח לניצחון';
+
+  @override
   String get rulesNardyTitle => 'שש-בש — חוקים';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'לאחר כל המהלכים התור עובר ליריב';
+
+  @override
+  String get nardyLayoutToggle => 'החלפת סידור';
 
   @override
   String get nardyNoMoves => 'אין מהלכים';

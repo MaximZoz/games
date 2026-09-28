@@ -18,6 +18,9 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -137,8 +140,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -213,18 +215,27 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
     final price = groupItems
         .map((e) => e.priceBronze)
         .fold<int>(groupItems.first.priceBronze, math.min);
-    return Material(
+    return GamepadFocusBlock(
+      radius: 16,
+      onActivate: () => context.push('/shop/emojis/$group'),
+      child: Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
+        canRequestFocus: false,
         borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/shop/emojis/$group'),
-        child: Container(
+        child: Builder(
+          builder: (inner) {
+            return Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: GamepadFocusBlock.frameColor(
+                inner,
+                Colors.black.withValues(alpha: 0.06),
+              ),
             ),
           ),
           child: Row(
@@ -263,7 +274,10 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
               ),
             ],
           ),
+            );
+          },
         ),
+      ),
       ),
     );
   }
@@ -326,30 +340,15 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
 
   Future<bool> _confirmBuy(ShopItem item) async {
     final l10n = context.l10n;
-    final result = await showDialog<bool>(
+    return showGamepadConfirmDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.shopBuyEmojiTitle),
-          content: Text(
-            '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
-            '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
-            '${l10n.shopEmojiUses}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.shopBuy),
-            ),
-          ],
-        );
-      },
+      title: l10n.shopBuyEmojiTitle,
+      message:
+          '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
+          '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
+          '${l10n.shopEmojiUses}',
+      confirmLabel: l10n.shopBuy,
     );
-    return result == true;
   }
 
   void _showPurchased(ShopItem item) {
@@ -361,10 +360,12 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
     );
   }
 
-  Future<void> _buy(ShopItem item) async {
+  Future<void> _buy(ShopItem item, {bool confirm = true}) async {
     if (_buyInFlight.contains(item.code)) return;
-    final ok = await _confirmBuy(item);
-    if (!ok || !mounted) return;
+    if (confirm) {
+      final ok = await _confirmBuy(item);
+      if (!ok || !mounted) return;
+    }
 
     _buyInFlight.add(item.code);
     setState(() {});
@@ -409,15 +410,8 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
       subtitle: context.l10n.shopEmojiPriceUses(
         formatRewardBronze(item.priceBronze),
       ),
-      bottomAction: Builder(
-        builder: (dialogContext) => FilledButton(
-          onPressed: () {
-            Navigator.of(dialogContext).pop();
-            unawaited(_buy(item));
-          },
-          child: Text(context.l10n.shopBuy),
-        ),
-      ),
+      onBuy: () => unawaited(_buy(item)),
+      buyLabel: context.l10n.shopBuy,
     );
   }
 
@@ -459,8 +453,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: context.l10n.commonBack,
           ),
@@ -499,71 +492,36 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                             (outer.maxHeight - pad.vertical).clamp(1.0, 4000.0);
                         final cols =
                             shopTileColumns(context, maxWidth: innerW);
-                        var rows = shopTileRows(context, maxHeight: innerH);
-                        var pageSize = (cols * rows).clamp(1, 48);
-                        if (fillTiles) {
-                          const minCell = 72.0;
-                          final maxCols =
-                              (innerW / minCell).floor().clamp(3, 8);
-                          final maxRows =
-                              (innerH / minCell).floor().clamp(2, 6);
-                          if (emojis.length <= maxCols * maxRows) {
-                            pageSize = emojis.length;
-                          }
-                        }
+                        final rows = shopTileRows(context, maxHeight: innerH);
+                        final pageSize = (cols * rows).clamp(1, 48);
                         final pageCount = emojis.isEmpty
                             ? 0
                             : ((emojis.length + pageSize - 1) / pageSize)
                                 .floor();
-                        return DesktopContentFrame(
-                          maxWidth: fillTiles
-                              ? double.infinity
-                              : (isWide(context) ? 720 : double.infinity),
-                          child: VerticalPagedSlider(
-                            pageCount: pageCount,
-                            itemBuilder: (context, page) {
-                              final start = page * pageSize;
-                              final end = math.min(
-                                start + pageSize,
-                                emojis.length,
-                              );
-                              final pageItems = emojis.sublist(start, end);
-                              return Padding(
-                                padding: pad,
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final pageCols = shopTileColumns(
-                                      context,
-                                      maxWidth: constraints.maxWidth,
-                                    );
-                                    final pageRows = (pageItems.length /
-                                            pageCols)
-                                        .ceil()
-                                        .clamp(1, fillTiles ? 8 : 3);
-                                    const gap = 8.0;
-                                    final cellW = (constraints.maxWidth -
-                                            gap * (pageCols - 1)) /
-                                        pageCols;
-                                    final cellH = (constraints.maxHeight -
-                                            gap * (pageRows - 1)) /
-                                        pageRows;
-                                    final ratio = cellH <= 0
-                                        ? 0.78
-                                        : (cellW / cellH).clamp(
-                                            fillTiles ? 0.45 : 0.55,
-                                            1.15,
-                                          );
-                                    return GridView.builder(
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: pageCols,
-                                        mainAxisSpacing: gap,
-                                        crossAxisSpacing: gap,
-                                        childAspectRatio: ratio,
-                                      ),
+                        final slider = VerticalPagedSlider(
+                          pageCount: pageCount,
+                          itemBuilder: (context, page) {
+                            final start = page * pageSize;
+                            final end = math.min(
+                              start + pageSize,
+                              emojis.length,
+                            );
+                            final pageItems = emojis.sublist(start, end);
+                            return Padding(
+                              padding: pad,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final pageCols = shopTileColumns(
+                                    context,
+                                    maxWidth: constraints.maxWidth,
+                                  );
+                                  const gap = 8.0;
+                                  if (fillTiles) {
+                                    return ShopFillGrid(
+                                      columns: pageCols,
+                                      rows: rows,
                                       itemCount: pageItems.length,
+                                      gap: gap,
                                       itemBuilder: (context, index) {
                                         final item = pageItems[index];
                                         return _EmojiBuyTile(
@@ -576,11 +534,56 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
                                         );
                                       },
                                     );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
+                                  }
+                                  final pageRows = (pageItems.length /
+                                          pageCols)
+                                      .ceil()
+                                      .clamp(1, rows);
+                                  final cellW = (constraints.maxWidth -
+                                          gap * (pageCols - 1)) /
+                                      pageCols;
+                                  final cellH = (constraints.maxHeight -
+                                          gap * (pageRows - 1)) /
+                                      pageRows;
+                                  final rawRatio =
+                                      cellH <= 0 ? 0.78 : cellW / cellH;
+                                  final ratio = rawRatio.clamp(0.55, 1.15);
+                                  return GridView.builder(
+                                    clipBehavior: Clip.hardEdge,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: pageCols,
+                                      mainAxisSpacing: gap,
+                                      crossAxisSpacing: gap,
+                                      childAspectRatio: ratio,
+                                    ),
+                                    itemCount: pageItems.length,
+                                    itemBuilder: (context, index) {
+                                      final item = pageItems[index];
+                                      return _EmojiBuyTile(
+                                        item: item,
+                                        busy: _buyInFlight
+                                            .contains(item.code),
+                                        onPreview: () =>
+                                            _openPreview(item),
+                                        onBuy: () => _buy(item),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        );
+                        return DesktopContentFrame(
+                          maxWidth: fillTiles
+                              ? double.infinity
+                              : (isWide(context) ? 720 : double.infinity),
+                          child: fillTiles
+                              ? SizedBox.expand(child: slider)
+                              : slider,
                         );
                       },
                     ),
@@ -608,17 +611,27 @@ class _EmojiBuyTile extends StatelessWidget {
     final name = (item.animatedName ?? '').trim();
     final fallback = item.emoji ?? '🙂';
 
-    return Material(
+    return GamepadFocusBlock(
+      radius: 18,
+      onActivate: onPreview,
+      child: Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(18),
       // Не клипаем жёстко содержимое: Lottie/emoji часто чуть выходят за бокс.
       clipBehavior: Clip.none,
-      child: Container(
+      child: Builder(
+        builder: (inner) {
+          return Container(
         padding: const EdgeInsets.fromLTRB(6, 6, 6, 5),
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          border: Border.all(
+            color: GamepadFocusBlock.frameColor(
+              inner,
+              Colors.black.withValues(alpha: 0.06),
+            ),
+          ),
         ),
         child: Column(
           children: [
@@ -626,6 +639,7 @@ class _EmojiBuyTile extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
+                  canRequestFocus: false,
                   onTap: onPreview,
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
@@ -673,6 +687,7 @@ class _EmojiBuyTile extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             InkWell(
+              canRequestFocus: false,
               onTap: busy ? null : onBuy,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
@@ -700,6 +715,9 @@ class _EmojiBuyTile extends StatelessWidget {
             ),
           ],
         ),
+      );
+        },
+      ),
       ),
     );
   }

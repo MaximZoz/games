@@ -72,25 +72,46 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad yok. Bir kol bağlayın ve herhangi bir düğmeye basın.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Yön tuşları / çubuk — menü ve tahta imleci';
+  String get settingsGamepadGenericName => 'Kontrolcü';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Çarpı — onayla veya hamle yap';
+  String get settingsGamepadHelpNavigate => 'Gezinme';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Daire — geri veya seçimi kaldır';
+  String get settingsGamepadHelpConfirm => 'Seç';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menü sekmeleri';
+  String get settingsGamepadHelpBack => 'Geri';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Sekmeler';
 
   @override
   String get settingsGamepadHelpPlay => 'Tahta ve el imleci: dama, xox, amiral battı, durak, uno, poker ve tavla';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartlarda: yön tuşları eli gezer, A oynar, X seçer / Uno, Y alır, geçer veya çeker';
+  String get settingsGamepadHelpCards => 'Kartlar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Metin alanında A oyun kolu klavyesini açar; X düzeni değiştirir, B siler veya kapatır';
+  String get settingsGamepadHelpKeyboard => 'Klavye';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Bakiye';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Çıkış';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sayfa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox düzeni';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation düzeni';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo düzeni';
 
   @override
   String get gamepadKeyboardTitle => 'Klavye';
@@ -819,6 +840,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Pozisyon üç kez tekrarlanırsa veya her taraftan 15 hamle sadece dama ve temassızsa — iki dama iki damaya karşı dahil — beraberlik.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Pozisyon üç kez tekrarlanırsa, 40 hamle yeme ve piyon yoksa veya her tarafta bir dama kalırsa beraberlik.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Pozisyon üç kez tekrarlanırsa veya 15 hamle sadece dama ve yemesizse beraberlik.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 25 hamlesi hedef köşeye taş eklemezse beraberlik.';
+
+  @override
+  String get checkersDrawRepetition => 'Beraberlik — pozisyon üç kez tekrarlandı';
+
+  @override
+  String get checkersDrawNoProgress => 'Beraberlik — hamleler zafere götürmüyor';
+
+  @override
+  String get checkersDrawInsufficient => 'Beraberlik — kazanacak güç yok';
+
+  @override
   String get rulesNardyTitle => 'Tavla — kurallar';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Tüm hamlelerden sonra sıra otomatik geçer';
+
+  @override
+  String get nardyLayoutToggle => 'Dizilimi değiştir';
 
   @override
   String get nardyNoMoves => 'Hamle yok';

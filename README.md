@@ -1,475 +1,145 @@
-# 🎮 MultiGames
+# MultiGames
 
-Монорепозиторий веб-клиента на Flutter и API на Go для мультиплатформенного игрового приложения.
-
-## 📌 Текущее состояние проекта
-
-На текущем этапе в репозитории реализованы:
-
-- полноценная аутентификация (register/login/me + refresh flow, подтверждение email, сброс пароля, OAuth Google/Apple/Yandex/VK);
-- профиль пользователя (ник, возраст, пол, about, аватар);
-- модуль друзей (друзья, входящие/исходящие заявки, поиск, действия);
-- чаты между друзьями (список, сообщения, чтение, блокировка, изображения, редактирование/ответы);
-- presence (онлайн-статус пользователей);
-- монеты и ежедневная награда;
-- крестики-нолики (лобби, invite/matchmake, игра 3×3–8×8, ставки, бот);
-- дурак (лобби, онлайн и офлайн с ботами: те же полёты карт — раздача, добор из колоды, стол в биту/руку, веер; стартовая раздача собирает веер по одной карте: слот появляется до полёта, лицо — в момент посадки, без вспышки всей руки и без snap по watchdog; добор из колоды и взятие со стола сжимают веер одним коротким твином, как после своего хода; добор соперника не вспыхивает всей рукой до полёта из колоды; перевод и отбой не моргают столом, если в этот момент подкинули карты; перевод не моргает уже лежащей картой на столе; подкид не мигает ходом, кнопками и картой на столе — стол и статус после посадки, overlay снимается после лица; чужая атака/перевод/подкид/отбой летят сразу в финальный слот сетки (слот резервируется до полёта, без посадки «рядом» и прыжка); после своего хода веер схлопывается одним коротким твином вместе с полётом, без дырки и без вспышки стола; когда соперник берёт — секунда «Беру», потом кнопка «Готово»; после последнего отбоя короткая пауза, потом победа и реванш; в переводном бот отвечает на перевод без смены вкладки; после отбоя пауза, потом бита; карта на столе только после посадки полёта; на iPhone PWA вытаскивание из веера без двойника карты; первый ход — младший козырь с анимацией и подписью; если козыря нет — добор по одной, пока не появится; против бота нет кнопки ничьей; крупные ранг и масть в углах карт, как в покере; полёты считают координаты от корневого overlay, а не от коробки вкладки, и снимаются при повороте, возврате с другой вкладки, resume приложения и если полёт завис без `_busy`; в альбоме колода и бита целиком в кадре, «Бито»/«Взять» над веером; итог в альбоме — статус и реванш в ряд);
-- текстовые кнопки в карточках игр, реванше, профиле и партиях — заливка цветом фона приложения, лавандовая рамка, чёрный текст (`FramedButton` / `AppButtonStyles`); чипы на карточке игры с той же заливкой; в карточке игры «Создать» и «Поиск» всегда в один ряд (на узкой ширине меньше отступ и кегль); цветные кнопки хода в покере без изменений;
-- групповой игровой чат исчезает вместе с оконченной партией (лобби `in_game` без живой игры тоже считается сиротой);
-- морской бой — серверный API (лобби, расстановка, выстрелы, бот, ставки; против бота после вашего выстрела пауза 1 с, после хода бота ещё 1 с и только тогда меняется поле);
-- нарды — 1×1, короткие и длинные: лобби с приглашениями и поиском соперника, игра с ботом (в т.ч. офлайн), бросок кубиков, отмена своего хода, чекбокс автоподтверждения только на своём ходе (без «Готово» ход уходит сам), ставки, время хода, статистика;
-- шашки — русские, английские, поддавки и уголки: лобби, бот (в т.ч. офлайн; в уголках развивает все шашки, а не одну), реванш, ставки и время хода; ровная доска 8×8 без щелей; дамка в русских обязана продолжать бой, направление выбирает игрок (не максимум фигур); в уголках фишка не возвращается в свой стартовый угол, а оставшиеся дома обязаны выйти за первые 25 ходов игрока;
-- UNO — серверное ядро и Flutter-клиент: карточка создания/поиска, онлайн-лобби своей игры с групповым чатом (3+), общим списком друзей для приглашения (статус «Онлайн», как в дураке) и карточкой профиля по тапу на игрока, приглашение в табе «Лобби» и в чате с названием «Уно» (не «Крестики-нолики»), адаптивный стол (соперники вокруг стола относительно вас и направления хода, как в дураке; рамка чьего хода и без таймера через общий `GameActorHighlight`; кнопки на десктопе компактные), собственные `CustomPaint`-карты и анимации (раздача, ход сразу убирает карту из веера и меняет сброс в момент прилёта, любой добор из колоды — сначала полёт, потом карта в веере, вскрытие незаконного +4 на 1 с и обратно в веер), стек одинаковых +2/+4 (штраф суммируется; +2 на +4 нельзя — клиент не подсвечивает и не шлёт такой ход), две одинаковые недикие карты (две жёлтые 8) уходят вместе автоматически, вышедший соперник визуально неактивен, ник и аватар соперника с профилем/сообщением, таймаут хода — проигрыш текущего игрока с текстом «Вы проиграли по времени» и сразу −ставка, а не добор; офлайн-матч с ботами, выбор цвета, вызовы UNO и Wild Draw Four (сказать «Уно» можно сразу (голос «Уно!» слышат все за столом), «Поймать без Уно» — через 1 с у всех игроков, не только у следующего; кнопка «Уно!» пропадает, если не поймали и следующий уже сходил), раунды и счёт (вдвоём до 100, при 3+ игроках до 200) с экраном очков после раунда; после матча — реванш, групповой чат (3+), монеты и выход/наблюдение как в покере и дураке; диалог правил совпадает с движком; ошибки ходов API (Уно, дурак, покер, морской бой) приходят понятным текстом на языке клиента;
-- статистика игрока (победы/ничьи/поражения, win-rate, время в игре, топ соперников, счёт head-to-head в попапе профиля с иконками всех игр); названия игр те же, что на карточках — через `GameDescriptor.localizedName` / `localizedGameTypeName`;
-- магазин и инвентарь (эмоции, коллекции, рамки, подарки, доход коллекций);
-- достижения с наградами (рамки); задания (анкета, 5 друзей, 10 игр) внутри «Монет»; бейджи заданий появляются сразу после выполнения (realtime `achievements_updated`), без захода в раздел;
-- Web Push-уведомления (PWA) с категориями (чат/друзья/игры/награды);
-- локализация интерфейса (27+ языков через `.arb`) и понятные ошибки API игр на языке клиента;
-- геймпад / контроллер: меню, вкладки, чаты, экранная клавиатура и курсор в шашках, крестиках-ноликах, морском бое, дураке, уно, покере и нардах;
-- адаптивный интерфейс (десктоп / мобильные, PWA на iOS; в landscape и на широких экранах главная, магазин, игры — сетка карточек; если название игры на карточке занимает 3 строки, хаб игр встаёт в 2 колонки, а не в 3; витрина смайликов на десктопе — страницы 3×3);
-- админка (пользователи + логи с фильтрами);
-- централизованное логирование frontend/backend в БД через файл-буфер;
-- деплой Flutter Web + Go API одним сервисом на Fly.io.
-
----
-
-## 🏗 Архитектура
+Монорепозиторий: Flutter-клиент (Web / Android / PWA) и Go API для онлайн-мини-игр.
 
 ```text
-Flutter (Web client, Riverpod + go_router)
-            │ REST (/api/*) + WebSocket (/api/ws)
-            ▼
-Go (net/http, middleware, auth, friends, chats, games, shop, admin, logging, i18n, mailer)
-            │
-            ├── PostgreSQL — источник истины (users, sessions, друзья, чаты, экономика, настройки, логи)
-            └── Redis — эфемерное состояние игр/лобби/матчмейкинга + Pub/Sub (опционален; без него games недоступны)
+Flutter (Riverpod, go_router)
+        │  REST /api/*  +  WebSocket /api/ws
+        ▼
+Go (net/http, pgx, JWT)
+        ├── PostgreSQL — пользователи, чаты, друзья, магазин, логи
+        └── Redis — лобби, партии, матчмейкинг (без Redis игры выключены)
 ```
 
-> Чаты и presence (онлайн-статус) живут в **Postgres**, а не в Redis. В Redis
-> хранится только состояние партий, лобби и очередь матчмейкинга. Подробности —
-> в [docs/DATABASE.md](docs/DATABASE.md) и [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Чаты и presence живут в Postgres. Подробности: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATABASE.md](docs/DATABASE.md).
 
 ---
 
-## 🧱 Актуальный стек
+## Что уже есть
 
-### Клиент (`client/`)
+**Аккаунт.** Регистрация и вход (email + refresh JWT), подтверждение почты, сброс пароля, OAuth Google / Apple / Yandex / VK, профиль (ник, возраст, пол, «о себе», аватар, до 3 фото).
 
-- Flutter (Dart SDK `>=3.2.0 <4.0.0`), Material 3
-- `flutter_riverpod` (state management)
-- `go_router` (роутинг, `StatefulShellRoute`)
-- `http`, `shared_preferences`
-- `image_picker`, `path_provider`
-- `flutter_localizations` + `intl` (i18n, 27+ языков через `.arb`)
-- `lottie`, `flutter_animate`, `flutter_slidable`
-- `image` (сжатие изображений в чате)
+**Соцсеть.** Друзья и заявки, чаты (текст, фото, правки, ответы, блокировка), онлайн-статус, push (PWA + Android FCM).
 
-### Сервер (`server/`)
+**Экономика.** Монеты, ежедневная награда, магазин (смайлы, коллекции, рамки, ставки), инвентарь и подарки, доход коллекций, достижения и задания.
 
-- Go `1.24`
-- стандартный `net/http` + `http.ServeMux`
-- `pgx/v5` (PostgreSQL)
-- `golang-migrate/migrate` (миграции)
-- `golang-jwt/jwt/v5` (JWT, access + refresh)
-- `go-redis/v9` (Redis)
-- `gorilla/websocket` (WebSocket, realtime)
-- `SherClockHolmes/webpush-go` (Web Push / VAPID)
-- `golang.org/x/crypto` (bcrypt)
-- `joho/godotenv` (env-конфиг)
+**Игры** — лобби, приглашения, поиск, бот/офлайн, ставки, реванш, статистика и head-to-head:
 
-### Инфраструктура
+| Игра | Режимы |
+|---|---|
+| Крестики-нолики | 3×3–8×8, swap, бот |
+| Дурак | онлайн и офлайн с ботами |
+| Морской бой | расстановка, бой, бот |
+| UNO | 2–4 игрока, офлайн-боты |
+| Покер (Texas Hold'em) | стол 2–6, офлайн-боты |
+| Нарды | короткие и длинные, кнопка смены раскладки фишек |
+| Шашки | русские, английские, поддавки, уголки; правила в диалоге — только выбранный режим |
 
-- Docker multi-stage build (Flutter build + Go binary)
-- `docker-compose` для локального Postgres/Redis
-- Fly.io (деплой приложения)
+**Оболочка.** 29 языков, адаптив десктоп / телефон / landscape / iOS PWA, админка (пользователи, логи, поддержка), офлайн-режим по подтверждению.
 
----
+**Геймпад** (веб: Gamepad API; Android: кнопки, стики, триггеры):
 
-## 📁 Структура репозитория
+- `LB` / `RB` — вкладки меню
+- левый стик и стрелки — карточки (достижения, монеты, магазин…)
+- правый стик — страница или скролл
+- `LT` — баланс (`A` открывает, любая кнопка закрывает окно)
+- `RT` — кнопка «Выйти» (`A` выходит)
+- в магазине `A` открывает превью, затем диалог покупки (`A` купить, любая другая — только закрыть диалог)
+- в партиях — курсор по полю, картам и кнопкам; в поле ввода — экранная клавиатура
 
-```text
-.
-├── client/                    # Flutter клиент
-│   ├── lib/
-│   │   ├── achievements/      # достижения (рамки) и задания в «Монетах»
-│   │   ├── admin/             # админка (пользователи, логи)
-│   │   ├── auth/              # AuthRepository, JWT-автоrefresh, OAuth, сброс пароля
-│   │   ├── chats/             # чаты: список, комната, доставка/чтение, изображения
-│   │   ├── core/              # api_client, api_config, realtime-ядро, presence, web_push
-│   │   ├── friends/           # друзья: репозиторий, провайдеры, поиск
-│   │   ├── games/             # крестики-нолики: настройки, лобби, игра, навигация
-│   │   ├── shop/              # магазин, инвентарь, коллекции, эмоции, подарки
-│   │   ├── screens/           # экраны
-│   │   ├── widgets/           # app_shell (навигация + бейджи), OAuth-виджеты
-│   │   ├── ui/                # тема, responsive, ui/widgets (UI-кит)
-│   │   ├── utils/             # relative_time, user_error
-│   │   ├── l10n/              # сгенерированная локализация (.dart) + исходники (.arb)
-│   │   ├── src/               # console_log (web/stub)
-│   │   ├── main.dart
-│   │   └── router.dart
-│   └── pubspec.yaml
-├── server/                    # Go API
-│   ├── cmd/server/            # main.go — точка входа
-│   ├── internal/
-│   │   ├── api/               # HTTP-хендлеры, middleware, WebSocket, OAuth, Web Push
-│   │   ├── applog/            # логирование: файл JSONL → импорт в app_logs
-│   │   ├── auth/              # JWT (HS256), bcrypt
-│   │   ├── i18n/              # локализация серверных сообщений
-│   │   ├── mailer/            # почта: Resend или SMTP (коды подтверждения)
-│   │   ├── uno/               # автономное игровое ядро UNO
-│   │   └── store/             # слой БД (stateless-функции, pgx)
-│   ├── migrations/            # миграции golang-migrate (001..045)
-│   └── go.mod
-├── launcher/                  # скрипты запуска/тестов/деплоя
-├── docs/
-├── docker-compose.yml
-├── Dockerfile
-├── fly.toml
-└── README.md
-```
+Подсказки кнопок зависят от Xbox / PlayStation / Nintendo. В Настройках раскладка (A/B или ✕/○, LB/RB или L1/R1, LT/RT) обновляется под подключённый контроллер.
 
 ---
 
-## ✅ Что уже реализовано
+## Стек
 
-### Бэкенд
+| | |
+|---|---|
+| Клиент | Flutter 3.27+, Dart ≥3.2, Riverpod, go_router, 29 `.arb` |
+| Сервер | Go 1.24, `net/http`, pgx, JWT, Redis, WebSocket, Web Push |
+| Данные | миграции `001`–`057` |
+| Деплой | Docker, Fly.io (прод + DEV), Android Play Internal |
 
-- Миграции `001..055`:
-  - `users`, `sessions`; `is_admin`; логин по `email` или `display_name`;
-    профильные поля (`age`, `gender`, `about`, `avatar_*`); галерея профиля
-    (`user_profile_photos`, до 3 фото); баланс, ежедневная
-    награда, серия входов, рефералы; `email_verified_at`;
-  - `app_logs`; `friendships`, `friend_requests`;
-  - чаты (`chats`, `chat_messages`, `chat_message_images`) и блокировки
-    (`user_blocks`);
-  - прогресс и достижения (`user_stats`, `user_achievements`);
-  - магазин и инвентарь (`shop_items`, `user_inventory`);
-  - настройки игр (`user_game_settings`) и общие настройки (`user_settings`);
-  - Web Push (`web_push_subscriptions`, `web_push_preferences`);
-  - OAuth (`oauth_accounts`), коды подтверждения email и сброса пароля
-    (`email_verification_codes`, `password_reset_codes`, `pending_registrations`).
-- Auth API:
-  - `POST /api/auth/register` — заявка + код на email; пользователь в БД создаётся только после verify
-  - `POST /api/auth/verify-email` — подтверждение кода, выдача JWT
-  - `POST /api/auth/resend-verification` — повторная отправка кода
-  - `POST /api/auth/forgot-password` — код сброса пароля на email
-  - `POST /api/auth/reset-password` — новый пароль по коду, выдача JWT
-  - `POST /api/auth/login`
-  - `POST /api/auth/refresh`
-  - `GET /api/auth/oauth/providers` — включённые OAuth (google/apple/yandex/vk)
-  - `GET /api/auth/oauth/{provider}/start` → callback → `/oauth/callback`
-  - `GET /api/me`
-  - `PUT /api/profile`
-  - `GET /api/profile/photos?user_id=` — список фото галереи (до 3)
-  - `GET /api/profile/photos/file?id=` — байты фото
-  - `POST /api/profile/photos` — загрузить/заменить фото слота
-  - `DELETE /api/profile/photos?id=` / `POST /api/profile/photos/delete` — удалить своё фото
-- Friends API:
-  - `GET /api/friends`
-  - `GET /api/friends/users-count`
-  - `GET /api/friends/search`
-  - `POST /api/friends/request|accept|reject|cancel|remove`
-- Chats API (всё в Postgres):
-  - `GET /api/chats`, `POST /api/chats/start`, `GET /api/chats/capabilities`
-  - `GET /api/chats/messages`, `POST /api/chats/messages`, `POST /api/chats/messages/image`
-  - `POST /api/chats/messages/edit`, `POST /api/chats/messages/delete` (редактирование, удаление, ответы, вложения)
-  - `POST /api/chats/read`, `POST /api/chats/delivered`
-  - `POST /api/chats/clear`, `POST /api/chats/block`, `POST /api/chats/unblock`, `GET /api/chats/blocked`
-- Presence API: `GET /api/presence?user_ids=...`
-- Coins API: `GET /api/coins/daily-available`, `POST /api/coins/claim-daily`
-- Games API (крестики-нолики, Redis обязателен):
-  - `GET|PUT /api/games/settings` — настройки игры (без Redis, Postgres)
-  - `POST /api/games/tictactoe/lobby` — создать лобби (invite/matchmake)
-  - `GET /api/games/tictactoe/lobbies` — список открытых лобби
-  - `GET /api/games/tictactoe/lobby/:id`, `POST /api/games/tictactoe/lobby/:id/invite|join|leave|decline`
-  - `POST /api/games/tictactoe/rematch` — реванш
-  - `GET /api/games/tictactoe/active` — активная игра/лобби
-  - `GET /api/games/tictactoe/game/:id`, `POST /api/games/tictactoe/game/:id/move|swap|forfeit|draw-offer|draw-accept`
-  - `GET /api/games/stats` — своя статистика (W/D/L, win-rate, время в игре, топ соперников; без Redis)
-  - `GET /api/games/head-to-head?user_id=<uuid>` — счёт между двумя игроками (без ботов)
-- Battleship API (морской бой, Redis обязателен):
-  - `POST /api/games/battleship/lobby` — invite/matchmake
-  - `GET /api/games/battleship/lobbies`, `GET /api/games/battleship/active`
-  - `GET /api/games/battleship/lobby/:id`, `POST .../invite|join|leave|decline|cancel-invite`
-  - `POST /api/games/battleship/rematch`
-  - `GET /api/games/battleship/game/:id`
-  - `POST /api/games/battleship/game/:id/place_ships|shoot|forfeit`
-- UNO API (Redis обязателен):
-  - `POST /api/games/uno/lobby` — invite/matchmake, `max_players=1` запускает игру с ботом
-  - `GET /api/games/uno/lobbies`, `GET /api/games/uno/active`
-  - `GET /api/games/uno/lobby/:id`, `POST .../invite|join|leave|decline|cancel-invite`
-  - `POST /api/games/uno/rematch`
-  - `GET /api/games/uno/game/:id`
-  - `POST /api/games/uno/game/:id/move|forfeit`
-- Shop & inventory API:
-  - `GET /api/shop`, `POST /api/shop/buy`
-  - `GET /api/inventory`, `GET /api/inventory/capabilities`
-  - `POST /api/inventory/consume|sell|gift`
-  - `GET /api/inventory/collections`, `GET /api/inventory/collection-income`, `POST /api/inventory/claim-collection-income`
-- Achievements API: `GET /api/achievements`, `GET /api/achievements/unclaimed-count`, `POST /api/achievements/claim`
-- Tasks API: `GET /api/tasks`, `GET /api/tasks/unclaimed-count`, `POST /api/tasks/claim`
-- Settings API: `GET|PUT /api/settings` (например, `messages_friends_only`)
-- Web Push API (PWA): `GET /api/push/vapid-key`, `POST /api/push/subscribe|unsubscribe`, `GET|PUT /api/push/preferences`
-- Android FCM: `POST /api/push/device`, `POST /api/push/device/unregister` (`FCM_SERVICE_ACCOUNT_JSON`)
-- Admin API:
-  - `POST /api/admin/init`
-  - `GET /api/admin/users`
-  - `GET /api/admin/logs`, `POST /api/admin/logs/clear`
-  - `POST /api/admin/users/set-admin|reset-password|delete`
-  - `GET /api/admin/support/chats`, `GET /api/admin/support/chats/:userId` (chat_id + support_user_id)
-  - `GET|POST /api/admin/support/chats/:userId/messages` (`limit`/`before`; полный чат админ ведёт через `/api/chats/*` от имени поддержки)
-- Realtime: `GET /api/ws?access_token=<jwt>` (WebSocket) — presence, чаты, друзья, игры, награды (`achievements_updated` сразу обновляет бейджи заданий).
-- Логи:
-  - backend request logging middleware;
-  - endpoint `POST /api/logs/frontend` для клиентских событий;
-  - импорт JSONL-файла в `app_logs`;
-  - retention cleanup по времени.
-
-### Фронтенд
-
-- Авторизация с автопродлением сессии через refresh token (до года); после входа приложение не выкидывает на `/login` из‑за долгого отсутствия или сбоя refresh — только явный выход.
-- Вход через OAuth (Google/Apple/Yandex/VK), если настроены провайдеры.
-- Подтверждение email и восстановление пароля по коду.
-- Guard маршрутов (в т.ч. `/admin`); на `/login` — только если локальной сессии нет.
-- Плохая сеть не включает офлайн сама: всплывашка предлагает режим офлайн (не чаще раза в 6 часов).
-- Профиль с редактированием, аватаром и галереей до 3 фото (клик открывает фото аватара в ленте; буква/смайл не показываются; без кнопки кропа; аватар хранится до 640px JPEG, чтобы полноэкран не мылился); возраст 1–111 проверяется при вводе; «О себе» в карточке в несколько строк, при редактировании — одна.
-- Иконки игр: у Дурака — Material Symbol `playing_cards`, у Покера — `poker_chip`.
-- Текстовые кнопки в едином стиле: светлый фон, лавандовая рамка, чёрный текст (`FramedButton` / `AppButtonStyles`); цветные кнопки хода в покере без изменений.
-- Адаптивный интерфейс: нижняя навигация на мобильных, `NavigationRail` на десктопе/landscape; главная, магазин (и разделы), игры и смайлики — сетка в landscape и на широких экранах; в лобби «Своя игра» в landscape ставка и ссылка стоят в одну строку, список друзей занимает остаток высоты и скроллится; в партии на телефоне в landscape тулбар оболочки скрыт (шапка игры и так есть) и шапка игры ниже, содержимое вкладки отступает от вырезов (`landscapeContentSafeArea`: низ и правый край — сам `AppShell`, левый съедает `NavigationRail`) и получает размер своей коробки, чтобы стол считался от неё, а не от экрана; безопасные зоны iPhone на вебе движок не отдаёт, поэтому `CssSafeArea` снимает `env(safe-area-inset-*)` со щупа в `web/index.html` и кладёт их в `MediaQuery`; стол подгоняется под высоту: в дураке размер карт и зона веера считаются от экрана (`gameTableFit`), а подъём веера — от высоты карты, чтобы крайние карты дуги не упирались в нижний край; в дураке при 3–4 игроках плашка соперника в альбоме горизонтальная (аватар рядом с именем), а коридор стола снизу упирается в слот «Бито» и ряды идут «кромкой» уже со второго ряда (`durakTableRowTop(..., compact: true)`) — иначе доске остаётся 64 px при паре в 80 px; в уно так же ужимаются колода, сброс и рука, а соперники в альбоме встают в боковые колонки (`unoLandscapeSideColumns`), потому что карточка сверху съедает высоту овала; зелёный овал в альбоме ниже по радиусу и с запасом снизу, подписи «Колода» и «Сброс» остаются внутри поля (`UnoCenterTableStyle`); в покере соперники встают на боковые кромки фетра (`pokerOpponentSeatAnchors(n, landscape: true)`, карты им кладутся внутрь стола) и только над рядом кнопок, борд центрируется в остатке над своими картами, а улица и банк идут одной строкой; в морском бое поле слева, а соперник и кнопки — колонкой справа; названия игр на карточках переносятся на новую строку, а не обрезаются; карточка просмотра профиля по центру (в альбоме — две колонки на весь экран); редактирование на телефоне: имя, возраст и «о себе» открываются однострочной полоской вплотную над клавиатурой (и в портрете, и в альбоме; форма остаётся видна выше, в альбоме — узкой прокручиваемой полосой); полоска ввода всегда смонтирована в дереве, поэтому клавиатура выезжает с первого тапа, а не со второго; клавиатуру убрали (тап в пустое место, кнопка «свернуть») — полоска закрывается, компактного ввода без клавиатуры не бывает; в друзьях и чатах ввод стоит сразу над клавиатурой (компактный режим включается только с открытой клавиатурой, поле не переносится по дереву — иначе на iOS клавиатура не открывается); высоту клавиатуры вычитает только `AppShell` — вложенные `Scaffold` смотрят на метку `KeyboardInsetScope` и не вычитают её второй раз; отладка раскладки под клавиатурой — `?insets=1`, `?fakekb=<px>`, `?fakesafe=1`; компактный тулбар на телефоне без двойного отступа status bar; при клавиатуре в альбоме тулбар и рейл схлопываются, чтобы поле ввода оставалось видимым; учёт iOS PWA (чёлка, home indicator).
-- Локализация интерфейса (27+ языков).
-- Админка:
-  - управление пользователями;
-  - поддержка — тот же чат, что у пользователя (пагинация, фото, ответы, редактирование; в шапке — пользователь, бейдж гаснет после прочтения);
-  - просмотр логов с фильтрами (user/source/date range);
-  - копирование логов (включая лимиты 120/500/1000/все).
-- Модуль друзей:
-  - друзья/входящие/исходящие;
-  - бейдж входящих в нижнем меню;
-  - сворачиваемый поиск (поле над списком, табы скрываются при открытой клавиатуре);
-  - динамическое скрытие пустых вкладок входящих/исходящих;
-  - компактные карточки и icon-only actions;
-  - поиск только по нику (`display_name`);
-  - пустой результат поиска — «Нет друзей, удовлетворяющих поиску», а не «нет друзей»;
-  - в альбоме число на табах «Друзья» / «Найти друга» того же цвета, что бейдж в портрете;
-  - email в карточках друзей не отображается;
-  - на десктопе и широких экранах карточки «Найти друга» того же размера, что у «Друзья»;
-  - пагинация списков (по 10) на широких экранах подгружает следующую страницу, когда лоадер виден.
-- Чаты (`/chats`): список диалогов, комната чата, непрочитанные, блокировка, изображения, редактирование и ответы; поле ввода стоит сразу над клавиатурой, сообщения видны выше (в альбоме поле в одну строку, тулбар схлопывается); на десктопе у списка чатов тонкая вертикальная полоса в цвет тогла свернуть/развернуть, вся колонка диалогов залита тем же цветом, панель сворачивается свайпом.
-- Presence: онлайн-статус в списке друзей и чатах.
-- Монеты и ежедневная награда (`/coins` или в меню).
-- Крестики-нолики (`/games`):
-  - вкладки «Игры» / «Лобби»: приглашение не пропадает при переключении; карточка у друга появляется сразу и догоняется сверкой с сервером, даже если кадр сокета потерялся;
-  - «Своя игра» (приглашение друга) и «Лобби» (matchmake); шапка общая для всех игр (`lobbyAppBarTitle`), заголовок всегда помещается;
-  - поле 3×3–8×8, время на ход, правило swap, запрет центра;
-  - ставки в бронзовых;
-  - умный бот (минимакс 3×3, эвристики для больших полей), задержка 1 с перед ходом;
-  - карточка соперника (чат, добавить в друзья — скрыто для бота);
-  - иконка правил в экране игры.
-- Морской бой (`/games/battleship/...`):
-  - «Своя игра» и «Лобби» (та же шапка, что у остальных игр, не название «Морской бой»);
-  - расстановка флота (10×10, русский набор кораблей), бой по клеткам;
-  - на телефоне поле целиком влезает в экран (в т.ч. Android: кнопки в два ряда, доска по остатку), кнопки расстановки внизу;
-  - ставки, таймер хода, бот (после вашего хода пауза 1 с, после хода бота ещё 1 с — затем смена поля), реванш;
-  - вкладка «Игры» с профиля/чатов возвращает в живую бот-партию (`/offline`), а не в каталог.
-- Магазин и инвентарь (`/shop`, `/inventory`): эмоции, коллекции, рамки, подарки друзьям, доход коллекций.
-- Достижения (`/achievements`) с рамками аватара; задания (полная анкета, 5 друзей, 10 игр) — внутри «Монет» (`/coins/tasks`); бейджи на «Главной» и в «Монетах» обновляются сразу после выполнения.
-- Web Push (PWA): подписка и категории уведомлений (чат/друзья/игры/награды).
-- Настройки (`/settings`):
-  - опция «Звук» — тосты, реванш/ничья, входящие чаты/заявки/инвайты, сигнал своего хода и тик часов на своём таймере (в т.ч. после предупреждения «мало времени» на последних 5 с); из партии в сообщениях тик хода и игровые звуки не глушатся, бейдж «ваш ход» на вкладке «Игры» остаётся; Kenney CC0 + голосовое «Уно»; раздача и бросок карты — мягкий card-place; клики кнопок без звука, ход соперника в дураке без звука;
-  - полёты карт/фишек/монет партии не рисуются поверх чатов и других вкладок (IndexedStack), но звук партии в сообщениях продолжает играть;
-  - опция «Контроллер» — геймпад (веб: Gamepad API; Android/десктоп: кнопки геймпада и стрелки): подсказки кнопок зависят от Xbox / PlayStation / Nintendo; крест/стик двигают фокус в меню, чатах и курсор на поле/в руке, A подтверждает ход, B назад или снимает выбор, L1/R1 переключают вкладки; свитчи настроек, режимы и время хода переключаются с геймпада; в шашках, крестиках-ноликах и морском бое курсор по клеткам; в дураке/уно — по картам руки (A ход, X мультивыбор/Уно, Y взять/бито/добор); в покере — по кнопкам действий и слайдеру рейза; в нардах — по пунктам, бару и снятию (X отмена, Y бросок/ход); в поле ввода A открывает клавиатуру геймпада (латиница/кириллица/цифры); в расстановке морского боя X — повернуть, Y — случайно, Start — подтвердить флот;
+Клиент: `client/lib/` по доменам (`auth`, `chats`, `friends`, `games`, `shop`, `core/gamepad`, `screens`).  
+Сервер: `server/cmd/server`, `internal/api`, `internal/store`, `migrations/`.
 
 ---
 
-## 🚀 Быстрый старт
+## API (кратко)
 
-### Требования
+Полный список: [docs/API.md](docs/API.md). Игры (`/api/games/*`, кроме `settings` / `stats`) требуют Redis.
 
-- Flutter `3.24+`
-- Go `1.24+`
-- Docker (для локальной БД/кэша)
+- Auth: `/api/auth/*`, `/api/me`, `/api/profile`, `/api/profile/photos`
+- Друзья, чаты, presence: `/api/friends/*`, `/api/chats/*`, `/api/presence`
+- Монеты, магазин, достижения: `/api/coins/*`, `/api/shop`, `/api/inventory/*`, `/api/achievements`, `/api/tasks`
+- Игры: `/api/games/{tictactoe,durak,battleship,uno,poker,nardy,checkers}/*`, `/api/games/settings|stats|head-to-head|invites`
+- Push: `/api/push/*`
+- Админка: `/api/admin/*`
+- Realtime: `GET /api/ws?access_token=`
 
-### 1) Локальные сервисы
+---
+
+## Быстрый старт
+
+Нужны Flutter 3.27+, Go 1.24+, Docker.
 
 ```bash
 docker compose up -d
+cp .env.example .env          # и в server/.env
+cd server && go run ./cmd/server
+cd client && flutter run -d chrome
 ```
 
-### 2) Переменные окружения
+Главное в `.env`: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ADMIN_INIT_SECRET`.  
+Почта — `RESEND_API_KEY` или `SMTP_*`. OAuth — `*_CLIENT_ID` / `*_CLIENT_SECRET`. Push — `VAPID_*`, на Android ещё `FCM_SERVICE_ACCOUNT_JSON`.
 
-```bash
-cp .env.example .env
-```
-
-Ключевые переменные:
-
-- `DATABASE_URL`
-- `REDIS_URL`
-- `JWT_SECRET`
-- `ADMIN_INIT_SECRET`
-- `PUBLIC_BASE_URL`, `FRONTEND_URL` — для OAuth redirect_uri
-- `RESEND_API_KEY`, `MAIL_FROM` — письма с кодом через [Resend](https://resend.com) (предпочтительно). Код всегда адресуется на email из регистрации; с `onboarding@resend.dev` Resend доставляет только на email аккаунта Resend — после верификации домена поставьте `MAIL_FROM=ZozuGames <noreply@ваш-домен>`
-- `SMTP_*` — альтернатива Resend; без почты код только в логе сервера
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_*`, `YANDEX_*`, `VK_*` — OAuth (пусто = кнопки скрыты)
-- `APP_LOG_FILE`, `APP_LOG_STATE_FILE`
-- `APP_LOG_SYNC_INTERVAL_SECONDS`
-- `APP_LOG_RETENTION_DAYS`
-- `APP_LOG_CLEANUP_INTERVAL_SECONDS`
-
-### 3) Сервер
-
-```bash
-cd server
-go mod download
-go run ./cmd/server
-```
-
-### 4) Клиент
-
-```bash
-cd client
-flutter pub get
-flutter run -d chrome
-```
-
-> Если платформенные папки ещё не созданы: `cd client && flutter create .`
+Без Redis сервер стартует, но лобби и партии недоступны.
 
 ---
 
-## 🧪 Тесты и проверки
-
-### Go
+## Тесты
 
 ```bash
-cd server
-go test ./...
-go build ./...
-```
-
-### Flutter
-
-```bash
-cd client
-flutter analyze --no-fatal-infos
-flutter test
+cd server && go test ./... && go vet ./...
+cd client && flutter analyze --no-fatal-infos && flutter test
+./launcher/test.sh
 ```
 
 ---
 
-## ☁️ Деплой (Fly.io)
+## Деплой
 
-Проект деплоится одним приложением:
-
-- Go API на `/api/*`;
-- Flutter Web как встроенная статика (`embed`) на `/*`.
-
-Быстрый вариант из Cursor/локально:
-
-```bash
-cp deploy.cursor.env.example deploy.cursor.env
-# заполнить FLY_API_TOKEN, FLY_APP_NAME, JWT_SECRET, ADMIN_INIT_SECRET
-./launcher/deploy_cursor.sh
-```
-
-Если нужно всегда деплоить именно `origin/develop`:
-
-```bash
-./launcher/deploy_develop.sh
-```
-
-**Отдельный DEV на Fly** (копия стека, своя БД; прод не трогает):
-
-```bash
-cp deploy.dev.env.example deploy.dev.env
-./launcher/setup_fly_dev.sh
-./launcher/deploy_dev.sh
-```
-
-**Автодеплой GitHub Actions** (нужен secret `FLY_API_TOKEN`):
+Один сервис на Fly.io: Go на `/api/*`, Flutter Web как статика.
 
 | Ветка | Куда |
 |---|---|
-| `develop` | `https://multigameszozu-dev.fly.dev` |
-| `main` | `https://multigameszozu.fly.dev` |
-
-На push в `develop` гоняется **Deploy Fly** (DEV): `flyctl` ставится с GitHub Releases (`v0.4.97`) с повторами, не через `setup-flyctl@v1`. Workflow `CI` (analyze/test) стартует при влитии в `main` и вручную: Actions → CI → Run workflow. Проверки локально: `./launcher/test.sh`.
-
-**Android → Play Internal** (при изменениях в `client/**`): workflow **Android Play Internal** собирает signed AAB и заливает в Internal testing — `develop` → flavor **dev** (`com.zozugames.app.dev` + DEV API), `main` → flavor **prod** (`com.zozugames.app` + prod API). Оба приложения ставятся на телефон рядом. AAB должен быть с `targetSdk = 36` (требование Play с 31.08.2026; Flutter 3.27 сам даёт 35). Нужны секреты keystore + Play service account и **второе** приложение в Play для `.dev` — см. `docs/ANDROID_PLAY_INTERNAL.md`.
-
-Windows:
-
-```powershell
-.\launcher\deploy_cursor.ps1
-```
-
-```powershell
-.\launcher\deploy_develop.ps1
-```
-
-```powershell
-Copy-Item deploy.dev.env.example deploy.dev.env
-.\launcher\setup_fly_dev.ps1
-.\launcher\deploy_dev.ps1
-```
-
-В чате Cursor доступна slash-команда проекта:
-
-```
-/deploy-develop
-```
-
-**Отключить логирование в production:**
+| `develop` | https://multigameszozu-dev.fly.dev |
+| `main` | https://multigameszozu.fly.dev |
 
 ```bash
-fly secrets set APP_LOG_ENABLED=false --app multigameszozu
+./launcher/deploy_dev.sh          # DEV
+./launcher/deploy_develop.sh      # origin/develop
 ```
 
-Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md), [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md)
+Android Play Internal: `develop` → flavor **dev**, `main` → **prod**. См. [docs/ANDROID_PLAY_INTERNAL.md](docs/ANDROID_PLAY_INTERNAL.md).
+
+Подробно: [DEPLOY.md](DEPLOY.md), [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md), [docs/DEPLOY_FLY_DEV.md](docs/DEPLOY_FLY_DEV.md).
+
 ---
 
-## 🎯 Актуальные задачи (roadmap)
+## Дальше
 
-### Уже сделано
+- [ ] Интеграционные тесты с живой БД (друзья, чаты, игры)
+- [ ] Шире widget-тесты ключевых экранов
+- [ ] Турниры и рейтинг
+- [ ] Релизный чек-лист (мониторинг, бэкапы, алерты)
 
-- [x] Auth + refresh token flow
-- [x] Подтверждение email, сброс пароля, OAuth (Google/Apple/Yandex/VK)
-- [x] Профиль пользователя (аватар + галерея до 3 фото)
-- [x] Админка пользователей
-- [x] Система логирования frontend/backend в БД
-- [x] Модуль друзей (API + UI)
-- [x] Чаты (API + UI) с изображениями, редактированием и ответами
-- [x] Presence, монеты, ежедневная награда
-- [x] Крестики-нолики (лобби, matchmake, игра, бот, ставки)
-- [x] Дурак (онлайн + офлайн: те же полёты — раздача, добор, бита, веер; первый ход — младший козырь; добор, если козыря нет; без ничьей против бота; читаемые углы карт)
-- [x] Морской бой — серверный API (engine + HTTP, бот, ставки) и клиент Flutter (лобби, расстановка, бой, реванш)
-- [x] Покер (Texas Hold'em) — онлайн/офлайн: онлайн-стол с 2–6 игроков (без режима «1 игрок» против бота); офлайн-боты коллируют олл-ин при паре или карте валет+; клик по своей комбинации открывает справочник, на вскрытии подпись не дублируется; таймаут хода — проигрыш стола, не фолд; кнопку хода нельзя нажать дважды (как в других играх — без тоста «не ваш ход»); после фолда, который закрывает раздачу, кнопки не возвращаются и не показывают «игра уже закончена»
-- [x] UNO — онлайн/офлайн с ботами, лобби, адаптивный стол, рамка чьего хода и без таймера (`GameActorHighlight`), анимации и карты `CustomPaint`
-- [x] Нарды — короткие и длинные: лобби, матчмейкинг, бот, офлайн, отмена хода, автоподтверждение, ставки и статистика
-- [x] Шашки — русские / английские / поддавки / уголки (запрет возврата в дом и выход за 25 ходов), лобби, бот, офлайн, реванш
-- [x] Магазин, инвентарь, коллекции, эмоции, подарки
-- [x] Достижения с наградами (рамки)
-- [x] Web Push-уведомления (PWA)
-- [x] Локализация интерфейса (27+ языков)
-- [x] Базовый деплой на Fly.io
-- [x] Скрипты отдельного Fly DEV (`multigameszozu-dev`)
-- [x] Геймпад / контроллер: меню, вкладки, чаты, клавиатура и курсор в шашках, крестиках-ноликах, морском бое, дураке, уно, покере и нардах
-
-### Ближайшие задачи
-
-- [ ] Добавить интеграционные тесты с реальной БД для friends/admin/chats/games
-- [ ] Расширить покрытие Flutter widget-тестами ключевых экранов
-- [ ] Нарды: турниры и рейтинг
-- [ ] Шашки: партия (русские, английские, поддавки, уголки)
-- [ ] Доп. режимы морского боя (если понадобятся); расширить набор игр
-- [ ] Подготовить релизный чек-лист для production (monitoring, alerts, backup policy)
 ---
 
-## 🔗 Документация
+## Документация
 
 - [Архитектура](docs/ARCHITECTURE.md)
 - [API](docs/API.md)
 - [Базы данных](docs/DATABASE.md)
-- [DEPLOY](DEPLOY.md)
-- [Fly.io deployment guide](docs/DEPLOY_FLY.md)
-- [Fly.io DEV environment](docs/DEPLOY_FLY_DEV.md)
-- [Launcher scripts](launcher/README.md)
+- [Деплой](DEPLOY.md)
+- [Скрипты](launcher/README.md)

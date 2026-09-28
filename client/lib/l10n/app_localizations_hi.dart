@@ -72,25 +72,46 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'गेमपैड नहीं मिला। कंट्रोलर जोड़ें और कोई भी बटन दबाएँ।';
 
   @override
-  String get settingsGamepadHelpNavigate => 'डी-पैड / स्टिक — मेनू और बोर्ड कर्सर';
+  String get settingsGamepadGenericName => 'कंट्रोलर';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / क्रॉस — पुष्टि या चाल';
+  String get settingsGamepadHelpNavigate => 'नेविगेट';
 
   @override
-  String get settingsGamepadHelpBack => 'B / सर्कल — वापस या चयन हटाएँ';
+  String get settingsGamepadHelpConfirm => 'चुनें';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — मेनू टैब';
+  String get settingsGamepadHelpBack => 'वापस';
+
+  @override
+  String get settingsGamepadHelpTabs => 'टैब';
 
   @override
   String get settingsGamepadHelpPlay => 'बोर्ड और हाथ कर्सर: चेकर्स, टिक-टैक-टो, बैटलशिप, दुराक, ऊनो, पोकर और बैकगैमन';
 
   @override
-  String get settingsGamepadHelpCards => 'पत्तों में: डी-पैड हाथ घुमाता है, A खेलता है, X चुनता है / ऊनो, Y लेता या खींचता है';
+  String get settingsGamepadHelpCards => 'पत्ते';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'टेक्स्ट फ़ील्ड में A गेमपैड कीबोर्ड खोलता है; X लेआउट बदलता है, B मिटाता या बंद करता है';
+  String get settingsGamepadHelpKeyboard => 'कीबोर्ड';
+
+  @override
+  String get settingsGamepadHelpBalance => 'बैलेंस';
+
+  @override
+  String get settingsGamepadHelpLogout => 'लॉग आउट';
+
+  @override
+  String get settingsGamepadHelpPage => 'पेज';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox लेआउट';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation लेआउट';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo लेआउट';
 
   @override
   String get gamepadKeyboardTitle => 'कीबोर्ड';
@@ -819,6 +840,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'जो मोहरे अभी घर में हैं, उन्हें खिलाड़ी के पहले 25 चालों में घर छोड़ना होगा।';
 
   @override
+  String get rulesCheckersDrawRussian => 'ड्रॉ यदि स्थिति तीन बार दोहराई जाए, या प्रत्येक ओर के 15 चालें बिना मार के केवल किंग हों — दो-दो किंग सहित।';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'तीन बार स्थिति, 40 चाल बिना मार/साधारण, या एक-एक किंग हो तो ड्रॉ।';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'तीन बार स्थिति या 15 किंग-चाल बिना मार तो ड्रॉ।';
+
+  @override
+  String get rulesCheckersDrawCorners => 'तीन बार स्थिति या प्रत्येक ओर 25 चाल लक्ष्य कोने में मोहरा न जोड़ें तो ड्रॉ।';
+
+  @override
+  String get checkersDrawRepetition => 'ड्रॉ — स्थिति तीन बार दोहराई गई';
+
+  @override
+  String get checkersDrawNoProgress => 'ड्रॉ — चालें जीत तक नहीं पहुँचतीं';
+
+  @override
+  String get checkersDrawInsufficient => 'ड्रॉ — जीत के लिए पर्याप्त मोहरे नहीं';
+
+  @override
   String get rulesNardyTitle => 'बैकगैमन — नियम';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'सभी चालों के बाद बारी अपने आप चली जाएगी';
+
+  @override
+  String get nardyLayoutToggle => 'खांचे बदलें';
 
   @override
   String get nardyNoMoves => 'कोई चाल नहीं';

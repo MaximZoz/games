@@ -111,6 +111,7 @@ class OfflineCheckersSession extends ChangeNotifier {
           ? humanUserId
           : (_engine.winner == 1 ? checkersBotUserId : ''),
       isDraw: _engine.winner == CheckersEngine.winnerDraw,
+      drawReason: _engine.drawReason,
       isForfeit: _forfeited,
     );
   }
@@ -183,7 +184,8 @@ class OfflineCheckersRegistry {
 
   final Map<String, OfflineCheckersSession> _sessions = {};
 
-  void put(OfflineCheckersSession session) => _sessions[session.gameId] = session;
+  void put(OfflineCheckersSession session) =>
+      _sessions[session.gameId] = session;
 
   OfflineCheckersSession? get(String gameId) => _sessions[gameId];
 

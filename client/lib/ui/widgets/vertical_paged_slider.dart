@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
 /// Вертикальный PageView с точками справа (без рамки и серой подложки).
@@ -20,7 +23,8 @@ class VerticalPagedSlider extends StatefulWidget {
   State<VerticalPagedSlider> createState() => _VerticalPagedSliderState();
 }
 
-class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
+class _VerticalPagedSliderState extends State<VerticalPagedSlider>
+    implements GamepadPager {
   late final PageController _controller;
   int _pageIndex = 0;
   bool _wheelBusy = false;
@@ -29,6 +33,7 @@ class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
   void initState() {
     super.initState();
     _controller = PageController();
+    GamepadPagerRegistry.register(this);
   }
 
   @override
@@ -46,8 +51,21 @@ class _VerticalPagedSliderState extends State<VerticalPagedSlider> {
 
   @override
   void dispose() {
+    GamepadPagerRegistry.unregister(this);
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  bool page(int delta) {
+    if (!mounted || !isGamepadContextOnstage(context)) return false;
+    final next = _pageIndex + delta;
+    if (next < 0 || next >= widget.pageCount) return false;
+    unawaited(_goToPage(next).then((_) {
+      if (!mounted) return;
+      scheduleFocusEdgeGamepadTarget(last: delta < 0);
+    }));
+    return true;
   }
 
   Future<void> _goToPage(int page) async {

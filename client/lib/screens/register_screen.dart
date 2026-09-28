@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/auth_redirect.dart';
 import 'package:multigames_client/auth/auth_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -44,6 +45,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    _displayNameFocus.skipTraversal = true;
+    _emailFocus.skipTraversal = true;
+    _passwordFocus.skipTraversal = true;
     _displayNameFocus.addListener(_onInputFocusChanged);
     _emailFocus.addListener(_onInputFocusChanged);
     _passwordFocus.addListener(_onInputFocusChanged);
@@ -170,87 +174,97 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      TextFormField(
-                        controller: _displayNameController,
-                        focusNode: _displayNameFocus,
-                        textInputAction: TextInputAction.next,
-                        maxLength: 20,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                          LengthLimitingTextInputFormatter(20),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.registerNameLabel,
-                          hintText: l10n.registerNameHint,
-                          prefixIcon: const Icon(Icons.person_outline_rounded),
-                          counterText: '',
+                      GamepadFieldBlock(
+                        autofocus: true,
+                        inputFocus: _displayNameFocus,
+                        child: TextFormField(
+                          controller: _displayNameController,
+                          focusNode: _displayNameFocus,
+                          textInputAction: TextInputAction.next,
+                          maxLength: 20,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                            LengthLimitingTextInputFormatter(20),
+                          ],
+                          decoration: InputDecoration(
+                            labelText: l10n.registerNameLabel,
+                            hintText: l10n.registerNameHint,
+                            prefixIcon: const Icon(Icons.person_outline_rounded),
+                            counterText: '',
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return l10n.registerNameRequired;
+                            }
+                            if (v.contains(RegExp(r'\s'))) {
+                              return l10n.registerNameNoSpaces;
+                            }
+                            if (v.length > 20) return l10n.registerNameMax;
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return l10n.registerNameRequired;
-                          }
-                          if (v.contains(RegExp(r'\s'))) {
-                            return l10n.registerNameNoSpaces;
-                          }
-                          if (v.length > 20) return l10n.registerNameMax;
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _emailController,
-                        focusNode: _emailFocus,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                        decoration: InputDecoration(
-                          labelText: l10n.registerEmailLabel,
-                          hintText: 'you@example.com',
-                          prefixIcon: const Icon(Icons.email_outlined),
+                      GamepadFieldBlock(
+                        inputFocus: _emailFocus,
+                        child: TextFormField(
+                          controller: _emailController,
+                          focusNode: _emailFocus,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          decoration: InputDecoration(
+                            labelText: l10n.registerEmailLabel,
+                            hintText: 'you@example.com',
+                            prefixIcon: const Icon(Icons.email_outlined),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return l10n.registerEmailRequired;
+                            }
+                            if (!v.contains('@')) {
+                              return l10n.registerEmailInvalid;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return l10n.registerEmailRequired;
-                          }
-                          if (!v.contains('@')) {
-                            return l10n.registerEmailInvalid;
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        focusNode: _passwordFocus,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        scrollPadding: const EdgeInsets.only(bottom: 120),
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: l10n.registerPasswordLabel,
-                          hintText: l10n.registerPasswordHint,
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
+                      GamepadFieldBlock(
+                        inputFocus: _passwordFocus,
+                        child: TextFormField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocus,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: InputDecoration(
+                            labelText: l10n.registerPasswordLabel,
+                            hintText: l10n.registerPasswordHint,
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_rounded
+                                    : Icons.visibility_rounded,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                             ),
                           ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return l10n.loginPasswordRequired;
+                            }
+                            if (v.length < 6) {
+                              return l10n.registerPasswordMin;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return l10n.loginPasswordRequired;
-                          }
-                          if (v.length < 6) {
-                            return l10n.registerPasswordMin;
-                          }
-                          return null;
-                        },
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 16),
@@ -260,28 +274,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ],
                       const SizedBox(height: 24),
-                      AppButton(
-                        onPressed: _submit,
-                        label: l10n.registerSubmit,
-                        isLoading: _isLoading,
-                        expanded: true,
-                      ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textSecondary,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                      GamepadActionBlock(
+                        outlined: true,
+                        radius: AppRadius.button,
+                        onActivate: _submit,
+                        child: AppButton(
+                          onPressed: _submit,
+                          label: l10n.registerSubmit,
+                          isLoading: _isLoading,
+                          expanded: true,
                         ),
-                        onPressed: () => context.go(
+                      ),
+                      GamepadActionBlock(
+                        outlined: true,
+                        radius: AppRadius.button,
+                        onActivate: () => context.go(
                           appendAuthQuery(
                             '/login',
                             redirect: _redirect,
                             ref: _ref,
                           ),
                         ),
-                        child: Text(l10n.registerHaveAccount),
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                          onPressed: () => context.go(
+                            appendAuthQuery(
+                              '/login',
+                              redirect: _redirect,
+                              ref: _ref,
+                            ),
+                          ),
+                          child: Text(l10n.registerHaveAccount),
+                        ),
                       ),
                       OAuthButtons(redirect: _redirect, refCode: _ref),
                     ],

@@ -72,25 +72,46 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Gamepad tidak ditemukan. Sambungkan kontroler dan tekan tombol apa saja.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu dan kursor papan';
+  String get settingsGamepadGenericName => 'Kontroler';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Silang — konfirmasi atau jalan';
+  String get settingsGamepadHelpNavigate => 'Navigasi';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Lingkaran — kembali atau batal pilih';
+  String get settingsGamepadHelpConfirm => 'Pilih';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpBack => 'Kembali';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursor papan dan kartu di tangan: dam, tic-tac-toe, kapal perang, durak, uno, poker, dan backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Di kartu: D-pad menggeser tangan, A main, X pilih / Uno, Y ambil, lewat, atau undi';
+  String get settingsGamepadHelpCards => 'Kartu';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Di kolom teks A membuka papan ketik gamepad; X ganti tata letak, B hapus atau tutup';
+  String get settingsGamepadHelpKeyboard => 'Papan ketik';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Keluar';
+
+  @override
+  String get settingsGamepadHelpPage => 'Halaman';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Tata letak Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Tata letak PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Tata letak Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Papan ketik';
@@ -819,6 +840,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Seri jika posisi terulang tiga kali, atau 15 langkah tiap sisi hanya dam tanpa makan — termasuk 2 lawan 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Seri jika posisi tiga kali, 40 langkah tanpa makan atau pion, atau satu dam lawan satu dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Seri jika posisi tiga kali atau 15 langkah dam tanpa makan.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Seri jika posisi tiga kali atau 25 langkah tiap sisi tak menambah buah di sudut tujuan.';
+
+  @override
+  String get checkersDrawRepetition => 'Seri — posisi terulang tiga kali';
+
+  @override
+  String get checkersDrawNoProgress => 'Seri — langkah tidak menuju kemenangan';
+
+  @override
+  String get checkersDrawInsufficient => 'Seri — material tidak cukup untuk menang';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — aturan';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Setelah semua langkah, giliran langsung berpindah';
+
+  @override
+  String get nardyLayoutToggle => 'Ubah susunan';
 
   @override
   String get nardyNoMoves => 'Tidak ada langkah';

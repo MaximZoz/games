@@ -7,6 +7,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
+import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Хаб магазина — три раздела, как на экране монет.
@@ -47,7 +48,8 @@ class ShopScreen extends ConsumerWidget {
     ];
 
     Widget mobileList(BuildContext context) {
-      return Align(
+      return FocusScope(
+        child: Align(
         alignment: Alignment.topCenter,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -67,6 +69,7 @@ class ShopScreen extends ConsumerWidget {
             ),
           ),
         ),
+        ),
       );
     }
 
@@ -77,8 +80,7 @@ class ShopScreen extends ConsumerWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+          leading: GamepadBackButton(
             onPressed: goBack,
             tooltip: l10n.commonBack,
           ),
@@ -91,6 +93,7 @@ class ShopScreen extends ConsumerWidget {
           ),
         ),
         body: SafeArea(
+          child: FocusScope(
           child: tiles
               ? DesktopTileGrid(
                   itemCount: cards.length,
@@ -107,6 +110,7 @@ class ShopScreen extends ConsumerWidget {
                   mobileBuilder: mobileList,
                 )
               : mobileList(context),
+          ),
         ),
       ),
     );

@@ -72,25 +72,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Nenhum gamepad. Ligue um controle e pressione qualquer botão.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Cruz / stick — menus e cursor no tabuleiro';
+  String get settingsGamepadGenericName => 'Controle';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cruz — confirmar ou jogar';
+  String get settingsGamepadHelpNavigate => 'Navegar';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Círculo — voltar ou desmarcar';
+  String get settingsGamepadHelpConfirm => 'Escolher';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — abas do menu';
+  String get settingsGamepadHelpBack => 'Voltar';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Abas';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor no tabuleiro e na mão: damas, jogo da velha, batalha naval, durak, uno, pôquer e gamão';
 
   @override
-  String get settingsGamepadHelpCards => 'Nas cartas: cruz move a mão, A joga, X seleciona / Uno, Y pega, passa ou compra';
+  String get settingsGamepadHelpCards => 'Cartas';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Num campo A abre o teclado do controle; X muda o layout, B apaga ou fecha';
+  String get settingsGamepadHelpKeyboard => 'Teclado';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Sair';
+
+  @override
+  String get settingsGamepadHelpPage => 'Página';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Esquema Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Esquema PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Esquema Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Teclado';
@@ -819,6 +840,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Empate se a posição se repetir três vezes ou se 15 lances de cada lado forem só damas sem captura, inclusive duas damas contra duas.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Empate se a posição se repetir três vezes, após 40 lances sem captura nem peão, ou com uma dama contra uma dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Empate se a posição se repetir três vezes ou após 15 lances de damas sem captura.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Empate se a posição se repetir três vezes ou se 25 lances de cada lado não acrescentarem peças ao canto alvo.';
+
+  @override
+  String get checkersDrawRepetition => 'Empate — posição repetida três vezes';
+
+  @override
+  String get checkersDrawNoProgress => 'Empate — os lances não levam à vitória';
+
+  @override
+  String get checkersDrawInsufficient => 'Empate — material insuficiente para vencer';
+
+  @override
   String get rulesNardyTitle => 'Gamão — regras';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Após todos os lances, o turno passa automaticamente';
+
+  @override
+  String get nardyLayoutToggle => 'Trocar disposição';
 
   @override
   String get nardyNoMoves => 'Sem jogadas';

@@ -72,25 +72,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No hay mando. Conéctalo y pulsa cualquier botón.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Cruz / stick — menús y cursor en el tablero';
+  String get settingsGamepadGenericName => 'Mando';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cruz — confirmar o mover';
+  String get settingsGamepadHelpNavigate => 'Navegar';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Círculo — atrás o quitar selección';
+  String get settingsGamepadHelpConfirm => 'Elegir';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — pestañas del menú';
+  String get settingsGamepadHelpBack => 'Atrás';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Pestañas';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor de tablero y mano: damas, tres en raya, hundir la flota, durak, uno, póker y backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'En cartas: cruceta mueve la mano, A juega, X selecciona / Uno, Y toma, pasa o roba';
+  String get settingsGamepadHelpCards => 'Cartas';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'En un campo A abre el teclado del mando; X cambia el diseño, B borra o cierra';
+  String get settingsGamepadHelpKeyboard => 'Teclado';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Salir';
+
+  @override
+  String get settingsGamepadHelpPage => 'Página';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Disposición Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Disposición PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Disposición Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Teclado';
@@ -819,6 +840,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Las fichas que aún no han salido de casa deben abandonarla en los primeros 25 movimientos del jugador.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Tablas si la posición se repite tres veces o si 15 jugadas de cada lado son solo damas sin captura, también con dos damas por bando.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Tablas si la posición se repite tres veces, tras 40 jugadas sin captura ni peón, o con una dama contra una dama.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Tablas si la posición se repite tres veces o tras 15 jugadas de damas sin captura.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Tablas si la posición se repite tres veces o si 25 jugadas de cada lado no añaden fichas a la esquina objetivo.';
+
+  @override
+  String get checkersDrawRepetition => 'Tablas — la posición se repitió tres veces';
+
+  @override
+  String get checkersDrawNoProgress => 'Tablas — las jugadas no llevan a la victoria';
+
+  @override
+  String get checkersDrawInsufficient => 'Tablas — material insuficiente para ganar';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — reglas';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Pasa el turno automáticamente tras todos los movimientos';
+
+  @override
+  String get nardyLayoutToggle => 'Cambiar disposición';
 
   @override
   String get nardyNoMoves => 'Sin jugadas';

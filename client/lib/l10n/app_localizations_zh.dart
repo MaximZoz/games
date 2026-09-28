@@ -72,25 +72,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadDisconnected => '未检测到手柄。请连接并按下任意键。';
 
   @override
-  String get settingsGamepadHelpNavigate => '方向键 / 摇杆 — 菜单和棋盘光标';
+  String get settingsGamepadGenericName => '手柄';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 叉 — 确认或落子';
+  String get settingsGamepadHelpNavigate => '导航';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 圈 — 返回或取消选择';
+  String get settingsGamepadHelpConfirm => '选择';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 切换标签';
+  String get settingsGamepadHelpBack => '返回';
+
+  @override
+  String get settingsGamepadHelpTabs => '标签';
 
   @override
   String get settingsGamepadHelpPlay => '棋盘与手牌光标：跳棋、井字棋、海战、杜拉克、UNO、扑克和西洋双陆';
 
   @override
-  String get settingsGamepadHelpCards => '卡牌中：方向键选择手牌，A出牌，X多选/UNO，Y拿牌、过牌或摸牌';
+  String get settingsGamepadHelpCards => '卡牌';
 
   @override
-  String get settingsGamepadHelpKeyboard => '在输入框按 A 打开手柄键盘；X 切换布局，B 删除或关闭';
+  String get settingsGamepadHelpKeyboard => '键盘';
+
+  @override
+  String get settingsGamepadHelpBalance => '余额';
+
+  @override
+  String get settingsGamepadHelpLogout => '退出';
+
+  @override
+  String get settingsGamepadHelpPage => '翻页';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 布局';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 布局';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 布局';
 
   @override
   String get gamepadKeyboardTitle => '键盘';
@@ -819,6 +840,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => '仍留在家里的棋子必须在该玩家前 25 步内离开家。';
 
   @override
+  String get rulesCheckersDrawRussian => '同一局面出现三次，或双方各 15 步只有王且无吃子（含双王对双王）则为和棋。';
+
+  @override
+  String get rulesCheckersDrawEnglish => '同一局面三次、40 步无吃子且无兵走动，或各剩一王，则为和棋。';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '同一局面三次，或双方各 15 步只有王且无吃子，则为和棋。';
+
+  @override
+  String get rulesCheckersDrawCorners => '同一局面三次，或双方各 25 步未再有棋子进入目标角，则为和棋。';
+
+  @override
+  String get checkersDrawRepetition => '和棋 — 同一局面三次';
+
+  @override
+  String get checkersDrawNoProgress => '和棋 — 着法无法取胜';
+
+  @override
+  String get checkersDrawInsufficient => '和棋 — 不足以取胜';
+
+  @override
   String get rulesNardyTitle => '西洋双陆 — 规则';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => '走完所有步后自动把回合交给对手';
+
+  @override
+  String get nardyLayoutToggle => '更换布局';
 
   @override
   String get nardyNoMoves => '无棋可走';

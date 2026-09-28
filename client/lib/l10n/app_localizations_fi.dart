@@ -72,25 +72,46 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ei gamepadia. Liitä ohjain ja paina mitä tahansa painiketta.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Risti / tikku — valikot ja laudan kursori';
+  String get settingsGamepadGenericName => 'Ohjain';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Risti — vahvista tai siirrä';
+  String get settingsGamepadHelpNavigate => 'Navigointi';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Ympyrä — takaisin tai poista valinta';
+  String get settingsGamepadHelpConfirm => 'Valitse';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — valikon välilehdet';
+  String get settingsGamepadHelpBack => 'Takaisin';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Välilehdet';
 
   @override
   String get settingsGamepadHelpPlay => 'Kursori laudalla ja kädessä: tammi, ristinolla, laivanupotus, durak, uno, pokeri ja backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Korteissa: risti siirtää kättä, A pelaa, X valitsee / Uno, Y ottaa, skippaa tai nostaa';
+  String get settingsGamepadHelpCards => 'Kortit';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Kentässä A avaa peliohjaimen näppäimistön; X vaihtaa asettelua, B poistaa tai sulkee';
+  String get settingsGamepadHelpKeyboard => 'Näppäimistö';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Kirjaudu ulos';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sivu';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-asettelu';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-asettelu';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-asettelu';
 
   @override
   String get gamepadKeyboardTitle => 'Näppäimistö';
@@ -819,6 +840,27 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin on vain kuningattaria ilman lyöntiä — myös 2 vs 2.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Tasapeli kolminkertaisesta toistosta, 40 siirrosta ilman lyöntiä tai sotilasta, tai kuningatar vastaan kuningatar.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Tasapeli kolminkertaisesta toistosta tai 15 kuningatarsiirrosta ilman lyöntiä.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Tasapeli kolminkertaisesta toistosta tai jos 25 siirtoa kummaltakin ei lisää nappuloita maalikulmaan.';
+
+  @override
+  String get checkersDrawRepetition => 'Tasapeli — asema toistui kolmesti';
+
+  @override
+  String get checkersDrawNoProgress => 'Tasapeli — siirrot eivät johda voittoon';
+
+  @override
+  String get checkersDrawInsufficient => 'Tasapeli — voittoon ei ole tarpeeksi voimaa';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — säännöt';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Siirron jälkeen vuoro siirtyy automaattisesti';
+
+  @override
+  String get nardyLayoutToggle => 'Vaihda asettelu';
 
   @override
   String get nardyNoMoves => 'Ei siirtoja';

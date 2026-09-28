@@ -1755,6 +1755,8 @@ Future<bool> playGameSettledLoss({
     if (!context.mounted) return false;
     final toBalance =
         ref.read(authStateProvider).valueOrNull?.balanceBronze ?? before;
+    // Ничья: сервер вернул ставку — баланс вырос, это не проигрыш.
+    if (toBalance > before) return false;
     // Если refresh ещё списал ставку — крутим реальный дроп; иначе визуальный.
     final fromBalance = toBalance < before ? before : toBalance + lostBronze;
     if (fromBalance <= toBalance) return false;

@@ -72,25 +72,46 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Tilslut en controller og tryk på en knap.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kors / stick — menuer og brætmarkør';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kors — bekræft eller træk';
+  String get settingsGamepadHelpNavigate => 'Navigation';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — tilbage eller fravælg';
+  String get settingsGamepadHelpConfirm => 'Vælg';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menufaner';
+  String get settingsGamepadHelpBack => 'Tilbage';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Faner';
 
   @override
   String get settingsGamepadHelpPlay => 'Markør på bræt og hånd: dam, kryds og bolle, sænk skibene, durak, uno, poker og backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'I kort: kors flytter hånden, A spiller, X vælger / Uno, Y tager, passer eller trækker';
+  String get settingsGamepadHelpCards => 'Kort';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'I et felt åbner A gamepad-tastaturet; X skifter layout, B sletter eller lukker';
+  String get settingsGamepadHelpKeyboard => 'Tastatur';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Log ud';
+
+  @override
+  String get settingsGamepadHelpPage => 'Side';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-layout';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-layout';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-layout';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';
@@ -819,6 +840,27 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brikker, der stadig er i hjemmet, skal forlade det inden for spillerens første 25 træk.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis, hvis stillingen gentages tre gange, eller hvis 15 træk kun er dame-træk uden slag — også to damer mod to damer.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis ved tredobbelt stilling, 40 træk uden slag eller bonde-træk, eller én dame mod én dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis ved tredobbelt stilling eller 15 dame-træk uden slag.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis ved tredobbelt stilling eller 25 træk per side uden flere brikker i målhjørnet.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — stillingen gentaget tre gange';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — træk fører ikke til sejr';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — ikke materiale nok til sejr';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Giv turen videre automatisk efter alle træk';
+
+  @override
+  String get nardyLayoutToggle => 'Skift opstilling';
 
   @override
   String get nardyNoMoves => 'Ingen træk';

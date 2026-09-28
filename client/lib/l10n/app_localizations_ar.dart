@@ -72,25 +72,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGamepadDisconnected => 'لا توجد لوحة ألعاب. وصّل وحدة التحكم واضغط أي زر.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'الأسهم / العصا — القوائم ومؤشر اللوحة';
+  String get settingsGamepadGenericName => 'وحدة التحكم';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / تقاطع — تأكيد أو تنفيذ نقلة';
+  String get settingsGamepadHelpNavigate => 'تنقل';
 
   @override
-  String get settingsGamepadHelpBack => 'B / دائرة — رجوع أو إلغاء التحديد';
+  String get settingsGamepadHelpConfirm => 'اختيار';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — تبويبات القائمة';
+  String get settingsGamepadHelpBack => 'رجوع';
+
+  @override
+  String get settingsGamepadHelpTabs => 'تبويبات';
 
   @override
   String get settingsGamepadHelpPlay => 'مؤشر اللوحة واليد: الضامة، إكس أو، السفن، الدوراك، أونو، البوكر والنرد';
 
   @override
-  String get settingsGamepadHelpCards => 'في الورق: الأسهم تحرّك اليد، A يلعب، X يختار / أونو، Y يأخذ أو يسحب';
+  String get settingsGamepadHelpCards => 'أوراق';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'في حقل النص A يفتح لوحة مفاتيح يد التحكم؛ X يغيّر التخطيط، B يحذف أو يغلق';
+  String get settingsGamepadHelpKeyboard => 'لوحة';
+
+  @override
+  String get settingsGamepadHelpBalance => 'الرصيد';
+
+  @override
+  String get settingsGamepadHelpLogout => 'خروج';
+
+  @override
+  String get settingsGamepadHelpPage => 'صفحة';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'تخطيط Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'تخطيط PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'تخطيط Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'لوحة المفاتيح';
@@ -819,6 +840,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'يجب أن تغادر القطع التي ما زالت في البيت خلال أول 25 نقلة للاعب.';
 
   @override
+  String get rulesCheckersDrawRussian => 'تعادل إذا تكرر الوضع ثلاث مرات أو إذا سارت 15 نقلة لكل جانب بالدامات فقط دون أسر، بما في ذلك داميتان ضد داميتين.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'تعادل إذا تكرر الوضع ثلاثًا، أو مرّت 40 نقلة دون أسر أو جندي، أو بقيت دامة ضد دامة.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'تعادل إذا تكرر الوضع ثلاثًا أو سارت 15 نقلة بالدامات دون أسر.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'تعادل إذا تكرر الوضع ثلاثًا أو لم تُضف 25 نقلة لكل جانب حجارة إلى الركن الهدف.';
+
+  @override
+  String get checkersDrawRepetition => 'تعادل — تكرر الوضع ثلاث مرات';
+
+  @override
+  String get checkersDrawNoProgress => 'تعادل — النقلات لا تؤدي إلى الفوز';
+
+  @override
+  String get checkersDrawInsufficient => 'تعادل — لا تكفي القطع للفوز';
+
+  @override
   String get rulesNardyTitle => 'النرد — القواعد';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'تمرير الدور تلقائياً بعد كل النقلات';
+
+  @override
+  String get nardyLayoutToggle => 'تغيير الترتيب';
 
   @override
   String get nardyNoMoves => 'لا توجد نقلات';

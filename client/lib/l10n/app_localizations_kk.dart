@@ -72,25 +72,46 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Геймпад табылмады. Контроллерді қосып, кез келген батырманы басыңыз.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Крест / стик — мәзір және тақтадағы курсор';
+  String get settingsGamepadGenericName => 'Контроллер';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Крест — таңдау немесе жүру';
+  String get settingsGamepadHelpNavigate => 'Навигация';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Шеңбер — артқа немесе таңдауды алу';
+  String get settingsGamepadHelpConfirm => 'Таңдау';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — мәзір қойындылары';
+  String get settingsGamepadHelpBack => 'Артқа';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Қойындылар';
 
   @override
   String get settingsGamepadHelpPlay => 'Өріс пен қол курсоры: дойбы, крестик-нолик, теңіз шайқасы, дурак, уно, покер және нарды';
 
   @override
-  String get settingsGamepadHelpCards => 'Карталарда: крест — қол, A — жүріс, X — таңдау / Уно, Y — алу, бито немесе алу';
+  String get settingsGamepadHelpCards => 'Карталар';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Енгізу өрісінде A геймпад пернетақтасын ашады; X — пернелер, B — өшіру немесе жабу';
+  String get settingsGamepadHelpKeyboard => 'Пернетақта';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Баланс';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Шығу';
+
+  @override
+  String get settingsGamepadHelpPage => 'Бет';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox орналасуы';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation орналасуы';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo орналасуы';
 
   @override
   String get gamepadKeyboardTitle => 'Пернетақта';
@@ -819,6 +840,27 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Үйде қалған тастар ойыншының алғашқы 25 жүрісінде шығуы тиіс.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Ничья: позиция үш рет қайталанса немесе 15 жүріс бойы тек дамка жүріп, алу болмаса — екі дамкаға екі дамка да солай.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Ничья: позиция үш рет қайталанса, 40 жүрісте алу не қарапайым жүріс болмаса, немесе әр жақта бір дамка қалса.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Ничья: позиция үш рет қайталанса немесе 15 жүріс бойы тек дамка жүріп, алу болмаса.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 25 жүрісі мақсат бұрышына тас қоспаса.';
+
+  @override
+  String get checkersDrawRepetition => 'Ничья — позиция үш рет қайталанды';
+
+  @override
+  String get checkersDrawNoProgress => 'Ничья — жүрістер жеңіске апармайды';
+
+  @override
+  String get checkersDrawInsufficient => 'Ничья — жеңіске күш жетпейді';
+
+  @override
   String get rulesNardyTitle => 'Нарды — ережелер';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Барлық жүрістен кейін жүріс бірден қарсыласқа өтеді';
+
+  @override
+  String get nardyLayoutToggle => 'Орналастыруды ауыстыру';
 
   @override
   String get nardyNoMoves => 'Жүріс жоқ';

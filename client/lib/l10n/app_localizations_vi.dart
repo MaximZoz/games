@@ -72,25 +72,46 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Không thấy gamepad. Cắm tay cầm và nhấn nút bất kỳ.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menu và con trỏ trên bàn';
+  String get settingsGamepadGenericName => 'Tay cầm';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Chéo — xác nhận hoặc đi nước';
+  String get settingsGamepadHelpNavigate => 'Điều hướng';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Tròn — quay lại hoặc bỏ chọn';
+  String get settingsGamepadHelpConfirm => 'Chọn';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — tab menu';
+  String get settingsGamepadHelpBack => 'Quay lại';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tab';
 
   @override
   String get settingsGamepadHelpPlay => 'Con trỏ bàn và bài trên tay: cờ đam, cờ caro, hải chiến, durak, uno, poker và cờ vua ngược';
 
   @override
-  String get settingsGamepadHelpCards => 'Trong bài: phím hướng chọn bài, A đánh, X chọn / Uno, Y lấy, bỏ qua hoặc bốc';
+  String get settingsGamepadHelpCards => 'Bài';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Trong ô nhập A mở bàn phím gamepad; X đổi bố cục, B xóa hoặc đóng';
+  String get settingsGamepadHelpKeyboard => 'Bàn phím';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Số dư';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Đăng xuất';
+
+  @override
+  String get settingsGamepadHelpPage => 'Trang';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Bố cục Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Bố cục PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Bố cục Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Bàn phím';
@@ -819,6 +840,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên chỉ đi đam mà không ăn — kể cả 2 đam đấu 2 đam.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Hòa nếu lặp thế ba lần, 40 nước không ăn và không đi tốt, hoặc mỗi bên còn một đam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Hòa nếu lặp thế ba lần hoặc 15 nước mỗi bên chỉ đi đam không ăn.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Hòa nếu lặp thế ba lần hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
+
+  @override
+  String get checkersDrawRepetition => 'Hòa — thế cờ lặp ba lần';
+
+  @override
+  String get checkersDrawNoProgress => 'Hòa — nước đi không dẫn tới thắng';
+
+  @override
+  String get checkersDrawInsufficient => 'Hòa — không đủ quân để thắng';
+
+  @override
   String get rulesNardyTitle => 'Cờ Backgammon — luật';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Sau mọi nước đi, lượt tự chuyển cho đối thủ';
+
+  @override
+  String get nardyLayoutToggle => 'Đổi cách xếp';
 
   @override
   String get nardyNoMoves => 'Không có nước đi';

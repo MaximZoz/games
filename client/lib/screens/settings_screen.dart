@@ -208,16 +208,33 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
-                    child: ValueListenableBuilder(
-                      valueListenable: GamepadService.instance.devices,
-                      builder: (context, pads, _) {
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([
+                        GamepadService.instance.devices,
+                        GamepadService.instance.activityTick,
+                      ]),
+                      builder: (context, _) {
+                        final pads = GamepadService.instance.devices.value;
                         final enabled = ref.watch(gamepadEnabledProvider);
                         final family = pads.isEmpty
                             ? GamepadFamily.xbox
                             : gamepadFamilyFromName(pads.first.name);
+                        final padName = pads.isEmpty
+                            ? ''
+                            : (pads.first.id == GamepadService.keyPadId
+                                ? l10n.settingsGamepadGenericName
+                                : pads.first.name);
                         final connected = pads.isNotEmpty
-                            ? l10n.settingsGamepadConnected(pads.first.name)
+                            ? l10n.settingsGamepadConnected(padName)
                             : l10n.settingsGamepadDisconnected;
+                        final layoutName = switch (family) {
+                          GamepadFamily.xbox =>
+                            l10n.settingsGamepadLayoutXbox,
+                          GamepadFamily.playstation =>
+                            l10n.settingsGamepadLayoutPlayStation,
+                          GamepadFamily.nintendo =>
+                            l10n.settingsGamepadLayoutNintendo,
+                        };
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -238,61 +255,101 @@ class SettingsScreen extends ConsumerWidget {
                                 color: AppColors.accentSoft,
                               ),
                               const SizedBox(height: 10),
-                              Text(
-                                connected,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
+                              if (pads.isEmpty)
+                                Text(
+                                  connected,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                )
+                              else ...[
+                                Text(
+                                  connected,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  layoutName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 14,
+                                  runSpacing: 8,
+                                  children: [
+                                    GamepadHintChip(
+                                      action: GamepadAction.left,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpNavigate,
                                     ),
-                              ),
-                              const SizedBox(height: 8),
-                              GamepadHintLabel(
-                                action: GamepadAction.left,
-                                family: family,
-                                text: l10n.settingsGamepadHelpNavigate,
-                              ),
-                              const SizedBox(height: 6),
-                              GamepadHintLabel(
-                                action: GamepadAction.confirm,
-                                family: family,
-                                text: l10n.settingsGamepadHelpConfirm,
-                              ),
-                              const SizedBox(height: 6),
-                              GamepadHintLabel(
-                                action: GamepadAction.cancel,
-                                family: family,
-                                text: l10n.settingsGamepadHelpBack,
-                              ),
-                              const SizedBox(height: 6),
-                              GamepadHintLabel(
-                                action: GamepadAction.shoulderL,
-                                family: family,
-                                text: l10n.settingsGamepadHelpTabs,
-                              ),
-                              const SizedBox(height: 6),
-                              GamepadHintLabel(
-                                action: GamepadAction.actionY,
-                                family: family,
-                                text: l10n.settingsGamepadHelpCards,
-                              ),
-                              const SizedBox(height: 6),
-                              GamepadHintLabel(
-                                action: GamepadAction.actionX,
-                                family: family,
-                                text: l10n.settingsGamepadHelpKeyboard,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.settingsGamepadHelpPlay,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
+                                    GamepadHintChip(
+                                      action: GamepadAction.confirm,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpConfirm,
                                     ),
-                              ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.cancel,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpBack,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.shoulderL,
+                                      action2: GamepadAction.shoulderR,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpTabs,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.triggerL,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpBalance,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.triggerR,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpLogout,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.scrollDown,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpPage,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.actionY,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpCards,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.actionX,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpKeyboard,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  l10n.settingsGamepadHelpPlay,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
+                              ],
                             ],
                           ],
                         );
@@ -654,12 +711,6 @@ class _SwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitleText = subtitle;
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        GamepadService.instance.devices,
-        GamepadService.instance.activityTick,
-      ]),
-      builder: (context, _) {
     return InkWell(
       onTap: onChanged == null ? null : () => onChanged!(!value),
       borderRadius: BorderRadius.circular(12),
@@ -698,15 +749,9 @@ class _SwitchRow extends StatelessWidget {
                 activeTrackColor: AppColors.accentStart,
               ),
             ),
-            if (gamepadHintsWanted()) ...[
-              const SizedBox(width: 8),
-              const GamepadGlyph(action: GamepadAction.confirm, size: 20),
-            ],
           ],
         ),
       ),
-    );
-      },
     );
   }
 }
@@ -724,42 +769,30 @@ class _CategoryCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        GamepadService.instance.devices,
-        GamepadService.instance.activityTick,
-      ]),
-      builder: (context, _) {
-        return InkWell(
-          onTap: () => onChanged(!value),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExcludeFocus(
-                  child: Checkbox(
-                    value: value,
-                    onChanged: (v) => onChanged(v ?? false),
-                    activeColor: AppColors.accentStart,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-                if (gamepadHintsWanted()) ...[
-                  const SizedBox(width: 6),
-                  const GamepadGlyph(action: GamepadAction.confirm, size: 18),
-                ],
-              ],
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeFocus(
+              child: Checkbox(
+                value: value,
+                onChanged: (v) => onChanged(v ?? false),
+                activeColor: AppColors.accentStart,
+              ),
             ),
-          ),
-        );
-      },
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -15,11 +15,18 @@ final nardyRepositoryProvider = Provider<NardyRepository>((ref) {
 });
 
 const _keyNardyAutoConfirm = 'nardy_auto_confirm';
+const _keyNardyHomeOnRight = 'nardy_home_on_right';
 
 /// Локально: после всех ходов сразу передать ход, без кнопки «Готово».
 final nardyAutoConfirmProvider =
     StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
   return PrefBoolNotifier(_keyNardyAutoConfirm, defaultValue: false);
+});
+
+/// Раскладка фишек: дом справа внизу (зеркало классической).
+final nardyHomeOnRightProvider =
+    StateNotifierProvider<PrefBoolNotifier, bool>((ref) {
+  return PrefBoolNotifier(_keyNardyHomeOnRight, defaultValue: false);
 });
 
 final nardyGameProvider = AsyncNotifierProvider.autoDispose

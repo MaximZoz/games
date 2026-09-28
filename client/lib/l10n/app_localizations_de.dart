@@ -72,25 +72,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Kein Gamepad gefunden. Controller anschließen und eine Taste drücken.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kreuz / Stick — Menüs und Feldcursor';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kreuz — bestätigen oder ziehen';
+  String get settingsGamepadHelpNavigate => 'Navigation';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Kreis — zurück oder Auswahl aufheben';
+  String get settingsGamepadHelpConfirm => 'Wählen';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — Menü-Tabs';
+  String get settingsGamepadHelpBack => 'Zurück';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tabs';
 
   @override
   String get settingsGamepadHelpPlay => 'Feld- und Handcursor: Dame, Tic-Tac-Toe, Schiffe versenken, Durak, Uno, Poker und Backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Bei Karten: Kreuz bewegt die Hand, A spielt, X wählt / Uno, Y nimmt, passt oder zieht';
+  String get settingsGamepadHelpCards => 'Karten';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Im Textfeld öffnet A die Gamepad-Tastatur; X wechselt das Layout, B löscht oder schließt';
+  String get settingsGamepadHelpKeyboard => 'Tastatur';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Guthaben';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Abmelden';
+
+  @override
+  String get settingsGamepadHelpPage => 'Seite';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-Belegung';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-Belegung';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-Belegung';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';
@@ -819,6 +840,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remis, wenn dieselbe Stellung dreimal entsteht oder 15 Züge lang nur Damen ohne Schlag ziehen — auch bei zwei Damen gegen zwei Damen.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remis bei dreifacher Stellungswiederholung, 40 Zügen ohne Schlag und Bauerzug, oder einer Dame gegen eine Dame.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remis bei dreifacher Wiederholung oder 15 Damen-Zügen ohne Schlag — Züge ohne Fortschritt zählen nicht.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remis bei dreifacher Wiederholung oder 25 Zügen pro Seite ohne weiteren Stein in der Zielecke.';
+
+  @override
+  String get checkersDrawRepetition => 'Remis — Stellung dreimal wiederholt';
+
+  @override
+  String get checkersDrawNoProgress => 'Remis — Züge führen nicht zum Sieg';
+
+  @override
+  String get checkersDrawInsufficient => 'Remis — nicht genug Material zum Sieg';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — Regeln';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Zug nach allen Zügen automatisch übergeben';
+
+  @override
+  String get nardyLayoutToggle => 'Aufstellung wechseln';
 
   @override
   String get nardyNoMoves => 'Kein Zug möglich';

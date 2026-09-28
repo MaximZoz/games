@@ -116,9 +116,9 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Check Play targetSdk
+      - name: Check Play SDK levels
         working-directory: client
         shell: bash
         run: |
@@ -128,8 +128,13 @@ jobs:
             echo "::error::targetSdk должен быть 36 — иначе Play: Target SDK of artifact is too low"
             exit 1
           fi
+          # Play Automatic Protection отклоняет AAB с minSdk < 24.
+          if ! grep -Eq 'minSdk[[:space:]]*=[[:space:]]*24' android/app/build.gradle.kts; then
+            echo "::error::minSdk должен быть 24 — иначе Play: automatic protection requires min SDK 24"
+            exit 1
+          fi
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -207,7 +212,7 @@ jobs:
           ls -lh "${{ steps.target.outputs.aab_path }}"
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: app-${{ steps.target.outputs.flavor }}-${{ steps.target.outputs.version_code }}
           path: client/${{ steps.target.outputs.aab_path }}

@@ -7,6 +7,7 @@ import 'package:multigames_client/core/api_client.dart';
 import 'package:multigames_client/core/api_config.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/game_engine/game_engine.dart';
+import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/offline_ttt_session.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/l10n/display_names.dart';
@@ -263,7 +264,10 @@ class UserGameSettings {
       );
     }
     if (gameType == 'checkers') {
-      final mode = gameMode == 'giveaway' ? 'giveaway' : 'russian';
+      final rawMode = (modeRaw == null || modeRaw.isEmpty)
+          ? json['variant']?.toString()
+          : gameMode;
+      final mode = CheckersEngine.normalizeMode(rawMode);
       return UserGameSettings(
         gameType: 'checkers',
         turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,

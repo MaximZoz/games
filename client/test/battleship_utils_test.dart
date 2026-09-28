@@ -607,6 +607,26 @@ void main() {
     });
   });
 
+  group('battleshipBoardAfterLocalShot', () {
+    test('промах в PvP — отпускаем поле после пульса', () {
+      expect(
+        battleshipBoardAfterLocalShot(keepAttacking: false, vsBot: false),
+        isNull,
+      );
+    });
+
+    test('попадание или бот — поле соперника остаётся', () {
+      expect(
+        battleshipBoardAfterLocalShot(keepAttacking: true, vsBot: false),
+        isFalse,
+      );
+      expect(
+        battleshipBoardAfterLocalShot(keepAttacking: false, vsBot: true),
+        isFalse,
+      );
+    });
+  });
+
   group('battleshipNewlySunkShip', () {
     test('возвращает новый корабль после выстрела', () {
       expect(

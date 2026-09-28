@@ -36,6 +36,7 @@ import 'package:multigames_client/screens/forgot_password_screen.dart';
 import 'package:multigames_client/screens/game_stats_screen.dart';
 import 'package:multigames_client/screens/reset_password_screen.dart';
 import 'package:multigames_client/screens/verify_email_screen.dart';
+import 'package:multigames_client/core/gamepad/gamepad_shell.dart';
 import 'package:multigames_client/widgets/app_shell.dart';
 
 const _publicPaths = <String>{
@@ -267,10 +268,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (context, state, navigationShell) => AppShell(
           navigationShell: navigationShell,
         ),
+        navigatorContainerBuilder: gamepadShellBranchContainer,
         branches: [
           StatefulShellBranch(
             routes: [

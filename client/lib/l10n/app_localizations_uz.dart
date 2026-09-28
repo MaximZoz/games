@@ -72,25 +72,46 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geympad topilmadi. Kontrollerni ulang va istalgan tugmani bosing.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Xrest / stik — menyu va doskadagi kursor';
+  String get settingsGamepadGenericName => 'Kontroller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Xrest — tanlash yoki yurish';
+  String get settingsGamepadHelpNavigate => 'Navigatsiya';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Doira — orqaga yoki tanlovni olish';
+  String get settingsGamepadHelpConfirm => 'Tanlash';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyu ichki oynalari';
+  String get settingsGamepadHelpBack => 'Orqaga';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Ichki oynalar';
 
   @override
   String get settingsGamepadHelpPlay => 'Doska va qo‘l kursori: shashka, x-nol, dengiz jangi, durak, uno, poker va nard';
 
   @override
-  String get settingsGamepadHelpCards => 'Kartalarda: xrest — qo‘l, A — yurish, X — tanlash / Uno, Y — olish yoki tortish';
+  String get settingsGamepadHelpCards => 'Kartalar';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'Matn maydonida A geympad klaviaturasini ochadi; X — tartib, B — o‘chirish yoki yopish';
+  String get settingsGamepadHelpKeyboard => 'Klaviatura';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Balans';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Chiqish';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sahifa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo joylashuvi';
 
   @override
   String get gamepadKeyboardTitle => 'Klaviatura';
@@ -819,6 +840,27 @@ class AppLocalizationsUz extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Hali uydagi toshlar o‘yinchining dastlabki 25 yurishida uydan chiqishi kerak.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Durang: pozitsiya uch marta takrorlansa yoki 15 yurish davomida faqat farzin yurib, olish bo‘lmasa.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Durang: pozitsiya uch marta takrorlansa, 40 yurishda olish yoki oddiy yurish bo‘lmasa, yoki har tomonda bitta farzin qolsa.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Durang: pozitsiya uch marta takrorlansa yoki 15 yurish faqat farzin bo‘lsa.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Durang: pozitsiya uch marta takrorlansa yoki har tomonning 25 yurishi maqsad burchagiga tosh qo‘shmasa.';
+
+  @override
+  String get checkersDrawRepetition => 'Durang — pozitsiya uch marta takrorlandi';
+
+  @override
+  String get checkersDrawNoProgress => 'Durang — yurishlar g‘alabaga olib kelmaydi';
+
+  @override
+  String get checkersDrawInsufficient => 'Durang — g‘alaba uchun kuch yetarli emas';
+
+  @override
   String get rulesNardyTitle => 'Narda — qoidalar';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Barcha yurishlardan so‘ng navbat avtomatik o‘tadi';
+
+  @override
+  String get nardyLayoutToggle => 'Joylashuvni almashtirish';
 
   @override
   String get nardyNoMoves => 'Yurish yo‘q';

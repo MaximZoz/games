@@ -109,6 +109,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   /// Карты, которые уже сидят на столе — их нельзя прятать при переводе.
   final Set<String> _seatedTableCardIds = {};
 
+  /// Карты, которые игрок уже видел на столе. Не гасим их при своём переводе.
+  final Set<String> _shownTableCardIds = {};
+
   /// Оптимистичная защита: индекс пары → карта.
   final Map<int, PlayingCard> _optimisticDefends = {};
 
@@ -147,6 +150,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Timer? _timeoutRetryTimer;
   Timer? _rematchPollTimer;
   Timer? _busyWatchdog;
+  Timer? _myTurnIdleTimer;
+  bool _showMyTurnIdleHint = false;
+  DateTime? _myTurnSince;
   Timer? _opponentTakeHoldTimer;
 
   /// После «Беру» соперника держим подпись, потом показываем «Готово».
@@ -381,6 +387,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _optimisticAttacks.clear();
       _optimisticDefends.clear();
       _seatedTableCardIds.clear();
+      _shownTableCardIds.clear();
       _fanAnimDuringBusy = false;
       _suppressFanLayoutAnim = true;
       _frozenFanCardSize = null;
@@ -388,11 +395,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _holdingFanCard = false;
       _activeCard = null;
       _dragGlobal = null;
+      _stopMyTurnIdleHint(clearShown: true);
+      _myTurnSince = null;
       _deckCountFreeze = null;
       _bitoCountFreeze = null;
       _fanCloseAfterPlay = false;
       _fanOpenAfterIncoming = false;
     });
+    final v = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
+    if (v != null && v.table.isNotEmpty) {
+      _seatTablePairs(v.table);
+    }
     _syncOfflineFxHold();
   }
 
@@ -576,6 +589,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _timeoutRetryTimer?.cancel();
     _rematchPollTimer?.cancel();
     _busyWatchdog?.cancel();
+    _myTurnIdleTimer?.cancel();
     _opponentTakeHoldTimer?.cancel();
     _realtimeSubscription?.close();
     _routeResumeSub?.close();
@@ -709,7 +723,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   static String _cardId(PlayingCard c) => '${c.rank.value}-${c.suit.name}';
 
   void _seatTableCard(PlayingCard card) {
-    _seatedTableCardIds.add(_cardId(card));
+    final id = _cardId(card);
+    _seatedTableCardIds.add(id);
+    _shownTableCardIds.add(id);
   }
 
   void _seatTablePairs(Iterable<DurakTablePairApi> table) {
@@ -717,6 +733,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final attack = pair.attack.toPlayingCard();
       if (durakShouldSeatPrevTableCard(
         remoteFlying: _remoteFlyingCardIds.contains(_cardId(attack)),
+        alreadyShown: _wasShownOnTable(attack),
       )) {
         _seatTableCard(attack);
       }
@@ -724,6 +741,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (defense != null &&
           durakShouldSeatPrevTableCard(
             remoteFlying: _remoteFlyingCardIds.contains(_cardId(defense)),
+            alreadyShown: _wasShownOnTable(defense),
           )) {
         _seatTableCard(defense);
       }
@@ -736,15 +754,76 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   void _markRemoteTableCardFlying(PlayingCard card) {
     _remoteFlyingCardIds.add(_cardId(card));
-    _unseatTableCard(card);
+    if (!_wasShownOnTable(card)) {
+      _unseatTableCard(card);
+    }
   }
 
   void _clearSeatedTableCards() {
     _seatedTableCardIds.clear();
+    _shownTableCardIds.clear();
   }
 
   bool _isSeatedTableCard(PlayingCard card) =>
       _seatedTableCardIds.contains(_cardId(card));
+
+  bool _wasShownOnTable(PlayingCard card) =>
+      _shownTableCardIds.contains(_cardId(card));
+
+  void _pruneShownTableCards(Iterable<DurakTablePairApi> table) {
+    final live = <String>{};
+    for (final pair in table) {
+      live.add(_cardId(pair.attack.toPlayingCard()));
+      final defense = pair.defense?.toPlayingCard();
+      if (defense != null) live.add(_cardId(defense));
+    }
+    _shownTableCardIds.removeWhere((id) => !live.contains(id));
+  }
+
+  /// Карты, которые уже показывали лицом, больше не прячем как remote.
+  void _seatUnhiddenTableCards(Iterable<DurakTablePairApi> table) {
+    for (final pair in table) {
+      final attack = pair.attack.toPlayingCard();
+      if (durakSeatUnhiddenTableCard(
+        remoteFlying: _remoteFlyingCardIds.contains(_cardId(attack)),
+        localFlying: _flyingToTable.contains(attack),
+      )) {
+        _seatTableCard(attack);
+      }
+      final defense = pair.defense?.toPlayingCard();
+      if (defense != null &&
+          durakSeatUnhiddenTableCard(
+            remoteFlying: _remoteFlyingCardIds.contains(_cardId(defense)),
+            localFlying: _flyingToTable.contains(defense),
+          )) {
+        _seatTableCard(defense);
+      }
+    }
+  }
+
+  bool _pairAttackExistedOn(
+    Iterable<DurakTablePairApi> table,
+    DurakTablePairApi pair,
+  ) {
+    return table.any(
+      (o) =>
+          o.attack.rank == pair.attack.rank &&
+          o.attack.suit == pair.attack.suit,
+    );
+  }
+
+  DurakTablePairApi? _pairOnTable(
+    Iterable<DurakTablePairApi> table,
+    DurakTablePairApi pair,
+  ) {
+    for (final o in table) {
+      if (o.attack.rank == pair.attack.rank &&
+          o.attack.suit == pair.attack.suit) {
+        return o;
+      }
+    }
+    return null;
+  }
 
   bool _shouldShowTablePair(DurakTablePairApi pair, int _) {
     final atk = pair.attack.toPlayingCard();
@@ -1559,6 +1638,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (doTransfer) {
         _optimisticAttacks.addAll(cards);
         _flyingToTable.addAll(cards);
+        // Уже лежащие карты остаются seated: WS/replay не гасит стол.
+        _seatTablePairs(view.table);
       }
       _fanCloseAfterPlay = true;
       _suppressFanLayoutAnim = false;
@@ -1578,9 +1659,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       if (defendRect != null) {
         to = defendRect;
       } else {
-        final atkKey = defendIdx >= 0
-            ? _attackKeyAt(defendIdx, view.table)
-            : null;
+        final atkKey =
+            defendIdx >= 0 ? _attackKeyAt(defendIdx, view.table) : null;
         final atk = (atkKey != null ? globalRectOf(atkKey) : null) ??
             globalRectOf(_tableKey) ??
             Rect.fromCenter(
@@ -2034,7 +2114,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Rect _landRectForPendingAttack(DurakGameView view, Size screen) {
     final pending = _pendingAttackPlaceholders(view);
     final pendingCard = pending.isEmpty ? null : pending.last;
-    final idx = _serverPairsInLayout(view) + (pending.isEmpty ? 0 : pending.length - 1);
+    final idx =
+        _serverPairsInLayout(view) + (pending.isEmpty ? 0 : pending.length - 1);
     return (pendingCard != null
             ? globalRectOf(_attackKeyFor(pendingCard))
             : null) ??
@@ -2064,6 +2145,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       pairCount: n,
       compact: _fit.compact,
       cols: _tableCols,
+      maxWidth: table?.width,
     );
   }
 
@@ -2126,19 +2208,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _flyingToTable.isNotEmpty ||
       _flightLockTable;
 
-  /// Свой overlay, busy или карта вытянута из веера — чужой FX стола ждёт.
+  /// Свой overlay или busy — чужой FX стола ждёт.
+  /// Подъём карты из веера не держит FX: соперник должен лететь сразу.
   bool get _tableFxDeferred => durakTableFxDeferred(
         fxScheduled: _fxScheduled,
         busy: _busy,
         localAttackHold: _localAttackHold,
         cardFlightActive: _cardFlightActive,
-        holdingFanCard: _holdingFanCard,
       );
 
   bool get _localAttackHold => durakHoldTableFxForLocalAttack(
         optimisticAttack: _optimisticAttacks.isNotEmpty,
         flyingToTable: _flyingToTable.isNotEmpty,
       );
+
+  /// Свой ход/полёт: пустой кадр сервера не должен гасить уже лежащий стол.
+  bool get _localPlayActive => _busy || _cardFlightActive || _localAttackHold;
 
   bool get _freezeMoveChrome =>
       _localAttackHold ||
@@ -2157,6 +2242,65 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _frozenTurnHint = null;
     _frozenTurnActorIdx = null;
     _frozenPhase = null;
+  }
+
+  void _stopMyTurnIdleHint({required bool clearShown}) {
+    _myTurnIdleTimer?.cancel();
+    _myTurnIdleTimer = null;
+    if (clearShown) {
+      _showMyTurnIdleHint = false;
+    }
+  }
+
+  void _armMyTurnIdleHint(Duration remaining) {
+    if (_showMyTurnIdleHint || _myTurnIdleTimer != null) return;
+    if (remaining <= Duration.zero) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _showMyTurnIdleHint = true);
+      });
+      return;
+    }
+    _myTurnIdleTimer = Timer(remaining, () {
+      if (!mounted) return;
+      setState(() => _showMyTurnIdleHint = true);
+    });
+  }
+
+  void _syncMyTurnIdleHint(DurakGameView view) {
+    final holding = _holdingFanCard || _activeCard != null;
+    final myTurn = !view.isOver && view.isMyTurn && !view.iAmEliminated;
+    if (!durakMyTurnIdleClockActive(
+      isMyTurn: myTurn,
+      gameOver: view.isOver,
+      localPlayActive: _localPlayActive,
+    )) {
+      _myTurnSince = null;
+      _stopMyTurnIdleHint(clearShown: true);
+      return;
+    }
+    // Подъём карты прячет надпись, но не сбрасывает 10 с — ход ещё не сделан.
+    if (holding) {
+      _stopMyTurnIdleHint(clearShown: true);
+      return;
+    }
+    _myTurnSince ??= DateTime.now();
+    final elapsed = DateTime.now().difference(_myTurnSince!);
+    if (elapsed >= kDurakMyTurnIdleHintDelay) {
+      _armMyTurnIdleHint(Duration.zero);
+      return;
+    }
+    _armMyTurnIdleHint(kDurakMyTurnIdleHintDelay - elapsed);
+  }
+
+  bool _showMyTurnIdleBanner(DurakGameView view) {
+    return durakMyTurnIdleHintVisible(
+          isMyTurn: view.isMyTurn && !view.iAmEliminated,
+          holdingFanCard: _holdingFanCard || _activeCard != null,
+          idleElapsed: _showMyTurnIdleHint,
+          gameOver: view.isOver,
+        ) &&
+        !_showFirstLeadBanner(view);
   }
 
   /// Жест в веере прячет кнопку; полёт карты — нет (иначе «Бито» мигает).
@@ -2932,7 +3076,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     _optimisticAttacks.clear();
     _optimisticDefends.clear();
     _seatedTableCardIds.clear();
+    _shownTableCardIds.clear();
     _selected.clear();
+    _stopMyTurnIdleHint(clearShown: true);
+    _myTurnSince = null;
     _handOrder = null;
     _deckCountFreeze = null;
     _bitoCountFreeze = null;
@@ -2996,6 +3143,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       optimistic: _optimisticAttacks.contains(card) ||
           _optimisticDefends.containsValue(card),
       localFlying: _flyingToTable.contains(card),
+      alreadyShown: _wasShownOnTable(card),
     );
   }
 
@@ -3023,6 +3171,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         seated: _isSeatedTableCard(attack),
         optimistic: _optimisticAttacks.contains(attack),
         localFlying: _flyingToTable.contains(attack),
+        alreadyShown: _wasShownOnTable(attack),
       )) {
         reveal.add(_cardId(attack));
         _seatTableCard(attack);
@@ -3034,6 +3183,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         seated: _isSeatedTableCard(def),
         optimistic: _optimisticDefends.containsValue(def),
         localFlying: _flyingToTable.contains(def),
+        alreadyShown: _wasShownOnTable(def),
       )) {
         reveal.add(_cardId(def));
         _seatTableCard(def);
@@ -3043,17 +3193,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   /// Новые чужие карты уже в view, а полёт ещё не стартовал — слот opacity 0.
-  void _hideNewRemoteTableCards(DurakGameView view) {
-    final prev = _prevTable;
+  void _hideNewRemoteTableCards(
+    DurakGameView view, {
+    List<DurakTablePairApi>? knownTable,
+  }) {
+    final prev = knownTable ?? _prevTable;
     final remoteAttacker = durakRemoteAttackFromSeat(
       attackerIndex: view.attackerIndex,
       throwerIndex: view.throwerIndex,
     );
     for (final p in view.table) {
       final attack = p.attack.toPlayingCard();
-      final existed = prev.any(
-        (o) => o.attack.rank == p.attack.rank && o.attack.suit == p.attack.suit,
-      );
+      final existed = _pairAttackExistedOn(prev, p);
       if (remoteAttacker != view.myIndex &&
           durakHideDeferredRemoteAttack(
             existedOnPrevTable: existed,
@@ -3061,23 +3212,21 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
             localFlying: _flyingToTable.contains(attack),
             fxDeferred: true,
             seated: _isSeatedTableCard(attack),
+            alreadyShown: _wasShownOnTable(attack),
           )) {
         _remoteFlyingCardIds.add(_cardId(attack));
       }
       final def = p.defense?.toPlayingCard();
       if (def == null) continue;
-      DurakTablePairApi? old;
-      for (final o in prev) {
-        if (o.attack.rank == p.attack.rank && o.attack.suit == p.attack.suit) {
-          old = o;
-          break;
-        }
-      }
-      final wasUndefended = old == null || old.defense == null;
-      if (wasUndefended &&
+      final old = _pairOnTable(prev, p);
+      final existedDefense = old?.defense != null;
+      if (!durakTableCardAlreadyVisible(
+            seated: _isSeatedTableCard(def),
+            existedOnKnownTable: existedDefense,
+            alreadyShown: _wasShownOnTable(def),
+          ) &&
           view.defenderIndex != view.myIndex &&
           !_optimisticDefends.containsValue(def) &&
-          !_isSeatedTableCard(def) &&
           !_flyingToTable.contains(def)) {
         _remoteFlyingCardIds.add(_cardId(def));
       }
@@ -3117,12 +3266,18 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   void _maybeRunTableFx(DurakGameView view) {
+    final knownTable = _prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable;
     if (view.table.isNotEmpty) {
       _lastNonEmptyTable = List.of(view.table);
       if (_firstLeadVisible) _firstLeadVisible = false;
       // Уже лежавшие карты помечаем севшими до любого нового полёта.
-      _seatTablePairs(_prevTable);
-    } else if (!_hidingTable && _takeTableHold == null) {
+      _seatTablePairs(knownTable);
+      _pruneShownTableCards(view.table);
+    } else if (durakShouldClearSeatedOnEmptyTable(
+      hidingTable: _hidingTable,
+      takeHold: _takeTableHold != null,
+      localPlayActive: _localPlayActive,
+    )) {
       _clearSeatedTableCards();
     }
     _reconcileHiddenRemoteTableCards(view);
@@ -3130,8 +3285,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (_tableFxDeferred) {
       _fxNeedsReplay = true;
       // Чужие карты уже в view — прячем до полёта, иначе вспышка на столе.
-      _hideNewRemoteTableCards(view);
+      _hideNewRemoteTableCards(view, knownTable: knownTable);
+      _seatUnhiddenTableCards(view.table);
       _holdClosedRoundTable(view);
+      // Уже видимые карты оставляем в prev: иначе свой перевод примет
+      // весь стол за новые remote и погасит слоты.
+      _prevTable = [
+        for (final p in view.table)
+          if (durakKeepVisibleCardInPrevTable(
+            remoteFlying: _remoteFlyingCardIds.contains(
+              _cardId(p.attack.toPlayingCard()),
+            ),
+            seated: _isSeatedTableCard(p.attack.toPlayingCard()),
+            alreadyShown: _wasShownOnTable(p.attack.toPlayingCard()),
+          ))
+            p,
+      ];
       return;
     }
     if (!_gameUiActive) {
@@ -4220,15 +4389,22 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     if (roundEnded) return;
     // Чужой подкид, спрятанный на время своего хода, не кладём в prev —
     // иначе replay увидит «уже была» и стол моргнёт без полёта.
+    // Севшие карты оставляем: иначе следующий ход погасит уже лежащий стол.
     _prevTable = [
       for (final p in v.table)
-        if (!_remoteFlyingCardIds.contains(_cardId(p.attack.toPlayingCard())))
+        if (durakKeepVisibleCardInPrevTable(
+          remoteFlying:
+              _remoteFlyingCardIds.contains(_cardId(p.attack.toPlayingCard())),
+          seated: _isSeatedTableCard(p.attack.toPlayingCard()),
+          alreadyShown: _wasShownOnTable(p.attack.toPlayingCard()),
+        ))
           DurakTablePairApi(
             attack: p.attack,
             defense: (p.defense != null &&
                     _remoteFlyingCardIds.contains(
                       _cardId(p.defense!.toPlayingCard()),
-                    ))
+                    ) &&
+                    !_isSeatedTableCard(p.defense!.toPlayingCard()))
                 ? null
                 : p.defense,
           ),
@@ -4315,11 +4491,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final existed = prev.any(
         (o) => o.attack.rank == p.attack.rank && o.attack.suit == p.attack.suit,
       );
-      final hidden = _remoteFlyingCardIds.contains(_cardId(attack));
-      if ((!existed || hidden) &&
-          !_optimisticAttacks.contains(attack) &&
-          !_isSeatedTableCard(attack) &&
-          !_flyingToTable.contains(attack)) {
+      if (durakShouldScheduleRemoteTableFlight(
+        existedOnPrevTable: existed,
+        seated: _isSeatedTableCard(attack),
+        optimistic: _optimisticAttacks.contains(attack),
+        localFlying: _flyingToTable.contains(attack),
+        alreadyShown: _wasShownOnTable(attack),
+      )) {
         flights.add(_RemoteTableFlight(
           card: attack,
           pairIndex: i,
@@ -4345,10 +4523,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         }
       }
       final wasUndefended = old == null || old.defense == null;
-      final hiddenDef = _remoteFlyingCardIds.contains(_cardId(defense));
-      if ((wasUndefended || hiddenDef) &&
+      if (wasUndefended &&
           _optimisticDefends[i] != defense &&
-          !_isSeatedTableCard(defense)) {
+          !_isSeatedTableCard(defense) &&
+          !_wasShownOnTable(defense)) {
         // old==null: атака+отбой в одном апдейте (пропустили кадр) — всё равно летим.
         flights.add(_RemoteTableFlight(
           card: defense,
@@ -4359,10 +4537,16 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
     }
 
-    if (flights.isEmpty) return;
+    if (flights.isEmpty) {
+      _seatUnhiddenTableCards(next);
+      return;
+    }
     // Не анимируем свои ходы (мой индекс).
     flights.removeWhere((f) => f.fromPlayer == view.myIndex);
-    if (flights.isEmpty) return;
+    if (flights.isEmpty) {
+      _seatUnhiddenTableCards(next);
+      return;
+    }
 
     // Скрыть сразу в этом же build — до отрисовки стола (без вспышки карты).
     // Снимаем seated: иначе следующий build посадит карту из prev, и слот
@@ -4370,6 +4554,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     for (final f in flights) {
       _markRemoteTableCardFlying(f.card);
     }
+    _seatUnhiddenTableCards(next);
 
     _beginTableFx();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -4822,7 +5007,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       _lockMidFinishOutcome(view);
       final credit = _rewardCredit(view);
       final displayReward = _rewardBronze(view);
-      final lost = (credit <= 0 && view.stakeBronze > 0) ? view.stakeBronze : 0;
+      final lost = stakeLostOnFinish(
+        stakeBronze: view.stakeBronze,
+        isDraw: view.isDraw,
+        iWon: credit > 0,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         clearBlockingGamePin(ref, ifGameId: widget.gameId);
@@ -4861,9 +5050,11 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       final credit = _rewardCredit(view);
       // В «+N» — чистый плюс к доматчевому балансу (как в крестиках).
       final displayReward = _rewardBronze(view);
-      final lost = (!view.isDraw && credit <= 0 && view.stakeBronze > 0)
-          ? view.stakeBronze
-          : 0;
+      final lost = stakeLostOnFinish(
+        stakeBronze: view.stakeBronze,
+        isDraw: view.isDraw,
+        iWon: credit > 0,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _snapVisualToServer();
@@ -5196,153 +5387,153 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         return _onGamepad(current, action);
       },
       child: SwipeBackScope.gameBoard(
-      onBack: _onClosePressed,
-      bottomInset: swipeBottomExclude,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+        onBack: _onClosePressed,
+        bottomInset: swipeBottomExclude,
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          toolbarHeight: gameToolbarHeight(context),
-          leadingWidth: gameAppBarLeadingWidth(),
-          centerTitle: true,
-          titleSpacing: 0,
-          // Крестик на одной линии с «правилами» (как в 1×1).
-          leading: buildGameAppBarLeading(
-            onClose: _busy ? null : _onClosePressed,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            toolbarHeight: gameToolbarHeight(context),
+            leadingWidth: gameAppBarLeadingWidth(),
+            centerTitle: true,
+            titleSpacing: 0,
+            // Крестик на одной линии с «правилами» (как в 1×1).
+            leading: buildGameAppBarLeading(
+              onClose: _busy ? null : _onClosePressed,
+            ),
+            title: Text(context.l10n.gamesDurak),
+            actions: view == null
+                ? const []
+                : buildGameAppBarActions(
+                    context: context,
+                    onSurrender: null, // сдача — overlay под правилами
+                    onOfferDraw: null,
+                    onShowRules: () => _showRules(view),
+                    rulesTooltip: context.l10n.gamesRulesTitle,
+                  ),
           ),
-          title: Text(context.l10n.gamesDurak),
-          actions: view == null
-              ? const []
-              : buildGameAppBarActions(
-                  context: context,
-                  onSurrender: null, // сдача — overlay под правилами
-                  onOfferDraw: null,
-                  onShowRules: () => _showRules(view),
-                  rulesTooltip: context.l10n.gamesRulesTitle,
-                ),
-        ),
-        body: GradientBackground(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (view != null)
-                MyTurnAlert.stackLeaf(
-                  isMyTurn:
-                      view.isMyTurn && !view.isOver && !view.iAmEliminated,
-                ),
-              // bottom: false — веер чуть заезжает под нижнюю панель.
-              SafeArea(
-                bottom: false,
-                child: gameAsync.when(
-                  skipLoadingOnReload: true,
-                  skipLoadingOnRefresh: true,
-                  data: _buildTable,
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accentStart),
+          body: GradientBackground(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (view != null)
+                  MyTurnAlert.stackLeaf(
+                    isMyTurn:
+                        view.isMyTurn && !view.isOver && !view.iAmEliminated,
                   ),
-                  error: (e, _) {
-                    _handleAuthError(e);
-                    if (_isGameGoneError(e)) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) _leaveGoneGame();
-                      });
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentStart,
+                // bottom: false — веер чуть заезжает под нижнюю панель.
+                SafeArea(
+                  bottom: false,
+                  child: gameAsync.when(
+                    skipLoadingOnReload: true,
+                    skipLoadingOnRefresh: true,
+                    data: _buildTable,
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.accentStart),
+                    ),
+                    error: (e, _) {
+                      _handleAuthError(e);
+                      if (_isGameGoneError(e)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _leaveGoneGame();
+                        });
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentStart,
+                          ),
+                        );
+                      }
+                      if (_isSessionExpired(e) || _isTransientLoadError(e)) {
+                        if (_isTransientLoadError(e)) {
+                          _scheduleTransientRetry();
+                        }
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentStart,
+                          ),
+                        );
+                      }
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                formatUserError(
+                                  e,
+                                  fallback: context.l10n.commonTryLater,
+                                ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: () => ref.invalidate(
+                                  durakGameProvider(widget.gameId),
+                                ),
+                                child: Text(context.l10n.commonTryRefresh),
+                              ),
+                            ],
+                          ),
                         ),
                       );
-                    }
-                    if (_isSessionExpired(e) || _isTransientLoadError(e)) {
-                      if (_isTransientLoadError(e)) {
-                        _scheduleTransientRetry();
-                      }
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentStart,
-                        ),
-                      );
-                    }
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              formatUserError(
-                                e,
-                                fallback: context.l10n.commonTryLater,
-                              ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 16),
-                            TextButton(
-                              onPressed: () => ref.invalidate(
-                                durakGameProvider(widget.gameId),
-                              ),
-                              child: Text(context.l10n.commonTryRefresh),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // Салют один раз: после arm не снимаем виджет, даже если у
-              // наблюдателя на столе снова карты (иначе анимация рестартит).
-              if (_confettiArmed)
-                Positioned.fill(
-                  child: GameConfettiOverlay(
-                    key: ValueKey('durak-confetti-${widget.gameId}'),
-                  ),
-                ),
-              // Групповой чат — отдельно под крестиком.
-              if (showGroupChat && view != null)
-                Positioned(
-                  left: 4,
-                  top: 0,
-                  child: GameIconWithBadge(
-                    icon: Icons.forum_rounded,
-                    badge: groupUnread,
-                    tooltip: context.l10n.chatGroupTooltip,
-                    onPressed: () => _openGroupChat(view),
-                  ),
-                ),
-              // «Сдаться» под «правилами» (1×1 и multi), как в одиночной.
-              if (showSurrender)
-                Positioned(
-                  right: 4,
-                  top: topPad + 4,
-                  child: GameActionsOverlay(
-                    canDraw: !isMulti &&
-                        view.playerIds.length == 2 &&
-                        !view.hasBotOpponent,
-                    iOfferedDraw: _iOfferedDraw(view),
-                    opponentOfferedDraw: _opponentOfferedDraw(view),
-                    onSurrender: _confirmSurrender,
-                    onDraw: () {
-                      if (_opponentOfferedDraw(view)) {
-                        unawaited(_acceptDraw());
-                      } else {
-                        unawaited(_offerDraw(view));
-                      }
                     },
-                    surrenderTooltip: context.l10n.gameSurrender,
-                    drawTooltip: context.l10n.gameOfferDraw,
-                    acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
-                    drawOfferedTooltip: context.l10n.gameDrawOffered,
                   ),
                 ),
-            ],
+                // Салют один раз: после arm не снимаем виджет, даже если у
+                // наблюдателя на столе снова карты (иначе анимация рестартит).
+                if (_confettiArmed)
+                  Positioned.fill(
+                    child: GameConfettiOverlay(
+                      key: ValueKey('durak-confetti-${widget.gameId}'),
+                    ),
+                  ),
+                // Групповой чат — отдельно под крестиком.
+                if (showGroupChat && view != null)
+                  Positioned(
+                    left: 4,
+                    top: 0,
+                    child: GameIconWithBadge(
+                      icon: Icons.forum_rounded,
+                      badge: groupUnread,
+                      tooltip: context.l10n.chatGroupTooltip,
+                      onPressed: () => _openGroupChat(view),
+                    ),
+                  ),
+                // «Сдаться» под «правилами» (1×1 и multi), как в одиночной.
+                if (showSurrender)
+                  Positioned(
+                    right: 4,
+                    top: topPad + 4,
+                    child: GameActionsOverlay(
+                      canDraw: !isMulti &&
+                          view.playerIds.length == 2 &&
+                          !view.hasBotOpponent,
+                      iOfferedDraw: _iOfferedDraw(view),
+                      opponentOfferedDraw: _opponentOfferedDraw(view),
+                      onSurrender: _confirmSurrender,
+                      onDraw: () {
+                        if (_opponentOfferedDraw(view)) {
+                          unawaited(_acceptDraw());
+                        } else {
+                          unawaited(_offerDraw(view));
+                        }
+                      },
+                      surrenderTooltip: context.l10n.gameSurrender,
+                      drawTooltip: context.l10n.gameOfferDraw,
+                      acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+                      drawOfferedTooltip: context.l10n.gameDrawOffered,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -5421,6 +5612,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Widget _buildTableBody(DurakGameView view, double availableHeight) {
     final tableSize = _tableCardSize;
     _maybeRunTableFx(view);
+    _syncMyTurnIdleHint(view);
     // Сбросить выбор, если карты уже не в руке / нелегальны.
     final trump = _suitFromApi(view.trumpSuit);
     final serverHand = _apiCardsToPlaying(
@@ -5774,8 +5966,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                                           .instance
                                                           .isRecentlyActive &&
                                                       handForFan.isNotEmpty
-                                                  ? handForFan[_gamepadHandIndex
-                                                      .clamp(
+                                                  ? handForFan[
+                                                      _gamepadHandIndex.clamp(
                                                       0,
                                                       handForFan.length - 1,
                                                     )]
@@ -5809,6 +6001,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                                   _activeCard = card;
                                                   if (card == null) {
                                                     _dragGlobal = null;
+                                                  } else {
+                                                    _stopMyTurnIdleHint(
+                                                      clearShown: true,
+                                                    );
                                                   }
                                                 });
                                               },
@@ -5817,8 +6013,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                                                     holding) {
                                                   return;
                                                 }
-                                                setState(() =>
-                                                    _holdingFanCard = holding);
+                                                setState(() {
+                                                  _holdingFanCard = holding;
+                                                  if (holding) {
+                                                    _stopMyTurnIdleHint(
+                                                      clearShown: true,
+                                                    );
+                                                  }
+                                                });
                                                 if (!holding) {
                                                   _requestFxReplay();
                                                 }
@@ -5904,42 +6106,44 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       switchInCurve: Curves.easeOut,
                       switchOutCurve: Curves.easeIn,
                       child: durakActionChromeVisible(
-                            liveCanShow: showActionOrReveal,
-                            holdingFanCard: _holdingFanCard,
-                          )
-                        ? (showTakeReveal || showBitoReveal)
-                            // Просто текст (как раньше в статусе), без «кнопки» —
-                            // слот 52px уже зарезервирован, стол/веер не прыгают.
-                            ? Text(
-                                showTakeReveal
-                                    ? context.l10n.durakStatusTaking
-                                    : context.l10n.durakActionBito,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              )
-                            : _PulsingActionButton(
-                                label: showTake
-                                    ? context.l10n.durakActionTake
-                                    : showPass
-                                        ? context.l10n.durakActionPass
-                                        : (showDone
-                                            ? context.l10n.durakActionDone
-                                            : context.l10n.durakActionBito),
-                                icon: showTake
-                                    ? Icons.south_rounded
-                                    : showPass
-                                        ? Icons.skip_next_rounded
-                                        : Icons.check_rounded,
-                                onPressed: showTake
-                                    ? _take
-                                    : showPass
-                                        ? _pass
-                                        : (showDone ? _confirmTakeDone : _bito),
-                              )
+                        liveCanShow: showActionOrReveal,
+                        holdingFanCard: _holdingFanCard,
+                      )
+                          ? (showTakeReveal || showBitoReveal)
+                              // Просто текст (как раньше в статусе), без «кнопки» —
+                              // слот 52px уже зарезервирован, стол/веер не прыгают.
+                              ? Text(
+                                  showTakeReveal
+                                      ? context.l10n.durakStatusTaking
+                                      : context.l10n.durakActionBito,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                )
+                              : _PulsingActionButton(
+                                  label: showTake
+                                      ? context.l10n.durakActionTake
+                                      : showPass
+                                          ? context.l10n.durakActionPass
+                                          : (showDone
+                                              ? context.l10n.durakActionDone
+                                              : context.l10n.durakActionBito),
+                                  icon: showTake
+                                      ? Icons.south_rounded
+                                      : showPass
+                                          ? Icons.skip_next_rounded
+                                          : Icons.check_rounded,
+                                  onPressed: showTake
+                                      ? _take
+                                      : showPass
+                                          ? _pass
+                                          : (showDone
+                                              ? _confirmTakeDone
+                                              : _bito),
+                                )
                           : const SizedBox.shrink(),
                     ),
                   ),
@@ -6531,7 +6735,8 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     final focus =
         _activeCard ?? (_selected.isNotEmpty ? _selected.first : null);
     // Подсказки при подъёме: все бьющиеся атаки + слот перевода в сетке.
-    final lifting = _flightLockTable || (!_busy && _activeCard != null);
+    final lifting = _flightLockTable ||
+        (!_busy && (_activeCard != null || _holdingFanCard));
     final highlightAttack = lifting && _highlightAttackSlot(view);
     final int defendPairIndex;
     if (_flightLockTable && _flightDefendIdx != null) {
@@ -6608,15 +6813,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
     );
 
     // При «Взять» рисуем снимок стола — сервер уже пустой, карты улетают по одной.
+    // Во время своего хода пустой кадр WS не должен гасить уже лежащие карты.
     final hold = _takeTableHold;
-    final sourceTable = hold ?? view.table;
-    var settledVisible = 0;
-    for (final p in sourceTable) {
-      final atk = p.attack.toPlayingCard();
-      if (_isSeatedTableCard(atk) && !_isRemoteTableCardHidden(atk)) {
-        settledVisible++;
-      }
-    }
+    final sourceTable = hold ??
+        ((view.table.isEmpty && _localPlayActive)
+            ? (_prevTable.isNotEmpty ? _prevTable : _lastNonEmptyTable)
+            : view.table);
     final tableItems = <Widget>[
       if (!_hidingTable) ...[
         for (var i = 0; i < sourceTable.length; i++)
@@ -6683,29 +6885,29 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                 attackKey: _attackKeyFor(pendingAttacks[i]),
               ),
             ),
-        // Слот атаки/перевода — только при подъёме карты (как раньше):
-        // иначе карта летит в «зарезервированный» центр/слот, а после
-        // посадки сетка перестраивается и карта «прыгает» на место.
-        // topLeft как у атаки в _AnimatedTablePair (не Center).
-        if (hold == null && showTableDropSlot)
-          KeyedSubtree(
-            key: _attackSlotKey,
-            child: SizedBox(
-              width: cardSize.width + 18,
-              height: cardSize.height + 20,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: IgnorePointer(
-                  child: DurakDropSlot(
-                    size: cardSize,
-                    active: true,
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     ];
+    // Подсказка перевода/атаки — оверлей, не ячейка ряда: иначе 2→3→2
+    // дёргает лежащие карты влево-вправо и даёт моргание при переводе.
+    final dropHint =
+        hold == null && showTableDropSlot && !durakDropHintOccupiesPairSlot()
+            ? KeyedSubtree(
+                key: _attackSlotKey,
+                child: SizedBox(
+                  width: cardSize.width + 18,
+                  height: cardSize.height + 20,
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: IgnorePointer(
+                      child: DurakDropSlot(
+                        size: cardSize,
+                        active: true,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -6795,10 +6997,10 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                       items: tableItems,
                       cardSize: cardSize,
                       maxWidth: tableMaxW,
-                      pinFirstSlot: durakPinExistingTablePair(
-                        settledCount: settledVisible,
-                        layoutCount: tableItems.length,
-                      ),
+                      animateSlots: !_suppressFanLayoutAnim &&
+                          hold == null &&
+                          !_hidingTable,
+                      dropHint: dropHint,
                     ),
                   ),
                 ),
@@ -6816,6 +7018,19 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
                   child: Align(
                     alignment: const Alignment(0, -0.12),
                     child: _buildFirstLeadBanner(view),
+                  ),
+                ),
+              ),
+            if (_showMyTurnIdleBanner(view))
+              Positioned(
+                left: leftReserve,
+                right: rightReserve,
+                top: 0,
+                bottom: usedBottom,
+                child: IgnorePointer(
+                  child: Align(
+                    alignment: const Alignment(0, -0.12),
+                    child: _buildMyTurnIdleBanner(),
                   ),
                 ),
               ),
@@ -6880,98 +7095,74 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       durakTableStackHeight(cardSize, rowCount, compact: _fit.compact);
 
   /// До 2 пар в ряд; если не влезает — пары наезжают друг на друга.
-  /// При 3+ рядах — передние ряды наезжают на задние: виден только угол карты.
+  ///
+  /// Сразу финальная сетка: лежащие карты одним твином едут на место,
+  /// новая летит в уже правильный слот — без второго рывка после посадки.
   Widget _buildTableRows({
     required List<Widget> items,
     required Size cardSize,
     required double maxWidth,
-    bool pinFirstSlot = false,
+    bool animateSlots = true,
+    Widget? dropHint,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
     final n = items.length;
-    final pairW = durakTablePairSlotWidth(cardSize);
-    const baseGap = 10.0;
     const cols = _tableCols;
+    final rows = (n + cols - 1) ~/ cols;
+    final totalH = _tableStackHeight(cardSize, rows);
+    final duration =
+        animateSlots ? kDurakTablePairSlideDuration : Duration.zero;
+    final pairW = durakTablePairSlotWidth(cardSize);
+    final pairH = durakTablePairHeight(cardSize);
 
-    // Перевод/подкид: лежащая карта остаётся в центре, новый слот справа.
-    if (pinFirstSlot && n == 2) {
-      final left0 = durakPinnedFirstPairLeft(
-        cardSize: cardSize,
+    final slots = <Widget>[];
+    for (var i = 0; i < n; i++) {
+      final origin = durakTablePairSlotOrigin(
         maxWidth: maxWidth,
-        gap: baseGap,
-      );
-      final left1 = durakPinnedSecondPairLeft(
         cardSize: cardSize,
-        maxWidth: maxWidth,
-        gap: baseGap,
+        pairIndex: i,
+        pairCount: n,
+        compact: _fit.compact,
+        cols: cols,
       );
-      return SizedBox(
-        width: maxWidth,
-        height: durakTablePairHeight(cardSize),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(left: left0, top: 0, child: items[0]),
-            Positioned(left: left1, top: 0, child: items[1]),
-          ],
+      slots.add(
+        AnimatedPositioned(
+          key: ValueKey('table-slot-${items[i].key ?? i}'),
+          duration: duration,
+          curve: kDurakLayoutCurve,
+          left: origin.dx,
+          top: origin.dy,
+          width: pairW,
+          height: pairH,
+          child: items[i],
         ),
       );
     }
-
-    final rows = <List<Widget>>[
-      for (var i = 0; i < n; i += cols) items.skip(i).take(cols).toList(),
-    ];
-
-    final maxRowLen = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
-    // Нужная ширина с нормальным зазором.
-    final neededW = maxRowLen * pairW + (maxRowLen - 1) * baseGap;
-    // Если не влезает — отрицательный gap (одна пара на другую), без scale-прыжка.
-    double gap = baseGap;
-    if (neededW > maxWidth && maxRowLen > 1) {
-      gap = ((maxWidth - maxRowLen * pairW) / (maxRowLen - 1))
-          .clamp(-(pairW * 0.55), baseGap);
-    }
-
-    Widget rowAt(int r) => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < rows[r].length; i++) ...[
-              if (i > 0) SizedBox(width: gap),
-              rows[r][i],
-            ],
-          ],
-        );
-
-    // 1–2 ряда — обычная колонка с зазором; в альбоме уже со второго ряда
-    // нужен наезд «кромкой», иначе стол не помещается по высоте.
-    if (!durakTableUsesRowStack(rows.length, compact: _fit.compact)) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var r = 0; r < rows.length; r++) ...[
-            if (r > 0) const SizedBox(height: 10),
-            rowAt(r),
-          ],
-        ],
+    if (dropHint != null) {
+      final hintAt = durakTablePairSlotOrigin(
+        maxWidth: maxWidth,
+        cardSize: cardSize,
+        pairIndex: n,
+        pairCount: n + 1,
+        compact: _fit.compact,
+        cols: cols,
+      );
+      slots.add(
+        Positioned(
+          left: hintAt.dx,
+          top: hintAt.dy,
+          width: pairW,
+          height: pairH,
+          child: dropHint,
+        ),
       );
     }
-
-    // 3+ ряда: 2-й наезжает на 1-й (виден ранг+масть); 3-й — обычный зазор.
-    final totalH = _tableStackHeight(cardSize, rows.length);
     return SizedBox(
+      width: maxWidth,
       height: totalH,
-      width: double.infinity,
       child: Stack(
         clipBehavior: Clip.none,
-        children: [
-          for (var r = 0; r < rows.length; r++)
-            Positioned(
-              top: _tableRowTop(cardSize, r, rows.length),
-              left: 0,
-              right: 0,
-              child: rowAt(r),
-            ),
-        ],
+        children: slots,
       ),
     );
   }
@@ -7087,8 +7278,13 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   bool _showFirstLeadBanner(DurakGameView view) {
-    if (view.isOver || view.table.isNotEmpty || !view.firstRound) return false;
-    return _firstLeadVisible;
+    return durakFirstLeadBannerVisible(
+      firstRound: view.firstRound,
+      tableEmpty: view.table.isEmpty,
+      firstLeadArmed: _firstLeadVisible,
+      holdingFanCard: _holdingFanCard || _activeCard != null,
+      gameOver: view.isOver,
+    );
   }
 
   String _firstLeadTitle(DurakGameView view) {
@@ -7103,6 +7299,46 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       return l10n.durakFirstLeadOpponent;
     }
     return l10n.durakFirstLeadOf(_playerDisplayName(view, view.attackerIndex));
+  }
+
+  Widget _buildMyTurnIdleBanner() {
+    final compact = isPhoneLandscape(context) || _fit.compact;
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+          maxWidth: compact ? 360 : (isNarrow(context) ? 280 : 340)),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(16),
+          border:
+              Border.all(color: AppColors.accentStart.withValues(alpha: 0.45)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accentStart.withValues(alpha: 0.18),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 12 : (isNarrow(context) ? 14 : 18),
+            vertical: compact ? 6 : (isNarrow(context) ? 8 : 10),
+          ),
+          child: Text(
+            context.l10n.gamesMyTurn,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: compact ? 14 : (isNarrow(context) ? 16 : 18),
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFirstLeadBanner(DurakGameView view) {
@@ -7183,6 +7419,9 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
 
   /// Статус как в крестиках: «Ваш ход» / «Ход {имя}» / итог со сдачей/таймаутом.
   String _turnHint(DurakGameView view) {
+    if (_holdingFanCard || _activeCard != null) {
+      return _liveTurnHint(view);
+    }
     if (_frozenTurnHint != null &&
         !durakFinishChromeVisible(
           isOver: view.isOver,
@@ -7276,7 +7515,17 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
       }
       return l10n.durakHintOpponentThrows;
     }
-    if (view.isMyTurn) return l10n.gamesMyTurn;
+    if (view.isMyTurn) {
+      if (durakMyTurnIdleHintVisible(
+        isMyTurn: true,
+        holdingFanCard: _holdingFanCard || _activeCard != null,
+        idleElapsed: _showMyTurnIdleHint,
+        gameOver: view.isOver,
+      )) {
+        return l10n.gamesMyTurn;
+      }
+      return '';
+    }
     final turnIdx = view.phase == 'defend'
         ? view.defenderIndex
         : (view.turnActorIdx >= 0 ? view.turnActorIdx : view.attackerIndex);

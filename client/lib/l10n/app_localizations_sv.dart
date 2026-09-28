@@ -72,25 +72,46 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Ingen gamepad. Anslut en kontroll och tryck på valfri knapp.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Styrkors / spak — menyer och brädcursor';
+  String get settingsGamepadGenericName => 'Kontroll';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kors — bekräfta eller göra ett drag';
+  String get settingsGamepadHelpNavigate => 'Navigera';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — tillbaka eller avmarkera';
+  String get settingsGamepadHelpConfirm => 'Välj';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menyflikar';
+  String get settingsGamepadHelpBack => 'Tillbaka';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Flikar';
 
   @override
   String get settingsGamepadHelpPlay => 'Markör på bräde och hand: dam, luffarschack, sänka skepp, durak, uno, poker och backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'I kort: styrkors flyttar handen, A spelar, X väljer / Uno, Y tar, passar eller drar';
+  String get settingsGamepadHelpCards => 'Kort';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'I ett fält öppnar A gamepad-tangentbordet; X byter layout, B raderar eller stänger';
+  String get settingsGamepadHelpKeyboard => 'Tangentbord';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Logga ut';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sida';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-layout';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-layout';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-layout';
 
   @override
   String get gamepadKeyboardTitle => 'Tangentbord';
@@ -819,6 +840,27 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brickor som fortfarande är hemma måste lämna hörnet inom spelarens 25 första drag.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remi om samma ställning uppstår tre gånger, eller om 15 drag per sida bara är damdrag utan slag — även två damer mot två.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remi vid trefaldig upprepning, 40 drag utan slag eller bondedrag, eller en dam mot en dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remi vid trefaldig upprepning eller 15 damdrag utan slag.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remi vid trefaldig upprepning eller 25 drag per sida utan extra bricka i målhörnet.';
+
+  @override
+  String get checkersDrawRepetition => 'Remi — ställningen upprepades tre gånger';
+
+  @override
+  String get checkersDrawNoProgress => 'Remi — dragen leder inte till vinst';
+
+  @override
+  String get checkersDrawInsufficient => 'Remi — otillräckligt material för vinst';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regler';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Efter alla drag går turen vidare automatiskt';
+
+  @override
+  String get nardyLayoutToggle => 'Byt uppställning';
 
   @override
   String get nardyNoMoves => 'Inga drag';

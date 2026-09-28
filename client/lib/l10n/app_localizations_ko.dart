@@ -72,25 +72,46 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadDisconnected => '게임패드가 없습니다. 컨트롤러를 연결하고 아무 버튼이나 누르세요.';
 
   @override
-  String get settingsGamepadHelpNavigate => '십자 / 스틱 — 메뉴와 보드 커서';
+  String get settingsGamepadGenericName => '컨트롤러';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / 십자 — 확인 또는 수 두기';
+  String get settingsGamepadHelpNavigate => '이동';
 
   @override
-  String get settingsGamepadHelpBack => 'B / 원 — 뒤로 또는 선택 해제';
+  String get settingsGamepadHelpConfirm => '선택';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — 메뉴 탭';
+  String get settingsGamepadHelpBack => '뒤로';
+
+  @override
+  String get settingsGamepadHelpTabs => '탭';
 
   @override
   String get settingsGamepadHelpPlay => '보드와 손패 커서: 체커, 틱택토, 배틀십, 두락, 우노, 포커, 주사위 놀이';
 
   @override
-  String get settingsGamepadHelpCards => '카드에서는 십자로 손패, A로 내기, X로 선택/우노, Y로 가져오거나 드로우';
+  String get settingsGamepadHelpCards => '카드';
 
   @override
-  String get settingsGamepadHelpKeyboard => '입력란에서 A는 게임패드 키보드를 엽니다. X는 배열, B는 지우거나 닫기';
+  String get settingsGamepadHelpKeyboard => '키보드';
+
+  @override
+  String get settingsGamepadHelpBalance => '잔액';
+
+  @override
+  String get settingsGamepadHelpLogout => '로그아웃';
+
+  @override
+  String get settingsGamepadHelpPage => '페이지';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 배치';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 배치';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 배치';
 
   @override
   String get gamepadKeyboardTitle => '키보드';
@@ -819,6 +840,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
 
   @override
+  String get rulesCheckersDrawRussian => '같은 국면이 세 번이거나, 양쪽 15수가 킹만 움직이고 잡기가 없으면(2대2 포함) 무승부.';
+
+  @override
+  String get rulesCheckersDrawEnglish => '같은 국면 3회, 40수 동안 잡기나 졸 이동이 없거나 킹 1대1이면 무승부.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => '같은 국면 3회 또는 양쪽 15수가 킹만이고 잡기가 없으면 무승부.';
+
+  @override
+  String get rulesCheckersDrawCorners => '같은 국면 3회이거나 양쪽 25수 동안 목표 구석에 말이 늘지 않으면 무승부.';
+
+  @override
+  String get checkersDrawRepetition => '무승부 — 같은 국면이 세 번';
+
+  @override
+  String get checkersDrawNoProgress => '무승부 — 승리로 이어지지 않는 수';
+
+  @override
+  String get checkersDrawInsufficient => '무승부 — 이길 전력이 부족함';
+
+  @override
   String get rulesNardyTitle => '백개먼 — 규칙';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => '모든 수를 두면 차례가 자동으로 넘어갑니다';
+
+  @override
+  String get nardyLayoutToggle => '배치 바꾸기';
 
   @override
   String get nardyNoMoves => '둘 수 없음';

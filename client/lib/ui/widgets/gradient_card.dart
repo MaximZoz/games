@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 
 import '../app_theme.dart';
 
@@ -77,7 +78,10 @@ class _GradientCardState extends State<GradientCard>
   }
 
   Widget _cardWithGradient(Gradient gradient) {
-    final borderOpacity = widget.borderOpacity.clamp(0.0, 1.0);
+    final hideFrame =
+        GamepadFocusBlock.watchOf(context)?.highlighted ?? false;
+    final borderOpacity =
+        hideFrame ? 0.0 : widget.borderOpacity.clamp(0.0, 1.0);
     final r = AppRadius.card + widget.borderWidth;
     final fadedGradient = borderOpacity >= 0.999
         ? gradient

@@ -72,25 +72,46 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsGamepadDisconnected => 'Geen gamepad. Sluit een controller aan en druk op een knop.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Kruis / stick — menu\'s en bordcursor';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Kruis — bevestigen of zetten';
+  String get settingsGamepadHelpNavigate => 'Navigeren';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Cirkel — terug of deselecteren';
+  String get settingsGamepadHelpConfirm => 'Kiezen';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — menutabbladen';
+  String get settingsGamepadHelpBack => 'Terug';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tabbladen';
 
   @override
   String get settingsGamepadHelpPlay => 'Cursor op bord en hand: dammen, boter-kaas-eieren, zeeslag, durak, uno, poker en backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'Bij kaarten: kruis beweegt de hand, A speelt, X selecteert / Uno, Y pakt, past of trekt';
+  String get settingsGamepadHelpCards => 'Kaarten';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'In een veld opent A het gamepad-toetsenbord; X wisselt layout, B wist of sluit';
+  String get settingsGamepadHelpKeyboard => 'Toetsenbord';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Uitloggen';
+
+  @override
+  String get settingsGamepadHelpPage => 'Pagina';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-indeling';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-indeling';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-indeling';
 
   @override
   String get gamepadKeyboardTitle => 'Toetsenbord';
@@ -819,6 +840,27 @@ class AppLocalizationsNl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Schijven die nog in huis staan, moeten het binnen de eerste 25 zetten van de speler verlaten.';
 
   @override
+  String get rulesCheckersDrawRussian => 'Remise als dezelfde stelling driemaal voorkomt, of als 15 zetten per kant alleen dammen zonder slaan zijn — ook twee dammen tegen twee.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'Remise bij drievoudige herhaling, 40 zetten zonder slaan of schijfzet, of één dam tegen één dam.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'Remise bij drievoudige herhaling of 15 damzetten zonder slaan.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'Remise bij drievoudige herhaling of 25 zetten per kant zonder extra schijf in de doelhoek.';
+
+  @override
+  String get checkersDrawRepetition => 'Remise — stelling driemaal herhaald';
+
+  @override
+  String get checkersDrawNoProgress => 'Remise — zetten leiden niet tot winst';
+
+  @override
+  String get checkersDrawInsufficient => 'Remise — onvoldoende materiaal voor winst';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — regels';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Geef de beurt automatisch door na alle zetten';
+
+  @override
+  String get nardyLayoutToggle => 'Opstelling wisselen';
 
   @override
   String get nardyNoMoves => 'Geen zetten';

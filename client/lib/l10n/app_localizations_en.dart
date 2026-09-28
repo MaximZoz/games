@@ -72,25 +72,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGamepadDisconnected => 'No gamepad found. Connect a controller and press any button.';
 
   @override
-  String get settingsGamepadHelpNavigate => 'D-pad / stick — menus and the board cursor';
+  String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpConfirm => 'A / Cross — confirm or make a move';
+  String get settingsGamepadHelpNavigate => 'Navigate';
 
   @override
-  String get settingsGamepadHelpBack => 'B / Circle — back or deselect';
+  String get settingsGamepadHelpConfirm => 'Select';
 
   @override
-  String get settingsGamepadHelpTabs => 'L1 / R1 — switch tabs';
+  String get settingsGamepadHelpBack => 'Back';
+
+  @override
+  String get settingsGamepadHelpTabs => 'Tabs';
 
   @override
   String get settingsGamepadHelpPlay => 'Board and hand cursor: checkers, tic-tac-toe, battleship, durak, uno, poker and backgammon';
 
   @override
-  String get settingsGamepadHelpCards => 'In card games: D-pad moves the hand, A plays, X selects / Uno, Y takes, passes or draws';
+  String get settingsGamepadHelpCards => 'Cards';
 
   @override
-  String get settingsGamepadHelpKeyboard => 'On a text field A opens the gamepad keyboard; X switches layout, B deletes or closes';
+  String get settingsGamepadHelpKeyboard => 'Keyboard';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Balance';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Log out';
+
+  @override
+  String get settingsGamepadHelpPage => 'Page';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox layout';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation layout';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo layout';
 
   @override
   String get gamepadKeyboardTitle => 'Keyboard';
@@ -819,6 +840,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Pieces still in the home corner must leave it within the player’s first 25 moves.';
 
   @override
+  String get rulesCheckersDrawRussian => 'A draw if the same position occurs three times, or if 15 moves by each side are only king moves without a capture — including two kings against two kings shuffling for no win.';
+
+  @override
+  String get rulesCheckersDrawEnglish => 'A draw if the same position occurs three times, if 40 moves pass without a capture or a man moving, or if only one king remains on each side.';
+
+  @override
+  String get rulesCheckersDrawGiveaway => 'A draw if the same position occurs three times, or if 15 moves by each side are only king moves without a capture — shuffling does not count as progress.';
+
+  @override
+  String get rulesCheckersDrawCorners => 'A draw if the same position occurs three times, or if 25 moves by each side add no extra pieces to the target corner.';
+
+  @override
+  String get checkersDrawRepetition => 'Draw — the position repeated three times';
+
+  @override
+  String get checkersDrawNoProgress => 'Draw — the moves do not lead to a win';
+
+  @override
+  String get checkersDrawInsufficient => 'Draw — not enough material to win';
+
+  @override
   String get rulesNardyTitle => 'Backgammon — rules';
 
   @override
@@ -861,6 +903,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nardyAutoConfirmHint => 'Pass the turn automatically after all moves';
+
+  @override
+  String get nardyLayoutToggle => 'Change layout';
 
   @override
   String get nardyNoMoves => 'No moves';
