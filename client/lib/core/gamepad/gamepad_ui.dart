@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
@@ -21,6 +22,19 @@ void dismissGamepadKeyboard() {
 
 /// Правый стик / статистика: страница скролла.
 bool scrollGamepadByPage(int direction) => _scrollPage(direction);
+
+/// Поле ввода при живом геймпаде — только экранная клавиатура контроллера.
+void syncGamepadKeyboardForFocus() {
+  if (!gamepadHintsWanted()) return;
+  if (isEditableTextFocused()) {
+    GamepadKeyboardController.instance.show();
+    return;
+  }
+  final ctx = FocusManager.instance.primaryFocus?.context;
+  final block = ctx?.findAncestorWidgetOfExactType<GamepadFocusBlock>();
+  if (block != null && block.attachKeyboard) return;
+  GamepadKeyboardController.instance.hide();
+}
 
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {

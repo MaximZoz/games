@@ -279,6 +279,57 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('при живом геймпаде тап по полю открывает клавиатуру геймпада',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(
+              body: Center(child: TextField()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    expect(find.byType(GamepadKeyboardPanel), findsOneWidget);
+  });
+
+  testWidgets('без геймпада тап по полю не открывает клавиатуру геймпада',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(
+              body: Center(child: TextField()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.byType(GamepadKeyboardPanel), findsNothing);
+  });
+
   test('подсказки только при подключённом геймпаде', () {
     final service = GamepadService.instance;
     service.start();

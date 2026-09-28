@@ -28,6 +28,9 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
   @override
   void initState() {
     super.initState();
+    FocusManager.instance.addListener(_syncKeyboard);
+    _service.activityTick.addListener(_syncKeyboard);
+    _service.devices.addListener(_syncKeyboard);
     // Слушаем и стартуем сразу: иначе первый кадр глотает LB/RB и крест.
     _listen();
     _service.start();
@@ -36,9 +39,18 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_syncKeyboard);
+    _service.activityTick.removeListener(_syncKeyboard);
+    _service.devices.removeListener(_syncKeyboard);
     _sub?.cancel();
     _service.stop();
     super.dispose();
+  }
+
+  void _syncKeyboard() {
+    if (!mounted) return;
+    if (!ref.read(gamepadEnabledProvider)) return;
+    syncGamepadKeyboardForFocus();
   }
 
   void _syncEnabled() {
