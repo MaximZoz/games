@@ -1235,6 +1235,60 @@ void main() {
     expect(tabs, 1);
   });
 
+  testWidgets('фокус по плиткам в PageView не двигает страницу', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = PageController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: SizedBox(
+                width: 720,
+                height: 280,
+                child: PageView(
+                  controller: controller,
+                  scrollDirection: Axis.vertical,
+                  children: [
+                    GridView.count(
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 3,
+                      children: [
+                        for (var i = 0; i < 6; i++)
+                          GamepadFocusBlock(
+                            autofocus: i == 0,
+                            onActivate: () {},
+                            child: Center(child: Text('e$i')),
+                          ),
+                      ],
+                    ),
+                    const Center(child: Text('page-2')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    final start = controller.offset;
+    GamepadService.instance.emit(GamepadAction.right);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(controller.offset, start);
+    expect(find.text('page-2'), findsNothing);
+    final focused = FocusManager.instance.primaryFocus;
+    expect(focused, isNotNull);
+    expect(gamepadFocusAlreadyVisible(focused!), isTrue);
+  });
+
   test('правый стик листает зарегистрированную страницу', () {
     final pager = _TestGamepadPager();
     GamepadPagerRegistry.register(pager);
