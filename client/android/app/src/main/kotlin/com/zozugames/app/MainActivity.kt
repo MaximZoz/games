@@ -69,7 +69,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.device?.isGamepadLike() == true || event.isGamepadButton) {
+        val fromPad = event.device?.isGamepadLike() == true || event.isGamepadButton
+        if (fromPad) {
             try {
                 gamepadChannel?.invokeMethod(
                     "key",
@@ -80,6 +81,11 @@ class MainActivity : FlutterActivity() {
                     ),
                 )
             } catch (_: Throwable) {
+            }
+            // DPAD с левого стика не должен дойти до IME/TextField — каретка
+            // остаётся на месте, символы выбирает экранная клавиатура.
+            if (event.isDpadDirection) {
+                return true
             }
         }
         return super.dispatchKeyEvent(event)
@@ -120,6 +126,12 @@ class MainActivity : FlutterActivity() {
         val vb = event.getAxisValue(b)
         return if (abs(va) >= abs(vb)) va else vb
     }
+
+    private val KeyEvent.isDpadDirection: Boolean
+        get() = keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
+            keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||
+            keyCode == KeyEvent.KEYCODE_DPAD_UP ||
+            keyCode == KeyEvent.KEYCODE_DPAD_DOWN
 
     private val KeyEvent.isGamepadButton: Boolean
         get() = keyCode == KeyEvent.KEYCODE_BUTTON_A ||

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_arrows.dart';
+import 'package:multigames_client/core/gamepad/gamepad_caret_guard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_native.dart';
@@ -62,6 +64,7 @@ class GamepadService {
       HardwareKeyboard.instance.addHandler(_onKey);
       _keyHandlerAttached = true;
     }
+    installGamepadCaretGuard();
     _nativePoll?.cancel();
     _nativePoll = null;
     if (debugPollNative &&
@@ -145,23 +148,24 @@ class GamepadService {
     if (action == null) return false;
     final shoulder = action == GamepadAction.shoulderL ||
         action == GamepadAction.shoulderR;
+    // Клавиатура геймпада: стрелки только по символам, не по каретке.
+    if (GamepadKeyboardController.instance.visible &&
+        (action.isDirection || isGamepadTextArrowKey(event.logicalKey))) {
+      if (action.isDirection) {
+        _emit(
+          GamepadActionEvent(
+            action: action,
+            source: isDedicatedGamepadKey(event.logicalKey) ? 'pad' : 'key',
+            deviceName: isDedicatedGamepadKey(event.logicalKey)
+                ? 'Gamepad'
+                : 'Keyboard',
+          ),
+        );
+      }
+      return true;
+    }
     // Плечи всегда листают вкладки — даже если фокус застрял в поле.
     if (!shoulder && isEditableTextFocused()) {
-      if (GamepadKeyboardController.instance.visible) {
-        // Стрелки левого стика/креста не должны сдвигать каретку в поле.
-        if (action.isDirection) {
-          _emit(
-            GamepadActionEvent(
-              action: action,
-              source: isDedicatedGamepadKey(event.logicalKey) ? 'pad' : 'key',
-              deviceName: isDedicatedGamepadKey(event.logicalKey)
-                  ? 'Gamepad'
-                  : 'Keyboard',
-            ),
-          );
-        }
-        return true;
-      }
       if (action == GamepadAction.cancel && event is KeyDownEvent) {
         FocusManager.instance.primaryFocus?.unfocus();
         return true;

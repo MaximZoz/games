@@ -72,6 +72,35 @@ GamepadAction? gamepadScrollFromStick({
   };
 }
 
+/// Правый стик, если оси не копируют левый (на части Android AXIS_Z = AXIS_X).
+GamepadAction? gamepadIndependentScroll({
+  required double leftX,
+  required double leftY,
+  required double rightX,
+  required double rightY,
+  double deadzone = kGamepadStickDeadzone,
+}) {
+  final left = gamepadActionFromStick(
+    x: leftX,
+    y: leftY,
+    deadzone: deadzone,
+  );
+  final scroll = gamepadScrollFromStick(
+    x: rightX,
+    y: rightY,
+    deadzone: deadzone,
+  );
+  if (left == null || scroll == null) return scroll;
+  final mirrored = switch (left) {
+    GamepadAction.left => scroll == GamepadAction.scrollLeft,
+    GamepadAction.right => scroll == GamepadAction.scrollRight,
+    GamepadAction.up => scroll == GamepadAction.scrollUp,
+    GamepadAction.down => scroll == GamepadAction.scrollDown,
+    _ => false,
+  };
+  return mirrored ? null : scroll;
+}
+
 /// Настоящие кнопки геймпада, не стрелки/Enter клавиатуры.
 bool isDedicatedGamepadKey(LogicalKeyboardKey key) {
   return key == LogicalKeyboardKey.gameButtonA ||

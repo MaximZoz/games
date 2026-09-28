@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_arrows.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -129,6 +130,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       descendantsAreTraversable: false,
     );
     GamepadFocusRegistry.register(_focus);
+    widget.inputFocus?.onKeyEvent = handleGamepadFieldArrowKey;
     final chrome = widget.chrome;
     if (chrome != null) {
       GamepadChromeRegistry.register(chrome, _focus);
@@ -141,6 +143,10 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     _focus.canRequestFocus = widget.focusable;
     _focus.skipTraversal = !widget.focusable;
     _focus.descendantsAreFocusable = widget.descendantsFocusable;
+    if (oldWidget.inputFocus != widget.inputFocus) {
+      oldWidget.inputFocus?.onKeyEvent = null;
+      widget.inputFocus?.onKeyEvent = handleGamepadFieldArrowKey;
+    }
     if (oldWidget.chrome != widget.chrome) {
       if (oldWidget.chrome != null) {
         GamepadChromeRegistry.unregister(oldWidget.chrome!, _focus);
@@ -157,6 +163,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       GamepadChromeRegistry.unregister(widget.chrome!, _focus);
     }
     GamepadFocusRegistry.unregister(_focus);
+    widget.inputFocus?.onKeyEvent = null;
     _focus.dispose();
     super.dispose();
   }

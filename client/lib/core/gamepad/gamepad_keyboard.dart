@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_caret_guard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
@@ -24,6 +25,8 @@ class GamepadKeyboardController extends ChangeNotifier {
 
   void show() {
     hideSoftKeyboard();
+    installGamepadCaretGuard();
+    setGamepadKeyboardBlocksTextArrows(true);
     if (_visible) return;
     _visible = true;
     notifyListeners();
@@ -41,6 +44,7 @@ class GamepadKeyboardController extends ChangeNotifier {
 
   void hide() {
     _generation++;
+    setGamepadKeyboardBlocksTextArrows(false);
     if (!_visible) return;
     _visible = false;
     notifyListeners();
@@ -52,6 +56,7 @@ class GamepadKeyboardController extends ChangeNotifier {
   void reset() {
     _visible = false;
     _generation++;
+    setGamepadKeyboardBlocksTextArrows(false);
   }
 }
 
@@ -245,6 +250,7 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
     final narrow = isNarrow(context);
     final rows = _rows;
     return GamepadScope(
+      exclusive: true,
       onAction: _onAction,
       child: Material(
         color: AppColors.surfaceUnified.withValues(alpha: 0.97),
