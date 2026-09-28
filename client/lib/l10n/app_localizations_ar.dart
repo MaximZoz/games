@@ -75,7 +75,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGamepadGenericName => 'وحدة التحكم';
 
   @override
-  String get settingsGamepadHelpNavigate => 'قائمة';
+  String get settingsGamepadHelpNavigate => 'تنقل';
 
   @override
   String get settingsGamepadHelpConfirm => 'اختيار';
@@ -94,6 +94,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'لوحة';
+
+  @override
+  String get settingsGamepadHelpBalance => 'الرصيد';
+
+  @override
+  String get settingsGamepadHelpLogout => 'خروج';
+
+  @override
+  String get settingsGamepadHelpPage => 'صفحة';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'تخطيط Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'تخطيط PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'تخطيط Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'لوحة المفاتيح';

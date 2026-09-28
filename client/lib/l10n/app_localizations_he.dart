@@ -75,7 +75,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsGamepadGenericName => 'בקר';
 
   @override
-  String get settingsGamepadHelpNavigate => 'תפריט';
+  String get settingsGamepadHelpNavigate => 'ניווט';
 
   @override
   String get settingsGamepadHelpConfirm => 'בחירה';
@@ -94,6 +94,24 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'מקלדת';
+
+  @override
+  String get settingsGamepadHelpBalance => 'יתרה';
+
+  @override
+  String get settingsGamepadHelpLogout => 'יציאה';
+
+  @override
+  String get settingsGamepadHelpPage => 'עמוד';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'פריסת Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'פריסת PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'פריסת Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'מקלדת';

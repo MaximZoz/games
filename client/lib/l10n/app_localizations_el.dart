@@ -75,7 +75,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get settingsGamepadGenericName => 'Χειριστήριο';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Μενού';
+  String get settingsGamepadHelpNavigate => 'Πλοήγηση';
 
   @override
   String get settingsGamepadHelpConfirm => 'Επιλογή';
@@ -94,6 +94,24 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Πληκτρολόγιο';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Υπόλοιπο';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Έξοδος';
+
+  @override
+  String get settingsGamepadHelpPage => 'Σελίδα';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Διάταξη Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Διάταξη PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Διάταξη Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Πληκτρολόγιο';

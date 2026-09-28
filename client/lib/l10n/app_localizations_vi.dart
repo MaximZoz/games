@@ -75,7 +75,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsGamepadGenericName => 'Tay cầm';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menu';
+  String get settingsGamepadHelpNavigate => 'Điều hướng';
 
   @override
   String get settingsGamepadHelpConfirm => 'Chọn';
@@ -94,6 +94,24 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Bàn phím';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Số dư';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Đăng xuất';
+
+  @override
+  String get settingsGamepadHelpPage => 'Trang';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Bố cục Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Bố cục PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Bố cục Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Bàn phím';

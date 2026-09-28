@@ -75,7 +75,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsGamepadGenericName => 'Ohjain';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Valikko';
+  String get settingsGamepadHelpNavigate => 'Navigointi';
 
   @override
   String get settingsGamepadHelpConfirm => 'Valitse';
@@ -94,6 +94,24 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Näppäimistö';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Kirjaudu ulos';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sivu';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-asettelu';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-asettelu';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-asettelu';
 
   @override
   String get gamepadKeyboardTitle => 'Näppäimistö';

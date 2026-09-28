@@ -131,10 +131,12 @@ class GamepadHintChip extends StatelessWidget {
     super.key,
     required this.action,
     required this.text,
+    this.action2,
     this.family,
   });
 
   final GamepadAction action;
+  final GamepadAction? action2;
   final String text;
   final GamepadFamily? family;
 
@@ -144,6 +146,10 @@ class GamepadHintChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         GamepadGlyph(action: action, family: family, size: 18),
+        if (action2 != null) ...[
+          const SizedBox(width: 4),
+          GamepadGlyph(action: action2!, family: family, size: 18),
+        ],
         const SizedBox(width: 6),
         Text(
           text,

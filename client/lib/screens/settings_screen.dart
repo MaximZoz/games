@@ -227,6 +227,14 @@ class SettingsScreen extends ConsumerWidget {
                         final connected = pads.isNotEmpty
                             ? l10n.settingsGamepadConnected(padName)
                             : l10n.settingsGamepadDisconnected;
+                        final layoutName = switch (family) {
+                          GamepadFamily.xbox =>
+                            l10n.settingsGamepadLayoutXbox,
+                          GamepadFamily.playstation =>
+                            l10n.settingsGamepadLayoutPlayStation,
+                          GamepadFamily.nintendo =>
+                            l10n.settingsGamepadLayoutNintendo,
+                        };
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -267,6 +275,17 @@ class SettingsScreen extends ConsumerWidget {
                                         color: AppColors.textSecondary,
                                       ),
                                 ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  layoutName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
                                 const SizedBox(height: 10),
                                 Wrap(
                                   spacing: 14,
@@ -289,8 +308,24 @@ class SettingsScreen extends ConsumerWidget {
                                     ),
                                     GamepadHintChip(
                                       action: GamepadAction.shoulderL,
+                                      action2: GamepadAction.shoulderR,
                                       family: family,
                                       text: l10n.settingsGamepadHelpTabs,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.triggerL,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpBalance,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.triggerR,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpLogout,
+                                    ),
+                                    GamepadHintChip(
+                                      action: GamepadAction.scrollDown,
+                                      family: family,
+                                      text: l10n.settingsGamepadHelpPage,
                                     ),
                                     GamepadHintChip(
                                       action: GamepadAction.actionY,
@@ -303,6 +338,16 @@ class SettingsScreen extends ConsumerWidget {
                                       text: l10n.settingsGamepadHelpKeyboard,
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  l10n.settingsGamepadHelpPlay,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                 ),
                               ],
                             ],

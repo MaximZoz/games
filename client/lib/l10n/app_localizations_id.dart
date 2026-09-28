@@ -75,7 +75,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsGamepadGenericName => 'Kontroler';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menu';
+  String get settingsGamepadHelpNavigate => 'Navigasi';
 
   @override
   String get settingsGamepadHelpConfirm => 'Pilih';
@@ -94,6 +94,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Papan ketik';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Keluar';
+
+  @override
+  String get settingsGamepadHelpPage => 'Halaman';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Tata letak Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Tata letak PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Tata letak Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Papan ketik';

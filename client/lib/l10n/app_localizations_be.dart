@@ -75,7 +75,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get settingsGamepadGenericName => 'Кантролер';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Меню';
+  String get settingsGamepadHelpNavigate => 'Навігацыя';
 
   @override
   String get settingsGamepadHelpConfirm => 'Выбраць';
@@ -94,6 +94,24 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Клавіятура';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Баланс';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Выхад';
+
+  @override
+  String get settingsGamepadHelpPage => 'Старонка';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Раскладка Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Раскладка PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Раскладка Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Клавіятура';
