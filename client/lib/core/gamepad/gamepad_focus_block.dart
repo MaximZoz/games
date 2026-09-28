@@ -102,8 +102,13 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     if (!widget.attachKeyboard) return;
     if (show && !_keyboardAttached) {
       _keyboardAttached = true;
+      final generation = GamepadKeyboardController.instance.generation;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !widget.attachKeyboard) return;
+        if (GamepadKeyboardController.instance.generation != generation) {
+          return;
+        }
+        if (!_focus.hasFocus) return;
         widget.inputFocus?.requestFocus();
         GamepadKeyboardController.instance.show();
       });

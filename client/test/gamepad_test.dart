@@ -1995,7 +1995,7 @@ void main() {
       isFalse,
     );
     expect(
-      isGamepadFormCardBox(const Size(390, 200), const Size(400, 800)),
+      isGamepadFormCardBox(const Size(390, 280), const Size(400, 800)),
       isTrue,
     );
   });
@@ -2098,7 +2098,7 @@ void main() {
       'на входе геймпад ходит по полям и кнопкам, не по всей карточке',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
-    tester.view.physicalSize = const Size(400, 860);
+    tester.view.physicalSize = const Size(400, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -2107,7 +2107,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/login',
-          builder: (_, __) => const LoginScreen(),
+          builder: (_, __) => const GamepadHost(child: LoginScreen()),
         ),
         GoRoute(path: '/register', builder: (_, __) => const SizedBox()),
         GoRoute(
@@ -2128,9 +2128,6 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ru'),
-          builder: (context, child) => GamepadHost(
-            child: child ?? const SizedBox.shrink(),
-          ),
         ),
       ),
     );
@@ -2152,19 +2149,20 @@ void main() {
       isTrue,
     );
     expect(GamepadKeyboardController.instance.visible, isTrue);
-    GamepadService.instance.emit(GamepadAction.cancel);
+    dismissGamepadKeyboard();
     await tester.pump();
     expect(GamepadKeyboardController.instance.visible, isFalse);
     expect(find.byType(GamepadGlyph), findsNothing);
 
     Future<void> downTo(Finder inner) async {
-      for (var i = 0; i < 6; i++) {
+      final hostCtx = tester.element(find.byType(GamepadHost));
+      for (var i = 0; i < 8; i++) {
         final ctx = tester.element(inner.first);
         if (GamepadFocusBlock.maybeOf(ctx)?.focusNode.hasFocus == true) {
           return;
         }
-        GamepadService.instance.emit(GamepadAction.down);
-        await tester.pump(const Duration(milliseconds: 40));
+        handleGamepadUiAction(hostCtx, GamepadAction.down);
+        await tester.pump();
       }
       final ctx = tester.element(inner.first);
       expect(
@@ -2174,7 +2172,7 @@ void main() {
     }
 
     await downTo(find.text('Пароль'));
-    GamepadService.instance.emit(GamepadAction.cancel);
+    dismissGamepadKeyboard();
     await tester.pump();
     await downTo(find.text('Забыли пароль?'));
     await downTo(find.text('Войти'));

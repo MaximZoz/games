@@ -276,11 +276,11 @@ List<FocusNode> _visibleGamepadFocusBlocks() {
     if (!isGamepadFocusVisible(node)) return;
     final ctx = node.context;
     if (ctx == null) return;
-    if (!GamepadFocusRegistry.nodes.contains(node) &&
-        GamepadFocusBlock.maybeOf(ctx) == null) {
+    // Только рамка блока, не глаз пароля и не внутренний TextField.
+    if (!GamepadFocusRegistry.nodes.contains(node)) {
       return;
     }
-    if (!_isFocusInView(node)) return;
+    if (!_isFocusInView(node) && !_isSameFormScrollable(node)) return;
     out.add(node);
   }
 
@@ -391,13 +391,27 @@ FocusNode? _neighborGamepadBlock(
             direction == TraversalDirection.up
         ? dx.abs()
         : dy.abs();
-    final score = secondary * 3 + primary;
+    // Ближе по направлению важнее выравнивания: иначе «Забыли пароль?»
+    // справа пропускается в пользу «Войти» по центру.
+    final score = primary + secondary * 0.35;
     if (score < bestScore) {
       bestScore = score;
       best = node;
     }
   }
   return best;
+}
+
+bool _isSameFormScrollable(FocusNode node) {
+  final current = FocusManager.instance.primaryFocus;
+  final aCtx = current?.context;
+  final bCtx = node.context;
+  if (aCtx == null || bCtx == null) return false;
+  final a = Scrollable.maybeOf(aCtx);
+  final b = Scrollable.maybeOf(bCtx);
+  if (a == null || !identical(a, b)) return false;
+  if (a.position is PageMetrics) return false;
+  return true;
 }
 
 bool _isFocusInView(FocusNode node) {
