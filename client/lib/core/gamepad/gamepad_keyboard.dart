@@ -169,6 +169,9 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
       });
       return true;
     }
+    if (action.isScroll) {
+      return GamepadTextEditing.moveByScroll(action);
+    }
     if (action == GamepadAction.confirm) {
       _activate(_current);
       return true;

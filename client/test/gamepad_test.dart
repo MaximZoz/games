@@ -75,6 +75,18 @@ void main() {
     expect(gamepadActionFromStick(x: -0.8, y: 0.1), GamepadAction.left);
     expect(gamepadActionFromStick(x: 0.1, y: -0.9), GamepadAction.up);
     expect(gamepadActionFromStick(x: 0.2, y: 0.95), GamepadAction.down);
+    expect(
+      gamepadScrollFromStick(x: -0.9, y: 0.1),
+      GamepadAction.scrollLeft,
+    );
+    expect(
+      gamepadScrollFromStick(x: 0.9, y: 0.1),
+      GamepadAction.scrollRight,
+    );
+    expect(
+      gamepadScrollFromStick(x: 0.1, y: -0.9),
+      GamepadAction.scrollUp,
+    );
   });
 
   test('клавиши и game-button ключи мапятся', () {
@@ -229,6 +241,14 @@ void main() {
       ),
     );
     expect(one.text, 'h');
+    const lines = TextEditingValue(
+      text: 'ab\ncd',
+      selection: TextSelection.collapsed(offset: 1),
+    );
+    expect(GamepadTextEditing.applyMove(lines, dx: 1).selection.baseOffset, 2);
+    expect(GamepadTextEditing.applyMove(lines, dx: -1).selection.baseOffset, 0);
+    expect(GamepadTextEditing.caretOffsetByLine('ab\ncd', 1, 1), 4);
+    expect(GamepadTextEditing.caretOffsetByLine('ab\ncd', 4, -1), 1);
   });
 
   test('раскладки клавиатуры геймпада содержат буквы и служебные клавиши', () {
@@ -2143,6 +2163,57 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
     expect(activated, 1);
+  });
+
+  testWidgets(
+      'левый стик ходит по клавиатуре, правый двигает курсор в поле',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final focus = FocusNode();
+    final controller = TextEditingController(text: 'abcd');
+    addTearDown(focus.dispose);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: GamepadFieldBlock(
+                autofocus: true,
+                inputFocus: focus,
+                child: TextField(
+                  focusNode: focus,
+                  controller: controller,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    controller.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.left);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
+    GamepadService.instance.emit(GamepadAction.scrollLeft);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 1);
+    GamepadService.instance.emit(GamepadAction.scrollRight);
+    await tester.pump();
+    expect(controller.selection.baseOffset, 2);
   });
 
   testWidgets(

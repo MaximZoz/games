@@ -147,6 +147,21 @@ class GamepadService {
         action == GamepadAction.shoulderR;
     // Плечи всегда листают вкладки — даже если фокус застрял в поле.
     if (!shoulder && isEditableTextFocused()) {
+      if (GamepadKeyboardController.instance.visible) {
+        // Стрелки левого стика/креста не должны сдвигать каретку в поле.
+        if (action.isDirection) {
+          _emit(
+            GamepadActionEvent(
+              action: action,
+              source: isDedicatedGamepadKey(event.logicalKey) ? 'pad' : 'key',
+              deviceName: isDedicatedGamepadKey(event.logicalKey)
+                  ? 'Gamepad'
+                  : 'Keyboard',
+            ),
+          );
+        }
+        return true;
+      }
       if (action == GamepadAction.cancel && event is KeyDownEvent) {
         FocusManager.instance.primaryFocus?.unfocus();
         return true;
