@@ -75,7 +75,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsGamepadGenericName => 'Controller';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menu';
+  String get settingsGamepadHelpNavigate => 'Navigation';
 
   @override
   String get settingsGamepadHelpConfirm => 'Vælg';
@@ -94,6 +94,24 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Tastatur';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Saldo';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Log ud';
+
+  @override
+  String get settingsGamepadHelpPage => 'Side';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox-layout';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation-layout';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo-layout';
 
   @override
   String get gamepadKeyboardTitle => 'Tastatur';

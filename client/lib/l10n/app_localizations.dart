@@ -284,7 +284,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsGamepadHelpNavigate.
   ///
   /// In ru, this message translates to:
-  /// **'Меню'**
+  /// **'Навигация'**
   String get settingsGamepadHelpNavigate;
 
   /// No description provided for @settingsGamepadHelpConfirm.
@@ -322,6 +322,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Клавиатура'**
   String get settingsGamepadHelpKeyboard;
+
+  /// No description provided for @settingsGamepadHelpBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс'**
+  String get settingsGamepadHelpBalance;
+
+  /// No description provided for @settingsGamepadHelpLogout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выход'**
+  String get settingsGamepadHelpLogout;
+
+  /// No description provided for @settingsGamepadHelpPage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Страница'**
+  String get settingsGamepadHelpPage;
+
+  /// No description provided for @settingsGamepadLayoutXbox.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Xbox'**
+  String get settingsGamepadLayoutXbox;
+
+  /// No description provided for @settingsGamepadLayoutPlayStation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка PlayStation'**
+  String get settingsGamepadLayoutPlayStation;
+
+  /// No description provided for @settingsGamepadLayoutNintendo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раскладка Nintendo'**
+  String get settingsGamepadLayoutNintendo;
 
   /// No description provided for @gamepadKeyboardTitle.
   ///

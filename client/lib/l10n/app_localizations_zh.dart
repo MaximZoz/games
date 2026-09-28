@@ -75,7 +75,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGamepadGenericName => '手柄';
 
   @override
-  String get settingsGamepadHelpNavigate => '菜单';
+  String get settingsGamepadHelpNavigate => '导航';
 
   @override
   String get settingsGamepadHelpConfirm => '选择';
@@ -94,6 +94,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => '键盘';
+
+  @override
+  String get settingsGamepadHelpBalance => '余额';
+
+  @override
+  String get settingsGamepadHelpLogout => '退出';
+
+  @override
+  String get settingsGamepadHelpPage => '翻页';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 布局';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 布局';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 布局';
 
   @override
   String get gamepadKeyboardTitle => '键盘';

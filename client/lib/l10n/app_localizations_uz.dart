@@ -75,7 +75,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get settingsGamepadGenericName => 'Kontroller';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menyu';
+  String get settingsGamepadHelpNavigate => 'Navigatsiya';
 
   @override
   String get settingsGamepadHelpConfirm => 'Tanlash';
@@ -94,6 +94,24 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Klaviatura';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Balans';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Chiqish';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sahifa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation joylashuvi';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo joylashuvi';
 
   @override
   String get gamepadKeyboardTitle => 'Klaviatura';

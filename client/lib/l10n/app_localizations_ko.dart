@@ -75,7 +75,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGamepadGenericName => '컨트롤러';
 
   @override
-  String get settingsGamepadHelpNavigate => '메뉴';
+  String get settingsGamepadHelpNavigate => '이동';
 
   @override
   String get settingsGamepadHelpConfirm => '선택';
@@ -94,6 +94,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => '키보드';
+
+  @override
+  String get settingsGamepadHelpBalance => '잔액';
+
+  @override
+  String get settingsGamepadHelpLogout => '로그아웃';
+
+  @override
+  String get settingsGamepadHelpPage => '페이지';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox 배치';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation 배치';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo 배치';
 
   @override
   String get gamepadKeyboardTitle => '키보드';

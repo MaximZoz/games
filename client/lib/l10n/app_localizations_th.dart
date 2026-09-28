@@ -75,7 +75,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settingsGamepadGenericName => 'คอนโทรลเลอร์';
 
   @override
-  String get settingsGamepadHelpNavigate => 'เมนู';
+  String get settingsGamepadHelpNavigate => 'นำทาง';
 
   @override
   String get settingsGamepadHelpConfirm => 'เลือก';
@@ -94,6 +94,24 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'คีย์บอร์ด';
+
+  @override
+  String get settingsGamepadHelpBalance => 'ยอดเงิน';
+
+  @override
+  String get settingsGamepadHelpLogout => 'ออก';
+
+  @override
+  String get settingsGamepadHelpPage => 'หน้า';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'ปุ่ม Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'ปุ่ม PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'ปุ่ม Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'คีย์บอร์ด';

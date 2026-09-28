@@ -409,15 +409,42 @@ Rect? _focusRect(FocusNode node) {
 }
 
 void _ensureVisible(FocusNode? node) {
-  final ctx = node?.context;
+  if (node == null || gamepadFocusAlreadyVisible(node)) return;
+  final ctx = node.context;
   if (ctx == null) return;
   Scrollable.ensureVisible(
     ctx,
-    alignment: 0.45,
-    duration: const Duration(milliseconds: 120),
+    alignment: 0.15,
+    duration: const Duration(milliseconds: 80),
     curve: Curves.easeOut,
-    alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
   );
+}
+
+/// Не скроллить, если плитка уже в кадре: иначе PageView эмоций в альбоме дёргается.
+@visibleForTesting
+bool gamepadFocusAlreadyVisible(FocusNode node) {
+  final rect = _focusRect(node);
+  final ctx = node.context;
+  if (rect == null || ctx == null) return false;
+  final scrollable = Scrollable.maybeOf(ctx);
+  if (scrollable != null && scrollable.position is PageMetrics) {
+    return true;
+  }
+  final box = scrollable?.context.findRenderObject();
+  final Rect view;
+  if (box is RenderBox && box.hasSize && box.attached) {
+    view = box.localToGlobal(Offset.zero) & box.size;
+  } else {
+    final mq = MediaQuery.maybeOf(ctx);
+    if (mq == null) return true;
+    view = Offset.zero & mq.size;
+  }
+  final visible = rect.intersect(view.deflate(1));
+  if (visible.isEmpty) return false;
+  final area = rect.width * rect.height;
+  if (area <= 0) return true;
+  return visible.width * visible.height >= area * 0.9;
 }
 
 bool _activateFocused() {

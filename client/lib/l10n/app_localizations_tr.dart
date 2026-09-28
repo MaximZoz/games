@@ -75,7 +75,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGamepadGenericName => 'Kontrolcü';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menü';
+  String get settingsGamepadHelpNavigate => 'Gezinme';
 
   @override
   String get settingsGamepadHelpConfirm => 'Seç';
@@ -94,6 +94,24 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Klavye';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Bakiye';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Çıkış';
+
+  @override
+  String get settingsGamepadHelpPage => 'Sayfa';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Xbox düzeni';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'PlayStation düzeni';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Nintendo düzeni';
 
   @override
   String get gamepadKeyboardTitle => 'Klavye';

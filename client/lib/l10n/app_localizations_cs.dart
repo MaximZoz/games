@@ -75,7 +75,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGamepadGenericName => 'Ovladač';
 
   @override
-  String get settingsGamepadHelpNavigate => 'Menu';
+  String get settingsGamepadHelpNavigate => 'Navigace';
 
   @override
   String get settingsGamepadHelpConfirm => 'Vybrat';
@@ -94,6 +94,24 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get settingsGamepadHelpKeyboard => 'Klávesnice';
+
+  @override
+  String get settingsGamepadHelpBalance => 'Zůstatek';
+
+  @override
+  String get settingsGamepadHelpLogout => 'Odhlásit';
+
+  @override
+  String get settingsGamepadHelpPage => 'Stránka';
+
+  @override
+  String get settingsGamepadLayoutXbox => 'Rozložení Xbox';
+
+  @override
+  String get settingsGamepadLayoutPlayStation => 'Rozložení PlayStation';
+
+  @override
+  String get settingsGamepadLayoutNintendo => 'Rozložení Nintendo';
 
   @override
   String get gamepadKeyboardTitle => 'Klávesnice';

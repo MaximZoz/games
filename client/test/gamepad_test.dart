@@ -8,6 +8,7 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
@@ -424,7 +425,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.textContaining('Геймпад не найден'), findsOneWidget);
-    expect(find.text('Меню'), findsNothing);
+    expect(find.text('Навигация'), findsNothing);
     expect(find.text('Карты'), findsNothing);
     expect(find.text('Клавиатура'), findsNothing);
   });
@@ -450,12 +451,109 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.textContaining('Геймпад не найден'), findsNothing);
     expect(find.textContaining('DualSense'), findsOneWidget);
-    expect(find.text('Меню'), findsOneWidget);
+    expect(find.text('Раскладка PlayStation'), findsOneWidget);
+    expect(find.text('Навигация'), findsOneWidget);
     expect(find.text('Выбрать'), findsOneWidget);
     expect(find.text('Назад'), findsOneWidget);
     expect(find.text('Вкладки'), findsOneWidget);
+    expect(find.text('Баланс'), findsOneWidget);
+    expect(find.text('Выход'), findsOneWidget);
+    expect(find.text('Страница'), findsOneWidget);
     expect(find.text('Карты'), findsOneWidget);
     expect(find.text('Клавиатура'), findsWidgets);
+    expect(
+      gamepadButtonLook(
+        GamepadAction.confirm,
+        family: GamepadFamily.playstation,
+      ).label,
+      '✕',
+    );
+    final confirmGlyph = tester
+        .widgetList<GamepadGlyph>(find.byType(GamepadGlyph))
+        .firstWhere((g) => g.action == GamepadAction.confirm);
+    expect(confirmGlyph.family, GamepadFamily.playstation);
+    expect(
+      tester
+          .widgetList<GamepadGlyph>(find.byType(GamepadGlyph))
+          .any((g) => g.action == GamepadAction.shoulderR),
+      isTrue,
+    );
+  });
+
+  testWidgets('настройки с Xbox показывают раскладку Xbox', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Раскладка Xbox'), findsOneWidget);
+    expect(find.text('Раскладка PlayStation'), findsNothing);
+    final confirmGlyph = tester
+        .widgetList<GamepadGlyph>(find.byType(GamepadGlyph))
+        .firstWhere((g) => g.action == GamepadAction.confirm);
+    expect(confirmGlyph.family, GamepadFamily.xbox);
+    expect(
+      gamepadButtonLook(GamepadAction.confirm, family: confirmGlyph.family)
+          .label,
+      'A',
+    );
+    expect(
+      gamepadButtonLook(GamepadAction.shoulderL, family: confirmGlyph.family)
+          .label,
+      'LB',
+    );
+  });
+
+  testWidgets('настройки с Nintendo показывают раскладку Nintendo',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(
+        id: 'pad',
+        name: 'Nintendo Switch Pro Controller',
+        index: 0,
+      ),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Раскладка Nintendo'), findsOneWidget);
+    final confirmGlyph = tester
+        .widgetList<GamepadGlyph>(find.byType(GamepadGlyph))
+        .firstWhere((g) => g.action == GamepadAction.confirm);
+    expect(confirmGlyph.family, GamepadFamily.nintendo);
+    expect(
+      gamepadButtonLook(GamepadAction.confirm, family: confirmGlyph.family)
+          .label,
+      'B',
+    );
+    expect(
+      gamepadButtonLook(GamepadAction.cancel, family: confirmGlyph.family)
+          .label,
+      'A',
+    );
   });
 
   testWidgets('настройки после кнопки геймпада больше не пишут «не найден»',
@@ -1135,6 +1233,60 @@ void main() {
     GamepadService.instance.emit(GamepadAction.shoulderR);
     await tester.pump();
     expect(tabs, 1);
+  });
+
+  testWidgets('фокус по плиткам в PageView не двигает страницу', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = PageController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: SizedBox(
+                width: 720,
+                height: 280,
+                child: PageView(
+                  controller: controller,
+                  scrollDirection: Axis.vertical,
+                  children: [
+                    GridView.count(
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 3,
+                      children: [
+                        for (var i = 0; i < 6; i++)
+                          GamepadFocusBlock(
+                            autofocus: i == 0,
+                            onActivate: () {},
+                            child: Center(child: Text('e$i')),
+                          ),
+                      ],
+                    ),
+                    const Center(child: Text('page-2')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    final start = controller.offset;
+    GamepadService.instance.emit(GamepadAction.right);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(controller.offset, start);
+    expect(find.text('page-2'), findsNothing);
+    final focused = FocusManager.instance.primaryFocus;
+    expect(focused, isNotNull);
+    expect(gamepadFocusAlreadyVisible(focused!), isTrue);
   });
 
   test('правый стик листает зарегистрированную страницу', () {
