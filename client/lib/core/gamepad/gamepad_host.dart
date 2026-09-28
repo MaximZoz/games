@@ -108,15 +108,12 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
       listenable: GamepadKeyboardController.instance,
       builder: (context, _) {
         final kb = GamepadKeyboardController.instance.visible;
-        final body = kb
-            ? Shortcuts(
-                shortcuts: gamepadKeyboardTextShortcuts,
-                child: widget.child,
-              )
-            : widget.child;
         return Stack(
           children: [
-            body,
+            Shortcuts(
+              shortcuts: kb ? gamepadKeyboardTextShortcuts : const {},
+              child: widget.child,
+            ),
             if (!kb) const GamepadHintsOverlay(),
             if (kb)
               Align(

@@ -33,9 +33,10 @@ class GamepadFieldBlock extends StatelessWidget {
       child: ListenableBuilder(
         listenable: GamepadKeyboardController.instance,
         builder: (context, _) {
-          if (!GamepadKeyboardController.instance.visible) return child;
           return Shortcuts(
-            shortcuts: gamepadKeyboardTextShortcuts,
+            shortcuts: GamepadKeyboardController.instance.visible
+                ? gamepadKeyboardTextShortcuts
+                : const <ShortcutActivator, Intent>{},
             child: child,
           );
         },
