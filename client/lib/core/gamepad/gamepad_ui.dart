@@ -7,6 +7,7 @@ import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
 import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_text.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
 /// Скрыть клавиатуру геймпада и вернуть фокус на рамку поля.
@@ -44,6 +45,14 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     return _switchTab(action == GamepadAction.shoulderL ? -1 : 1);
   }
   if (action.isScroll) {
+    if (GamepadKeyboardController.instance.visible ||
+        isEditableTextFocused()) {
+      return GamepadTextEditing.moveByScroll(action);
+    }
+    if (action == GamepadAction.scrollLeft ||
+        action == GamepadAction.scrollRight) {
+      return false;
+    }
     return _scrollPage(action == GamepadAction.scrollUp ? -1 : 1);
   }
   if (action == GamepadAction.triggerL) {
@@ -98,6 +107,8 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     case GamepadAction.triggerR:
     case GamepadAction.scrollUp:
     case GamepadAction.scrollDown:
+    case GamepadAction.scrollLeft:
+    case GamepadAction.scrollRight:
     case GamepadAction.select:
       return false;
   }

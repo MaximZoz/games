@@ -45,6 +45,7 @@ class AndroidGamepadBridge {
   Timer? _timer;
   double _lx = 0;
   double _ly = 0;
+  double _rx = 0;
   double _ry = 0;
   double _hx = 0;
   double _hy = 0;
@@ -80,6 +81,7 @@ class AndroidGamepadBridge {
       _name = '${args['name'] ?? _name}';
       _lx = (args['lx'] as num?)?.toDouble() ?? 0;
       _ly = (args['ly'] as num?)?.toDouble() ?? 0;
+      _rx = (args['rx'] as num?)?.toDouble() ?? 0;
       _ry = (args['ry'] as num?)?.toDouble() ?? 0;
       _hx = (args['hx'] as num?)?.toDouble() ?? 0;
       _hy = (args['hy'] as num?)?.toDouble() ?? 0;
@@ -122,9 +124,8 @@ class AndroidGamepadBridge {
     if (hat != null) held.add(hat);
     final left = gamepadActionFromStick(x: _lx, y: _ly);
     if (left != null) held.add(left);
-    final right = gamepadActionFromStick(x: 0, y: _ry);
-    if (right == GamepadAction.up) held.add(GamepadAction.scrollUp);
-    if (right == GamepadAction.down) held.add(GamepadAction.scrollDown);
+    final scroll = gamepadScrollFromStick(x: _rx, y: _ry);
+    if (scroll != null) held.add(scroll);
     final lt = _lt >= 0.55;
     if (lt && !_ltHeld) pressedNow.add(GamepadAction.triggerL);
     _ltHeld = lt;

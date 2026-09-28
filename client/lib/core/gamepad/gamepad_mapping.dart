@@ -57,6 +57,21 @@ GamepadAction? gamepadActionFromStick({
   return y < 0 ? GamepadAction.up : GamepadAction.down;
 }
 
+/// Правый стик: страница / курсор в поле, не выбор карточек.
+GamepadAction? gamepadScrollFromStick({
+  required double x,
+  required double y,
+  double deadzone = kGamepadStickDeadzone,
+}) {
+  return switch (gamepadActionFromStick(x: x, y: y, deadzone: deadzone)) {
+    GamepadAction.up => GamepadAction.scrollUp,
+    GamepadAction.down => GamepadAction.scrollDown,
+    GamepadAction.left => GamepadAction.scrollLeft,
+    GamepadAction.right => GamepadAction.scrollRight,
+    _ => null,
+  };
+}
+
 /// Настоящие кнопки геймпада, не стрелки/Enter клавиатуры.
 bool isDedicatedGamepadKey(LogicalKeyboardKey key) {
   return key == LogicalKeyboardKey.gameButtonA ||
