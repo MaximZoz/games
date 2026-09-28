@@ -16,7 +16,11 @@ class GamepadKeyboardController extends ChangeNotifier {
   static final GamepadKeyboardController instance = GamepadKeyboardController();
 
   bool _visible = false;
+  int _generation = 0;
   bool get visible => _visible;
+
+  /// Растёт при каждом `hide`, чтобы отменить отложенный `show`.
+  int get generation => _generation;
 
   void show() {
     if (_visible) return;
@@ -26,6 +30,7 @@ class GamepadKeyboardController extends ChangeNotifier {
   }
 
   void hide() {
+    _generation++;
     if (!_visible) return;
     _visible = false;
     notifyListeners();
@@ -36,6 +41,7 @@ class GamepadKeyboardController extends ChangeNotifier {
   @visibleForTesting
   void reset() {
     _visible = false;
+    _generation++;
   }
 }
 
@@ -157,7 +163,11 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
       _activate(_current);
       return true;
     }
-    if (action == GamepadAction.cancel || action == GamepadAction.actionY) {
+    if (action == GamepadAction.cancel) {
+      widget.onClose();
+      return true;
+    }
+    if (action == GamepadAction.actionY) {
       if (!GamepadTextEditing.backspace()) {
         widget.onClose();
       }
@@ -246,7 +256,6 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
                       ),
                     ),
                     IconButton(
-                      tooltip: l10n.commonClose,
                       onPressed: widget.onClose,
                       icon: const Icon(Icons.keyboard_hide_rounded),
                     ),

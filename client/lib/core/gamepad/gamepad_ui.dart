@@ -8,6 +8,17 @@ import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 
+/// Скрыть клавиатуру геймпада и вернуть фокус на рамку поля.
+void dismissGamepadKeyboard() {
+  GamepadKeyboardController.instance.hide();
+  final primary = FocusManager.instance.primaryFocus;
+  final ctx = primary?.context;
+  if (ctx == null || !isEditableTextFocused()) return;
+  final scope = GamepadFocusBlock.maybeOf(ctx);
+  primary!.unfocus();
+  scope?.focusNode.requestFocus();
+}
+
 /// Правый стик / статистика: страница скролла.
 bool scrollGamepadByPage(int direction) => _scrollPage(direction);
 
@@ -32,7 +43,7 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
       isGamepadFocusVisible(FocusManager.instance.primaryFocus)) {
     if (action == GamepadAction.cancel) {
       if (GamepadKeyboardController.instance.visible) {
-        GamepadKeyboardController.instance.hide();
+        dismissGamepadKeyboard();
         return true;
       }
       FocusManager.instance.primaryFocus?.unfocus();
@@ -123,6 +134,14 @@ bool focusFirstVisibleGamepadTarget() {
   return true;
 }
 
+/// Карточка входа с рейлом не занимает 94% ширины, но это всё равно весь блок.
+bool isGamepadFormCardBox(Size box, Size screen) {
+  if (box.width > screen.width * 0.94 && box.height > screen.height * 0.45) {
+    return true;
+  }
+  return box.width > screen.width * 0.55 && box.height > screen.height * 0.32;
+}
+
 bool isGamepadFocusVisible(FocusNode? node) {
   if (node == null || !node.canRequestFocus) return false;
   if (node == FocusManager.instance.rootScope) return false;
@@ -139,9 +158,7 @@ bool isGamepadFocusVisible(FocusNode? node) {
   final inBlock = GamepadFocusBlock.maybeOf(ctx) != null;
   if (!inBlock) {
     final mq = MediaQuery.maybeOf(ctx);
-    if (mq != null &&
-        ro.size.width > mq.size.width * 0.94 &&
-        ro.size.height > mq.size.height * 0.45) {
+    if (mq != null && isGamepadFormCardBox(ro.size, mq.size)) {
       return false;
     }
   }
@@ -259,11 +276,11 @@ List<FocusNode> _visibleGamepadFocusBlocks() {
     if (!isGamepadFocusVisible(node)) return;
     final ctx = node.context;
     if (ctx == null) return;
-    if (!GamepadFocusRegistry.nodes.contains(node) &&
-        GamepadFocusBlock.maybeOf(ctx) == null) {
+    // Только рамка блока, не глаз пароля и не внутренний TextField.
+    if (!GamepadFocusRegistry.nodes.contains(node)) {
       return;
     }
-    if (!_isFocusInView(node)) return;
+    if (!_isFocusInView(node) && !_isSameFormScrollable(node)) return;
     out.add(node);
   }
 
@@ -374,13 +391,27 @@ FocusNode? _neighborGamepadBlock(
             direction == TraversalDirection.up
         ? dx.abs()
         : dy.abs();
-    final score = secondary * 3 + primary;
+    // Ближе по направлению важнее выравнивания: иначе «Забыли пароль?»
+    // справа пропускается в пользу «Войти» по центру.
+    final score = primary + secondary * 0.35;
     if (score < bestScore) {
       bestScore = score;
       best = node;
     }
   }
   return best;
+}
+
+bool _isSameFormScrollable(FocusNode node) {
+  final current = FocusManager.instance.primaryFocus;
+  final aCtx = current?.context;
+  final bCtx = node.context;
+  if (aCtx == null || bCtx == null) return false;
+  final a = Scrollable.maybeOf(aCtx);
+  final b = Scrollable.maybeOf(bCtx);
+  if (a == null || !identical(a, b)) return false;
+  if (a.position is PageMetrics) return false;
+  return true;
 }
 
 bool _isFocusInView(FocusNode node) {

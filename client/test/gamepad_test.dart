@@ -23,6 +23,7 @@ import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_text.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -30,7 +31,10 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/settings_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/screens/login_screen.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/widgets/oauth_buttons.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -42,6 +46,7 @@ void main() {
     GamepadService.debugPollNative = false;
     GamepadService.instance.reset();
     GamepadService.debugPollNative = false;
+    GamepadKeyboardController.instance.reset();
   });
 
   tearDown(() {
@@ -1978,6 +1983,201 @@ void main() {
     GamepadService.instance.emit(GamepadAction.shoulderR);
     await tester.pump();
     expect(tabs, 1);
+  });
+
+  test('карточка формы входа с рейлом считается слишком большой для обводки', () {
+    expect(
+      isGamepadFormCardBox(const Size(520, 280), const Size(800, 360)),
+      isTrue,
+    );
+    expect(
+      isGamepadFormCardBox(const Size(180, 48), const Size(800, 360)),
+      isFalse,
+    );
+    expect(
+      isGamepadFormCardBox(const Size(390, 280), const Size(400, 800)),
+      isTrue,
+    );
+  });
+
+  testWidgets('оверлей не рисует A на всей карточке формы', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(800, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 520,
+                  height: 280,
+                  child: FilledButton(
+                    autofocus: true,
+                    onPressed: () {},
+                    child: const Text('карточка'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(find.text('карточка'), findsOneWidget);
+    expect(find.byType(GamepadGlyph), findsNothing);
+  });
+
+  testWidgets(
+      'наведение на поле открывает клавиатуру, B скрывает и даёт уйти вниз',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final emailFocus = FocusNode();
+    addTearDown(emailFocus.dispose);
+    var activated = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: Column(
+                children: [
+                  GamepadFieldBlock(
+                    autofocus: true,
+                    inputFocus: emailFocus,
+                    child: TextField(
+                      focusNode: emailFocus,
+                      decoration: const InputDecoration(labelText: 'логин'),
+                    ),
+                  ),
+                  GamepadActionBlock(
+                    outlined: true,
+                    onActivate: () => activated++,
+                    child: const Text('войти'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    expect(find.text('Клавиатура'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.text('Клавиатура'), findsNothing);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(activated, 1);
+  });
+
+  testWidgets(
+      'на входе геймпад ходит по полям и кнопкам, не по всей карточке',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/login',
+      routes: [
+        GoRoute(
+          path: '/login',
+          builder: (_, __) => const GamepadHost(child: LoginScreen()),
+        ),
+        GoRoute(path: '/register', builder: (_, __) => const SizedBox()),
+        GoRoute(
+          path: '/forgot-password',
+          builder: (_, __) => const SizedBox(),
+        ),
+        GoRoute(path: '/games', builder: (_, __) => const SizedBox()),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          oauthProvidersProvider.overrideWith((ref) async => ['google']),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Вход'), findsOneWidget);
+    expect(find.byType(GamepadFieldBlock), findsNWidgets(2));
+    expect(find.byType(GamepadActionBlock), findsAtLeastNWidgets(3));
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    final emailCtx = tester.element(find.text('Email или логин').first);
+    expect(
+      GamepadFocusBlock.maybeOf(emailCtx)?.focusNode.hasFocus,
+      isTrue,
+    );
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    dismissGamepadKeyboard();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.byType(GamepadGlyph), findsNothing);
+
+    Future<void> downTo(Finder inner) async {
+      final hostCtx = tester.element(find.byType(GamepadHost));
+      for (var i = 0; i < 8; i++) {
+        final ctx = tester.element(inner.first);
+        if (GamepadFocusBlock.maybeOf(ctx)?.focusNode.hasFocus == true) {
+          return;
+        }
+        handleGamepadUiAction(hostCtx, GamepadAction.down);
+        await tester.pump();
+      }
+      final ctx = tester.element(inner.first);
+      expect(
+        GamepadFocusBlock.maybeOf(ctx)?.focusNode.hasFocus,
+        isTrue,
+      );
+    }
+
+    await downTo(find.text('Пароль'));
+    dismissGamepadKeyboard();
+    await tester.pump();
+    await downTo(find.text('Забыли пароль?'));
+    await downTo(find.text('Войти'));
+    await downTo(find.text('Нет аккаунта? Зарегистрироваться'));
+    await downTo(find.text('Google'));
   });
 }
 
