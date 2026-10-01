@@ -115,7 +115,12 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
       });
     } else if (!show && _keyboardAttached) {
       _keyboardAttached = false;
-      GamepadKeyboardController.instance.hide();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_focus.hasFocus || widget.inputFocus?.hasFocus == true) return;
+        if (isEditableTextFocused()) return;
+        GamepadKeyboardController.instance.hide();
+      });
     }
   }
 

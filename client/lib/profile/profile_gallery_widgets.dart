@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/auth/profile_extra.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/chats/chat_image_pick.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_photo_cache.dart';
@@ -724,12 +725,19 @@ class _EditSlotCard extends StatelessWidget {
       children: [
         SizedBox(
           height: size,
-          child: Material(
+          child: GamepadFocusBlock(
+            radius: 12,
+            borderWidth: 2.2,
+            onActivate: !enabled || busy
+                ? null
+                : (filled ? onReplace : onAdd),
+            child: Material(
             key: ValueKey('profile-gallery-slot-$slot'),
             color: AppColors.accentSoft,
             borderRadius: BorderRadius.circular(12),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
+              canRequestFocus: false,
               onTap: !enabled || busy
                   ? null
                   : (filled ? onReplace : onAdd),
@@ -790,6 +798,7 @@ class _EditSlotCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ],
