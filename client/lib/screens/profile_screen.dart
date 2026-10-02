@@ -2473,10 +2473,21 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     return ListenableBuilder(
       listenable: GamepadService.instance.devices,
       builder: (context, _) {
-        if (widget.compact) {
-          return _buildCompactEditor(context);
-        }
-        return _buildWideEditor(context);
+        final editor = widget.compact
+            ? _buildCompactEditor(context)
+            : _buildWideEditor(context);
+        if (!_gamepadEditor) return editor;
+        return GamepadScope(
+          onAction: (action) {
+            if (action != GamepadAction.cancel) return false;
+            if (GamepadKeyboardController.instance.visible ||
+                isEditableTextFocused()) {
+              return false;
+            }
+            return _handleEditBack();
+          },
+          child: editor,
+        );
       },
     );
   }

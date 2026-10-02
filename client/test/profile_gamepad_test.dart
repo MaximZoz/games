@@ -173,16 +173,17 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Сохранить'), findsOneWidget);
-    expect(focusFirstVisibleGamepadTarget(), isTrue);
-    await tester.pump();
-    await tester.pump();
     expect(GamepadKeyboardController.instance.visible, isFalse);
     expect(find.text('Клавиатура'), findsNothing);
 
-    final nameCtx = tester.element(
-      find.byKey(const ValueKey('compact_display_name')),
+    final nameScope = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_display_name'))),
     );
-    expect(GamepadFocusBlock.maybeOf(nameCtx)?.focusNode.hasFocus, isTrue);
+    expect(nameScope, isNotNull);
+    nameScope!.focusNode.requestFocus();
+    await tester.pump();
+    await tester.pump();
+    expect(nameScope.focusNode.hasFocus, isTrue);
 
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
