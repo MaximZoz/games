@@ -155,5 +155,59 @@ void main() {
       tester.widgetList(find.byType(GamepadFocusBlock)).length,
       greaterThan(8),
     );
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+  });
+
+  testWidgets(
+      'в редакторе клавиатура только по A, B скрывает, назад выходит',
+      (tester) async {
+    await _pumpProfile(tester);
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Сохранить'), findsOneWidget);
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.text('Клавиатура'), findsNothing);
+
+    final nameScope = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_display_name'))),
+    );
+    expect(nameScope, isNotNull);
+    nameScope!.focusNode.requestFocus();
+    await tester.pump();
+    await tester.pump();
+    expect(nameScope.focusNode.hasFocus, isTrue);
+
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    expect(find.text('Клавиатура'), findsOneWidget);
+
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    expect(find.text('Клавиатура'), findsNothing);
+    expect(find.text('Сохранить'), findsOneWidget);
+
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    handleGamepadUiAction(hostCtx, GamepadAction.down);
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    final ageCtx = tester.element(find.byKey(const ValueKey('compact_age')));
+    expect(GamepadFocusBlock.maybeOf(ageCtx)?.focusNode.hasFocus, isTrue);
+
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Редактировать'), findsOneWidget);
+    expect(find.text('Сохранить'), findsNothing);
   });
 }

@@ -2193,6 +2193,62 @@ void main() {
   });
 
   testWidgets(
+      'openOnFocus: false открывает клавиатуру только по A',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final emailFocus = FocusNode();
+    addTearDown(emailFocus.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Scaffold(
+              body: Column(
+                children: [
+                  GamepadFieldBlock(
+                    autofocus: true,
+                    openOnFocus: false,
+                    inputFocus: emailFocus,
+                    child: TextField(
+                      focusNode: emailFocus,
+                      decoration: const InputDecoration(labelText: 'логин'),
+                    ),
+                  ),
+                  GamepadActionBlock(
+                    outlined: true,
+                    onActivate: () {},
+                    child: const Text('войти'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    expect(find.text('Клавиатура'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isFalse);
+  });
+
+  testWidgets(
       'левый стик ходит по клавиатуре, правый двигает курсор в поле',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
