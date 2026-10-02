@@ -4,18 +4,22 @@ import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 
-/// Поле входа: рамка геймпада и клавиатура при наведении.
+/// Поле входа: рамка геймпада. По умолчанию клавиатура при наведении.
 class GamepadFieldBlock extends StatelessWidget {
   const GamepadFieldBlock({
     super.key,
     required this.inputFocus,
     required this.child,
     this.autofocus = false,
+    this.openOnFocus = true,
   });
 
   final FocusNode inputFocus;
   final Widget child;
   final bool autofocus;
+
+  /// `true` — клавиатура при наведении (вход). `false` — только по A.
+  final bool openOnFocus;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class GamepadFieldBlock extends StatelessWidget {
       radius: AppRadius.input,
       borderWidth: 2.2,
       descendantsFocusable: true,
-      attachKeyboard: true,
+      attachKeyboard: openOnFocus,
       inputFocus: inputFocus,
       onActivate: () {
         inputFocus.requestFocus();

@@ -20,9 +20,12 @@ import 'package:multigames_client/screens/profile_about_line.dart';
 import 'package:multigames_client/screens/profile_age_input.dart';
 import 'package:multigames_client/screens/profile_avatar_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/soft_keyboard.dart';
 import 'package:multigames_client/screens/profile_edit_back.dart';
@@ -203,7 +206,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ProfileExtra? _lastProfileExtra;
   final _cardKey = GlobalKey();
   final _displayNameController = TextEditingController();
-  final _displayNameFocus = FocusNode();
+  final _displayNameFocus = FocusNode(skipTraversal: true);
 
   static const _closeDuration = Duration(milliseconds: 280);
 
@@ -1099,8 +1102,8 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       text: widget.profileExtra.about ?? '',
     );
     _lastAboutText = _aboutController.text;
-    _ageFocus = FocusNode();
-    _aboutFocus = FocusNode();
+    _ageFocus = FocusNode(skipTraversal: true);
+    _aboutFocus = FocusNode(skipTraversal: true);
     _ageFocus.addListener(_onAgeFocusChanged);
     _aboutFocus.addListener(_onAboutFocusChanged);
     _ageController.addListener(_onAgeTextChanged);
@@ -1130,6 +1133,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   bool get _fieldIsOpen => profileEditFieldActive(_activeField);
+
+  /// В режиме контроллера — как на входе: без IME-полоски, клавиатура по A.
+  bool get _gamepadEditor => gamepadConnected();
 
   static const List<ProfileEditField> _stripFieldOrder = [
     ProfileEditField.name,
@@ -1207,6 +1213,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   void _requestFieldFocus(ProfileEditField field) {
     if (!mounted) return;
+    if (_gamepadEditor) {
+      switch (field) {
+        case ProfileEditField.name:
+          widget.focusNode.requestFocus();
+        case ProfileEditField.age:
+          _ageFocus.requestFocus();
+        case ProfileEditField.about:
+          _aboutFocus.requestFocus();
+        case ProfileEditField.none:
+          break;
+      }
+      return;
+    }
     switch (field) {
       case ProfileEditField.name:
         openSoftKeyboard(widget.focusNode);
@@ -1221,6 +1240,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   void _openField(ProfileEditField field) {
     if (_isSaving || field == ProfileEditField.none) return;
+    if (_gamepadEditor) {
+      _requestFieldFocus(field);
+      GamepadKeyboardController.instance.show();
+      return;
+    }
     // Фокус — до setState: поле уже в дереве (offstage-полоска), поэтому
     // клавиатура выезжает тем же жестом, без «полоска есть, IME нет».
     _requestFieldFocus(field);
@@ -1237,12 +1261,21 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   void _openAboutField() => _openField(ProfileEditField.about);
 
   void _onEmptyEditorTap() {
+    if (_gamepadEditor) {
+      dismissGamepadKeyboard();
+      return;
+    }
     if (shouldUnfocusFieldOnEmptyTap(fieldFocused: _fieldIsOpen)) {
       _leaveActiveField();
     }
   }
 
   bool _handleEditBack() {
+    if (_gamepadEditor) {
+      dismissGamepadKeyboard();
+      widget.onCancel();
+      return true;
+    }
     final action = profileEditBackAction(fieldFocused: _fieldIsOpen);
     if (action == ProfileEditBackAction.stayInEditor) {
       _leaveActiveField();
@@ -1253,7 +1286,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   void _syncActiveField(ProfileEditField field) {
-    if (!mounted || !widget.compact) return;
+    if (!mounted || !widget.compact || _gamepadEditor) return;
     if (shouldClearFieldOpenOnFocusLost()) return;
     if (_activeField != field) {
       setState(() => _activeField = field);
@@ -1690,18 +1723,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildAboutPreview({Key? key}) {
+    if (_gamepadEditor) {
+      return GamepadFieldBlock(
+        inputFocus: _aboutFocus,
+        openOnFocus: false,
+        child: _buildAboutEditorField(key: key, autofocus: false),
+      );
+    }
     final text = _aboutController.text.trim();
     final empty = text.isEmpty;
     return _ProfileGamepadTarget(
-      attachKeyboard: true,
-      inputFocus: _aboutFocus,
-      onActivate: _isSaving
-          ? null
-          : () {
-              _openAboutField();
-              _aboutFocus.requestFocus();
-              GamepadKeyboardController.instance.show();
-            },
+      onActivate: _isSaving ? null : _openAboutField,
       child: Material(
       key: key,
       color: AppColors.surfaceCard,
@@ -1961,17 +1993,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     required FocusNode inputFocus,
     String? errorText,
   }) {
+    if (_gamepadEditor) {
+      return GamepadFieldBlock(
+        autofocus: field == ProfileEditField.name,
+        inputFocus: inputFocus,
+        openOnFocus: false,
+        child: field == ProfileEditField.name
+            ? _buildNameEditorField(key: key, autofocus: false)
+            : _buildAgeEditorField(key: key, autofocus: false),
+      );
+    }
     return _ProfileGamepadTarget(
       autofocus: field == ProfileEditField.name,
-      attachKeyboard: true,
-      inputFocus: inputFocus,
-      onActivate: _isSaving
-          ? null
-          : () {
-              _openField(field);
-              inputFocus.requestFocus();
-              GamepadKeyboardController.instance.show();
-            },
+      onActivate: _isSaving ? null : () => _openField(field),
       child: Material(
       key: key,
       color: AppColors.surfaceCard,
@@ -2436,9 +2470,18 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.compact) {
-      return _buildCompactEditor(context);
-    }
+    return ListenableBuilder(
+      listenable: GamepadService.instance.devices,
+      builder: (context, _) {
+        if (widget.compact) {
+          return _buildCompactEditor(context);
+        }
+        return _buildWideEditor(context);
+      },
+    );
+  }
+
+  Widget _buildWideEditor(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -2458,14 +2501,10 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 32),
-                _ProfileGamepadTarget(
+                GamepadFieldBlock(
                   autofocus: true,
-                  attachKeyboard: true,
                   inputFocus: widget.focusNode,
-                  onActivate: () {
-                    widget.focusNode.requestFocus();
-                    GamepadKeyboardController.instance.show();
-                  },
+                  openOnFocus: false,
                   child: TextFormField(
                     controller: widget.displayNameController,
                     focusNode: widget.focusNode,
@@ -2489,13 +2528,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _ProfileGamepadTarget(
-                  attachKeyboard: true,
+                GamepadFieldBlock(
                   inputFocus: _ageFocus,
-                  onActivate: () {
-                    _ageFocus.requestFocus();
-                    GamepadKeyboardController.instance.show();
-                  },
+                  openOnFocus: false,
                   child: TextFormField(
                     controller: _ageController,
                     focusNode: _ageFocus,
@@ -2534,15 +2569,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 const SizedBox(height: 16),
                 _buildShowStatsCheckbox(),
                 const SizedBox(height: 12),
-                _activeField == ProfileEditField.about
-                    ? _ProfileGamepadTarget(
-                        attachKeyboard: true,
+                _gamepadEditor || _activeField == ProfileEditField.about
+                    ? GamepadFieldBlock(
                         inputFocus: _aboutFocus,
-                        onActivate: () {
-                          _aboutFocus.requestFocus();
-                          GamepadKeyboardController.instance.show();
-                        },
-                        child: _buildAboutEditorField(),
+                        openOnFocus: false,
+                        child: _buildAboutEditorField(autofocus: false),
                       )
                     : _buildAboutPreview(),
                 const SizedBox(height: 20),
@@ -2716,8 +2747,6 @@ class _ProfileGamepadTarget extends StatelessWidget {
     this.radius = AppRadius.input,
     this.shape = GamepadHighlightShape.roundedRect,
     this.autofocus = false,
-    this.inputFocus,
-    this.attachKeyboard = false,
   });
 
   final Widget child;
@@ -2725,8 +2754,6 @@ class _ProfileGamepadTarget extends StatelessWidget {
   final double radius;
   final GamepadHighlightShape shape;
   final bool autofocus;
-  final FocusNode? inputFocus;
-  final bool attachKeyboard;
 
   @override
   Widget build(BuildContext context) {
@@ -2735,9 +2762,6 @@ class _ProfileGamepadTarget extends StatelessWidget {
       radius: radius,
       borderWidth: 2.2,
       shape: shape,
-      attachKeyboard: attachKeyboard,
-      inputFocus: inputFocus,
-      descendantsFocusable: attachKeyboard,
       onActivate: onActivate,
       child: child,
     );
