@@ -453,14 +453,31 @@ List<FocusNode>? _navGroupBlocks(
   TraversalDirection direction,
 ) {
   if (current == null) return null;
-  final group = GamepadNavGroup.ofNode(current);
-  if (group == null) return null;
+  final nearest = GamepadNavGroup.ofNode(current);
+  final exclusive = GamepadNavGroup.exclusiveOfNode(current);
   final horizontal = direction == TraversalDirection.left ||
       direction == TraversalDirection.right;
-  if (!horizontal && !group.exclusive) return null;
+  if (nearest != null && !nearest.exclusive && horizontal) {
+    return _sortedGroupMembers(
+      (node) => identical(GamepadNavGroup.ofNode(node), nearest),
+    );
+  }
+  if (exclusive != null) {
+    return _sortedGroupMembers(
+      (node) => identical(GamepadNavGroup.exclusiveOfNode(node), exclusive),
+    );
+  }
+  if (nearest == null) return null;
+  if (!horizontal && !nearest.exclusive) return null;
+  return _sortedGroupMembers(
+    (node) => identical(GamepadNavGroup.ofNode(node), nearest),
+  );
+}
+
+List<FocusNode> _sortedGroupMembers(bool Function(FocusNode node) match) {
   final members = <FocusNode>[];
   for (final node in GamepadFocusRegistry.nodes) {
-    if (!identical(GamepadNavGroup.ofNode(node), group)) continue;
+    if (!match(node)) continue;
     if (!isGamepadFocusVisible(node)) continue;
     members.add(node);
   }
@@ -516,8 +533,13 @@ FocusNode? _neighborGamepadBlock(
     final horizontal = direction == TraversalDirection.left ||
         direction == TraversalDirection.right;
     final currentGroup = GamepadNavGroup.ofNode(current);
-    if (currentGroup != null && (horizontal || currentGroup.exclusive)) {
+    final currentExclusive = GamepadNavGroup.exclusiveOfNode(current);
+    if (currentGroup != null && !currentGroup.exclusive && horizontal) {
       if (!identical(GamepadNavGroup.ofNode(node), currentGroup)) continue;
+    } else if (currentExclusive != null) {
+      if (!identical(GamepadNavGroup.exclusiveOfNode(node), currentExclusive)) {
+        continue;
+      }
     } else if (horizontal) {
       final currentStrip = _horizontalScrollable(current);
       if (currentStrip != null) {
