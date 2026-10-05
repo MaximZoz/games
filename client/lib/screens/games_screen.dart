@@ -1603,13 +1603,11 @@ class _GamesPageContent extends ConsumerWidget {
       ];
       return Align(
         alignment: Alignment.topCenter,
-        child: Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final tile in tiles) SizedBox(width: tileWidth, child: tile),
-          ],
+        child: gamesHubEqualHeightGrid(
+          cols: cols,
+          gap: gap,
+          tileWidth: tileWidth,
+          tiles: tiles,
         ),
       );
     }

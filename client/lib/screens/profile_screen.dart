@@ -1087,6 +1087,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   ProfileExtra? _initialExtra;
   String? _avatarCacheKey;
   Widget? _cachedAvatarWidget;
+  final GlobalKey _genderFieldKey = GlobalKey();
 
   @override
   void initState() {
@@ -1694,13 +1695,19 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           ),
         ),
       ),
-    ).whenComplete(() {
-      if (!mounted) return;
-      scheduleFocusFirstVisibleGamepadTarget();
-    });
+    ).whenComplete(_restoreGenderFieldFocus);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       focusFirstVisibleGamepadTarget();
+    });
+  }
+
+  void _restoreGenderFieldFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _genderFieldKey.currentContext;
+      if (ctx == null) return;
+      GamepadFocusBlock.maybeOf(ctx)?.focusNode.requestFocus();
     });
   }
 
@@ -2057,9 +2064,11 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     return _ProfileGamepadTarget(
       onActivate: _openGenderMenu,
       child: Material(
-        key: key,
+        key: _genderFieldKey,
         color: Colors.transparent,
-        child: InkWell(
+        child: KeyedSubtree(
+          key: key,
+          child: InkWell(
           canRequestFocus: false,
           onTap: _openGenderMenu,
           borderRadius: BorderRadius.circular(AppRadius.input),
@@ -2088,6 +2097,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
