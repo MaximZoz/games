@@ -1613,6 +1613,17 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     kGenderFemaleApi,
   ];
 
+  void _selectGender(String value, BuildContext dialogContext) {
+    if (!mounted) return;
+    setState(() => _gender = value);
+    final nav = Navigator.of(dialogContext, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
+      return;
+    }
+    Navigator.of(dialogContext).maybePop();
+  }
+
   void _openGenderMenu() {
     showDialog<void>(
       context: context,
@@ -1629,62 +1640,68 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
           }
           return true;
         },
-        child: Center(
-          child: Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.input),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < _genderOptions.length; i++)
-                    _ProfileGamepadTarget(
-                      autofocus: i == 0,
-                      onActivate: () {
-                        setState(() => _gender = _genderOptions[i]);
-                        Navigator.of(ctx).pop();
-                      },
-                      child: InkWell(
-                        canRequestFocus: false,
-                        onTap: () {
-                          setState(() => _gender = _genderOptions[i]);
-                          Navigator.of(ctx).pop();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  localizeGender(
-                                    _genderOptions[i],
-                                    context.l10n,
-                                  ),
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
-                                    fontWeight: _gender == _genderOptions[i]
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+        child: GamepadNavGroup(
+          name: 'gender-popup',
+          exclusive: true,
+          child: Center(
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.input),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < _genderOptions.length; i++)
+                      _ProfileGamepadTarget(
+                        autofocus: i == 0,
+                        onActivate: () => _selectGender(_genderOptions[i], ctx),
+                        child: InkWell(
+                          key: ValueKey('gender_option_$i'),
+                          canRequestFocus: false,
+                          onTap: () => _selectGender(_genderOptions[i], ctx),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    localizeGender(
+                                      _genderOptions[i],
+                                      context.l10n,
+                                    ),
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 15,
+                                      fontWeight: _gender == _genderOptions[i]
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      if (!mounted) return;
+      scheduleFocusFirstVisibleGamepadTarget();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      focusFirstVisibleGamepadTarget();
+    });
   }
 
   Widget _buildCompactHeader(BuildContext context) {
@@ -2266,7 +2283,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: GamepadNavGroup(
+                    name: 'profile-avatar-presets',
+                    child: SingleChildScrollView(
                     key: const ValueKey('compact_avatar_presets'),
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -2283,6 +2302,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                           ),
                         ],
                       ],
+                    ),
                     ),
                   ),
                 ),
@@ -2308,12 +2328,15 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(height: phoneLand ? 8 : 12),
-          ProfileGalleryEditSlots(
-            userId: widget.user.id,
-            enabled: !_isSaving,
-            compact: true,
-            onPhotosChanged: _onGalleryPhotosChanged,
-            onMutated: _onGalleryMutated,
+          GamepadNavGroup(
+            name: 'profile-gallery',
+            child: ProfileGalleryEditSlots(
+              userId: widget.user.id,
+              enabled: !_isSaving,
+              compact: true,
+              onPhotosChanged: _onGalleryPhotosChanged,
+              onMutated: _onGalleryMutated,
+            ),
           ),
           SizedBox(height: phoneLand ? 8 : 12),
           _buildChangePhotoButton(compact: true),
@@ -2476,54 +2499,60 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    // Обводка геймпада по самому квадрату 22×22, не по большому hit-box.
     final checked = _showStatsToOthers;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _ProfileGamepadTarget(
-            radius: 5,
-            onActivate: () => setState(() => _showStatsToOthers = !checked),
-            child: GestureDetector(
-              key: const ValueKey('compact_show_stats'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() => _showStatsToOthers = !checked),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: checked ? AppColors.accentStart : Colors.transparent,
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(
-                    color: checked
-                        ? AppColors.accentStart
-                        : AppColors.textSecondary.withValues(alpha: 0.55),
-                    width: 2,
+    return SizedBox(
+      width: double.infinity,
+      child: _ProfileGamepadTarget(
+      radius: AppRadius.input,
+      onActivate: () => setState(() => _showStatsToOthers = !checked),
+      child: Material(
+        key: const ValueKey('compact_show_stats'),
+        color: Colors.transparent,
+        child: InkWell(
+          canRequestFocus: false,
+          onTap: () => setState(() => _showStatsToOthers = !checked),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: checked ? AppColors.accentStart : Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(
+                      color: checked
+                          ? AppColors.accentStart
+                          : AppColors.textSecondary.withValues(alpha: 0.55),
+                      width: 2,
+                    ),
+                  ),
+                  child: checked
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.profileShowStats,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                      height: 1.3,
+                    ),
                   ),
                 ),
-                child: checked
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : null,
-              ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              context.l10n.profileShowStats,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
+    ),
     );
   }
 
@@ -2663,7 +2692,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
+                GamepadNavGroup(
+                  name: 'profile-avatar-presets',
+                  child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
@@ -2709,12 +2740,16 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     }),
                   ],
                 ),
+                ),
                 const SizedBox(height: 12),
-                ProfileGalleryEditSlots(
-                  userId: widget.user.id,
-                  enabled: !_isSaving,
-                  onPhotosChanged: _onGalleryPhotosChanged,
-                  onMutated: _onGalleryMutated,
+                GamepadNavGroup(
+                  name: 'profile-gallery',
+                  child: ProfileGalleryEditSlots(
+                    userId: widget.user.id,
+                    enabled: !_isSaving,
+                    onPhotosChanged: _onGalleryPhotosChanged,
+                    onMutated: _onGalleryMutated,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildChangePhotoButton(),

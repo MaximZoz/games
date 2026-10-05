@@ -335,20 +335,130 @@ void main() {
     );
   });
 
-  testWidgets('чекбокс обводится по квадрату, не по hit-box 40', (tester) async {
+  testWidgets('чекбокс обводит «Показывать статистику»', (tester) async {
     await _enterEdit(tester);
-    final box = tester.getSize(find.byKey(const ValueKey('compact_show_stats')));
-    expect(box.width, 22);
-    expect(box.height, 22);
-    final block = tester.widget<GamepadFocusBlock>(
-      find
-          .ancestor(
-            of: find.byKey(const ValueKey('compact_show_stats')),
-            matching: find.byType(GamepadFocusBlock),
-          )
-          .first,
+    final scope = GamepadFocusBlock.maybeOf(
+      tester.element(find.text('Показывать статистику')),
     );
-    expect(block.radius, 5);
+    expect(scope, isNotNull);
+    scope!.focusNode.requestFocus();
+    await tester.pump();
+    expect(scope.focusNode.hasFocus, isTrue);
+    final box = tester.getSize(
+      find.byKey(const ValueKey('compact_show_stats')),
+    );
+    expect(box.width, greaterThan(120));
+    expect(box.height, greaterThan(22));
+  });
+
+  testWidgets('всплывашка пола листается только внутри себя', (tester) async {
+    await _enterEdit(tester);
+    final gender = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_gender'))),
+    );
+    gender!.focusNode.requestFocus();
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byKey(const ValueKey('gender_option_0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('gender_option_1')), findsOneWidget);
+    final option0 = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('gender_option_0'))),
+    );
+    option0!.focusNode.requestFocus();
+    await tester.pump();
+
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    handleGamepadUiAction(hostCtx, GamepadAction.up);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_display_name'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_age'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+
+    handleGamepadUiAction(hostCtx, GamepadAction.down);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('gender_option_1'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_display_name'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_age'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+
+    handleGamepadUiAction(hostCtx, GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gender_option_0')), findsNothing);
+    expect(find.text('Женский'), findsWidgets);
+  });
+
+  testWidgets('фото влево/вправо остаются в ряду слотов', (tester) async {
+    await _enterEdit(tester);
+    final slot0 = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('profile-gallery-slot-0'))),
+    );
+    slot0!.focusNode.requestFocus();
+    await tester.pump();
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    handleGamepadUiAction(hostCtx, GamepadAction.right);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('profile-gallery-slot-1'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+    handleGamepadUiAction(hostCtx, GamepadAction.right);
+    await tester.pump();
+    handleGamepadUiAction(hostCtx, GamepadAction.right);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('profile-gallery-slot-2'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.text('Поменять аватар')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_about_preview'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    handleGamepadUiAction(hostCtx, GamepadAction.down);
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('profile-gallery-slot-2'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
   });
 }
 
