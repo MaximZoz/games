@@ -80,7 +80,9 @@ void main() {
     expect(short.height, long.height);
     expect(
       short.height,
-      gameCardChipHeight(compact: false, isDesktop: false),
+      greaterThanOrEqualTo(
+        gameCardChipHeight(compact: false, isDesktop: false),
+      ),
     );
   });
 

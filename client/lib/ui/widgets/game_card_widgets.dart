@@ -244,7 +244,7 @@ class GameCardChip extends StatelessWidget {
         splashColor: AppColors.accentStart.withValues(alpha: 0.2),
         highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
         child: Container(
-          height: chipH,
+          constraints: BoxConstraints(minHeight: chipH),
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
             color: AppColors.buttonFill,
