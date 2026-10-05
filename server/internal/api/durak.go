@@ -68,20 +68,22 @@ func (h *GamesHandler) serveDurak(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetDurakGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.DurakMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitDurakGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
-			h.DurakOfferDraw(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
-			h.DurakAcceptDraw(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetDurakGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.DurakMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitDurakGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+				h.DurakOfferDraw(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+				h.DurakAcceptDraw(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -187,6 +189,7 @@ func (h *GamesHandler) CreateDurakLobby(w http.ResponseWriter, r *http.Request) 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	// Открытый поиск живёт как waiting_invite + mode=matchmake — так же,
 	// как multi «Найти игру» в крестиках: тогда ListLobbies его видит,
@@ -244,7 +247,7 @@ func (h *GamesHandler) findOpenDurakLobbyID(
 	gameMode string,
 	maxPlayers, stakeBronze int,
 ) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -354,7 +357,7 @@ func (h *GamesHandler) ListDurakLobbies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -803,16 +806,18 @@ func (h *GamesHandler) scheduleDurakBitoReveal(gameID string) {
 		timer := time.NewTimer(delay + 50*time.Millisecond)
 		defer timer.Stop()
 		<-timer.C
-		ctx := context.Background()
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
-			return
-		}
-		state, err := durak.Decode(m["state"])
-		if err != nil || state.Phase != durak.PhaseBitoReveal {
-			return
-		}
-		_ = h.healDurakBitoReveal(ctx, gameID, m, state)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+				return nil
+			}
+			state, err := durak.Decode(m["state"])
+			if err != nil || state.Phase != durak.PhaseBitoReveal {
+				return nil
+			}
+			_ = h.healDurakBitoReveal(ctx, gameID, m, state)
+			return nil
+		})
 	}()
 }
 
@@ -866,16 +871,18 @@ func (h *GamesHandler) scheduleDurakTakeReveal(gameID string) {
 		timer := time.NewTimer(delay + 50*time.Millisecond)
 		defer timer.Stop()
 		<-timer.C
-		ctx := context.Background()
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
-			return
-		}
-		state, err := durak.Decode(m["state"])
-		if err != nil || state.Phase != durak.PhaseTakeReveal {
-			return
-		}
-		_ = h.healDurakTakeReveal(ctx, gameID, m, state)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+				return nil
+			}
+			state, err := durak.Decode(m["state"])
+			if err != nil || state.Phase != durak.PhaseTakeReveal {
+				return nil
+			}
+			_ = h.healDurakTakeReveal(ctx, gameID, m, state)
+			return nil
+		})
 	}()
 }
 
@@ -920,12 +927,14 @@ func (h *GamesHandler) scheduleDurakDealGrace(gameID string) {
 		timer := time.NewTimer(durak.OpeningDealGraceExtra(4, 12) + 200*time.Millisecond)
 		defer timer.Stop()
 		<-timer.C
-		ctx := context.Background()
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
-			return
-		}
-		_ = h.armDurakTurnAfterDeal(ctx, gameID, m)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+				return nil
+			}
+			_ = h.armDurakTurnAfterDeal(ctx, gameID, m)
+			return nil
+		})
 	}()
 }
 
@@ -1606,6 +1615,7 @@ func (h *GamesHandler) DurakRematch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	turnT, _ := strconv.Atoi(m["turn_time_sec"])
@@ -2003,6 +2013,7 @@ func (h *GamesHandler) onDurakGameFinished(ctx context.Context, gameID string, m
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		if strings.TrimSpace(m["chat_id"]) != "" {
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)

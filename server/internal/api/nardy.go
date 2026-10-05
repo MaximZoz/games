@@ -89,16 +89,18 @@ func (h *GamesHandler) serveNardy(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetNardyGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.NardyMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitNardyGame(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetNardyGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.NardyMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitNardyGame(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -153,6 +155,7 @@ func (h *GamesHandler) CreateNardyLobby(w http.ResponseWriter, r *http.Request) 
 
 	if body.VsBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startNardyGameCore(
 			ctx,
 			lobbyID,
@@ -186,6 +189,7 @@ func (h *GamesHandler) CreateNardyLobby(w http.ResponseWriter, r *http.Request) 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	pipe := h.Rdb.Pipeline()
@@ -227,7 +231,7 @@ func (h *GamesHandler) findOpenNardyLobbyID(
 	gameMode string,
 	turnTimeSec, stakeBronze int,
 ) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -276,7 +280,7 @@ func (h *GamesHandler) ListNardyLobbies(w http.ResponseWriter, r *http.Request) 
 		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	keys, err := scanRedisKeys(r.Context(), h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(r.Context())
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -754,6 +758,7 @@ func (h *GamesHandler) NardyRematch(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(invitees) == 0 && hasBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startNardyGameCore(
 			ctx,
 			lobbyID,
@@ -798,6 +803,7 @@ func (h *GamesHandler) createNardyInviteLobby(
 	turnTimeSec, stakeBronze int,
 ) (string, error) {
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
@@ -995,6 +1001,7 @@ func (h *GamesHandler) onNardyGameFinished(
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
 		h.broadcast(humans, map[string]any{"type": "chat_list_changed"})

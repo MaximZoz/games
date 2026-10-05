@@ -270,6 +270,9 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	session, err := store.GetSessionByRefreshTokenHash(r.Context(), h.Pool, tokenHash)
 	if err != nil {
 		if err == pgx.ErrNoRows {
+			if rejectIfFrozen(w, r, h.Pool, userID) {
+				return
+			}
 			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
@@ -289,6 +292,11 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	if u == nil {
 		WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+		return
+	}
+	if u.IsFrozen() {
+		_ = store.DeleteSessionsByUserID(r.Context(), h.Pool, u.ID)
+		WriteErr(w, r, http.StatusForbidden, "account frozen")
 		return
 	}
 

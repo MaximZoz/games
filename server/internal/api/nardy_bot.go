@@ -31,30 +31,39 @@ func (h *GamesHandler) scheduleNardyBotAct(gameID string) {
 		// Шагов за ход не больше пяти (бросок + 4 шашки), лимит — страховка.
 		for step := 0; step < 24; step++ {
 			time.Sleep(nardyBotStepDelay)
-			ctx := context.Background()
-			h.Rdb.Expire(ctx, runKey, nardyBotRunTTL)
-			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			if err != nil || len(m) == 0 || m["game_type"] != nardyGameType ||
-				m["status"] != gameStatusActive {
-				return
-			}
-			state, err := nardy.Decode(m["state"])
-			players := parsePlayerIDsCSV(m["player_ids"])
-			if err != nil || !nardyCurrentPlayerIsBot(state, players) {
-				return
-			}
-			turnDone := nardy.PlayBotStep(state, nardyRNG())
-			h.saveNardyState(ctx, gameID, m, state)
-			h.broadcastNardyState(gameID, m)
-			if nardyIsOver(state) {
-				h.onNardyGameFinished(ctx, gameID, m, state, "normal")
-				return
-			}
-			if !turnDone {
-				continue
-			}
-			if !nardyCurrentPlayerIsBot(state, players) {
-				h.notifyNardyTurn(gameID, state, players)
+			var stop bool
+			err := h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+				h.Rdb.Expire(ctx, runKey, nardyBotRunTTL)
+				m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if err != nil || len(m) == 0 || m["game_type"] != nardyGameType ||
+					m["status"] != gameStatusActive {
+					stop = true
+					return nil
+				}
+				state, err := nardy.Decode(m["state"])
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if err != nil || !nardyCurrentPlayerIsBot(state, players) {
+					stop = true
+					return nil
+				}
+				turnDone := nardy.PlayBotStep(state, nardyRNG())
+				h.saveNardyState(ctx, gameID, m, state)
+				h.broadcastNardyState(gameID, m)
+				if nardyIsOver(state) {
+					h.onNardyGameFinished(ctx, gameID, m, state, "normal")
+					stop = true
+					return nil
+				}
+				if !turnDone {
+					return nil
+				}
+				if !nardyCurrentPlayerIsBot(state, players) {
+					h.notifyNardyTurn(gameID, state, players)
+					stop = true
+				}
+				return nil
+			})
+			if err != nil || stop {
 				return
 			}
 		}

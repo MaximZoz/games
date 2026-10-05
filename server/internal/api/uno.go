@@ -79,16 +79,18 @@ func (h *GamesHandler) serveUno(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetUnoGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.UnoMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitUnoGame(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetUnoGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.UnoMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitUnoGame(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -150,6 +152,7 @@ func (h *GamesHandler) CreateUnoLobby(w http.ResponseWriter, r *http.Request) {
 
 	if maxPlayers == 1 {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startUnoGameCore(
 			ctx,
 			lobbyID,
@@ -183,6 +186,7 @@ func (h *GamesHandler) CreateUnoLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	pipe := h.Rdb.Pipeline()
@@ -232,7 +236,7 @@ func (h *GamesHandler) findOpenUnoLobbyID(
 	excludeUser uuid.UUID,
 	turnTimeSec, maxPlayers, stakeBronze int,
 ) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -287,7 +291,7 @@ func (h *GamesHandler) ListUnoLobbies(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	keys, err := scanRedisKeys(r.Context(), h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(r.Context())
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -778,6 +782,7 @@ func (h *GamesHandler) UnoRematch(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(invitees) == 0 && hasBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startUnoGameCore(
 			ctx,
 			lobbyID,
@@ -821,6 +826,7 @@ func (h *GamesHandler) createUnoInviteLobby(
 	turnTimeSec, stakeBronze, maxPlayers int,
 ) (string, error) {
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
@@ -1009,6 +1015,7 @@ func (h *GamesHandler) onUnoGameFinished(
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		if strings.TrimSpace(m["chat_id"]) != "" {
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)
