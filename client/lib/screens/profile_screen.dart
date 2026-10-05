@@ -1616,10 +1616,12 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   void _selectGender(String value, BuildContext dialogContext) {
     if (!mounted) return;
     setState(() => _gender = value);
-    final nav = Navigator.of(dialogContext);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (nav.canPop()) nav.pop();
-    });
+    final nav = Navigator.of(dialogContext, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
+      return;
+    }
+    Navigator.of(dialogContext).maybePop();
   }
 
   void _openGenderMenu() {
