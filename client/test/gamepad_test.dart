@@ -2446,6 +2446,34 @@ void main() {
     await downTo(find.text('Нет аккаунта? Зарегистрироваться'));
     await downTo(find.text('Google'));
   });
+
+  test('влево по горизонтали скроллит к началу, вправо — к концу', () {
+    const view = Rect.fromLTWH(0, 0, 200, 60);
+    expect(
+      gamepadEnsureVisiblePolicy(
+        focus: const Rect.fromLTWH(-40, 0, 48, 48),
+        view: view,
+        axis: Axis.horizontal,
+      ),
+      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+    );
+    expect(
+      gamepadEnsureVisiblePolicy(
+        focus: const Rect.fromLTWH(180, 0, 48, 48),
+        view: view,
+        axis: Axis.horizontal,
+      ),
+      ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
+    expect(
+      gamepadEnsureVisiblePolicy(
+        focus: const Rect.fromLTWH(0, -30, 48, 48),
+        view: view,
+        axis: Axis.vertical,
+      ),
+      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+    );
+  });
 }
 
 class _TestGamepadPager implements GamepadPager {
