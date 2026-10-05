@@ -2766,4 +2766,135 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 pemain: papan 4×4, empat pemain (X, O, △, □). Menang dengan menyelesaikan garis dari tanda Anda.';
+
+  @override
+  String get adminUsersTab => 'Pengguna';
+
+  @override
+  String get adminSupportTab => 'Dukungan';
+
+  @override
+  String get adminSearchHint => 'Cari lewat email atau nama';
+
+  @override
+  String get adminRoleAdmins => 'Admin';
+
+  @override
+  String get adminRoleUsers => 'Pengguna';
+
+  @override
+  String get adminRoleAll => 'Semua peran';
+
+  @override
+  String get adminStatusFrozen => 'Dibekukan';
+
+  @override
+  String get adminStatusActive => 'Aktif';
+
+  @override
+  String get adminStatusAny => 'Status apa pun';
+
+  @override
+  String get adminOrderDesc => 'Menurun';
+
+  @override
+  String get adminOrderAsc => 'Menaik';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Gagal memuat: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Tidak ada pengguna';
+
+  @override
+  String get adminSortLastSeen => 'Menurut kunjungan terakhir';
+
+  @override
+  String get adminSortEmail => 'Menurut email';
+
+  @override
+  String get adminSortCreated => 'Menurut tanggal daftar';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount perunggu';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Cabut admin';
+
+  @override
+  String get adminGrantAdmin => 'Jadikan admin';
+
+  @override
+  String get adminAdminRevoked => 'Hak admin dicabut';
+
+  @override
+  String get adminAdminGranted => 'Hak admin diberikan';
+
+  @override
+  String get adminGrantCoins => 'Beri koin';
+
+  @override
+  String get adminWriteSupport => 'Tulis sebagai dukungan';
+
+  @override
+  String get adminUnfreeze => 'Cairkan';
+
+  @override
+  String get adminFreeze => 'Bekukan';
+
+  @override
+  String get adminUnfrozen => 'Dicairkan';
+
+  @override
+  String get adminFrozenDone => 'Dibekukan';
+
+  @override
+  String get adminResetPassword => 'Atur ulang kata sandi';
+
+  @override
+  String get adminCoinsAmountHint => 'Jumlah (negatif = potong)';
+
+  @override
+  String get adminReasonOptional => 'Alasan (opsional)';
+
+  @override
+  String get adminGrantSent => 'Kartu dikirim ke chat dukungan';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount perunggu dipotong';
+  }
+
+  @override
+  String get adminGrantVerb => 'Beri';
+
+  @override
+  String get adminNewPasswordHint => 'Kata sandi baru (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Kata sandi diatur ulang';
+
+  @override
+  String get adminResetVerb => 'Atur ulang';
+
+  @override
+  String adminShortError(String error) {
+    return 'Kesalahan: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Tidak ada permintaan dukungan';
+
+  @override
+  String get adminUserFallback => 'Pengguna';
+
+  @override
+  String get apiErrTooManyRequests => 'Terlalu banyak permintaan. Coba lagi nanti.';
+
+  @override
+  String get apiErrMoveConflict => 'Langkah bentrok. Coba lagi.';
 }

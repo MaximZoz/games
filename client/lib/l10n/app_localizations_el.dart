@@ -2766,4 +2766,135 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 παίκτες: πίνακας 4×4, τέσσερις παίκτες (X, O, △, □). Κερδίζετε με γραμμή από τα σύμβολά σας.';
+
+  @override
+  String get adminUsersTab => 'Χρήστες';
+
+  @override
+  String get adminSupportTab => 'Υποστήριξη';
+
+  @override
+  String get adminSearchHint => 'Αναζήτηση με email ή όνομα';
+
+  @override
+  String get adminRoleAdmins => 'Διαχειριστές';
+
+  @override
+  String get adminRoleUsers => 'Χρήστες';
+
+  @override
+  String get adminRoleAll => 'Όλοι οι ρόλοι';
+
+  @override
+  String get adminStatusFrozen => 'Παγωμένοι';
+
+  @override
+  String get adminStatusActive => 'Ενεργοί';
+
+  @override
+  String get adminStatusAny => 'Κάθε κατάσταση';
+
+  @override
+  String get adminOrderDesc => 'Φθίνουσα';
+
+  @override
+  String get adminOrderAsc => 'Αύξουσα';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Αποτυχία φόρτωσης: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Δεν βρέθηκαν χρήστες';
+
+  @override
+  String get adminSortLastSeen => 'Κατά τελευταία επίσκεψη';
+
+  @override
+  String get adminSortEmail => 'Κατά email';
+
+  @override
+  String get adminSortCreated => 'Κατά ημερομηνία εγγραφής';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount χαλκός';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Αφαίρεση διαχειριστή';
+
+  @override
+  String get adminGrantAdmin => 'Ορισμός διαχειριστή';
+
+  @override
+  String get adminAdminRevoked => 'Τα δικαιώματα διαχειριστή αφαιρέθηκαν';
+
+  @override
+  String get adminAdminGranted => 'Τα δικαιώματα διαχειριστή δόθηκαν';
+
+  @override
+  String get adminGrantCoins => 'Πίστωση νομισμάτων';
+
+  @override
+  String get adminWriteSupport => 'Γράψτε ως υποστήριξη';
+
+  @override
+  String get adminUnfreeze => 'Ξεπάγωμα';
+
+  @override
+  String get adminFreeze => 'Πάγωμα';
+
+  @override
+  String get adminUnfrozen => 'Ξεπαγώθηκε';
+
+  @override
+  String get adminFrozenDone => 'Παγώθηκε';
+
+  @override
+  String get adminResetPassword => 'Επαναφορά κωδικού';
+
+  @override
+  String get adminCoinsAmountHint => 'Ποσό (αρνητικό = αφαίρεση)';
+
+  @override
+  String get adminReasonOptional => 'Λόγος (προαιρετικό)';
+
+  @override
+  String get adminGrantSent => 'Η κάρτα στάλθηκε στη συνομιλία υποστήριξης';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Αφαιρέθηκαν $amount χαλκός';
+  }
+
+  @override
+  String get adminGrantVerb => 'Πίστωση';
+
+  @override
+  String get adminNewPasswordHint => 'Νέος κωδικός (ελάχ. 6)';
+
+  @override
+  String get adminPasswordReset => 'Ο κωδικός επαναφέρθηκε';
+
+  @override
+  String get adminResetVerb => 'Επαναφορά';
+
+  @override
+  String adminShortError(String error) {
+    return 'Σφάλμα: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Δεν υπάρχουν αιτήματα υποστήριξης';
+
+  @override
+  String get adminUserFallback => 'Χρήστης';
+
+  @override
+  String get apiErrTooManyRequests => 'Πάρα πολλά αιτήματα. Δοκιμάστε αργότερα.';
+
+  @override
+  String get apiErrMoveConflict => 'Σύγκρουση κίνησης. Δοκιμάστε ξανά.';
 }

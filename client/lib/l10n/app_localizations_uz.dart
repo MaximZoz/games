@@ -2766,4 +2766,135 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 o‘yinchi: 4×4 doska, to‘rt o‘yinchi (X, O, △, □). O‘z belgilaringiz bilan chiziq yig‘ing.';
+
+  @override
+  String get adminUsersTab => 'Foydalanuvchilar';
+
+  @override
+  String get adminSupportTab => 'Yordam';
+
+  @override
+  String get adminSearchHint => 'Email yoki taxallus bo‘yicha qidirish';
+
+  @override
+  String get adminRoleAdmins => 'Adminlar';
+
+  @override
+  String get adminRoleUsers => 'Foydalanuvchilar';
+
+  @override
+  String get adminRoleAll => 'Barcha rollar';
+
+  @override
+  String get adminStatusFrozen => 'Muzlatilgan';
+
+  @override
+  String get adminStatusActive => 'Faol';
+
+  @override
+  String get adminStatusAny => 'Har qanday holat';
+
+  @override
+  String get adminOrderDesc => 'Kamayish bo‘yicha';
+
+  @override
+  String get adminOrderAsc => 'O‘sish bo‘yicha';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Yuklash xatosi: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Foydalanuvchilar topilmadi';
+
+  @override
+  String get adminSortLastSeen => 'Oxirgi tashrif bo‘yicha';
+
+  @override
+  String get adminSortEmail => 'Email bo‘yicha';
+
+  @override
+  String get adminSortCreated => 'Ro‘yxat sanasi bo‘yicha';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Adminni olish';
+
+  @override
+  String get adminGrantAdmin => 'Admin qilish';
+
+  @override
+  String get adminAdminRevoked => 'Admin huquqi olindi';
+
+  @override
+  String get adminAdminGranted => 'Admin huquqi berildi';
+
+  @override
+  String get adminGrantCoins => 'Tangalar qo‘shish';
+
+  @override
+  String get adminWriteSupport => 'Yordam nomidan yozish';
+
+  @override
+  String get adminUnfreeze => 'Muzdan tushirish';
+
+  @override
+  String get adminFreeze => 'Muzlatish';
+
+  @override
+  String get adminUnfrozen => 'Muzdan tushirildi';
+
+  @override
+  String get adminFrozenDone => 'Muzlatildi';
+
+  @override
+  String get adminResetPassword => 'Parolni tiklash';
+
+  @override
+  String get adminCoinsAmountHint => 'Miqdor (manfiy = yechish)';
+
+  @override
+  String get adminReasonOptional => 'Sabab (ixtiyoriy)';
+
+  @override
+  String get adminGrantSent => 'Kartochka yordam chatiga yuborildi';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount bronza yechildi';
+  }
+
+  @override
+  String get adminGrantVerb => 'Qo‘shish';
+
+  @override
+  String get adminNewPasswordHint => 'Yangi parol (kamida 6)';
+
+  @override
+  String get adminPasswordReset => 'Parol tiklandi';
+
+  @override
+  String get adminResetVerb => 'Tiklash';
+
+  @override
+  String adminShortError(String error) {
+    return 'Xato: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Yordam murojaatlari yo‘q';
+
+  @override
+  String get adminUserFallback => 'Foydalanuvchi';
+
+  @override
+  String get apiErrTooManyRequests => 'So‘rovlar juda ko‘p. Keyinroq urinib ko‘ring.';
+
+  @override
+  String get apiErrMoveConflict => 'Yurish to‘qnashdi. Qaytaring.';
 }

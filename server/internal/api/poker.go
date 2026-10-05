@@ -71,18 +71,20 @@ func (h *GamesHandler) servePoker(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetPokerGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.PokerMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "show" && r.Method == http.MethodPost:
-			h.PokerShowCards(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitPokerGame(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetPokerGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.PokerMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "show" && r.Method == http.MethodPost:
+				h.PokerShowCards(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitPokerGame(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -180,6 +182,7 @@ func (h *GamesHandler) CreatePokerLobby(w http.ResponseWriter, r *http.Request) 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	status := lobbyStatusWaitingInvite
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -232,7 +235,7 @@ func pokerGroupChatTitle(n int) string {
 
 // findOpenPokerLobbyID — открытое poker-лобби тех же правил, куда можно войти.
 func (h *GamesHandler) findOpenPokerLobbyID(ctx context.Context, excludeUser uuid.UUID, turnTimeSec, maxPlayers, stakeBronze int) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -293,7 +296,7 @@ func (h *GamesHandler) ListPokerLobbies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -819,6 +822,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	pipe := h.Rdb.Pipeline()
@@ -977,48 +981,54 @@ func (h *GamesHandler) schedulePokerBotAct(gameID string) {
 	go func() {
 		for {
 			time.Sleep(pokerBotDelay)
-			ctx := context.Background()
 			lockKey := "poker_bot_lock:" + gameID
-			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+			locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 5*time.Second).Result()
 			if !locked {
 				return
 			}
-			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			state, err := poker.Decode(m["state"])
-			if err != nil || state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			acting := state.Players[state.ActingIndex]
-			if !isBot(acting.UserID) {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			action := pokerBotAction(state)
-			if err := state.Apply(state.ActingIndex, action); err != nil {
-				// Фолбэк: если ход невалиден — фолд.
-				_ = state.Apply(state.ActingIndex, poker.Action{Type: poker.ActionFold})
-			}
-			h.savePokerState(ctx, gameID, m, state)
-			h.broadcastPokerState(gameID, m)
-			over := state.IsOver() || state.HandOver
-			if over {
-				h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
-			}
-			h.Rdb.Del(ctx, lockKey)
-			if over {
-				return
-			}
-			if state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
-				return
-			}
-			nextID := state.Players[state.ActingIndex].UserID
-			if !isBot(nextID) {
-				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+			var stop bool
+			err := h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+				m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if err != nil || len(m) == 0 || m["status"] != gameStatusActive {
+					stop = true
+					return nil
+				}
+				state, err := poker.Decode(m["state"])
+				if err != nil || state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
+					stop = true
+					return nil
+				}
+				acting := state.Players[state.ActingIndex]
+				if !isBot(acting.UserID) {
+					stop = true
+					return nil
+				}
+				action := pokerBotAction(state)
+				if err := state.Apply(state.ActingIndex, action); err != nil {
+					// Фолбэк: если ход невалиден — фолд.
+					_ = state.Apply(state.ActingIndex, poker.Action{Type: poker.ActionFold})
+				}
+				h.savePokerState(ctx, gameID, m, state)
+				h.broadcastPokerState(gameID, m)
+				over := state.IsOver() || state.HandOver
+				if over {
+					h.onPokerHandOrTableOver(ctx, gameID, m, state, "normal")
+					stop = true
+					return nil
+				}
+				if state.ActingIndex < 0 || state.ActingIndex >= len(state.Players) {
+					stop = true
+					return nil
+				}
+				nextID := state.Players[state.ActingIndex].UserID
+				if !isBot(nextID) {
+					h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+					stop = true
+				}
+				return nil
+			})
+			h.Rdb.Del(context.Background(), lockKey)
+			if err != nil || stop {
 				return
 			}
 			// Следующий тоже бот — продолжаем цикл (с новой паузой).
@@ -1345,50 +1355,51 @@ func (h *GamesHandler) schedulePokerNextHand(gameID string) {
 	}
 	go func() {
 		time.Sleep(pokerNextHandDelay)
-		ctx := context.Background()
 		lockKey := "poker_next_hand_lock:" + gameID
-		locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 10*time.Second).Result()
+		locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 10*time.Second).Result()
 		if !locked {
 			return
 		}
-		defer h.Rdb.Del(ctx, lockKey)
-
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || len(m) == 0 || m["game_type"] != pokerGameType {
-			return
-		}
-		state, err := poker.Decode(m["state"])
-		if err != nil || !state.HandOver || state.TableOver {
-			return
-		}
-		rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-		if err := state.StartNextHand(rng); err != nil {
-			return
-		}
-		// Сбрасываем флаги прошлой раздачи.
-		h.Rdb.HDel(ctx, "game:"+gameID, "forfeit", "timeout")
-		delete(m, "forfeit")
-		delete(m, "timeout")
-		h.savePokerState(ctx, gameID, m, state)
-		// Active только у игроков с фишками; выбывшие остаются в observation.
-		for i := range state.Players {
-			pid := state.Players[i].UserID
-			if isBot(pid) || state.Players[i].Chips <= 0 {
-				continue
+		defer h.Rdb.Del(context.Background(), lockKey)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || len(m) == 0 || m["game_type"] != pokerGameType {
+				return nil
 			}
-			if u, err := uuid.Parse(pid); err == nil {
-				setUserActiveGame(ctx, h.Rdb, u, gameID)
+			state, err := poker.Decode(m["state"])
+			if err != nil || !state.HandOver || state.TableOver {
+				return nil
 			}
-		}
-		h.broadcastPokerState(gameID, m)
-		if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
-			nextID := state.Players[state.ActingIndex].UserID
-			if isBot(nextID) {
-				h.schedulePokerBotAct(gameID)
-			} else {
-				h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+			rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+			if err := state.StartNextHand(rng); err != nil {
+				return nil
 			}
-		}
+			// Сбрасываем флаги прошлой раздачи.
+			h.Rdb.HDel(ctx, "game:"+gameID, "forfeit", "timeout")
+			delete(m, "forfeit")
+			delete(m, "timeout")
+			h.savePokerState(ctx, gameID, m, state)
+			// Active только у игроков с фишками; выбывшие остаются в observation.
+			for i := range state.Players {
+				pid := state.Players[i].UserID
+				if isBot(pid) || state.Players[i].Chips <= 0 {
+					continue
+				}
+				if u, err := uuid.Parse(pid); err == nil {
+					setUserActiveGame(ctx, h.Rdb, u, gameID)
+				}
+			}
+			h.broadcastPokerState(gameID, m)
+			if state.ActingIndex >= 0 && state.ActingIndex < len(state.Players) {
+				nextID := state.Players[state.ActingIndex].UserID
+				if isBot(nextID) {
+					h.schedulePokerBotAct(gameID)
+				} else {
+					h.notifyYourTurnUser(gameID, nextID, pokerGameType)
+				}
+			}
+			return nil
+		})
 	}()
 }
 
@@ -1399,6 +1410,7 @@ func (h *GamesHandler) onPokerTableFinished(ctx context.Context, gameID string, 
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 		if strings.TrimSpace(m["chat_id"]) != "" {
 			_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, lobbyID)

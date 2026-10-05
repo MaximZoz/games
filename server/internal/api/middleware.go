@@ -13,6 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// isUserFrozenFn проверяет бан. Подменяется в тестах.
+var isUserFrozenFn = store.IsUserFrozen
+
 type contextKey string
 
 const UserIDKey contextKey = "user_id"
@@ -69,13 +72,39 @@ func RequireAuth(secret []byte, pool *pgxpool.Pool, next http.Handler) http.Hand
 				return
 			}
 			if !ok {
+				// Сессии нет: обычный выход — 401, заморозка — 403,
+				// чтобы клиент не путал бан с протухшим токеном.
+				if rejectIfFrozen(w, r, pool, userID) {
+					return
+				}
 				WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+				return
+			}
+			if rejectIfFrozen(w, r, pool, userID) {
 				return
 			}
 		}
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// rejectIfFrozen отвечает 403/503 и возвращает true, если запрос надо остановить.
+func rejectIfFrozen(w http.ResponseWriter, r *http.Request, pool *pgxpool.Pool, userID uuid.UUID) bool {
+	if pool == nil {
+		return false
+	}
+	frozen, err := isUserFrozenFn(r.Context(), pool, userID)
+	if err != nil {
+		log.Printf("auth: IsUserFrozen failed: %v", err)
+		WriteErr(w, r, http.StatusServiceUnavailable, "temporarily unavailable")
+		return true
+	}
+	if frozen {
+		WriteErr(w, r, http.StatusForbidden, "account frozen")
+		return true
+	}
+	return false
 }
 
 func GetUserID(ctx context.Context) (uuid.UUID, bool) {

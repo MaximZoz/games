@@ -18,11 +18,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
+
+// realtimeFanout публикует событие на другие инстансы.
+// true — доставка локальным сокетам будет из подписчика Redis (эхо включено).
+type realtimeFanout func(userIDs []uuid.UUID, all bool, payload any) bool
 
 type RealtimeHub struct {
 	mu      sync.RWMutex
 	clients map[uuid.UUID]map[*websocket.Conn]*realtimeClient
+	fanout  realtimeFanout
 }
 
 type realtimeClient struct {
@@ -53,6 +59,29 @@ func NewRealtimeHub() *RealtimeHub {
 	return &RealtimeHub{
 		clients: make(map[uuid.UUID]map[*websocket.Conn]*realtimeClient),
 	}
+}
+
+// SetFanout включает рассылку чатов, друзей и presence на все реплики.
+func (h *RealtimeHub) SetFanout(fn realtimeFanout) {
+	if h == nil {
+		return
+	}
+	h.mu.Lock()
+	h.fanout = fn
+	h.mu.Unlock()
+}
+
+func (h *RealtimeHub) fanoutOK(userIDs []uuid.UUID, all bool, payload any) bool {
+	if h == nil {
+		return false
+	}
+	h.mu.RLock()
+	fn := h.fanout
+	h.mu.RUnlock()
+	if fn == nil {
+		return false
+	}
+	return fn(userIDs, all, payload)
 }
 
 func (h *RealtimeHub) Register(userID uuid.UUID, conn *websocket.Conn) *realtimeClient {
@@ -126,15 +155,37 @@ func (h *RealtimeHub) ConnectedUserIDs() []uuid.UUID {
 	return ids
 }
 
-// PublishToAll — рассылка всем подключённым на этом инстансе.
+// PublishToAll — всем онлайн-клиентам. С fanout — на каждой реплике.
 func (h *RealtimeHub) PublishToAll(payload any) {
 	if h == nil {
 		return
 	}
-	h.PublishToUsers(h.ConnectedUserIDs(), payload)
+	if h.fanoutOK(nil, true, payload) {
+		return
+	}
+	h.DeliverLocalAll(payload)
+}
+
+// DeliverLocalAll пишет payload только сокетам этого процесса.
+func (h *RealtimeHub) DeliverLocalAll(payload any) {
+	if h == nil {
+		return
+	}
+	h.DeliverLocal(h.ConnectedUserIDs(), payload)
 }
 
 func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
+	if h == nil || len(userIDs) == 0 {
+		return
+	}
+	if h.fanoutOK(userIDs, false, payload) {
+		return
+	}
+	h.DeliverLocal(userIDs, payload)
+}
+
+// DeliverLocal пишет payload сокетам этого процесса, без Redis.
+func (h *RealtimeHub) DeliverLocal(userIDs []uuid.UUID, payload any) {
 	if h == nil || len(userIDs) == 0 {
 		return
 	}
@@ -180,10 +231,12 @@ func (h *RealtimeHub) PublishToUsers(userIDs []uuid.UUID, payload any) {
 type RealtimeWSHandler struct {
 	Hub           *RealtimeHub
 	Pool          *pgxpool.Pool
+	Rdb           *redis.Client
 	JWTSecret     []byte
 	LogWriter     *applog.FileWriter // файл (для импорта)
 	AppLogEnabled bool               // если true — presence пишем ещё и напрямую в БД
 	Push          *WebPushSender
+	Limiter       *RateLimiter
 }
 
 var wsUpgrader = websocket.Upgrader{
@@ -214,6 +267,22 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "realtime hub is not initialized")
 		return
 	}
+	if h.Limiter != nil {
+		ip := clientIP(r)
+		if ip == "" {
+			ip = "unknown"
+		}
+		ok, retry := h.Limiter.Allow(r.Context(), "ws:"+ip, RateWSConnectPerMinute, time.Minute)
+		if !ok {
+			sec := int(retry.Seconds())
+			if sec < 1 {
+				sec = 1
+			}
+			w.Header().Set("Retry-After", strconv.Itoa(sec))
+			WriteErr(w, r, http.StatusTooManyRequests, "too many requests")
+			return
+		}
+	}
 
 	token := wsAccessTokenFromRequest(r)
 	if token == "" {
@@ -243,7 +312,13 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !ok {
+			if rejectIfFrozen(w, r, h.Pool, userID) {
+				return
+			}
 			WriteErr(w, r, http.StatusUnauthorized, "invalid or expired token")
+			return
+		}
+		if rejectIfFrozen(w, r, h.Pool, userID) {
 			return
 		}
 	}
@@ -254,6 +329,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := h.Hub.Register(userID, conn)
+	h.Hub.MarkOnline(r.Context(), h.Rdb, userID)
 	log.Printf("realtime: user %s connected", userID)
 
 	// Update last_seen and notify presence on connect
@@ -407,6 +483,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		h.Hub.Unregister(userID, conn)
+		h.Hub.MarkOffline(context.Background(), h.Rdb, userID)
 		_ = conn.Close()
 	}()
 
@@ -441,6 +518,7 @@ func (h *RealtimeWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if err := client.writePing(); err != nil {
 					return
 				}
+				h.Hub.RefreshOnline(context.Background(), h.Rdb, userID)
 				continue
 			}
 			if err := conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(5*time.Second)); err != nil {

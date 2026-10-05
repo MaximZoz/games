@@ -2766,4 +2766,135 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 खिलाड़ी: 4×4 बोर्ड, चार खिलाड़ी (X, O, △, □)। अपनी चिह्नों की रेखा पूरी करें।';
+
+  @override
+  String get adminUsersTab => 'उपयोगकर्ता';
+
+  @override
+  String get adminSupportTab => 'सहायता';
+
+  @override
+  String get adminSearchHint => 'ईमेल या नाम से खोजें';
+
+  @override
+  String get adminRoleAdmins => 'एडमिन';
+
+  @override
+  String get adminRoleUsers => 'उपयोगकर्ता';
+
+  @override
+  String get adminRoleAll => 'सभी भूमिकाएँ';
+
+  @override
+  String get adminStatusFrozen => 'जमे हुए';
+
+  @override
+  String get adminStatusActive => 'सक्रिय';
+
+  @override
+  String get adminStatusAny => 'कोई भी स्थिति';
+
+  @override
+  String get adminOrderDesc => 'घटते क्रम';
+
+  @override
+  String get adminOrderAsc => 'बढ़ते क्रम';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'लोड नहीं हो सका: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'कोई उपयोगकर्ता नहीं';
+
+  @override
+  String get adminSortLastSeen => 'अंतिम विज़िट के अनुसार';
+
+  @override
+  String get adminSortEmail => 'ईमेल के अनुसार';
+
+  @override
+  String get adminSortCreated => 'पंजीकरण तिथि के अनुसार';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount कांस्य';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'एडमिन हटाएँ';
+
+  @override
+  String get adminGrantAdmin => 'एडमिन बनाएँ';
+
+  @override
+  String get adminAdminRevoked => 'एडमिन अधिकार हटाए गए';
+
+  @override
+  String get adminAdminGranted => 'एडमिन अधिकार दिए गए';
+
+  @override
+  String get adminGrantCoins => 'सिक्के दें';
+
+  @override
+  String get adminWriteSupport => 'सहायता के रूप में लिखें';
+
+  @override
+  String get adminUnfreeze => 'अनफ़्रीज़';
+
+  @override
+  String get adminFreeze => 'फ़्रीज़';
+
+  @override
+  String get adminUnfrozen => 'अनफ़्रीज़ हो गया';
+
+  @override
+  String get adminFrozenDone => 'फ़्रीज़ हो गया';
+
+  @override
+  String get adminResetPassword => 'पासवर्ड रीसेट';
+
+  @override
+  String get adminCoinsAmountHint => 'मात्रा (ऋण = कटौती)';
+
+  @override
+  String get adminReasonOptional => 'कारण (वैकल्पिक)';
+
+  @override
+  String get adminGrantSent => 'कार्ड सहायता चैट में भेजा गया';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount कांस्य काटे गए';
+  }
+
+  @override
+  String get adminGrantVerb => 'दें';
+
+  @override
+  String get adminNewPasswordHint => 'नया पासवर्ड (कम से कम 6)';
+
+  @override
+  String get adminPasswordReset => 'पासवर्ड रीसेट हो गया';
+
+  @override
+  String get adminResetVerb => 'रीसेट';
+
+  @override
+  String adminShortError(String error) {
+    return 'त्रुटि: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'कोई सहायता अनुरोध नहीं';
+
+  @override
+  String get adminUserFallback => 'उपयोगकर्ता';
+
+  @override
+  String get apiErrTooManyRequests => 'बहुत अधिक अनुरोध। बाद में कोशिश करें।';
+
+  @override
+  String get apiErrMoveConflict => 'चाल का टकराव। फिर कोशिश करें।';
 }

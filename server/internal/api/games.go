@@ -95,24 +95,24 @@ type LobbyPlayerItem struct {
 }
 
 type LobbyItem struct {
-	ID                   string            `json:"id"`
-	CreatorID            string            `json:"creator_id"`
-	CreatorName          string            `json:"creator_name,omitempty"`
-	OpponentID           *string           `json:"opponent_id,omitempty"`
-	Status               string            `json:"status"`
-	Mode                 string            `json:"mode,omitempty"`
-	GameID               *string           `json:"game_id,omitempty"`
-	CreatedAt            string            `json:"created_at"`
-	TurnTimeSec          int               `json:"turn_time_sec,omitempty"`
-	Variant              string            `json:"variant,omitempty"`
-	GridSize             int               `json:"grid_size,omitempty"`
-	MaxPlayers           int               `json:"max_players,omitempty"`
-	PlayersCount         int               `json:"players_count,omitempty"`
-	PlayerIDs            []string          `json:"player_ids,omitempty"`
-	Players              []LobbyPlayerItem `json:"players,omitempty"`
+	ID           string            `json:"id"`
+	CreatorID    string            `json:"creator_id"`
+	CreatorName  string            `json:"creator_name,omitempty"`
+	OpponentID   *string           `json:"opponent_id,omitempty"`
+	Status       string            `json:"status"`
+	Mode         string            `json:"mode,omitempty"`
+	GameID       *string           `json:"game_id,omitempty"`
+	CreatedAt    string            `json:"created_at"`
+	TurnTimeSec  int               `json:"turn_time_sec,omitempty"`
+	Variant      string            `json:"variant,omitempty"`
+	GridSize     int               `json:"grid_size,omitempty"`
+	MaxPlayers   int               `json:"max_players,omitempty"`
+	PlayersCount int               `json:"players_count,omitempty"`
+	PlayerIDs    []string          `json:"player_ids,omitempty"`
+	Players      []LobbyPlayerItem `json:"players,omitempty"`
 	// Invited — кому уже ушло приглашение. Нужен, чтобы в своей игре был
 	// виден приглашённый соперник, даже если его нет в друзьях (реванш).
-	Invited []LobbyPlayerItem `json:"invited,omitempty"`
+	Invited              []LobbyPlayerItem `json:"invited,omitempty"`
 	ChatID               string            `json:"chat_id,omitempty"`
 	SwapRule             bool              `json:"swap_rule,omitempty"`              // deprecated
 	FirstMoveRestriction bool              `json:"first_move_restriction,omitempty"` // deprecated
@@ -389,22 +389,24 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.MakeMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "swap" && r.Method == http.MethodPost:
-			h.SwapSides(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
-			h.OfferDraw(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
-			h.AcceptDraw(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.MakeMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "swap" && r.Method == http.MethodPost:
+				h.SwapSides(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+				h.OfferDraw(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+				h.AcceptDraw(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 		return
 	}
 
@@ -510,6 +512,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 						reuseLobbyID = otherLobbyID
 					} else {
 						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+						h.forgetLobby(otherLobbyID)
 					}
 				}
 				gameID, lobbyID, err := h.createGameFromMatch(ctx, userID, otherUUID, reuseLobbyID, turnTimeSec, gridSize, swapRule, firstMoveRestriction, stakeBronze, string(variant))
@@ -537,6 +540,7 @@ func (h *GamesHandler) CreateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	status := lobbyStatusWaitingInvite
 	if mode == "matchmake" && !openMultiFind {
 		status = lobbyStatusWaitingMatchmake
@@ -617,7 +621,7 @@ func (h *GamesHandler) findOpenMultiLobbyID(
 	variantStr string,
 	stakeBronze, maxPlayers int,
 ) string {
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		return ""
 	}
@@ -944,6 +948,7 @@ func (h *GamesHandler) Rematch(w http.ResponseWriter, r *http.Request) {
 	// Всегда создаём лобби и отправляем приглашение. Игра начнётся только после
 	// явного принятия (JoinLobby) всеми нужными игроками.
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	invitedKey := key + ":invited"
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -1564,7 +1569,7 @@ func (h *GamesHandler) ListLobbies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -2297,7 +2302,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 	}
 
 	if status == lobbyStatusWaitingInvite {
-		keys, _ := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+		keys, _ := h.lobbyHashKeys(ctx)
 		for _, k := range keys {
 			if k == key || strings.HasSuffix(k, ":invited") {
 				continue
@@ -2314,6 +2319,7 @@ func (h *GamesHandler) JoinLobby(w http.ResponseWriter, r *http.Request, lobbyID
 			h.Rdb.Del(ctx, k)
 			h.Rdb.Del(ctx, k+":invited")
 			staleLobbyID := strings.TrimPrefix(k, "lobby:")
+			h.forgetLobby(staleLobbyID)
 			if staleLobbyID != "" {
 				h.cleanupInviteLobbyChatMessages(ctx, staleLobbyID)
 				_ = store.DeleteGameGroupChatByLobby(ctx, h.Pool, staleLobbyID)
@@ -2752,14 +2758,13 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 	}
 	ctx := r.Context()
 	uid := userID.String()
-	indexed, _ := h.Rdb.SMembers(ctx, userInvitesRedisKey(uid)).Result()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*:invited")
-	if err != nil && len(indexed) == 0 {
+	indexed, err := h.Rdb.SMembers(ctx, userInvitesRedisKey(uid)).Result()
+	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
 	out := make([]map[string]any, 0)
-	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, keys) {
+	for _, lobbyID := range mergePendingInviteLobbyIDs(indexed, nil) {
 		invitedKey := "lobby:" + lobbyID + ":invited"
 		okMem, _ := h.Rdb.SIsMember(ctx, invitedKey, uid).Result()
 		m, _ := h.Rdb.HGetAll(ctx, "lobby:"+lobbyID).Result()
@@ -4089,6 +4094,7 @@ func (h *GamesHandler) onGameFinishedWithMap(
 		if maxPlayers > 2 || m["t_user_id"] != "" || m["s_user_id"] != "" {
 			if h.Rdb != nil {
 				h.Rdb.Del(ctx, "lobby:"+lobbyID)
+				h.forgetLobby(lobbyID)
 				h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 				if gameID != "" {
 					h.Rdb.HDel(ctx, "game:"+gameID, "chat_id")

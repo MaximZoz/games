@@ -5230,6 +5230,252 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.'**
   String get rulesTttMulti4;
+
+  /// No description provided for @adminUsersTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи'**
+  String get adminUsersTab;
+
+  /// No description provided for @adminSupportTab.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поддержка'**
+  String get adminSupportTab;
+
+  /// No description provided for @adminSearchHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по email или нику'**
+  String get adminSearchHint;
+
+  /// No description provided for @adminRoleAdmins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Админы'**
+  String get adminRoleAdmins;
+
+  /// No description provided for @adminRoleUsers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи'**
+  String get adminRoleUsers;
+
+  /// No description provided for @adminRoleAll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все роли'**
+  String get adminRoleAll;
+
+  /// No description provided for @adminStatusFrozen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Замороженные'**
+  String get adminStatusFrozen;
+
+  /// No description provided for @adminStatusActive.
+  ///
+  /// In ru, this message translates to:
+  /// **'Активные'**
+  String get adminStatusActive;
+
+  /// No description provided for @adminStatusAny.
+  ///
+  /// In ru, this message translates to:
+  /// **'Любой статус'**
+  String get adminStatusAny;
+
+  /// No description provided for @adminOrderDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'По убыванию'**
+  String get adminOrderDesc;
+
+  /// No description provided for @adminOrderAsc.
+  ///
+  /// In ru, this message translates to:
+  /// **'По возрастанию'**
+  String get adminOrderAsc;
+
+  /// No description provided for @adminLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка загрузки: {error}'**
+  String adminLoadFailed(String error);
+
+  /// No description provided for @adminUsersEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователи не найдены'**
+  String get adminUsersEmpty;
+
+  /// No description provided for @adminSortLastSeen.
+  ///
+  /// In ru, this message translates to:
+  /// **'По последнему визиту'**
+  String get adminSortLastSeen;
+
+  /// No description provided for @adminSortEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'По email'**
+  String get adminSortEmail;
+
+  /// No description provided for @adminSortCreated.
+  ///
+  /// In ru, this message translates to:
+  /// **'По дате рег.'**
+  String get adminSortCreated;
+
+  /// No description provided for @adminBronzeBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'{amount} бр.'**
+  String adminBronzeBalance(int amount);
+
+  /// No description provided for @adminRevokeAdmin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать админа'**
+  String get adminRevokeAdmin;
+
+  /// No description provided for @adminGrantAdmin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать админом'**
+  String get adminGrantAdmin;
+
+  /// No description provided for @adminAdminRevoked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Права админа сняты'**
+  String get adminAdminRevoked;
+
+  /// No description provided for @adminAdminGranted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Права админа выданы'**
+  String get adminAdminGranted;
+
+  /// No description provided for @adminGrantCoins.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начислить монеты'**
+  String get adminGrantCoins;
+
+  /// No description provided for @adminWriteSupport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Написать от поддержки'**
+  String get adminWriteSupport;
+
+  /// No description provided for @adminUnfreeze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разморозить'**
+  String get adminUnfreeze;
+
+  /// No description provided for @adminFreeze.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заморозить'**
+  String get adminFreeze;
+
+  /// No description provided for @adminUnfrozen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разморожен'**
+  String get adminUnfrozen;
+
+  /// No description provided for @adminFrozenDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заморожен'**
+  String get adminFrozenDone;
+
+  /// No description provided for @adminResetPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить пароль'**
+  String get adminResetPassword;
+
+  /// No description provided for @adminCoinsAmountHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Количество (отрицательное = списание)'**
+  String get adminCoinsAmountHint;
+
+  /// No description provided for @adminReasonOptional.
+  ///
+  /// In ru, this message translates to:
+  /// **'Причина (необязательно)'**
+  String get adminReasonOptional;
+
+  /// No description provided for @adminGrantSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карточка отправлена в чат поддержки'**
+  String get adminGrantSent;
+
+  /// No description provided for @adminCoinsDebited.
+  ///
+  /// In ru, this message translates to:
+  /// **'Списано {amount} бронзовых'**
+  String adminCoinsDebited(int amount);
+
+  /// No description provided for @adminGrantVerb.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начислить'**
+  String get adminGrantVerb;
+
+  /// No description provided for @adminNewPasswordHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый пароль (мин. 6)'**
+  String get adminNewPasswordHint;
+
+  /// No description provided for @adminPasswordReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль сброшен'**
+  String get adminPasswordReset;
+
+  /// No description provided for @adminResetVerb.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get adminResetVerb;
+
+  /// No description provided for @adminShortError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка: {error}'**
+  String adminShortError(String error);
+
+  /// No description provided for @adminSupportEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет обращений в поддержку'**
+  String get adminSupportEmpty;
+
+  /// No description provided for @adminUserFallback.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пользователь'**
+  String get adminUserFallback;
+
+  /// No description provided for @apiErrTooManyRequests.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много запросов. Попробуйте позже.'**
+  String get apiErrTooManyRequests;
+
+  /// No description provided for @apiErrMoveConflict.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход конфликтует. Повторите.'**
+  String get apiErrMoveConflict;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

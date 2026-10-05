@@ -83,22 +83,24 @@ func (h *GamesHandler) serveBattleship(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.GetBattleshipGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "place_ships" && r.Method == http.MethodPost:
-			h.BattleshipPlaceShips(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "shoot" && r.Method == http.MethodPost:
-			h.BattleshipShoot(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.ForfeitBattleshipGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
-			h.BattleshipOfferDraw(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
-			h.BattleshipAcceptDraw(w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.GetBattleshipGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "place_ships" && r.Method == http.MethodPost:
+				h.BattleshipPlaceShips(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "shoot" && r.Method == http.MethodPost:
+				h.BattleshipShoot(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.ForfeitBattleshipGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-offer" && r.Method == http.MethodPost:
+				h.BattleshipOfferDraw(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw-accept" && r.Method == http.MethodPost:
+				h.BattleshipAcceptDraw(w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -180,6 +182,7 @@ func (h *GamesHandler) CreateBattleshipLobby(w http.ResponseWriter, r *http.Requ
 						reuseLobbyID = otherLobbyID
 					} else if otherLobbyID != "" {
 						h.Rdb.Del(ctx, "lobby:"+otherLobbyID)
+						h.forgetLobby(otherLobbyID)
 					}
 				}
 				gameID, lobbyID, cerr := h.createBattleshipGameFromMatch(
@@ -213,6 +216,7 @@ func (h *GamesHandler) CreateBattleshipLobby(w http.ResponseWriter, r *http.Requ
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	status := lobbyStatusWaitingInvite
 	if mode == "matchmake" {
 		status = lobbyStatusWaitingMatchmake
@@ -264,7 +268,7 @@ func (h *GamesHandler) ListBattleshipLobbies(w http.ResponseWriter, r *http.Requ
 	}
 	_ = userID
 	ctx := r.Context()
-	keys, err := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, err := h.lobbyHashKeys(ctx)
 	if err != nil {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
@@ -944,46 +948,51 @@ func (h *GamesHandler) scheduleBattleshipBotAct(gameID string) {
 		for step := 0; step < 25; step++ {
 			time.Sleep(battleshipBotActDelay(continueAfterHit))
 			lockKey := "battleship_bot_lock:" + gameID
-			locked, _ := h.Rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+			locked, _ := h.Rdb.SetNX(context.Background(), lockKey, "1", 5*time.Second).Result()
 			if !locked {
 				return
 			}
-			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			if err != nil || len(m) == 0 || m["status"] != gameStatusActive ||
-				m["phase"] != battleshipPhaseBattle || !isBot(m["turn"]) {
-				h.Rdb.Del(ctx, lockKey)
+			var stop bool
+			err := h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+				m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if err != nil || len(m) == 0 || m["status"] != gameStatusActive ||
+					m["phase"] != battleshipPhaseBattle || !isBot(m["turn"]) {
+					stop = true
+					return nil
+				}
+				side := battleshipSide(m, m["turn"])
+				if side == "" {
+					stop = true
+					return nil
+				}
+				opp := battleshipOpponentSide(side)
+				oppShips, err := battleship.ParseShipsJSON(m[opp+"_ships"])
+				if err != nil {
+					stop = true
+					return nil
+				}
+				myShots, _ := battleship.ParseShotsJSON(m[side+"_shots"])
+				cell, err := battleship.BotPickShot(oppShips, myShots, rand.New(rand.NewSource(time.Now().UnixNano()+int64(step))))
+				if err != nil {
+					stop = true
+					return nil
+				}
+				if err := h.applyBattleshipShot(ctx, gameID, m, side, cell, "normal"); err != nil {
+					stop = true
+					return nil
+				}
+				m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+				if m["status"] != gameStatusActive || m["last_shot_hit"] != "true" || !isBot(m["turn"]) {
+					stop = true
+					return nil
+				}
+				continueAfterHit = true
+				return nil
+			})
+			h.Rdb.Del(context.Background(), lockKey)
+			if err != nil || stop {
 				return
 			}
-			side := battleshipSide(m, m["turn"])
-			if side == "" {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			opp := battleshipOpponentSide(side)
-			oppShips, err := battleship.ParseShipsJSON(m[opp+"_ships"])
-			if err != nil {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			myShots, _ := battleship.ParseShotsJSON(m[side+"_shots"])
-			cell, err := battleship.BotPickShot(oppShips, myShots, rand.New(rand.NewSource(time.Now().UnixNano()+int64(step))))
-			if err != nil {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			if err := h.applyBattleshipShot(ctx, gameID, m, side, cell, "normal"); err != nil {
-				h.Rdb.Del(ctx, lockKey)
-				return
-			}
-			m, _ = h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-			h.Rdb.Del(ctx, lockKey)
-			if m["status"] != gameStatusActive {
-				return
-			}
-			if m["last_shot_hit"] != "true" || !isBot(m["turn"]) {
-				return
-			}
-			continueAfterHit = true
 		}
 	}()
 }
@@ -1159,6 +1168,7 @@ func (h *GamesHandler) BattleshipRematch(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	lkey := "lobby:" + lobbyID
 	invitedKey := lkey + ":invited"
 	now := time.Now().UTC().Format(time.RFC3339Nano)

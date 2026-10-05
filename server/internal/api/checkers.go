@@ -89,27 +89,29 @@ func (h *GamesHandler) serveCheckers(w http.ResponseWriter, r *http.Request) {
 			WriteErr(w, r, http.StatusBadRequest, "game id required")
 			return
 		}
-		switch {
-		case len(parts) == 2 && r.Method == http.MethodGet:
-			h.getCheckersGame(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
-			h.checkersMove(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
-			h.checkersForfeit(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "draw" && r.Method == http.MethodPost:
-			h.OfferDraw(w, r, gameID)
-		case len(parts) == 3 && parts[2] == "accept-draw" && r.Method == http.MethodPost:
-			h.acceptSimple1v1Draw(s, func(enc string) (string, error) {
-				g, err := checkers.Decode(enc)
-				if err != nil {
-					return "", err
-				}
-				g.AgreeDraw()
-				return checkers.Encode(g)
-			}, w, r, gameID)
-		default:
-			WriteErr(w, r, http.StatusNotFound, "not found")
-		}
+		h.callGame(w, r, gameID, func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case len(parts) == 2 && r.Method == http.MethodGet:
+				h.getCheckersGame(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "move" && r.Method == http.MethodPost:
+				h.checkersMove(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "forfeit" && r.Method == http.MethodPost:
+				h.checkersForfeit(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "draw" && r.Method == http.MethodPost:
+				h.OfferDraw(w, r, gameID)
+			case len(parts) == 3 && parts[2] == "accept-draw" && r.Method == http.MethodPost:
+				h.acceptSimple1v1Draw(s, func(enc string) (string, error) {
+					g, err := checkers.Decode(enc)
+					if err != nil {
+						return "", err
+					}
+					g.AgreeDraw()
+					return checkers.Encode(g)
+				}, w, r, gameID)
+			default:
+				WriteErr(w, r, http.StatusNotFound, "not found")
+			}
+		})
 	default:
 		WriteErr(w, r, http.StatusNotFound, "not found")
 	}
@@ -275,42 +277,44 @@ func (h *GamesHandler) notifyCheckersTurn(gameID string, state *checkers.Game, p
 func (h *GamesHandler) scheduleCheckersBot(gameID string) {
 	go func() {
 		time.Sleep(500 * time.Millisecond)
-		ctx := context.Background()
-		m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
-		if err != nil || m["status"] != gameStatusActive {
-			return
-		}
-		state, err := checkers.Decode(m["state"])
-		if err != nil || state.IsOver() {
-			return
-		}
-		players := parsePlayerIDsCSV(m["player_ids"])
-		if !isBot(players[state.Turn]) {
-			return
-		}
-		mv, ok := checkers.PickMove(state, rand.New(rand.NewSource(time.Now().UnixNano())))
-		if !ok {
-			return
-		}
-		if err := state.Apply(state.Turn, mv); err != nil {
-			return
-		}
-		encoded, err := checkers.Encode(state)
-		if err != nil {
-			return
-		}
-		s := checkersSpec()
-		h.saveSimple1v1State(ctx, s, gameID, m, encoded, state.Turn, state.IsOver())
-		h.broadcastCheckers(gameID, m)
-		if state.IsOver() {
-			h.onSimple1v1Finished(ctx, s, gameID, m, "normal")
-			return
-		}
-		if isBot(players[state.Turn]) {
-			h.scheduleCheckersBot(gameID)
-			return
-		}
-		h.notifyCheckersTurn(gameID, state, players)
+		_ = h.withGameLock(context.Background(), gameID, func(ctx context.Context) error {
+			m, err := h.Rdb.HGetAll(ctx, "game:"+gameID).Result()
+			if err != nil || m["status"] != gameStatusActive {
+				return nil
+			}
+			state, err := checkers.Decode(m["state"])
+			if err != nil || state.IsOver() {
+				return nil
+			}
+			players := parsePlayerIDsCSV(m["player_ids"])
+			if !isBot(players[state.Turn]) {
+				return nil
+			}
+			mv, ok := checkers.PickMove(state, rand.New(rand.NewSource(time.Now().UnixNano())))
+			if !ok {
+				return nil
+			}
+			if err := state.Apply(state.Turn, mv); err != nil {
+				return nil
+			}
+			encoded, err := checkers.Encode(state)
+			if err != nil {
+				return nil
+			}
+			s := checkersSpec()
+			h.saveSimple1v1State(ctx, s, gameID, m, encoded, state.Turn, state.IsOver())
+			h.broadcastCheckers(gameID, m)
+			if state.IsOver() {
+				h.onSimple1v1Finished(ctx, s, gameID, m, "normal")
+				return nil
+			}
+			if isBot(players[state.Turn]) {
+				h.scheduleCheckersBot(gameID)
+				return nil
+			}
+			h.notifyCheckersTurn(gameID, state, players)
+			return nil
+		})
 	}()
 }
 

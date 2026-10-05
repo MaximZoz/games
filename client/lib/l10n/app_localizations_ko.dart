@@ -2766,4 +2766,135 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4인: 4×4 보드, 네 명(X, O, △, □). 자신의 기호로 줄을 완성하면 승리합니다.';
+
+  @override
+  String get adminUsersTab => '사용자';
+
+  @override
+  String get adminSupportTab => '지원';
+
+  @override
+  String get adminSearchHint => '이메일 또는 닉네임 검색';
+
+  @override
+  String get adminRoleAdmins => '관리자';
+
+  @override
+  String get adminRoleUsers => '사용자';
+
+  @override
+  String get adminRoleAll => '모든 역할';
+
+  @override
+  String get adminStatusFrozen => '정지됨';
+
+  @override
+  String get adminStatusActive => '활성';
+
+  @override
+  String get adminStatusAny => '모든 상태';
+
+  @override
+  String get adminOrderDesc => '내림차순';
+
+  @override
+  String get adminOrderAsc => '오름차순';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '불러오기 실패: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => '사용자가 없습니다';
+
+  @override
+  String get adminSortLastSeen => '최근 방문순';
+
+  @override
+  String get adminSortEmail => '이메일순';
+
+  @override
+  String get adminSortCreated => '가입일순';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 브론즈';
+  }
+
+  @override
+  String get adminRevokeAdmin => '관리자 해제';
+
+  @override
+  String get adminGrantAdmin => '관리자로 지정';
+
+  @override
+  String get adminAdminRevoked => '관리자 권한을 해제했습니다';
+
+  @override
+  String get adminAdminGranted => '관리자 권한을 부여했습니다';
+
+  @override
+  String get adminGrantCoins => '코인 지급';
+
+  @override
+  String get adminWriteSupport => '지원으로 메시지';
+
+  @override
+  String get adminUnfreeze => '정지 해제';
+
+  @override
+  String get adminFreeze => '정지';
+
+  @override
+  String get adminUnfrozen => '정지를 해제했습니다';
+
+  @override
+  String get adminFrozenDone => '정지했습니다';
+
+  @override
+  String get adminResetPassword => '비밀번호 재설정';
+
+  @override
+  String get adminCoinsAmountHint => '수량(음수 = 차감)';
+
+  @override
+  String get adminReasonOptional => '사유(선택)';
+
+  @override
+  String get adminGrantSent => '카드를 지원 채팅으로 보냈습니다';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '브론즈 ${amount}을 차감했습니다';
+  }
+
+  @override
+  String get adminGrantVerb => '지급';
+
+  @override
+  String get adminNewPasswordHint => '새 비밀번호(최소 6자)';
+
+  @override
+  String get adminPasswordReset => '비밀번호를 재설정했습니다';
+
+  @override
+  String get adminResetVerb => '재설정';
+
+  @override
+  String adminShortError(String error) {
+    return '오류: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => '지원 요청이 없습니다';
+
+  @override
+  String get adminUserFallback => '사용자';
+
+  @override
+  String get apiErrTooManyRequests => '요청이 너무 많습니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get apiErrMoveConflict => '수가 충돌했습니다. 다시 시도하세요.';
 }

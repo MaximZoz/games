@@ -383,8 +383,8 @@ class AppShell extends ConsumerWidget {
       ref.listen(realtimeEventsProvider, (_, next) {
         next.whenData((event) {
           final type = event['type'];
-          if (type == 'session_replaced') {
-            // Вход с другого устройства — выходим на этом.
+          if (type == 'session_replaced' || type == 'account_frozen') {
+            // Другое устройство или заморозка — сессия на этом клиенте мертва.
             unawaited(ref.read(authStateProvider.notifier).logout());
             return;
           }

@@ -2766,4 +2766,135 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 hráči: plán 4×4, čtyři hráči (X, O, △, □). Vyhrajte řadou vlastních znaků.';
+
+  @override
+  String get adminUsersTab => 'Uživatelé';
+
+  @override
+  String get adminSupportTab => 'Podpora';
+
+  @override
+  String get adminSearchHint => 'Hledat podle e-mailu nebo jména';
+
+  @override
+  String get adminRoleAdmins => 'Admini';
+
+  @override
+  String get adminRoleUsers => 'Uživatelé';
+
+  @override
+  String get adminRoleAll => 'Všechny role';
+
+  @override
+  String get adminStatusFrozen => 'Zmrazení';
+
+  @override
+  String get adminStatusActive => 'Aktivní';
+
+  @override
+  String get adminStatusAny => 'Libovolný stav';
+
+  @override
+  String get adminOrderDesc => 'Sestupně';
+
+  @override
+  String get adminOrderAsc => 'Vzestupně';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Načtení selhalo: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Žádní uživatelé';
+
+  @override
+  String get adminSortLastSeen => 'Podle poslední návštěvy';
+
+  @override
+  String get adminSortEmail => 'Podle e-mailu';
+
+  @override
+  String get adminSortCreated => 'Podle data registrace';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Odebrat admina';
+
+  @override
+  String get adminGrantAdmin => 'Udělat adminem';
+
+  @override
+  String get adminAdminRevoked => 'Práva admina odebrána';
+
+  @override
+  String get adminAdminGranted => 'Práva admina udělena';
+
+  @override
+  String get adminGrantCoins => 'Připsat mince';
+
+  @override
+  String get adminWriteSupport => 'Psát jako podpora';
+
+  @override
+  String get adminUnfreeze => 'Odmrazit';
+
+  @override
+  String get adminFreeze => 'Zmrazit';
+
+  @override
+  String get adminUnfrozen => 'Odmrazeno';
+
+  @override
+  String get adminFrozenDone => 'Zmrazeno';
+
+  @override
+  String get adminResetPassword => 'Obnovit heslo';
+
+  @override
+  String get adminCoinsAmountHint => 'Částka (záporná = odečet)';
+
+  @override
+  String get adminReasonOptional => 'Důvod (volitelné)';
+
+  @override
+  String get adminGrantSent => 'Karta odeslána do chatu podpory';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Odečteno $amount bronzu';
+  }
+
+  @override
+  String get adminGrantVerb => 'Připsat';
+
+  @override
+  String get adminNewPasswordHint => 'Nové heslo (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Heslo obnoveno';
+
+  @override
+  String get adminResetVerb => 'Obnovit';
+
+  @override
+  String adminShortError(String error) {
+    return 'Chyba: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Žádné požadavky podpory';
+
+  @override
+  String get adminUserFallback => 'Uživatel';
+
+  @override
+  String get apiErrTooManyRequests => 'Příliš mnoho požadavků. Zkuste to později.';
+
+  @override
+  String get apiErrMoveConflict => 'Konflikt tahu. Zkuste to znovu.';
 }

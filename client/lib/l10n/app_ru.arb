@@ -1658,5 +1658,74 @@
   "chatTitleDurak4": "Дурак на четверых",
   "rulesTttUltimate": "Ультимейт: 9 мини-полей 3×3. Ход в клетку отправляет соперника в соответствующее мини-поле. Выигрывает тот, кто собрал линию на мета-поле.",
   "rulesTttMulti3": "На троих: поле 3×3, трое игроков (X, O, △). Кто собрал линию из своих знаков — побеждает.",
-  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает."
+  "rulesTttMulti4": "На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.",
+  "adminUsersTab": "Пользователи",
+  "adminSupportTab": "Поддержка",
+  "adminSearchHint": "Поиск по email или нику",
+  "adminRoleAdmins": "Админы",
+  "adminRoleUsers": "Пользователи",
+  "adminRoleAll": "Все роли",
+  "adminStatusFrozen": "Замороженные",
+  "adminStatusActive": "Активные",
+  "adminStatusAny": "Любой статус",
+  "adminOrderDesc": "По убыванию",
+  "adminOrderAsc": "По возрастанию",
+  "adminLoadFailed": "Ошибка загрузки: {error}",
+  "@adminLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersEmpty": "Пользователи не найдены",
+  "adminSortLastSeen": "По последнему визиту",
+  "adminSortEmail": "По email",
+  "adminSortCreated": "По дате рег.",
+  "adminBronzeBalance": "{amount} бр.",
+  "@adminBronzeBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "adminRevokeAdmin": "Убрать админа",
+  "adminGrantAdmin": "Сделать админом",
+  "adminAdminRevoked": "Права админа сняты",
+  "adminAdminGranted": "Права админа выданы",
+  "adminGrantCoins": "Начислить монеты",
+  "adminWriteSupport": "Написать от поддержки",
+  "adminUnfreeze": "Разморозить",
+  "adminFreeze": "Заморозить",
+  "adminUnfrozen": "Разморожен",
+  "adminFrozenDone": "Заморожен",
+  "adminResetPassword": "Сбросить пароль",
+  "adminCoinsAmountHint": "Количество (отрицательное = списание)",
+  "adminReasonOptional": "Причина (необязательно)",
+  "adminGrantSent": "Карточка отправлена в чат поддержки",
+  "adminCoinsDebited": "Списано {amount} бронзовых",
+  "@adminCoinsDebited": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "adminGrantVerb": "Начислить",
+  "adminNewPasswordHint": "Новый пароль (мин. 6)",
+  "adminPasswordReset": "Пароль сброшен",
+  "adminResetVerb": "Сбросить",
+  "adminShortError": "Ошибка: {error}",
+  "@adminShortError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSupportEmpty": "Нет обращений в поддержку",
+  "adminUserFallback": "Пользователь",
+  "apiErrTooManyRequests": "Слишком много запросов. Попробуйте позже.",
+  "apiErrMoveConflict": "Ход конфликтует. Повторите."
 }

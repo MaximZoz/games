@@ -2766,4 +2766,135 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 שחקנים: לוח 4×4, ארבעה שחקנים (X, O, △, □). השלימו שורה בסימנים שלכם כדי לנצח.';
+
+  @override
+  String get adminUsersTab => 'משתמשים';
+
+  @override
+  String get adminSupportTab => 'תמיכה';
+
+  @override
+  String get adminSearchHint => 'חיפוש לפי אימייל או כינוי';
+
+  @override
+  String get adminRoleAdmins => 'מנהלים';
+
+  @override
+  String get adminRoleUsers => 'משתמשים';
+
+  @override
+  String get adminRoleAll => 'כל התפקידים';
+
+  @override
+  String get adminStatusFrozen => 'מוקפאים';
+
+  @override
+  String get adminStatusActive => 'פעילים';
+
+  @override
+  String get adminStatusAny => 'כל סטטוס';
+
+  @override
+  String get adminOrderDesc => 'יורד';
+
+  @override
+  String get adminOrderAsc => 'עולה';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'הטעינה נכשלה: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'לא נמצאו משתמשים';
+
+  @override
+  String get adminSortLastSeen => 'לפי ביקור אחרון';
+
+  @override
+  String get adminSortEmail => 'לפי אימייל';
+
+  @override
+  String get adminSortCreated => 'לפי תאריך הרשמה';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount ברונזה';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'הסר מנהל';
+
+  @override
+  String get adminGrantAdmin => 'הפוך למנהל';
+
+  @override
+  String get adminAdminRevoked => 'הרשאות מנהל הוסרו';
+
+  @override
+  String get adminAdminGranted => 'הרשאות מנהל ניתנו';
+
+  @override
+  String get adminGrantCoins => 'הענק מטבעות';
+
+  @override
+  String get adminWriteSupport => 'כתוב כתמיכה';
+
+  @override
+  String get adminUnfreeze => 'בטל הקפאה';
+
+  @override
+  String get adminFreeze => 'הקפא';
+
+  @override
+  String get adminUnfrozen => 'ההקפאה בוטלה';
+
+  @override
+  String get adminFrozenDone => 'הוקפא';
+
+  @override
+  String get adminResetPassword => 'איפוס סיסמה';
+
+  @override
+  String get adminCoinsAmountHint => 'כמות (שלילי = חיסור)';
+
+  @override
+  String get adminReasonOptional => 'סיבה (לא חובה)';
+
+  @override
+  String get adminGrantSent => 'הכרטיס נשלח לצ\'אט התמיכה';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'הופחתו $amount ברונזה';
+  }
+
+  @override
+  String get adminGrantVerb => 'הענק';
+
+  @override
+  String get adminNewPasswordHint => 'סיסמה חדשה (לפחות 6)';
+
+  @override
+  String get adminPasswordReset => 'הסיסמה אופסה';
+
+  @override
+  String get adminResetVerb => 'אפס';
+
+  @override
+  String adminShortError(String error) {
+    return 'שגיאה: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'אין פניות תמיכה';
+
+  @override
+  String get adminUserFallback => 'משתמש';
+
+  @override
+  String get apiErrTooManyRequests => 'יותר מדי בקשות. נסו שוב מאוחר יותר.';
+
+  @override
+  String get apiErrMoveConflict => 'התנגשות מהלך. נסו שוב.';
 }

@@ -261,6 +261,12 @@ func userIDFromBearer(secret []byte, header string) string {
 }
 
 func clientIP(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	if ip := strings.TrimSpace(r.Header.Get("Fly-Client-IP")); ip != "" {
+		return ip
+	}
 	if forwarded := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); forwarded != "" {
 		parts := strings.Split(forwarded, ",")
 		if len(parts) > 0 {

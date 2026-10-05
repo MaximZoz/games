@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 // OAuthConfig — клиентские ID/секреты провайдеров. Пустые = провайдер выключен.
@@ -31,16 +32,19 @@ type OAuthConfig struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 
-	AppleClientID    string // Services ID
-	AppleTeamID      string
-	AppleKeyID       string
-	ApplePrivateKey  string // PEM PKCS8
+	AppleClientID   string // Services ID
+	AppleTeamID     string
+	AppleKeyID      string
+	ApplePrivateKey string // PEM PKCS8
 
 	YandexClientID     string
 	YandexClientSecret string
 
 	VKClientID     string
 	VKClientSecret string
+
+	// Rdb хранит state/result между репликами. Пусто — память процесса (dev без Redis).
+	Rdb *redis.Client
 
 	mu      sync.Mutex
 	states  map[string]oauthState  // state → data; cleanup по TTL
@@ -73,10 +77,22 @@ func (c *OAuthConfig) ensureStates() {
 }
 
 func (c *OAuthConfig) putResult(state string, res oauthResult) {
+	res.Expires = time.Now().Add(5 * time.Minute)
+	if c != nil && c.Rdb != nil {
+		raw, err := json.Marshal(res)
+		if err != nil {
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := c.Rdb.Set(ctx, "oauth:result:"+state, raw, 5*time.Minute).Err(); err != nil {
+			log.Printf("oauth result redis: %v", err)
+		}
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
-	res.Expires = time.Now().Add(5 * time.Minute)
 	c.results[state] = res
 	now := time.Now()
 	for k, v := range c.results {
@@ -87,6 +103,19 @@ func (c *OAuthConfig) putResult(state string, res oauthResult) {
 }
 
 func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
+	if c != nil && c.Rdb != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		raw, err := c.Rdb.GetDel(ctx, "oauth:result:"+state).Result()
+		if err != nil {
+			return oauthResult{}, false
+		}
+		var res oauthResult
+		if json.Unmarshal([]byte(raw), &res) != nil || time.Now().After(res.Expires) {
+			return oauthResult{}, false
+		}
+		return res, true
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
@@ -100,22 +129,34 @@ func (c *OAuthConfig) takeResult(state string) (oauthResult, bool) {
 }
 
 func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool) (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.ensureStates()
 	b := make([]byte, 24)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
 	state := base64.RawURLEncoding.EncodeToString(b)
-	c.states[state] = oauthState{
+	st := oauthState{
 		Provider: provider,
 		Redirect: redirect,
 		Ref:      ref,
 		FromPWA:  fromPWA,
 		Expires:  time.Now().Add(10 * time.Minute),
 	}
-	// Простая уборка
+	if c != nil && c.Rdb != nil {
+		raw, err := json.Marshal(st)
+		if err != nil {
+			return "", err
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := c.Rdb.Set(ctx, "oauth:state:"+state, raw, 10*time.Minute).Err(); err != nil {
+			return "", err
+		}
+		return state, nil
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.ensureStates()
+	c.states[state] = st
 	now := time.Now()
 	for k, v := range c.states {
 		if now.After(v.Expires) {
@@ -126,6 +167,19 @@ func (c *OAuthConfig) putState(provider, redirect, ref string, fromPWA bool) (st
 }
 
 func (c *OAuthConfig) takeState(state string) (oauthState, bool) {
+	if c != nil && c.Rdb != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		raw, err := c.Rdb.GetDel(ctx, "oauth:state:"+state).Result()
+		if err != nil {
+			return oauthState{}, false
+		}
+		var st oauthState
+		if json.Unmarshal([]byte(raw), &st) != nil || time.Now().After(st.Expires) {
+			return oauthState{}, false
+		}
+		return st, true
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
@@ -139,11 +193,24 @@ func (c *OAuthConfig) takeState(state string) (oauthState, bool) {
 }
 
 func (c *OAuthConfig) peekFromPWA(state string) bool {
+	if c != nil && c.Rdb != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		raw, err := c.Rdb.Get(ctx, "oauth:state:"+state).Result()
+		if err != nil {
+			return false
+		}
+		var st oauthState
+		if json.Unmarshal([]byte(raw), &st) != nil || time.Now().After(st.Expires) {
+			return false
+		}
+		return st.FromPWA
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ensureStates()
 	s, ok := c.states[state]
-	return ok && s.FromPWA
+	return ok && s.FromPWA && time.Now().Before(s.Expires)
 }
 
 func (c *OAuthConfig) EnabledProviders() []string {

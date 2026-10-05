@@ -169,6 +169,10 @@ String? _serverKeyMessage(String key, dynamic l10n) {
       return l10n.apiErrDeck52ThreeOrFour;
     case 'account frozen':
       return l10n.apiErrAccountFrozen;
+    case 'too many requests':
+      return l10n.apiErrTooManyRequests;
+    case 'move conflict':
+      return l10n.apiErrMoveConflict;
     case 'turn_time_sec must be 0, 20, 60 or 600':
       return l10n.apiErrTurnTimeInvalid;
     default:
