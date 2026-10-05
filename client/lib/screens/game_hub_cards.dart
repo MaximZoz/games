@@ -1263,73 +1263,13 @@ class _TictactoeGameCard extends StatelessWidget {
         offlineBot: isOffline,
       );
 
-  Widget _selectableChip({
-    required bool selected,
-    required VoidCallback? onTap,
-    required IconData icon,
-    required String label,
-    required TextTheme? theme,
-    required double padV,
-    required double padH,
-    required double iconSz,
-    required double fontSz,
-    required bool compact,
-  }) {
-    final color = selected ? AppColors.accentStart : AppColors.textSecondary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-        highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-          decoration: BoxDecoration(
-            color: AppColors.buttonFill,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected
-                  ? AppColors.accentStart.withValues(alpha: 0.3)
-                  : AppColors.textSecondary.withValues(alpha: 0.25),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: iconSz, color: color),
-              SizedBox(width: compact ? 4 : 6),
-              Text(
-                label,
-                style: theme?.bodyMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: fontSz,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildChipList({
     required BuildContext context,
-    required TextTheme? theme,
     required bool isCreating,
     required bool isFinding,
     required bool isDesktop,
     required bool isMedium,
-    bool compact = false,
   }) {
-    final padV = compact ? 4.0 : 6.0;
-    final padH = compact ? 6.0 : 10.0;
-    final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
-    final fontSz =
-        compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
     final busy = isCreating || isFinding;
     // Кнопка игроков: активна → 2/3/4 фиолетовая; иначе тёмная «2».
     final playersSelected = playersControlActive;
@@ -1344,73 +1284,33 @@ class _TictactoeGameCard extends StatelessWidget {
             ? Icons.dashboard_customize_rounded
             : Icons.close_rounded;
     return [
-      _selectableChip(
+      GameCardChip(
         selected: playersSelected,
-        onTap: busy ? null : onPlayersChipTap,
         icon: Icons.groups_rounded,
         label: playersLabel,
-        theme: theme,
-        padV: padV,
-        padH: padH,
-        iconSz: iconSz,
-        fontSz: fontSz,
-        compact: compact,
+        onTap: busy ? null : onPlayersChipTap,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
       if (!isOffline)
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
+        Tooltip(
+          message: context.l10n.gamesTapChangeTurnTime,
+          child: GameCardChip(
+            selected: true,
+            icon: Icons.timer_outlined,
+            label: formatTurnTime(turnTimeSec),
             onTap: busy ? null : _cycleTurnTime,
-            borderRadius: BorderRadius.circular(10),
-            splashColor: AppColors.accentStart.withValues(alpha: 0.2),
-            highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
-            child: Tooltip(
-              message: context.l10n.gamesTapChangeTurnTime,
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
-                decoration: BoxDecoration(
-                  color: AppColors.buttonFill,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.accentStart.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      size: iconSz,
-                      color: AppColors.accentStart,
-                    ),
-                    SizedBox(width: compact ? 4 : 6),
-                    Text(
-                      formatTurnTime(turnTimeSec),
-                      style: theme?.bodyMedium?.copyWith(
-                        color: AppColors.accentStart,
-                        fontWeight: FontWeight.w600,
-                        fontSize: fontSz,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            isDesktop: isDesktop,
+            isMedium: isMedium,
           ),
         ),
-      _selectableChip(
+      GameCardChip(
         selected: modeSelected,
-        onTap: busy ? null : onModeChipTap,
         icon: modeIcon,
         label: variantLabel(modeVariant),
-        theme: theme,
-        padV: padV,
-        padH: padH,
-        iconSz: iconSz,
-        fontSz: fontSz,
-        compact: compact,
+        onTap: busy ? null : onModeChipTap,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     ];
   }
@@ -1428,7 +1328,6 @@ class _TictactoeGameCard extends StatelessWidget {
     final isDesktop = isWide(context);
     final width = MediaQuery.sizeOf(context).width;
     final isMedium = width >= 700 && width < 950;
-    final theme = Theme.of(context);
     // Без appear-анимации: при возврате из лобби карточка иначе «мигает»
     // (opacity 0→1), хотя выход уже мгновенный.
     return GameCardShell(
@@ -1448,12 +1347,10 @@ class _TictactoeGameCard extends StatelessWidget {
       ),
       chips: _buildChipList(
         context: context,
-        theme: theme.textTheme,
         isCreating: isCreating,
         isFinding: isFinding,
         isDesktop: isDesktop,
         isMedium: isMedium,
-        compact: width < 400,
       ),
       actions: GameCardActionsRow(
         createLabel: context.l10n.gamesCreate,
