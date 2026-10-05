@@ -150,18 +150,15 @@ void main() {
     GamepadService.instance.setDevicesForTest(const [
       GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
     ]);
+    focusFirstVisibleGamepadTarget();
+    await tester.pump();
     GamepadService.instance.emit(GamepadAction.down);
     await tester.pump(const Duration(milliseconds: 40));
-    final collectionBlock = find.descendant(
-      of: find.byType(CollectionShowcaseGrid),
-      matching: find.byType(GamepadFocusBlock),
-    );
-    expect(collectionBlock, findsOneWidget);
+    final focusedCtx = FocusManager.instance.primaryFocus?.context;
+    expect(focusedCtx, isNotNull);
     expect(
-      GamepadFocusBlock.maybeOf(tester.element(collectionBlock))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
+      focusedCtx!.findAncestorWidgetOfExactType<CollectionShowcaseGrid>(),
+      isNotNull,
     );
   });
 }
