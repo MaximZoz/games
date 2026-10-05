@@ -2476,7 +2476,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 
   Widget _buildShowStatsCheckbox() {
-    // Кликается только квадрат (не подпись). Выровнен по левому краю как поля.
+    // Обводка геймпада по самому квадрату 22×22, не по большому hit-box.
     final checked = _showStatsToOthers;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -2484,36 +2484,30 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _ProfileGamepadTarget(
-            radius: 8,
+            radius: 5,
             onActivate: () => setState(() => _showStatsToOthers = !checked),
             child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() => _showStatsToOthers = !checked),
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: checked ? AppColors.accentStart : Colors.transparent,
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(
-                      color: checked
-                          ? AppColors.accentStart
-                          : AppColors.textSecondary.withValues(alpha: 0.55),
-                      width: 2,
-                    ),
+              key: const ValueKey('compact_show_stats'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _showStatsToOthers = !checked),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: checked ? AppColors.accentStart : Colors.transparent,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: checked
+                        ? AppColors.accentStart
+                        : AppColors.textSecondary.withValues(alpha: 0.55),
+                    width: 2,
                   ),
-                  child: checked
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
-                      : null,
                 ),
+                child: checked
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
               ),
-            ),
             ),
           ),
           const SizedBox(width: 8),

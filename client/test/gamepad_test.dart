@@ -2447,6 +2447,14 @@ void main() {
     await downTo(find.text('Google'));
   });
 
+  test('влево/вправо не считают целью поле из другой строки', () {
+    const age = Rect.fromLTWH(0, 120, 180, 56);
+    const gender = Rect.fromLTWH(200, 120, 180, 56);
+    const about = Rect.fromLTWH(0, 200, 400, 56);
+    expect(gamepadSameRow(age, gender), isTrue);
+    expect(gamepadSameRow(age, about), isFalse);
+  });
+
   test('влево по горизонтали скроллит к началу, вправо — к концу', () {
     const view = Rect.fromLTWH(0, 0, 200, 60);
     expect(
