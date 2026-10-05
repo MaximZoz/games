@@ -290,6 +290,22 @@ class GamepadNavGroup extends InheritedWidget {
     return ctx.getInheritedWidgetOfExactType<GamepadNavGroup>();
   }
 
+  /// Ближняя exclusive-группа, даже если поверх неё лежит обычный ряд.
+  static GamepadNavGroup? exclusiveOfNode(FocusNode node) {
+    final ctx = node.context;
+    if (ctx == null) return null;
+    GamepadNavGroup? found;
+    ctx.visitAncestorElements((el) {
+      final w = el.widget;
+      if (w is GamepadNavGroup && w.exclusive) {
+        found = w;
+        return false;
+      }
+      return true;
+    });
+    return found;
+  }
+
   @override
   bool updateShouldNotify(GamepadNavGroup oldWidget) {
     return name != oldWidget.name || exclusive != oldWidget.exclusive;

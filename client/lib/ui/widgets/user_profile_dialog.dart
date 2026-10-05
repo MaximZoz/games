@@ -414,16 +414,27 @@ Future<void> showUserProfileDialog({
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          resolvedAbout,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            height: 1.35,
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSoft.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            resolvedAbout,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                       HeadToHeadSection(

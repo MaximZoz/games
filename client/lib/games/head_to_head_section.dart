@@ -168,33 +168,43 @@ class _HeadToHeadBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasScore = games.isNotEmpty;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasScore)
-          Expanded(
-            child: HeadToHeadScoreStrip(
-              title: context.l10n.statsYourScore,
-              games: games,
+        if (hasScore) ...[
+          Text(
+            context.l10n.statsYourScore,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        if (hasScore && showStats) const SizedBox(width: 8),
-        if (showStats) StatsIconButton(onTap: onTapStats),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (hasScore)
+              Expanded(
+                child: HeadToHeadScoreStrip(games: games),
+              ),
+            if (hasScore && showStats) const SizedBox(width: 8),
+            if (showStats) StatsIconButton(onTap: onTapStats),
+          ],
+        ),
       ],
     );
   }
 }
 
-/// «Ваш счёт» и карточки игр в одной горизонтальной полосе.
+/// Карточки игр со счётом в одной горизонтальной полосе.
 class HeadToHeadScoreStrip extends StatefulWidget {
   const HeadToHeadScoreStrip({
     super.key,
-    required this.title,
     required this.games,
     this.controller,
   });
 
-  final String title;
   final List<GameTypeScore> games;
   final ScrollController? controller;
 
@@ -238,50 +248,36 @@ class _HeadToHeadScoreStripState extends State<HeadToHeadScoreStrip> {
         color: AppColors.accentSoft.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
-        children: [
-          Text(
-            widget.title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
+      child: Listener(
+        onPointerSignal: _onPointerSignal,
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: const {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+              PointerDeviceKind.stylus,
+              PointerDeviceKind.unknown,
+            },
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Listener(
-              onPointerSignal: _onPointerSignal,
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: const {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                    PointerDeviceKind.trackpad,
-                    PointerDeviceKind.stylus,
-                    PointerDeviceKind.unknown,
-                  },
+          child: ListView.separated(
+            controller: _controller,
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.games.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final g = widget.games[index];
+              return Center(
+                child: GameTypeScoreChip(
+                  gameType: g.gameType,
+                  won: g.won,
+                  lost: g.lost,
+                  drawn: g.drawn,
                 ),
-                child: ListView.separated(
-                  controller: _controller,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.games.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 16),
-                  itemBuilder: (context, index) {
-                    final g = widget.games[index];
-                    return Center(
-                      child: GameTypeScoreChip(
-                        gameType: g.gameType,
-                        won: g.won,
-                        lost: g.lost,
-                        drawn: g.drawn,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
