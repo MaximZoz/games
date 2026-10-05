@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
@@ -401,6 +403,16 @@ FocusNode? _neighborGamepadBlock(
     if (rect == null) continue;
     final dx = rect.center.dx - curRect.center.dx;
     final dy = rect.center.dy - curRect.center.dy;
+    final horizontal = direction == TraversalDirection.left ||
+        direction == TraversalDirection.right;
+    if (horizontal) {
+      final currentStrip = _horizontalScrollable(current);
+      if (currentStrip != null) {
+        if (!identical(_horizontalScrollable(node), currentStrip)) continue;
+      } else if (!gamepadSameRow(curRect, rect)) {
+        continue;
+      }
+    }
     final ok = switch (direction) {
       TraversalDirection.down => dy > 8,
       TraversalDirection.up => dy < -8,
@@ -425,6 +437,25 @@ FocusNode? _neighborGamepadBlock(
     }
   }
   return best;
+}
+
+/// Влево/вправо остаются в одной визуальной строке: не спрыгивать на поле ниже.
+@visibleForTesting
+bool gamepadSameRow(Rect a, Rect b) {
+  final overlap = math.min(a.bottom, b.bottom) - math.max(a.top, b.top);
+  if (overlap >= 8) return true;
+  final slack = math.max(24.0, math.max(a.height, b.height) * 0.45);
+  return (a.center.dy - b.center.dy).abs() <= slack;
+}
+
+ScrollableState? _horizontalScrollable(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null) return null;
+  final scrollable = Scrollable.maybeOf(ctx);
+  if (scrollable == null || scrollable.position.axis != Axis.horizontal) {
+    return null;
+  }
+  return scrollable;
 }
 
 bool _isSameFormScrollable(FocusNode node) {

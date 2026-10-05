@@ -282,6 +282,74 @@ void main() {
     }
     expect(offset(), lessThan(afterRight));
   });
+
+  testWidgets('вправо по аватарам не спускается на возраст', (tester) async {
+    await _enterEdit(tester);
+    final first = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_avatar_preset_0'))),
+    );
+    first!.focusNode.requestFocus();
+    await tester.pump();
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    for (var i = 0; i < 4; i++) {
+      handleGamepadUiAction(hostCtx, GamepadAction.right);
+      await tester.pump();
+    }
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_age'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_display_name'))),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_avatar_preset_4'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('с возраста вправо — на пол', (tester) async {
+    await _enterEdit(tester);
+    final age = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_age'))),
+    );
+    age!.focusNode.requestFocus();
+    await tester.pump();
+    handleGamepadUiAction(
+      tester.element(find.byType(GamepadHost)),
+      GamepadAction.right,
+    );
+    await tester.pump();
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_gender'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('чекбокс обводится по квадрату, не по hit-box 40', (tester) async {
+    await _enterEdit(tester);
+    final box = tester.getSize(find.byKey(const ValueKey('compact_show_stats')));
+    expect(box.width, 22);
+    expect(box.height, 22);
+    final block = tester.widget<GamepadFocusBlock>(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('compact_show_stats')),
+            matching: find.byType(GamepadFocusBlock),
+          )
+          .first,
+    );
+    expect(block.radius, 5);
+  });
 }
 
 Future<void> _enterEdit(WidgetTester tester) async {
