@@ -231,6 +231,11 @@ class GameCardChip extends StatelessWidget {
     final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
     final fontSz =
         compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+    final chipH = gameCardChipHeight(
+      compact: compact,
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+    );
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -239,6 +244,7 @@ class GameCardChip extends StatelessWidget {
         splashColor: AppColors.accentStart.withValues(alpha: 0.2),
         highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
         child: Container(
+          constraints: BoxConstraints(minHeight: chipH),
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
             color: AppColors.buttonFill,
@@ -252,6 +258,7 @@ class GameCardChip extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               iconChild ??
                   (flipIcon
@@ -277,7 +284,7 @@ class GameCardChip extends StatelessWidget {
 
 /// Ряд кнопок «Создать игру» / «Найти игру».
 ///
-/// Всегда одна линия: на узкой карточке уменьшаются отступ и кегль.
+/// Всегда одна линия и одинаковый размер на любой ширине карточки.
 /// Loading заменяет иконку на spinner и текст на «Создание…» / «Поиск…».
 /// В offline-режиме — одна широкая кнопка «Играть».
 class GameCardActionsRow extends StatelessWidget {
@@ -350,60 +357,46 @@ class GameCardActionsRow extends StatelessWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final veryTight = width < 300;
-        final tight = width < 360;
-        final height = veryTight ? 42.0 : (tight ? 44.0 : _height);
-        final padH = veryTight ? 6.0 : (tight ? 8.0 : 12.0);
-        final fontSize = veryTight ? 11.5 : (tight ? 12.5 : 13.5);
-        final iconSize = veryTight ? 16.0 : (tight ? 17.0 : 18.0);
-        final gap = veryTight ? 6.0 : (tight ? 8.0 : 10.0);
-        final padding = EdgeInsets.symmetric(horizontal: padH, vertical: 8);
+    Widget action({
+      required IconData icon,
+      required String label,
+      required VoidCallback? onPressed,
+      required bool loading,
+    }) {
+      return Expanded(
+        child: SizedBox(
+          height: _height,
+          child: FramedButton(
+            onPressed: onPressed,
+            icon: icon,
+            label: label,
+            loading: loading,
+            expanded: true,
+            minHeight: _height,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            fontSize: 13.5,
+            iconSize: 18,
+          ),
+        ),
+      );
+    }
 
-        Widget action({
-          required IconData icon,
-          required String label,
-          required VoidCallback? onPressed,
-          required bool loading,
-        }) {
-          return Expanded(
-            child: SizedBox(
-              height: height,
-              child: FramedButton(
-                onPressed: onPressed,
-                icon: icon,
-                label: label,
-                loading: loading,
-                expanded: true,
-                minHeight: height,
-                padding: padding,
-                fontSize: fontSize,
-                iconSize: iconSize,
-              ),
-            ),
-          );
-        }
-
-        return Row(
-          children: [
-            action(
-              icon: Icons.add_rounded,
-              label: isCreating ? creatingLabel : createLabel,
-              onPressed: isCreating || isFinding ? null : onCreate,
-              loading: isCreating,
-            ),
-            SizedBox(width: gap),
-            action(
-              icon: Icons.search_rounded,
-              label: isFinding ? findingLabel : findLabel,
-              onPressed: isCreating || isFinding ? null : onFind,
-              loading: isFinding,
-            ),
-          ],
-        );
-      },
+    return Row(
+      children: [
+        action(
+          icon: Icons.add_rounded,
+          label: isCreating ? creatingLabel : createLabel,
+          onPressed: isCreating || isFinding ? null : onCreate,
+          loading: isCreating,
+        ),
+        const SizedBox(width: 10),
+        action(
+          icon: Icons.search_rounded,
+          label: isFinding ? findingLabel : findLabel,
+          onPressed: isCreating || isFinding ? null : onFind,
+          loading: isFinding,
+        ),
+      ],
     );
   }
 }
@@ -460,10 +453,9 @@ double gameCardTitleMinHeight({
   return fontSize * 1.15 * 2;
 }
 
-/// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
-/// («Переводной», «24 карты») переносятся дважды, не в два ряда.
+/// Высота одного чипа режима — одинаковая для короткой и длинной подписи.
 @visibleForTesting
-double gameCardChipsMinHeight({
+double gameCardChipHeight({
   required bool compact,
   required bool isDesktop,
   bool isMedium = false,
@@ -472,7 +464,22 @@ double gameCardChipsMinHeight({
   final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
   final fontSz =
       compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
-  final row = math.max(iconSz, fontSz * 1.35) + padV * 2 + 2;
+  return (math.max(iconSz, fontSz * 1.35) + padV * 2 + 2).ceilToDouble();
+}
+
+/// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
+/// («Переводной», «24 карты») переносятся дважды, не в два ряда.
+@visibleForTesting
+double gameCardChipsMinHeight({
+  required bool compact,
+  required bool isDesktop,
+  bool isMedium = false,
+}) {
+  final row = gameCardChipHeight(
+    compact: compact,
+    isDesktop: isDesktop,
+    isMedium: isMedium,
+  );
   const rows = 3;
   return row * rows + 8 * (rows - 1) + 4;
 }
@@ -540,7 +547,7 @@ class GameCardShell extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: gameCardChipsMinHeight(
-              compact: compact,
+              compact: false,
               isDesktop: isDesktop,
               isMedium: isMedium,
             ),

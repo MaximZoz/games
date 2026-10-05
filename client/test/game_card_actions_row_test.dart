@@ -85,6 +85,18 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
+  testWidgets('кнопки одной высоты на узкой и широкой карточке', (tester) async {
+    await tester.pumpWidget(_wrap(280));
+    final narrow = tester.getSize(
+      find.widgetWithText(FramedButton, 'Создать игру'),
+    );
+    await tester.pumpWidget(_wrap(400));
+    final wide = tester.getSize(
+      find.widgetWithText(FramedButton, 'Создать игру'),
+    );
+    expect(narrow.height, wide.height);
+  });
+
   testWidgets('на широкой карточке кнопки тоже в ряд', (tester) async {
     await tester.pumpWidget(_wrap(400));
 

@@ -210,6 +210,15 @@ void main() {
     expect(ttt.height, durak.height);
     expect(ttt.width, durak.width);
 
+    final chipSizes = [
+      for (var i = 0; i < tester.widgetList(find.byType(GameCardChip)).length; i++)
+        tester.getSize(find.byType(GameCardChip).at(i)),
+    ];
+    expect(chipSizes, isNotEmpty);
+    for (final size in chipSizes) {
+      expect(size.height, chipSizes.first.height);
+    }
+
     final tttWrap = tester.getSize(find.byType(Wrap).at(0));
     final durakWrap = tester.getSize(find.byType(Wrap).at(1));
     expect(durakWrap.height, greaterThan(tttWrap.height + 8));

@@ -54,6 +54,38 @@ void main() {
     expect(decoration.color, AppColors.surfaceUnified);
   });
 
+  testWidgets('короткий и длинный чип одной высоты', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              GameCardChip(
+                label: '2',
+                icon: Icons.groups_rounded,
+                onTap: () {},
+              ),
+              GameCardChip(
+                label: 'Переводной',
+                icon: Icons.swap_horiz_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final short = tester.getSize(find.byType(GameCardChip).at(0));
+    final long = tester.getSize(find.byType(GameCardChip).at(1));
+    expect(short.height, long.height);
+    expect(
+      short.height,
+      greaterThanOrEqualTo(
+        gameCardChipHeight(compact: false, isDesktop: false),
+      ),
+    );
+  });
+
   testWidgets('кнопки карточки заливаются цветом фона приложения',
       (tester) async {
     await tester.pumpWidget(
