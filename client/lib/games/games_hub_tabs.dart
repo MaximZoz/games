@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 
 /// Анимация TabBarView «Игры ↔ Лобби» — короче дефолтных 300 мс Flutter.
@@ -101,7 +102,7 @@ double gamesHubTileWidth({
 /// Кнопки «Создать» / «Найти» всегда в один ряд.
 bool gamesHubStackActions(double cardWidth) => cardWidth < 360;
 
-/// Сетка карточек: в ряду одна высота (как у самой высокой, Дурак),
+/// Сетка карточек: все плитки одной высоты (как у самой высокой),
 /// кнопки прижаты к нижнему краю каждой карточки.
 Widget gamesHubEqualHeightGrid({
   required int cols,
@@ -109,48 +110,201 @@ Widget gamesHubEqualHeightGrid({
   required double tileWidth,
   required List<Widget> tiles,
 }) {
-  Widget tileBox(Widget tile) {
-    return SizedBox(
-      width: tileWidth,
-      child: GameCardLayout(
-        cardWidth: tileWidth,
-        child: tile,
-      ),
+  if (tiles.isEmpty) return const SizedBox.shrink();
+  return _GamesHubEqualHeightGrid(
+    cols: cols < 1 ? 1 : cols,
+    gap: gap,
+    tileWidth: tileWidth,
+    children: [
+      for (final tile in tiles)
+        GameCardLayout(
+          cardWidth: tileWidth,
+          child: tile,
+        ),
+    ],
+  );
+}
+
+class _GamesHubEqualHeightGrid extends MultiChildRenderObjectWidget {
+  const _GamesHubEqualHeightGrid({
+    required this.cols,
+    required this.gap,
+    required this.tileWidth,
+    required super.children,
+  });
+
+  final int cols;
+  final double gap;
+  final double tileWidth;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderGamesHubEqualHeightGrid(
+      cols: cols,
+      gap: gap,
+      tileWidth: tileWidth,
     );
   }
 
-  if (tiles.isEmpty) return const SizedBox.shrink();
-  if (cols <= 1) {
-    return Column(
-      children: [
-        for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) SizedBox(height: gap),
-          tileBox(tiles[i]),
-        ],
-      ],
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderGamesHubEqualHeightGrid renderObject,
+  ) {
+    renderObject
+      ..cols = cols
+      ..gap = gap
+      ..tileWidth = tileWidth;
+  }
+}
+
+class _GamesHubTileParentData extends ContainerBoxParentData<RenderBox> {}
+
+/// Сначала меряет каждую плитку по ширине, затем перекладывает все
+/// в высоту самой высокой — перенос чипов больше не выпирает одну карточку.
+class _RenderGamesHubEqualHeightGrid extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _GamesHubTileParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _GamesHubTileParentData> {
+  _RenderGamesHubEqualHeightGrid({
+    required int cols,
+    required double gap,
+    required double tileWidth,
+  })  : _cols = cols,
+        _gap = gap,
+        _tileWidth = tileWidth;
+
+  int _cols;
+  double _gap;
+  double _tileWidth;
+
+  int get cols => _cols;
+  set cols(int value) {
+    if (_cols == value) return;
+    _cols = value;
+    markNeedsLayout();
+  }
+
+  double get gap => _gap;
+  set gap(double value) {
+    if (_gap == value) return;
+    _gap = value;
+    markNeedsLayout();
+  }
+
+  double get tileWidth => _tileWidth;
+  set tileWidth(double value) {
+    if (_tileWidth == value) return;
+    _tileWidth = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _GamesHubTileParentData) {
+      child.parentData = _GamesHubTileParentData();
+    }
+  }
+
+  List<RenderBox> _childList() {
+    final out = <RenderBox>[];
+    var child = firstChild;
+    while (child != null) {
+      out.add(child);
+      child = childAfter(child);
+    }
+    return out;
+  }
+
+  @override
+  void performLayout() {
+    final children = _childList();
+    if (children.isEmpty) {
+      size = constraints.smallest;
+      return;
+    }
+
+    final width = tileWidth.clamp(0.0, constraints.maxWidth);
+    final loose = BoxConstraints(
+      minWidth: width,
+      maxWidth: width,
     );
+    var tileHeight = 0.0;
+    for (final child in children) {
+      child.layout(loose, parentUsesSize: true);
+      tileHeight = math.max(tileHeight, child.size.height);
+    }
+
+    final tight = BoxConstraints.tightFor(width: width, height: tileHeight);
+    for (final child in children) {
+      child.layout(tight, parentUsesSize: true);
+    }
+
+    final columns = cols < 1 ? 1 : cols;
+    final rows = ((children.length + columns - 1) / columns).floor();
+    final gridWidth = columns == 1
+        ? width
+        : width * columns + gap * (columns - 1);
+    var y = 0.0;
+    for (var r = 0; r < rows; r++) {
+      final start = r * columns;
+      final end = math.min(start + columns, children.length);
+      final count = end - start;
+      final rowWidth = width * count + gap * (count - 1);
+      var x = (gridWidth - rowWidth) / 2;
+      for (var i = start; i < end; i++) {
+        final parentData = children[i].parentData! as _GamesHubTileParentData;
+        parentData.offset = Offset(x, y);
+        x += width + gap;
+      }
+      y += tileHeight;
+      if (r != rows - 1) y += gap;
+    }
+    size = constraints.constrain(Size(gridWidth, y));
   }
-  final rows = <List<Widget>>[];
-  for (var i = 0; i < tiles.length; i += cols) {
-    rows.add(tiles.sublist(i, math.min(i + cols, tiles.length)));
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    defaultPaint(context, offset);
   }
-  return Column(
-    children: [
-      for (var r = 0; r < rows.length; r++) ...[
-        if (r > 0) SizedBox(height: gap),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < rows[r].length; i++) ...[
-              if (i > 0) SizedBox(width: gap),
-              tileBox(rows[r][i]),
-            ],
-          ],
-        ),
-      ],
-    ],
-  );
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    final columns = cols < 1 ? 1 : cols;
+    final n = childCount < columns ? childCount : columns;
+    if (n <= 0) return 0;
+    return tileWidth * n + gap * (n - 1);
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      computeMinIntrinsicWidth(height);
+
+  @override
+  double computeMinIntrinsicHeight(double width) {
+    if (childCount == 0) return 0;
+    final columns = cols < 1 ? 1 : cols;
+    final rows = ((childCount + columns - 1) / columns).floor();
+    var tileHeight = 0.0;
+    var child = firstChild;
+    while (child != null) {
+      tileHeight = math.max(
+        tileHeight,
+        child.getMinIntrinsicHeight(tileWidth),
+      );
+      child = childAfter(child);
+    }
+    return tileHeight * rows + gap * (rows - 1);
+  }
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      computeMinIntrinsicHeight(width);
 }
 
 /// Вкладка хаба по позиции анимации (0 = игры, 1 = лобби).
