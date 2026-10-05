@@ -460,7 +460,8 @@ double gameCardTitleMinHeight({
   return fontSize * 1.15 * 2;
 }
 
-/// Место под два ряда чипов, как у Дурака (4 чипа переносятся).
+/// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
+/// («Переводной», «24 карты») переносятся дважды, не в два ряда.
 @visibleForTesting
 double gameCardChipsMinHeight({
   required bool compact,
@@ -472,7 +473,8 @@ double gameCardChipsMinHeight({
   final fontSz =
       compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
   final row = math.max(iconSz, fontSz * 1.35) + padV * 2 + 2;
-  return row * 2 + 8;
+  const rows = 3;
+  return row * rows + 8 * (rows - 1) + 4;
 }
 
 /// Ширина плитки и растяжение по высоте ряда — без LayoutBuilder
@@ -535,10 +537,21 @@ class GameCardShell extends StatelessWidget {
         actionsGap: actionsGap,
         children: [
           header,
-          Wrap(
-            spacing: isDesktop ? 10 : 8,
-            runSpacing: 8,
-            children: chips,
+          SizedBox(
+            width: double.infinity,
+            height: gameCardChipsMinHeight(
+              compact: compact,
+              isDesktop: isDesktop,
+              isMedium: isMedium,
+            ),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Wrap(
+                spacing: isDesktop ? 10 : 8,
+                runSpacing: 8,
+                children: chips,
+              ),
+            ),
           ),
           actions,
         ],

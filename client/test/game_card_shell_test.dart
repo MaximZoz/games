@@ -4,17 +4,24 @@ import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
+import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
 Widget _shell({
   required String title,
   required List<String> chipLabels,
   required Key actionsKey,
+  bool isDesktop = false,
+  bool isMedium = false,
 }) {
   return GameCardShell(
+    isDesktop: isDesktop,
+    isMedium: isMedium,
     header: GameCardHeader(
       title: title,
       icon: Icons.style_rounded,
       onInfoTap: () {},
+      isDesktop: isDesktop,
+      isMedium: isMedium,
     ),
     chips: [
       for (final label in chipLabels)
@@ -22,6 +29,8 @@ Widget _shell({
           label: label,
           icon: Icons.groups_rounded,
           onTap: () {},
+          isDesktop: isDesktop,
+          isMedium: isMedium,
         ),
     ],
     actions: KeyedSubtree(
@@ -33,8 +42,19 @@ Widget _shell({
         findLabel: 'Поиск игроков',
         findingLabel: 'Поиск…',
         onFind: () {},
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     ),
+  );
+}
+
+Widget _app(Widget body) {
+  return MaterialApp(
+    locale: const Locale('ru'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: Center(child: body)),
   );
 }
 
@@ -45,8 +65,8 @@ void main() {
       greaterThan(30),
     );
     expect(
-      gameCardChipsMinHeight(compact: false, isDesktop: false),
-      greaterThan(40),
+      gameCardChipsMinHeight(compact: false, isDesktop: true),
+      greaterThan(110),
     );
   });
 
@@ -115,37 +135,30 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: 680,
-              child: gamesHubEqualHeightGrid(
-                cols: 2,
-                gap: 16,
-                tileWidth: 320,
-                tiles: [
-                  _shell(
-                    title: 'Дурак',
-                    chipLabels: const ['2', '1 мин', 'Переводной', '24 карты'],
-                    actionsKey: const ValueKey('a'),
-                  ),
-                  _shell(
-                    title: 'Уно',
-                    chipLabels: const ['2', '1 мин'],
-                    actionsKey: const ValueKey('b'),
-                  ),
-                  _shell(
-                    title: 'Покер',
-                    chipLabels: const ['3', '1 мин'],
-                    actionsKey: const ValueKey('c'),
-                  ),
-                ],
+      _app(
+        SizedBox(
+          width: 680,
+          child: gamesHubEqualHeightGrid(
+            cols: 2,
+            gap: 16,
+            tileWidth: 320,
+            tiles: [
+              _shell(
+                title: 'Дурак',
+                chipLabels: const ['2', '1 мин', 'Переводной', '24 карты'],
+                actionsKey: const ValueKey('a'),
               ),
-            ),
+              _shell(
+                title: 'Уно',
+                chipLabels: const ['2', '1 мин'],
+                actionsKey: const ValueKey('b'),
+              ),
+              _shell(
+                title: 'Покер',
+                chipLabels: const ['3', '1 мин'],
+                actionsKey: const ValueKey('c'),
+              ),
+            ],
           ),
         ),
       ),
@@ -157,5 +170,99 @@ void main() {
     final c = tester.getSize(find.byType(GameCardShell).at(2));
     expect(a.height, b.height);
     expect(a.height, c.height);
+  });
+
+  testWidgets('крестики и дурак одного размера на десктопе', (tester) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          width: 800,
+          child: gamesHubEqualHeightGrid(
+            cols: 2,
+            gap: 16,
+            tileWidth: 392,
+            tiles: [
+              _shell(
+                title: 'Крестики-нолики',
+                chipLabels: const ['2', '1 мин', 'Классика'],
+                actionsKey: const ValueKey('ttt'),
+                isDesktop: true,
+              ),
+              _shell(
+                title: 'Дурак',
+                chipLabels: const ['2', '1 мин', 'Переводной', '24 карты'],
+                actionsKey: const ValueKey('durak'),
+                isDesktop: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final ttt = tester.getSize(find.byType(GradientCard).at(0));
+    final durak = tester.getSize(find.byType(GradientCard).at(1));
+    expect(ttt.height, durak.height);
+    expect(ttt.width, durak.width);
+
+    final tttWrap = tester.getSize(find.byType(Wrap).at(0));
+    final durakWrap = tester.getSize(find.byType(Wrap).at(1));
+    expect(durakWrap.height, greaterThan(tttWrap.height + 8));
+
+    final tttBtns = tester.getRect(find.byKey(const ValueKey('ttt')));
+    final durakBtns = tester.getRect(find.byKey(const ValueKey('durak')));
+    expect((tttBtns.bottom - durakBtns.bottom).abs(), lessThan(1));
+  });
+
+  testWidgets('без сетки крестики и дурак всё равно одной высоты',
+      (tester) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _app(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 392,
+              child: GameCardLayout(
+                cardWidth: 392,
+                child: _shell(
+                  title: 'Крестики-нолики',
+                  chipLabels: const ['2', '1 мин', 'Классика'],
+                  actionsKey: const ValueKey('ttt'),
+                  isDesktop: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 392,
+              child: GameCardLayout(
+                cardWidth: 392,
+                child: _shell(
+                  title: 'Дурак',
+                  chipLabels: const ['2', '1 мин', 'Переводной', '24 карты'],
+                  actionsKey: const ValueKey('durak'),
+                  isDesktop: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final ttt = tester.getSize(find.byType(GradientCard).at(0));
+    final durak = tester.getSize(find.byType(GradientCard).at(1));
+    expect(ttt.height, durak.height);
   });
 }
