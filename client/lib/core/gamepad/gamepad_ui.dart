@@ -473,8 +473,40 @@ void _ensureVisible(FocusNode? node) {
     alignment: 0.15,
     duration: const Duration(milliseconds: 80),
     curve: Curves.easeOut,
-    alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    alignmentPolicy: gamepadEnsureVisiblePolicy(
+      focus: _focusRect(node),
+      view: _nearestScrollView(ctx),
+      axis: Scrollable.maybeOf(ctx)?.position.axis,
+    ),
   );
+}
+
+/// Влево/вверх — к началу вьюпорта, вправо/вниз — к концу.
+/// `keepVisibleAtEnd` не двигает горизонтальный список, если цель слева.
+@visibleForTesting
+ScrollPositionAlignmentPolicy gamepadEnsureVisiblePolicy({
+  required Rect? focus,
+  required Rect? view,
+  required Axis? axis,
+}) {
+  if (focus == null || view == null || axis == null) {
+    return ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
+  }
+  final clippedStart = axis == Axis.horizontal
+      ? focus.left < view.left - 0.5
+      : focus.top < view.top - 0.5;
+  return clippedStart
+      ? ScrollPositionAlignmentPolicy.keepVisibleAtStart
+      : ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
+}
+
+Rect? _nearestScrollView(BuildContext ctx) {
+  final scrollable = Scrollable.maybeOf(ctx);
+  final box = scrollable?.context.findRenderObject();
+  if (box is RenderBox && box.hasSize && box.attached) {
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+  return null;
 }
 
 /// Не скроллить, если плитка уже в кадре: иначе PageView эмоций в альбоме дёргается.

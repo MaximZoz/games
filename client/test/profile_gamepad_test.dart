@@ -17,6 +17,7 @@ import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/screens/profile_screen.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/mobile_toolbar_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -210,4 +211,91 @@ void main() {
     expect(find.text('Редактировать'), findsOneWidget);
     expect(find.text('Сохранить'), findsNothing);
   });
+
+  testWidgets('пол с белой заливкой и обводкой геймпада', (tester) async {
+    await _enterEdit(tester);
+    expect(find.byKey(const ValueKey('compact_gender')), findsOneWidget);
+    final gender = tester.widget<InputDecorator>(
+      find.descendant(
+        of: find.byKey(const ValueKey('compact_gender')),
+        matching: find.byType(InputDecorator),
+      ),
+    );
+    expect(gender.decoration.filled, isTrue);
+    expect(gender.decoration.fillColor, AppColors.surfaceCard);
+    final scope = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_gender'))),
+    );
+    expect(scope, isNotNull);
+    scope!.focusNode.requestFocus();
+    await tester.pump();
+    expect(scope.focusNode.hasFocus, isTrue);
+    expect(scope.highlighted, isTrue);
+  });
+
+  testWidgets('поменять аватар обводится рамкой самой кнопки', (tester) async {
+    await _enterEdit(tester);
+    final block = tester.widget<GamepadFocusBlock>(
+      find
+          .ancestor(
+            of: find.text('Поменять аватар'),
+            matching: find.byType(GamepadFocusBlock),
+          )
+          .first,
+    );
+    expect(block.outlined, isFalse);
+    expect(block.radius, AppRadius.button);
+  });
+
+  testWidgets('пресеты аватара листаются влево так же, как вправо',
+      (tester) async {
+    await _enterEdit(tester);
+    final row = find.byKey(const ValueKey('compact_avatar_presets'));
+    expect(row, findsOneWidget);
+    final first = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_avatar_preset_0'))),
+    );
+    expect(first, isNotNull);
+    first!.focusNode.requestFocus();
+    await tester.pump();
+
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    double offset() => tester
+        .state<ScrollableState>(
+          find.descendant(of: row, matching: find.byType(Scrollable)),
+        )
+        .position
+        .pixels;
+
+    expect(offset(), 0);
+    for (var i = 0; i < 8; i++) {
+      handleGamepadUiAction(hostCtx, GamepadAction.right);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    final afterRight = offset();
+    expect(afterRight, greaterThan(0));
+
+    for (var i = 0; i < 8; i++) {
+      handleGamepadUiAction(hostCtx, GamepadAction.left);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(offset(), lessThan(afterRight));
+  });
+}
+
+Future<void> _enterEdit(WidgetTester tester) async {
+  await _pumpProfile(tester);
+  GamepadService.instance.start();
+  GamepadService.instance.setDevicesForTest(const [
+    GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+  ]);
+  await tester.pump();
+  expect(focusFirstVisibleGamepadTarget(), isTrue);
+  await tester.pump();
+  GamepadService.instance.emit(GamepadAction.confirm);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  expect(find.text('Сохранить'), findsOneWidget);
 }
