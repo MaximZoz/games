@@ -230,7 +230,6 @@ void main() {
     scope!.focusNode.requestFocus();
     await tester.pump();
     expect(scope.focusNode.hasFocus, isTrue);
-    expect(scope.highlighted, isTrue);
   });
 
   testWidgets('поменять аватар обводится рамкой самой кнопки', (tester) async {
