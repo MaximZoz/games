@@ -1,5 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -50,57 +55,92 @@ class HeadToHeadSection extends ConsumerWidget {
                   final title = name.isNotEmpty
                       ? name
                       : context.l10n.statsTitle;
-                  return Dialog(
-                    backgroundColor: AppColors.surfaceUnified,
-                    insetPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 24,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: 520,
-                        maxHeight: 640,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8),
-                                    child: Text(
-                                      title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 18,
+                  void close() {
+                    final nav = Navigator.of(ctx);
+                    if (nav.canPop()) nav.pop();
+                  }
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    focusFirstVisibleGamepadTarget();
+                  });
+                  return GamepadScope(
+                    exclusive: true,
+                    onAction: (action) {
+                      if (action == GamepadAction.cancel) {
+                        close();
+                        return true;
+                      }
+                      if (action.isScroll || action.isDirection) {
+                        return handleGamepadUiAction(ctx, action);
+                      }
+                      return true;
+                    },
+                    child: GamepadNavGroup(
+                      name: 'h2h-stats-popup',
+                      exclusive: true,
+                      child: Dialog(
+                        backgroundColor: AppColors.surfaceUnified,
+                        insetPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 520,
+                            maxHeight: 640,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Text(
+                                          title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 18,
+                                          ),
+                                        ),
                                       ),
                                     ),
+                                    GamepadFocusBlock(
+                                      autofocus: true,
+                                      radius: 18,
+                                      onActivate: close,
+                                      child: IconButton(
+                                        onPressed: close,
+                                        icon: const Icon(Icons.close_rounded),
+                                        tooltip: context.l10n.commonClose,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Flexible(
+                                child: GameStatsBody(
+                                  userId: opponentId,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    4,
+                                    16,
+                                    20,
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () => Navigator.of(ctx).pop(),
-                                  icon: const Icon(Icons.close_rounded),
-                                  tooltip: context.l10n.commonClose,
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Flexible(
-                            child: GameStatsBody(
-                              userId: opponentId,
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
@@ -128,52 +168,121 @@ class _HeadToHeadBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasScore = games.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (hasScore) ...[
+        if (hasScore)
+          Expanded(
+            child: HeadToHeadScoreStrip(
+              title: context.l10n.statsYourScore,
+              games: games,
+            ),
+          ),
+        if (hasScore && showStats) const SizedBox(width: 8),
+        if (showStats) StatsIconButton(onTap: onTapStats),
+      ],
+    );
+  }
+}
+
+/// «Ваш счёт» и карточки игр в одной горизонтальной полосе.
+class HeadToHeadScoreStrip extends StatefulWidget {
+  const HeadToHeadScoreStrip({
+    super.key,
+    required this.title,
+    required this.games,
+    this.controller,
+  });
+
+  final String title;
+  final List<GameTypeScore> games;
+  final ScrollController? controller;
+
+  @override
+  State<HeadToHeadScoreStrip> createState() => _HeadToHeadScoreStripState();
+}
+
+class _HeadToHeadScoreStripState extends State<HeadToHeadScoreStrip> {
+  ScrollController? _owned;
+
+  ScrollController get _controller =>
+      widget.controller ?? (_owned ??= ScrollController());
+
+  @override
+  void dispose() {
+    _owned?.dispose();
+    super.dispose();
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_controller.hasClients) return;
+    final delta = event.scrollDelta.dy != 0
+        ? event.scrollDelta.dy
+        : event.scrollDelta.dx;
+    if (delta == 0) return;
+    final pos = _controller.position;
+    final next =
+        (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
+    if (next == _controller.offset) return;
+    _controller.jumpTo(next);
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 76,
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
           Text(
-            context.l10n.statsYourScore,
+            widget.title,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
-        ],
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (hasScore)
-              Flexible(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Wrap(
-                    spacing: 16,
-                    runSpacing: 12,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      for (final g in games)
-                        GameTypeScoreChip(
-                          gameType: g.gameType,
-                          won: g.won,
-                          lost: g.lost,
-                          drawn: g.drawn,
-                        ),
-                    ],
-                  ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Listener(
+              onPointerSignal: _onPointerSignal,
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: const {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.trackpad,
+                    PointerDeviceKind.stylus,
+                    PointerDeviceKind.unknown,
+                  },
+                ),
+                child: ListView.separated(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: widget.games.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) {
+                    final g = widget.games[index];
+                    return Center(
+                      child: GameTypeScoreChip(
+                        gameType: g.gameType,
+                        won: g.won,
+                        lost: g.lost,
+                        drawn: g.drawn,
+                      ),
+                    );
+                  },
                 ),
               ),
-            if (hasScore && showStats) const SizedBox(width: 8),
-            if (showStats) StatsIconButton(onTap: onTapStats),
-          ],
-        ),
-      ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -373,27 +482,32 @@ class StatsIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Tooltip(
-          message: context.l10n.statsTitle,
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accentStart.withValues(alpha: 0.35),
+    return GamepadFocusBlock(
+      radius: 12,
+      onActivate: onTap,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          canRequestFocus: false,
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Tooltip(
+            message: context.l10n.statsTitle,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.accentSoft,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.accentStart.withValues(alpha: 0.35),
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.bar_chart_rounded,
-              size: 22,
-              color: AppColors.accentStart,
+              child: const Icon(
+                Icons.bar_chart_rounded,
+                size: 22,
+                color: AppColors.accentStart,
+              ),
             ),
           ),
         ),

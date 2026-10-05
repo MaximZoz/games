@@ -9,6 +9,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -207,6 +208,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   int _gamepadCardCount = 0;
   int _gamepadColumns = 1;
   final List<List<VoidCallback>> _gamepadCardActions = [];
+  final List<VoidCallback> _gamepadCardOpens = [];
   final Map<int, GlobalKey> _gamepadCardKeys = {};
 
   @override
@@ -569,6 +571,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _gamepadCardCount = count;
     _gamepadColumns = columns < 1 ? 1 : columns;
     _gamepadCardActions.clear();
+    _gamepadCardOpens.clear();
     if (count <= 0) {
       _gamepadCardIndex = 0;
       _gamepadActionIndex = null;
@@ -579,11 +582,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
   }
 
-  void _registerGamepadActions(List<VoidCallback> actions) {
+  void _registerGamepadActions(
+    List<VoidCallback> actions, {
+    required VoidCallback onOpen,
+  }) {
     if (_gamepadCollectTab == null || !_isTabActive(_gamepadCollectTab!)) {
       return;
     }
     _gamepadCardActions.add(actions);
+    _gamepadCardOpens.add(onOpen);
+  }
+
+  VoidCallback? _openForCurrentCard() {
+    if (_gamepadCardIndex < 0 ||
+        _gamepadCardIndex >= _gamepadCardOpens.length) {
+      return null;
+    }
+    return _gamepadCardOpens[_gamepadCardIndex];
   }
 
   List<VoidCallback> _actionsForCurrentCard() {
@@ -685,12 +700,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     if (action == GamepadAction.confirm) {
       if (_gamepadCardCount <= 0) return false;
-      final actions = _actionsForCurrentCard();
-      if (actions.isEmpty) return true;
       if (_gamepadActionIndex == null) {
-        setState(() => _gamepadActionIndex = 0);
+        _openForCurrentCard()?.call();
         return true;
       }
+      final actions = _actionsForCurrentCard();
       final i = _gamepadActionIndex!;
       if (i >= 0 && i < actions.length) {
         actions[i]();
@@ -931,26 +945,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   Future<bool> _confirmRemoveFriend(FriendUserItem user) async {
     final name = _displayName(user);
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
+    return showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.friendsRemoveTitle),
-        content: Text(
-          l10n.friendsRemoveConfirm(name),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.friendsRemoveConfirmAction),
-          ),
-        ],
-      ),
+      title: l10n.friendsRemoveTitle,
+      message: l10n.friendsRemoveConfirm(name),
+      confirmLabel: l10n.friendsRemoveConfirmAction,
     );
-    return confirmed == true;
   }
 
   Future<void> _runSearchAction({
@@ -1045,42 +1045,55 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         children: [
           Row(
             children: [
-              _buildAvatar(
-                user,
-                isOnline: presence?.online,
-                onTap: () => _showRequestInfoDialog(
-                  user: user,
-                  presence: presence,
-                ),
-              ),
-              SizedBox(width: compactDesktopCard ? 8 : 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _displayName(user),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (statusText != null && statusText.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          statusText,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _showRequestInfoDialog(
+                    user: user,
+                    presence: presence,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildAvatar(
+                        user,
+                        isOnline: presence?.online,
+                        onTap: () => _showRequestInfoDialog(
+                          user: user,
+                          presence: presence,
                         ),
                       ),
-                  ],
+                      SizedBox(width: compactDesktopCard ? 8 : 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _displayName(user),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (statusText != null && statusText.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  statusText,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               if (trailing != null) ...[
@@ -1408,7 +1421,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           );
         }
 
-        _registerGamepadActions([openChat, removeFriend]);
+        _registerGamepadActions(
+          [openChat, removeFriend],
+          onOpen: () => unawaited(
+            _showRequestInfoDialog(
+              user: item.user,
+              presence: presence[item.user.id],
+            ),
+          ),
+        );
         return _buildUserCard(
           context: context,
           user: item.user,
@@ -1477,7 +1498,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               call: (repo) => repo.rejectRequest(item.requestId),
               success: l10n.friendsRequestDeclined,
             );
-        _registerGamepadActions([openChat, accept, reject]);
+        _registerGamepadActions(
+          [openChat, accept, reject],
+          onOpen: () => unawaited(
+            _showRequestInfoDialog(
+              user: item.user,
+              presence: presence[item.user.id],
+            ),
+          ),
+        );
         return _buildUserCard(
           context: context,
           user: item.user,
@@ -1554,7 +1583,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
               call: (repo) => repo.cancelRequest(item.requestId),
               success: l10n.friendsRequestCancelled,
             );
-        _registerGamepadActions([openChat, cancel]);
+        _registerGamepadActions(
+          [openChat, cancel],
+          onOpen: () => unawaited(
+            _showRequestInfoDialog(
+              user: item.user,
+              presence: presence[item.user.id],
+            ),
+          ),
+        );
         return _buildUserCard(
           context: context,
           user: item.user,
@@ -1805,7 +1842,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ),
       );
     }
-    _registerGamepadActions(gamepadActions);
+    _registerGamepadActions(
+      gamepadActions,
+      onOpen: () => unawaited(
+        _showRequestInfoDialog(
+          user: item.user,
+          presence: presence[item.user.id],
+        ),
+      ),
+    );
 
     return _buildUserCard(
       context: context,

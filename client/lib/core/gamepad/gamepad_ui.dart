@@ -26,6 +26,37 @@ void dismissGamepadKeyboard() {
 /// Правый стик / статистика: страница скролла.
 bool scrollGamepadByPage(int direction) => _scrollPage(direction);
 
+/// Правый стик: горизонтальная полоса (счёт, коллекции, смайлы).
+bool scrollGamepadHorizontalStrip(
+  GamepadAction action, {
+  BuildContext? context,
+}) {
+  if (!action.isScroll) return false;
+  final left = action == GamepadAction.scrollLeft ||
+      action == GamepadAction.scrollUp;
+  final position = _horizontalScrollPosition(context);
+  if (position == null ||
+      !position.hasPixels ||
+      !position.hasContentDimensions) {
+    return false;
+  }
+  final viewport = position.viewportDimension;
+  if (viewport <= 0) return false;
+  final direction = left ? -1.0 : 1.0;
+  final delta = math.max(56.0, viewport * 0.55) * direction;
+  final next = (position.pixels + delta).clamp(
+    position.minScrollExtent,
+    position.maxScrollExtent,
+  );
+  if ((next - position.pixels).abs() < 1) return false;
+  position.animateTo(
+    next,
+    duration: const Duration(milliseconds: 160),
+    curve: Curves.easeOut,
+  );
+  return true;
+}
+
 /// Поле ввода при живом геймпаде — только экранная клавиатура контроллера.
 void syncGamepadKeyboardForFocus() {
   if (!gamepadHintsWanted()) return;
@@ -524,6 +555,7 @@ FocusNode? _neighborGamepadBlock(
 /// Диалог / exclusive-группа: стик не уходит на поля под всплывашкой.
 @visibleForTesting
 bool gamepadNodeInPopup(FocusNode node) {
+  if (!_gamepadRouteIsCurrent(node)) return false;
   if (GamepadNavGroup.ofNode(node)?.exclusive == true) return true;
   return gamepadNodeOnPopupRoute(node);
 }
@@ -533,7 +565,18 @@ bool gamepadNodeOnPopupRoute(FocusNode node) {
   final ctx = node.context;
   if (ctx == null || !ctx.mounted) return false;
   try {
-    return ModalRoute.of(ctx) is PopupRoute;
+    final route = ModalRoute.of(ctx);
+    return route is PopupRoute && route.isCurrent;
+  } catch (_) {
+    return false;
+  }
+}
+
+bool _gamepadRouteIsCurrent(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null || !ctx.mounted) return false;
+  try {
+    return ModalRoute.of(ctx)?.isCurrent == true;
   } catch (_) {
     return false;
   }
@@ -556,6 +599,39 @@ ScrollableState? _horizontalScrollable(FocusNode node) {
     return null;
   }
   return scrollable;
+}
+
+ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
+  final focusCtx = FocusManager.instance.primaryFocus?.context;
+  if (focusCtx != null) {
+    final focused = Scrollable.maybeOf(focusCtx);
+    final pos = focused?.position;
+    if (pos != null &&
+        pos.axis == Axis.horizontal &&
+        pos.hasContentDimensions &&
+        pos.maxScrollExtent > pos.minScrollExtent) {
+      return pos;
+    }
+  }
+  ScrollPosition? found;
+  void walk(Element el) {
+    if (found != null) return;
+    if (el is StatefulElement && el.state is ScrollableState) {
+      final pos = (el.state as ScrollableState).position;
+      if (pos.axis == Axis.horizontal &&
+          pos.hasContentDimensions &&
+          pos.maxScrollExtent > pos.minScrollExtent) {
+        found = pos;
+        return;
+      }
+    }
+    el.visitChildren(walk);
+  }
+
+  context?.visitChildElements(walk);
+  if (found != null) return found;
+  WidgetsBinding.instance.rootElement?.visitChildren(walk);
+  return found;
 }
 
 bool _isSameFormScrollable(FocusNode node) {
