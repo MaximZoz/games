@@ -2766,4 +2766,135 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 oyuncu: 4×4 tahta, dört oyuncu (X, O, △, □). Kendi işaretlerinizle çizgi tamamlayın.';
+
+  @override
+  String get adminUsersTab => 'Kullanıcılar';
+
+  @override
+  String get adminSupportTab => 'Destek';
+
+  @override
+  String get adminSearchHint => 'E-posta veya takma ada göre ara';
+
+  @override
+  String get adminRoleAdmins => 'Yöneticiler';
+
+  @override
+  String get adminRoleUsers => 'Kullanıcılar';
+
+  @override
+  String get adminRoleAll => 'Tüm roller';
+
+  @override
+  String get adminStatusFrozen => 'Dondurulmuş';
+
+  @override
+  String get adminStatusActive => 'Aktif';
+
+  @override
+  String get adminStatusAny => 'Her durum';
+
+  @override
+  String get adminOrderDesc => 'Azalan';
+
+  @override
+  String get adminOrderAsc => 'Artan';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Yüklenemedi: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Kullanıcı yok';
+
+  @override
+  String get adminSortLastSeen => 'Son ziyarete göre';
+
+  @override
+  String get adminSortEmail => 'E-postaya göre';
+
+  @override
+  String get adminSortCreated => 'Kayıt tarihine göre';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Yöneticiliği kaldır';
+
+  @override
+  String get adminGrantAdmin => 'Yönetici yap';
+
+  @override
+  String get adminAdminRevoked => 'Yönetici yetkisi alındı';
+
+  @override
+  String get adminAdminGranted => 'Yönetici yetkisi verildi';
+
+  @override
+  String get adminGrantCoins => 'Jeton ekle';
+
+  @override
+  String get adminWriteSupport => 'Destek olarak yaz';
+
+  @override
+  String get adminUnfreeze => 'Çöz';
+
+  @override
+  String get adminFreeze => 'Dondur';
+
+  @override
+  String get adminUnfrozen => 'Çözüldü';
+
+  @override
+  String get adminFrozenDone => 'Donduruldu';
+
+  @override
+  String get adminResetPassword => 'Parolayı sıfırla';
+
+  @override
+  String get adminCoinsAmountHint => 'Miktar (negatif = düş)';
+
+  @override
+  String get adminReasonOptional => 'Sebep (isteğe bağlı)';
+
+  @override
+  String get adminGrantSent => 'Kart destek sohbetine gönderildi';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount bronz düşüldü';
+  }
+
+  @override
+  String get adminGrantVerb => 'Ekle';
+
+  @override
+  String get adminNewPasswordHint => 'Yeni parola (en az 6)';
+
+  @override
+  String get adminPasswordReset => 'Parola sıfırlandı';
+
+  @override
+  String get adminResetVerb => 'Sıfırla';
+
+  @override
+  String adminShortError(String error) {
+    return 'Hata: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Destek talebi yok';
+
+  @override
+  String get adminUserFallback => 'Kullanıcı';
+
+  @override
+  String get apiErrTooManyRequests => 'Çok fazla istek. Daha sonra deneyin.';
+
+  @override
+  String get apiErrMoveConflict => 'Hamle çakıştı. Tekrar deneyin.';
 }

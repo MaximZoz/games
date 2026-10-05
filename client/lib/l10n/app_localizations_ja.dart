@@ -2766,4 +2766,135 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4人用：4×4盤で4人（X・O・△・□）。自分の記号で揃えると勝ちです。';
+
+  @override
+  String get adminUsersTab => 'ユーザー';
+
+  @override
+  String get adminSupportTab => 'サポート';
+
+  @override
+  String get adminSearchHint => 'メールまたは名前で検索';
+
+  @override
+  String get adminRoleAdmins => '管理者';
+
+  @override
+  String get adminRoleUsers => 'ユーザー';
+
+  @override
+  String get adminRoleAll => 'すべての役割';
+
+  @override
+  String get adminStatusFrozen => '凍結中';
+
+  @override
+  String get adminStatusActive => '有効';
+
+  @override
+  String get adminStatusAny => 'すべての状態';
+
+  @override
+  String get adminOrderDesc => '降順';
+
+  @override
+  String get adminOrderAsc => '昇順';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '読み込み失敗: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'ユーザーがいません';
+
+  @override
+  String get adminSortLastSeen => '最終訪問順';
+
+  @override
+  String get adminSortEmail => 'メール順';
+
+  @override
+  String get adminSortCreated => '登録日順';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 銅';
+  }
+
+  @override
+  String get adminRevokeAdmin => '管理者を外す';
+
+  @override
+  String get adminGrantAdmin => '管理者にする';
+
+  @override
+  String get adminAdminRevoked => '管理者権限を外しました';
+
+  @override
+  String get adminAdminGranted => '管理者権限を付与しました';
+
+  @override
+  String get adminGrantCoins => 'コインを付与';
+
+  @override
+  String get adminWriteSupport => 'サポートとして書く';
+
+  @override
+  String get adminUnfreeze => '凍結解除';
+
+  @override
+  String get adminFreeze => '凍結';
+
+  @override
+  String get adminUnfrozen => '凍結を解除しました';
+
+  @override
+  String get adminFrozenDone => '凍結しました';
+
+  @override
+  String get adminResetPassword => 'パスワードをリセット';
+
+  @override
+  String get adminCoinsAmountHint => '数量（負の値は減算）';
+
+  @override
+  String get adminReasonOptional => '理由（任意）';
+
+  @override
+  String get adminGrantSent => 'カードをサポートチャットに送りました';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '銅 $amount を減算しました';
+  }
+
+  @override
+  String get adminGrantVerb => '付与';
+
+  @override
+  String get adminNewPasswordHint => '新しいパスワード（6文字以上）';
+
+  @override
+  String get adminPasswordReset => 'パスワードをリセットしました';
+
+  @override
+  String get adminResetVerb => 'リセット';
+
+  @override
+  String adminShortError(String error) {
+    return 'エラー: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'サポート依頼はありません';
+
+  @override
+  String get adminUserFallback => 'ユーザー';
+
+  @override
+  String get apiErrTooManyRequests => 'リクエストが多すぎます。あとで試してください。';
+
+  @override
+  String get apiErrMoveConflict => '手が競合しました。もう一度試してください。';
 }

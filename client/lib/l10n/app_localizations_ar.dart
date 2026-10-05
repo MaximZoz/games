@@ -2766,4 +2766,135 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 لاعبين: لوحة 4×4 وأربعة لاعبين (X، O، △، □). أكمل خطًا برموزك للفوز.';
+
+  @override
+  String get adminUsersTab => 'المستخدمون';
+
+  @override
+  String get adminSupportTab => 'الدعم';
+
+  @override
+  String get adminSearchHint => 'ابحث بالبريد أو الاسم';
+
+  @override
+  String get adminRoleAdmins => 'المسؤولون';
+
+  @override
+  String get adminRoleUsers => 'المستخدمون';
+
+  @override
+  String get adminRoleAll => 'كل الأدوار';
+
+  @override
+  String get adminStatusFrozen => 'مجمّدون';
+
+  @override
+  String get adminStatusActive => 'نشطون';
+
+  @override
+  String get adminStatusAny => 'أي حالة';
+
+  @override
+  String get adminOrderDesc => 'تنازلي';
+
+  @override
+  String get adminOrderAsc => 'تصاعدي';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'تعذر التحميل: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'لا مستخدمين';
+
+  @override
+  String get adminSortLastSeen => 'حسب آخر زيارة';
+
+  @override
+  String get adminSortEmail => 'حسب البريد';
+
+  @override
+  String get adminSortCreated => 'حسب تاريخ التسجيل';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount برونز';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'إزالة المسؤول';
+
+  @override
+  String get adminGrantAdmin => 'جعله مسؤولاً';
+
+  @override
+  String get adminAdminRevoked => 'أُزيلت صلاحيات المسؤول';
+
+  @override
+  String get adminAdminGranted => 'مُنحت صلاحيات المسؤول';
+
+  @override
+  String get adminGrantCoins => 'منح عملات';
+
+  @override
+  String get adminWriteSupport => 'الكتابة كدعم';
+
+  @override
+  String get adminUnfreeze => 'إلغاء التجميد';
+
+  @override
+  String get adminFreeze => 'تجميد';
+
+  @override
+  String get adminUnfrozen => 'أُلغي التجميد';
+
+  @override
+  String get adminFrozenDone => 'تم التجميد';
+
+  @override
+  String get adminResetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get adminCoinsAmountHint => 'الكمية (السالب = خصم)';
+
+  @override
+  String get adminReasonOptional => 'السبب (اختياري)';
+
+  @override
+  String get adminGrantSent => 'أُرسلت البطاقة إلى دردشة الدعم';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'خُصم $amount من البرونز';
+  }
+
+  @override
+  String get adminGrantVerb => 'منح';
+
+  @override
+  String get adminNewPasswordHint => 'كلمة مرور جديدة (6 على الأقل)';
+
+  @override
+  String get adminPasswordReset => 'أُعيد تعيين كلمة المرور';
+
+  @override
+  String get adminResetVerb => 'إعادة تعيين';
+
+  @override
+  String adminShortError(String error) {
+    return 'خطأ: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'لا طلبات دعم';
+
+  @override
+  String get adminUserFallback => 'مستخدم';
+
+  @override
+  String get apiErrTooManyRequests => 'طلبات كثيرة جدًا. حاول لاحقًا.';
+
+  @override
+  String get apiErrMoveConflict => 'تعارض في النقلة. أعد المحاولة.';
 }

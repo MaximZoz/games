@@ -2766,4 +2766,135 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 spelers: 4×4-bord, vier spelers (X, O, △, □). Maak een lijn met je eigen tekens om te winnen.';
+
+  @override
+  String get adminUsersTab => 'Gebruikers';
+
+  @override
+  String get adminSupportTab => 'Support';
+
+  @override
+  String get adminSearchHint => 'Zoek op e-mail of naam';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Gebruikers';
+
+  @override
+  String get adminRoleAll => 'Alle rollen';
+
+  @override
+  String get adminStatusFrozen => 'Bevroren';
+
+  @override
+  String get adminStatusActive => 'Actief';
+
+  @override
+  String get adminStatusAny => 'Elke status';
+
+  @override
+  String get adminOrderDesc => 'Aflopend';
+
+  @override
+  String get adminOrderAsc => 'Oplopend';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Laden mislukt: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Geen gebruikers';
+
+  @override
+  String get adminSortLastSeen => 'Op laatste bezoek';
+
+  @override
+  String get adminSortEmail => 'Op e-mail';
+
+  @override
+  String get adminSortCreated => 'Op registratiedatum';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Admin intrekken';
+
+  @override
+  String get adminGrantAdmin => 'Admin maken';
+
+  @override
+  String get adminAdminRevoked => 'Adminrechten ingetrokken';
+
+  @override
+  String get adminAdminGranted => 'Adminrechten gegeven';
+
+  @override
+  String get adminGrantCoins => 'Munten toekennen';
+
+  @override
+  String get adminWriteSupport => 'Schrijven als support';
+
+  @override
+  String get adminUnfreeze => 'Ontdooien';
+
+  @override
+  String get adminFreeze => 'Bevriezen';
+
+  @override
+  String get adminUnfrozen => 'Ontdooid';
+
+  @override
+  String get adminFrozenDone => 'Bevroren';
+
+  @override
+  String get adminResetPassword => 'Wachtwoord resetten';
+
+  @override
+  String get adminCoinsAmountHint => 'Aantal (negatief = afschrijven)';
+
+  @override
+  String get adminReasonOptional => 'Reden (optioneel)';
+
+  @override
+  String get adminGrantSent => 'Kaart naar supportchat gestuurd';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount brons afgeschreven';
+  }
+
+  @override
+  String get adminGrantVerb => 'Toekennen';
+
+  @override
+  String get adminNewPasswordHint => 'Nieuw wachtwoord (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Wachtwoord gereset';
+
+  @override
+  String get adminResetVerb => 'Resetten';
+
+  @override
+  String adminShortError(String error) {
+    return 'Fout: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Geen supportverzoeken';
+
+  @override
+  String get adminUserFallback => 'Gebruiker';
+
+  @override
+  String get apiErrTooManyRequests => 'Te veel verzoeken. Probeer later opnieuw.';
+
+  @override
+  String get apiErrMoveConflict => 'Zetconflict. Probeer opnieuw.';
 }

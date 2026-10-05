@@ -2766,4 +2766,135 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => 'На четверых: поле 4×4, четверо игроков (X, O, △, □). Кто собрал линию из своих знаков — побеждает.';
+
+  @override
+  String get adminUsersTab => 'Пользователи';
+
+  @override
+  String get adminSupportTab => 'Поддержка';
+
+  @override
+  String get adminSearchHint => 'Поиск по email или нику';
+
+  @override
+  String get adminRoleAdmins => 'Админы';
+
+  @override
+  String get adminRoleUsers => 'Пользователи';
+
+  @override
+  String get adminRoleAll => 'Все роли';
+
+  @override
+  String get adminStatusFrozen => 'Замороженные';
+
+  @override
+  String get adminStatusActive => 'Активные';
+
+  @override
+  String get adminStatusAny => 'Любой статус';
+
+  @override
+  String get adminOrderDesc => 'По убыванию';
+
+  @override
+  String get adminOrderAsc => 'По возрастанию';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Ошибка загрузки: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Пользователи не найдены';
+
+  @override
+  String get adminSortLastSeen => 'По последнему визиту';
+
+  @override
+  String get adminSortEmail => 'По email';
+
+  @override
+  String get adminSortCreated => 'По дате рег.';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount бр.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Убрать админа';
+
+  @override
+  String get adminGrantAdmin => 'Сделать админом';
+
+  @override
+  String get adminAdminRevoked => 'Права админа сняты';
+
+  @override
+  String get adminAdminGranted => 'Права админа выданы';
+
+  @override
+  String get adminGrantCoins => 'Начислить монеты';
+
+  @override
+  String get adminWriteSupport => 'Написать от поддержки';
+
+  @override
+  String get adminUnfreeze => 'Разморозить';
+
+  @override
+  String get adminFreeze => 'Заморозить';
+
+  @override
+  String get adminUnfrozen => 'Разморожен';
+
+  @override
+  String get adminFrozenDone => 'Заморожен';
+
+  @override
+  String get adminResetPassword => 'Сбросить пароль';
+
+  @override
+  String get adminCoinsAmountHint => 'Количество (отрицательное = списание)';
+
+  @override
+  String get adminReasonOptional => 'Причина (необязательно)';
+
+  @override
+  String get adminGrantSent => 'Карточка отправлена в чат поддержки';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Списано $amount бронзовых';
+  }
+
+  @override
+  String get adminGrantVerb => 'Начислить';
+
+  @override
+  String get adminNewPasswordHint => 'Новый пароль (мин. 6)';
+
+  @override
+  String get adminPasswordReset => 'Пароль сброшен';
+
+  @override
+  String get adminResetVerb => 'Сбросить';
+
+  @override
+  String adminShortError(String error) {
+    return 'Ошибка: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Нет обращений в поддержку';
+
+  @override
+  String get adminUserFallback => 'Пользователь';
+
+  @override
+  String get apiErrTooManyRequests => 'Слишком много запросов. Попробуйте позже.';
+
+  @override
+  String get apiErrMoveConflict => 'Ход конфликтует. Повторите.';
 }

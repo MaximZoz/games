@@ -2766,4 +2766,135 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 ойыншы: 4×4 тақта, төрт ойыншы (X, O, △, □). Өз белгілеріңізбен сызық жинасаңыз — жеңесіз.';
+
+  @override
+  String get adminUsersTab => 'Пайдаланушылар';
+
+  @override
+  String get adminSupportTab => 'Қолдау';
+
+  @override
+  String get adminSearchHint => 'Email немесе лақап ат бойынша іздеу';
+
+  @override
+  String get adminRoleAdmins => 'Әкімшілер';
+
+  @override
+  String get adminRoleUsers => 'Пайдаланушылар';
+
+  @override
+  String get adminRoleAll => 'Барлық рөлдер';
+
+  @override
+  String get adminStatusFrozen => 'Мұздатылған';
+
+  @override
+  String get adminStatusActive => 'Белсенді';
+
+  @override
+  String get adminStatusAny => 'Кез келген күй';
+
+  @override
+  String get adminOrderDesc => 'Кемуі бойынша';
+
+  @override
+  String get adminOrderAsc => 'Өсуі бойынша';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Жүктеу қатесі: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Пайдаланушылар табылмады';
+
+  @override
+  String get adminSortLastSeen => 'Соңғы кіру бойынша';
+
+  @override
+  String get adminSortEmail => 'Email бойынша';
+
+  @override
+  String get adminSortCreated => 'Тіркелген күні бойынша';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount бр.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Әкімшіні алу';
+
+  @override
+  String get adminGrantAdmin => 'Әкімші ету';
+
+  @override
+  String get adminAdminRevoked => 'Әкімші құқығы алынды';
+
+  @override
+  String get adminAdminGranted => 'Әкімші құқығы берілді';
+
+  @override
+  String get adminGrantCoins => 'Монета есептеу';
+
+  @override
+  String get adminWriteSupport => 'Қолдау атынан жазу';
+
+  @override
+  String get adminUnfreeze => 'Еріту';
+
+  @override
+  String get adminFreeze => 'Мұздату';
+
+  @override
+  String get adminUnfrozen => 'Ерітілді';
+
+  @override
+  String get adminFrozenDone => 'Мұздатылды';
+
+  @override
+  String get adminResetPassword => 'Құпиясөзді қалпына келтіру';
+
+  @override
+  String get adminCoinsAmountHint => 'Саны (теріс = шегеру)';
+
+  @override
+  String get adminReasonOptional => 'Себебі (міндетті емес)';
+
+  @override
+  String get adminGrantSent => 'Карточка қолдау чатына жіберілді';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount қола шегерілді';
+  }
+
+  @override
+  String get adminGrantVerb => 'Есептеу';
+
+  @override
+  String get adminNewPasswordHint => 'Жаңа құпиясөз (кемі 6)';
+
+  @override
+  String get adminPasswordReset => 'Құпиясөз қалпына келтірілді';
+
+  @override
+  String get adminResetVerb => 'Қалпына келтіру';
+
+  @override
+  String adminShortError(String error) {
+    return 'Қате: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Қолдау өтініштері жоқ';
+
+  @override
+  String get adminUserFallback => 'Пайдаланушы';
+
+  @override
+  String get apiErrTooManyRequests => 'Сұраулар тым көп. Кейінірек көріңіз.';
+
+  @override
+  String get apiErrMoveConflict => 'Жүріс қақтығысты. Қайталаңыз.';
 }

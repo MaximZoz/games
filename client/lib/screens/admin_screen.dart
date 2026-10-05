@@ -50,18 +50,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen>
         backgroundColor: AppColors.surfaceUnified,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Админка',
-          style: TextStyle(
+        title: Text(
+          context.l10n.adminTitle,
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Пользователи'),
-            Tab(text: 'Поддержка'),
+          tabs: [
+            Tab(text: context.l10n.adminUsersTab),
+            Tab(text: context.l10n.adminSupportTab),
           ],
           labelColor: AppColors.accentStart,
           unselectedLabelColor: AppColors.textSecondary,
@@ -199,7 +199,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Поиск по email или нику',
+                  hintText: context.l10n.adminSearchHint,
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   isDense: true,
                   contentPadding:
@@ -236,25 +236,26 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
                     const SizedBox(width: 8),
                     _FilterChipButton(
                       label: _adminFilter == 'admin'
-                          ? 'Админы'
+                          ? context.l10n.adminRoleAdmins
                           : _adminFilter == 'user'
-                              ? 'Пользователи'
-                              : 'Все роли',
+                              ? context.l10n.adminRoleUsers
+                              : context.l10n.adminRoleAll,
                       onTap: _cycleAdminFilter,
                     ),
                     const SizedBox(width: 8),
                     _FilterChipButton(
                       label: _frozenFilter == 'frozen'
-                          ? 'Замороженные'
+                          ? context.l10n.adminStatusFrozen
                           : _frozenFilter == 'active'
-                              ? 'Активные'
-                              : 'Любой статус',
+                              ? context.l10n.adminStatusActive
+                              : context.l10n.adminStatusAny,
                       onTap: _cycleFrozenFilter,
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      tooltip:
-                          _order == 'desc' ? 'По убыванию' : 'По возрастанию',
+                      tooltip: _order == 'desc'
+                          ? context.l10n.adminOrderDesc
+                          : context.l10n.adminOrderAsc,
                       icon: Icon(_order == 'desc'
                           ? Icons.arrow_downward_rounded
                           : Icons.arrow_upward_rounded),
@@ -282,7 +283,9 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Ошибка загрузки: ${formatUserError(e, fallback: "попробуйте позже")}',
+                  context.l10n.adminLoadFailed(
+                    formatUserError(e, fallback: context.l10n.commonTryLater),
+                  ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppColors.textSecondary),
                 ),
@@ -290,12 +293,12 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
             ),
             data: (state) {
               if (state.users.isEmpty) {
-                return const Center(
+                return Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Пользователи не найдены',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      context.l10n.adminUsersEmpty,
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ),
                 );
@@ -339,13 +342,14 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
   }
 
   String _sortLabel() {
+    final l10n = context.l10n;
     switch (_sort) {
       case 'last_seen':
-        return 'По последнему визиту';
+        return l10n.adminSortLastSeen;
       case 'email':
-        return 'По email';
+        return l10n.adminSortEmail;
       default:
-        return 'По дате рег.';
+        return l10n.adminSortCreated;
     }
   }
 
@@ -484,14 +488,14 @@ class _UserCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            '${user.balanceBronze} бр.',
+                            context.l10n.adminBronzeBalance(user.balanceBronze),
                             style: const TextStyle(
                                 fontSize: 12, color: AppColors.textSecondary),
                           ),
                           if (user.lastSeenAt != null) ...[
                             const SizedBox(width: 8),
                             Text(
-                              _lastSeenShort(user.lastSeenAt!),
+                              _lastSeenShort(context, user.lastSeenAt!),
                               style: const TextStyle(
                                   fontSize: 12, color: AppColors.textSecondary),
                             ),
@@ -535,14 +539,15 @@ class _UserCard extends ConsumerWidget {
     );
   }
 
-  String _lastSeenShort(String iso) {
+  String _lastSeenShort(BuildContext context, String iso) {
+    final l10n = context.l10n;
     try {
       final t = DateTime.parse(iso);
       final diff = DateTime.now().toUtc().difference(t);
-      if (diff.inMinutes < 1) return 'только что';
-      if (diff.inMinutes < 60) return '${diff.inMinutes} мин назад';
-      if (diff.inHours < 24) return '${diff.inHours} ч назад';
-      return '${diff.inDays} дн назад';
+      if (diff.inMinutes < 1) return l10n.timeJustNow;
+      if (diff.inMinutes < 60) return l10n.timeMinutesAgo(diff.inMinutes);
+      if (diff.inHours < 24) return l10n.timeHoursAgo(diff.inHours);
+      return l10n.timeDaysAgo(diff.inDays);
     } catch (_) {
       return '';
     }
@@ -577,22 +582,25 @@ class _UserCard extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.shield_rounded,
                     color: AppColors.accentStart),
-                title: Text(user.isAdmin ? 'Убрать админа' : 'Сделать админом'),
+                title: Text(user.isAdmin
+                    ? context.l10n.adminRevokeAdmin
+                    : context.l10n.adminGrantAdmin),
                 enabled: !(isSelf && user.isAdmin),
                 onTap: () async {
                   Navigator.pop(ctx);
                   await _doAction(
                     context,
                     () => repo.setAdmin(user.id, !user.isAdmin),
-                    success:
-                        user.isAdmin ? 'Права админа сняты' : 'Права админа выданы',
+                    success: user.isAdmin
+                        ? context.l10n.adminAdminRevoked
+                        : context.l10n.adminAdminGranted,
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.monetization_on_outlined,
                     color: AppColors.accentStart),
-                title: const Text('Начислить монеты'),
+                title: Text(context.l10n.adminGrantCoins),
                 onTap: () {
                   Navigator.pop(ctx);
                   _showGrantCoinsDialog(context);
@@ -601,7 +609,7 @@ class _UserCard extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.support_agent_rounded,
                     color: AppColors.accentStart),
-                title: const Text('Написать от поддержки'),
+                title: Text(context.l10n.adminWriteSupport),
                 onTap: () {
                   Navigator.pop(ctx);
                   final name = user.displayName?.trim().isNotEmpty == true
@@ -621,21 +629,25 @@ class _UserCard extends ConsumerWidget {
                   user.isFrozen ? Icons.lock_open_rounded : Icons.ac_unit_rounded,
                   color: user.isFrozen ? Colors.green : Colors.blueGrey,
                 ),
-                title: Text(user.isFrozen ? 'Разморозить' : 'Заморозить'),
+                title: Text(user.isFrozen
+                    ? context.l10n.adminUnfreeze
+                    : context.l10n.adminFreeze),
                 enabled: !isSelf,
                 onTap: () async {
                   Navigator.pop(ctx);
                   await _doAction(
                     context,
                     () => repo.freezeUser(user.id, !user.isFrozen),
-                    success: user.isFrozen ? 'Разморожен' : 'Заморожен',
+                    success: user.isFrozen
+                        ? context.l10n.adminUnfrozen
+                        : context.l10n.adminFrozenDone,
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.lock_reset_rounded,
                     color: AppColors.accentStart),
-                title: const Text('Сбросить пароль'),
+                title: Text(context.l10n.adminResetPassword),
                 onTap: () {
                   Navigator.pop(ctx);
                   _showResetPasswordDialog(context);
@@ -663,7 +675,7 @@ class _UserCard extends ConsumerWidget {
       if (!context.mounted) return;
       showAppSnackBar(
         context,
-        message: formatUserError(e, fallback: 'Ошибка'),
+        message: formatUserError(e, fallback: context.l10n.commonError),
         kind: AppSnackKind.error,
       );
     }
@@ -675,30 +687,29 @@ class _UserCard extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Начислить монеты'),
+        title: Text(ctx.l10n.adminGrantCoins),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: amountCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'Количество (отрицательное = списание)',
+              decoration: InputDecoration(
+                hintText: ctx.l10n.adminCoinsAmountHint,
               ),
               autofocus: true,
             ),
             const SizedBox(height: 8),
             TextField(
               controller: reasonCtrl,
-              decoration:
-                  const InputDecoration(hintText: 'Причина (необязательно)'),
+              decoration: InputDecoration(hintText: ctx.l10n.adminReasonOptional),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            child: Text(ctx.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -710,11 +721,11 @@ class _UserCard extends ConsumerWidget {
                 () => repo.grantCoins(user.id, amount,
                     reason: reasonCtrl.text.trim()),
                 success: amount > 0
-                    ? 'Карточка отправлена в чат поддержки'
-                    : 'Списано ${amount.abs()} бронзовых',
+                    ? context.l10n.adminGrantSent
+                    : context.l10n.adminCoinsDebited(amount.abs()),
               );
             },
-            child: const Text('Начислить'),
+            child: Text(ctx.l10n.adminGrantVerb),
           ),
         ],
       ),
@@ -726,16 +737,16 @@ class _UserCard extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Сбросить пароль'),
+        title: Text(ctx.l10n.adminResetPassword),
         content: TextField(
           controller: ctrl,
           obscureText: true,
-          decoration: const InputDecoration(hintText: 'Новый пароль (мин. 6)'),
+          decoration: InputDecoration(hintText: ctx.l10n.adminNewPasswordHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            child: Text(ctx.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -744,10 +755,10 @@ class _UserCard extends ConsumerWidget {
               await _doAction(
                 context,
                 () => repo.resetPassword(user.id, ctrl.text),
-                success: 'Пароль сброшен',
+                success: context.l10n.adminPasswordReset,
               );
             },
-            child: const Text('Сбросить'),
+            child: Text(ctx.l10n.adminResetVerb),
           ),
         ],
       ),
@@ -818,18 +829,20 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
       ),
       error: (e, _) => Center(
         child: Text(
-          'Ошибка: ${formatUserError(e, fallback: "попробуйте позже")}',
+          context.l10n.adminShortError(
+            formatUserError(e, fallback: context.l10n.commonTryLater),
+          ),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
       ),
       data: (chats) {
         if (chats.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Text(
-                'Нет обращений в поддержку',
-                style: TextStyle(color: AppColors.textSecondary),
+                context.l10n.adminSupportEmpty,
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
           );
@@ -889,7 +902,7 @@ class _SupportTabState extends ConsumerState<_SupportTab> {
                                       ? c.peerName!.trim()
                                       : (c.peerId.isNotEmpty
                                           ? c.peerId
-                                          : 'Пользователь'),
+                                          : context.l10n.adminUserFallback),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
