@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show rulesLineWithStakeIcon;
 import 'package:multigames_client/l10n/l10n.dart';
@@ -470,8 +471,8 @@ double gameCardChipsMinHeight({
   final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
   final fontSz =
       compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
-  final row = math.max(iconSz, fontSz * 1.35) + padV * 2;
-  return row * 2 + 8 + 6;
+  final row = math.max(iconSz, fontSz * 1.35) + padV * 2 + 2;
+  return row * 2 + 8;
 }
 
 /// Ширина плитки и растяжение по высоте ряда — без LayoutBuilder
@@ -523,40 +524,146 @@ class GameCardShell extends StatelessWidget {
     );
     final chipsGap = isDesktop ? 18.0 : 14.0;
     final actionsGap = isDesktop ? 20.0 : 16.0;
-    final body = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        header,
-        SizedBox(height: chipsGap),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: gameCardChipsMinHeight(
-                  compact: compact,
-                  isDesktop: isDesktop,
-                  isMedium: isMedium,
-                ),
-          ),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Wrap(
-              spacing: isDesktop ? 10 : 8,
-              runSpacing: 8,
-              children: chips,
-            ),
-          ),
-        ),
-        SizedBox(height: actionsGap),
-        actions,
-      ],
-    );
     return GradientCard(
       animate: false,
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 14 : (isMedium ? 18 : (isDesktop ? 24 : 20)),
         vertical: compact ? 14 : (isMedium ? 16 : (isDesktop ? 22 : 20)),
       ),
-      child: body,
+      child: _GameCardBodyColumn(
+        headerGap: chipsGap,
+        actionsGap: actionsGap,
+        children: [
+          header,
+          Wrap(
+            spacing: isDesktop ? 10 : 8,
+            runSpacing: 8,
+            children: chips,
+          ),
+          actions,
+        ],
+      ),
     );
+  }
+}
+
+/// Шапка + чипы сверху, кнопки внизу, если сетка дала общую высоту.
+class _GameCardBodyColumn extends MultiChildRenderObjectWidget {
+  const _GameCardBodyColumn({
+    required this.headerGap,
+    required this.actionsGap,
+    required super.children,
+  });
+
+  final double headerGap;
+  final double actionsGap;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderGameCardBodyColumn(
+      headerGap: headerGap,
+      actionsGap: actionsGap,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderGameCardBodyColumn renderObject,
+  ) {
+    renderObject
+      ..headerGap = headerGap
+      ..actionsGap = actionsGap;
+  }
+}
+
+class _GameCardBodyParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderGameCardBodyColumn extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _GameCardBodyParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _GameCardBodyParentData> {
+  _RenderGameCardBodyColumn({
+    required double headerGap,
+    required double actionsGap,
+  })  : _headerGap = headerGap,
+        _actionsGap = actionsGap;
+
+  double _headerGap;
+  double _actionsGap;
+
+  double get headerGap => _headerGap;
+  set headerGap(double value) {
+    if (_headerGap == value) return;
+    _headerGap = value;
+    markNeedsLayout();
+  }
+
+  double get actionsGap => _actionsGap;
+  set actionsGap(double value) {
+    if (_actionsGap == value) return;
+    _actionsGap = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _GameCardBodyParentData) {
+      child.parentData = _GameCardBodyParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    final header = firstChild;
+    final chips = header == null ? null : childAfter(header);
+    final actions = chips == null ? null : childAfter(chips);
+    if (header == null || chips == null || actions == null) {
+      size = constraints.smallest;
+      return;
+    }
+
+    final width = constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : constraints.constrainWidth();
+    final childConstraints = BoxConstraints(
+      minWidth: width,
+      maxWidth: width,
+    );
+    header.layout(childConstraints, parentUsesSize: true);
+    chips.layout(childConstraints, parentUsesSize: true);
+    actions.layout(childConstraints, parentUsesSize: true);
+
+    final contentHeight = header.size.height +
+        headerGap +
+        chips.size.height +
+        actionsGap +
+        actions.size.height;
+    final height = constraints.hasBoundedHeight &&
+            constraints.maxHeight.isFinite &&
+            constraints.maxHeight > contentHeight
+        ? constraints.maxHeight
+        : contentHeight;
+
+    final headerData = header.parentData! as _GameCardBodyParentData;
+    final chipsData = chips.parentData! as _GameCardBodyParentData;
+    final actionsData = actions.parentData! as _GameCardBodyParentData;
+    headerData.offset = Offset.zero;
+    chipsData.offset = Offset(0, header.size.height + headerGap);
+    actionsData.offset = Offset(
+      0,
+      height - actions.size.height,
+    );
+    size = constraints.constrain(Size(constraints.maxWidth, height));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    defaultPaint(context, offset);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
   }
 }

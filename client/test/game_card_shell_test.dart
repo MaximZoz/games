@@ -64,11 +64,11 @@ void main() {
         home: Scaffold(
           body: Center(
             child: SizedBox(
-              width: 800,
+              width: 680,
               child: gamesHubEqualHeightGrid(
                 cols: 2,
                 gap: 16,
-                tileWidth: 392,
+                tileWidth: 320,
                 tiles: [
                   _shell(
                     title: 'Дурак',
@@ -91,16 +91,71 @@ void main() {
 
     final durak = tester.getSize(find.byType(GameCardShell).at(0));
     final uno = tester.getSize(find.byType(GameCardShell).at(1));
-    expect((durak.height - uno.height).abs(), lessThan(8));
+    expect(durak.height, uno.height);
     expect(durak.height, greaterThan(180));
+
+    final durakChips = tester.getRect(find.byType(Wrap).at(0));
+    final unoChips = tester.getRect(find.byType(Wrap).at(1));
+    expect(durakChips.height, greaterThan(unoChips.height + 8));
 
     final durakBtns = tester.getRect(find.byKey(const ValueKey('durak-actions')));
     final unoBtns = tester.getRect(find.byKey(const ValueKey('uno-actions')));
-    expect((durakBtns.bottom - unoBtns.bottom).abs(), lessThan(8));
-    expect((durakBtns.top - unoBtns.top).abs(), lessThan(8));
+    expect((durakBtns.bottom - unoBtns.bottom).abs(), lessThan(1));
+    expect((durakBtns.top - unoBtns.top).abs(), lessThan(1));
 
     final durakCard = tester.getRect(find.byType(GameCardShell).at(0));
     expect(durakCard.bottom - durakBtns.bottom, lessThan(28));
     expect(find.widgetWithText(FramedButton, 'Создать игру'), findsNWidgets(2));
+  });
+
+  testWidgets('все плитки сетки одной высоты, даже в разных рядах',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 680,
+              child: gamesHubEqualHeightGrid(
+                cols: 2,
+                gap: 16,
+                tileWidth: 320,
+                tiles: [
+                  _shell(
+                    title: 'Дурак',
+                    chipLabels: const ['2', '1 мин', 'Переводной', '24 карты'],
+                    actionsKey: const ValueKey('a'),
+                  ),
+                  _shell(
+                    title: 'Уно',
+                    chipLabels: const ['2', '1 мин'],
+                    actionsKey: const ValueKey('b'),
+                  ),
+                  _shell(
+                    title: 'Покер',
+                    chipLabels: const ['3', '1 мин'],
+                    actionsKey: const ValueKey('c'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final a = tester.getSize(find.byType(GameCardShell).at(0));
+    final b = tester.getSize(find.byType(GameCardShell).at(1));
+    final c = tester.getSize(find.byType(GameCardShell).at(2));
+    expect(a.height, b.height);
+    expect(a.height, c.height);
   });
 }
