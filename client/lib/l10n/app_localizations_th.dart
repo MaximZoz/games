@@ -2766,4 +2766,135 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 คน: กระดาน 4×4 ผู้เล่นสี่คน (X, O, △, □) ชนะด้วยเส้นจากสัญลักษณ์ของคุณ';
+
+  @override
+  String get adminUsersTab => 'ผู้ใช้';
+
+  @override
+  String get adminSupportTab => 'ซัพพอร์ต';
+
+  @override
+  String get adminSearchHint => 'ค้นหาด้วยอีเมลหรือชื่อ';
+
+  @override
+  String get adminRoleAdmins => 'แอดมิน';
+
+  @override
+  String get adminRoleUsers => 'ผู้ใช้';
+
+  @override
+  String get adminRoleAll => 'ทุกบทบาท';
+
+  @override
+  String get adminStatusFrozen => 'ถูกระงับ';
+
+  @override
+  String get adminStatusActive => 'ใช้งานอยู่';
+
+  @override
+  String get adminStatusAny => 'ทุกสถานะ';
+
+  @override
+  String get adminOrderDesc => 'มากไปน้อย';
+
+  @override
+  String get adminOrderAsc => 'น้อยไปมาก';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'โหลดไม่สำเร็จ: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'ไม่พบผู้ใช้';
+
+  @override
+  String get adminSortLastSeen => 'ตามการเข้าล่าสุด';
+
+  @override
+  String get adminSortEmail => 'ตามอีเมล';
+
+  @override
+  String get adminSortCreated => 'ตามวันสมัคร';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount ทองแดง';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'ถอดแอดมิน';
+
+  @override
+  String get adminGrantAdmin => 'ตั้งเป็นแอดมิน';
+
+  @override
+  String get adminAdminRevoked => 'ถอดสิทธิ์แอดมินแล้ว';
+
+  @override
+  String get adminAdminGranted => 'ให้สิทธิ์แอดมินแล้ว';
+
+  @override
+  String get adminGrantCoins => 'ให้เหรียญ';
+
+  @override
+  String get adminWriteSupport => 'เขียนในฐานะซัพพอร์ต';
+
+  @override
+  String get adminUnfreeze => 'ปลดระงับ';
+
+  @override
+  String get adminFreeze => 'ระงับ';
+
+  @override
+  String get adminUnfrozen => 'ปลดระงับแล้ว';
+
+  @override
+  String get adminFrozenDone => 'ระงับแล้ว';
+
+  @override
+  String get adminResetPassword => 'รีเซ็ตรหัสผ่าน';
+
+  @override
+  String get adminCoinsAmountHint => 'จำนวน (ค่าลบ = หัก)';
+
+  @override
+  String get adminReasonOptional => 'เหตุผล (ไม่บังคับ)';
+
+  @override
+  String get adminGrantSent => 'ส่งการ์ดไปแชทซัพพอร์ตแล้ว';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'หักทองแดง $amount';
+  }
+
+  @override
+  String get adminGrantVerb => 'ให้';
+
+  @override
+  String get adminNewPasswordHint => 'รหัสผ่านใหม่ (อย่างน้อย 6)';
+
+  @override
+  String get adminPasswordReset => 'รีเซ็ตรหัสผ่านแล้ว';
+
+  @override
+  String get adminResetVerb => 'รีเซ็ต';
+
+  @override
+  String adminShortError(String error) {
+    return 'ข้อผิดพลาด: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'ไม่มีคำขอซัพพอร์ต';
+
+  @override
+  String get adminUserFallback => 'ผู้ใช้';
+
+  @override
+  String get apiErrTooManyRequests => 'มีคำขอมากเกินไป ลองใหม่ภายหลัง';
+
+  @override
+  String get apiErrMoveConflict => 'การเดินชนกัน ลองอีกครั้ง';
 }

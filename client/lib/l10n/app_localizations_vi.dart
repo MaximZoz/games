@@ -2766,4 +2766,135 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 người: bàn 4×4, bốn người (X, O, △, □). Thắng khi hoàn thành một hàng bằng ký hiệu của bạn.';
+
+  @override
+  String get adminUsersTab => 'Người dùng';
+
+  @override
+  String get adminSupportTab => 'Hỗ trợ';
+
+  @override
+  String get adminSearchHint => 'Tìm theo email hoặc biệt danh';
+
+  @override
+  String get adminRoleAdmins => 'Quản trị';
+
+  @override
+  String get adminRoleUsers => 'Người dùng';
+
+  @override
+  String get adminRoleAll => 'Mọi vai trò';
+
+  @override
+  String get adminStatusFrozen => 'Đã đóng băng';
+
+  @override
+  String get adminStatusActive => 'Đang hoạt động';
+
+  @override
+  String get adminStatusAny => 'Mọi trạng thái';
+
+  @override
+  String get adminOrderDesc => 'Giảm dần';
+
+  @override
+  String get adminOrderAsc => 'Tăng dần';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Không tải được: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Không có người dùng';
+
+  @override
+  String get adminSortLastSeen => 'Theo lần vào gần nhất';
+
+  @override
+  String get adminSortEmail => 'Theo email';
+
+  @override
+  String get adminSortCreated => 'Theo ngày đăng ký';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount đồng';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Gỡ quản trị';
+
+  @override
+  String get adminGrantAdmin => 'Đặt làm quản trị';
+
+  @override
+  String get adminAdminRevoked => 'Đã gỡ quyền quản trị';
+
+  @override
+  String get adminAdminGranted => 'Đã cấp quyền quản trị';
+
+  @override
+  String get adminGrantCoins => 'Cấp xu';
+
+  @override
+  String get adminWriteSupport => 'Viết với tư cách hỗ trợ';
+
+  @override
+  String get adminUnfreeze => 'Bỏ đóng băng';
+
+  @override
+  String get adminFreeze => 'Đóng băng';
+
+  @override
+  String get adminUnfrozen => 'Đã bỏ đóng băng';
+
+  @override
+  String get adminFrozenDone => 'Đã đóng băng';
+
+  @override
+  String get adminResetPassword => 'Đặt lại mật khẩu';
+
+  @override
+  String get adminCoinsAmountHint => 'Số lượng (âm = trừ)';
+
+  @override
+  String get adminReasonOptional => 'Lý do (không bắt buộc)';
+
+  @override
+  String get adminGrantSent => 'Đã gửi thẻ vào chat hỗ trợ';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Đã trừ $amount đồng';
+  }
+
+  @override
+  String get adminGrantVerb => 'Cấp';
+
+  @override
+  String get adminNewPasswordHint => 'Mật khẩu mới (tối thiểu 6)';
+
+  @override
+  String get adminPasswordReset => 'Đã đặt lại mật khẩu';
+
+  @override
+  String get adminResetVerb => 'Đặt lại';
+
+  @override
+  String adminShortError(String error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Không có yêu cầu hỗ trợ';
+
+  @override
+  String get adminUserFallback => 'Người dùng';
+
+  @override
+  String get apiErrTooManyRequests => 'Quá nhiều yêu cầu. Hãy thử lại sau.';
+
+  @override
+  String get apiErrMoveConflict => 'Nước đi bị xung đột. Hãy thử lại.';
 }

@@ -60,20 +60,20 @@ type BlockedChatUserItem struct {
 }
 
 type ChatMessageItem struct {
-	ID           string  `json:"id"`
-	ChatID       string  `json:"chat_id"`
-	SenderUserID string  `json:"sender_user_id"`
-	Body         string  `json:"body"`
-	CreatedAt    string  `json:"created_at"`
-	DeliveredAt  *string `json:"delivered_at,omitempty"`
-	ReadAt       *string `json:"read_at,omitempty"`
-	EditedAt     *string `json:"edited_at,omitempty"`
+	ID               string  `json:"id"`
+	ChatID           string  `json:"chat_id"`
+	SenderUserID     string  `json:"sender_user_id"`
+	Body             string  `json:"body"`
+	CreatedAt        string  `json:"created_at"`
+	DeliveredAt      *string `json:"delivered_at,omitempty"`
+	ReadAt           *string `json:"read_at,omitempty"`
+	EditedAt         *string `json:"edited_at,omitempty"`
 	ReplyToMessageID *string `json:"reply_to_message_id,omitempty"`
-	HasImage     bool    `json:"has_image,omitempty"`
-	ImageCount   int     `json:"image_count,omitempty"`
-	ReplyToBody  *string `json:"reply_to_body,omitempty"`
-	ReplyToHasImage bool `json:"reply_to_has_image,omitempty"`
-	ReplyToSenderID *string `json:"reply_to_sender_id,omitempty"`
+	HasImage         bool    `json:"has_image,omitempty"`
+	ImageCount       int     `json:"image_count,omitempty"`
+	ReplyToBody      *string `json:"reply_to_body,omitempty"`
+	ReplyToHasImage  bool    `json:"reply_to_has_image,omitempty"`
+	ReplyToSenderID  *string `json:"reply_to_sender_id,omitempty"`
 }
 
 type StartChatBody struct {
@@ -90,8 +90,8 @@ type SendChatMessageBody struct {
 	Body             string `json:"body"`
 	ReplyToMessageID string `json:"reply_to_message_id,omitempty"`
 	// image_base64 — устаревший одиночный вариант; images — до 3 фото.
-	ImageBase64 string             `json:"image_base64,omitempty"`
-	ImageMime   string             `json:"image_mime,omitempty"`
+	ImageBase64 string              `json:"image_base64,omitempty"`
+	ImageMime   string              `json:"image_mime,omitempty"`
 	Images      []SendChatImageBody `json:"images,omitempty"`
 }
 
@@ -1183,6 +1183,7 @@ func (h *ChatsHandler) cleanupOrphanGroupChats(ctx context.Context, userID uuid.
 			removed++
 			h.Rdb.Del(ctx, "lobby:"+lobbyID)
 			h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
+			forgetLobbyIndex(h.Rdb, lobbyID)
 		}
 	}
 	if removed > 0 {

@@ -538,6 +538,15 @@ class AuthRepository {
     }
   }
 
+  static bool _isAccountFrozen(http.Response response) {
+    if (response.statusCode != 403) return false;
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['error'] == 'account frozen') return true;
+    } catch (_) {}
+    return false;
+  }
+
   static String _messageFromResponse(http.Response response) {
     var msg = response.body.trim();
     try {
@@ -808,6 +817,11 @@ class AuthRepository {
     }
 
     var response = await _withTransientRetry(() => request(token!));
+    if (_isAccountFrozen(response)) {
+      await logout();
+      onSessionInvalidated?.call();
+      throw AuthException(403, LocaleService.l10n.apiErrAccountFrozen);
+    }
     if (response.statusCode != 401) return response;
 
     token = await _refreshAccessToken();

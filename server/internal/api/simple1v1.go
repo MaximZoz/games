@@ -16,8 +16,8 @@ import (
 
 // simple1v1 — общий каркас лобби/партии для 1×1 настолок (шашки, 4 в ряд).
 type simple1v1 struct {
-	gameType string
-	botID    string
+	gameType      string
+	botID         string
 	normalizeMode func(string) string
 	newState      func(mode string) (encoded string, turn int, err error)
 	isOver        func(encoded string) bool
@@ -112,6 +112,7 @@ func (h *GamesHandler) createSimple1v1Lobby(s simple1v1, w http.ResponseWriter, 
 
 	if body.VsBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startSimple1v1Game(ctx, s, lobbyID, []string{userID.String(), s.botID}, []uuid.UUID{userID}, gameMode, body.TurnTimeSec, stakeBronze)
 		if err != nil {
 			h.writeSimple1v1StartError(w, r, err)
@@ -137,6 +138,7 @@ func (h *GamesHandler) createSimple1v1Lobby(s simple1v1, w http.ResponseWriter, 
 	}
 
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	status := lobbyStatusWaitingInvite
@@ -179,7 +181,7 @@ func (h *GamesHandler) findOpenSimple1v1Lobby(
 	gameMode string,
 	turnTimeSec, stakeBronze int,
 ) string {
-	keys, _ := scanRedisKeys(ctx, h.Rdb, "lobby:*")
+	keys, _ := h.lobbyHashKeys(ctx)
 	for _, key := range keys {
 		if strings.HasSuffix(key, ":invited") {
 			continue
@@ -410,6 +412,7 @@ func (h *GamesHandler) rematchSimple1v1(s simple1v1, w http.ResponseWriter, r *h
 	}
 	if len(invitees) == 0 && hasBot {
 		lobbyID := uuid.New().String()
+		h.rememberLobby(lobbyID)
 		gameID, err := h.startSimple1v1Game(ctx, s, lobbyID, []string{userID.String(), s.botID}, []uuid.UUID{userID}, gameMode, turnTimeSec, stakeBronze)
 		if err != nil {
 			h.writeSimple1v1StartError(w, r, err)
@@ -447,6 +450,7 @@ func (h *GamesHandler) createSimple1v1InviteLobby(
 	turnTimeSec, stakeBronze int,
 ) (string, error) {
 	lobbyID := uuid.New().String()
+	h.rememberLobby(lobbyID)
 	key := "lobby:" + lobbyID
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, key,
@@ -591,6 +595,7 @@ func (h *GamesHandler) onSimple1v1Finished(ctx context.Context, s simple1v1, gam
 	lobbyID := strings.TrimSpace(m["lobby_id"])
 	if lobbyID != "" {
 		h.Rdb.Del(ctx, "lobby:"+lobbyID)
+		h.forgetLobby(lobbyID)
 		h.Rdb.Del(ctx, "lobby:"+lobbyID+":invited")
 	}
 	stakeBronze, _ := strconv.Atoi(m["stake_bronze"])

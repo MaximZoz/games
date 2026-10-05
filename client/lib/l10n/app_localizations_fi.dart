@@ -2766,4 +2766,135 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 pelaajaa: 4×4-lauta, neljä pelaajaa (X, O, △, □). Voita omien merkkien rivillä.';
+
+  @override
+  String get adminUsersTab => 'Käyttäjät';
+
+  @override
+  String get adminSupportTab => 'Tuki';
+
+  @override
+  String get adminSearchHint => 'Hae sähköpostilla tai nimellä';
+
+  @override
+  String get adminRoleAdmins => 'Ylläpitäjät';
+
+  @override
+  String get adminRoleUsers => 'Käyttäjät';
+
+  @override
+  String get adminRoleAll => 'Kaikki roolit';
+
+  @override
+  String get adminStatusFrozen => 'Jäädytetyt';
+
+  @override
+  String get adminStatusActive => 'Aktiiviset';
+
+  @override
+  String get adminStatusAny => 'Mikä tahansa tila';
+
+  @override
+  String get adminOrderDesc => 'Laskeva';
+
+  @override
+  String get adminOrderAsc => 'Nouseva';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Lataus epäonnistui: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Ei käyttäjiä';
+
+  @override
+  String get adminSortLastSeen => 'Viimeisen käynnin mukaan';
+
+  @override
+  String get adminSortEmail => 'Sähköpostin mukaan';
+
+  @override
+  String get adminSortCreated => 'Rekisteröintipäivän mukaan';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount pr.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Poista ylläpito';
+
+  @override
+  String get adminGrantAdmin => 'Tee ylläpitäjäksi';
+
+  @override
+  String get adminAdminRevoked => 'Ylläpito-oikeudet poistettu';
+
+  @override
+  String get adminAdminGranted => 'Ylläpito-oikeudet annettu';
+
+  @override
+  String get adminGrantCoins => 'Anna kolikoita';
+
+  @override
+  String get adminWriteSupport => 'Kirjoita tukena';
+
+  @override
+  String get adminUnfreeze => 'Poista jäädytys';
+
+  @override
+  String get adminFreeze => 'Jäädytä';
+
+  @override
+  String get adminUnfrozen => 'Jäädytys poistettu';
+
+  @override
+  String get adminFrozenDone => 'Jäädytetty';
+
+  @override
+  String get adminResetPassword => 'Nollaa salasana';
+
+  @override
+  String get adminCoinsAmountHint => 'Määrä (negatiivinen = vähennys)';
+
+  @override
+  String get adminReasonOptional => 'Syy (valinnainen)';
+
+  @override
+  String get adminGrantSent => 'Kortti lähetettiin tukichattiin';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Vähennettiin $amount pronssia';
+  }
+
+  @override
+  String get adminGrantVerb => 'Anna';
+
+  @override
+  String get adminNewPasswordHint => 'Uusi salasana (väh. 6)';
+
+  @override
+  String get adminPasswordReset => 'Salasana nollattu';
+
+  @override
+  String get adminResetVerb => 'Nollaa';
+
+  @override
+  String adminShortError(String error) {
+    return 'Virhe: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Ei tukipyyntöjä';
+
+  @override
+  String get adminUserFallback => 'Käyttäjä';
+
+  @override
+  String get apiErrTooManyRequests => 'Liian monta pyyntöä. Yritä myöhemmin.';
+
+  @override
+  String get apiErrMoveConflict => 'Siirto ristiriidassa. Yritä uudelleen.';
 }

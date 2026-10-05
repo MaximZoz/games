@@ -33,21 +33,21 @@ type AdminInitRequest struct {
 }
 
 type AdminUserItem struct {
-	ID           string  `json:"id"`
-	Email        string  `json:"email"`
-	DisplayName  *string `json:"display_name,omitempty"`
-	IsAdmin      bool    `json:"is_admin"`
-	IsSupport    bool    `json:"is_support"`
-	IsFrozen     bool    `json:"is_frozen"`
-	FrozenAt     *string `json:"frozen_at,omitempty"`
-	CreatedAt    string  `json:"created_at"`
-	LastSeenAt   *string `json:"last_seen_at,omitempty"`
-	BalanceBronze int    `json:"balance_bronze"`
-	Age          *int    `json:"age,omitempty"`
-	Gender       *string `json:"gender,omitempty"`
-	About        *string `json:"about,omitempty"`
-	AvatarKind   string  `json:"avatar_kind,omitempty"`
-	AvatarValue  *string `json:"avatar_value,omitempty"`
+	ID            string  `json:"id"`
+	Email         string  `json:"email"`
+	DisplayName   *string `json:"display_name,omitempty"`
+	IsAdmin       bool    `json:"is_admin"`
+	IsSupport     bool    `json:"is_support"`
+	IsFrozen      bool    `json:"is_frozen"`
+	FrozenAt      *string `json:"frozen_at,omitempty"`
+	CreatedAt     string  `json:"created_at"`
+	LastSeenAt    *string `json:"last_seen_at,omitempty"`
+	BalanceBronze int     `json:"balance_bronze"`
+	Age           *int    `json:"age,omitempty"`
+	Gender        *string `json:"gender,omitempty"`
+	About         *string `json:"about,omitempty"`
+	AvatarKind    string  `json:"avatar_kind,omitempty"`
+	AvatarValue   *string `json:"avatar_value,omitempty"`
 }
 
 func adminUserItemFromUser(u *store.User) AdminUserItem {
@@ -430,8 +430,8 @@ func (h *AdminHandler) ClearLogs(w http.ResponseWriter, r *http.Request) {
 
 // FreezeUserRequest — тело запроса заморозки/разморозки.
 type FreezeUserRequest struct {
-	UserID  string `json:"user_id"`
-	Frozen  bool   `json:"frozen"`
+	UserID string `json:"user_id"`
+	Frozen bool   `json:"frozen"`
 }
 
 // FreezeUser замораживает/размораживает пользователя.
@@ -463,12 +463,23 @@ func (h *AdminHandler) FreezeUser(w http.ResponseWriter, r *http.Request) {
 		WriteErr(w, r, http.StatusInternalServerError, "server error")
 		return
 	}
+	if req.Frozen {
+		// Иначе живой refresh (до года) продолжает выдавать access.
+		_ = store.DeleteSessionsByUserID(r.Context(), h.Pool, id)
+	}
 	// WS-уведомление пользователю об изменении статуса.
+	// PublishToUsers уходит на все инстансы, если подключён Redis-fanout.
 	if h.Hub != nil {
 		h.Hub.PublishToUsers([]uuid.UUID{id}, map[string]any{
 			"type":   "account_frozen",
 			"frozen": req.Frozen,
 		})
+		if req.Frozen {
+			h.Hub.DisconnectUser(id, map[string]any{
+				"type":   "account_frozen",
+				"frozen": true,
+			})
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

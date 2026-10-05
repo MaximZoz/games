@@ -2766,4 +2766,135 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 Spieler: 4×4-Feld, vier Spieler (X, O, △, □). Wer eine Linie aus eigenen Zeichen bildet, gewinnt.';
+
+  @override
+  String get adminUsersTab => 'Nutzer';
+
+  @override
+  String get adminSupportTab => 'Support';
+
+  @override
+  String get adminSearchHint => 'Suche nach E-Mail oder Namen';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Nutzer';
+
+  @override
+  String get adminRoleAll => 'Alle Rollen';
+
+  @override
+  String get adminStatusFrozen => 'Eingefroren';
+
+  @override
+  String get adminStatusActive => 'Aktiv';
+
+  @override
+  String get adminStatusAny => 'Jeder Status';
+
+  @override
+  String get adminOrderDesc => 'Absteigend';
+
+  @override
+  String get adminOrderAsc => 'Aufsteigend';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Laden fehlgeschlagen: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Keine Nutzer gefunden';
+
+  @override
+  String get adminSortLastSeen => 'Nach letztem Besuch';
+
+  @override
+  String get adminSortEmail => 'Nach E-Mail';
+
+  @override
+  String get adminSortCreated => 'Nach Registrierung';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount Br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Admin entfernen';
+
+  @override
+  String get adminGrantAdmin => 'Zum Admin machen';
+
+  @override
+  String get adminAdminRevoked => 'Adminrechte entfernt';
+
+  @override
+  String get adminAdminGranted => 'Adminrechte vergeben';
+
+  @override
+  String get adminGrantCoins => 'Münzen gutschreiben';
+
+  @override
+  String get adminWriteSupport => 'Als Support schreiben';
+
+  @override
+  String get adminUnfreeze => 'Entsperren';
+
+  @override
+  String get adminFreeze => 'Einfrieren';
+
+  @override
+  String get adminUnfrozen => 'Entsperrt';
+
+  @override
+  String get adminFrozenDone => 'Eingefroren';
+
+  @override
+  String get adminResetPassword => 'Passwort zurücksetzen';
+
+  @override
+  String get adminCoinsAmountHint => 'Betrag (negativ = abziehen)';
+
+  @override
+  String get adminReasonOptional => 'Grund (optional)';
+
+  @override
+  String get adminGrantSent => 'Karte an den Support-Chat gesendet';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '$amount Bronze abgezogen';
+  }
+
+  @override
+  String get adminGrantVerb => 'Gutschreiben';
+
+  @override
+  String get adminNewPasswordHint => 'Neues Passwort (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Passwort zurückgesetzt';
+
+  @override
+  String get adminResetVerb => 'Zurücksetzen';
+
+  @override
+  String adminShortError(String error) {
+    return 'Fehler: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Keine Support-Anfragen';
+
+  @override
+  String get adminUserFallback => 'Nutzer';
+
+  @override
+  String get apiErrTooManyRequests => 'Zu viele Anfragen. Versuche es später.';
+
+  @override
+  String get apiErrMoveConflict => 'Zugkonflikt. Bitte wiederholen.';
 }

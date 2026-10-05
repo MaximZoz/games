@@ -2766,4 +2766,135 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '四人局：4×4 棋盘，四位玩家（X、O、△、□）。用自己的符号连成一线即胜。';
+
+  @override
+  String get adminUsersTab => '用户';
+
+  @override
+  String get adminSupportTab => '支持';
+
+  @override
+  String get adminSearchHint => '按邮箱或昵称搜索';
+
+  @override
+  String get adminRoleAdmins => '管理员';
+
+  @override
+  String get adminRoleUsers => '用户';
+
+  @override
+  String get adminRoleAll => '全部角色';
+
+  @override
+  String get adminStatusFrozen => '已冻结';
+
+  @override
+  String get adminStatusActive => '活跃';
+
+  @override
+  String get adminStatusAny => '任意状态';
+
+  @override
+  String get adminOrderDesc => '降序';
+
+  @override
+  String get adminOrderAsc => '升序';
+
+  @override
+  String adminLoadFailed(String error) {
+    return '加载失败：$error';
+  }
+
+  @override
+  String get adminUsersEmpty => '没有用户';
+
+  @override
+  String get adminSortLastSeen => '按最近访问';
+
+  @override
+  String get adminSortEmail => '按邮箱';
+
+  @override
+  String get adminSortCreated => '按注册日期';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount 铜币';
+  }
+
+  @override
+  String get adminRevokeAdmin => '取消管理员';
+
+  @override
+  String get adminGrantAdmin => '设为管理员';
+
+  @override
+  String get adminAdminRevoked => '已取消管理员权限';
+
+  @override
+  String get adminAdminGranted => '已授予管理员权限';
+
+  @override
+  String get adminGrantCoins => '发放金币';
+
+  @override
+  String get adminWriteSupport => '以支持身份写信';
+
+  @override
+  String get adminUnfreeze => '解冻';
+
+  @override
+  String get adminFreeze => '冻结';
+
+  @override
+  String get adminUnfrozen => '已解冻';
+
+  @override
+  String get adminFrozenDone => '已冻结';
+
+  @override
+  String get adminResetPassword => '重置密码';
+
+  @override
+  String get adminCoinsAmountHint => '数量（负数为扣除）';
+
+  @override
+  String get adminReasonOptional => '原因（可选）';
+
+  @override
+  String get adminGrantSent => '卡片已发到支持聊天';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return '已扣除 $amount 铜币';
+  }
+
+  @override
+  String get adminGrantVerb => '发放';
+
+  @override
+  String get adminNewPasswordHint => '新密码（至少 6 位）';
+
+  @override
+  String get adminPasswordReset => '密码已重置';
+
+  @override
+  String get adminResetVerb => '重置';
+
+  @override
+  String adminShortError(String error) {
+    return '错误：$error';
+  }
+
+  @override
+  String get adminSupportEmpty => '没有支持请求';
+
+  @override
+  String get adminUserFallback => '用户';
+
+  @override
+  String get apiErrTooManyRequests => '请求过多，请稍后再试。';
+
+  @override
+  String get apiErrMoveConflict => '着法冲突，请重试。';
 }

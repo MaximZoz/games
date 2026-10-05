@@ -24,26 +24,44 @@ type GamesBroadcaster struct {
 	Hub *RealtimeHub
 }
 
+// PublishRemote кладёт событие в Redis. Подписчик на каждой реплике пишет его в локальные сокеты.
+func (b *GamesBroadcaster) PublishRemote(userIDs []uuid.UUID, all bool, payload any) error {
+	if b == nil || b.Rdb == nil {
+		return redis.ErrClosed
+	}
+	payloadMap, ok := payload.(map[string]any)
+	if !ok || payloadMap == nil {
+		return redis.ErrClosed
+	}
+	msg := gamesBroadcastMsg{All: all, Payload: payloadMap}
+	if !all {
+		if len(userIDs) == 0 {
+			return nil
+		}
+		ids := make([]string, len(userIDs))
+		for i, id := range userIDs {
+			ids[i] = id.String()
+		}
+		msg.UserIDs = ids
+	}
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err()
+}
+
 // Publish sends the payload to all userIDs via Redis Pub/Sub.
 // Each server instance will receive and deliver to its connected users.
 func (b *GamesBroadcaster) Publish(userIDs []uuid.UUID, payload any) {
 	if b == nil || b.Rdb == nil || len(userIDs) == 0 {
 		return
 	}
-	ids := make([]string, len(userIDs))
-	for i, id := range userIDs {
-		ids[i] = id.String()
-	}
-	payloadMap, ok := payload.(map[string]any)
-	if !ok {
-		return
-	}
-	raw, err := json.Marshal(gamesBroadcastMsg{UserIDs: ids, Payload: payloadMap})
-	if err != nil {
-		return
-	}
-	if err := b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err(); err != nil {
+	if err := b.PublishRemote(userIDs, false, payload); err != nil {
 		log.Printf("games broadcast publish: %v", err)
+		if b.Hub != nil {
+			b.Hub.DeliverLocal(userIDs, payload)
+		}
 	}
 }
 
@@ -53,25 +71,17 @@ func (b *GamesBroadcaster) PublishAll(payload any) {
 	if b == nil {
 		return
 	}
-	payloadMap, ok := payload.(map[string]any)
-	if !ok {
-		return
-	}
-	if b.Rdb != nil {
-		raw, err := json.Marshal(gamesBroadcastMsg{All: true, Payload: payloadMap})
-		if err != nil {
-			return
-		}
-		if err := b.Rdb.Publish(context.Background(), gamesBroadcastChannel, raw).Err(); err != nil {
-			log.Printf("games broadcast publish all: %v", err)
-			if b.Hub != nil {
-				b.Hub.PublishToAll(payloadMap)
-			}
+	if b.Rdb == nil {
+		if b.Hub != nil {
+			b.Hub.DeliverLocalAll(payload)
 		}
 		return
 	}
-	if b.Hub != nil {
-		b.Hub.PublishToAll(payloadMap)
+	if err := b.PublishRemote(nil, true, payload); err != nil {
+		log.Printf("games broadcast publish all: %v", err)
+		if b.Hub != nil {
+			b.Hub.DeliverLocalAll(payload)
+		}
 	}
 }
 
@@ -101,7 +111,7 @@ func (b *GamesBroadcaster) Start(ctx context.Context) {
 				continue
 			}
 			if m.All {
-				b.Hub.PublishToAll(m.Payload)
+				b.Hub.DeliverLocalAll(m.Payload)
 				continue
 			}
 			userIDs := make([]uuid.UUID, 0, len(m.UserIDs))
@@ -113,7 +123,7 @@ func (b *GamesBroadcaster) Start(ctx context.Context) {
 				userIDs = append(userIDs, id)
 			}
 			if len(userIDs) > 0 {
-				b.Hub.PublishToUsers(userIDs, m.Payload)
+				b.Hub.DeliverLocal(userIDs, m.Payload)
 			}
 		}
 	}

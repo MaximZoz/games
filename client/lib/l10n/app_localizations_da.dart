@@ -2766,4 +2766,135 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get rulesTttMulti4 => '4 spillere: 4×4-bræt, fire spillere (X, O, △, □). Lav en linje med dine tegn for at vinde.';
+
+  @override
+  String get adminUsersTab => 'Brugere';
+
+  @override
+  String get adminSupportTab => 'Support';
+
+  @override
+  String get adminSearchHint => 'Søg på e-mail eller navn';
+
+  @override
+  String get adminRoleAdmins => 'Admins';
+
+  @override
+  String get adminRoleUsers => 'Brugere';
+
+  @override
+  String get adminRoleAll => 'Alle roller';
+
+  @override
+  String get adminStatusFrozen => 'Frosne';
+
+  @override
+  String get adminStatusActive => 'Aktive';
+
+  @override
+  String get adminStatusAny => 'Enhver status';
+
+  @override
+  String get adminOrderDesc => 'Faldende';
+
+  @override
+  String get adminOrderAsc => 'Stigende';
+
+  @override
+  String adminLoadFailed(String error) {
+    return 'Kunne ikke indlæse: $error';
+  }
+
+  @override
+  String get adminUsersEmpty => 'Ingen brugere';
+
+  @override
+  String get adminSortLastSeen => 'Efter seneste besøg';
+
+  @override
+  String get adminSortEmail => 'Efter e-mail';
+
+  @override
+  String get adminSortCreated => 'Efter tilmelding';
+
+  @override
+  String adminBronzeBalance(int amount) {
+    return '$amount br.';
+  }
+
+  @override
+  String get adminRevokeAdmin => 'Fjern admin';
+
+  @override
+  String get adminGrantAdmin => 'Gør til admin';
+
+  @override
+  String get adminAdminRevoked => 'Adminrettigheder fjernet';
+
+  @override
+  String get adminAdminGranted => 'Adminrettigheder givet';
+
+  @override
+  String get adminGrantCoins => 'Giv mønter';
+
+  @override
+  String get adminWriteSupport => 'Skriv som support';
+
+  @override
+  String get adminUnfreeze => 'Optø';
+
+  @override
+  String get adminFreeze => 'Frys';
+
+  @override
+  String get adminUnfrozen => 'Optøet';
+
+  @override
+  String get adminFrozenDone => 'Frosset';
+
+  @override
+  String get adminResetPassword => 'Nulstil adgangskode';
+
+  @override
+  String get adminCoinsAmountHint => 'Antal (negativt = træk fra)';
+
+  @override
+  String get adminReasonOptional => 'Årsag (valgfri)';
+
+  @override
+  String get adminGrantSent => 'Kortet blev sendt til supportchatten';
+
+  @override
+  String adminCoinsDebited(int amount) {
+    return 'Trak $amount bronze';
+  }
+
+  @override
+  String get adminGrantVerb => 'Giv';
+
+  @override
+  String get adminNewPasswordHint => 'Ny adgangskode (min. 6)';
+
+  @override
+  String get adminPasswordReset => 'Adgangskoden er nulstillet';
+
+  @override
+  String get adminResetVerb => 'Nulstil';
+
+  @override
+  String adminShortError(String error) {
+    return 'Fejl: $error';
+  }
+
+  @override
+  String get adminSupportEmpty => 'Ingen supporthenvendelser';
+
+  @override
+  String get adminUserFallback => 'Bruger';
+
+  @override
+  String get apiErrTooManyRequests => 'For mange forespørgsler. Prøv igen senere.';
+
+  @override
+  String get apiErrMoveConflict => 'Trækkonflikt. Prøv igen.';
 }
