@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 
@@ -98,6 +100,58 @@ double gamesHubTileWidth({
 /// Компактные отступы карточки, если она узкая.
 /// Кнопки «Создать» / «Найти» всегда в один ряд.
 bool gamesHubStackActions(double cardWidth) => cardWidth < 360;
+
+/// Сетка карточек: в ряду одна высота (как у самой высокой, Дурак),
+/// кнопки прижаты к нижнему краю каждой карточки.
+Widget gamesHubEqualHeightGrid({
+  required int cols,
+  required double gap,
+  required double tileWidth,
+  required List<Widget> tiles,
+}) {
+  Widget tileBox(Widget tile) {
+    return SizedBox(
+      width: tileWidth,
+      child: GameCardLayout(
+        cardWidth: tileWidth,
+        child: tile,
+      ),
+    );
+  }
+
+  if (tiles.isEmpty) return const SizedBox.shrink();
+  if (cols <= 1) {
+    return Column(
+      children: [
+        for (var i = 0; i < tiles.length; i++) ...[
+          if (i > 0) SizedBox(height: gap),
+          tileBox(tiles[i]),
+        ],
+      ],
+    );
+  }
+  final rows = <List<Widget>>[];
+  for (var i = 0; i < tiles.length; i += cols) {
+    rows.add(tiles.sublist(i, math.min(i + cols, tiles.length)));
+  }
+  return Column(
+    children: [
+      for (var r = 0; r < rows.length; r++) ...[
+        if (r > 0) SizedBox(height: gap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < rows[r].length; i++) ...[
+              if (i > 0) SizedBox(width: gap),
+              tileBox(rows[r][i]),
+            ],
+          ],
+        ),
+      ],
+    ],
+  );
+}
 
 /// Вкладка хаба по позиции анимации (0 = игры, 1 = лобби).
 ///

@@ -1601,13 +1601,11 @@ class _GamesPageContent extends ConsumerWidget {
       ];
       return Align(
         alignment: Alignment.topCenter,
-        child: Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final tile in tiles) SizedBox(width: tileWidth, child: tile),
-          ],
+        child: gamesHubEqualHeightGrid(
+          cols: cols,
+          gap: gap,
+          tileWidth: tileWidth,
+          tiles: tiles,
         ),
       );
     }
@@ -3404,139 +3402,44 @@ class _TictactoeGameCard extends StatelessWidget {
     final theme = Theme.of(context);
     // Без appear-анимации: при возврате из лобби карточка иначе «мигает»
     // (opacity 0→1), хотя выход уже мгновенный.
-    return GradientCard(
-      animate: false,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMedium ? 18 : (isDesktop ? 24 : 20),
-        vertical: isMedium ? 16 : (isDesktop ? 22 : 20),
+    return GameCardShell(
+      isDesktop: isDesktop,
+      isMedium: isMedium,
+      header: GameCardHeader(
+        title: context.l10n.gamesTicTacToe,
+        icon: Icons.grid_3x3_rounded,
+        stakeBronze: !isOffline && stakeBronze > 0 ? stakeBronze : null,
+        stakeLabel: formatStakeAmount(stakeBronze),
+        stakeCoinType: stakeCoinType(stakeBronze),
+        onStakeTap: isCreating || isFinding ? null : _cycleStake,
+        onInfoTap: () => _showRulesInfo(context),
+        busy: isCreating || isFinding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: isDesktop ? 52 : 44,
-                height: isDesktop ? 52 : 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.accentStart, AppColors.accentEnd],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.grid_3x3_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-              SizedBox(width: isDesktop ? 20 : 12),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: GameCardTitle(
-                        title: context.l10n.gamesTicTacToe,
-                        isDesktop: isDesktop,
-                        isMedium: isMedium,
-                      ),
-                    ),
-                    if (!isOffline && stakeBronze > 0) ...[
-                      SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: isCreating || isFinding ? null : _cycleStake,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Tooltip(
-                            message: context.l10n.gamesTapChangeStake,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 2),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    formatStakeAmount(stakeBronze),
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  CoinIcon(
-                                    coinType: stakeCoinType(stakeBronze),
-                                    size: 20,
-                                    showBorder: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    IconButton(
-                      onPressed: () => _showRulesInfo(context),
-                      icon: const Icon(
-                        Icons.info_outline_rounded,
-                        size: 22,
-                        color: AppColors.textSecondary,
-                      ),
-                      tooltip: context.l10n.gamesRulesTitle,
-                      style: IconButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        minimumSize: const Size(32, 32),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: const EdgeInsets.all(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Wrap(
-              spacing: width < 400 ? 6 : 10,
-              runSpacing: 6,
-              alignment: WrapAlignment.start,
-              children: _buildChipList(
-                context: context,
-                theme: theme.textTheme,
-                isCreating: isCreating,
-                isFinding: isFinding,
-                isDesktop: isDesktop,
-                isMedium: isMedium,
-                compact: width < 400,
-              ),
-            ),
-          ),
-          SizedBox(height: isMedium ? 20 : (isDesktop ? 28 : 20)),
-          // Общий виджет — тот же, что у карточки Дурака.
-          GameCardActionsRow(
-            createLabel: context.l10n.gamesCreate,
-            creatingLabel: context.l10n.commonCreating,
-            onCreate: onCreateGame,
-            findLabel: context.l10n.lobbySearchPlayers,
-            findingLabel: context.l10n.commonSearching,
-            onFind: onFindGame,
-            offline: isOffline,
-            offlinePlayLabel: context.l10n.gamesPlay,
-            onOfflinePlay: onPlayOffline,
-            isCreating: isCreating,
-            isFinding: isFinding,
-            isDesktop: isDesktop,
-            isMedium: isMedium,
-          ),
-        ],
+      chips: _buildChipList(
+        context: context,
+        theme: theme.textTheme,
+        isCreating: isCreating,
+        isFinding: isFinding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
+        compact: width < 400,
+      ),
+      actions: GameCardActionsRow(
+        createLabel: context.l10n.gamesCreate,
+        creatingLabel: context.l10n.commonCreating,
+        onCreate: onCreateGame,
+        findLabel: context.l10n.lobbySearchPlayers,
+        findingLabel: context.l10n.commonSearching,
+        onFind: onFindGame,
+        offline: isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: onPlayOffline,
+        isCreating: isCreating,
+        isFinding: isFinding,
+        isDesktop: isDesktop,
+        isMedium: isMedium,
       ),
     );
   }

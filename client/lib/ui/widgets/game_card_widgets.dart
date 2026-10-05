@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:multigames_client/games/games_repository.dart'
     show rulesLineWithStakeIcon;
@@ -120,10 +122,18 @@ class GameCardHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: GameCardTitle(
-                  title: title,
-                  isDesktop: isDesktop,
-                  isMedium: isMedium,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: gameCardTitleMinHeight(
+                      isDesktop: isDesktop,
+                      isMedium: isMedium,
+                    ),
+                  ),
+                  child: GameCardTitle(
+                    title: title,
+                    isDesktop: isDesktop,
+                    isMedium: isMedium,
+                  ),
                 ),
               ),
               if (stakeBronze != null && stakeBronze! > 0) ...[
@@ -439,6 +449,52 @@ Widget rulesTextLines(List<String> lines) {
   );
 }
 
+/// Две строки названия — как у «Крестики-нолики», чтобы шапка совпадала с Дураком.
+@visibleForTesting
+double gameCardTitleMinHeight({
+  required bool isDesktop,
+  required bool isMedium,
+}) {
+  final fontSize = isMedium ? 18.0 : (isDesktop ? 20.0 : 18.0);
+  return fontSize * 1.15 * 2;
+}
+
+/// Место под два ряда чипов, как у Дурака (4 чипа переносятся).
+@visibleForTesting
+double gameCardChipsMinHeight({
+  required bool compact,
+  required bool isDesktop,
+  bool isMedium = false,
+}) {
+  final padV = compact ? 4.0 : 6.0;
+  final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
+  final fontSz =
+      compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
+  final row = math.max(iconSz, fontSz * 1.35) + padV * 2;
+  return row * 2 + 8 + 6;
+}
+
+/// Ширина плитки и растяжение по высоте ряда — без LayoutBuilder
+/// (он не считается в IntrinsicHeight).
+class GameCardLayout extends InheritedWidget {
+  const GameCardLayout({
+    super.key,
+    required this.cardWidth,
+    required super.child,
+  });
+
+  final double cardWidth;
+
+  static GameCardLayout? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<GameCardLayout>();
+  }
+
+  @override
+  bool updateShouldNotify(GameCardLayout oldWidget) {
+    return cardWidth != oldWidget.cardWidth;
+  }
+}
+
 /// Общий «скелет» карточки игры: заголовок + чипы + кнопки, единый стиль.
 class GameCardShell extends StatelessWidget {
   const GameCardShell({
@@ -460,32 +516,47 @@ class GameCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = gamesHubStackActions(constraints.maxWidth);
-        return GradientCard(
+    final layout = GameCardLayout.maybeOf(context);
+    final cardWidth = layout?.cardWidth;
+    final compact = gamesHubStackActions(
+      cardWidth ?? MediaQuery.sizeOf(context).width,
+    );
+    final chipsGap = isDesktop ? 18.0 : 14.0;
+    final actionsGap = isDesktop ? 20.0 : 16.0;
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        header,
+        SizedBox(height: chipsGap),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: gameCardChipsMinHeight(
+                  compact: compact,
+                  isDesktop: isDesktop,
+                  isMedium: isMedium,
+                ),
+          ),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Wrap(
+              spacing: isDesktop ? 10 : 8,
+              runSpacing: 8,
+              children: chips,
+            ),
+          ),
+        ),
+        SizedBox(height: actionsGap),
+        actions,
+      ],
+    );
+    return GradientCard(
       animate: false,
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 14 : (isMedium ? 18 : (isDesktop ? 24 : 20)),
         vertical: compact ? 14 : (isMedium ? 16 : (isDesktop ? 22 : 20)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          header,
-          SizedBox(height: isDesktop ? 18 : 14),
-          Wrap(
-            spacing: isDesktop ? 10 : 8,
-            runSpacing: 8,
-            children: chips,
-          ),
-          SizedBox(height: isDesktop ? 20 : 16),
-          actions,
-        ],
-      ),
-        );
-      },
+      child: body,
     );
   }
 }
