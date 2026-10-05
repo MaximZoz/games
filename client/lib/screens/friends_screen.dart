@@ -7,10 +7,19 @@ import 'package:multigames_client/achievements/achievements_provider.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/presence_sort.dart';
+import 'package:multigames_client/friends/friends_gamepad.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -193,6 +202,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   final GlobalKey _searchLoaderKey = GlobalKey();
   bool _desktopPagingScheduled = false;
 
+  int _gamepadCardIndex = 0;
+  int? _gamepadActionIndex;
+  int _gamepadCardCount = 0;
+  int _gamepadColumns = 1;
+  final List<List<VoidCallback>> _gamepadCardActions = [];
+  final Map<int, GlobalKey> _gamepadCardKeys = {};
+
   @override
   void initState() {
     super.initState();
@@ -228,6 +244,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (_isFindFriendTab && _searchController.text.trim().isNotEmpty) {
       _scheduleSearch(immediate: true);
     }
+    _resetGamepadCursor();
     if (mounted) setState(() {});
   }
 
@@ -528,7 +545,203 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     _syncBottomNavCollapse();
   }
 
-  void _toggleSearch() {
+  void _resetGamepadCursor() {
+    _gamepadCardIndex = 0;
+    _gamepadActionIndex = null;
+  }
+
+  _FriendsTabKind? _gamepadCollectTab;
+
+  bool _isTabActive(_FriendsTabKind tab) {
+    return _currentTabs.isNotEmpty &&
+        _tabController.index >= 0 &&
+        _tabController.index < _currentTabs.length &&
+        _currentTabs[_tabController.index] == tab;
+  }
+
+  void _beginGamepadCards({
+    required int count,
+    required int columns,
+    required _FriendsTabKind tab,
+  }) {
+    if (!_isTabActive(tab)) return;
+    _gamepadCollectTab = tab;
+    _gamepadCardCount = count;
+    _gamepadColumns = columns < 1 ? 1 : columns;
+    _gamepadCardActions.clear();
+    if (count <= 0) {
+      _gamepadCardIndex = 0;
+      _gamepadActionIndex = null;
+      return;
+    }
+    if (_gamepadCardIndex >= count) {
+      _gamepadCardIndex = count - 1;
+    }
+  }
+
+  void _registerGamepadActions(List<VoidCallback> actions) {
+    if (_gamepadCollectTab == null || !_isTabActive(_gamepadCollectTab!)) {
+      return;
+    }
+    _gamepadCardActions.add(actions);
+  }
+
+  List<VoidCallback> _actionsForCurrentCard() {
+    if (_gamepadCardIndex < 0 ||
+        _gamepadCardIndex >= _gamepadCardActions.length) {
+      return const [];
+    }
+    return _gamepadCardActions[_gamepadCardIndex];
+  }
+
+  bool _cardHighlighted(int index) {
+    return gamepadConnected() &&
+        GamepadService.instance.isRecentlyActive &&
+        index == _gamepadCardIndex &&
+        _gamepadActionIndex == null;
+  }
+
+  bool _actionHighlighted(int cardIndex, int actionIndex) {
+    return gamepadConnected() &&
+        GamepadService.instance.isRecentlyActive &&
+        cardIndex == _gamepadCardIndex &&
+        _gamepadActionIndex == actionIndex;
+  }
+
+  GlobalKey _gamepadKeyFor(int index) {
+    return _gamepadCardKeys.putIfAbsent(index, GlobalKey.new);
+  }
+
+  void _ensureGamepadCardVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _gamepadCardKeys[_gamepadCardIndex]?.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.25,
+        duration: const Duration(milliseconds: 120),
+      );
+    });
+  }
+
+  void _focusSearchField() {
+    if (gamepadConnected()) {
+      _searchFocusNode.requestFocus();
+      GamepadKeyboardController.instance.show();
+      return;
+    }
+    openSoftKeyboard(_searchFocusNode);
+  }
+
+  bool _onGamepad(GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    final keyboard = GamepadKeyboardController.instance.visible;
+    if (action == GamepadAction.triggerL) {
+      _toggleSearch(fromGamepad: true);
+      return true;
+    }
+    if (keyboard) return false;
+    if (action.isScroll) {
+      if (_tabController.length <= 1) return true;
+      final next = friendsTabIndexAfterScroll(
+        index: _tabController.index,
+        length: _tabController.length,
+        action: action,
+      );
+      if (next != _tabController.index) {
+        _tabController.animateTo(next);
+      }
+      return true;
+    }
+    if (action == GamepadAction.up || action == GamepadAction.down) {
+      if (_gamepadCardCount <= 0) return true;
+      setState(() {
+        _gamepadActionIndex = null;
+        _gamepadCardIndex = friendsCardIndexAfterMove(
+          index: _gamepadCardIndex,
+          count: _gamepadCardCount,
+          columns: _gamepadColumns,
+          action: action,
+        );
+      });
+      _ensureGamepadCardVisible();
+      return true;
+    }
+    if (action == GamepadAction.left || action == GamepadAction.right) {
+      if (_gamepadCardCount <= 0) return true;
+      final actions = _actionsForCurrentCard();
+      setState(() {
+        _gamepadActionIndex = friendsActionIndexAfterMove(
+          current: _gamepadActionIndex,
+          actionCount: actions.length,
+          action: action,
+        );
+      });
+      return true;
+    }
+    if (action == GamepadAction.confirm) {
+      if (_gamepadCardCount <= 0) return false;
+      final actions = _actionsForCurrentCard();
+      if (actions.isEmpty) return true;
+      if (_gamepadActionIndex == null) {
+        setState(() => _gamepadActionIndex = 0);
+        return true;
+      }
+      final i = _gamepadActionIndex!;
+      if (i >= 0 && i < actions.length) {
+        actions[i]();
+      }
+      return true;
+    }
+    if (action == GamepadAction.cancel) {
+      if (_gamepadActionIndex != null) {
+        setState(() => _gamepadActionIndex = null);
+        return true;
+      }
+      if (_searchFocusNode.hasFocus ||
+          GamepadKeyboardController.instance.visible) {
+        _searchFocusNode.unfocus();
+        dismissGamepadKeyboard();
+        if (!isWide(context) && _isSearchExpanded) {
+          setState(() => _isSearchExpanded = false);
+          _syncBottomNavCollapse();
+        }
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  Widget _gamepadActionFrame({
+    required int cardIndex,
+    required int actionIndex,
+    required Widget child,
+  }) {
+    return wrapGamepadCursor(
+      highlighted: _actionHighlighted(cardIndex, actionIndex),
+      radius: 10,
+      child: child,
+    );
+  }
+
+  void _toggleSearch({bool fromGamepad = false}) {
+    final wide = mounted && isWide(context);
+    if (wide) {
+      if (_searchFocusNode.hasFocus ||
+          GamepadKeyboardController.instance.visible) {
+        _searchFocusNode.unfocus();
+        dismissGamepadKeyboard();
+        return;
+      }
+      _focusSearchField();
+      return;
+    }
+
     setState(() {
       _isSearchExpanded = !_isSearchExpanded;
       if (!_isSearchExpanded) {
@@ -539,15 +752,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     if (_isSearchExpanded) {
       // Поле уже смонтировано (свёрнутая панель) — фокус тем же жестом,
       // иначе браузер не считает открытие клавиатуры пользовательским.
-      openSoftKeyboard(_searchFocusNode);
+      _focusSearchField();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) openSoftKeyboard(_searchFocusNode);
+        if (mounted) _focusSearchField();
       });
       if (_searchController.text.trim().isNotEmpty) {
         _scheduleSearch(immediate: true, forceRun: true);
       }
     } else {
       _searchFocusNode.unfocus();
+      if (fromGamepad || gamepadConnected()) {
+        dismissGamepadKeyboard();
+      }
       _syncBottomNavCollapse();
     }
   }
@@ -815,10 +1031,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     Widget? trailing,
     bool alignActionsRight = false,
     PresenceEntry? presence,
+    int? gamepadIndex,
   }) {
     final compactDesktopCard = isWide(context);
     final statusText = presence == null ? null : formatPresenceStatus(presence);
-    return GradientCard(
+    final card = GradientCard(
       margin: EdgeInsets.zero,
       padding: EdgeInsets.all(compactDesktopCard ? 10 : 14),
       animate: false,
@@ -892,6 +1109,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         ],
       ),
     );
+    final highlighted =
+        gamepadIndex != null && _cardHighlighted(gamepadIndex);
+    final framed = wrapGamepadCursor(
+      highlighted: highlighted,
+      radius: 22,
+      child: card,
+    );
+    if (gamepadIndex == null) return framed;
+    return KeyedSubtree(key: _gamepadKeyFor(gamepadIndex), child: framed);
   }
 
   GlobalKey _loaderKeyForTab(_FriendsTabKind tab) {
@@ -1001,7 +1227,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildAdaptiveList<T>({
     required List<T> items,
-    required Widget Function(T item) itemBuilder,
+    required Widget Function(T item, int index) itemBuilder,
     required String emptyText,
     required _FriendsTabKind tab,
   }) {
@@ -1044,6 +1270,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           );
           final itemWidth = layout.itemWidth;
           final availableWidth = layout.contentWidth;
+          _beginGamepadCards(
+            count: visibleCount,
+            columns: layout.crossAxisCount,
+            tab: tab,
+          );
           final tabActive = _currentTabs.isNotEmpty &&
               _tabController.index >= 0 &&
               _tabController.index < _currentTabs.length &&
@@ -1091,7 +1322,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           for (var i = 0; i < visibleCount; i++)
                             SizedBox(
                               width: itemWidth,
-                              child: itemBuilder(items[i]),
+                              child: itemBuilder(items[i], i),
                             ),
                         ],
                       ),
@@ -1115,6 +1346,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           );
         }
 
+        _beginGamepadCards(count: visibleCount, columns: 1, tab: tab);
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           physics: const AlwaysScrollableScrollPhysics(
@@ -1139,7 +1371,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             }
             return Align(
               alignment: Alignment.topCenter,
-              child: itemBuilder(items[index]),
+              child: itemBuilder(items[index], index),
             );
           },
         );
@@ -1161,42 +1393,52 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         nothingFound: l10n.friendsSearchNoMatches,
       ),
       tab: _FriendsTabKind.friends,
-      itemBuilder: (item) {
+      itemBuilder: (item, index) {
         final key = 'remove_${item.user.id}';
         final chatKey = 'chat_${item.user.id}';
+        Future<void> openChat() =>
+            _openChatWithUser(item.user, actionKey: chatKey);
+        Future<void> removeFriend() async {
+          final ok = await _confirmRemoveFriend(item.user);
+          if (!ok || !mounted) return;
+          await _runAction(
+            key: key,
+            call: (repo) => repo.removeFriend(item.user.id),
+            success: l10n.friendsRemoved,
+          );
+        }
+
+        _registerGamepadActions([openChat, removeFriend]);
         return _buildUserCard(
           context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: l10n.friendsSince(_formatDateTime(item.createdAt)),
+          gamepadIndex: index,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCompactIconButton(
-                icon: Icons.chat_bubble_outline_rounded,
-                tooltip: l10n.gameWriteMessage,
-                loading: _busy(chatKey),
-                onPressed: _busy(chatKey)
-                    ? null
-                    : () => _openChatWithUser(item.user, actionKey: chatKey),
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 0,
+                child: _buildCompactIconButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: l10n.gameWriteMessage,
+                  loading: _busy(chatKey),
+                  onPressed: _busy(chatKey) ? null : openChat,
+                ),
               ),
               const SizedBox(width: 14),
-              _buildCompactIconButton(
-                icon: Icons.person_remove_alt_1_rounded,
-                tooltip: l10n.friendsRemove,
-                danger: true,
-                loading: _busy(key),
-                onPressed: _busy(key)
-                    ? null
-                    : () async {
-                        final ok = await _confirmRemoveFriend(item.user);
-                        if (!ok || !mounted) return;
-                        await _runAction(
-                          key: key,
-                          call: (repo) => repo.removeFriend(item.user.id),
-                          success: l10n.friendsRemoved,
-                        );
-                      },
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 1,
+                child: _buildCompactIconButton(
+                  icon: Icons.person_remove_alt_1_rounded,
+                  tooltip: l10n.friendsRemove,
+                  danger: true,
+                  loading: _busy(key),
+                  onPressed: _busy(key) ? null : removeFriend,
+                ),
               ),
             ],
           ),
@@ -1219,43 +1461,67 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         nothingFound: l10n.friendsIncomingSearchNoMatches,
       ),
       tab: _FriendsTabKind.incoming,
-      itemBuilder: (item) {
+      itemBuilder: (item, index) {
         final acceptKey = 'accept_${item.requestId}';
         final rejectKey = 'reject_${item.requestId}';
         final chatKey = 'chat_incoming_${item.user.id}';
+        Future<void> openChat() =>
+            _openChatWithUser(item.user, actionKey: chatKey);
+        Future<void> accept() => _runAction(
+              key: acceptKey,
+              call: (repo) => repo.acceptRequest(item.requestId),
+              success: l10n.friendsRequestAccepted,
+            );
+        Future<void> reject() => _runAction(
+              key: rejectKey,
+              call: (repo) => repo.rejectRequest(item.requestId),
+              success: l10n.friendsRequestDeclined,
+            );
+        _registerGamepadActions([openChat, accept, reject]);
         return _buildUserCard(
           context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: l10n.friendsIncomingAt(_formatDateTime(item.createdAt)),
+          gamepadIndex: index,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCompactIconButton(
-                icon: Icons.chat_bubble_outline_rounded,
-                tooltip: l10n.gameWriteMessage,
-                loading: _busy(chatKey),
-                onPressed: _busy(chatKey)
-                    ? null
-                    : () => _openChatWithUser(item.user, actionKey: chatKey),
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 0,
+                child: _buildCompactIconButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: l10n.gameWriteMessage,
+                  loading: _busy(chatKey),
+                  onPressed: _busy(chatKey) ? null : openChat,
+                ),
               ),
               const SizedBox(width: 14),
-              _buildActionIcon(
-                key: acceptKey,
-                icon: Icons.check_rounded,
-                tooltip: l10n.friendsAcceptRequest,
-                call: (repo) => repo.acceptRequest(item.requestId),
-                success: l10n.friendsRequestAccepted,
-                successStyle: true,
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 1,
+                child: _buildActionIcon(
+                  key: acceptKey,
+                  icon: Icons.check_rounded,
+                  tooltip: l10n.friendsAcceptRequest,
+                  call: (repo) => repo.acceptRequest(item.requestId),
+                  success: l10n.friendsRequestAccepted,
+                  successStyle: true,
+                ),
               ),
               const SizedBox(width: 4),
-              _buildActionIcon(
-                key: rejectKey,
-                icon: Icons.close_rounded,
-                tooltip: l10n.friendsDeclineRequest,
-                call: (repo) => repo.rejectRequest(item.requestId),
-                success: l10n.friendsRequestDeclined,
-                danger: true,
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 2,
+                child: _buildActionIcon(
+                  key: rejectKey,
+                  icon: Icons.close_rounded,
+                  tooltip: l10n.friendsDeclineRequest,
+                  call: (repo) => repo.rejectRequest(item.requestId),
+                  success: l10n.friendsRequestDeclined,
+                  danger: true,
+                ),
               ),
             ],
           ),
@@ -1278,33 +1544,48 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         nothingFound: l10n.friendsOutgoingSearchNoMatches,
       ),
       tab: _FriendsTabKind.outgoing,
-      itemBuilder: (item) {
+      itemBuilder: (item, index) {
         final cancelKey = 'cancel_${item.requestId}';
         final chatKey = 'chat_outgoing_${item.user.id}';
+        Future<void> openChat() =>
+            _openChatWithUser(item.user, actionKey: chatKey);
+        Future<void> cancel() => _runAction(
+              key: cancelKey,
+              call: (repo) => repo.cancelRequest(item.requestId),
+              success: l10n.friendsRequestCancelled,
+            );
+        _registerGamepadActions([openChat, cancel]);
         return _buildUserCard(
           context: context,
           user: item.user,
           presence: presence[item.user.id],
           subtitle: l10n.friendsOutgoingAt(_formatDateTime(item.createdAt)),
+          gamepadIndex: index,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCompactIconButton(
-                icon: Icons.chat_bubble_outline_rounded,
-                tooltip: l10n.gameWriteMessage,
-                loading: _busy(chatKey),
-                onPressed: _busy(chatKey)
-                    ? null
-                    : () => _openChatWithUser(item.user, actionKey: chatKey),
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 0,
+                child: _buildCompactIconButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: l10n.gameWriteMessage,
+                  loading: _busy(chatKey),
+                  onPressed: _busy(chatKey) ? null : openChat,
+                ),
               ),
               const SizedBox(width: 14),
-              _buildActionIcon(
-                key: cancelKey,
-                icon: Icons.close_rounded,
-                tooltip: l10n.friendsCancelRequest,
-                call: (repo) => repo.cancelRequest(item.requestId),
-                success: l10n.friendsRequestCancelled,
-                danger: true,
+              _gamepadActionFrame(
+                cardIndex: index,
+                actionIndex: 1,
+                child: _buildActionIcon(
+                  key: cancelKey,
+                  icon: Icons.close_rounded,
+                  tooltip: l10n.friendsCancelRequest,
+                  call: (repo) => repo.cancelRequest(item.requestId),
+                  success: l10n.friendsRequestCancelled,
+                  danger: true,
+                ),
               ),
             ],
           ),
@@ -1381,8 +1662,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildSearchResultCard(BuildContext context, FriendSearchItem item,
-      Map<String, PresenceEntry> presence) {
+  Widget _buildSearchResultCard(
+    BuildContext context,
+    FriendSearchItem item,
+    Map<String, PresenceEntry> presence, {
+    required int index,
+  }) {
     final l10n = context.l10n;
     final relation = item.relationStatus;
     final sendKey = 'send_${item.user.id}';
@@ -1393,108 +1678,109 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final chatKey = 'chat_search_${item.user.id}';
 
     final controls = <Widget>[];
+    final gamepadActions = <VoidCallback>[];
     if (relation == 'none') {
       final busy = _busy(sendKey);
+      Future<void> send() => _runSearchAction(
+            key: sendKey,
+            call: (repo) => repo.sendRequest(item.user.id),
+            success: l10n.friendsRequestSent,
+            userID: item.user.id,
+            nextRelationStatus: 'outgoing',
+            nextRequestID: item.requestId,
+          );
+      gamepadActions.add(send);
       controls.add(
         _buildCompactIconButton(
           icon: Icons.person_add_alt_1_rounded,
           tooltip: l10n.friendsAdd,
           loading: busy,
-          onPressed: busy
-              ? null
-              : () => _runSearchAction(
-                    key: sendKey,
-                    call: (repo) => repo.sendRequest(item.user.id),
-                    success: l10n.friendsRequestSent,
-                    userID: item.user.id,
-                    nextRelationStatus: 'outgoing',
-                    nextRequestID: item.requestId,
-                  ),
+          onPressed: busy ? null : send,
         ),
       );
     } else if (relation == 'outgoing' && item.requestId != null) {
       final busy = _busy(cancelKey);
+      Future<void> cancel() => _runSearchAction(
+            key: cancelKey,
+            call: (repo) => repo.cancelRequest(item.requestId!),
+            success: l10n.friendsRequestCancelled,
+            userID: item.user.id,
+            nextRelationStatus: 'none',
+          );
+      gamepadActions.add(cancel);
       controls.add(
         _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: l10n.friendsCancelRequest,
           danger: true,
           loading: busy,
-          onPressed: busy
-              ? null
-              : () => _runSearchAction(
-                    key: cancelKey,
-                    call: (repo) => repo.cancelRequest(item.requestId!),
-                    success: l10n.friendsRequestCancelled,
-                    userID: item.user.id,
-                    nextRelationStatus: 'none',
-                  ),
+          onPressed: busy ? null : cancel,
         ),
       );
     } else if (relation == 'incoming' && item.requestId != null) {
       final acceptBusy = _busy(acceptKey);
       final rejectBusy = _busy(rejectKey);
+      Future<void> accept() => _runSearchAction(
+            key: acceptKey,
+            call: (repo) => repo.acceptRequest(item.requestId!),
+            success: l10n.friendsRequestAccepted,
+            userID: item.user.id,
+            nextRelationStatus: 'friend',
+          );
+      Future<void> reject() => _runSearchAction(
+            key: rejectKey,
+            call: (repo) => repo.rejectRequest(item.requestId!),
+            success: l10n.friendsRequestDeclined,
+            userID: item.user.id,
+            nextRelationStatus: 'none',
+          );
+      gamepadActions.addAll([accept, reject]);
       controls.addAll([
         _buildCompactIconButton(
           icon: Icons.check_rounded,
           tooltip: l10n.friendsAcceptRequest,
           success: true,
           loading: acceptBusy,
-          onPressed: acceptBusy
-              ? null
-              : () => _runSearchAction(
-                    key: acceptKey,
-                    call: (repo) => repo.acceptRequest(item.requestId!),
-                    success: l10n.friendsRequestAccepted,
-                    userID: item.user.id,
-                    nextRelationStatus: 'friend',
-                  ),
+          onPressed: acceptBusy ? null : accept,
         ),
         _buildCompactIconButton(
           icon: Icons.close_rounded,
           tooltip: l10n.friendsDeclineRequest,
           danger: true,
           loading: rejectBusy,
-          onPressed: rejectBusy
-              ? null
-              : () => _runSearchAction(
-                    key: rejectKey,
-                    call: (repo) => repo.rejectRequest(item.requestId!),
-                    success: l10n.friendsRequestDeclined,
-                    userID: item.user.id,
-                    nextRelationStatus: 'none',
-                  ),
+          onPressed: rejectBusy ? null : reject,
         ),
       ]);
     } else if (relation == 'friend') {
       final removeBusy = _busy(removeKey);
+      Future<void> openChat() =>
+          _openChatWithUser(item.user, actionKey: chatKey);
+      Future<void> removeFriend() async {
+        final ok = await _confirmRemoveFriend(item.user);
+        if (!ok || !mounted) return;
+        await _runSearchAction(
+          key: removeKey,
+          call: (repo) => repo.removeFriend(item.user.id),
+          success: l10n.friendsRemoved,
+          userID: item.user.id,
+          nextRelationStatus: 'none',
+        );
+      }
+
+      gamepadActions.addAll([openChat, removeFriend]);
       controls.addAll([
         _buildCompactIconButton(
           icon: Icons.chat_bubble_outline_rounded,
           tooltip: l10n.gameWriteMessage,
           loading: _busy(chatKey),
-          onPressed: _busy(chatKey)
-              ? null
-              : () => _openChatWithUser(item.user, actionKey: chatKey),
+          onPressed: _busy(chatKey) ? null : openChat,
         ),
         _buildCompactIconButton(
           icon: Icons.person_remove_alt_1_rounded,
           tooltip: l10n.friendsRemove,
           danger: true,
           loading: removeBusy,
-          onPressed: removeBusy
-              ? null
-              : () async {
-                  final ok = await _confirmRemoveFriend(item.user);
-                  if (!ok || !mounted) return;
-                  await _runSearchAction(
-                    key: removeKey,
-                    call: (repo) => repo.removeFriend(item.user.id),
-                    success: l10n.friendsRemoved,
-                    userID: item.user.id,
-                    nextRelationStatus: 'none',
-                  );
-                },
+          onPressed: removeBusy ? null : removeFriend,
         ),
       ]);
     }
@@ -1511,14 +1797,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       if (i > 0) {
         controlRow.add(const SizedBox(width: 4));
       }
-      controlRow.add(controls[i]);
+      controlRow.add(
+        _gamepadActionFrame(
+          cardIndex: index,
+          actionIndex: i,
+          child: controls[i],
+        ),
+      );
     }
+    _registerGamepadActions(gamepadActions);
 
     return _buildUserCard(
       context: context,
       user: item.user,
       presence: presence[item.user.id],
       subtitle: relationLabel,
+      gamepadIndex: index,
       trailing: Row(mainAxisSize: MainAxisSize.min, children: controlRow),
       actions: const [],
     );
@@ -1548,7 +1842,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   _isSearchLoadingMore = false;
                   _searchHasMore = false;
                 });
-                openSoftKeyboard(_searchFocusNode);
+                _focusSearchField();
               },
               icon: Icon(Icons.close_rounded, color: Colors.red.shade600),
             ),
@@ -1563,7 +1857,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, tight ? 4 : 10),
-      child: Container(
+      child: FriendsGamepadLtHint(
+        expandChild: true,
+        child: GamepadFieldBlock(
+          inputFocus: _searchFocusNode,
+          child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(AppRadius.input),
@@ -1609,6 +1907,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           ),
           onChanged: _onSearchTextChanged,
           onSubmitted: (_) => _scheduleSearch(immediate: true),
+        ),
+          ),
         ),
       ),
     );
@@ -1665,6 +1965,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           );
           final itemWidth = layout.itemWidth;
           final availableWidth = layout.contentWidth;
+          _beginGamepadCards(
+            count: _searchResults.length,
+            columns: layout.crossAxisCount,
+            tab: _FriendsTabKind.findFriend,
+          );
           if (_isFindFriendTab && _searchHasMore && !_isSearchLoadingMore) {
             _scheduleVisiblePaging(
               loaderKey: _searchLoaderKey,
@@ -1710,7 +2015,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                             SizedBox(
                               width: itemWidth,
                               child: _buildSearchResultCard(
-                                  context, _searchResults[i], presence),
+                                context,
+                                _searchResults[i],
+                                presence,
+                                index: i,
+                              ),
                             ),
                         ],
                       ),
@@ -1739,6 +2048,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       );
     }
 
+    _beginGamepadCards(
+      count: _searchResults.length,
+      columns: 1,
+      tab: _FriendsTabKind.findFriend,
+    );
     return ListView.separated(
       physics:
           const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
@@ -1768,8 +2082,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         }
         return Align(
           alignment: Alignment.topCenter,
-          child:
-              _buildSearchResultCard(context, _searchResults[index], presence),
+          child: _buildSearchResultCard(
+            context,
+            _searchResults[index],
+            presence,
+            index: index,
+          ),
         );
       },
     );
@@ -1781,7 +2099,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: _buildInlineSearchField(),
+          child: FriendsGamepadLtHint(
+            expandChild: true,
+            child: _buildInlineSearchField(),
+          ),
         ),
       ),
     );
@@ -1789,7 +2110,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
   Widget _buildInlineSearchField() {
     final focused = _searchFocusNode.hasFocus;
-    return Container(
+    return GamepadFieldBlock(
+      inputFocus: _searchFocusNode,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(AppRadius.input),
@@ -1829,7 +2152,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       _isSearchLoadingMore = false;
                       _searchHasMore = false;
                     });
-                    openSoftKeyboard(_searchFocusNode);
+                    _focusSearchField();
                   },
                   icon: Icon(Icons.close_rounded,
                       size: 20, color: Colors.red.shade600),
@@ -1844,6 +2167,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         onChanged: _onSearchTextChanged,
         onSubmitted: (_) => _scheduleSearch(immediate: true),
       ),
+    ),
     );
   }
 
@@ -2050,20 +2374,24 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           ref.read(mobileToolbarLeadingProvider.notifier).state =
-              _buildGradientHeaderIconButton(
-            icon: _isSearchExpanded
-                ? Icons.search_off_rounded
-                : Icons.search_rounded,
-            tooltip: _isSearchExpanded
-                ? context.l10n.friendsCollapseSearch
-                : context.l10n.friendsExpandSearch,
-            onPressed: _toggleSearch,
-            active: _isSearchExpanded,
+              FriendsGamepadLtHint(
+            child: _buildGradientHeaderIconButton(
+              icon: _isSearchExpanded
+                  ? Icons.search_off_rounded
+                  : Icons.search_rounded,
+              tooltip: _isSearchExpanded
+                  ? context.l10n.friendsCollapseSearch
+                  : context.l10n.friendsExpandSearch,
+              onPressed: _toggleSearch,
+              active: _isSearchExpanded,
+            ),
           );
         });
       });
     }
-    return Scaffold(
+    return GamepadScope(
+      onAction: _onGamepad,
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       // Клавиатуру уже вычел AppShell — иначе поиск и список без высоты.
       resizeToAvoidBottomInset: !KeyboardInsetScope.handledOf(context),
@@ -2105,7 +2433,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       if (!hideTabs)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: TabBar(
+                        child: Focus(
+                          canRequestFocus: false,
+                          skipTraversal: true,
+                          descendantsAreFocusable: false,
+                          descendantsAreTraversable: false,
+                          child: TabBar(
                           controller: _tabController,
                           isScrollable: false,
                           tabAlignment: TabAlignment.fill,
@@ -2135,6 +2468,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                                 ),
                               ),
                           ],
+                        ),
                         ),
                       ),
                       Expanded(
@@ -2188,6 +2522,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           ],
         ),
       ),
+    ),
     );
   }
 }
