@@ -8,6 +8,7 @@ import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -209,5 +210,78 @@ void main() {
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump(const Duration(milliseconds: 40));
     expect(closed, isTrue);
+  });
+
+  testWidgets('диалог статистики: крестик без рамки, стик скроллит, B закрывает',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    const stats = GameStats(
+      wins: 3,
+      draws: 1,
+      losses: 2,
+      totalPlayed: 6,
+      winRate: 0.5,
+      totalDurationSec: 120,
+      topWon: [],
+      topDrawn: [],
+      topLost: [],
+      games: [
+        GameTypeScore(gameType: 'durak', won: 2, lost: 1, drawn: 0),
+        GameTypeScore(gameType: 'uno', won: 1, lost: 1, drawn: 1),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          gameStatsProvider.overrideWith((ref, userId) async => stats),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: TextButton(
+                    onPressed: () => showHeadToHeadStatsDialog(
+                      context: context,
+                      opponentId: 'opp',
+                      title: 'Игрок',
+                    ),
+                    child: const Text('open-stats'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open-stats'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.close_rounded),
+        matching: find.byType(GamepadFocusBlock),
+      ),
+      findsNothing,
+    );
+
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(find.byType(Dialog), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(Dialog), findsNothing);
   });
 }
