@@ -313,6 +313,86 @@ void main() {
       )?.focusNode.hasFocus,
       isTrue,
     );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byTooltip('Назад')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.text('Сохранить')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+  });
+
+  testWidgets('влево/вправо по смайлам не уходит на назад и сохранить',
+      (tester) async {
+    await _enterEdit(tester);
+    final first = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_avatar_preset_0'))),
+    );
+    first!.focusNode.requestFocus();
+    await tester.pump();
+    final hostCtx = tester.element(find.byType(GamepadHost));
+    for (var i = 0; i < 16; i++) {
+      handleGamepadUiAction(hostCtx, GamepadAction.right);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byTooltip('Назад')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.text('Сохранить')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    var onPreset = false;
+    for (var i = 0; i < 12; i++) {
+      final scope = GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(ValueKey('compact_avatar_preset_$i'))),
+      );
+      if (scope?.focusNode.hasFocus == true) {
+        onPreset = true;
+        break;
+      }
+    }
+    expect(onPreset, isTrue);
+
+    for (var i = 0; i < 16; i++) {
+      handleGamepadUiAction(hostCtx, GamepadAction.left);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byTooltip('Назад')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.text('Сохранить')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+    onPreset = false;
+    for (var i = 0; i < 12; i++) {
+      final scope = GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(ValueKey('compact_avatar_preset_$i'))),
+      );
+      if (scope?.focusNode.hasFocus == true) {
+        onPreset = true;
+        break;
+      }
+    }
+    expect(onPreset, isTrue);
   });
 
   testWidgets('с возраста вправо — на пол', (tester) async {
@@ -411,6 +491,49 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const ValueKey('gender_option_0')), findsNothing);
     expect(find.text('Женский'), findsWidgets);
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_gender'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byTooltip('Назад')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
+  });
+
+  testWidgets('B во всплывашке пола возвращает фокус на поле пола',
+      (tester) async {
+    await _enterEdit(tester);
+    final gender = GamepadFocusBlock.maybeOf(
+      tester.element(find.byKey(const ValueKey('compact_gender'))),
+    );
+    gender!.focusNode.requestFocus();
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byKey(const ValueKey('gender_option_0')), findsOneWidget);
+
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gender_option_0')), findsNothing);
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byKey(const ValueKey('compact_gender'))),
+      )?.focusNode.hasFocus,
+      isTrue,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(
+        tester.element(find.byTooltip('Назад')),
+      )?.focusNode.hasFocus,
+      isFalse,
+    );
   });
 
   testWidgets('фото влево/вправо остаются в ряду слотов', (tester) async {

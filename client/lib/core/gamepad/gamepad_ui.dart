@@ -351,6 +351,31 @@ bool _moveGamepadBlock(
 ) {
   if (blocks.isEmpty) return false;
   final current = FocusManager.instance.primaryFocus;
+  final horizontal = direction == TraversalDirection.left ||
+      direction == TraversalDirection.right;
+  final groupBlocks = _navGroupBlocks(current, direction);
+  if (groupBlocks != null) {
+    if (groupBlocks.isEmpty) return true;
+    final groupIndex = _indexOfGamepadBlock(groupBlocks, current);
+    if (groupIndex < 0) {
+      groupBlocks.first.requestFocus();
+      _ensureVisible(
+        groupBlocks.first,
+        axis: horizontal ? Axis.horizontal : Axis.vertical,
+      );
+      return true;
+    }
+    final groupNeighbor =
+        _neighborGamepadBlock(groupBlocks, groupIndex, direction);
+    if (groupNeighbor != null) {
+      groupNeighbor.requestFocus();
+      _ensureVisible(
+        groupNeighbor,
+        axis: horizontal ? Axis.horizontal : Axis.vertical,
+      );
+    }
+    return true;
+  }
   final index = _indexOfGamepadBlock(blocks, current);
   if (index < 0) {
     final popupBlocks = [
@@ -377,7 +402,10 @@ bool _moveGamepadBlock(
   final neighbor = _neighborGamepadBlock(blocks, index, direction);
   if (neighbor != null) {
     neighbor.requestFocus();
-    _ensureVisible(neighbor);
+    _ensureVisible(
+      neighbor,
+      axis: horizontal ? Axis.horizontal : Axis.vertical,
+    );
     return true;
   }
   final pageDelta = switch (direction) {
@@ -386,6 +414,34 @@ bool _moveGamepadBlock(
   };
   if (GamepadPagerRegistry.page(pageDelta)) return true;
   return true;
+}
+
+/// Влево/вправо в группе (смайлы, фото) — только её члены, без «Назад»/«Сохранить».
+List<FocusNode>? _navGroupBlocks(
+  FocusNode? current,
+  TraversalDirection direction,
+) {
+  if (current == null) return null;
+  final group = GamepadNavGroup.ofNode(current);
+  if (group == null) return null;
+  final horizontal = direction == TraversalDirection.left ||
+      direction == TraversalDirection.right;
+  if (!horizontal && !group.exclusive) return null;
+  final members = <FocusNode>[];
+  for (final node in GamepadFocusRegistry.nodes) {
+    if (!identical(GamepadNavGroup.ofNode(node), group)) continue;
+    if (!isGamepadFocusVisible(node)) continue;
+    members.add(node);
+  }
+  members.sort((a, b) {
+    final ra = _focusRect(a);
+    final rb = _focusRect(b);
+    if (ra == null || rb == null) return 0;
+    final dy = ra.center.dy - rb.center.dy;
+    if (dy.abs() > 8) return dy.compareTo(0);
+    return ra.center.dx.compareTo(rb.center.dx);
+  });
+  return members;
 }
 
 bool _isContentGamepadBlock(FocusNode? node) {
@@ -539,19 +595,29 @@ Rect? _focusRect(FocusNode node) {
   return ro.localToGlobal(Offset.zero) & ro.size;
 }
 
-void _ensureVisible(FocusNode? node) {
+void _ensureVisible(FocusNode? node, {Axis? axis}) {
   if (node == null || gamepadFocusAlreadyVisible(node)) return;
   final ctx = node.context;
   if (ctx == null) return;
-  Scrollable.ensureVisible(
-    ctx,
+  var scrollable = Scrollable.maybeOf(ctx);
+  while (scrollable != null &&
+      axis != null &&
+      scrollable.position.axis != axis) {
+    scrollable = Scrollable.maybeOf(scrollable.context);
+  }
+  scrollable ??= Scrollable.maybeOf(ctx);
+  if (scrollable == null) return;
+  final ro = ctx.findRenderObject();
+  if (ro == null || !ro.attached) return;
+  scrollable.position.ensureVisible(
+    ro,
     alignment: 0.15,
     duration: const Duration(milliseconds: 80),
     curve: Curves.easeOut,
     alignmentPolicy: gamepadEnsureVisiblePolicy(
       focus: _focusRect(node),
-      view: _nearestScrollView(ctx),
-      axis: Scrollable.maybeOf(ctx)?.position.axis,
+      view: _scrollableView(scrollable),
+      axis: scrollable.position.axis,
     ),
   );
 }
@@ -575,8 +641,7 @@ ScrollPositionAlignmentPolicy gamepadEnsureVisiblePolicy({
       : ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
 }
 
-Rect? _nearestScrollView(BuildContext ctx) {
-  final scrollable = Scrollable.maybeOf(ctx);
+Rect? _scrollableView(ScrollableState? scrollable) {
   final box = scrollable?.context.findRenderObject();
   if (box is RenderBox && box.hasSize && box.attached) {
     return box.localToGlobal(Offset.zero) & box.size;
