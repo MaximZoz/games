@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/l10n/l10n.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 
 /// Диалог подтверждения: A — да, любая другая кнопка геймпада — закрыть.
 Future<bool> showGamepadConfirmDialog({
@@ -53,6 +56,73 @@ Future<bool> showGamepadConfirmDialog({
     },
   );
   return result == true;
+}
+
+/// Подтверждение со стиком: только «Отмена» / действие, без выхода из окна.
+Future<bool> showGamepadChoiceDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+  required String confirmLabel,
+  String? cancelLabel,
+}) async {
+  final future = showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      var closed = false;
+      void close([bool ok = false]) {
+        if (closed) return;
+        closed = true;
+        final nav = Navigator.of(dialogContext);
+        if (nav.canPop()) nav.pop(ok);
+      }
+
+      return GamepadScope(
+        exclusive: true,
+        onAction: (action) {
+          if (action == GamepadAction.cancel) {
+            close(false);
+            return true;
+          }
+          if (action == GamepadAction.confirm || action.isDirection) {
+            return handleGamepadUiAction(dialogContext, action);
+          }
+          return true;
+        },
+        child: GamepadNavGroup(
+          name: 'choice-popup',
+          exclusive: true,
+          child: AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              GamepadFocusBlock(
+                autofocus: true,
+                radius: AppRadius.button,
+                onActivate: () => close(false),
+                child: TextButton(
+                  onPressed: () => close(false),
+                  child: Text(cancelLabel ?? context.l10n.commonCancel),
+                ),
+              ),
+              GamepadFocusBlock(
+                radius: AppRadius.button,
+                onActivate: () => close(true),
+                child: FilledButton(
+                  onPressed: () => close(true),
+                  child: Text(confirmLabel),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    focusFirstVisibleGamepadTarget();
+  });
+  return (await future) == true;
 }
 
 /// Обёртка диалога: любая кнопка геймпада закрывает только его.

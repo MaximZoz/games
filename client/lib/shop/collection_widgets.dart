@@ -8,6 +8,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_buy_button.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
@@ -299,37 +300,45 @@ class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
               PointerDeviceKind.unknown,
             },
           ),
-          child: ListView.separated(
+          child: GamepadNavGroup(
+            name: 'collection-showcase',
+            child: ListView.separated(
             controller: _controller,
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final it = items[index];
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => showCollectionFullscreen(
-                  context,
-                  title: it.title,
-                  animatedName: it.animatedName ?? 'sparkles',
-                  fallback: it.emoji,
-                  subtitle: widget.titleOnlyOnTap
-                      ? null
-                      : collectionItemSubtitle(it.dailyBronze),
-                ),
-                child: SizedBox(
-                  width: 52,
-                  height: 56,
-                  child: Center(
-                    child: ShopAnimatedEmoji(
-                      animatedName: it.animatedName ?? 'sparkles',
-                      size: 44,
-                      fallback: it.emoji,
+              void open() => showCollectionFullscreen(
+                    context,
+                    title: it.title,
+                    animatedName: it.animatedName ?? 'sparkles',
+                    fallback: it.emoji,
+                    subtitle: widget.titleOnlyOnTap
+                        ? null
+                        : collectionItemSubtitle(it.dailyBronze),
+                  );
+              return GamepadFocusBlock(
+                radius: 12,
+                onActivate: open,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: open,
+                  child: SizedBox(
+                    width: 52,
+                    height: 56,
+                    child: Center(
+                      child: ShopAnimatedEmoji(
+                        animatedName: it.animatedName ?? 'sparkles',
+                        size: 44,
+                        fallback: it.emoji,
+                      ),
                     ),
                   ),
                 ),
               );
             },
+          ),
           ),
         ),
       ),

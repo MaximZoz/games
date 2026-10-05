@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/friends/friends_repository.dart';
@@ -10,6 +14,7 @@ import 'package:multigames_client/games/head_to_head_section.dart';
 import 'package:multigames_client/l10n/display_names.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/profile/profile_gallery_widgets.dart';
+import 'package:multigames_client/profile/profile_photos.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/avatar_memory_cache.dart';
@@ -41,10 +46,30 @@ Future<void> showUserProfileDialog({
   final id = userId.trim();
   if (id.isEmpty || id.startsWith('bot:')) return;
 
-  await showDialog<void>(
+  final future = showDialog<void>(
     context: context,
     builder: (dialogContext) {
-      return Dialog(
+      return GamepadScope(
+        exclusive: true,
+        onAction: (action) {
+          if (action == GamepadAction.cancel) {
+            final nav = Navigator.of(dialogContext);
+            if (nav.canPop()) nav.pop();
+            return true;
+          }
+          if (action.isScroll) {
+            scrollGamepadHorizontalStrip(action, context: dialogContext);
+            return true;
+          }
+          if (action == GamepadAction.confirm || action.isDirection) {
+            return handleGamepadUiAction(dialogContext, action);
+          }
+          return true;
+        },
+        child: GamepadNavGroup(
+          name: 'user-profile-popup',
+          exclusive: true,
+          child: Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
         backgroundColor: Colors.transparent,
         child: ConstrainedBox(
@@ -166,6 +191,35 @@ Future<void> showUserProfileDialog({
                 final resolvedFrameColor =
                     friendUser?.frameColor ?? frameColor;
 
+                final avatarKindResolved =
+                    friendUser?.avatarKind ?? avatarKind;
+                final avatarValueResolved =
+                    friendUser?.avatarValue ?? avatarValue;
+                final avatarLetter = name.trim().isEmpty
+                    ? '?'
+                    : name.trim()[0].toUpperCase();
+                void openAvatarGallery() {
+                  final count = ref
+                          .read(profilePhotosProvider(id))
+                          .valueOrNull
+                          ?.length ??
+                      0;
+                  if (!isProfileFileAvatar(
+                          avatarKindResolved, avatarValueResolved) &&
+                      count <= 0) {
+                    return;
+                  }
+                  showProfilePhotosGallery(
+                    context: dialogContext,
+                    userId: id,
+                    canManage: isSelf,
+                    avatarKind: avatarKindResolved,
+                    avatarValue: avatarValueResolved,
+                    letter: avatarLetter,
+                    photoCount: count,
+                  );
+                }
+
                 return SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -174,25 +228,25 @@ Future<void> showUserProfileDialog({
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TappableProfileAvatar(
+                          GamepadFocusBlock(
+                            autofocus: true,
+                            radius: 24,
+                            shape: GamepadHighlightShape.circle,
+                            onActivate: openAvatarGallery,
+                            child: TappableProfileAvatar(
                             userId: id,
                             canManage: isSelf,
-                            avatarKind:
-                                friendUser?.avatarKind ?? avatarKind,
-                            avatarValue:
-                                friendUser?.avatarValue ?? avatarValue,
-                            letter: name.trim().isEmpty
-                                ? '?'
-                                : name.trim()[0].toUpperCase(),
+                            avatarKind: avatarKindResolved,
+                            avatarValue: avatarValueResolved,
+                            letter: avatarLetter,
                             child: _ProfileAvatar(
                               displayName: name,
-                              avatarKind:
-                                  friendUser?.avatarKind ?? avatarKind,
-                              avatarValue:
-                                  friendUser?.avatarValue ?? avatarValue,
+                              avatarKind: avatarKindResolved,
+                              avatarValue: avatarValueResolved,
                               frameCode: resolvedFrameCode,
                               frameColor: resolvedFrameColor,
                             ),
+                          ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -226,20 +280,12 @@ Future<void> showUserProfileDialog({
                             ),
                           ),
                           if (showAddFriend)
-                            IconButton(
+                            _profileGamepadIconButton(
                               tooltip: incomingRequestId != null
                                   ? context.l10n.commonAccept
                                   : context.l10n.friendsAdd,
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              icon: const Icon(
-                                Icons.person_add_alt_1_rounded,
-                                color: AppColors.accentStart,
-                              ),
+                              icon: Icons.person_add_alt_1_rounded,
+                              color: AppColors.accentStart,
                               onPressed: () async {
                                 try {
                                   final incoming = incomingRequestId;
@@ -282,18 +328,10 @@ Future<void> showUserProfileDialog({
                               },
                             ),
                           if (showMessage)
-                            IconButton(
+                            _profileGamepadIconButton(
                               tooltip: context.l10n.navChats,
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              icon: const Icon(
-                                Icons.chat_bubble_outline_rounded,
-                                color: AppColors.accentStart,
-                              ),
+                              icon: Icons.chat_bubble_outline_rounded,
+                              color: AppColors.accentStart,
                               onPressed: () async {
                                 try {
                                   final chatId = await ref
@@ -331,15 +369,9 @@ Future<void> showUserProfileDialog({
                               },
                             ),
                           const SizedBox(width: 4),
-                          IconButton(
+                          _profileGamepadIconButton(
                             tooltip: context.l10n.commonClose,
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.all(6),
-                            constraints: const BoxConstraints(
-                              minWidth: 36,
-                              minHeight: 36,
-                            ),
-                            icon: const Icon(Icons.close_rounded),
+                            icon: Icons.close_rounded,
                             onPressed: () =>
                                 Navigator.of(dialogContext).pop(),
                           ),
@@ -406,8 +438,34 @@ Future<void> showUserProfileDialog({
             ),
           ),
         ),
+          ),
+        ),
       );
     },
+  );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    focusFirstVisibleGamepadTarget();
+  });
+  await future;
+}
+
+Widget _profileGamepadIconButton({
+  required String tooltip,
+  required IconData icon,
+  required VoidCallback onPressed,
+  Color? color,
+}) {
+  return GamepadFocusBlock(
+    radius: 18,
+    onActivate: onPressed,
+    child: IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.all(6),
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      icon: Icon(icon, color: color),
+      onPressed: onPressed,
+    ),
   );
 }
 

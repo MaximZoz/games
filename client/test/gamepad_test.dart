@@ -2482,6 +2482,71 @@ void main() {
       ScrollPositionAlignmentPolicy.keepVisibleAtStart,
     );
   });
+
+  testWidgets('выбор в алерте: стик между кнопками, A подтверждает выбранную',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var result = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () async {
+                        result = await showGamepadChoiceDialog(
+                          context: context,
+                          title: 'Убрать из друзей',
+                          message: 'Убрать игрока?',
+                          confirmLabel: 'Убрать',
+                          cancelLabel: 'Отмена',
+                        );
+                      },
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Убрать игрока?'), findsOneWidget);
+    expect(GamepadDispatcher.hasExclusive, isTrue);
+
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(find.text('Убрать игрока?'), findsOneWidget);
+
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(find.text('Убрать игрока?'), findsNothing);
+    expect(result, isFalse);
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.right);
+    await tester.pump(const Duration(milliseconds: 40));
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(result, isTrue);
+    expect(GamepadDispatcher.hasExclusive, isFalse);
+  });
 }
 
 class _TestGamepadPager implements GamepadPager {
