@@ -161,4 +161,53 @@ void main() {
       isNotNull,
     );
   });
+
+  test('кнопка закрывает статистику, стик — нет', () {
+    expect(statsPopupActionCloses(GamepadAction.confirm), isTrue);
+    expect(statsPopupActionCloses(GamepadAction.cancel), isTrue);
+    expect(statsPopupActionCloses(GamepadAction.actionX), isTrue);
+    expect(statsPopupActionCloses(GamepadAction.menu), isTrue);
+    expect(statsPopupActionCloses(GamepadAction.down), isFalse);
+    expect(statsPopupActionCloses(GamepadAction.scrollUp), isFalse);
+  });
+
+  testWidgets('во всплывашке статистики A закрывает, стик не трогает крестик',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var closed = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: StatsPopupGamepadScope(
+              onClose: () => closed = true,
+              child: Scaffold(
+                body: ListView(
+                  children: [
+                    for (var i = 0; i < 20; i++)
+                      SizedBox(height: 40, child: Text('строка $i')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(GamepadFocusBlock), findsNothing);
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(closed, isFalse);
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(closed, isTrue);
+  });
 }

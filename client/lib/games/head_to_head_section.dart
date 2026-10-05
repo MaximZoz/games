@@ -47,104 +47,10 @@ class HeadToHeadSection extends ConsumerWidget {
             showStats: showStats,
             onTapStats: () {
               final name = (opponentName ?? h2h.displayName).trim();
-              // Из попапа профиля — статистика тоже во всплывашке.
-              // С главной (/stats) остаётся полноэкранный виджет.
-              showDialog<void>(
+              showHeadToHeadStatsDialog(
                 context: context,
-                builder: (ctx) {
-                  final title = name.isNotEmpty
-                      ? name
-                      : context.l10n.statsTitle;
-                  void close() {
-                    final nav = Navigator.of(ctx);
-                    if (nav.canPop()) nav.pop();
-                  }
-
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    focusFirstVisibleGamepadTarget();
-                  });
-                  return GamepadScope(
-                    exclusive: true,
-                    onAction: (action) {
-                      if (action == GamepadAction.cancel) {
-                        close();
-                        return true;
-                      }
-                      if (action.isScroll || action.isDirection) {
-                        return handleGamepadUiAction(ctx, action);
-                      }
-                      return true;
-                    },
-                    child: GamepadNavGroup(
-                      name: 'h2h-stats-popup',
-                      exclusive: true,
-                      child: Dialog(
-                        backgroundColor: AppColors.surfaceUnified,
-                        insetPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 24,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: 520,
-                            maxHeight: 640,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: Text(
-                                          title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: AppColors.textPrimary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    GamepadFocusBlock(
-                                      autofocus: true,
-                                      radius: 18,
-                                      onActivate: close,
-                                      child: IconButton(
-                                        onPressed: close,
-                                        icon: const Icon(Icons.close_rounded),
-                                        tooltip: context.l10n.commonClose,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Flexible(
-                                child: GameStatsBody(
-                                  userId: opponentId,
-                                  padding: const EdgeInsets.fromLTRB(
-                                    16,
-                                    4,
-                                    16,
-                                    20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                opponentId: opponentId,
+                title: name.isNotEmpty ? name : context.l10n.statsTitle,
               );
             },
           );
@@ -468,6 +374,122 @@ class _ScoreDigit extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Стик и стрелки только скроллят; любая кнопка закрывает, как крестик.
+@visibleForTesting
+bool statsPopupActionCloses(GamepadAction action) {
+  return !action.isDirection && !action.isScroll;
+}
+
+/// Всплывашка статистики: без рамки на крестике, стик не ходит по кнопкам.
+class StatsPopupGamepadScope extends StatelessWidget {
+  const StatsPopupGamepadScope({
+    super.key,
+    required this.onClose,
+    required this.child,
+  });
+
+  final VoidCallback onClose;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GamepadScope(
+      exclusive: true,
+      onAction: (action) {
+        if (action.isDirection || action.isScroll) {
+          if (handleGamepadUiAction(context, action)) return true;
+          final back = action == GamepadAction.up ||
+              action == GamepadAction.left ||
+              action == GamepadAction.scrollUp ||
+              action == GamepadAction.scrollLeft;
+          return scrollGamepadByPage(back ? -1 : 1);
+        }
+        onClose();
+        return true;
+      },
+      child: child,
+    );
+  }
+}
+
+void showHeadToHeadStatsDialog({
+  required BuildContext context,
+  required String opponentId,
+  required String title,
+}) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) {
+      void close() {
+        final nav = Navigator.of(ctx);
+        if (nav.canPop()) nav.pop();
+      }
+
+      return StatsPopupGamepadScope(
+        onClose: close,
+        child: Dialog(
+          backgroundColor: AppColors.surfaceUnified,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 520,
+              maxHeight: 640,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 4, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Focus(
+                        canRequestFocus: false,
+                        descendantsAreFocusable: false,
+                        child: IconButton(
+                          onPressed: close,
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: ctx.l10n.commonClose,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: GameStatsBody(
+                    userId: opponentId,
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 /// Иконка статистики без текста — сразу за блоком счёта.
