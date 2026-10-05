@@ -244,7 +244,7 @@ class GameCardChip extends StatelessWidget {
         splashColor: AppColors.accentStart.withValues(alpha: 0.2),
         highlightColor: AppColors.accentStart.withValues(alpha: 0.1),
         child: Container(
-          constraints: BoxConstraints(minHeight: chipH),
+          height: chipH,
           padding: EdgeInsets.symmetric(vertical: padV, horizontal: padH),
           decoration: BoxDecoration(
             color: AppColors.buttonFill,
@@ -258,6 +258,7 @@ class GameCardChip extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               iconChild ??
                   (flipIcon
@@ -463,7 +464,7 @@ double gameCardChipHeight({
   final iconSz = compact ? 14.0 : (isDesktop ? 18.0 : 16.0);
   final fontSz =
       compact ? 11.0 : (isMedium ? 13.0 : (isDesktop ? 14.0 : 13.0));
-  return math.max(iconSz, fontSz * 1.35) + padV * 2 + 2;
+  return (math.max(iconSz, fontSz * 1.35) + padV * 2 + 2).ceilToDouble();
 }
 
 /// Полоса чипов на три ряда: на плитке ~340px четыре чипа Дурака
