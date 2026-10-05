@@ -266,6 +266,36 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
   }
 }
 
+/// Ряд или попап: стик не выходит из группы в заблокированных направлениях.
+class GamepadNavGroup extends InheritedWidget {
+  const GamepadNavGroup({
+    super.key,
+    required this.name,
+    required super.child,
+    this.exclusive = false,
+  });
+
+  final String name;
+
+  /// Всплывашка: вверх/вниз/влево/вправо остаются внутри, пока её не закроют.
+  final bool exclusive;
+
+  static GamepadNavGroup? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<GamepadNavGroup>();
+  }
+
+  static GamepadNavGroup? ofNode(FocusNode node) {
+    final ctx = node.context;
+    if (ctx == null) return null;
+    return ctx.getInheritedWidgetOfExactType<GamepadNavGroup>();
+  }
+
+  @override
+  bool updateShouldNotify(GamepadNavGroup oldWidget) {
+    return name != oldWidget.name || exclusive != oldWidget.exclusive;
+  }
+}
+
 class GamepadFocusScope extends InheritedWidget {
   const GamepadFocusScope({
     super.key,

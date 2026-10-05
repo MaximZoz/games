@@ -322,6 +322,18 @@ List<FocusNode> _visibleGamepadFocusBlocks() {
   }
 
   walk(FocusManager.instance.rootScope);
+  if (GamepadFocusRegistry.nodes.any(gamepadNodeInPopup)) {
+    out.removeWhere((node) => !gamepadNodeInPopup(node));
+    if (out.isEmpty) {
+      for (final node in GamepadFocusRegistry.nodes) {
+        if (!gamepadNodeInPopup(node) || !isGamepadFocusVisible(node)) {
+          continue;
+        }
+        if (out.contains(node)) continue;
+        out.add(node);
+      }
+    }
+  }
   out.sort((a, b) {
     final ra = _focusRect(a);
     final rb = _focusRect(b);
@@ -341,6 +353,17 @@ bool _moveGamepadBlock(
   final current = FocusManager.instance.primaryFocus;
   final index = _indexOfGamepadBlock(blocks, current);
   if (index < 0) {
+    final popupBlocks = [
+      for (final node in blocks)
+        if (gamepadNodeInPopup(node)) node,
+    ];
+    if (popupBlocks.isNotEmpty) {
+      final neighbor = _neighborGamepadBlock(popupBlocks, 0, direction);
+      final next = neighbor ?? popupBlocks.first;
+      next.requestFocus();
+      _ensureVisible(next);
+      return true;
+    }
     // Сфокусированный блок мог выпасть из «видимых» — не прыгаем на первый.
     if (_isContentGamepadBlock(current)) return true;
     final next = (direction == TraversalDirection.up ||
@@ -405,7 +428,10 @@ FocusNode? _neighborGamepadBlock(
     final dy = rect.center.dy - curRect.center.dy;
     final horizontal = direction == TraversalDirection.left ||
         direction == TraversalDirection.right;
-    if (horizontal) {
+    final currentGroup = GamepadNavGroup.ofNode(current);
+    if (currentGroup != null && (horizontal || currentGroup.exclusive)) {
+      if (!identical(GamepadNavGroup.ofNode(node), currentGroup)) continue;
+    } else if (horizontal) {
       final currentStrip = _horizontalScrollable(current);
       if (currentStrip != null) {
         if (!identical(_horizontalScrollable(node), currentStrip)) continue;
@@ -437,6 +463,24 @@ FocusNode? _neighborGamepadBlock(
     }
   }
   return best;
+}
+
+/// Диалог / exclusive-группа: стик не уходит на поля под всплывашкой.
+@visibleForTesting
+bool gamepadNodeInPopup(FocusNode node) {
+  if (GamepadNavGroup.ofNode(node)?.exclusive == true) return true;
+  return gamepadNodeOnPopupRoute(node);
+}
+
+@visibleForTesting
+bool gamepadNodeOnPopupRoute(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null || !ctx.mounted) return false;
+  try {
+    return ModalRoute.of(ctx) is PopupRoute;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// Влево/вправо остаются в одной визуальной строке: не спрыгивать на поле ниже.
