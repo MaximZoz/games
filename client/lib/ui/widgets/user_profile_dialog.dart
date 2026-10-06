@@ -5,6 +5,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -338,6 +339,7 @@ Future<void> showUserProfileDialog({
                                       .read(chatsRepositoryProvider)
                                       .startChat(id);
                                   if (!dialogContext.mounted) return;
+                                  GamepadKeyboardController.instance.hide();
                                   Navigator.of(dialogContext).pop();
                                   if (!context.mounted || chatId.isEmpty) {
                                     return;

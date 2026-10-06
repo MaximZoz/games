@@ -11,6 +11,18 @@ import 'package:multigames_client/ui/responsive.dart';
 
 enum GamepadKeyboardLayout { latin, cyrillic, digits }
 
+/// Высота панели геймпада — как viewInsets у системной клавиатуры.
+double gamepadKeyboardPanelHeight({
+  required double bottomSafeArea,
+}) {
+  const title = 48.0;
+  const row = 40.0;
+  const rowGap = 4.0;
+  const rows = 4;
+  const padV = 16.0;
+  return padV + title + rows * row + (rows - 1) * rowGap + bottomSafeArea;
+}
+
 class GamepadKeyboardController extends ChangeNotifier {
   GamepadKeyboardController();
 
