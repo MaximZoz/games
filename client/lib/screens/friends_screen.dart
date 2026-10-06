@@ -664,9 +664,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     if (keyboard) return false;
     if (action.isScroll) {
+      final route = ModalRoute.of(context);
       if (!friendsGamepadAllowsTabScroll(
         popupOpen: isGamepadPopupOpen(context),
         exclusive: GamepadDispatcher.hasExclusive,
+        routeCovered: route != null && !route.isCurrent,
       )) {
         return true;
       }
@@ -1930,6 +1932,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         child: TextField(
           controller: _searchController,
           focusNode: _searchFocusNode,
+          readOnly: gamepadConnected(),
+          showCursor: true,
           // null = AutofillConfiguration.disabled → autocomplete=off на web.
           // Иначе дефолт [] оставляет autocomplete=on и iOS Safari
           // показывает панель Passwords / Payment / Locations над клавиатурой.
@@ -2180,6 +2184,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
+        readOnly: gamepadConnected(),
+        showCursor: true,
         autofillHints: null,
         enableSuggestions: false,
         autocorrect: false,

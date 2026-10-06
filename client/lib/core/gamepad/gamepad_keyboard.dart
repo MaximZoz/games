@@ -167,7 +167,9 @@ class _GamepadKeyboardPanelState extends State<GamepadKeyboardPanel> {
 
   bool _onAction(GamepadAction action) {
     if (action == GamepadAction.shoulderL ||
-        action == GamepadAction.shoulderR) {
+        action == GamepadAction.shoulderR ||
+        action == GamepadAction.triggerL ||
+        action == GamepadAction.triggerR) {
       return false;
     }
     if (action.isDirection) {
