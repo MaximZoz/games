@@ -8,8 +8,9 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 bool friendsGamepadAllowsTabScroll({
   required bool popupOpen,
   required bool exclusive,
+  bool routeCovered = false,
 }) {
-  return !popupOpen && !exclusive;
+  return !popupOpen && !exclusive && !routeCovered;
 }
 
 /// Правый стик: предыдущая / следующая вкладка друзей.

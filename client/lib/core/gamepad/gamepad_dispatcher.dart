@@ -31,9 +31,13 @@ class GamepadDispatcher {
 
   static bool get hasExclusive => _stack.any((entry) => entry.exclusive);
 
-  static bool dispatch(GamepadAction action) {
+  static bool dispatch(
+    GamepadAction action, {
+    bool exclusiveOnly = false,
+  }) {
     final snapshot = List<_GamepadHandler>.from(_stack);
     for (var i = snapshot.length - 1; i >= 0; i--) {
+      if (exclusiveOnly && !snapshot[i].exclusive) continue;
       if (snapshot[i].fn(action)) return true;
     }
     return false;

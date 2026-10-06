@@ -127,6 +127,14 @@ void main() {
       isFalse,
     );
     expect(
+      friendsGamepadAllowsTabScroll(
+        popupOpen: false,
+        exclusive: false,
+        routeCovered: true,
+      ),
+      isFalse,
+    );
+    expect(
       friendsGamepadAllowsTabScroll(popupOpen: false, exclusive: false),
       isTrue,
     );

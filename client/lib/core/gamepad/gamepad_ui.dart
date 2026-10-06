@@ -679,6 +679,20 @@ bool _isContentHorizontalStrip(ScrollPosition pos) {
   return true;
 }
 
+bool _isTabPagerElement(Element el) {
+  var pager = false;
+  void check(Widget w) {
+    if (w is TabBarView || w is PageView) pager = true;
+  }
+
+  check(el.widget);
+  el.visitAncestorElements((ancestor) {
+    check(ancestor.widget);
+    return !pager;
+  });
+  return pager;
+}
+
 bool _isDescendantContext(BuildContext ancestor, BuildContext child) {
   if (!ancestor.mounted || !child.mounted) return false;
   if (identical(ancestor, child)) return true;
@@ -716,6 +730,7 @@ ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
   ScrollPosition? found;
   void walk(Element el) {
     if (found != null) return;
+    if (_isTabPagerElement(el)) return;
     if (el is StatefulElement && el.state is ScrollableState) {
       final pos = (el.state as ScrollableState).position;
       if (_isContentHorizontalStrip(pos)) {

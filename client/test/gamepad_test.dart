@@ -2424,6 +2424,88 @@ void main() {
     expect(GamepadKeyboardController.instance.visible, isTrue);
   });
 
+  testWidgets('LT-клавиша при фокусе в поле доходит до экрана', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var ltHits = 0;
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: GamepadScope(
+              onAction: (action) {
+                if (action == GamepadAction.triggerL) {
+                  ltHits++;
+                  return true;
+                }
+                return false;
+              },
+              child: Scaffold(
+                body: TextField(
+                  autofocus: true,
+                  focusNode: focus,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    focus.requestFocus();
+    await tester.pump();
+    expect(isEditableTextFocused(), isTrue);
+    GamepadKeyboardController.instance.show();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.gameButtonLeft2);
+    await tester.pump();
+    expect(ltHits, 1);
+  });
+
+  testWidgets('exclusive не отдаёт стик фону с вкладками', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var backgroundScrolls = 0;
+    final background = GamepadDispatcher.push((action) {
+      if (action.isScroll) {
+        backgroundScrolls++;
+        return true;
+      }
+      return false;
+    });
+    final exclusive = GamepadDispatcher.push((_) => false, exclusive: true);
+    addTearDown(() {
+      GamepadDispatcher.remove(background);
+      GamepadDispatcher.remove(exclusive);
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    GamepadService.instance.emit(GamepadAction.scrollRight);
+    await tester.pump();
+    expect(backgroundScrolls, 0);
+  });
+
   testWidgets(
       'стрелки не двигают каретку, даже если сервис геймпада остановлен',
       (tester) async {

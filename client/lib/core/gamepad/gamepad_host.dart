@@ -76,10 +76,13 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     if (!mounted) return;
     // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
     if (GamepadDispatcher.hasExclusive) {
+      // Стик/крест только попапу: фон (вкладки друзей) не получает жест.
+      if (event.action.isScroll || event.action.isDirection) {
+        GamepadDispatcher.dispatch(event.action, exclusiveOnly: true);
+        return;
+      }
       if (GamepadDispatcher.dispatch(event.action)) return;
-      // Exclusive без обработки не глушит LB/RB. Стик/крест не уходят в фон.
-      if (event.action.isScroll || event.action.isDirection) return;
-      // Скоуп уже снят (диалог закрыли в этом же кадре) — обычный ввод.
+      // Exclusive без обработки не глушит LB/RB.
     }
     // Любой попап без exclusive: стик/кнопка закрывает его, вкладки не листаем.
     if (isGamepadPopupOpen(context)) {

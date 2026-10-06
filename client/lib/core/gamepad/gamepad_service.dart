@@ -164,8 +164,10 @@ class GamepadService {
       }
       return true;
     }
-    // Плечи всегда листают вкладки — даже если фокус застрял в поле.
-    if (!shoulder && isEditableTextFocused()) {
+    final trigger = action == GamepadAction.triggerL ||
+        action == GamepadAction.triggerR;
+    // Плечи и LT/RT доходят даже если фокус застрял в поле (поиск, чат).
+    if (!shoulder && !trigger && isEditableTextFocused()) {
       if (action == GamepadAction.cancel && event is KeyDownEvent) {
         FocusManager.instance.primaryFocus?.unfocus();
         return true;
