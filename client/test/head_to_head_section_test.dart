@@ -284,4 +284,125 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(Dialog), findsNothing);
   });
+
+  testWidgets(
+      'стик в карточке профиля листает счёт, не вкладки друзей',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final tabs = TabController(length: 2, vsync: const TestVSync());
+    addTearDown(tabs.dispose);
+    final games = [
+      for (final type in const [
+        'durak',
+        'uno',
+        'poker',
+        'seka',
+        'chess',
+        'tictactoe',
+        'domino',
+        'bingo',
+      ])
+        GameTypeScore(gameType: type, won: 1, lost: 0, drawn: 0),
+    ];
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Column(
+                    children: [
+                      TabBar(
+                        controller: tabs,
+                        tabs: const [
+                          Tab(text: 'Друзья'),
+                          Tab(text: 'Найти друга'),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          controller: tabs,
+                          children: [
+                            Focus(
+                              autofocus: true,
+                              child: ListView(
+                                children: const [
+                                  SizedBox(height: 48, child: Text('друг')),
+                                ],
+                              ),
+                            ),
+                            const Center(child: Text('найти')),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (dialogContext) {
+                              return GamepadScope(
+                                exclusive: true,
+                                onAction: (action) {
+                                  if (action.isScroll) {
+                                    scrollGamepadHorizontalStrip(
+                                      action,
+                                      context: dialogContext,
+                                    );
+                                    return true;
+                                  }
+                                  return true;
+                                },
+                                child: Dialog(
+                                  child: SizedBox(
+                                    width: 360,
+                                    child: HeadToHeadScoreStrip(games: games),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: const Text('open-profile'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open-profile'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HeadToHeadScoreStrip), findsOneWidget);
+    expect(tabs.index, 0);
+
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    final strip = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(HeadToHeadScoreStrip),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    final before = strip.position.pixels;
+    GamepadService.instance.emit(GamepadAction.scrollRight);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(tabs.index, 0);
+    expect(find.text('найти'), findsNothing);
+    expect(strip.position.pixels, greaterThan(before));
+  });
 }

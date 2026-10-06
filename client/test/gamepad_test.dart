@@ -2377,6 +2377,53 @@ void main() {
     expect(controller.selection.baseOffset, 2);
   });
 
+  testWidgets('LT при открытой клавиатуре доходит до экрана', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var ltHits = 0;
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('ru'),
+          home: GamepadHost(
+            child: GamepadScope(
+              onAction: (action) {
+                if (action == GamepadAction.triggerL) {
+                  ltHits++;
+                  return true;
+                }
+                return false;
+              },
+              child: Scaffold(
+                body: GamepadFieldBlock(
+                  autofocus: true,
+                  inputFocus: focus,
+                  child: TextField(focusNode: focus),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    await tester.pump();
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+    GamepadService.instance.emit(GamepadAction.triggerL);
+    await tester.pump();
+    expect(ltHits, 1);
+    expect(GamepadKeyboardController.instance.visible, isTrue);
+  });
+
   testWidgets(
       'стрелки не двигают каретку, даже если сервис геймпада остановлен',
       (tester) async {

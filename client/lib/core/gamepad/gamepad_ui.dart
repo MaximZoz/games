@@ -670,26 +670,55 @@ ScrollableState? _horizontalScrollable(FocusNode node) {
   return scrollable;
 }
 
-ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
-  final focusCtx = FocusManager.instance.primaryFocus?.context;
-  if (focusCtx != null) {
-    final focused = Scrollable.maybeOf(focusCtx);
-    final pos = focused?.position;
-    if (pos != null &&
-        pos.axis == Axis.horizontal &&
-        pos.hasContentDimensions &&
-        pos.maxScrollExtent > pos.minScrollExtent) {
-      return pos;
+bool _isContentHorizontalStrip(ScrollPosition pos) {
+  if (pos.axis != Axis.horizontal) return false;
+  if (!pos.hasContentDimensions) return false;
+  if (pos.maxScrollExtent <= pos.minScrollExtent) return false;
+  // TabBarView / PageView — переключение вкладок, не полоса счёта.
+  if (pos is PageMetrics) return false;
+  return true;
+}
+
+bool _isDescendantContext(BuildContext ancestor, BuildContext child) {
+  if (!ancestor.mounted || !child.mounted) return false;
+  if (identical(ancestor, child)) return true;
+  var found = false;
+  child.visitAncestorElements((el) {
+    if (identical(el, ancestor)) {
+      found = true;
+      return false;
     }
+    return true;
+  });
+  return found;
+}
+
+ScrollPosition? _horizontalPositionOf(BuildContext ctx) {
+  var scrollable = Scrollable.maybeOf(ctx);
+  while (scrollable != null) {
+    final pos = scrollable.position;
+    if (_isContentHorizontalStrip(pos)) return pos;
+    final parentCtx = scrollable.context;
+    scrollable = parentCtx.mounted ? Scrollable.maybeOf(parentCtx) : null;
+    if (identical(scrollable?.context, parentCtx)) break;
+  }
+  return null;
+}
+
+/// Полоса счёта / смайлов. С [context] не трогаем TabBarView и фон за попапом.
+ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
+  final scoped = context != null && context.mounted;
+  final focusCtx = FocusManager.instance.primaryFocus?.context;
+  if (focusCtx != null && (!scoped || _isDescendantContext(context, focusCtx))) {
+    final focused = _horizontalPositionOf(focusCtx);
+    if (focused != null) return focused;
   }
   ScrollPosition? found;
   void walk(Element el) {
     if (found != null) return;
     if (el is StatefulElement && el.state is ScrollableState) {
       final pos = (el.state as ScrollableState).position;
-      if (pos.axis == Axis.horizontal &&
-          pos.hasContentDimensions &&
-          pos.maxScrollExtent > pos.minScrollExtent) {
+      if (_isContentHorizontalStrip(pos)) {
         found = pos;
         return;
       }
@@ -697,8 +726,10 @@ ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
     el.visitChildren(walk);
   }
 
-  context?.visitChildElements(walk);
-  if (found != null) return found;
+  if (scoped) {
+    context.visitChildElements(walk);
+    return found;
+  }
   WidgetsBinding.instance.rootElement?.visitChildren(walk);
   return found;
 }
