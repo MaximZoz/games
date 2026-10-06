@@ -24,7 +24,10 @@ void dismissGamepadKeyboard() {
 }
 
 /// Правый стик / статистика: страница скролла.
-bool scrollGamepadByPage(int direction) => _scrollPage(direction);
+///
+/// [context] — искать скролл сначала рядом с попапом, не у фона (друзья).
+bool scrollGamepadByPage(int direction, {BuildContext? context}) =>
+    _scrollPage(direction, context: context);
 
 /// Правый стик: горизонтальная полоса (счёт, коллекции, смайлы).
 bool scrollGamepadHorizontalStrip(
@@ -230,15 +233,26 @@ bool _switchTab(int delta) {
   return true;
 }
 
-bool _scrollPage(int direction) {
+bool _scrollPage(int direction, {BuildContext? context}) {
   if (GamepadPagerRegistry.page(direction)) return true;
+  final local = _verticalScrollPositionNear(context);
+  if (local != null && _animateScrollPage(local, direction)) return true;
   final ctx = FocusManager.instance.primaryFocus?.context;
-  final pos = ctx == null
-      ? null
-      : Scrollable.maybeOf(ctx)?.position;
+  final pos = ctx == null ? null : Scrollable.maybeOf(ctx)?.position;
+  final focused = (pos != null &&
+          pos.axis == Axis.vertical &&
+          pos.hasPixels &&
+          pos.hasContentDimensions)
+      ? pos
+      : null;
+  if (focused != null && _animateScrollPage(focused, direction)) return true;
   final fallback = _nearestScrollPosition();
-  final position = pos ?? fallback;
-  if (position == null || !position.hasPixels || !position.hasContentDimensions) {
+  if (fallback != null && _animateScrollPage(fallback, direction)) return true;
+  return false;
+}
+
+bool _animateScrollPage(ScrollPosition position, int direction) {
+  if (!position.hasPixels || !position.hasContentDimensions) {
     return false;
   }
   final viewport = position.viewportDimension;
@@ -256,6 +270,39 @@ bool _scrollPage(int direction) {
   );
   scheduleFocusEdgeGamepadTarget(last: direction < 0);
   return true;
+}
+
+ScrollPosition? _verticalScrollPositionNear(BuildContext? context) {
+  if (context == null || !context.mounted) return null;
+  var scrollable = Scrollable.maybeOf(context);
+  while (scrollable != null) {
+    final pos = scrollable.position;
+    if (pos.axis == Axis.vertical &&
+        pos.hasContentDimensions &&
+        pos.maxScrollExtent > pos.minScrollExtent) {
+      return pos;
+    }
+    final parentCtx = scrollable.context;
+    scrollable = parentCtx.mounted ? Scrollable.maybeOf(parentCtx) : null;
+    if (identical(scrollable?.context, parentCtx)) break;
+  }
+  ScrollPosition? found;
+  void walk(Element el) {
+    if (found != null) return;
+    if (el is StatefulElement && el.state is ScrollableState) {
+      final pos = (el.state as ScrollableState).position;
+      if (pos.axis == Axis.vertical &&
+          pos.hasContentDimensions &&
+          pos.maxScrollExtent > pos.minScrollExtent) {
+        found = pos;
+        return;
+      }
+    }
+    el.visitChildren(walk);
+  }
+
+  context.visitChildElements(walk);
+  return found;
 }
 
 ScrollPosition? _nearestScrollPosition() {

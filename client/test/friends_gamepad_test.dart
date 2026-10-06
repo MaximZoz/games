@@ -117,6 +117,21 @@ void main() {
     );
   });
 
+  test('попап не даёт стику листать вкладки друзей', () {
+    expect(
+      friendsGamepadAllowsTabScroll(popupOpen: true, exclusive: false),
+      isFalse,
+    );
+    expect(
+      friendsGamepadAllowsTabScroll(popupOpen: false, exclusive: true),
+      isFalse,
+    );
+    expect(
+      friendsGamepadAllowsTabScroll(popupOpen: false, exclusive: false),
+      isTrue,
+    );
+  });
+
   testWidgets('без геймпада LT-подпись скрыта', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(

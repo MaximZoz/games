@@ -117,14 +117,15 @@ class GameStatsBody extends ConsumerWidget {
                 if (action.isDirection || action.isScroll) {
                   final back = action == GamepadAction.up ||
                       action == GamepadAction.left ||
-                      action == GamepadAction.scrollUp;
-                  return scrollGamepadByPage(back ? -1 : 1);
+                      action == GamepadAction.scrollUp ||
+                      action == GamepadAction.scrollLeft;
+                  scrollGamepadByPage(back ? -1 : 1, context: context);
+                  return true;
                 }
                 return false;
               },
               child: ListView(
               padding: contentPadding,
-              shrinkWrap: true,
               children: [
                 _GameStatsBlock(
                   title: l10n.statsAllGames,

@@ -4,6 +4,14 @@ import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 
+/// Попап перехватывает стик: вкладки друзей не листаем.
+bool friendsGamepadAllowsTabScroll({
+  required bool popupOpen,
+  required bool exclusive,
+}) {
+  return !popupOpen && !exclusive;
+}
+
 /// Правый стик: предыдущая / следующая вкладка друзей.
 int friendsTabIndexAfterScroll({
   required int index,

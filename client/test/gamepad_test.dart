@@ -377,6 +377,41 @@ void main() {
     expect(find.byType(GamepadKeyboardPanel), findsNothing);
   });
 
+  test('высота панели геймпада как у системной клавиатуры', () {
+    expect(gamepadKeyboardPanelHeight(bottomSafeArea: 0), greaterThan(200));
+    expect(
+      gamepadKeyboardPanelHeight(bottomSafeArea: 34),
+      gamepadKeyboardPanelHeight(bottomSafeArea: 0) + 34,
+    );
+  });
+
+  testWidgets('клавиатура геймпада поднимает контент viewInsets',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    late double inset;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                inset = MediaQuery.viewInsetsOf(context).bottom;
+                return const Scaffold(body: SizedBox.expand());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(inset, 0);
+    GamepadKeyboardController.instance.show();
+    await tester.pump();
+    expect(inset, gamepadKeyboardPanelHeight(bottomSafeArea: 0));
+  });
+
   test('подсказки только при подключённом геймпаде', () {
     final service = GamepadService.instance;
     service.start();
@@ -2078,6 +2113,38 @@ void main() {
     );
     await tester.pump();
     expect(GamepadDispatcher.hasExclusive, isTrue);
+    GamepadService.instance.emit(GamepadAction.shoulderR);
+    await tester.pump();
+    expect(tabs, 1);
+  });
+
+  testWidgets('exclusive без обработки не листает вкладки стиком',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var tabs = 0;
+    GamepadNav.switchTab = (_) => tabs++;
+    addTearDown(() => GamepadNav.switchTab = null);
+    final leaked = GamepadDispatcher.push((_) => false, exclusive: true);
+    addTearDown(() => GamepadDispatcher.remove(leaked));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    GamepadService.instance.emit(GamepadAction.scrollRight);
+    await tester.pump();
+    expect(tabs, 0);
     GamepadService.instance.emit(GamepadAction.shoulderR);
     await tester.pump();
     expect(tabs, 1);

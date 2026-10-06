@@ -77,6 +77,8 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
     // Диалог забирает весь ввод: B не закрывает фон, LB/RB не листают вкладки.
     if (GamepadDispatcher.hasExclusive) {
       if (GamepadDispatcher.dispatch(event.action)) return;
+      // Exclusive без обработки не глушит LB/RB. Стик/крест не уходят в фон.
+      if (event.action.isScroll || event.action.isDirection) return;
       // Скоуп уже снят (диалог закрыли в этом же кадре) — обычный ввод.
     }
     // Любой попап без exclusive: стик/кнопка закрывает его, вкладки не листаем.
@@ -108,11 +110,27 @@ class _GamepadHostState extends ConsumerState<GamepadHost> {
       listenable: GamepadKeyboardController.instance,
       builder: (context, _) {
         final kb = GamepadKeyboardController.instance.visible;
+        final media = MediaQuery.of(context);
+        final kbInset = kb
+            ? gamepadKeyboardPanelHeight(bottomSafeArea: media.padding.bottom)
+            : 0.0;
+        final childMedia = kbInset > 0
+            ? media.copyWith(
+                viewInsets: media.viewInsets.copyWith(
+                  bottom: media.viewInsets.bottom > kbInset
+                      ? media.viewInsets.bottom
+                      : kbInset,
+                ),
+              )
+            : media;
         return Stack(
           children: [
-            Shortcuts(
-              shortcuts: kb ? gamepadKeyboardTextShortcuts : const {},
-              child: widget.child,
+            MediaQuery(
+              data: childMedia,
+              child: Shortcuts(
+                shortcuts: kb ? gamepadKeyboardTextShortcuts : const {},
+                child: widget.child,
+              ),
             ),
             if (!kb) const GamepadHintsOverlay(),
             if (kb)
