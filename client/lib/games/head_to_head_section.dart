@@ -399,12 +399,13 @@ class StatsPopupGamepadScope extends StatelessWidget {
       exclusive: true,
       onAction: (action) {
         if (action.isDirection || action.isScroll) {
-          if (handleGamepadUiAction(context, action)) return true;
+          handleGamepadUiAction(context, action);
           final back = action == GamepadAction.up ||
               action == GamepadAction.left ||
               action == GamepadAction.scrollUp ||
               action == GamepadAction.scrollLeft;
-          return scrollGamepadByPage(back ? -1 : 1);
+          scrollGamepadByPage(back ? -1 : 1, context: context);
+          return true;
         }
         onClose();
         return true;

@@ -10,6 +10,7 @@ import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -502,6 +503,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     setState(() => _actionsInProgress.add(key));
 
     try {
+      _searchFocusNode.unfocus();
+      GamepadKeyboardController.instance.hide();
       final chatID = await ref.read(chatsRepositoryProvider).startChat(user.id);
       if (!mounted) return;
       if (chatID.isEmpty) return;
@@ -661,6 +664,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     }
     if (keyboard) return false;
     if (action.isScroll) {
+      if (!friendsGamepadAllowsTabScroll(
+        popupOpen: isGamepadPopupOpen(context),
+        exclusive: GamepadDispatcher.hasExclusive,
+      )) {
+        return true;
+      }
       if (_tabController.length <= 1) return true;
       final next = friendsTabIndexAfterScroll(
         index: _tabController.index,

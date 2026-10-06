@@ -16,6 +16,7 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
@@ -3378,6 +3379,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                             TextField(
                               controller: _textController,
                               focusNode: _composerFocusNode,
+                              readOnly: gamepadConnected(),
+                              showCursor: true,
                               contextMenuBuilder: (ctx, editableTextState) {
                                 return AdaptiveTextSelectionToolbar.editableText(
                                   editableTextState: editableTextState,
@@ -3432,7 +3435,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                 ),
                               ),
                               textInputAction: TextInputAction.send,
-                              onTap: _scrollToBottom,
+                              onTap: () {
+                                _scrollToBottom();
+                                if (gamepadConnected()) {
+                                  GamepadKeyboardController.instance.show();
+                                }
+                              },
                               // Не снимать фокус при тапе по «Отправить»
                               // (снаружи поля). Иначе Flutter + WebKit
                               // моргают клавиатурой.
