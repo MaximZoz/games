@@ -21,7 +21,7 @@ bool gamesHubScrollPagesCards(GamepadAction action) {
       action == GamepadAction.scrollDown;
 }
 
-/// Правый стик: предыдущая / следующая вкладка хаба.
+/// Правый стик: предыдущая / следующая вкладка хаба, без зацикливания.
 int gamesHubTabIndexAfterScroll({
   required int index,
   required int length,
@@ -30,10 +30,10 @@ int gamesHubTabIndexAfterScroll({
   if (length <= 0) return 0;
   if (length == 1) return 0;
   if (action == GamepadAction.scrollLeft) {
-    return (index - 1 + length) % length;
+    return (index - 1).clamp(0, length - 1);
   }
   if (action == GamepadAction.scrollRight) {
-    return (index + 1) % length;
+    return (index + 1).clamp(0, length - 1);
   }
   return index.clamp(0, length - 1);
 }

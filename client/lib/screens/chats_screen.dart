@@ -10,6 +10,7 @@ import 'package:multigames_client/chats/chats_provider.dart';
 import 'package:multigames_client/chats/chats_repository.dart';
 import 'package:multigames_client/chats/chats_gamepad.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
@@ -831,30 +832,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
     required String title,
     required String description,
     required String confirmText,
-    bool destructive = false,
   }) async {
-    final confirmed = await showDialog<bool>(
+    return showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(description),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(context.l10n.commonCancel),
-          ),
-          FilledButton(
-            style: AppButtonStyles.of(
-              foregroundColor:
-                  destructive ? Colors.red.shade800 : AppColors.textPrimary,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(confirmText),
-          ),
-        ],
-      ),
+      title: title,
+      message: description,
+      confirmLabel: confirmText,
     );
-    return confirmed == true;
   }
 
   Future<void> _clearChatFromList(ChatPreviewItem item) async {
@@ -862,7 +846,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       title: context.l10n.chatsClearTitle,
       description: context.l10n.chatsClearDesc,
       confirmText: context.l10n.chatsClearConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
@@ -908,7 +891,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
       title: context.l10n.chatsBlockTitle,
       description: context.l10n.chatsBlockDesc,
       confirmText: context.l10n.chatsBlockConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
