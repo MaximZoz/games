@@ -20,7 +20,6 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
-import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
@@ -1228,13 +1227,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                     ],
                   )
                 : null,
-            child: wrapGamepadCursor(
-              highlighted: highlighted && gamepadConnected(),
-              radius: 16,
-              child: GestureDetector(
-                onLongPress: () => unawaited(_showMessageActions(message)),
-                child: child,
-              ),
+            child: GestureDetector(
+              onLongPress: () => unawaited(_showMessageActions(message)),
+              child: child,
             ),
           ),
         ),
@@ -2184,7 +2179,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     final notifyLabel = notifyCount > 99 ? '99+' : '$notifyCount';
     final inToolbar = _gamepadZone == ChatRoomGamepadZone.toolbar;
     return ChatRoomGamepadLaneHint(
-      action: GamepadAction.down,
+      action: GamepadAction.actionY,
       leading: false,
       child: Padding(
         padding: const EdgeInsets.only(left: 4),
@@ -3186,7 +3181,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
     return GamepadScope(
       onAction: _onGamepad,
-      child: Scaffold(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          _handleChatBack();
+        },
+        child: Scaffold(
         backgroundColor: Colors.transparent,
         // Если клавиатуру уже вычел AppShell, второй раз нельзя: композер
         // уезжает выше клавиатуры, а сообщения схлопываются в ноль.
@@ -3194,7 +3195,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         body: SafeArea(
           child: SwipeBackScope(
             enabled: canSwipeBack,
-            onBack: _goBackToChats,
+            onBack: _handleChatBack,
             // Композер слева (смайлик) не должен перекрываться edge-зоной свайпа.
             bottomInset: 72,
             child: Column(
@@ -3408,8 +3409,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
-                  child: ChatRoomGamepadLaneHint(
-                    action: GamepadAction.up,
+                child: ChatRoomGamepadLaneHint(
+                  action: GamepadAction.actionX,
                     child: GamepadNavGroup(
                       name: 'chat-composer',
                       child: Row(
@@ -3580,25 +3581,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                             const EdgeInsets.fromLTRB(
                                           16,
                                           14,
-                                          4,
+                                          16,
                                           14,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          onPressed: _sending
-                                              ? null
-                                              : _openEmojiPicker,
-                                          tooltip: context.l10n.chatEmoji,
-                                          splashRadius: 22,
-                                          icon: const Icon(
-                                            Icons.emoji_emotions_outlined,
-                                            color: _composerIconPurple,
-                                            size: 28,
-                                          ),
-                                        ),
-                                        suffixIconConstraints:
-                                            const BoxConstraints(
-                                          minWidth: 48,
-                                          minHeight: 48,
                                         ),
                                       ),
                                       textInputAction: TextInputAction.send,
@@ -3637,6 +3621,31 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                                     ),
                                   ],
                                 ),
+                              ),
+                            ),
+                          ),
+                          GamepadFocusBlock(
+                            focusable:
+                                _gamepadZone == ChatRoomGamepadZone.composer,
+                            radius: 20,
+                            shape: GamepadHighlightShape.circle,
+                            onActivate: _sending
+                                ? null
+                                : () => unawaited(_openEmojiPicker()),
+                            child: IconButton(
+                              onPressed: _sending
+                                  ? null
+                                  : () => unawaited(_openEmojiPicker()),
+                              tooltip: context.l10n.chatEmoji,
+                              padding: const EdgeInsets.all(10),
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              icon: const Icon(
+                                Icons.emoji_emotions_outlined,
+                                color: _composerIconPurple,
+                                size: 28,
                               ),
                             ),
                           ),
@@ -3702,7 +3711,17 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           ),
         ),
       ),
+      ),
     );
+  }
+
+  bool _handleChatBack() {
+    if (_replyTo != null || _editingMessage != null) {
+      _cancelComposerContext();
+      return true;
+    }
+    _goBackToChats();
+    return true;
   }
 
   bool _onGamepad(GamepadAction action) {
@@ -3710,48 +3729,46 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         action == GamepadAction.shoulderR) {
       return false;
     }
+    if (chatRoomGoesToToolbar(action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.toolbar);
+      return true;
+    }
+    if (chatRoomGoesToComposer(action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.composer);
+      return true;
+    }
     if (GamepadKeyboardController.instance.visible || isEditableTextFocused()) {
       if (action == GamepadAction.cancel &&
-          (_replyTo != null || _editingMessage != null) &&
           !GamepadKeyboardController.instance.visible) {
-        _cancelComposerContext();
-        return true;
+        return _handleChatBack();
       }
       if (action == GamepadAction.confirm &&
           !GamepadKeyboardController.instance.visible) {
         GamepadKeyboardController.instance.show();
         return true;
       }
-      if (action == GamepadAction.up &&
+      if (chatRoomStickReturnsToMessages(
+            zone: ChatRoomGamepadZone.composer,
+            action: action,
+          ) &&
           !GamepadKeyboardController.instance.visible) {
         _enterGamepadZone(ChatRoomGamepadZone.messages);
         return true;
       }
       return false;
     }
-    if (action == GamepadAction.cancel &&
-        (_replyTo != null || _editingMessage != null)) {
-      _cancelComposerContext();
-      return true;
+    if (action == GamepadAction.cancel) {
+      return _handleChatBack();
     }
     if (_messages.isNotEmpty) {
       _gamepadMessageIndex =
           _gamepadMessageIndex.clamp(0, _messages.length - 1);
     }
-    final hasToolbar = widget.onLeave != null ||
-        !(widget.inSplitView && !widget.fromFriends && !widget.fromGames);
+    if (chatRoomStickReturnsToMessages(zone: _gamepadZone, action: action)) {
+      _enterGamepadZone(ChatRoomGamepadZone.messages);
+      return true;
+    }
     if (action == GamepadAction.up || action == GamepadAction.down) {
-      final nextZone = chatRoomZoneAfterVertical(
-        zone: _gamepadZone,
-        action: action,
-        messageIndex: _gamepadMessageIndex,
-        messageCount: _messages.length,
-        hasToolbar: hasToolbar,
-      );
-      if (nextZone != _gamepadZone) {
-        _enterGamepadZone(nextZone);
-        return true;
-      }
       if (_gamepadZone == ChatRoomGamepadZone.messages &&
           _messages.isNotEmpty) {
         setState(() {
@@ -3962,10 +3979,60 @@ class _ChatEmojiPickerSheet extends StatefulWidget {
 }
 
 class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
-  static const _collapsedSize = 0.14;
+  static const _collapsedSize = kChatRoomEmojiSheetCollapsed;
   static const _expandedThreshold = 0.26;
 
+  final DraggableScrollableController _sheet = DraggableScrollableController();
   bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) focusFirstVisibleGamepadTarget();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sheet.dispose();
+    super.dispose();
+  }
+
+  void _closeSheet() {
+    if (!mounted) return;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) nav.pop();
+  }
+
+  void _resizeSheet({required bool expand}) {
+    if (!_sheet.isAttached) return;
+    final next = chatRoomEmojiSheetSizeAfterScroll(
+      current: _sheet.size,
+      expand: expand,
+    );
+    _sheet.animateTo(
+      next,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
+  bool _onEmojiGamepad(GamepadAction action) {
+    if (action == GamepadAction.cancel) {
+      _closeSheet();
+      return true;
+    }
+    if (action == GamepadAction.scrollUp ||
+        action == GamepadAction.scrollDown) {
+      _resizeSheet(expand: action == GamepadAction.scrollUp);
+      return true;
+    }
+    if (action == GamepadAction.confirm || action.isDirection) {
+      return handleGamepadUiAction(context, action);
+    }
+    return true;
+  }
 
   Map<String, String> get _groupTitles {
     final l10n = LocaleService.l10n;
@@ -3986,7 +4053,10 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
     required double emojiSize,
     required double qtySize,
   }) {
-    return InkWell(
+    return GamepadFocusBlock(
+      radius: 12,
+      onActivate: () => widget.onPick(it),
+      child: InkWell(
       onTap: () => widget.onPick(it),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -4011,6 +4081,7 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -4045,21 +4116,34 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
       ...grouped.keys.where((k) => !known.contains(k)),
     ];
 
-    return NotificationListener<DraggableScrollableNotification>(
+    return GamepadScope(
+      exclusive: true,
+      onAction: _onEmojiGamepad,
+      child: GamepadNavGroup(
+        name: 'chat-emoji',
+        exclusive: true,
+        child: NotificationListener<DraggableScrollableNotification>(
       onNotification: (n) {
         final next = n.extent >= _expandedThreshold;
         if (next != _expanded) {
           setState(() => _expanded = next);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) focusFirstVisibleGamepadTarget();
+          });
         }
         return false;
       },
       child: DraggableScrollableSheet(
+        controller: _sheet,
         expand: false,
         snap: true,
-        snapSizes: const [_collapsedSize, 0.55],
+        snapSizes: const [
+          kChatRoomEmojiSheetCollapsed,
+          kChatRoomEmojiSheetMid,
+        ],
         initialChildSize: _collapsedSize,
         minChildSize: _collapsedSize,
-        maxChildSize: 0.92,
+        maxChildSize: kChatRoomEmojiSheetMax,
         builder: (context, scrollController) {
           return Container(
             decoration: const BoxDecoration(
@@ -4196,6 +4280,8 @@ class _ChatEmojiPickerSheetState extends State<_ChatEmojiPickerSheet> {
           );
         },
       ),
+    ),
+    ),
     );
   }
 }
