@@ -2208,6 +2208,35 @@ void main() {
     expect(find.byType(GamepadGlyph), findsNothing);
   });
 
+  testWidgets('оверлей не рисует A на обычной сфокусированной кнопке',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GamepadHost(
+            child: Scaffold(
+              body: Center(
+                child: FilledButton(
+                  autofocus: true,
+                  onPressed: () {},
+                  child: const Text('OK'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    GamepadService.instance.start();
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(find.text('OK'), findsOneWidget);
+    expect(find.byType(GamepadGlyph), findsNothing);
+  });
+
   testWidgets(
       'наведение на поле открывает клавиатуру, B скрывает и даёт уйти вниз',
       (tester) async {

@@ -1516,7 +1516,8 @@ class _MobileBottomNav extends StatelessWidget {
     final navItems = _navItems(context, offline: offline);
     final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
     final label = navItems[safeIndex].label;
-    return Padding(
+    return ExcludeFocus(
+      child: Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1606,6 +1607,7 @@ class _MobileBottomNav extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
