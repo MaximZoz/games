@@ -36,6 +36,12 @@ func shopItemJSON(it store.ShopItemView) map[string]any {
 	if it.AcquiredAt != "" {
 		m["acquired_at"] = it.AcquiredAt
 	}
+	if it.ConditionShift != 0 {
+		m["condition_shift"] = it.ConditionShift
+	}
+	if it.VintageAt != "" {
+		m["vintage_at"] = it.VintageAt
+	}
 	if len(it.Payload) > 0 {
 		var payload any
 		if json.Unmarshal(it.Payload, &payload) == nil {
@@ -166,25 +172,36 @@ func (h *ShopHandler) Inventory(w http.ResponseWriter, r *http.Request) {
 	}
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
-		m := map[string]any{
-			"code":        it.Code,
-			"kind":        it.Kind,
-			"title":       it.Title,
-			"description": it.Description,
-			"acquired_at": it.AcquiredAt,
-			"quantity":    it.Quantity,
-		}
-		if len(it.Payload) > 0 {
-			var payload any
-			if json.Unmarshal(it.Payload, &payload) == nil {
-				m["payload"] = payload
-			}
-		}
+		m := inventoryItemJSON(it)
 		out = append(out, m)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")
 	_ = json.NewEncoder(w).Encode(map[string]any{"items": out})
+}
+
+func inventoryItemJSON(it store.InventoryItemView) map[string]any {
+	m := map[string]any{
+		"code":        it.Code,
+		"kind":        it.Kind,
+		"title":       it.Title,
+		"description": it.Description,
+		"acquired_at": it.AcquiredAt,
+		"quantity":    it.Quantity,
+	}
+	if it.ConditionShift != 0 {
+		m["condition_shift"] = it.ConditionShift
+	}
+	if it.VintageAt != "" {
+		m["vintage_at"] = it.VintageAt
+	}
+	if len(it.Payload) > 0 {
+		var payload any
+		if json.Unmarshal(it.Payload, &payload) == nil {
+			m["payload"] = payload
+		}
+	}
+	return m
 }
 
 // GET /api/inventory/capabilities
@@ -259,6 +276,54 @@ func (h *ShopHandler) Sell(w http.ResponseWriter, r *http.Request) {
 		"balance_bronze": balance,
 		"refund_bronze":  refund,
 	})
+}
+
+type elixirBody struct {
+	ElixirCode     string `json:"elixir_code"`
+	CollectionCode string `json:"collection_code"`
+}
+
+// POST /api/inventory/elixir  {"elixir_code":"...","collection_code":"..."}
+func (h *ShopHandler) ApplyElixir(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		WriteErr(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+	userID, ok := GetUserID(r.Context())
+	if !ok {
+		WriteErr(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body elixirBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		WriteErr(w, r, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	elixirCode := strings.TrimSpace(body.ElixirCode)
+	collectionCode := strings.TrimSpace(body.CollectionCode)
+	if elixirCode == "" || collectionCode == "" {
+		WriteErr(w, r, http.StatusBadRequest, "code required")
+		return
+	}
+	result, err := store.ApplyElixir(r.Context(), h.Pool, userID, elixirCode, collectionCode)
+	if err != nil {
+		switch err {
+		case store.ErrElixirNotOwned, store.ErrElixirNotApplicable, store.ErrElixirWrongSet, store.ErrNotCollection:
+			WriteErr(w, r, http.StatusConflict, err.Error())
+		default:
+			WriteErr(w, r, http.StatusInternalServerError, "server error")
+		}
+		return
+	}
+	resp := map[string]any{
+		"condition_shift": result.ConditionShift,
+		"elixir_quantity": result.ElixirQuantity,
+	}
+	if result.VintageAt != nil {
+		resp["vintage_at"] = result.VintageAt.UTC().Format(time.RFC3339)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // POST /api/inventory/gift  {"code":"coll_unicorn","to_user_id":"..."}
@@ -388,21 +453,7 @@ func (h *ShopHandler) CollectionsShowcase(w http.ResponseWriter, r *http.Request
 	}
 	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
-		m := map[string]any{
-			"code":        it.Code,
-			"kind":        it.Kind,
-			"title":       it.Title,
-			"description": it.Description,
-			"acquired_at": it.AcquiredAt,
-			"quantity":    it.Quantity,
-		}
-		if len(it.Payload) > 0 {
-			var payload any
-			if json.Unmarshal(it.Payload, &payload) == nil {
-				m["payload"] = payload
-			}
-		}
-		out = append(out, m)
+		out = append(out, inventoryItemJSON(it))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store, no-cache")

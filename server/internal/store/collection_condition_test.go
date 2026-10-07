@@ -57,3 +57,101 @@ func TestCollectionRefundBronze(t *testing.T) {
 		t.Fatalf("zero price: got %d", got)
 	}
 }
+
+func TestCollectionConditionEffective(t *testing.T) {
+	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
+	now := acquired.AddDate(0, 0, 1) // новое
+	if got := CollectionConditionEffective(acquired, now, 1, nil); got != CollectionCondWorn {
+		t.Fatalf("старение нового: got %s", got)
+	}
+	if got := CollectionConditionEffective(acquired, now, -1, nil); got != CollectionCondNew {
+		t.Fatalf("омоложение не моложе нового: got %s", got)
+	}
+	tired := acquired.AddDate(0, 3, 0)
+	if got := CollectionConditionEffective(acquired, tired, 1, nil); got != CollectionCondShabby {
+		t.Fatalf("старение уставшего: got %s", got)
+	}
+	shabby := acquired.AddDate(0, 8, 0)
+	if got := CollectionConditionEffective(acquired, shabby, 1, nil); got != CollectionCondShabby {
+		t.Fatalf("старение не даёт винтаж: got %s", got)
+	}
+	vintage := acquired.AddDate(1, 1, 0)
+	if got := CollectionConditionEffective(acquired, vintage, -1, nil); got != CollectionCondShabby {
+		t.Fatalf("омоложение винтажа: got %s", got)
+	}
+	boost := shabby.AddDate(0, 3, 0)
+	if got := CollectionConditionEffective(acquired, shabby, 0, &boost); got != CollectionCondShabby {
+		t.Fatalf("ускорение ещё не наступило: got %s", got)
+	}
+	if got := CollectionConditionEffective(acquired, boost, 0, &boost); got != CollectionCondVintage {
+		t.Fatalf("ускорение наступило: got %s", got)
+	}
+	agedPrice := CollectionRefundAged(1000, acquired, tired, 1, nil)
+	if agedPrice != 1000 {
+		t.Fatalf("продажа уставшего после старения: got %d", agedPrice)
+	}
+}
+
+func TestPlanElixirApply(t *testing.T) {
+	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
+	now := acquired.AddDate(0, 0, 2)
+	if _, _, err := PlanElixirApply(ElixirRejuvenate, acquired, now, 0, nil); err != ErrElixirNotApplicable {
+		t.Fatalf("омоложение нового: %v", err)
+	}
+	shift, vintage, err := PlanElixirApply(ElixirAge, acquired, now, 0, nil)
+	if err != nil || shift != 1 || vintage != nil {
+		t.Fatalf("старение нового: shift %d vintage %v err %v", shift, vintage, err)
+	}
+	shabby := acquired.AddDate(0, 8, 0)
+	if _, _, err := PlanElixirApply(ElixirAge, acquired, shabby, 0, nil); err != ErrElixirNotApplicable {
+		t.Fatalf("старение ветхого: %v", err)
+	}
+	shift, vintage, err = PlanElixirApply(ElixirAccelerate, acquired, shabby, 0, nil)
+	if err != nil || shift != 0 || vintage == nil {
+		t.Fatalf("ускорение: shift %d vintage %v err %v", shift, vintage, err)
+	}
+	if !vintage.Equal(shabby.AddDate(0, 3, 0)) {
+		t.Fatalf("срок ускорения: %s", vintage)
+	}
+	if _, _, err := PlanElixirApply(ElixirAccelerate, acquired, shabby, 0, vintage); err != ErrElixirNotApplicable {
+		t.Fatalf("повтор ускорения: %v", err)
+	}
+	late := acquired.AddDate(0, 11, 0)
+	if _, _, err := PlanElixirApply(ElixirAccelerate, acquired, late, 0, nil); err != ErrElixirNotApplicable {
+		t.Fatalf("ускорение не короче года: %v", err)
+	}
+	boost := shabby.AddDate(0, 3, 0)
+	shift, vintage, err = PlanElixirApply(ElixirRejuvenate, acquired, boost, 0, &boost)
+	if err != nil || shift != 0 || vintage != nil {
+		t.Fatalf("омоложение ускоренного винтажа: shift %d vintage %v err %v", shift, vintage, err)
+	}
+	if got := CollectionConditionEffective(acquired, boost, shift, vintage); got != CollectionCondShabby {
+		t.Fatalf("после омоложения ускоренного винтажа: %s", got)
+	}
+}
+
+func TestNextCollectionCondition(t *testing.T) {
+	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
+	now := acquired.AddDate(0, 0, 1)
+	cond, at, ok := NextCollectionCondition(acquired, now, 0, nil)
+	if !ok || cond != CollectionCondWorn || !at.Equal(acquired.AddDate(0, 0, 7)) {
+		t.Fatalf("новое: %s %s %v", cond, at, ok)
+	}
+	cond, at, ok = NextCollectionCondition(acquired, now, 1, nil)
+	if !ok || cond != CollectionCondTired || !at.Equal(acquired.AddDate(0, 0, 7)) {
+		t.Fatalf("состаренное новое: %s %s %v", cond, at, ok)
+	}
+	shabby := acquired.AddDate(0, 8, 0)
+	cond, _, ok = NextCollectionCondition(acquired, shabby, 0, nil)
+	if !ok || cond != CollectionCondVintage {
+		t.Fatalf("ветхое: %s %v", cond, ok)
+	}
+	boost := shabby.AddDate(0, 3, 0)
+	cond, at, ok = NextCollectionCondition(acquired, shabby, 0, &boost)
+	if !ok || cond != CollectionCondVintage || !at.Equal(boost) {
+		t.Fatalf("ускоренное ветхое: %s %s %v", cond, at, ok)
+	}
+	if _, _, ok = NextCollectionCondition(acquired, acquired.AddDate(2, 0, 0), 0, nil); ok {
+		t.Fatalf("у винтажа не должно быть таймера")
+	}
+}

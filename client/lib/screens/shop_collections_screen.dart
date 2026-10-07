@@ -514,9 +514,11 @@ class _ShopCollectionGroupScreenState
         animatedName: item.animatedName ?? 'sparkles',
         fallback: item.emoji,
         subtitle: collectionItemSubtitle(item.dailyBronze),
-        condition: item.owned
-            ? collectionConditionOf(item.acquiredAt)
-            : CollectionCondition.fresh,
+        condition: item.owned ? null : CollectionCondition.fresh,
+        acquiredAt:
+            item.owned ? parseCollectionAcquiredAt(item.acquiredAt) : null,
+        conditionShift: item.conditionShift,
+        vintageAt: parseCollectionAcquiredAt(item.vintageAt),
         onBuy: item.owned ? null : () => unawaited(_buy(item)),
         buyLabel: context.l10n.shopBuy,
       ),
@@ -605,63 +607,66 @@ class _CollectionShopCard extends StatelessWidget {
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                InkWell(
-                  canRequestFocus: false,
-                  onTap: onPreview,
-                  borderRadius: BorderRadius.circular(12),
-                  child: ShopAnimatedEmoji(
-                    animatedName: item.animatedName ?? 'sparkles',
-                    size: 52,
-                    fallback: item.emoji,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        catalogTitle(item.code,
-                            fallback: item.title, l10n: context.l10n),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        collectionItemSubtitle(item.dailyBronze),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      BalanceDisplay(
-                        bronze: item.priceBronze,
-                        coinSize: 14,
-                        fontSize: 13,
-                        spacing: 6,
-                      ),
-                    ],
-                  ),
-                ),
-                if (item.owned)
-                  Text(
-                    context.l10n.shopHave,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2E7D32),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                canRequestFocus: false,
+                onTap: onPreview,
+                borderRadius: BorderRadius.circular(18),
+                child: Row(
+                  children: [
+                    ShopAnimatedEmoji(
+                      animatedName: item.animatedName ?? 'sparkles',
+                      size: 52,
+                      fallback: item.emoji,
                     ),
-                  )
-                else
-                  FilledButton(
-                    onPressed: busy ? null : onBuy,
-                    child: Text(busy ? '…' : context.l10n.shopBuy),
-                  ),
-              ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            catalogTitle(item.code,
+                                fallback: item.title, l10n: context.l10n),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            collectionItemSubtitle(item.dailyBronze),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          BalanceDisplay(
+                            bronze: item.priceBronze,
+                            coinSize: 14,
+                            fontSize: 13,
+                            spacing: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (item.owned)
+                      Text(
+                        context.l10n.shopHave,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: busy ? null : onBuy,
+                        child: Text(busy ? '…' : context.l10n.shopBuy),
+                      ),
+                  ],
+                ),
+              ),
             ),
           );
         },

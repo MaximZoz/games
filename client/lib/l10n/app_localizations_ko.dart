@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -808,7 +810,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get gamesChessModeAntichess => '안티체스';
 
-
   @override
   String get rulesCheckersPlayers => '플레이어: 2.';
 
@@ -889,7 +890,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesChessDrawAntichess => '무승부: 3회 반복, 또는 같은 수에 양쪽이 말이 없어지면.';
-
 
   @override
   String get checkersDrawRepetition => '무승부 — 같은 국면이 세 번';
@@ -2964,4 +2964,165 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get apiErrMoveConflict => '수가 충돌했습니다. 다시 시도하세요.';
+
+  @override
+  String get shopElixirs => '엘릭서';
+
+  @override
+  String get shopElixirsSubtitle => '컬렉션을 회춘, 노화 또는 가속';
+
+  @override
+  String get shopElixirsHelp => '선반 세 개: 회춘, 노화, 가속. 각 선반에 여섯 병, 컬렉션 세트마다 하나. 엘릭서는 자기 세트에만 작용합니다.\n\n회춘은 한 단계 새롭게 하고 새것보다 새로워지지 않습니다. 노화는 한 단계 낡게 하고 낡은 것보다 더 낡지 않습니다. 가속은 낡은 것만: 빈티지까지 3개월, 한 번. 엘릭서만으로 빈티지가 되지는 않습니다.\n\n산 엘릭서는 아이템에 있습니다. 컬렉션 카드나 엘릭서 카드에서 사용합니다. 쓸 때마다 하나 소모됩니다.';
+
+  @override
+  String get elixirGroupRejuvenate => '회춘';
+
+  @override
+  String get elixirGroupAge => '노화';
+
+  @override
+  String get elixirGroupAccelerate => '가속';
+
+  @override
+  String get elixirEffectRejuvenate => '회춘';
+
+  @override
+  String get elixirEffectAge => '노화';
+
+  @override
+  String get elixirEffectAccelerate => '가속';
+
+  @override
+  String get elixirAdjCelebration => '축제';
+
+  @override
+  String get elixirAdjNature => '자연';
+
+  @override
+  String get elixirAdjLegends => '전설';
+
+  @override
+  String get elixirAdjCosmic => '우주';
+
+  @override
+  String get elixirAdjAdventure => '모험';
+
+  @override
+  String get elixirAdjJewels => '보석';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective $effect 엘릭서';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => '한 단계 새롭게 합니다. 새것보다 새로워지지 않습니다.';
+
+  @override
+  String get elixirHelpAge => '한 단계 낡게 합니다. 낡은 것보다 더 낡지 않습니다.';
+
+  @override
+  String get elixirHelpAccelerate => '낡은 것만. 빈티지까지 3개월, 한 번.';
+
+  @override
+  String get elixirUseRejuvenate => '회춘';
+
+  @override
+  String get elixirUseAge => '노화';
+
+  @override
+  String get elixirUseAccelerate => '가속';
+
+  @override
+  String get elixirUse => '사용';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count일',
+      one: '$count일',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count시간',
+      one: '$count시간',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count분',
+      one: '$count분',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return '「$set」세트만.';
+  }
+
+  @override
+  String get elixirPickCollection => '컬렉션 선택';
+
+  @override
+  String get elixirNoTarget => '이 세트에서 이 엘릭서를 쓸 컬렉션이 없습니다';
+
+  @override
+  String get elixirApplied => '엘릭서를 사용했습니다';
+
+  @override
+  String get elixirConfirmTitle => '이 엘릭서를 사용할까요?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => '엘릭서가 없습니다 — 상점에서 구매하세요';
+
+  @override
+  String get elixirNotApplicable => '지금은 이 컬렉션에 쓸 수 없습니다';
+
+  @override
+  String get elixirWrongSet => '다른 세트용 엘릭서입니다';
+
+  @override
+  String get elixirNotOwned => '이 엘릭서가 없습니다';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return '$state까지 $left';
+  }
+
+  @override
+  String get collectionLeftSoon => '1분 미만';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

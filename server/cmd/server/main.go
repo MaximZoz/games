@@ -591,6 +591,7 @@ func main() {
 	mux.Handle("/api/inventory/capabilities", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Capabilities)))
 	mux.Handle("/api/inventory/consume", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Consume)))
 	mux.Handle("/api/inventory/sell", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Sell)))
+	mux.Handle("/api/inventory/elixir", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.ApplyElixir)))
 	mux.Handle("/api/inventory/gift", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.Gift)))
 	mux.Handle("/api/inventory/collections", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.CollectionsShowcase)))
 	mux.Handle("/api/inventory/collection-income", api.RequireAuth([]byte(jwtSecret), pool, http.HandlerFunc(shopHandler.CollectionIncome)))

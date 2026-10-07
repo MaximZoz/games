@@ -1697,7 +1697,6 @@ abstract class AppLocalizations {
   /// **'Антишахматы'**
   String get gamesChessModeAntichess;
 
-
   /// No description provided for @rulesCheckersPlayers.
   ///
   /// In ru, this message translates to:
@@ -1847,7 +1846,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ничья при троекратном повторении позиции или если оба остались без фигур в один ход.'**
   String get rulesChessDrawAntichess;
-
 
   /// No description provided for @checkersDrawRepetition.
   ///
@@ -5604,6 +5602,264 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ход конфликтует. Повторите.'**
   String get apiErrMoveConflict;
+
+  /// No description provided for @shopElixirs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсиры'**
+  String get shopElixirs;
+
+  /// No description provided for @shopElixirsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омоложение, старение и ускорение коллекций'**
+  String get shopElixirsSubtitle;
+
+  /// No description provided for @shopElixirsHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Три полки: омоложение, старение и ускорение. На каждой шесть эликсиров — по одному на набор коллекций. Эликсир действует только на свой набор.\n\nОмоложение делает коллекцию на шаг новее и не новее, чем новое. Старение делает на шаг старше и не старше, чем ветхое. Ускорение только для ветхой: до винтажа остаётся 3 месяца, один раз. Винтаж эликсиром не наступает.\n\nКупленный эликсир лежит в предметах. Его применяют с карточки коллекции или с карточки эликсира. Каждый раз тратится одна штука.'**
+  String get shopElixirsHelp;
+
+  /// No description provided for @elixirGroupRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омоложение'**
+  String get elixirGroupRejuvenate;
+
+  /// No description provided for @elixirGroupAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Старение'**
+  String get elixirGroupAge;
+
+  /// No description provided for @elixirGroupAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ускорение'**
+  String get elixirGroupAccelerate;
+
+  /// No description provided for @elixirEffectRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'омоложения'**
+  String get elixirEffectRejuvenate;
+
+  /// No description provided for @elixirEffectAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'старения'**
+  String get elixirEffectAge;
+
+  /// No description provided for @elixirEffectAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'ускорения'**
+  String get elixirEffectAccelerate;
+
+  /// No description provided for @elixirAdjCelebration.
+  ///
+  /// In ru, this message translates to:
+  /// **'Праздничный'**
+  String get elixirAdjCelebration;
+
+  /// No description provided for @elixirAdjNature.
+  ///
+  /// In ru, this message translates to:
+  /// **'Природный'**
+  String get elixirAdjNature;
+
+  /// No description provided for @elixirAdjLegends.
+  ///
+  /// In ru, this message translates to:
+  /// **'Легендарный'**
+  String get elixirAdjLegends;
+
+  /// No description provided for @elixirAdjCosmic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Космический'**
+  String get elixirAdjCosmic;
+
+  /// No description provided for @elixirAdjAdventure.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приключенческий'**
+  String get elixirAdjAdventure;
+
+  /// No description provided for @elixirAdjJewels.
+  ///
+  /// In ru, this message translates to:
+  /// **'Драгоценный'**
+  String get elixirAdjJewels;
+
+  /// No description provided for @elixirName.
+  ///
+  /// In ru, this message translates to:
+  /// **'{adjective} эликсир {effect}'**
+  String elixirName(String adjective, String effect);
+
+  /// No description provided for @elixirHelpRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Делает коллекцию на шаг новее. Не новее, чем новое.'**
+  String get elixirHelpRejuvenate;
+
+  /// No description provided for @elixirHelpAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Делает коллекцию на шаг старше. Не старше, чем ветхое.'**
+  String get elixirHelpAge;
+
+  /// No description provided for @elixirHelpAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только для ветхой. До винтажа остаётся 3 месяца, один раз.'**
+  String get elixirHelpAccelerate;
+
+  /// No description provided for @elixirUseRejuvenate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Омолодить'**
+  String get elixirUseRejuvenate;
+
+  /// No description provided for @elixirUseAge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Состарить'**
+  String get elixirUseAge;
+
+  /// No description provided for @elixirUseAccelerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ускорить'**
+  String get elixirUseAccelerate;
+
+  /// No description provided for @elixirUse.
+  ///
+  /// In ru, this message translates to:
+  /// **'Использовать'**
+  String get elixirUse;
+
+  /// No description provided for @collectionLeftDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дней}}'**
+  String collectionLeftDays(int count);
+
+  /// No description provided for @collectionLeftHours.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} час} few{{count} часа} many{{count} часов} other{{count} часов}}'**
+  String collectionLeftHours(int count);
+
+  /// No description provided for @collectionLeftMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} минута} few{{count} минуты} many{{count} минут} other{{count} минут}}'**
+  String collectionLeftMinutes(int count);
+
+  /// No description provided for @elixirSetOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только набор «{set}».'**
+  String elixirSetOnly(String set);
+
+  /// No description provided for @elixirPickCollection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите коллекцию'**
+  String get elixirPickCollection;
+
+  /// No description provided for @elixirNoTarget.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет коллекции этого набора, на которую эликсир подействует'**
+  String get elixirNoTarget;
+
+  /// No description provided for @elixirApplied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсир применён'**
+  String get elixirApplied;
+
+  /// No description provided for @elixirConfirmTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить эликсир?'**
+  String get elixirConfirmTitle;
+
+  /// No description provided for @elixirConfirmBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'{elixir}\n{collection}'**
+  String elixirConfirmBody(String elixir, String collection);
+
+  /// No description provided for @inventoryNoElixirs.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет эликсиров — купите в магазине'**
+  String get inventoryNoElixirs;
+
+  /// No description provided for @elixirNotApplicable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сейчас этот эликсир на коллекцию не подействует'**
+  String get elixirNotApplicable;
+
+  /// No description provided for @elixirWrongSet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсир от другого набора'**
+  String get elixirWrongSet;
+
+  /// No description provided for @elixirNotOwned.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эликсира нет'**
+  String get elixirNotOwned;
+
+  /// No description provided for @collectionUntil.
+  ///
+  /// In ru, this message translates to:
+  /// **'До {state} {left}'**
+  String collectionUntil(String state, String left);
+
+  /// No description provided for @collectionLeftSoon.
+  ///
+  /// In ru, this message translates to:
+  /// **'меньше минуты'**
+  String get collectionLeftSoon;
+
+  /// No description provided for @collectionCondGenNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'нового'**
+  String get collectionCondGenNew;
+
+  /// No description provided for @collectionCondGenWorn.
+  ///
+  /// In ru, this message translates to:
+  /// **'потрепанного'**
+  String get collectionCondGenWorn;
+
+  /// No description provided for @collectionCondGenTired.
+  ///
+  /// In ru, this message translates to:
+  /// **'уставшего'**
+  String get collectionCondGenTired;
+
+  /// No description provided for @collectionCondGenShabby.
+  ///
+  /// In ru, this message translates to:
+  /// **'ветхого'**
+  String get collectionCondGenShabby;
+
+  /// No description provided for @collectionCondGenVintage.
+  ///
+  /// In ru, this message translates to:
+  /// **'винтажа'**
+  String get collectionCondGenVintage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
