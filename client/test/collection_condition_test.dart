@@ -81,9 +81,8 @@ void main() {
       collectionConditionName(l10n, CollectionCondition.vintage),
       'Винтаж',
     );
-    expect(l10n.collectionConditionSell(300), 'Продажа 300%');
-    expect(l10n.shopCollectionConditionInfo, contains('80%'));
-    expect(l10n.shopCollectionConditionInfo, contains('300%'));
+    expect(l10n.shopCollectionsHelp, contains('продажа 80% от стоимости'));
+    expect(l10n.shopCollectionsHelp, contains('продажа 300% от стоимости'));
     expect(l10n.shopCollectionsHelp, contains('Винтаж'));
   });
 }

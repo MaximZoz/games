@@ -1686,7 +1686,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopEmojisHelp => 'チャット用のアニメ絵文字。セットを買って友達に送れます。';
 
   @override
-  String get shopCollectionsHelp => 'アイテムセットを集めましょう。プロフィールのショーケースに表示され、贈ったり売ったりできます。揃えると毎日追加コインが入ります。\n\n状態はコレクションを持っている期間で変わります。新品——最初の7日、売却80%。使い込まれた——8日目から2か月、売却60%。疲れた——2か月から6か月、売却40%。ぼろぼろ——6か月から1年、売却100%。ヴィンテージ——1年から、売却300%。';
+  String get shopCollectionsHelp => 'アイテムセットを集めましょう。プロフィールのショーケースに表示され、贈ったり売ったりできます。揃えると毎日追加コインが入ります。\n\n状態はコレクションを持っている期間で変わります。新品——最初の7日、価格の80%で売却。使い込まれた——8日目から2か月、価格の60%で売却。疲れた——2か月から6か月、価格の40%で売却。ぼろぼろ——6か月から1年、価格の100%で売却。ヴィンテージ——1年から、価格の300%で売却。';
 
   @override
   String get shopStakesHelp => 'より高い賭け金を解除。賭け金が高いほどポットと配当が大きくなります。';
@@ -2039,9 +2039,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopSellRefund => '売却額はコレクションの状態によります';
 
   @override
-  String get shopCollectionConditionInfo => '状態はコレクションを持っている期間で変わります。新品——最初の7日、売却80%。使い込まれた——8日目から2か月、売却60%。疲れた——2か月から6か月、売却40%。ぼろぼろ——6か月から1年、売却100%。ヴィンテージ——1年から、売却300%。';
-
-  @override
   String get collectionConditionNew => '新品';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'ヴィンテージ';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return '売却 $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

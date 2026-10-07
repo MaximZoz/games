@@ -1686,7 +1686,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopEmojisHelp => 'Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.';
 
   @override
-  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.\n\nHolat kolleksiya sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, sotish 80%. Yeyilgan — 8-kundan 2 oygacha, sotish 60%. Charchagan — 2 oydan 6 oygacha, sotish 40%. Eski — 6 oydan 1 yilgacha, sotish 100%. Vintaj — 1 yildan keyin, sotish 300%.';
+  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.\n\nHolat kolleksiya sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, narxning 80%iga sotish. Yeyilgan — 8-kundan 2 oygacha, narxning 60%iga sotish. Charchagan — 2 oydan 6 oygacha, narxning 40%iga sotish. Eski — 6 oydan 1 yilgacha, narxning 100%iga sotish. Vintaj — 1 yildan keyin, narxning 300%iga sotish.';
 
   @override
   String get shopStakesHelp => 'O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopSellRefund => 'Sotish kolleksiya holatiga bog‘liq';
 
   @override
-  String get shopCollectionConditionInfo => 'Holat kolleksiya sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, sotish 80%. Yeyilgan — 8-kundan 2 oygacha, sotish 60%. Charchagan — 2 oydan 6 oygacha, sotish 40%. Eski — 6 oydan 1 yilgacha, sotish 100%. Vintaj — 1 yildan keyin, sotish 300%.';
-
-  @override
   String get collectionConditionNew => 'Yangi';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Vintaj';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Sotish $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

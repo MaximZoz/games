@@ -624,7 +624,7 @@
   "shopStakes": "Taruhan",
   "shopStakesSubtitle": "Buka taruhan lebih tinggi",
   "shopEmojisHelp": "Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.",
-  "shopCollectionsHelp": "Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.\n\nKondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80%. Usang — hari ke-8 sampai 2 bulan, jual 60%. Lelah — 2 sampai 6 bulan, jual 40%. Lapuk — 6 bulan sampai 1 tahun, jual 100%. Vintage — setelah 1 tahun, jual 300%.",
+  "shopCollectionsHelp": "Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.\n\nKondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80% dari harga. Usang — hari ke-8 sampai 2 bulan, jual 60% dari harga. Lelah — 2 sampai 6 bulan, jual 40% dari harga. Lapuk — 6 bulan sampai 1 tahun, jual 100% dari harga. Vintage — setelah 1 tahun, jual 300% dari harga.",
   "shopStakesHelp": "Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.",
   "inventoryTitle": "Item",
   "inventoryEmpty": "Belum ada apa pun — cek toko",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Pembelian sekali",
   "shopSellRefund": "Penjualan tergantung kondisi koleksi",
-  "shopCollectionConditionInfo": "Kondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80%. Usang — hari ke-8 sampai 2 bulan, jual 60%. Lelah — 2 sampai 6 bulan, jual 40%. Lapuk — 6 bulan sampai 1 tahun, jual 100%. Vintage — setelah 1 tahun, jual 300%.",
   "collectionConditionNew": "Baru",
   "collectionConditionWorn": "Usang",
   "collectionConditionTired": "Lelah",
   "collectionConditionShabby": "Lapuk",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Jual {percent}%",
   "shopCollectionAdded": "{title} ditambahkan ke profil",
   "@shopCollectionAdded": {
     "placeholders": {

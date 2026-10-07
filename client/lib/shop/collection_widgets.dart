@@ -174,29 +174,59 @@ Future<void> showCollectionFullscreen(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: close,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ShopAnimatedEmoji(
-                        animatedName: animatedName,
-                        size: 180,
-                        fallback: fallback,
-                        animate: true,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ShopAnimatedEmoji(
+                              animatedName: animatedName,
+                              size: 180,
+                              fallback: fallback,
+                              animate: true,
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if ((subtitle ?? '').trim().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
+                                child: Text(
+                                  subtitle!,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (action != null) ...[
+                              const SizedBox(height: 24),
+                              GestureDetector(
+                                onTap: () {},
+                                child: action,
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (condition != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
+                    ),
+                    if (condition != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                        child: Text(
                           collectionConditionName(
                             dialogContext.l10n,
                             condition,
@@ -208,41 +238,8 @@ Future<void> showCollectionFullscreen(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          dialogContext.l10n.collectionConditionSell(
-                            collectionSellPercent(condition),
-                          ),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                      if ((subtitle ?? '').trim().isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(
-                            subtitle!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (action != null) ...[
-                        const SizedBox(height: 24),
-                        GestureDetector(
-                          onTap: () {},
-                          child: action,
-                        ),
-                      ],
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -251,23 +248,6 @@ Future<void> showCollectionFullscreen(
       );
     },
   );
-}
-
-/// Правила состояний в магазине коллекций.
-class CollectionConditionNotice extends StatelessWidget {
-  const CollectionConditionNotice({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      context.l10n.shopCollectionConditionInfo,
-      style: const TextStyle(
-        fontSize: 13,
-        height: 1.35,
-        color: AppColors.textSecondary,
-      ),
-    );
-  }
 }
 
 /// Секция коллекций в карточке пользователя (по клику на аватар).

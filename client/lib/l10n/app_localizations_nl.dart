@@ -1686,7 +1686,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopEmojisHelp => 'Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.';
 
   @override
-  String get shopCollectionsHelp => 'Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.\n\nDe staat hangt af van hoe lang de collectie al van jou is. Nieuw — de eerste 7 dagen, verkoop 80%. Versleten — van dag 8 tot 2 maanden, verkoop 60%. Vermoeid — van 2 tot 6 maanden, verkoop 40%. Verval — van 6 maanden tot 1 jaar, verkoop 100%. Vintage — vanaf 1 jaar, verkoop 300%.';
+  String get shopCollectionsHelp => 'Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.\n\nDe staat hangt af van hoe lang de collectie al van jou is. Nieuw — de eerste 7 dagen, verkoop 80% van de prijs. Versleten — van dag 8 tot 2 maanden, verkoop 60% van de prijs. Vermoeid — van 2 tot 6 maanden, verkoop 40% van de prijs. Verval — van 6 maanden tot 1 jaar, verkoop 100% van de prijs. Vintage — vanaf 1 jaar, verkoop 300% van de prijs.';
 
   @override
   String get shopStakesHelp => 'Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopSellRefund => 'Verkoop hangt af van de staat van de collectie';
 
   @override
-  String get shopCollectionConditionInfo => 'De staat hangt af van hoe lang de collectie al van jou is. Nieuw — de eerste 7 dagen, verkoop 80%. Versleten — van dag 8 tot 2 maanden, verkoop 60%. Vermoeid — van 2 tot 6 maanden, verkoop 40%. Verval — van 6 maanden tot 1 jaar, verkoop 100%. Vintage — vanaf 1 jaar, verkoop 300%.';
-
-  @override
   String get collectionConditionNew => 'Nieuw';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Vintage';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Verkoop $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {
