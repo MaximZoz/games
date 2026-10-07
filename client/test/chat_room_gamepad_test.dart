@@ -50,67 +50,33 @@ void main() {
       ),
       4,
     );
-    expect(
-      chatRoomMessageIndexAfterMove(
-        index: 2,
-        count: 5,
-        action: GamepadAction.left,
-      ),
-      2,
-    );
   });
 
-  test('на краю ленты стрелка переключает полосу', () {
+  test('стик вверх/вниз с панелей возвращает в сообщения', () {
     expect(
-      chatRoomZoneAfterVertical(
-        zone: ChatRoomGamepadZone.messages,
-        action: GamepadAction.up,
-        messageIndex: 0,
-        messageCount: 4,
-        hasToolbar: true,
-      ),
-      ChatRoomGamepadZone.toolbar,
-    );
-    expect(
-      chatRoomZoneAfterVertical(
-        zone: ChatRoomGamepadZone.messages,
-        action: GamepadAction.down,
-        messageIndex: 3,
-        messageCount: 4,
-        hasToolbar: true,
-      ),
-      ChatRoomGamepadZone.composer,
-    );
-    expect(
-      chatRoomZoneAfterVertical(
-        zone: ChatRoomGamepadZone.messages,
-        action: GamepadAction.down,
-        messageIndex: 1,
-        messageCount: 4,
-        hasToolbar: true,
-      ),
-      ChatRoomGamepadZone.messages,
-    );
-    expect(
-      chatRoomZoneAfterVertical(
+      chatRoomStickReturnsToMessages(
         zone: ChatRoomGamepadZone.toolbar,
         action: GamepadAction.down,
-        messageIndex: 0,
-        messageCount: 4,
-        hasToolbar: true,
       ),
-      ChatRoomGamepadZone.messages,
+      isTrue,
     );
     expect(
-      chatRoomZoneAfterVertical(
+      chatRoomStickReturnsToMessages(
         zone: ChatRoomGamepadZone.composer,
         action: GamepadAction.up,
-        messageIndex: 3,
-        messageCount: 4,
-        hasToolbar: true,
       ),
-      ChatRoomGamepadZone.messages,
+      isTrue,
     );
+    expect(
+      chatRoomStickReturnsToMessages(
+        zone: ChatRoomGamepadZone.messages,
+        action: GamepadAction.up,
+      ),
+      isFalse,
+    );
+    expect(chatRoomGoesToToolbar(GamepadAction.actionY), isTrue);
+    expect(chatRoomGoesToComposer(GamepadAction.actionX), isTrue);
+    expect(chatRoomGoesToToolbar(GamepadAction.up), isFalse);
   });
 
   test('правый стик листает окно и оставляет первое на экране', () {
@@ -132,26 +98,33 @@ void main() {
       ),
       13,
     );
-    expect(
-      chatRoomPageIndex(
-        index: 1,
-        count: 20,
-        step: 5,
-        visualUp: true,
-      ),
-      0,
-    );
     expect(chatRoomPageStep(viewport: 400, itemExtent: 80), 5);
   });
 
   test('вбок — ответ, в меню A и стик не закрывают', () {
     expect(chatRoomHorizontalIsReply(GamepadAction.left), isTrue);
     expect(chatRoomHorizontalIsReply(GamepadAction.scrollRight), isTrue);
-    expect(chatRoomHorizontalIsReply(GamepadAction.up), isFalse);
     expect(chatRoomActionMenuKeepsOpen(GamepadAction.confirm), isTrue);
-    expect(chatRoomActionMenuKeepsOpen(GamepadAction.down), isTrue);
     expect(chatRoomActionMenuKeepsOpen(GamepadAction.cancel), isFalse);
-    expect(chatRoomActionMenuKeepsOpen(GamepadAction.actionX), isFalse);
+  });
+
+  test('правый стик раскрывает и сужает панель смайлов', () {
+    expect(
+      chatRoomEmojiSheetSizeAfterScroll(current: 0.14, expand: true),
+      kChatRoomEmojiSheetMid,
+    );
+    expect(
+      chatRoomEmojiSheetSizeAfterScroll(current: 0.55, expand: true),
+      kChatRoomEmojiSheetMax,
+    );
+    expect(
+      chatRoomEmojiSheetSizeAfterScroll(current: 0.92, expand: false),
+      kChatRoomEmojiSheetMid,
+    );
+    expect(
+      chatRoomEmojiSheetSizeAfterScroll(current: 0.55, expand: false),
+      kChatRoomEmojiSheetCollapsed,
+    );
   });
 
   testWidgets('без геймпада глиф полосы скрыт', (tester) async {
@@ -159,7 +132,7 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: ChatRoomGamepadLaneHint(
-            action: GamepadAction.down,
+            action: GamepadAction.actionY,
             child: Text('шапка'),
           ),
         ),

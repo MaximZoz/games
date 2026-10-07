@@ -21,45 +21,23 @@ int chatRoomMessageIndexAfterMove({
   return index.clamp(0, count - 1);
 }
 
-/// Стрелки / стик вверх-вниз: сменить полосу на краю ленты.
-ChatRoomGamepadZone chatRoomZoneAfterVertical({
+/// Стик вверх/вниз с шапки или композера возвращает в ленту.
+bool chatRoomStickReturnsToMessages({
   required ChatRoomGamepadZone zone,
   required GamepadAction action,
-  required int messageIndex,
-  required int messageCount,
-  required bool hasToolbar,
 }) {
-  if (action != GamepadAction.up && action != GamepadAction.down) {
-    return zone;
-  }
-  switch (zone) {
-    case ChatRoomGamepadZone.toolbar:
-      return action == GamepadAction.down
-          ? ChatRoomGamepadZone.messages
-          : ChatRoomGamepadZone.toolbar;
-    case ChatRoomGamepadZone.composer:
-      return action == GamepadAction.up
-          ? ChatRoomGamepadZone.messages
-          : ChatRoomGamepadZone.composer;
-    case ChatRoomGamepadZone.messages:
-      if (messageCount <= 0) {
-        if (action == GamepadAction.up && hasToolbar) {
-          return ChatRoomGamepadZone.toolbar;
-        }
-        if (action == GamepadAction.down) {
-          return ChatRoomGamepadZone.composer;
-        }
-        return zone;
-      }
-      if (action == GamepadAction.up && messageIndex <= 0 && hasToolbar) {
-        return ChatRoomGamepadZone.toolbar;
-      }
-      if (action == GamepadAction.down && messageIndex >= messageCount - 1) {
-        return ChatRoomGamepadZone.composer;
-      }
-      return ChatRoomGamepadZone.messages;
-  }
+  if (zone == ChatRoomGamepadZone.messages) return false;
+  return action == GamepadAction.up ||
+      action == GamepadAction.down ||
+      action == GamepadAction.scrollUp ||
+      action == GamepadAction.scrollDown;
 }
+
+bool chatRoomGoesToToolbar(GamepadAction action) =>
+    action == GamepadAction.actionY;
+
+bool chatRoomGoesToComposer(GamepadAction action) =>
+    action == GamepadAction.actionX;
 
 /// Шаг правого стика: одно окно, индекс не зацикливается.
 int chatRoomPageIndex({
@@ -96,7 +74,28 @@ bool chatRoomActionMenuKeepsOpen(GamepadAction action) {
   return action == GamepadAction.confirm || action.isDirection;
 }
 
-/// Глиф стрелки на верхней (вниз) или нижней (вверх) панели.
+const double kChatRoomEmojiSheetCollapsed = 0.14;
+const double kChatRoomEmojiSheetMid = 0.55;
+const double kChatRoomEmojiSheetMax = 0.92;
+
+/// Правый стик: раскрыть / сузить панель смайлов.
+double chatRoomEmojiSheetSizeAfterScroll({
+  required double current,
+  required bool expand,
+}) {
+  if (expand) {
+    if (current < kChatRoomEmojiSheetMid - 0.04) {
+      return kChatRoomEmojiSheetMid;
+    }
+    return kChatRoomEmojiSheetMax;
+  }
+  if (current > kChatRoomEmojiSheetMid + 0.04) {
+    return kChatRoomEmojiSheetMid;
+  }
+  return kChatRoomEmojiSheetCollapsed;
+}
+
+/// Глиф Y / X (или △ / □) на верхней и нижней панели.
 class ChatRoomGamepadLaneHint extends StatelessWidget {
   const ChatRoomGamepadLaneHint({
     super.key,
