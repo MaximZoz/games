@@ -2001,6 +2001,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopOwned => 'Sotib olingan';
 
   @override
+  String get shopHave => 'Bor';
+
+  @override
   String get shopEmpty => 'Hali bo‘sh';
 
   @override

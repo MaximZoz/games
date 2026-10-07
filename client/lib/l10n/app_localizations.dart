@@ -3905,6 +3905,12 @@ abstract class AppLocalizations {
   /// **'Куплено'**
   String get shopOwned;
 
+  /// No description provided for @shopHave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть'**
+  String get shopHave;
+
   /// No description provided for @shopEmpty.
   ///
   /// In ru, this message translates to:

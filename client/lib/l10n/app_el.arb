@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Αγορασμένο",
+  "shopHave": "Το έχεις",
   "shopEmpty": "Ακόμα άδειο",
   "shopPurchased": "Αγοράστηκε το {title}",
   "@shopPurchased": {

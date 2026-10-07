@@ -1059,6 +1059,7 @@
     }
   },
   "shopOwned": "Куплено",
+  "shopHave": "Есть",
   "shopEmpty": "Пока пусто",
   "shopPurchased": "{title} куплен",
   "@shopPurchased": {

@@ -2001,6 +2001,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopOwned => '購入済み';
 
   @override
+  String get shopHave => '所持';
+
+  @override
   String get shopEmpty => 'まだ何もありません';
 
   @override

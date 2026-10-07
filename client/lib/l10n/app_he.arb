@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "נרכש",
+  "shopHave": "יש",
   "shopEmpty": "עדיין ריק",
   "shopPurchased": "{title} נרכש",
   "@shopPurchased": {

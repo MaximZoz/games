@@ -2001,6 +2001,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopOwned => 'Куплено';
 
   @override
+  String get shopHave => 'Есть';
+
+  @override
   String get shopEmpty => 'Пока пусто';
 
   @override

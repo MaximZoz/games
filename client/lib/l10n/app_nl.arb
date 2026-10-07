@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Gekocht",
+  "shopHave": "In bezit",
   "shopEmpty": "Nog leeg",
   "shopPurchased": "{title} gekocht",
   "@shopPurchased": {

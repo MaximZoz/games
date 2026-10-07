@@ -2001,6 +2001,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopOwned => 'Dibeli';
 
   @override
+  String get shopHave => 'Punya';
+
+  @override
   String get shopEmpty => 'Masih kosong';
 
   @override

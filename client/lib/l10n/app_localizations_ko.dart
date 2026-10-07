@@ -2001,6 +2001,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopOwned => '구매함';
 
   @override
+  String get shopHave => '보유';
+
+  @override
   String get shopEmpty => '아직 비어 있음';
 
   @override

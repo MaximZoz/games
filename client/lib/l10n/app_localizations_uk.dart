@@ -2001,6 +2001,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shopOwned => 'Куплено';
 
   @override
+  String get shopHave => 'Є';
+
+  @override
   String get shopEmpty => 'Поки порожньо';
 
   @override

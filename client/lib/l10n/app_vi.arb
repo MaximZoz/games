@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Đã mua",
+  "shopHave": "Có",
   "shopEmpty": "Vẫn trống",
   "shopPurchased": "Đã mua {title}",
   "@shopPurchased": {

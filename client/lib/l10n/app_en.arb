@@ -914,6 +914,7 @@
     }
   },
   "shopOwned": "Owned",
+  "shopHave": "Have",
   "shopEmpty": "Nothing here yet",
   "shopPurchased": "{title} purchased",
   "@shopPurchased": {

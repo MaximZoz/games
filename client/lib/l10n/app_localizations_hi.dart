@@ -2001,6 +2001,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopOwned => 'खरीदा गया';
 
   @override
+  String get shopHave => 'है';
+
+  @override
   String get shopEmpty => 'अभी खाली';
 
   @override

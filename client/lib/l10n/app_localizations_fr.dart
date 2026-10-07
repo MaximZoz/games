@@ -2001,6 +2001,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopOwned => 'Acheté';
 
   @override
+  String get shopHave => 'En possession';
+
+  @override
   String get shopEmpty => 'Rien pour l’instant';
 
   @override

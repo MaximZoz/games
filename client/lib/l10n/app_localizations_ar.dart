@@ -2001,6 +2001,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shopOwned => 'تم الشراء';
 
   @override
+  String get shopHave => 'لديك';
+
+  @override
   String get shopEmpty => 'فارغ حتى الآن';
 
   @override

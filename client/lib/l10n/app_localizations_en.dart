@@ -2001,6 +2001,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopOwned => 'Owned';
 
   @override
+  String get shopHave => 'Have';
+
+  @override
   String get shopEmpty => 'Nothing here yet';
 
   @override

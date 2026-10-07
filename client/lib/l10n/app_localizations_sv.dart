@@ -2001,6 +2001,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopOwned => 'Köpt';
 
   @override
+  String get shopHave => 'Har';
+
+  @override
   String get shopEmpty => 'Tomt än så länge';
 
   @override

@@ -2001,6 +2001,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopOwned => 'נרכש';
 
   @override
+  String get shopHave => 'יש';
+
+  @override
   String get shopEmpty => 'עדיין ריק';
 
   @override

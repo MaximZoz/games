@@ -2001,6 +2001,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopOwned => '已购买';
 
   @override
+  String get shopHave => '已有';
+
+  @override
   String get shopEmpty => '暂无内容';
 
   @override

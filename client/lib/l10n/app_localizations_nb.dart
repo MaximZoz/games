@@ -2001,6 +2001,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shopOwned => 'Kjøpt';
 
   @override
+  String get shopHave => 'Har';
+
+  @override
   String get shopEmpty => 'Tomt foreløpig';
 
   @override

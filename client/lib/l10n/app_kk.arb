@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Сатып алынған",
+  "shopHave": "Бар",
   "shopEmpty": "Әзірге бос",
   "shopPurchased": "{title} сатып алынды",
   "@shopPurchased": {

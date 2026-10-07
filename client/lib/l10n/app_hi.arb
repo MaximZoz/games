@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "खरीदा गया",
+  "shopHave": "है",
   "shopEmpty": "अभी खाली",
   "shopPurchased": "{title} खरीदा गया",
   "@shopPurchased": {

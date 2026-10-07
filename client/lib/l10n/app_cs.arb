@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Zakoupeno",
+  "shopHave": "Máš",
   "shopEmpty": "Zatím prázdné",
   "shopPurchased": "{title} zakoupeno",
   "@shopPurchased": {

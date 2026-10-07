@@ -2001,6 +2001,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopOwned => 'Satın alındı';
 
   @override
+  String get shopHave => 'Var';
+
+  @override
   String get shopEmpty => 'Henüz boş';
 
   @override

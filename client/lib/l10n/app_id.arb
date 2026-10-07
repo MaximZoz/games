@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Dibeli",
+  "shopHave": "Punya",
   "shopEmpty": "Masih kosong",
   "shopPurchased": "{title} dibeli",
   "@shopPurchased": {

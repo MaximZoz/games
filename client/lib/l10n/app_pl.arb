@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Kupione",
+  "shopHave": "Masz",
   "shopEmpty": "Na razie pusto",
   "shopPurchased": "Kupiono {title}",
   "@shopPurchased": {

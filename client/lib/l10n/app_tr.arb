@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Satın alındı",
+  "shopHave": "Var",
   "shopEmpty": "Henüz boş",
   "shopPurchased": "{title} satın alındı",
   "@shopPurchased": {

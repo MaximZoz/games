@@ -2001,6 +2001,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopOwned => 'ซื้อแล้ว';
 
   @override
+  String get shopHave => 'มีแล้ว';
+
+  @override
   String get shopEmpty => 'ยังว่างอยู่';
 
   @override

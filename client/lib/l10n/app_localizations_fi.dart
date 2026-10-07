@@ -2001,6 +2001,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopOwned => 'Ostettu';
 
   @override
+  String get shopHave => 'On';
+
+  @override
   String get shopEmpty => 'Vielä tyhjä';
 
   @override

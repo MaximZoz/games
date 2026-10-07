@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "구매함",
+  "shopHave": "보유",
   "shopEmpty": "아직 비어 있음",
   "shopPurchased": "{title} 구매 완료",
   "@shopPurchased": {

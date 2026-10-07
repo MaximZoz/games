@@ -2001,6 +2001,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopOwned => 'Куплена';
 
   @override
+  String get shopHave => 'Ёсць';
+
+  @override
   String get shopEmpty => 'Пакуль пуста';
 
   @override

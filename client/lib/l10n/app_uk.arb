@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Куплено",
+  "shopHave": "Є",
   "shopEmpty": "Поки порожньо",
   "shopPurchased": "{title} куплено",
   "@shopPurchased": {

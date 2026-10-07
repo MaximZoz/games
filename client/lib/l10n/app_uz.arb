@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Sotib olingan",
+  "shopHave": "Bor",
   "shopEmpty": "Hali bo‘sh",
   "shopPurchased": "{title} sotib olindi",
   "@shopPurchased": {

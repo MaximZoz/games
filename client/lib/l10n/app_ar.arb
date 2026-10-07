@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "تم الشراء",
+  "shopHave": "لديك",
   "shopEmpty": "فارغ حتى الآن",
   "shopPurchased": "تم شراء {title}",
   "@shopPurchased": {

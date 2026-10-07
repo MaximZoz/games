@@ -2001,6 +2001,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopOwned => 'Αγορασμένο';
 
   @override
+  String get shopHave => 'Το έχεις';
+
+  @override
   String get shopEmpty => 'Ακόμα άδειο';
 
   @override

@@ -2001,6 +2001,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopOwned => 'Gekocht';
 
   @override
+  String get shopHave => 'In bezit';
+
+  @override
   String get shopEmpty => 'Nog leeg';
 
   @override

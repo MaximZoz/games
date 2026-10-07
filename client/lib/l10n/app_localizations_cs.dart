@@ -2001,6 +2001,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopOwned => 'Zakoupeno';
 
   @override
+  String get shopHave => 'Máš';
+
+  @override
   String get shopEmpty => 'Zatím prázdné';
 
   @override

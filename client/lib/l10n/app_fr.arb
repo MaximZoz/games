@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Acheté",
+  "shopHave": "En possession",
   "shopEmpty": "Rien pour l’instant",
   "shopPurchased": "{title} acheté",
   "@shopPurchased": {

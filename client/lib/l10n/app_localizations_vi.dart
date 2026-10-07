@@ -2001,6 +2001,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopOwned => 'Đã mua';
 
   @override
+  String get shopHave => 'Có';
+
+  @override
   String get shopEmpty => 'Vẫn trống';
 
   @override

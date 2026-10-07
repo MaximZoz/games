@@ -2001,6 +2001,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopOwned => 'Сатып алынған';
 
   @override
+  String get shopHave => 'Бар';
+
+  @override
   String get shopEmpty => 'Әзірге бос';
 
   @override

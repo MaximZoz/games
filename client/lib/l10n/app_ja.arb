@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "購入済み",
+  "shopHave": "所持",
   "shopEmpty": "まだ何もありません",
   "shopPurchased": "{title} を購入しました",
   "@shopPurchased": {

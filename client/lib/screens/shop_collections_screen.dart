@@ -643,7 +643,7 @@ class _CollectionShopCard extends StatelessWidget {
           ),
           if (item.owned)
             Text(
-              context.l10n.shopOwned,
+              context.l10n.shopHave,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF2E7D32),

@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "Köpt",
+  "shopHave": "Har",
   "shopEmpty": "Tomt än så länge",
   "shopPurchased": "{title} köpt",
   "@shopPurchased": {

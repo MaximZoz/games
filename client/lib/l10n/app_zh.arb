@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "已购买",
+  "shopHave": "已有",
   "shopEmpty": "暂无内容",
   "shopPurchased": "已购买 {title}",
   "@shopPurchased": {

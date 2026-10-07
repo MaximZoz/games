@@ -855,6 +855,7 @@
     }
   },
   "shopOwned": "ซื้อแล้ว",
+  "shopHave": "มีแล้ว",
   "shopEmpty": "ยังว่างอยู่",
   "shopPurchased": "ซื้อ {title} แล้ว",
   "@shopPurchased": {
