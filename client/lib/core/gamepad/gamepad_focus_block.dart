@@ -104,6 +104,10 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   late final FocusNode _focus;
   bool _keyboardAttached = false;
 
+  /// «Назад» не в обходе Flutter: иначе AppBar забирает фокус раньше плиток.
+  bool get _skipTraversal =>
+      !widget.focusable || !widget.includeInEdgeFocus;
+
   void _syncKeyboard(bool show) {
     if (!widget.attachKeyboard) return;
     if (show && !_keyboardAttached) {
@@ -135,7 +139,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     _focus = FocusNode(
       debugLabel: 'GamepadFocusBlock',
       canRequestFocus: widget.focusable,
-      skipTraversal: !widget.focusable,
+      skipTraversal: _skipTraversal,
       descendantsAreFocusable: widget.descendantsFocusable,
       descendantsAreTraversable: false,
     );
@@ -151,7 +155,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   void didUpdateWidget(GamepadFocusBlock oldWidget) {
     super.didUpdateWidget(oldWidget);
     _focus.canRequestFocus = widget.focusable;
-    _focus.skipTraversal = !widget.focusable;
+    _focus.skipTraversal = _skipTraversal;
     _focus.descendantsAreFocusable = widget.descendantsFocusable;
     if (oldWidget.inputFocus != widget.inputFocus) {
       oldWidget.inputFocus?.onKeyEvent = null;
@@ -198,7 +202,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
             focusNode: _focus,
             autofocus: widget.autofocus,
             canRequestFocus: widget.focusable,
-            skipTraversal: !widget.focusable,
+            skipTraversal: _skipTraversal,
             descendantsAreFocusable: widget.descendantsFocusable,
             descendantsAreTraversable: false,
             child: !widget.outlined || !show
@@ -210,7 +214,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
                       Positioned.fill(
                         child: IgnorePointer(
                           child: CustomPaint(
-                            painter: _GamepadFocusOutlinePainter(
+                            painter: GamepadFocusOutlinePainter(
                               radius: widget.radius,
                               borderWidth: widget.borderWidth,
                               shape: widget.shape,
@@ -228,8 +232,8 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
 }
 
 /// Обводка по контуру рамки: один RRect, без стыков сторон BoxDecoration.
-class _GamepadFocusOutlinePainter extends CustomPainter {
-  const _GamepadFocusOutlinePainter({
+class GamepadFocusOutlinePainter extends CustomPainter {
+  const GamepadFocusOutlinePainter({
     required this.radius,
     required this.borderWidth,
     required this.shape,
@@ -274,7 +278,7 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _GamepadFocusOutlinePainter oldDelegate) {
+  bool shouldRepaint(covariant GamepadFocusOutlinePainter oldDelegate) {
     return oldDelegate.radius != radius ||
         oldDelegate.borderWidth != borderWidth ||
         oldDelegate.shape != shape;

@@ -15,7 +15,6 @@ import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
-import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/core/presence_provider.dart';
@@ -613,16 +612,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   bool _cardHighlighted(int index) {
-    return gamepadConnected() &&
-        GamepadService.instance.isRecentlyActive &&
-        index == _gamepadCardIndex &&
-        _gamepadActionIndex == null;
+    return index == _gamepadCardIndex && _gamepadActionIndex == null;
   }
 
   bool _actionHighlighted(int cardIndex, int actionIndex) {
-    return gamepadConnected() &&
-        GamepadService.instance.isRecentlyActive &&
-        cardIndex == _gamepadCardIndex &&
+    return cardIndex == _gamepadCardIndex &&
         _gamepadActionIndex == actionIndex;
   }
 

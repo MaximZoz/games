@@ -13,6 +13,7 @@ import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
+import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
@@ -431,6 +432,30 @@ void main() {
     expect(gamepadConnected(), isTrue);
     expect(gamepadHintsWanted(), isTrue);
     expect(currentGamepadFamily(), GamepadFamily.xbox);
+  });
+
+  testWidgets('рамка курсора появляется при подключении контроллера',
+      (tester) async {
+    GamepadService.instance.start();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: wrapGamepadCursor(
+            highlighted: true,
+            radius: 16,
+            child: const SizedBox(width: 120, height: 48, child: Text('chat')),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(GamepadCursorOutline), findsNothing);
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(find.byType(GamepadCursorOutline), findsOneWidget);
+    expect(find.byType(CustomPaint), findsWidgets);
   });
 
   test('кнопка геймпада считает контроллер найденным, стрелки — нет', () {
@@ -1609,6 +1634,145 @@ void main() {
       GamepadFocusBlock.maybeOf(ctx!)?.includeInEdgeFocus,
       isTrue,
     );
+  });
+
+  testWidgets('вниз без фокуса сразу на карточку, не на назад', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadFocusRegistry.reset();
+    addTearDown(GamepadFocusRegistry.reset);
+    var back = 0;
+    var tile = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: GamepadBackButton(onPressed: () => back++),
+              ),
+              body: GamepadFocusBlock(
+                radius: 12,
+                onActivate: () => tile++,
+                child: const SizedBox(
+                  width: 200,
+                  height: 80,
+                  child: Text('tile'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(back, 0);
+    expect(tile, 1);
+  });
+
+  testWidgets('вверх с первой карточки выделяет назад', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadFocusRegistry.reset();
+    addTearDown(GamepadFocusRegistry.reset);
+    var back = 0;
+    var tile = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: GamepadBackButton(onPressed: () => back++),
+              ),
+              body: GamepadFocusBlock(
+                radius: 12,
+                onActivate: () => tile++,
+                child: const SizedBox(
+                  width: 200,
+                  height: 80,
+                  child: Text('tile'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.up);
+    await tester.pump();
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pump();
+    expect(tile, 0);
+    expect(back, 1);
+  });
+
+  testWidgets('вход ждёт плитку и не подсвечивает назад', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadFocusRegistry.reset();
+    addTearDown(GamepadFocusRegistry.reset);
+    var frames = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: GamepadBackButton(onPressed: () {}),
+              ),
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  if (frames == 0) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (frames < 3) setState(() => frames++);
+                    });
+                  } else if (frames < 3) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() => frames++);
+                    });
+                  }
+                  if (frames < 3) return const SizedBox.expand();
+                  return GamepadFocusBlock(
+                    radius: 12,
+                    onActivate: () {},
+                    child: const SizedBox(
+                      width: 200,
+                      height: 80,
+                      child: Text('late-tile'),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    scheduleFocusFirstVisibleGamepadTarget();
+    for (var i = 0; i < 8; i++) {
+      await tester.pump();
+    }
+    expect(find.text('late-tile'), findsOneWidget);
+    final focused = FocusManager.instance.primaryFocus;
+    final ctx = focused?.context;
+    expect(ctx, isNotNull);
+    expect(
+      GamepadFocusBlock.maybeOf(ctx!)?.includeInEdgeFocus,
+      isTrue,
+    );
+    expect(find.text('late-tile'), findsOneWidget);
   });
 
   testWidgets('эксклюзивный диалог: A подтверждает, B и LB не трогают фон',

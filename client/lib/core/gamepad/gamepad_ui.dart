@@ -155,11 +155,31 @@ void scheduleFocusFirstVisibleGamepadTarget() {
   scheduleFocusEdgeGamepadTarget(last: false);
 }
 
-List<FocusNode> _edgeGamepadFocusBlocks(List<FocusNode> blocks) {
-  final content = [
+/// Первый контент, если фокус ещё пустой или на «Назад» (каталог догрузился).
+void scheduleFocusFirstVisibleGamepadTargetIfPending() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!_gamepadFocusIsBackOrEmpty()) return;
+    scheduleFocusEdgeGamepadTarget(last: false);
+  });
+}
+
+bool _gamepadFocusIsBackOrEmpty() {
+  final current = FocusManager.instance.primaryFocus;
+  if (current == null || current == FocusManager.instance.rootScope) {
+    return true;
+  }
+  return !_includeInEdgeFocus(current);
+}
+
+List<FocusNode> _contentGamepadFocusBlocks(List<FocusNode> blocks) {
+  return [
     for (final node in blocks)
       if (_includeInEdgeFocus(node)) node,
   ];
+}
+
+List<FocusNode> _edgeGamepadFocusBlocks(List<FocusNode> blocks) {
+  final content = _contentGamepadFocusBlocks(blocks);
   return content.isNotEmpty ? content : blocks;
 }
 
@@ -169,15 +189,27 @@ bool _includeInEdgeFocus(FocusNode node) {
   return GamepadFocusBlock.maybeOf(ctx)?.includeInEdgeFocus ?? true;
 }
 
+const _focusEdgeRetryLimit = 6;
+
 /// После перелистывания страницы — первый или последний видимый блок.
 void scheduleFocusEdgeGamepadTarget({required bool last}) {
+  _scheduleFocusEdgeGamepadTarget(last: last, attempt: 0);
+}
+
+void _scheduleFocusEdgeGamepadTarget({
+  required bool last,
+  required int attempt,
+}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    final blocks = _edgeGamepadFocusBlocks(_visibleGamepadFocusBlocks());
-    if (blocks.isEmpty) {
-      focusFirstVisibleGamepadTarget();
+    final visible = _visibleGamepadFocusBlocks();
+    final content = _contentGamepadFocusBlocks(visible);
+    if (content.isEmpty && attempt < _focusEdgeRetryLimit) {
+      _scheduleFocusEdgeGamepadTarget(last: last, attempt: attempt + 1);
       return;
     }
-    final node = last ? blocks.last : blocks.first;
+    // Пока плиток нет — не прыгаем на «Назад»; её выделяют только вверх.
+    if (content.isEmpty) return;
+    final node = last ? content.last : content.first;
     node.requestFocus();
     _ensureVisible(node);
   });
@@ -354,6 +386,11 @@ bool _moveFocus(TraversalDirection direction) {
     return true;
   }
   if (start == null || start == root || start.context == null) {
+    if (direction == TraversalDirection.down ||
+        direction == TraversalDirection.right) {
+      final content = _contentGamepadFocusBlocks(_visibleGamepadFocusBlocks());
+      if (content.isEmpty) return false;
+    }
     return focusFirstVisibleGamepadTarget();
   }
   // У края списка остаёмся на месте, не прыгаем на первый элемент.
@@ -483,12 +520,35 @@ bool _moveGamepadBlock(
     }
     // Сфокусированный блок мог выпасть из «видимых» — не прыгаем на первый.
     if (_isContentGamepadBlock(current)) return true;
-    final next = (direction == TraversalDirection.up ||
-            direction == TraversalDirection.left)
-        ? blocks.last
-        : blocks.first;
-    next.requestFocus();
-    _ensureVisible(next);
+    final content = _contentGamepadFocusBlocks(blocks);
+    // Вниз/вбок с пустого фокуса — сразу на контент, не на «Назад».
+    if (direction != TraversalDirection.up) {
+      if (content.isEmpty) return false;
+      content.first.requestFocus();
+      _ensureVisible(
+        content.first,
+        axis: horizontal ? Axis.horizontal : Axis.vertical,
+      );
+      return true;
+    }
+    FocusNode? back;
+    for (final node in blocks) {
+      if (!_includeInEdgeFocus(node)) {
+        back = node;
+        break;
+      }
+    }
+    if (back != null) {
+      back.requestFocus();
+      _ensureVisible(back);
+      return true;
+    }
+    if (content.isEmpty) return false;
+    content.last.requestFocus();
+    _ensureVisible(
+      content.last,
+      axis: horizontal ? Axis.horizontal : Axis.vertical,
+    );
     return true;
   }
   final neighbor = _neighborGamepadBlock(blocks, index, direction);
