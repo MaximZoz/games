@@ -25,12 +25,15 @@ class GamepadScrollDismissScope extends StatelessWidget {
       exclusive: true,
       onAction: (action) {
         if (action.isDirection || action.isScroll) {
-          handleGamepadUiAction(context, action);
           final back = action == GamepadAction.up ||
               action == GamepadAction.left ||
               action == GamepadAction.scrollUp ||
               action == GamepadAction.scrollLeft;
-          scrollGamepadByPage(back ? -1 : 1, context: context);
+          scrollGamepadByPage(
+            back ? -1 : 1,
+            context: context,
+            moveFocus: false,
+          );
           return true;
         }
         onClose();

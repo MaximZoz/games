@@ -26,8 +26,12 @@ void dismissGamepadKeyboard() {
 /// Правый стик / статистика: страница скролла.
 ///
 /// [context] — искать скролл сначала рядом с попапом, не у фона (друзья).
-bool scrollGamepadByPage(int direction, {BuildContext? context}) =>
-    _scrollPage(direction, context: context);
+bool scrollGamepadByPage(
+  int direction, {
+  BuildContext? context,
+  bool moveFocus = true,
+}) =>
+    _scrollPage(direction, context: context, moveFocus: moveFocus);
 
 /// Правый стик: горизонтальная полоса (счёт, коллекции, смайлы).
 bool scrollGamepadHorizontalStrip(
@@ -298,10 +302,17 @@ bool _switchTab(int delta) {
   return true;
 }
 
-bool _scrollPage(int direction, {BuildContext? context}) {
-  if (GamepadPagerRegistry.page(direction)) return true;
+bool _scrollPage(
+  int direction, {
+  BuildContext? context,
+  bool moveFocus = true,
+}) {
+  if (moveFocus && GamepadPagerRegistry.page(direction)) return true;
   final local = _verticalScrollPositionNear(context);
-  if (local != null && _animateScrollPage(local, direction)) return true;
+  if (local != null &&
+      _animateScrollPage(local, direction, moveFocus: moveFocus)) {
+    return true;
+  }
   final ctx = FocusManager.instance.primaryFocus?.context;
   final pos = ctx == null ? null : Scrollable.maybeOf(ctx)?.position;
   final focused = (pos != null &&
@@ -310,13 +321,24 @@ bool _scrollPage(int direction, {BuildContext? context}) {
           pos.hasContentDimensions)
       ? pos
       : null;
-  if (focused != null && _animateScrollPage(focused, direction)) return true;
+  if (focused != null &&
+      _animateScrollPage(focused, direction, moveFocus: moveFocus)) {
+    return true;
+  }
+  if (!moveFocus) return false;
   final fallback = _nearestScrollPosition();
-  if (fallback != null && _animateScrollPage(fallback, direction)) return true;
+  if (fallback != null &&
+      _animateScrollPage(fallback, direction, moveFocus: moveFocus)) {
+    return true;
+  }
   return false;
 }
 
-bool _animateScrollPage(ScrollPosition position, int direction) {
+bool _animateScrollPage(
+  ScrollPosition position,
+  int direction, {
+  bool moveFocus = true,
+}) {
   if (!position.hasPixels || !position.hasContentDimensions) {
     return false;
   }
@@ -333,7 +355,9 @@ bool _animateScrollPage(ScrollPosition position, int direction) {
     duration: const Duration(milliseconds: 160),
     curve: Curves.easeOut,
   );
-  scheduleFocusEdgeGamepadTarget(last: direction < 0);
+  if (moveFocus) {
+    scheduleFocusEdgeGamepadTarget(last: direction < 0);
+  }
   return true;
 }
 

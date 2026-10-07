@@ -84,7 +84,17 @@ Future<bool> showGamepadChoiceDialog({
             close(false);
             return true;
           }
-          if (action == GamepadAction.confirm || action.isDirection) {
+          if (action == GamepadAction.confirm) {
+            return handleGamepadUiAction(dialogContext, action);
+          }
+          if (action.isScroll) {
+            final nav = action == GamepadAction.scrollLeft ||
+                    action == GamepadAction.scrollUp
+                ? GamepadAction.left
+                : GamepadAction.right;
+            return handleGamepadUiAction(dialogContext, nav);
+          }
+          if (action.isDirection) {
             return handleGamepadUiAction(dialogContext, action);
           }
           return true;

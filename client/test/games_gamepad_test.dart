@@ -28,7 +28,7 @@ void main() {
     GamepadFocusRegistry.reset();
   });
 
-  test('правый стик влево/вправо листает игры и лобби по кругу', () {
+  test('правый стик влево/вправо листает игры и лобби без круга', () {
     expect(gamesHubScrollSwitchesTab(GamepadAction.scrollRight), isTrue);
     expect(gamesHubScrollSwitchesTab(GamepadAction.scrollLeft), isTrue);
     expect(gamesHubScrollSwitchesTab(GamepadAction.scrollDown), isFalse);
@@ -46,7 +46,7 @@ void main() {
         length: 2,
         action: GamepadAction.scrollRight,
       ),
-      0,
+      1,
     );
     expect(
       gamesHubTabIndexAfterScroll(
@@ -54,7 +54,7 @@ void main() {
         length: 2,
         action: GamepadAction.scrollLeft,
       ),
-      1,
+      0,
     );
   });
 
@@ -149,6 +149,7 @@ void main() {
 
   testWidgets('правила: стик не закрывает, кнопка закрывает', (tester) async {
     SharedPreferences.setMockInitialValues({});
+    var created = 0;
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -157,17 +158,30 @@ void main() {
           home: GamepadHost(
             child: Builder(
               builder: (context) {
-                return TextButton(
-                  onPressed: () {
-                    showGameRulesDialog(
-                      context: context,
-                      content: const SizedBox(
-                        height: 800,
-                        child: Text('rule-body'),
+                return Column(
+                  children: [
+                    GamepadFocusBlock(
+                      pageAnchor: true,
+                      onActivate: () => created++,
+                      child: const SizedBox(
+                        width: 200,
+                        height: 48,
+                        child: Text('create-bg'),
                       ),
-                    );
-                  },
-                  child: const Text('open-rules'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        showGameRulesDialog(
+                          context: context,
+                          content: const SizedBox(
+                            height: 800,
+                            child: Text('rule-body'),
+                          ),
+                        );
+                      },
+                      child: const Text('open-rules'),
+                    ),
+                  ],
                 );
               },
             ),
@@ -180,10 +194,16 @@ void main() {
     expect(find.text('rule-body'), findsOneWidget);
     GamepadService.instance.emit(GamepadAction.scrollDown);
     await tester.pump();
+    GamepadService.instance.emit(GamepadAction.down);
+    await tester.pump();
     expect(find.text('rule-body'), findsOneWidget);
+    expect(created, 0);
+    final bg = GamepadFocusBlock.maybeOf(tester.element(find.text('create-bg')));
+    expect(bg?.focusNode.hasFocus, isFalse);
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pumpAndSettle();
     expect(find.text('rule-body'), findsNothing);
+    expect(created, 0);
   });
 
   test('кнопка закрывает правила, стик — нет', () {
