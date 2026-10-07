@@ -15,7 +15,6 @@ import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
-import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
@@ -2553,11 +2552,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen>
   }
 
   bool _isGamepadChat(ChatPreviewItem item) {
-    if (!gamepadConnected() ||
-        !GamepadService.instance.isRecentlyActive ||
-        _chats.isEmpty) {
-      return false;
-    }
+    if (_chats.isEmpty) return false;
     final i = _gamepadChatIndex.clamp(0, _chats.length - 1);
     return _chats[i].chatID == item.chatID;
   }

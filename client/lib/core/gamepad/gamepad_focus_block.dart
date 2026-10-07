@@ -210,7 +210,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
                       Positioned.fill(
                         child: IgnorePointer(
                           child: CustomPaint(
-                            painter: _GamepadFocusOutlinePainter(
+                            painter: GamepadFocusOutlinePainter(
                               radius: widget.radius,
                               borderWidth: widget.borderWidth,
                               shape: widget.shape,
@@ -228,8 +228,8 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
 }
 
 /// Обводка по контуру рамки: один RRect, без стыков сторон BoxDecoration.
-class _GamepadFocusOutlinePainter extends CustomPainter {
-  const _GamepadFocusOutlinePainter({
+class GamepadFocusOutlinePainter extends CustomPainter {
+  const GamepadFocusOutlinePainter({
     required this.radius,
     required this.borderWidth,
     required this.shape,
@@ -274,7 +274,7 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _GamepadFocusOutlinePainter oldDelegate) {
+  bool shouldRepaint(covariant GamepadFocusOutlinePainter oldDelegate) {
     return oldDelegate.radius != radius ||
         oldDelegate.borderWidth != borderWidth ||
         oldDelegate.shape != shape;

@@ -13,6 +13,7 @@ import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_mapping.dart';
 import 'package:multigames_client/core/gamepad/gamepad_repeat.dart';
+import 'package:multigames_client/core/gamepad/gamepad_highlight.dart';
 import 'package:multigames_client/core/gamepad/gamepad_host.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
 import 'package:multigames_client/core/gamepad/gamepad_nav.dart';
@@ -431,6 +432,30 @@ void main() {
     expect(gamepadConnected(), isTrue);
     expect(gamepadHintsWanted(), isTrue);
     expect(currentGamepadFamily(), GamepadFamily.xbox);
+  });
+
+  testWidgets('рамка курсора появляется при подключении контроллера',
+      (tester) async {
+    GamepadService.instance.start();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: wrapGamepadCursor(
+            highlighted: true,
+            radius: 16,
+            child: const SizedBox(width: 120, height: 48, child: Text('chat')),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(GamepadCursorOutline), findsNothing);
+    GamepadService.instance.setDevicesForTest(const [
+      GamepadDevice(id: 'pad', name: 'Xbox Wireless Controller', index: 0),
+    ]);
+    await tester.pump();
+    expect(find.byType(GamepadCursorOutline), findsOneWidget);
+    expect(find.byType(CustomPaint), findsWidgets);
   });
 
   test('кнопка геймпада считает контроллер найденным, стрелки — нет', () {
