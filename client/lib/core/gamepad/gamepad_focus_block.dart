@@ -104,6 +104,10 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   late final FocusNode _focus;
   bool _keyboardAttached = false;
 
+  /// «Назад» не в обходе Flutter: иначе AppBar забирает фокус раньше плиток.
+  bool get _skipTraversal =>
+      !widget.focusable || !widget.includeInEdgeFocus;
+
   void _syncKeyboard(bool show) {
     if (!widget.attachKeyboard) return;
     if (show && !_keyboardAttached) {
@@ -135,7 +139,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
     _focus = FocusNode(
       debugLabel: 'GamepadFocusBlock',
       canRequestFocus: widget.focusable,
-      skipTraversal: !widget.focusable,
+      skipTraversal: _skipTraversal,
       descendantsAreFocusable: widget.descendantsFocusable,
       descendantsAreTraversable: false,
     );
@@ -151,7 +155,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   void didUpdateWidget(GamepadFocusBlock oldWidget) {
     super.didUpdateWidget(oldWidget);
     _focus.canRequestFocus = widget.focusable;
-    _focus.skipTraversal = !widget.focusable;
+    _focus.skipTraversal = _skipTraversal;
     _focus.descendantsAreFocusable = widget.descendantsFocusable;
     if (oldWidget.inputFocus != widget.inputFocus) {
       oldWidget.inputFocus?.onKeyEvent = null;
@@ -198,7 +202,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
             focusNode: _focus,
             autofocus: widget.autofocus,
             canRequestFocus: widget.focusable,
-            skipTraversal: !widget.focusable,
+            skipTraversal: _skipTraversal,
             descendantsAreFocusable: widget.descendantsFocusable,
             descendantsAreTraversable: false,
             child: !widget.outlined || !show

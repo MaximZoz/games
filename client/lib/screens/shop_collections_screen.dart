@@ -46,7 +46,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
-      scheduleFocusFirstVisibleGamepadTarget();
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -64,6 +64,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       }
       if (!mounted) return;
       setState(() => _items = items);
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {}
   }
 
@@ -314,7 +315,7 @@ class _ShopCollectionGroupScreenState
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
-      scheduleFocusFirstVisibleGamepadTarget();
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -332,6 +333,7 @@ class _ShopCollectionGroupScreenState
       }
       if (!mounted) return;
       setState(() => _items = items);
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {}
   }
 

@@ -68,7 +68,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         });
       }
       unawaited(_reloadSilent());
-      scheduleFocusFirstVisibleGamepadTarget();
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -89,6 +89,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         _items = items;
         _loading = false;
       });
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -314,7 +315,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         });
       }
       unawaited(_reloadSilent());
-      scheduleFocusFirstVisibleGamepadTarget();
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     });
   }
 
@@ -335,6 +336,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         _items = items;
         _loading = false;
       });
+      scheduleFocusFirstVisibleGamepadTargetIfPending();
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
