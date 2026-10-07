@@ -1686,7 +1686,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.';
 
   @override
-  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.\n\nTrạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.';
+  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.\n\nTrạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80% giá. Sờn — từ ngày 8 đến 2 tháng, bán 60% giá. Mệt — từ 2 đến 6 tháng, bán 40% giá. Cũ nát — từ 6 tháng đến 1 năm, bán 100% giá. Cổ điển — từ 1 năm, bán 300% giá.';
 
   @override
   String get shopStakesHelp => 'Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopSellRefund => 'Giá bán phụ thuộc trạng thái bộ sưu tập';
 
   @override
-  String get shopCollectionConditionInfo => 'Trạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.';
-
-  @override
   String get collectionConditionNew => 'Mới';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Cổ điển';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Bán $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

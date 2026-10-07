@@ -128,61 +128,47 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           ),
         ),
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: CollectionConditionNotice(),
-              ),
-              Expanded(
-                child: orderedSets.isEmpty
-                    ? Center(
-                        child: Text(
-                          context.l10n.shopEmpty,
-                          style:
-                              const TextStyle(color: AppColors.textSecondary),
-                        ),
-                      )
-                    : DesktopTileGrid(
+          child: orderedSets.isEmpty
+              ? Center(
+                  child: Text(
+                    context.l10n.shopEmpty,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                )
+              : DesktopTileGrid(
+                  itemCount: orderedSets.length,
+                  maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
+                  maxContentWidth: 1100,
+                  maxColumns: 3,
+                  padding: EdgeInsets.fromLTRB(
+                    isPhoneLandscape(context) ? 12 : 16,
+                    8,
+                    isPhoneLandscape(context) ? 12 : 16,
+                    24,
+                  ),
+                  itemBuilder: (context, index) => _buildCollectionSetTile(
+                    context,
+                    orderedSets[index],
+                    bySet,
+                  ),
+                  mobileBuilder: (context) => Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: orderedSets.length,
-                        maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
-                        maxContentWidth: 1100,
-                        maxColumns: 3,
-                        padding: EdgeInsets.fromLTRB(
-                          isPhoneLandscape(context) ? 12 : 16,
-                          8,
-                          isPhoneLandscape(context) ? 12 : 16,
-                          24,
-                        ),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) =>
                             _buildCollectionSetTile(
                           context,
                           orderedSets[index],
                           bySet,
                         ),
-                        mobileBuilder: (context) => Align(
-                          alignment: Alignment.topCenter,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 520),
-                            child: ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: orderedSets.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 10),
-                              itemBuilder: (context, index) =>
-                                  _buildCollectionSetTile(
-                                context,
-                                orderedSets[index],
-                                bySet,
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
-              ),
-            ],
-          ),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -366,8 +352,7 @@ class _ShopCollectionGroupScreenState
             '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n\n'
             '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
             '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
-            '${l10n.shopBuyOnce}\n'
-            '${l10n.shopCollectionConditionInfo}',
+            '${l10n.shopBuyOnce}',
         confirmLabel: l10n.shopBuy,
       );
       if (!ok || !mounted) return;
@@ -544,18 +529,11 @@ class _ShopCollectionGroupScreenState
     required int ownedCount,
     required int setDaily,
   }) {
-    final progress = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _collectionProgressHeader(
-          complete: complete,
-          ownedCount: ownedCount,
-          total: groupItems.length,
-          setDaily: setDaily,
-        ),
-        const SizedBox(height: 8),
-        const CollectionConditionNotice(),
-      ],
+    final progress = _collectionProgressHeader(
+      complete: complete,
+      ownedCount: ownedCount,
+      total: groupItems.length,
+      setDaily: setDaily,
     );
 
     if (!useDesktopTiles(context)) {

@@ -624,7 +624,7 @@
   "shopStakes": "Puntate",
   "shopStakesSubtitle": "Sblocca le puntate più alte",
   "shopEmojisHelp": "Emoji animate per la chat. Compra un set e inviale agli amici.",
-  "shopCollectionsHelp": "Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Una collezione completa dà monete extra ogni giorno.\n\nLo stato dipende da quanto tempo hai la collezione. Nuovo — i primi 7 giorni, vendita 80%. Logoro — dall’8º giorno a 2 mesi, vendita 60%. Stanco — da 2 a 6 mesi, vendita 40%. Consunto — da 6 mesi a 1 anno, vendita 100%. Vintage — da 1 anno, vendita 300%.",
+  "shopCollectionsHelp": "Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Una collezione completa dà monete extra ogni giorno.\n\nLo stato dipende da quanto tempo hai la collezione. Nuovo — i primi 7 giorni, vendita all'80% del prezzo. Logoro — dall’8º giorno a 2 mesi, vendita al 60% del prezzo. Stanco — da 2 a 6 mesi, vendita al 40% del prezzo. Consunto — da 6 mesi a 1 anno, vendita al 100% del prezzo. Vintage — da 1 anno, vendita al 300% del prezzo.",
   "shopStakesHelp": "Sblocca puntate più alte. Più alta è la puntata, più grandi sono il piatto e la vincita.",
   "inventoryTitle": "Oggetti",
   "inventoryEmpty": "Ancora niente qui — dai un’occhiata al negozio",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Acquisto una tantum",
   "shopSellRefund": "La vendita dipende dallo stato della collezione",
-  "shopCollectionConditionInfo": "Lo stato dipende da quanto tempo hai la collezione. Nuovo — i primi 7 giorni, vendita 80%. Logoro — dall’8º giorno a 2 mesi, vendita 60%. Stanco — da 2 a 6 mesi, vendita 40%. Consunto — da 6 mesi a 1 anno, vendita 100%. Vintage — da 1 anno, vendita 300%.",
   "collectionConditionNew": "Nuovo",
   "collectionConditionWorn": "Logoro",
   "collectionConditionTired": "Stanco",
   "collectionConditionShabby": "Consunto",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Vendita {percent}%",
   "shopCollectionAdded": "{title} aggiunto al profilo",
   "@shopCollectionAdded": {
     "placeholders": {

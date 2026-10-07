@@ -1686,7 +1686,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shopEmojisHelp => 'Animierte Emojis für den Chat. Kaufe ein Set und sende sie in Nachrichten an Freunde.';
 
   @override
-  String get shopCollectionsHelp => 'Sammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt oder verkauft werden. Eine vollständige Sammlung bringt jeden Tag extra Münzen.\n\nDer Zustand hängt davon ab, wie lange die Sammlung bei dir ist. Neu — die ersten 7 Tage, Verkauf 80%. Abgenutzt — vom 8. Tag bis 2 Monate, Verkauf 60%. Müde — von 2 bis 6 Monaten, Verkauf 40%. Schäbig — von 6 Monaten bis 1 Jahr, Verkauf 100%. Vintage — ab 1 Jahr, Verkauf 300%.';
+  String get shopCollectionsHelp => 'Sammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt oder verkauft werden. Eine vollständige Sammlung bringt jeden Tag extra Münzen.\n\nDer Zustand hängt davon ab, wie lange die Sammlung bei dir ist. Neu — die ersten 7 Tage, Verkauf 80 % des Preises. Abgenutzt — vom 8. Tag bis 2 Monate, Verkauf 60 % des Preises. Müde — von 2 bis 6 Monaten, Verkauf 40 % des Preises. Schäbig — von 6 Monaten bis 1 Jahr, Verkauf 100 % des Preises. Vintage — ab 1 Jahr, Verkauf 300 % des Preises.';
 
   @override
   String get shopStakesHelp => 'Schalte höhere Einsätze in Spielen frei. Je höher der Einsatz, desto größer sind Pot und Gewinn.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shopSellRefund => 'Der Verkauf hängt vom Zustand der Sammlung ab';
 
   @override
-  String get shopCollectionConditionInfo => 'Der Zustand hängt davon ab, wie lange die Sammlung bei dir ist. Neu — die ersten 7 Tage, Verkauf 80%. Abgenutzt — vom 8. Tag bis 2 Monate, Verkauf 60%. Müde — von 2 bis 6 Monaten, Verkauf 40%. Schäbig — von 6 Monaten bis 1 Jahr, Verkauf 100%. Vintage — ab 1 Jahr, Verkauf 300%.';
-
-  @override
   String get collectionConditionNew => 'Neu';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Vintage';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Verkauf $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

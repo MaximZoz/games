@@ -1686,7 +1686,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopEmojisHelp => 'אימוג\'ים מונפשים לצ\'אט. קנו סט ושלחו אותם לחברים.';
 
   @override
-  String get shopCollectionsHelp => 'אספו סט פריטים: הם מופיעים בחלון הראווה של הפרופיל, אפשר לתת במתנה או למכור. אוסף מלא מעניק מטבעות נוספים בכל יום.\n\nהמצב תלוי בכמה זמן האוסף אצלך. חדש — 7 הימים הראשונים, מכירה 80%. בלוי — מהיום השמיני עד חודשיים, מכירה 60%. עייף — מחודשיים עד 6 חודשים, מכירה 40%. רעוע — מ-6 חודשים עד שנה, מכירה 100%. וינטאג׳ — משנה, מכירה 300%.';
+  String get shopCollectionsHelp => 'אספו סט פריטים: הם מופיעים בחלון הראווה של הפרופיל, אפשר לתת במתנה או למכור. אוסף מלא מעניק מטבעות נוספים בכל יום.\n\nהמצב תלוי בכמה זמן האוסף אצלך. חדש — 7 הימים הראשונים, מכירה 80% מהמחיר. בלוי — מהיום השמיני עד חודשיים, מכירה 60% מהמחיר. עייף — מחודשיים עד 6 חודשים, מכירה 40% מהמחיר. רעוע — מ-6 חודשים עד שנה, מכירה 100% מהמחיר. וינטאג׳ — משנה, מכירה 300% מהמחיר.';
 
   @override
   String get shopStakesHelp => 'פתחו הימורים גבוהים יותר. ככל שההימור גבוה יותר, כך הקופה והזכייה גדולים יותר.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopSellRefund => 'המכירה תלויה במצב האוסף';
 
   @override
-  String get shopCollectionConditionInfo => 'המצב תלוי בכמה זמן האוסף אצלך. חדש — 7 הימים הראשונים, מכירה 80%. בלוי — מהיום השמיני עד חודשיים, מכירה 60%. עייף — מחודשיים עד 6 חודשים, מכירה 40%. רעוע — מ-6 חודשים עד שנה, מכירה 100%. וינטאג׳ — משנה, מכירה 300%.';
-
-  @override
   String get collectionConditionNew => 'חדש';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'וינטאג׳';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'מכירה $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

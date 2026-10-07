@@ -1686,7 +1686,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopEmojisHelp => 'Sohbet için animasyonlu emojiler. Bir set alın ve arkadaşlarınıza gönderin.';
 
   @override
-  String get shopCollectionsHelp => 'Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Tam koleksiyon her gün ekstra jeton kazandırır.\n\nDurum, koleksiyonun sende ne kadar süredir olduğuna bağlı. Yeni — ilk 7 gün, satış %80. Yıpranmış — 8. günden 2 aya kadar, satış %60. Yorgun — 2 aydan 6 aya kadar, satış %40. Eskimiş — 6 aydan 1 yıla kadar, satış %100. Vintage — 1 yıldan sonra, satış %300.';
+  String get shopCollectionsHelp => 'Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Tam koleksiyon her gün ekstra jeton kazandırır.\n\nDurum, koleksiyonun sende ne kadar süredir olduğuna bağlı. Yeni — ilk 7 gün, fiyatın %80\'i. Yıpranmış — 8. günden 2 aya kadar, fiyatın %60\'ı. Yorgun — 2 aydan 6 aya kadar, fiyatın %40\'ı. Eskimiş — 6 aydan 1 yıla kadar, fiyatın %100\'ü. Vintage — 1 yıldan sonra, fiyatın %300\'ü.';
 
   @override
   String get shopStakesHelp => 'Daha yüksek bahislerin kilidini açın. Bahis ne kadar yüksekse pot ve kazanç o kadar büyük olur.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopSellRefund => 'Satış koleksiyonun durumuna bağlıdır';
 
   @override
-  String get shopCollectionConditionInfo => 'Durum, koleksiyonun sende ne kadar süredir olduğuna bağlı. Yeni — ilk 7 gün, satış %80. Yıpranmış — 8. günden 2 aya kadar, satış %60. Yorgun — 2 aydan 6 aya kadar, satış %40. Eskimiş — 6 aydan 1 yıla kadar, satış %100. Vintage — 1 yıldan sonra, satış %300.';
-
-  @override
   String get collectionConditionNew => 'Yeni';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Vintage';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Satış %$percent';
-  }
 
   @override
   String shopCollectionAdded(String title) {

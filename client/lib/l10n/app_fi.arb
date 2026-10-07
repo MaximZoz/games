@@ -624,7 +624,7 @@
   "shopStakes": "Panokset",
   "shopStakesSubtitle": "Avaa korkeammat panokset",
   "shopEmojisHelp": "Animoidut emojit chattiin. Osta setti ja lähetä niitä ystäville.",
-  "shopCollectionsHelp": "Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Täysi kokoelma tuo lisäkolikoita joka päivä.\n\nTila riippuu siitä, kuinka kauan kokoelma on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 %. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 %. Väsynyt — 2–6 kuukautta, myynti 40 %. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 %. Vintage — vuodesta eteenpäin, myynti 300 %.",
+  "shopCollectionsHelp": "Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Täysi kokoelma tuo lisäkolikoita joka päivä.\n\nTila riippuu siitä, kuinka kauan kokoelma on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 % hinnasta. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 % hinnasta. Väsynyt — 2–6 kuukautta, myynti 40 % hinnasta. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 % hinnasta. Vintage — vuodesta eteenpäin, myynti 300 % hinnasta.",
   "shopStakesHelp": "Avaa korkeammat panokset. Mitä korkeampi panos, sitä suurempi potti ja voitto.",
   "inventoryTitle": "Esineet",
   "inventoryEmpty": "Täällä ei ole vielä mitään — katso kauppaa",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Kertaluonteinen osto",
   "shopSellRefund": "Myynti riippuu kokoelman tilasta",
-  "shopCollectionConditionInfo": "Tila riippuu siitä, kuinka kauan kokoelma on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 %. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 %. Väsynyt — 2–6 kuukautta, myynti 40 %. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 %. Vintage — vuodesta eteenpäin, myynti 300 %.",
   "collectionConditionNew": "Uusi",
   "collectionConditionWorn": "Kulunut",
   "collectionConditionTired": "Väsynyt",
   "collectionConditionShabby": "Rähjäinen",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Myynti {percent} %",
   "shopCollectionAdded": "{title} lisätty profiiliin",
   "@shopCollectionAdded": {
     "placeholders": {

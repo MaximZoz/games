@@ -1686,7 +1686,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shopEmojisHelp => 'رموز تعبيرية متحركة للدردشة. اشترِ مجموعة وأرسلها إلى الأصدقاء.';
 
   @override
-  String get shopCollectionsHelp => 'اجمع مجموعة من العناصر: تظهر في واجهة الملف الشخصي ويمكن إهداؤها أو بيعها. المجموعة الكاملة تمنح عملات إضافية كل يوم.\n\nالحالة تعتمد على مدة امتلاك المجموعة. جديد — أول 7 أيام، البيع 80%. بالٍ — من اليوم 8 حتى شهرين، البيع 60%. متعب — من شهرين إلى 6 أشهر، البيع 40%. رث — من 6 أشهر حتى سنة، البيع 100%. عتيق — من سنة، البيع 300%.';
+  String get shopCollectionsHelp => 'اجمع مجموعة من العناصر: تظهر في واجهة الملف الشخصي ويمكن إهداؤها أو بيعها. المجموعة الكاملة تمنح عملات إضافية كل يوم.\n\nالحالة تعتمد على مدة امتلاك المجموعة. جديد — أول 7 أيام، البيع 80% من السعر. بالٍ — من اليوم 8 حتى شهرين، البيع 60% من السعر. متعب — من شهرين إلى 6 أشهر، البيع 40% من السعر. رث — من 6 أشهر حتى سنة، البيع 100% من السعر. عتيق — من سنة، البيع 300% من السعر.';
 
   @override
   String get shopStakesHelp => 'افتح رهانات أعلى. كلما ارتفع الرهان زادت الجائزة والربح.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shopSellRefund => 'البيع يعتمد على حالة المجموعة';
 
   @override
-  String get shopCollectionConditionInfo => 'الحالة تعتمد على مدة امتلاك المجموعة. جديد — أول 7 أيام، البيع 80%. بالٍ — من اليوم 8 حتى شهرين، البيع 60%. متعب — من شهرين إلى 6 أشهر، البيع 40%. رث — من 6 أشهر حتى سنة، البيع 100%. عتيق — من سنة، البيع 300%.';
-
-  @override
   String get collectionConditionNew => 'جديد';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'عتيق';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'البيع $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

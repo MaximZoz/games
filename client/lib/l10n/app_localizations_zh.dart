@@ -1686,7 +1686,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopEmojisHelp => '聊天用动态表情。购买一套后即可发给好友。';
 
   @override
-  String get shopCollectionsHelp => '收集一套物品：它们会显示在个人橱窗，可以赠送或出售。集齐后每天额外获得金币。\n\n状态取决于收藏在你这里多久。崭新——前7天，出售80%。破旧——第8天到2个月，出售60%。疲倦——2到6个月，出售40%。残旧——6个月到1年，出售100%。古旧——满1年，出售300%。';
+  String get shopCollectionsHelp => '收集一套物品：它们会显示在个人橱窗，可以赠送或出售。集齐后每天额外获得金币。\n\n状态取决于收藏在你这里多久。崭新——前7天，按价格的80%出售。破旧——第8天到2个月，按价格的60%出售。疲倦——2到6个月，按价格的40%出售。残旧——6个月到1年，按价格的100%出售。古旧——满1年，按价格的300%出售。';
 
   @override
   String get shopStakesHelp => '解锁更高赌注。赌注越高，奖池和收益越大。';
@@ -2039,9 +2039,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopSellRefund => '出售价格取决于收藏状态';
 
   @override
-  String get shopCollectionConditionInfo => '状态取决于收藏在你这里多久。崭新——前7天，出售80%。破旧——第8天到2个月，出售60%。疲倦——2到6个月，出售40%。残旧——6个月到1年，出售100%。古旧——满1年，出售300%。';
-
-  @override
   String get collectionConditionNew => '崭新';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => '古旧';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return '出售 $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

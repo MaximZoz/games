@@ -624,7 +624,7 @@
   "shopStakes": "Mises",
   "shopStakesSubtitle": "Débloquer les mises plus élevées",
   "shopEmojisHelp": "Emojis animés pour le chat. Achetez un lot et envoyez-les à vos amis.",
-  "shopCollectionsHelp": "Rassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts ou vendus. Une collection complète rapporte des pièces chaque jour.\n\nL’état dépend depuis combien de temps la collection est à vous. Neuf — les 7 premiers jours, vente 80 %. Usé — du 8e jour à 2 mois, vente 60 %. Fatigué — de 2 à 6 mois, vente 40 %. Vétuste — de 6 mois à 1 an, vente 100 %. Vintage — à partir d’1 an, vente 300 %.",
+  "shopCollectionsHelp": "Rassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts ou vendus. Une collection complète rapporte des pièces chaque jour.\n\nL’état dépend depuis combien de temps la collection est à vous. Neuf — les 7 premiers jours, vente à 80 % du prix. Usé — du 8e jour à 2 mois, vente à 60 % du prix. Fatigué — de 2 à 6 mois, vente à 40 % du prix. Vétuste — de 6 mois à 1 an, vente à 100 % du prix. Vintage — à partir d’1 an, vente à 300 % du prix.",
   "shopStakesHelp": "Débloquez des mises plus élevées. Plus la mise est haute, plus le pot et le gain sont importants.",
   "inventoryTitle": "Objets",
   "inventoryEmpty": "Rien ici pour le moment — consultez la boutique",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Achat unique",
   "shopSellRefund": "La vente dépend de l’état de la collection",
-  "shopCollectionConditionInfo": "L’état dépend depuis combien de temps la collection est à vous. Neuf — les 7 premiers jours, vente 80 %. Usé — du 8e jour à 2 mois, vente 60 %. Fatigué — de 2 à 6 mois, vente 40 %. Vétuste — de 6 mois à 1 an, vente 100 %. Vintage — à partir d’1 an, vente 300 %.",
   "collectionConditionNew": "Neuf",
   "collectionConditionWorn": "Usé",
   "collectionConditionTired": "Fatigué",
   "collectionConditionShabby": "Vétuste",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Vente {percent} %",
   "shopCollectionAdded": "{title} ajouté au profil",
   "@shopCollectionAdded": {
     "placeholders": {

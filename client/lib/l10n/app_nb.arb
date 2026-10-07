@@ -624,7 +624,7 @@
   "shopStakes": "Innsatser",
   "shopStakesSubtitle": "Lås opp høyere innsatser",
   "shopEmojisHelp": "Animerte emojier for chatten. Kjøp et sett og send dem til venner.",
-  "shopCollectionsHelp": "Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. En komplett samling gir ekstra mynter hver dag.\n\nTilstanden avhenger av hvor lenge du har hatt samlingen. Ny — de første 7 dagene, salg 80 %. Slitt — fra dag 8 til 2 måneder, salg 60 %. Trett — fra 2 til 6 måneder, salg 40 %. Falleferdig — fra 6 måneder til 1 år, salg 100 %. Vintage — fra 1 år, salg 300 %.",
+  "shopCollectionsHelp": "Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. En komplett samling gir ekstra mynter hver dag.\n\nTilstanden avhenger av hvor lenge du har hatt samlingen. Ny — de første 7 dagene, salg 80 % av prisen. Slitt — fra dag 8 til 2 måneder, salg 60 % av prisen. Trett — fra 2 til 6 måneder, salg 40 % av prisen. Falleferdig — fra 6 måneder til 1 år, salg 100 % av prisen. Vintage — fra 1 år, salg 300 % av prisen.",
   "shopStakesHelp": "Lås opp høyere innsatser. Jo høyere innsats, desto større pott og gevinst.",
   "inventoryTitle": "Gjenstander",
   "inventoryEmpty": "Ingenting her ennå — sjekk butikken",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Engangskjøp",
   "shopSellRefund": "Salget avhenger av samlingens tilstand",
-  "shopCollectionConditionInfo": "Tilstanden avhenger av hvor lenge du har hatt samlingen. Ny — de første 7 dagene, salg 80 %. Slitt — fra dag 8 til 2 måneder, salg 60 %. Trett — fra 2 til 6 måneder, salg 40 %. Falleferdig — fra 6 måneder til 1 år, salg 100 %. Vintage — fra 1 år, salg 300 %.",
   "collectionConditionNew": "Ny",
   "collectionConditionWorn": "Slitt",
   "collectionConditionTired": "Trett",
   "collectionConditionShabby": "Falleferdig",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Salg {percent}%",
   "shopCollectionAdded": "{title} lagt til i profilen",
   "@shopCollectionAdded": {
     "placeholders": {

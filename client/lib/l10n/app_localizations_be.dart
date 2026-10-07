@@ -1686,7 +1686,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopEmojisHelp => 'Анімаваныя смайлікі для чата. Купіце набор і адпраўляйце іх у паведамленнях сябрам.';
 
   @override
-  String get shopCollectionsHelp => 'Збярыце набор прадметаў: яны з’яўляюцца ў вітрыне профілю, іх можна дарыць і прадаваць. Поўная калекцыя штодня дае дадатковы прыбытак манетамі.\n\nСтан залежыць ад таго, як даўно калекцыя ў вас. Новае — першыя 7 дзён, продаж 80%. Пацёртае — з 8-га дня да 2 месяцаў, продаж 60%. Стомленае — з 2 да 6 месяцаў, продаж 40%. Старое — з 6 месяцаў да года, продаж 100%. Вінтаж — ад года, продаж 300%.';
+  String get shopCollectionsHelp => 'Збярыце набор прадметаў: яны з’яўляюцца ў вітрыне профілю, іх можна дарыць і прадаваць. Поўная калекцыя штодня дае дадатковы прыбытак манетамі.\n\nСтан залежыць ад таго, як даўно калекцыя ў вас. Новае — першыя 7 дзён, продаж 80% ад кошту. Пацёртае — з 8-га дня да 2 месяцаў, продаж 60% ад кошту. Стомленае — з 2 да 6 месяцаў, продаж 40% ад кошту. Старое — з 6 месяцаў да года, продаж 100% ад кошту. Вінтаж — ад года, продаж 300% ад кошту.';
 
   @override
   String get shopStakesHelp => 'Разблакуйце вышэйшыя стаўкі ў гульнях. Чым вышэйшая стаўка, тым большы банк і выйгрыш.';
@@ -2039,9 +2039,6 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopSellRefund => 'Продаж залежыць ад стану калекцыі';
 
   @override
-  String get shopCollectionConditionInfo => 'Стан залежыць ад таго, як даўно калекцыя ў вас. Новае — першыя 7 дзён, продаж 80%. Пацёртае — з 8-га дня да 2 месяцаў, продаж 60%. Стомленае — з 2 да 6 месяцаў, продаж 40%. Старое — з 6 месяцаў да года, продаж 100%. Вінтаж — ад года, продаж 300%.';
-
-  @override
   String get collectionConditionNew => 'Новае';
 
   @override
@@ -2055,11 +2052,6 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get collectionConditionVintage => 'Вінтаж';
-
-  @override
-  String collectionConditionSell(int percent) {
-    return 'Продаж $percent%';
-  }
 
   @override
   String shopCollectionAdded(String title) {

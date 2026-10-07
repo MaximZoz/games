@@ -624,7 +624,7 @@
   "shopStakes": "Insatser",
   "shopStakesSubtitle": "Lås upp högre insatser",
   "shopEmojisHelp": "Animerade emojis för chatten. Köp ett set och skicka dem till vänner.",
-  "shopCollectionsHelp": "Samla ett set föremål: de syns i profilens monter och kan ges bort eller säljas. En komplett samling ger extra mynt varje dag.\n\nTillståndet beror på hur länge du har haft samlingen. Ny — de första 7 dagarna, försäljning 80 %. Sliten — från dag 8 till 2 månader, försäljning 60 %. Trött — från 2 till 6 månader, försäljning 40 %. Skröplig — från 6 månader till 1 år, försäljning 100 %. Vintage — från 1 år, försäljning 300 %.",
+  "shopCollectionsHelp": "Samla ett set föremål: de syns i profilens monter och kan ges bort eller säljas. En komplett samling ger extra mynt varje dag.\n\nTillståndet beror på hur länge du har haft samlingen. Ny — de första 7 dagarna, försäljning 80 % av priset. Sliten — från dag 8 till 2 månader, försäljning 60 % av priset. Trött — från 2 till 6 månader, försäljning 40 % av priset. Skröplig — från 6 månader till 1 år, försäljning 100 % av priset. Vintage — från 1 år, försäljning 300 % av priset.",
   "shopStakesHelp": "Lås upp högre insatser. Ju högre insats, desto större pott och vinst.",
   "inventoryTitle": "Föremål",
   "inventoryEmpty": "Inget här ännu — kolla butiken",
@@ -893,13 +893,11 @@
   },
   "shopBuyOnce": "Engångsköp",
   "shopSellRefund": "Försäljningen beror på samlingens tillstånd",
-  "shopCollectionConditionInfo": "Tillståndet beror på hur länge du har haft samlingen. Ny — de första 7 dagarna, försäljning 80 %. Sliten — från dag 8 till 2 månader, försäljning 60 %. Trött — från 2 till 6 månader, försäljning 40 %. Skröplig — från 6 månader till 1 år, försäljning 100 %. Vintage — från 1 år, försäljning 300 %.",
   "collectionConditionNew": "Ny",
   "collectionConditionWorn": "Sliten",
   "collectionConditionTired": "Trött",
   "collectionConditionShabby": "Skröplig",
   "collectionConditionVintage": "Vintage",
-  "collectionConditionSell": "Försäljning {percent}%",
   "shopCollectionAdded": "{title} tillagd i profilen",
   "@shopCollectionAdded": {
     "placeholders": {
