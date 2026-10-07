@@ -797,6 +797,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Ecken';
 
   @override
+  String get gamesChess => 'Schach';
+
+  @override
+  String get gamesChessModeClassic => 'Klassisch';
+
+  @override
+  String get gamesChessMode960 => 'Chess960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antischach';
+
+
+  @override
   String get rulesCheckersPlayers => 'Spieler: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remis bei dreifacher Wiederholung oder 25 Zügen pro Seite ohne weiteren Stein in der Zielecke.';
+
+  @override
+  String get rulesChessPlayers => 'Spieler: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassisch: Brett 8×8. Jede Seite hat König, Dame, zwei Türme, zwei Läufer, zwei Springer und acht Bauern. Weiß zieht zuerst. Übliche Züge, en passant, Umwandlung und Rochade. Gewinn durch Matt oder Aufgabe.';
+
+  @override
+  String get rulesChessPlay960 => 'Chess960: übliche Züge. Die Grundreihe wird nach Fischer gemischt: König zwischen den Türmen, Läufer auf verschiedenen Farben. Rochade auf c und g. Matt oder Aufgabe.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antischach: übliche Züge, Schlagen ist Pflicht. Es gibt kein Schach — der König darf geschlagen werden. Keine Rochade. Es gewinnt, wer alle Steine abgibt oder keinen Zug hat.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remis bei Patt, dreifacher Wiederholung, 50-Züge-Regel, fehlendem Mattmaterial oder Einigung.';
+
+  @override
+  String get rulesChessDraw960 => 'Remis bei Patt, dreifacher Wiederholung, 50-Züge-Regel, fehlendem Mattmaterial oder Einigung.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remis bei dreifacher Wiederholung oder wenn beide in einem Zug ohne Steine dastehen.';
+
 
   @override
   String get checkersDrawRepetition => 'Remis — Stellung dreimal wiederholt';

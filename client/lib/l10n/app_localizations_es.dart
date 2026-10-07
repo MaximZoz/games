@@ -797,6 +797,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Esquinas';
 
   @override
+  String get gamesChess => 'Ajedrez';
+
+  @override
+  String get gamesChessModeClassic => 'Clásico';
+
+  @override
+  String get gamesChessMode960 => 'Ajedrez 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antiajedrez';
+
+
+  @override
   String get rulesCheckersPlayers => 'Jugadores: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Tablas si la posición se repite tres veces o si 25 jugadas de cada lado no añaden fichas a la esquina objetivo.';
+
+  @override
+  String get rulesChessPlayers => 'Jugadores: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Clásico: tablero 8×8. Cada bando tiene rey, dama, dos torres, dos alfiles, dos caballos y ocho peones. Blancas empiezan. Movimientos habituales, al paso, coronación y enroque. Gana el mate o la retirada.';
+
+  @override
+  String get rulesChessPlay960 => 'Ajedrez 960: movimientos habituales. La última fila se baraja según Fischer: rey entre las torres, alfiles en colores opuestos. Enroque a c y g. Mate o retirada.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antiajedrez: movimientos habituales, capturar es obligatorio. No hay jaque: se puede capturar el rey. Sin enroque. Gana quien entrega todas las piezas o no puede mover.';
+
+  @override
+  String get rulesChessDrawClassic => 'Tablas por ahogado, triple repetición, regla de 50 jugadas, material insuficiente o acuerdo.';
+
+  @override
+  String get rulesChessDraw960 => 'Tablas por ahogado, triple repetición, regla de 50 jugadas, material insuficiente o acuerdo.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Tablas por triple repetición o si ambos se quedan sin piezas en la misma jugada.';
+
 
   @override
   String get checkersDrawRepetition => 'Tablas — la posición se repitió tres veces';

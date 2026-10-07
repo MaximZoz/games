@@ -797,6 +797,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesCheckersModeCorners => '角落棋';
 
   @override
+  String get gamesChess => '国际象棋';
+
+  @override
+  String get gamesChessModeClassic => '经典';
+
+  @override
+  String get gamesChessMode960 => '象棋960';
+
+  @override
+  String get gamesChessModeAntichess => '反象棋';
+
+
+  @override
   String get rulesCheckersPlayers => '玩家：2 人。';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => '同一局面三次，或双方各 25 步未再有棋子进入目标角，则为和棋。';
+
+  @override
+  String get rulesChessPlayers => '玩家：2 人。';
+
+  @override
+  String rulesChessMode(String mode) {
+    return '模式：$mode。';
+  }
+
+  @override
+  String get rulesChessPlayClassic => '经典：8×8 棋盘。各方有王、后、双车、双象、双马和八兵。白方先行。常规走法，可吃过路兵、升变和王车易位。将死或对手认输即胜。';
+
+  @override
+  String get rulesChessPlay960 => '象棋960：走法照常。底线按费舍尔规则随机：王在两车之间，象在不同颜色。易位落到 c、g。将死或认输。';
+
+  @override
+  String get rulesChessPlayAntichess => '反象棋：走法照常，能吃必须吃。无将军，可吃王。无易位。送掉全部棋子或无子可走即胜。';
+
+  @override
+  String get rulesChessDrawClassic => '和棋：逼和、三次重复、50 步规则、不足以将死或双方同意。';
+
+  @override
+  String get rulesChessDraw960 => '和棋：逼和、三次重复、50 步规则、不足以将死或双方同意。';
+
+  @override
+  String get rulesChessDrawAntichess => '和棋：三次重复，或双方在同一回合都失去最后一子。';
+
 
   @override
   String get checkersDrawRepetition => '和棋 — 同一局面三次';

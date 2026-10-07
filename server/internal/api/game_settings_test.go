@@ -44,7 +44,7 @@ func TestNormalizeGameSettingsStakeClamp(t *testing.T) {
 
 func TestNormalizeGameSettingsRejects(t *testing.T) {
 	cases := []gameSettingsBody{
-		{GameType: "chess", TurnTimeSec: 0, GridSize: 3, StakeBronze: 2},
+		{GameType: "go", TurnTimeSec: 0, GridSize: 3, StakeBronze: 2},
 		{TurnTimeSec: 15, GridSize: 3, StakeBronze: 2},
 	}
 	for i, body := range cases {
@@ -259,6 +259,49 @@ func TestNormalizeCheckersGameSettings(t *testing.T) {
 	}
 	if s4.GameMode != "corners" || s4.Variant != "corners" {
 		t.Fatalf("corners: %+v", s4)
+	}
+}
+
+func TestNormalizeChessGameSettings(t *testing.T) {
+	s, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 60,
+		StakeBronze: 10,
+		GameMode:    "chess960",
+		MaxPlayers:  4,
+	})
+	if errMsg != "" {
+		t.Fatalf("err=%s", errMsg)
+	}
+	if s.GameType != store.GameTypeChess || s.MaxPlayers != 2 ||
+		s.GameMode != "chess960" || s.Variant != "chess960" ||
+		s.GridSize != 8 || s.StakeBronze != 10 {
+		t.Fatalf("unexpected %+v", s)
+	}
+	s2, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 20,
+		StakeBronze: 2,
+		GameMode:    "unknown",
+		Variant:     "antichess",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s2.GameMode != "antichess" || s2.Variant != "antichess" {
+		t.Fatalf("antichess from variant: %+v", s2)
+	}
+	s3, errMsg := normalizeGameSettings(gameSettingsBody{
+		GameType:    store.GameTypeChess,
+		TurnTimeSec: 0,
+		StakeBronze: 2,
+		GameMode:    "classic",
+	})
+	if errMsg != "" {
+		t.Fatal(errMsg)
+	}
+	if s3.GameMode != "classic" || s3.Variant != "classic" {
+		t.Fatalf("classic: %+v", s3)
 	}
 }
 

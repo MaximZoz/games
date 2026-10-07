@@ -797,6 +797,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Góc';
 
   @override
+  String get gamesChess => 'Cờ vua';
+
+  @override
+  String get gamesChessModeClassic => 'Cổ điển';
+
+  @override
+  String get gamesChessMode960 => 'Cờ 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Phản cờ vua';
+
+
+  @override
   String get rulesCheckersPlayers => 'Người chơi: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Hòa nếu lặp thế ba lần hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
+
+  @override
+  String get rulesChessPlayers => 'Người chơi: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Chế độ: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Cổ điển: bàn 8×8. Mỗi bên có vua, hậu, hai xe, hai tượng, hai mã và tám tốt. Trắng đi trước. Nước đi thường, bắt tốt qua đường, phong cấp và nhập thành. Thắng bằng chiếu hết hoặc đối thủ đầu hàng.';
+
+  @override
+  String get rulesChessPlay960 => 'Cờ 960: nước đi thường. Hàng cuối xáo theo Fischer: vua giữa hai xe, tượng khác màu. Nhập thành về c và g. Chiếu hết hoặc đầu hàng.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Phản cờ vua: nước đi thường, bắt quân là bắt buộc. Không chiếu, có thể bắt vua. Không nhập thành. Thắng khi bỏ hết quân hoặc hết nước đi.';
+
+  @override
+  String get rulesChessDrawClassic => 'Hòa vì hết nước, lặp ba lần, luật 50 nước, thiếu quân hoặc thỏa thuận.';
+
+  @override
+  String get rulesChessDraw960 => 'Hòa vì hết nước, lặp ba lần, luật 50 nước, thiếu quân hoặc thỏa thuận.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Hòa khi lặp ba lần hoặc cả hai hết quân trong cùng một nước.';
+
 
   @override
   String get checkersDrawRepetition => 'Hòa — thế cờ lặp ba lần';

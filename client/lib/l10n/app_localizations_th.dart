@@ -797,6 +797,19 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesCheckersModeCorners => 'มุม';
 
   @override
+  String get gamesChess => 'หมากรุก';
+
+  @override
+  String get gamesChessModeClassic => 'คลาสสิก';
+
+  @override
+  String get gamesChessMode960 => 'หมากรุก 960';
+
+  @override
+  String get gamesChessModeAntichess => 'แอนตีเชส';
+
+
+  @override
   String get rulesCheckersPlayers => 'ผู้เล่น: 2';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'เสมอหากซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่เพิ่มหมากในมุมเป้าหมาย';
+
+  @override
+  String get rulesChessPlayers => 'ผู้เล่น: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'โหมด: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'คลาสสิก: กระดาน 8×8 แต่ละฝ่ายมีคิง ควีน เรือ 2 บิชอป 2 ม้า 2 และเบี้ย 8 ขาวเดินก่อน เดินตามปกติ มีการกินผ่าน โปรโมต และเข้าปราสาท ชนะด้วยรุกฆาตหรือคู่ต่อสู้ยอมแพ้';
+
+  @override
+  String get rulesChessPlay960 => 'หมากรุก 960: เดินตามปกติ แถวหลังสุ่มตามฟิชเชอร์ คิงอยู่ระหว่างเรือ บิชอปคนละสี เข้าปราสาทไป c และ g รุกฆาตหรือยอมแพ้';
+
+  @override
+  String get rulesChessPlayAntichess => 'แอนตีเชส: เดินตามปกติ ต้องกินถ้ากินได้ ไม่มีรุก กินคิงได้ ไม่เข้าปราสาท ผู้ที่สละหมากทั้งหมดหรือเดินไม่ได้เป็นฝ่ายชนะ';
+
+  @override
+  String get rulesChessDrawClassic => 'เสมอเมื่อแพต ซ้ำสามครั้ง กติกา 50 ตา หมากไม่พอรุกฆาต หรือตกลงกัน';
+
+  @override
+  String get rulesChessDraw960 => 'เสมอเมื่อแพต ซ้ำสามครั้ง กติกา 50 ตา หมากไม่พอรุกฆาต หรือตกลงกัน';
+
+  @override
+  String get rulesChessDrawAntichess => 'เสมอเมื่อซ้ำสามครั้ง หรือทั้งสองหมดหมากในตาเดียวกัน';
+
 
   @override
   String get checkersDrawRepetition => 'เสมอ — ตำแหน่งซ้ำสามครั้ง';

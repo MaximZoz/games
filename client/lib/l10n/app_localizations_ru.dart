@@ -797,6 +797,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Уголки';
 
   @override
+  String get gamesChess => 'Шахматы';
+
+  @override
+  String get gamesChessModeClassic => 'Классика';
+
+  @override
+  String get gamesChessMode960 => 'Шахматы-960';
+
+  @override
+  String get gamesChessModeAntichess => 'Антишахматы';
+
+
+  @override
   String get rulesCheckersPlayers => 'Игроки: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.';
+
+  @override
+  String get rulesChessPlayers => 'Игроки: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Классика: доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.';
+
+  @override
+  String get rulesChessPlay960 => 'Шахматы-960: доска 8×8, фигуры ходят как обычно. На последней линии они стоят в случайном порядке по правилам Фишера: король между ладьями, слоны на клетках разного цвета. Белые ходят первыми. Рокировка есть: король и ладья заканчивают на клетках c и g. Побеждает тот, кто поставил мат или соперник сдался.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Антишахматы: доска 8×8, фигуры ходят как обычно. Взятие обязательно, если оно есть. Шаха нет — короля можно брать. Рокировки нет. Побеждает тот, кто отдал все свои фигуры или остался без хода.';
+
+  @override
+  String get rulesChessDrawClassic => 'Ничья при пате, троекратном повторении позиции, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.';
+
+  @override
+  String get rulesChessDraw960 => 'Ничья при пате, троекратном повторении, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Ничья при троекратном повторении позиции или если оба остались без фигур в один ход.';
+
 
   @override
   String get checkersDrawRepetition => 'Ничья — позиция повторилась трижды';

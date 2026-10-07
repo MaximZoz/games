@@ -25,6 +25,9 @@ void main() {
     expect(localizedGameTypeName('nardy', t), isNot(t.gamesTicTacToe));
     expect(localizedGameTypeName('checkers', t), t.gamesCheckers);
     expect(localizeChatTitle('Шашки', t), t.gamesCheckers);
+    expect(localizedGameTypeName('chess', t), t.gamesChess);
+    expect(localizeChatTitle('Шахматы', t), t.gamesChess);
+    expect(localizeChatTitle('Chess', t), t.gamesChess);
     expect(localizedGameTypeName('nardy', t), isNot('nardy'));
     expect(localizedGameTypeName('unknown-game', t), 'unknown-game');
     expect(localizedGameTypeName('unknown-game', t), isNot(t.gamesTicTacToe));
@@ -49,6 +52,14 @@ void main() {
     expect(
         localizedGameModeLabel(
             gameType: 'chess', variant: 'classic', l10n: t),
+        t.gamesChessModeClassic);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'chess', gameMode: 'chess960', l10n: t),
+        t.gamesChessMode960);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'go', variant: 'classic', l10n: t),
         isEmpty);
     expect(
         localizedGameModeLabel(

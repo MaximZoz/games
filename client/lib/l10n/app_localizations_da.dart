@@ -797,6 +797,19 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Hjørner';
 
   @override
+  String get gamesChess => 'Skak';
+
+  @override
+  String get gamesChessModeClassic => 'Klassisk';
+
+  @override
+  String get gamesChessMode960 => 'Skak960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antiskak';
+
+
+  @override
   String get rulesCheckersPlayers => 'Spillere: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remis ved tredobbelt stilling eller 25 træk per side uden flere brikker i målhjørnet.';
+
+  @override
+  String get rulesChessPlayers => 'Spillere: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Tilstand: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassisk: bræt 8×8. Hver side har konge, dronning, to tårne, to løbere, to springere og otte bønder. Hvid starter. Almindelige træk, en passant, forvandling og rokade. Sejr ved mat eller opgivelse.';
+
+  @override
+  String get rulesChessPlay960 => 'Skak960: almindelige træk. Sidste række blandes efter Fischer: kongen mellem tårnene, løbere på forskellige farver. Rokade til c og g. Mat eller opgivelse.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antiskak: almindelige træk, slag er tvunget. Ingen skak — kongen må slås. Ingen rokade. Den der afgiver alle brikker eller ikke kan trække vinder.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remis ved pat, tredobbelt gentagelse, 50-træksreglen, for lidt materiale eller aftale.';
+
+  @override
+  String get rulesChessDraw960 => 'Remis ved pat, tredobbelt gentagelse, 50-træksreglen, for lidt materiale eller aftale.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remis ved tredobbelt gentagelse eller hvis begge står uden brikker i samme træk.';
+
 
   @override
   String get checkersDrawRepetition => 'Remis — stillingen gentaget tre gange';

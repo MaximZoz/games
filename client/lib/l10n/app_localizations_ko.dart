@@ -797,6 +797,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesCheckersModeCorners => '코너';
 
   @override
+  String get gamesChess => '체스';
+
+  @override
+  String get gamesChessModeClassic => '클래식';
+
+  @override
+  String get gamesChessMode960 => '체스960';
+
+  @override
+  String get gamesChessModeAntichess => '안티체스';
+
+
+  @override
   String get rulesCheckersPlayers => '플레이어: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => '같은 국면 3회이거나 양쪽 25수 동안 목표 구석에 말이 늘지 않으면 무승부.';
+
+  @override
+  String get rulesChessPlayers => '플레이어: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return '모드: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => '클래식: 보드 8×8. 각 진영에 킹, 퀸, 룩 2, 비숍 2, 나이트 2, 폰 8. 백이 선공. 일반 수, 앙파상, 승진, 캐슬링. 체크메이트나 기권으로 승리.';
+
+  @override
+  String get rulesChessPlay960 => '체스960: 수는 일반. 마지막 줄은 피셔 규칙으로 섞임: 킹은 룩 사이, 비숍은 다른 색. 캐슬링은 c·g. 메이트 또는 기권.';
+
+  @override
+  String get rulesChessPlayAntichess => '안티체스: 수는 일반, 잡을 수 있으면 필수. 체크 없음, 킹을 잡을 수 있음. 캐슬링 없음. 모든 말을 주거나 둘 곳이 없으면 승리.';
+
+  @override
+  String get rulesChessDrawClassic => '무승부: 스테일메이트, 3회 반복, 50수, 부족한 전력 또는 합의.';
+
+  @override
+  String get rulesChessDraw960 => '무승부: 스테일메이트, 3회 반복, 50수, 부족한 전력 또는 합의.';
+
+  @override
+  String get rulesChessDrawAntichess => '무승부: 3회 반복, 또는 같은 수에 양쪽이 말이 없어지면.';
+
 
   @override
   String get checkersDrawRepetition => '무승부 — 같은 국면이 세 번';

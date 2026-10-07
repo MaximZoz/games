@@ -797,6 +797,19 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Burchaklar';
 
   @override
+  String get gamesChess => 'Shaxmat';
+
+  @override
+  String get gamesChessModeClassic => 'Klassika';
+
+  @override
+  String get gamesChessMode960 => 'Shaxmat-960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antishaxmat';
+
+
+  @override
   String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Durang: pozitsiya uch marta takrorlansa yoki har tomonning 25 yurishi maqsad burchagiga tosh qo‘shmasa.';
+
+  @override
+  String get rulesChessPlayers => 'O‘yinchilar: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Rejim: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassika: doska 8×8. Har tomonda shoh, vazir, ikki rux, ikki fil, ikki ot va sakkiz piyoda. Oqlar boshlaydi. Oddiy yurishlar, o‘tishda olish, o‘girish va rokirovka bor. Mat yoki taslim — g‘alaba.';
+
+  @override
+  String get rulesChessPlay960 => 'Shaxmat-960: yurishlar oddiy. Oxirgi qator Fisher qoidasi bilan tasodifiy: shoh ruxlar orasida, fillar turli rangda. Rokirovka c va g. Mat yoki taslim.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antishaxmat: yurishlar oddiy, olish majburiy. Shox yo‘q, shohni olish mumkin. Rokirovka yo‘q. Barcha donani bergan yoki yurishsiz qolgan yutadi.';
+
+  @override
+  String get rulesChessDrawClassic => 'Durang: pat, uch marta takror, 50 yurish, mat uchun dona yetmasa yoki kelishuv.';
+
+  @override
+  String get rulesChessDraw960 => 'Durang: pat, uch marta takror, 50 yurish, mat uchun dona yetmasa yoki kelishuv.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Durang: uch marta takror yoki ikkisi ham bir yurishda donasiz qolsa.';
+
 
   @override
   String get checkersDrawRepetition => 'Durang — pozitsiya uch marta takrorlandi';

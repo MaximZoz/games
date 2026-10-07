@@ -797,6 +797,19 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Вуглікі';
 
   @override
+  String get gamesChess => 'Шахматы';
+
+  @override
+  String get gamesChessModeClassic => 'Класіка';
+
+  @override
+  String get gamesChessMode960 => 'Шахматы-960';
+
+  @override
+  String get gamesChessModeAntichess => 'Антышахматы';
+
+
+  @override
   String get rulesCheckersPlayers => 'Гульцы: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Нічыя, калі пазіцыя паўтарылася тройчы або 25 хадоў кожнага не дадалі шашак у мэтавы кут.';
+
+  @override
+  String get rulesChessPlayers => 'Гульцы: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Рэжым: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Класіка: дошка 8×8. У кожнага кароль, ферзь, дзве вежы, два сланы, два коні і восем пешак. Белыя ходзяць першымі. Ёсць узяцце на праходзе, пераўтварэнне і ракіроўка. Перамагае мат або здача суперніка.';
+
+  @override
+  String get rulesChessPlay960 => 'Шахматы-960: ходы звычайныя, апошняя лінія выпадковая па Фішэру: кароль між вежамі, сланы на розных колерах. Ракіроўка на c і g. Мат або здача.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Антышахматы: ходы звычайныя, узяцце абавязковае. Шаха няма, караля можна браць. Ракіроўкі няма. Перамагае той, хто аддаў усе фігуры або застаўся без ходу.';
+
+  @override
+  String get rulesChessDrawClassic => 'Нічыя пры паце, патройным паўторы, правіле 50 хадоў, недахопе фігур або па згодзе.';
+
+  @override
+  String get rulesChessDraw960 => 'Нічыя пры паце, патройным паўторы, правіле 50 хадоў, недахопе фігур або па згодзе.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Нічыя пры патройным паўторы або калі абодва засталіся без фігур адным ходам.';
+
 
   @override
   String get checkersDrawRepetition => 'Нічыя — пазіцыя паўтарылася тройчы';

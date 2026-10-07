@@ -64,7 +64,8 @@ InviteLobbyLink? parseInviteLobbyShareUrl(String raw) {
   if (segments.length < 4) return null;
   if (segments[0] != 'games' || segments[2] != 'lobby') return null;
   final gt = segments[1].trim();
-  if (!gameRegistry.contains(gt)) return null;
+  final game = gameRegistry[gt];
+  if (game == null || game.comingSoon) return null;
   final id = segments[3].trim();
   if (id.isEmpty) return null;
   if (id.contains('/') || id.contains(' ')) return null;

@@ -797,6 +797,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Cantos';
 
   @override
+  String get gamesChess => 'Xadrez';
+
+  @override
+  String get gamesChessModeClassic => 'Clássico';
+
+  @override
+  String get gamesChessMode960 => 'Xadrez 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antixadrez';
+
+
+  @override
   String get rulesCheckersPlayers => 'Jogadores: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Empate se a posição se repetir três vezes ou se 25 lances de cada lado não acrescentarem peças ao canto alvo.';
+
+  @override
+  String get rulesChessPlayers => 'Jogadores: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modo: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Clássico: tabuleiro 8×8. Cada lado tem rei, dama, duas torres, dois bispos, dois cavalos e oito peões. As brancas começam. Lances habituais, en passant, promoção e roque. Ganha o xeque-mate ou o abandono.';
+
+  @override
+  String get rulesChessPlay960 => 'Xadrez 960: lances habituais. A última fila é embaralhada à Fischer: rei entre as torres, bispos em cores opostas. Roque para c e g. Mate ou abandono.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antixadrez: lances habituais, capturar é obrigatório. Não há xeque: o rei pode ser capturado. Sem roque. Ganha quem entrega todas as peças ou não tem lance.';
+
+  @override
+  String get rulesChessDrawClassic => 'Empate por afogamento, tripla repetição, regra das 50 jogadas, material insuficiente ou acordo.';
+
+  @override
+  String get rulesChessDraw960 => 'Empate por afogamento, tripla repetição, regra das 50 jogadas, material insuficiente ou acordo.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Empate por tripla repetição ou se ambos ficam sem peças no mesmo lance.';
+
 
   @override
   String get checkersDrawRepetition => 'Empate — posição repetida três vezes';

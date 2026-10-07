@@ -1673,6 +1673,31 @@ abstract class AppLocalizations {
   /// **'Уголки'**
   String get gamesCheckersModeCorners;
 
+  /// No description provided for @gamesChess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шахматы'**
+  String get gamesChess;
+
+  /// No description provided for @gamesChessModeClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика'**
+  String get gamesChessModeClassic;
+
+  /// No description provided for @gamesChessMode960.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шахматы-960'**
+  String get gamesChessMode960;
+
+  /// No description provided for @gamesChessModeAntichess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Антишахматы'**
+  String get gamesChessModeAntichess;
+
+
   /// No description provided for @rulesCheckersPlayers.
   ///
   /// In ru, this message translates to:
@@ -1774,6 +1799,55 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.'**
   String get rulesCheckersDrawCorners;
+
+  /// No description provided for @rulesChessPlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки: 2.'**
+  String get rulesChessPlayers;
+
+  /// No description provided for @rulesChessMode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Режим: {mode}.'**
+  String rulesChessMode(String mode);
+
+  /// No description provided for @rulesChessPlayClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классика: доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.'**
+  String get rulesChessPlayClassic;
+
+  /// No description provided for @rulesChessPlay960.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шахматы-960: доска 8×8, фигуры ходят как обычно. На последней линии они стоят в случайном порядке по правилам Фишера: король между ладьями, слоны на клетках разного цвета. Белые ходят первыми. Рокировка есть: король и ладья заканчивают на клетках c и g. Побеждает тот, кто поставил мат или соперник сдался.'**
+  String get rulesChessPlay960;
+
+  /// No description provided for @rulesChessPlayAntichess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Антишахматы: доска 8×8, фигуры ходят как обычно. Взятие обязательно, если оно есть. Шаха нет — короля можно брать. Рокировки нет. Побеждает тот, кто отдал все свои фигуры или остался без хода.'**
+  String get rulesChessPlayAntichess;
+
+  /// No description provided for @rulesChessDrawClassic.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья при пате, троекратном повторении позиции, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.'**
+  String get rulesChessDrawClassic;
+
+  /// No description provided for @rulesChessDraw960.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья при пате, троекратном повторении, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.'**
+  String get rulesChessDraw960;
+
+  /// No description provided for @rulesChessDrawAntichess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья при троекратном повторении позиции или если оба остались без фигур в один ход.'**
+  String get rulesChessDrawAntichess;
+
 
   /// No description provided for @checkersDrawRepetition.
   ///

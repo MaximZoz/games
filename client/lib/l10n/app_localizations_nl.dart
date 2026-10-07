@@ -797,6 +797,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Hoeken';
 
   @override
+  String get gamesChess => 'Schaken';
+
+  @override
+  String get gamesChessModeClassic => 'Klassiek';
+
+  @override
+  String get gamesChessMode960 => 'Chess960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antischaken';
+
+
+  @override
   String get rulesCheckersPlayers => 'Spelers: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remise bij drievoudige herhaling of 25 zetten per kant zonder extra schijf in de doelhoek.';
+
+  @override
+  String get rulesChessPlayers => 'Spelers: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modus: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassiek: bord 8×8. Elke kant heeft koning, dame, twee torens, twee lopers, twee paarden en acht pionnen. Wit begint. Gewone zetten, en passant, promotie en rokade. Winst door mat of opgave.';
+
+  @override
+  String get rulesChessPlay960 => 'Chess960: gewone zetten. De achterste rij is geschud volgens Fischer: koning tussen de torens, lopers op verschillende kleuren. Rokade naar c en g. Mat of opgave.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antischaken: gewone zetten, slaan is verplicht. Geen schaak — de koning mag geslagen. Geen rokade. Wint wie alle stukken weggeeft of geen zet heeft.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remise bij pat, drievoudige herhaling, 50-zettenregel, onvoldoende materiaal of afspraak.';
+
+  @override
+  String get rulesChessDraw960 => 'Remise bij pat, drievoudige herhaling, 50-zettenregel, onvoldoende materiaal of afspraak.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remise bij drievoudige herhaling of als beide in dezelfde zet zonder stukken staan.';
+
 
   @override
   String get checkersDrawRepetition => 'Remise — stelling driemaal herhaald';

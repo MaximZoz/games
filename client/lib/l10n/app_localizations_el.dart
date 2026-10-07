@@ -797,6 +797,19 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Γωνίες';
 
   @override
+  String get gamesChess => 'Σκάκι';
+
+  @override
+  String get gamesChessModeClassic => 'Κλασικό';
+
+  @override
+  String get gamesChessMode960 => 'Σκάκι 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Αντισκάκι';
+
+
+  @override
   String get rulesCheckersPlayers => 'Παίκτες: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Ισοπαλία σε τριπλή επανάληψη ή 25 κινήσεις ανά πλευρά χωρίς νέο πούλι στη γωνία-στόχο.';
+
+  @override
+  String get rulesChessPlayers => 'Παίκτες: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Λειτουργία: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Κλασικό: σκακιέρα 8×8. Κάθε πλευρά έχει βασιλιά, βασίλισσα, δύο πύργους, δύο αξιωματικούς, δύο ίππους και οκτώ πιόνια. Παίζουν τα λευκά. Συνήθεις κινήσεις, πάρσιμο εν διελεύσει, προαγωγή και ροκέ. Νίκη με ματ ή εγκατάλειψη.';
+
+  @override
+  String get rulesChessPlay960 => 'Σκάκι 960: συνήθεις κινήσεις. Η τελευταία γραμμή τυχαία κατά Φίσερ: βασιλιάς ανάμεσα στους πύργους, αξιωματικοί σε διαφορετικά χρώματα. Ροκέ στα c και g. Ματ ή εγκατάλειψη.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Αντισκάκι: συνήθεις κινήσεις, το πάρσιμο είναι υποχρεωτικό. Δεν υπάρχει σαχ, ο βασιλιάς πιάνεται. Χωρίς ροκέ. Κερδίζει όποιος χάσει όλα τα κομμάτια ή μείνει χωρίς κίνηση.';
+
+  @override
+  String get rulesChessDrawClassic => 'Ισοπαλία σε πατ, τριπλή επανάληψη, κανόνα 50 κινήσεων, έλλειψη υλικού ή συμφωνία.';
+
+  @override
+  String get rulesChessDraw960 => 'Ισοπαλία σε πατ, τριπλή επανάληψη, κανόνα 50 κινήσεων, έλλειψη υλικού ή συμφωνία.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Ισοπαλία σε τριπλή επανάληψη ή αν μείνουν και οι δύο χωρίς κομμάτια στην ίδια κίνηση.';
+
 
   @override
   String get checkersDrawRepetition => 'Ισοπαλία — η θέση επαναλήφθηκε τρεις φορές';
