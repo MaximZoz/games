@@ -1686,7 +1686,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopEmojisHelp => 'Κινούμενα emoji για τη συνομιλία. Αγοράστε ένα σετ και στείλτε τα σε φίλους.';
 
   @override
-  String get shopCollectionsHelp => 'Συλλέξτε ένα σετ αντικειμένων: εμφανίζονται στη βιτρίνα προφίλ και μπορούν να χαριστούν ή να πουληθούν. Μια πλήρης συλλογή δίνει επιπλέον νομίσματα κάθε μέρα.';
+  String get shopCollectionsHelp => 'Συλλέξτε ένα σετ αντικειμένων: εμφανίζονται στη βιτρίνα προφίλ και μπορούν να χαριστούν ή να πουληθούν. Μια πλήρης συλλογή δίνει επιπλέον νομίσματα κάθε μέρα.\n\nΗ κατάσταση εξαρτάται από το πόσο καιρό έχεις τη συλλογή. Καινούργια — τις πρώτες 7 ημέρες, πώληση 80%. Φθαρμένη — από την 8η ημέρα έως 2 μήνες, πώληση 60%. Κουρασμένη — από 2 έως 6 μήνες, πώληση 40%. Ερειπωμένη — από 6 μήνες έως 1 έτος, πώληση 100%. Vintage — από 1 έτος, πώληση 300%.';
 
   @override
   String get shopStakesHelp => 'Ξεκλειδώστε υψηλότερα πονταρίσματα. Όσο υψηλότερο το ποντάρισμα, τόσο μεγαλύτερο το pot και το κέρδος.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopBuyOnce => 'Εφάπαξ αγορά';
 
   @override
-  String get shopSellRefund => 'Η πώληση επιστρέφει το 80% του κόστους';
+  String get shopSellRefund => 'Η πώληση εξαρτάται από την κατάσταση της συλλογής';
+
+  @override
+  String get shopCollectionConditionInfo => 'Η κατάσταση εξαρτάται από το πόσο καιρό έχεις τη συλλογή. Καινούργια — τις πρώτες 7 ημέρες, πώληση 80%. Φθαρμένη — από την 8η ημέρα έως 2 μήνες, πώληση 60%. Κουρασμένη — από 2 έως 6 μήνες, πώληση 40%. Ερειπωμένη — από 6 μήνες έως 1 έτος, πώληση 100%. Vintage — από 1 έτος, πώληση 300%.';
+
+  @override
+  String get collectionConditionNew => 'Καινούργια';
+
+  @override
+  String get collectionConditionWorn => 'Φθαρμένη';
+
+  @override
+  String get collectionConditionTired => 'Κουρασμένη';
+
+  @override
+  String get collectionConditionShabby => 'Ερειπωμένη';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Πώληση $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

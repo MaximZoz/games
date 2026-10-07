@@ -624,7 +624,7 @@
   "shopStakes": "Stawki",
   "shopStakesSubtitle": "Odblokuj wyższe stawki",
   "shopEmojisHelp": "Animowane emotikony do czatu. Kup zestaw i wysyłaj je znajomym.",
-  "shopCollectionsHelp": "Zbierz zestaw przedmiotów: pojawiają się w witrynie profilu, można je dawać i sprzedawać. Kompletna kolekcja codziennie daje dodatkowe monety.",
+  "shopCollectionsHelp": "Zbierz zestaw przedmiotów: pojawiają się w witrynie profilu, można je dawać i sprzedawać. Kompletna kolekcja codziennie daje dodatkowe monety.\n\nStan zależy od tego, jak długo kolekcja jest u ciebie. Nowa — pierwsze 7 dni, sprzedaż 80%. Znoszona — od 8. dnia do 2 miesięcy, sprzedaż 60%. Zmęczona — od 2 do 6 miesięcy, sprzedaż 40%. Zniszczona — od 6 miesięcy do roku, sprzedaż 100%. Vintage — od roku, sprzedaż 300%.",
   "shopStakesHelp": "Odblokuj wyższe stawki. Im wyższa stawka, tym większa pula i wygrana.",
   "inventoryTitle": "Przedmioty",
   "inventoryEmpty": "Na razie pusto — zajrzyj do sklepu",
@@ -892,7 +892,14 @@
     }
   },
   "shopBuyOnce": "Zakup jednorazowy",
-  "shopSellRefund": "Sprzedaż zwraca 80% kosztów",
+  "shopSellRefund": "Sprzedaż zależy od stanu kolekcji",
+  "shopCollectionConditionInfo": "Stan zależy od tego, jak długo kolekcja jest u ciebie. Nowa — pierwsze 7 dni, sprzedaż 80%. Znoszona — od 8. dnia do 2 miesięcy, sprzedaż 60%. Zmęczona — od 2 do 6 miesięcy, sprzedaż 40%. Zniszczona — od 6 miesięcy do roku, sprzedaż 100%. Vintage — od roku, sprzedaż 300%.",
+  "collectionConditionNew": "Nowa",
+  "collectionConditionWorn": "Znoszona",
+  "collectionConditionTired": "Zmęczona",
+  "collectionConditionShabby": "Zniszczona",
+  "collectionConditionVintage": "Vintage",
+  "collectionConditionSell": "Sprzedaż {percent}%",
   "shopCollectionAdded": "{title} dodano do profilu",
   "@shopCollectionAdded": {
     "placeholders": {

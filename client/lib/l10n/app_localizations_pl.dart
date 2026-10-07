@@ -1686,7 +1686,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shopEmojisHelp => 'Animowane emotikony do czatu. Kup zestaw i wysyłaj je znajomym.';
 
   @override
-  String get shopCollectionsHelp => 'Zbierz zestaw przedmiotów: pojawiają się w witrynie profilu, można je dawać i sprzedawać. Kompletna kolekcja codziennie daje dodatkowe monety.';
+  String get shopCollectionsHelp => 'Zbierz zestaw przedmiotów: pojawiają się w witrynie profilu, można je dawać i sprzedawać. Kompletna kolekcja codziennie daje dodatkowe monety.\n\nStan zależy od tego, jak długo kolekcja jest u ciebie. Nowa — pierwsze 7 dni, sprzedaż 80%. Znoszona — od 8. dnia do 2 miesięcy, sprzedaż 60%. Zmęczona — od 2 do 6 miesięcy, sprzedaż 40%. Zniszczona — od 6 miesięcy do roku, sprzedaż 100%. Vintage — od roku, sprzedaż 300%.';
 
   @override
   String get shopStakesHelp => 'Odblokuj wyższe stawki. Im wyższa stawka, tym większa pula i wygrana.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shopBuyOnce => 'Zakup jednorazowy';
 
   @override
-  String get shopSellRefund => 'Sprzedaż zwraca 80% kosztów';
+  String get shopSellRefund => 'Sprzedaż zależy od stanu kolekcji';
+
+  @override
+  String get shopCollectionConditionInfo => 'Stan zależy od tego, jak długo kolekcja jest u ciebie. Nowa — pierwsze 7 dni, sprzedaż 80%. Znoszona — od 8. dnia do 2 miesięcy, sprzedaż 60%. Zmęczona — od 2 do 6 miesięcy, sprzedaż 40%. Zniszczona — od 6 miesięcy do roku, sprzedaż 100%. Vintage — od roku, sprzedaż 300%.';
+
+  @override
+  String get collectionConditionNew => 'Nowa';
+
+  @override
+  String get collectionConditionWorn => 'Znoszona';
+
+  @override
+  String get collectionConditionTired => 'Zmęczona';
+
+  @override
+  String get collectionConditionShabby => 'Zniszczona';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Sprzedaż $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

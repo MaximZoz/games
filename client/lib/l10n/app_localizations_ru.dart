@@ -1686,7 +1686,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopEmojisHelp => 'Анимированные смайлики для чата. Купите набор — и отправляйте его в сообщениях друзьям.';
 
   @override
-  String get shopCollectionsHelp => 'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.';
+  String get shopCollectionsHelp => 'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.\n\nСостояние зависит от того, как давно коллекция у вас. Новое — первые 7 дней, продажа 80%. Потрепанное — с 8-го дня до 2 месяцев, продажа 60%. Уставшее — с 2 до 6 месяцев, продажа 40%. Ветхое — с 6 месяцев до года, продажа 100%. Винтаж — от года, продажа 300%.';
 
   @override
   String get shopStakesHelp => 'Разблокируйте более высокие ставки в играх. Чем выше ставка, тем больше банк и выигрыш.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopBuyOnce => 'Покупка один раз';
 
   @override
-  String get shopSellRefund => 'Продажа вернет 80% стоимости';
+  String get shopSellRefund => 'Продажа зависит от состояния коллекции';
+
+  @override
+  String get shopCollectionConditionInfo => 'Состояние зависит от того, как давно коллекция у вас. Новое — первые 7 дней, продажа 80%. Потрепанное — с 8-го дня до 2 месяцев, продажа 60%. Уставшее — с 2 до 6 месяцев, продажа 40%. Ветхое — с 6 месяцев до года, продажа 100%. Винтаж — от года, продажа 300%.';
+
+  @override
+  String get collectionConditionNew => 'Новое';
+
+  @override
+  String get collectionConditionWorn => 'Потрепанное';
+
+  @override
+  String get collectionConditionTired => 'Уставшее';
+
+  @override
+  String get collectionConditionShabby => 'Ветхое';
+
+  @override
+  String get collectionConditionVintage => 'Винтаж';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Продажа $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

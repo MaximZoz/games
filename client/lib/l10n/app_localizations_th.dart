@@ -1686,7 +1686,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopEmojisHelp => 'อิโมจิเคลื่อนไหวสำหรับแชท ซื้อชุดแล้วส่งให้เพื่อนได้';
 
   @override
-  String get shopCollectionsHelp => 'สะสมชุดไอเท็ม: แสดงในตู้โปรไฟล์ ให้เป็นของขวัญหรือขายได้ ชุดครบให้เหรียญเพิ่มทุกวัน';
+  String get shopCollectionsHelp => 'สะสมชุดไอเท็ม: แสดงในตู้โปรไฟล์ ให้เป็นของขวัญหรือขายได้ ชุดครบให้เหรียญเพิ่มทุกวัน\n\nสภาพขึ้นกับว่าสะสมมานานแค่ไหน ใหม่ — 7 วันแรก ขาย 80% เก่า — ตั้งแต่วันที่ 8 ถึง 2 เดือน ขาย 60% เหนื่อย — 2 ถึง 6 เดือน ขาย 40% ชำรุด — 6 เดือนถึง 1 ปี ขาย 100% วินเทจ — ตั้งแต่ 1 ปี ขาย 300%';
 
   @override
   String get shopStakesHelp => 'ปลดล็อกเดิมพันที่สูงขึ้น เดิมพันยิ่งสูง เงินกองกลางและรางวัลยิ่งใหญ่';
@@ -2036,7 +2036,30 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopBuyOnce => 'ซื้อครั้งเดียว';
 
   @override
-  String get shopSellRefund => 'การขายคืน 80% ของราคา';
+  String get shopSellRefund => 'การขายขึ้นกับสภาพคอลเลกชัน';
+
+  @override
+  String get shopCollectionConditionInfo => 'สภาพขึ้นกับว่าสะสมมานานแค่ไหน ใหม่ — 7 วันแรก ขาย 80% เก่า — ตั้งแต่วันที่ 8 ถึง 2 เดือน ขาย 60% เหนื่อย — 2 ถึง 6 เดือน ขาย 40% ชำรุด — 6 เดือนถึง 1 ปี ขาย 100% วินเทจ — ตั้งแต่ 1 ปี ขาย 300%';
+
+  @override
+  String get collectionConditionNew => 'ใหม่';
+
+  @override
+  String get collectionConditionWorn => 'เก่า';
+
+  @override
+  String get collectionConditionTired => 'เหนื่อย';
+
+  @override
+  String get collectionConditionShabby => 'ชำรุด';
+
+  @override
+  String get collectionConditionVintage => 'วินเทจ';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'ขาย $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

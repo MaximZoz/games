@@ -1686,7 +1686,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.';
 
   @override
-  String get shopCollectionsHelp => 'Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.';
+  String get shopCollectionsHelp => 'Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.\n\nKondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80%. Usang — hari ke-8 sampai 2 bulan, jual 60%. Lelah — 2 sampai 6 bulan, jual 40%. Lapuk — 6 bulan sampai 1 tahun, jual 100%. Vintage — setelah 1 tahun, jual 300%.';
 
   @override
   String get shopStakesHelp => 'Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopBuyOnce => 'Pembelian sekali';
 
   @override
-  String get shopSellRefund => 'Menjual mengembalikan 80% biaya';
+  String get shopSellRefund => 'Penjualan tergantung kondisi koleksi';
+
+  @override
+  String get shopCollectionConditionInfo => 'Kondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80%. Usang — hari ke-8 sampai 2 bulan, jual 60%. Lelah — 2 sampai 6 bulan, jual 40%. Lapuk — 6 bulan sampai 1 tahun, jual 100%. Vintage — setelah 1 tahun, jual 300%.';
+
+  @override
+  String get collectionConditionNew => 'Baru';
+
+  @override
+  String get collectionConditionWorn => 'Usang';
+
+  @override
+  String get collectionConditionTired => 'Lelah';
+
+  @override
+  String get collectionConditionShabby => 'Lapuk';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Jual $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

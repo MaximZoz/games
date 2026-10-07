@@ -465,7 +465,7 @@ POST /api/shop/buy                      // { "item_code": "...", "quantity": 1 }
 GET  /api/inventory                     // инвентарь пользователя
 GET  /api/inventory/capabilities        // доступные ставки/возможности
 POST /api/inventory/consume             // { "item_code": "..." }
-POST /api/inventory/sell                // продажа коллекции (возврат 80%)
+POST /api/inventory/sell                // продажа коллекции: 80/60/40/100/300% по состоянию
 POST /api/inventory/gift                // подарок другу (создаёт системное сообщение в чате)
 
 GET  /api/inventory/collections?user_id=<uuid>      // витрина коллекций

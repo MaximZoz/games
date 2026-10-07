@@ -624,7 +624,7 @@
   "shopStakes": "Inzetten",
   "shopStakesSubtitle": "Hogere inzetten ontgrendelen",
   "shopEmojisHelp": "Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.",
-  "shopCollectionsHelp": "Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.",
+  "shopCollectionsHelp": "Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.\n\nDe staat hangt af van hoe lang de collectie al van jou is. Nieuw — de eerste 7 dagen, verkoop 80%. Versleten — van dag 8 tot 2 maanden, verkoop 60%. Vermoeid — van 2 tot 6 maanden, verkoop 40%. Verval — van 6 maanden tot 1 jaar, verkoop 100%. Vintage — vanaf 1 jaar, verkoop 300%.",
   "shopStakesHelp": "Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.",
   "inventoryTitle": "Items",
   "inventoryEmpty": "Nog niets hier — bekijk de winkel",
@@ -892,7 +892,14 @@
     }
   },
   "shopBuyOnce": "Eenmalige aankoop",
-  "shopSellRefund": "Verkopen geeft 80% van de prijs terug",
+  "shopSellRefund": "Verkoop hangt af van de staat van de collectie",
+  "shopCollectionConditionInfo": "De staat hangt af van hoe lang de collectie al van jou is. Nieuw — de eerste 7 dagen, verkoop 80%. Versleten — van dag 8 tot 2 maanden, verkoop 60%. Vermoeid — van 2 tot 6 maanden, verkoop 40%. Verval — van 6 maanden tot 1 jaar, verkoop 100%. Vintage — vanaf 1 jaar, verkoop 300%.",
+  "collectionConditionNew": "Nieuw",
+  "collectionConditionWorn": "Versleten",
+  "collectionConditionTired": "Vermoeid",
+  "collectionConditionShabby": "Verval",
+  "collectionConditionVintage": "Vintage",
+  "collectionConditionSell": "Verkoop {percent}%",
   "shopCollectionAdded": "{title} toegevoegd aan profiel",
   "@shopCollectionAdded": {
     "placeholders": {

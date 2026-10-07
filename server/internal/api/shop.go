@@ -33,6 +33,9 @@ func shopItemJSON(it store.ShopItemView) map[string]any {
 		"owned":        it.Owned,
 		"sort_order":   it.SortOrder,
 	}
+	if it.AcquiredAt != "" {
+		m["acquired_at"] = it.AcquiredAt
+	}
 	if len(it.Payload) > 0 {
 		var payload any
 		if json.Unmarshal(it.Payload, &payload) == nil {
@@ -325,14 +328,14 @@ func (h *ShopHandler) Gift(w http.ResponseWriter, r *http.Request) {
 					// Отдельное событие получателю — бейдж на Главной/Предметах
 					// даже если клиент пропустил разбор тела chat_message.
 					h.Hub.PublishToUsers([]uuid.UUID{toID}, map[string]any{
-						"type":           "collection_gifted",
-						"code":           code,
-						"title":          title,
-						"emoji":          emoji,
-						"animated_name":  animatedName,
-						"from_user_id":   userID.String(),
-						"chat_id":        item.ChatID,
-						"message_id":     item.ID,
+						"type":          "collection_gifted",
+						"code":          code,
+						"title":         title,
+						"emoji":         emoji,
+						"animated_name": animatedName,
+						"from_user_id":  userID.String(),
+						"chat_id":       item.ChatID,
+						"message_id":    item.ID,
 					})
 				}
 				if h.Push != nil {
@@ -423,12 +426,12 @@ func (h *ShopHandler) CollectionIncome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := map[string]any{
-		"available":         info.Available,
-		"amount_bronze":     info.AmountBronze,
-		"items_bronze":      info.ItemsBronze,
-		"set_bonus_bronze":  info.SetBonusBronze,
-		"completed_sets":    info.CompletedSets,
-		"owned_count":       info.OwnedCount,
+		"available":        info.Available,
+		"amount_bronze":    info.AmountBronze,
+		"items_bronze":     info.ItemsBronze,
+		"set_bonus_bronze": info.SetBonusBronze,
+		"completed_sets":   info.CompletedSets,
+		"owned_count":      info.OwnedCount,
 	}
 	if info.NextClaimAt != nil {
 		resp["next_claim_at"] = *info.NextClaimAt

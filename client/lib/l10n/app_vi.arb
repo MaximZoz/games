@@ -624,7 +624,7 @@
   "shopStakes": "Cược",
   "shopStakesSubtitle": "Mở khóa cược cao hơn",
   "shopEmojisHelp": "Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.",
-  "shopCollectionsHelp": "Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.",
+  "shopCollectionsHelp": "Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.\n\nTrạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.",
   "shopStakesHelp": "Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.",
   "inventoryTitle": "Vật phẩm",
   "inventoryEmpty": "Chưa có gì ở đây — xem cửa hàng",
@@ -892,7 +892,14 @@
     }
   },
   "shopBuyOnce": "Mua một lần",
-  "shopSellRefund": "Bán sẽ hoàn lại 80% chi phí",
+  "shopSellRefund": "Giá bán phụ thuộc trạng thái bộ sưu tập",
+  "shopCollectionConditionInfo": "Trạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.",
+  "collectionConditionNew": "Mới",
+  "collectionConditionWorn": "Sờn",
+  "collectionConditionTired": "Mệt",
+  "collectionConditionShabby": "Cũ nát",
+  "collectionConditionVintage": "Cổ điển",
+  "collectionConditionSell": "Bán {percent}%",
   "shopCollectionAdded": "Đã thêm {title} vào hồ sơ",
   "@shopCollectionAdded": {
     "placeholders": {

@@ -18,6 +18,7 @@ class ShopItem {
     this.stockRemaining,
     this.payload = const {},
     this.sortOrder = 0,
+    this.acquiredAt,
   });
 
   final String code;
@@ -29,6 +30,7 @@ class ShopItem {
   final int? stockRemaining;
   final Map<String, dynamic> payload;
   final int sortOrder;
+  final String? acquiredAt;
 
   bool get isOutOfStock =>
       stockRemaining != null && stockRemaining! <= 0 && !owned;
@@ -72,10 +74,10 @@ class ShopItem {
       0;
   @Deprecated('Use dailyBronze')
   int get weeklyBronze => dailyBronze;
-  int get sellRefundBronze => (priceBronze * 80) ~/ 100;
 
   ShopItem copyWith({
     bool? owned,
+    String? acquiredAt,
   }) {
     return ShopItem(
       code: code,
@@ -87,6 +89,7 @@ class ShopItem {
       stockRemaining: stockRemaining,
       payload: payload,
       sortOrder: sortOrder,
+      acquiredAt: acquiredAt ?? this.acquiredAt,
     );
   }
 
@@ -108,6 +111,7 @@ class ShopItem {
       stockRemaining: (json['stock_remaining'] as num?)?.toInt(),
       payload: payload,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
+      acquiredAt: json['acquired_at'] as String?,
     );
   }
 
@@ -121,6 +125,7 @@ class ShopItem {
         'stock_remaining': stockRemaining,
         'payload': payload,
         'sort_order': sortOrder,
+        'acquired_at': acquiredAt,
       };
 }
 
@@ -315,7 +320,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -339,7 +345,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
@@ -361,7 +368,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return (body['quantity'] as num?)?.toInt() ?? 0;
@@ -401,7 +409,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return InventoryCapabilities.fromJson(body);
@@ -419,7 +428,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final raw = body['items'];
@@ -443,7 +453,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(
@@ -465,7 +476,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
   }
 
@@ -479,7 +491,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return CollectionIncomeInfo.fromJson(body);
@@ -498,7 +511,8 @@ class ShopRepository {
       ),
     );
     if (response.statusCode != 200) {
-      _throwShopError(response, fallback: LocaleService.l10n.commonGenericError);
+      _throwShopError(response,
+          fallback: LocaleService.l10n.commonGenericError);
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return ShopBuyResult(

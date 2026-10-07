@@ -624,7 +624,7 @@
   "shopStakes": "Apostas",
   "shopStakesSubtitle": "Desbloquear apostas mais altas",
   "shopEmojisHelp": "Emojis animados para o chat. Compre um conjunto e envie nas mensagens aos amigos.",
-  "shopCollectionsHelp": "Reúna um conjunto de itens: eles aparecem na vitrine do perfil e podem ser presentes ou vendidos. Uma coleção completa rende moedas extras todos os dias.",
+  "shopCollectionsHelp": "Reúna um conjunto de itens: eles aparecem na vitrine do perfil e podem ser presentes ou vendidos. Uma coleção completa rende moedas extras todos os dias.\n\nO estado depende de há quanto tempo a coleção é sua. Novo — os primeiros 7 dias, venda 80%. Gasto — do 8.º dia até 2 meses, venda 60%. Cansado — de 2 a 6 meses, venda 40%. Gasto pelo tempo — de 6 meses a 1 ano, venda 100%. Vintage — a partir de 1 ano, venda 300%.",
   "shopStakesHelp": "Desbloqueie apostas mais altas. Quanto maior a aposta, maior o pot e o prêmio.",
   "inventoryTitle": "Itens",
   "inventoryEmpty": "Ainda não há nada aqui — veja a loja",
@@ -892,7 +892,14 @@
     }
   },
   "shopBuyOnce": "Compra única",
-  "shopSellRefund": "Vender devolve 80% do custo",
+  "shopSellRefund": "A venda depende do estado da coleção",
+  "shopCollectionConditionInfo": "O estado depende de há quanto tempo a coleção é sua. Novo — os primeiros 7 dias, venda 80%. Gasto — do 8.º dia até 2 meses, venda 60%. Cansado — de 2 a 6 meses, venda 40%. Gasto pelo tempo — de 6 meses a 1 ano, venda 100%. Vintage — a partir de 1 ano, venda 300%.",
+  "collectionConditionNew": "Novo",
+  "collectionConditionWorn": "Gasto",
+  "collectionConditionTired": "Cansado",
+  "collectionConditionShabby": "Gasto pelo tempo",
+  "collectionConditionVintage": "Vintage",
+  "collectionConditionSell": "Venda {percent}%",
   "shopCollectionAdded": "{title} adicionado ao perfil",
   "@shopCollectionAdded": {
     "placeholders": {

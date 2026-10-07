@@ -7,6 +7,7 @@ import 'package:multigames_client/auth/auth_provider.dart';
 import 'package:multigames_client/core/offline_disk_cache.dart';
 import 'package:multigames_client/core/offline_mode_provider.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -81,7 +82,8 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
     final cached = ref.watch(shopCatalogProvider).valueOrNull;
     final items = (cached != null && cached.isNotEmpty) ? cached : _items;
     final collections = items
-        .where((e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+        .where(
+            (e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
         .toList();
 
     final bySet = <String, List<ShopItem>>{};
@@ -125,48 +127,61 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
           ),
         ),
         body: SafeArea(
-          child: orderedSets.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.shopEmpty,
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                )
-              : DesktopTileGrid(
-                  itemCount: orderedSets.length,
-                  maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
-                  maxContentWidth: 1100,
-                  maxColumns: 3,
-                  padding: EdgeInsets.fromLTRB(
-                    isPhoneLandscape(context) ? 12 : 16,
-                    8,
-                    isPhoneLandscape(context) ? 12 : 16,
-                    24,
-                  ),
-                  itemBuilder: (context, index) => _buildCollectionSetTile(
-                    context,
-                    orderedSets[index],
-                    bySet,
-                  ),
-                  mobileBuilder: (context) => Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: CollectionConditionNotice(),
+              ),
+              Expanded(
+                child: orderedSets.isEmpty
+                    ? Center(
+                        child: Text(
+                          context.l10n.shopEmpty,
+                          style:
+                              const TextStyle(color: AppColors.textSecondary),
+                        ),
+                      )
+                    : DesktopTileGrid(
                         itemCount: orderedSets.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
+                        maxCellWidth: isPhoneLandscape(context) ? 240 : 320,
+                        maxContentWidth: 1100,
+                        maxColumns: 3,
+                        padding: EdgeInsets.fromLTRB(
+                          isPhoneLandscape(context) ? 12 : 16,
+                          8,
+                          isPhoneLandscape(context) ? 12 : 16,
+                          24,
+                        ),
                         itemBuilder: (context, index) =>
                             _buildCollectionSetTile(
                           context,
                           orderedSets[index],
                           bySet,
                         ),
+                        mobileBuilder: (context) => Align(
+                          alignment: Alignment.topCenter,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 520),
+                            child: ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              itemCount: orderedSets.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (context, index) =>
+                                  _buildCollectionSetTile(
+                                context,
+                                orderedSets[index],
+                                bySet,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -192,97 +207,100 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       radius: 16,
       onActivate: () => unawaited(openSet()),
       child: Material(
-      color: AppColors.surfaceCard,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        canRequestFocus: false,
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        onTap: () => unawaited(openSet()),
-        child: Builder(
-          builder: (inner) {
-            return Container(
-          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: GamepadFocusBlock.frameColor(
-                inner,
-                Colors.black.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              ShopAnimatedEmoji(
-                animatedName: preview.animatedName ?? 'sparkles',
-                size: 40,
-                fallback: preview.emoji,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      collectionSetTitle(set),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
+        child: InkWell(
+          canRequestFocus: false,
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => unawaited(openSet()),
+          child: Builder(
+            builder: (inner) {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: GamepadFocusBlock.frameColor(
+                      inner,
+                      Colors.black.withValues(alpha: 0.06),
                     ),
-                    const SizedBox(height: 2),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
-                      children: [
-                        Text(
-                          context.l10n.shopSetProgress(
-                            ownedCount,
-                            groupItems.length,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (setDaily > 0) ...[
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    ShopAnimatedEmoji(
+                      animatedName: preview.animatedName ?? 'sparkles',
+                      size: 40,
+                      fallback: preview.emoji,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            '·',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.8),
+                            collectionSetTitle(set),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          BalanceDisplay(
-                            bronze: setDaily,
-                            prefix: ownedCount >= groupItems.length ? '+' : null,
-                            perDay: true,
-                            coinSize: 14,
-                            fontSize: 12,
+                          const SizedBox(height: 2),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 4,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                            opacity:
-                                ownedCount >= groupItems.length ? 1 : 0.35,
+                            children: [
+                              Text(
+                                context.l10n.shopSetProgress(
+                                  ownedCount,
+                                  groupItems.length,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              if (setDaily > 0) ...[
+                                Text(
+                                  '·',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary
+                                        .withValues(alpha: 0.8),
+                                  ),
+                                ),
+                                BalanceDisplay(
+                                  bronze: setDaily,
+                                  prefix: ownedCount >= groupItems.length
+                                      ? '+'
+                                      : null,
+                                  perDay: true,
+                                  coinSize: 14,
+                                  fontSize: 12,
+                                  spacing: 4,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                  opacity: ownedCount >= groupItems.length
+                                      ? 1
+                                      : 0.35,
+                                ),
+                              ],
+                            ],
                           ),
                         ],
-                      ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textSecondary,
                     ),
                   ],
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
-            ],
+              );
+            },
           ),
-        );
-          },
         ),
-      ),
       ),
     );
   }
@@ -347,7 +365,7 @@ class _ShopCollectionGroupScreenState
             '${l10n.shopPrice(formatRewardBronze(item.priceBronze))}\n'
             '${l10n.shopDailyIncome('+${formatRewardBronzePerDay(item.dailyBronze)}')}\n'
             '${l10n.shopBuyOnce}\n'
-            '${l10n.shopSellRefund}',
+            '${l10n.shopCollectionConditionInfo}',
         confirmLabel: l10n.shopBuy,
       );
       if (!ok || !mounted) return;
@@ -377,9 +395,8 @@ class _ShopCollectionGroupScreenState
         context,
         message: wasOffline
             ? context.l10n.shopPurchaseQueued
-            : context.l10n.shopCollectionAdded(
-                catalogTitle(item.code,
-                    fallback: item.title, l10n: context.l10n)),
+            : context.l10n.shopCollectionAdded(catalogTitle(item.code,
+                fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -408,7 +425,8 @@ class _ShopCollectionGroupScreenState
     final items = _items.isNotEmpty ? _items : (cached ?? const <ShopItem>[]);
     final groupItems = items
         .where((e) =>
-            e.kind == 'collection' && (e.collectionSet ?? 'other') == widget.set)
+            e.kind == 'collection' &&
+            (e.collectionSet ?? 'other') == widget.set)
         .toList()
       ..sort((a, b) => compareCollectionItemsByDaily(
             a.dailyBronze,
@@ -419,8 +437,7 @@ class _ShopCollectionGroupScreenState
 
     final setDaily = collectionSetBonusBronze(widget.set);
     final ownedCount = groupItems.where((e) => e.owned).length;
-    final complete =
-        ownedCount == groupItems.length && groupItems.isNotEmpty;
+    final complete = ownedCount == groupItems.length && groupItems.isNotEmpty;
 
     return SwipeBackScope(
       onBack: goBack,
@@ -505,13 +522,15 @@ class _ShopCollectionGroupScreenState
       onBuy: () => _buy(item),
       onPreview: () => showCollectionFullscreen(
         context,
-        title: catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        title:
+            catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
         animatedName: item.animatedName ?? 'sparkles',
         fallback: item.emoji,
         subtitle: collectionItemSubtitle(item.dailyBronze),
-        onBuy: item.owned
-            ? null
-            : () => unawaited(_buy(item)),
+        condition: item.owned
+            ? collectionConditionOf(item.acquiredAt)
+            : CollectionCondition.fresh,
+        onBuy: item.owned ? null : () => unawaited(_buy(item)),
         buyLabel: context.l10n.shopBuy,
       ),
     );
@@ -523,11 +542,18 @@ class _ShopCollectionGroupScreenState
     required int ownedCount,
     required int setDaily,
   }) {
-    final progress = _collectionProgressHeader(
-      complete: complete,
-      ownedCount: ownedCount,
-      total: groupItems.length,
-      setDaily: setDaily,
+    final progress = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _collectionProgressHeader(
+          complete: complete,
+          ownedCount: ownedCount,
+          total: groupItems.length,
+          setDaily: setDaily,
+        ),
+        const SizedBox(height: 8),
+        const CollectionConditionNotice(),
+      ],
     );
 
     if (!useDesktopTiles(context)) {
@@ -588,75 +614,76 @@ class _CollectionShopCard extends StatelessWidget {
       child: Builder(
         builder: (inner) {
           return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: GamepadFocusBlock.frameColor(
-            inner,
-            Colors.black.withValues(alpha: 0.06),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            canRequestFocus: false,
-            onTap: onPreview,
-            borderRadius: BorderRadius.circular(12),
-            child: ShopAnimatedEmoji(
-              animatedName: item.animatedName ?? 'sparkles',
-              size: 52,
-              fallback: item.emoji,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: GamepadFocusBlock.frameColor(
+                  inner,
+                  Colors.black.withValues(alpha: 0.06),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                InkWell(
+                  canRequestFocus: false,
+                  onTap: onPreview,
+                  borderRadius: BorderRadius.circular(12),
+                  child: ShopAnimatedEmoji(
+                    animatedName: item.animatedName ?? 'sparkles',
+                    size: 52,
+                    fallback: item.emoji,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  collectionItemSubtitle(item.dailyBronze),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        catalogTitle(item.code,
+                            fallback: item.title, l10n: context.l10n),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        collectionItemSubtitle(item.dailyBronze),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      BalanceDisplay(
+                        bronze: item.priceBronze,
+                        coinSize: 14,
+                        fontSize: 13,
+                        spacing: 6,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                BalanceDisplay(
-                  bronze: item.priceBronze,
-                  coinSize: 14,
-                  fontSize: 13,
-                  spacing: 6,
-                ),
+                if (item.owned)
+                  Text(
+                    context.l10n.shopHave,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  )
+                else
+                  FilledButton(
+                    onPressed: busy ? null : onBuy,
+                    child: Text(busy ? '…' : context.l10n.shopBuy),
+                  ),
               ],
             ),
-          ),
-          if (item.owned)
-            Text(
-              context.l10n.shopHave,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2E7D32),
-              ),
-            )
-          else
-            FilledButton(
-              onPressed: busy ? null : onBuy,
-              child: Text(busy ? '…' : context.l10n.shopBuy),
-            ),
-        ],
-      ),
-      );
+          );
         },
       ),
     );

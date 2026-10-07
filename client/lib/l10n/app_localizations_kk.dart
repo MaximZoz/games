@@ -1686,7 +1686,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopEmojisHelp => 'Чатқа арналған анимациялық смайликтер. Жиынтықты сатып алып, достарыңызға жіберіңіз.';
 
   @override
-  String get shopCollectionsHelp => 'Заттар жиынтығын жинаңыз: олар профиль сөресінде көрінеді, сыйлауға және сатуға болады. Толық коллекция күн сайын қосымша тиын әкеледі.';
+  String get shopCollectionsHelp => 'Заттар жиынтығын жинаңыз: олар профиль сөресінде көрінеді, сыйлауға және сатуға болады. Толық коллекция күн сайын қосымша тиын әкеледі.\n\nКүй коллекция сізде қанша уақыт болғанына байланысты. Жаңа — алғашқы 7 күн, сату 80%. Тозған — 8-күннен 2 айға дейін, сату 60%. Шаршаған — 2 айдан 6 айға дейін, сату 40%. Ескі — 6 айдан бір жылға дейін, сату 100%. Винтаж — бір жылдан кейін, сату 300%.';
 
   @override
   String get shopStakesHelp => 'Ойындарда жоғары ставкаларды ашыңыз. Ставка неғұрлым жоғары болса, банк пен ұтыс соғұрлым үлкен.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopBuyOnce => 'Бір рет сатып алу';
 
   @override
-  String get shopSellRefund => 'Сату құнының 80%-ін қайтарады';
+  String get shopSellRefund => 'Сату коллекция күйіне байланысты';
+
+  @override
+  String get shopCollectionConditionInfo => 'Күй коллекция сізде қанша уақыт болғанына байланысты. Жаңа — алғашқы 7 күн, сату 80%. Тозған — 8-күннен 2 айға дейін, сату 60%. Шаршаған — 2 айдан 6 айға дейін, сату 40%. Ескі — 6 айдан бір жылға дейін, сату 100%. Винтаж — бір жылдан кейін, сату 300%.';
+
+  @override
+  String get collectionConditionNew => 'Жаңа';
+
+  @override
+  String get collectionConditionWorn => 'Тозған';
+
+  @override
+  String get collectionConditionTired => 'Шаршаған';
+
+  @override
+  String get collectionConditionShabby => 'Ескі';
+
+  @override
+  String get collectionConditionVintage => 'Винтаж';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Сату $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

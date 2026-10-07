@@ -1686,7 +1686,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopEmojisHelp => 'चैट के लिए एनिमेटेड इमोजी। सेट खरीदें और दोस्तों को भेजें।';
 
   @override
-  String get shopCollectionsHelp => 'वस्तुओं का सेट इकट्ठा करें: वे प्रोफ़ाइल शोकेस में दिखते हैं, उपहार या बेचे जा सकते हैं। पूरी कलेक्शन हर दिन अतिरिक्त सिक्के देती है।';
+  String get shopCollectionsHelp => 'वस्तुओं का सेट इकट्ठा करें: वे प्रोफ़ाइल शोकेस में दिखते हैं, उपहार या बेचे जा सकते हैं। पूरी कलेक्शन हर दिन अतिरिक्त सिक्के देती है।\n\nस्थिति इस पर निर्भर करती है कि संग्रह आपके पास कब से है। नया — पहले 7 दिन, बिक्री 80%। घिसा — 8वें दिन से 2 महीने, बिक्री 60%। थका — 2 से 6 महीने, बिक्री 40%। जर्जर — 6 महीने से 1 साल, बिक्री 100%। विंटेज — 1 साल के बाद, बिक्री 300%।';
 
   @override
   String get shopStakesHelp => 'ऊँची बाज़ियाँ अनलॉक करें। बाज़ी जितनी बड़ी, पॉट और जीत उतनी बड़ी।';
@@ -2036,7 +2036,30 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopBuyOnce => 'एक बार की खरीद';
 
   @override
-  String get shopSellRefund => 'बेचने पर लागत का 80% वापस मिलता है';
+  String get shopSellRefund => 'बिक्री संग्रह की स्थिति पर निर्भर करती है';
+
+  @override
+  String get shopCollectionConditionInfo => 'स्थिति इस पर निर्भर करती है कि संग्रह आपके पास कब से है। नया — पहले 7 दिन, बिक्री 80%। घिसा — 8वें दिन से 2 महीने, बिक्री 60%। थका — 2 से 6 महीने, बिक्री 40%। जर्जर — 6 महीने से 1 साल, बिक्री 100%। विंटेज — 1 साल के बाद, बिक्री 300%।';
+
+  @override
+  String get collectionConditionNew => 'नया';
+
+  @override
+  String get collectionConditionWorn => 'घिसा';
+
+  @override
+  String get collectionConditionTired => 'थका';
+
+  @override
+  String get collectionConditionShabby => 'जर्जर';
+
+  @override
+  String get collectionConditionVintage => 'विंटेज';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'बिक्री $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

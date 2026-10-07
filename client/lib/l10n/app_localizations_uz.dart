@@ -1686,7 +1686,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopEmojisHelp => 'Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.';
 
   @override
-  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.';
+  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.\n\nHolat kolleksiya sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, sotish 80%. Yeyilgan — 8-kundan 2 oygacha, sotish 60%. Charchagan — 2 oydan 6 oygacha, sotish 40%. Eski — 6 oydan 1 yilgacha, sotish 100%. Vintaj — 1 yildan keyin, sotish 300%.';
 
   @override
   String get shopStakesHelp => 'O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopBuyOnce => 'Bir martalik xarid';
 
   @override
-  String get shopSellRefund => 'Sotish narxning 80%ini qaytaradi';
+  String get shopSellRefund => 'Sotish kolleksiya holatiga bog‘liq';
+
+  @override
+  String get shopCollectionConditionInfo => 'Holat kolleksiya sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, sotish 80%. Yeyilgan — 8-kundan 2 oygacha, sotish 60%. Charchagan — 2 oydan 6 oygacha, sotish 40%. Eski — 6 oydan 1 yilgacha, sotish 100%. Vintaj — 1 yildan keyin, sotish 300%.';
+
+  @override
+  String get collectionConditionNew => 'Yangi';
+
+  @override
+  String get collectionConditionWorn => 'Yeyilgan';
+
+  @override
+  String get collectionConditionTired => 'Charchagan';
+
+  @override
+  String get collectionConditionShabby => 'Eski';
+
+  @override
+  String get collectionConditionVintage => 'Vintaj';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Sotish $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {
