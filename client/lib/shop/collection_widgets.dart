@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/locale_provider.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
@@ -58,7 +59,8 @@ int compareCollectionSetsByDaily(
 }
 
 /// Предметы коллекции: доход/день по возрастанию.
-int compareCollectionItemsByDaily(int aDaily, int bDaily, int aOrder, int bOrder) {
+int compareCollectionItemsByDaily(
+    int aDaily, int bDaily, int aOrder, int bOrder) {
   final byDaily = aDaily.compareTo(bDaily);
   if (byDaily != 0) return byDaily;
   return aOrder.compareTo(bOrder);
@@ -99,10 +101,17 @@ Future<void> showCollectionFullscreen(
   Widget? bottomAction,
   VoidCallback? onBuy,
   String? buyLabel,
+  CollectionCondition? condition,
 }) {
+  final background = condition == null
+      ? Colors.black
+      : collectionConditionBackground(condition);
+  final glow = condition == null
+      ? const Color(0xFF1A1A1A)
+      : collectionConditionGlow(condition);
   return showDialog<void>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.86),
+    barrierColor: background.withValues(alpha: 0.92),
     builder: (dialogContext) {
       var closed = false;
       void close() {
@@ -152,53 +161,88 @@ Future<void> showCollectionFullscreen(
           return true;
         },
         child: Dialog.fullscreen(
-          backgroundColor: Colors.black,
-          child: SafeArea(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: close,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ShopAnimatedEmoji(
-                      animatedName: animatedName,
-                      size: 180,
-                      fallback: fallback,
-                      animate: true,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+          backgroundColor: background,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.25),
+                radius: 1.05,
+                colors: [glow, background],
+              ),
+            ),
+            child: SafeArea(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: close,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ShopAnimatedEmoji(
+                        animatedName: animatedName,
+                        size: 180,
+                        fallback: fallback,
+                        animate: true,
                       ),
-                    ),
-                    if ((subtitle ?? '').trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          subtitle!,
+                      const SizedBox(height: 20),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (condition != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          collectionConditionName(
+                            dialogContext.l10n,
+                            condition,
+                          ),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          dialogContext.l10n.collectionConditionSell(
+                            collectionSellPercent(condition),
+                          ),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.75),
+                            color: Colors.white.withValues(alpha: 0.72),
                             fontSize: 14,
                           ),
                         ),
-                      ),
+                      ],
+                      if ((subtitle ?? '').trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            subtitle!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.75),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (action != null) ...[
+                        const SizedBox(height: 24),
+                        GestureDetector(
+                          onTap: () {},
+                          child: action,
+                        ),
+                      ],
                     ],
-                    if (action != null) ...[
-                      const SizedBox(height: 24),
-                      GestureDetector(
-                        onTap: () {},
-                        child: action,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -207,6 +251,23 @@ Future<void> showCollectionFullscreen(
       );
     },
   );
+}
+
+/// Правила состояний в магазине коллекций.
+class CollectionConditionNotice extends StatelessWidget {
+  const CollectionConditionNotice({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      context.l10n.shopCollectionConditionInfo,
+      style: const TextStyle(
+        fontSize: 13,
+        height: 1.35,
+        color: AppColors.textSecondary,
+      ),
+    );
+  }
 }
 
 /// Секция коллекций в карточке пользователя (по клику на аватар).
@@ -266,8 +327,7 @@ class CollectionShowcaseGrid extends StatefulWidget {
   final bool titleOnlyOnTap;
 
   @override
-  State<CollectionShowcaseGrid> createState() =>
-      _CollectionShowcaseGridState();
+  State<CollectionShowcaseGrid> createState() => _CollectionShowcaseGridState();
 }
 
 class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
@@ -282,13 +342,11 @@ class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent || !_controller.hasClients) return;
     // Колесо мыши / трекпад → горизонтальный скролл полосы.
-    final delta = event.scrollDelta.dy != 0
-        ? event.scrollDelta.dy
-        : event.scrollDelta.dx;
+    final delta =
+        event.scrollDelta.dy != 0 ? event.scrollDelta.dy : event.scrollDelta.dx;
     if (delta == 0) return;
     final pos = _controller.position;
-    final next =
-        (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
+    final next = (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
     if (next == _controller.offset) return;
     _controller.jumpTo(next);
     // Не отдаём скролл родителю (карточка профиля).
@@ -337,6 +395,7 @@ class _CollectionShowcaseGridState extends State<CollectionShowcaseGrid> {
                       subtitle: widget.titleOnlyOnTap
                           ? null
                           : collectionItemSubtitle(it.dailyBronze),
+                      condition: collectionConditionOf(it.acquiredAt),
                     );
                 return GamepadFocusBlock(
                   radius: 14,

@@ -1686,7 +1686,7 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopEmojisHelp => 'Анімаваныя смайлікі для чата. Купіце набор і адпраўляйце іх у паведамленнях сябрам.';
 
   @override
-  String get shopCollectionsHelp => 'Збярыце набор прадметаў: яны з’яўляюцца ў вітрыне профілю, іх можна дарыць і прадаваць. Поўная калекцыя штодня дае дадатковы прыбытак манетамі.';
+  String get shopCollectionsHelp => 'Збярыце набор прадметаў: яны з’яўляюцца ў вітрыне профілю, іх можна дарыць і прадаваць. Поўная калекцыя штодня дае дадатковы прыбытак манетамі.\n\nСтан залежыць ад таго, як даўно калекцыя ў вас. Новае — першыя 7 дзён, продаж 80%. Пацёртае — з 8-га дня да 2 месяцаў, продаж 60%. Стомленае — з 2 да 6 месяцаў, продаж 40%. Старое — з 6 месяцаў да года, продаж 100%. Вінтаж — ад года, продаж 300%.';
 
   @override
   String get shopStakesHelp => 'Разблакуйце вышэйшыя стаўкі ў гульнях. Чым вышэйшая стаўка, тым большы банк і выйгрыш.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopBuyOnce => 'Пакупка адзін раз';
 
   @override
-  String get shopSellRefund => 'Продаж верне 80% кошту';
+  String get shopSellRefund => 'Продаж залежыць ад стану калекцыі';
+
+  @override
+  String get shopCollectionConditionInfo => 'Стан залежыць ад таго, як даўно калекцыя ў вас. Новае — першыя 7 дзён, продаж 80%. Пацёртае — з 8-га дня да 2 месяцаў, продаж 60%. Стомленае — з 2 да 6 месяцаў, продаж 40%. Старое — з 6 месяцаў да года, продаж 100%. Вінтаж — ад года, продаж 300%.';
+
+  @override
+  String get collectionConditionNew => 'Новае';
+
+  @override
+  String get collectionConditionWorn => 'Пацёртае';
+
+  @override
+  String get collectionConditionTired => 'Стомленае';
+
+  @override
+  String get collectionConditionShabby => 'Старое';
+
+  @override
+  String get collectionConditionVintage => 'Вінтаж';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Продаж $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

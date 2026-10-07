@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/shop/collection_condition.dart';
+
+void main() {
+  final acquired = DateTime.utc(2024, 1, 15, 12);
+
+  test('состояние коллекции по возрасту владения', () {
+    expect(
+      collectionConditionAt(acquired, acquired),
+      CollectionCondition.fresh,
+    );
+    expect(
+      collectionConditionAt(acquired, acquired.add(const Duration(days: 6))),
+      CollectionCondition.fresh,
+    );
+    expect(
+      collectionConditionAt(acquired, acquired.add(const Duration(days: 7))),
+      CollectionCondition.worn,
+    );
+    expect(
+      collectionConditionAt(acquired, DateTime.utc(2024, 2, 15, 12)),
+      CollectionCondition.worn,
+    );
+    expect(
+      collectionConditionAt(acquired, DateTime.utc(2024, 3, 15, 12)),
+      CollectionCondition.tired,
+    );
+    expect(
+      collectionConditionAt(acquired, DateTime.utc(2024, 7, 15, 12)),
+      CollectionCondition.shabby,
+    );
+    expect(
+      collectionConditionAt(acquired, DateTime.utc(2025, 1, 15, 12)),
+      CollectionCondition.vintage,
+    );
+  });
+
+  test('пустая дата не становится винтажем', () {
+    expect(collectionConditionOf(null), CollectionCondition.fresh);
+    expect(collectionConditionOf(''), CollectionCondition.fresh);
+  });
+
+  test('выкуп: 80, 60, 40, 100 и 300 процентов', () {
+    int refund(DateTime at) => collectionRefundBronze(
+          priceBronze: 1000,
+          acquiredAt: acquired.toIso8601String(),
+          now: at,
+        );
+    expect(refund(acquired.add(const Duration(days: 1))), 800);
+    expect(refund(acquired.add(const Duration(days: 20))), 600);
+    expect(refund(DateTime.utc(2024, 4, 15)), 400);
+    expect(refund(DateTime.utc(2024, 9, 15)), 1000);
+    expect(refund(DateTime.utc(2025, 2, 15)), 3000);
+    expect(
+      collectionRefundBronze(priceBronze: 0, acquiredAt: null),
+      0,
+    );
+  });
+
+  test('подписи состояний на русском', () {
+    final l10n = lookupAppLocalizations(const Locale('ru'));
+    expect(
+      collectionConditionName(l10n, CollectionCondition.fresh),
+      'Новое',
+    );
+    expect(
+      collectionConditionName(l10n, CollectionCondition.worn),
+      'Потрепанное',
+    );
+    expect(
+      collectionConditionName(l10n, CollectionCondition.tired),
+      'Уставшее',
+    );
+    expect(
+      collectionConditionName(l10n, CollectionCondition.shabby),
+      'Ветхое',
+    );
+    expect(
+      collectionConditionName(l10n, CollectionCondition.vintage),
+      'Винтаж',
+    );
+    expect(l10n.collectionConditionSell(300), 'Продажа 300%');
+    expect(l10n.shopCollectionConditionInfo, contains('80%'));
+    expect(l10n.shopCollectionConditionInfo, contains('300%'));
+    expect(l10n.shopCollectionsHelp, contains('Винтаж'));
+  });
+}

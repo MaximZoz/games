@@ -3350,7 +3350,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopCollectionsHelp.
   ///
   /// In ru, this message translates to:
-  /// **'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.'**
+  /// **'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.\n\nСостояние зависит от того, как давно коллекция у вас. Новое — первые 7 дней, продажа 80%. Потрепанное — с 8-го дня до 2 месяцев, продажа 60%. Уставшее — с 2 до 6 месяцев, продажа 40%. Ветхое — с 6 месяцев до года, продажа 100%. Винтаж — от года, продажа 300%.'**
   String get shopCollectionsHelp;
 
   /// No description provided for @shopStakesHelp.
@@ -3962,8 +3962,50 @@ abstract class AppLocalizations {
   /// No description provided for @shopSellRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Продажа вернет 80% стоимости'**
+  /// **'Продажа зависит от состояния коллекции'**
   String get shopSellRefund;
+
+  /// No description provided for @shopCollectionConditionInfo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Состояние зависит от того, как давно коллекция у вас. Новое — первые 7 дней, продажа 80%. Потрепанное — с 8-го дня до 2 месяцев, продажа 60%. Уставшее — с 2 до 6 месяцев, продажа 40%. Ветхое — с 6 месяцев до года, продажа 100%. Винтаж — от года, продажа 300%.'**
+  String get shopCollectionConditionInfo;
+
+  /// No description provided for @collectionConditionNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новое'**
+  String get collectionConditionNew;
+
+  /// No description provided for @collectionConditionWorn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Потрепанное'**
+  String get collectionConditionWorn;
+
+  /// No description provided for @collectionConditionTired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уставшее'**
+  String get collectionConditionTired;
+
+  /// No description provided for @collectionConditionShabby.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ветхое'**
+  String get collectionConditionShabby;
+
+  /// No description provided for @collectionConditionVintage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Винтаж'**
+  String get collectionConditionVintage;
+
+  /// No description provided for @collectionConditionSell.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продажа {percent}%'**
+  String collectionConditionSell(int percent);
 
   /// No description provided for @shopCollectionAdded.
   ///

@@ -1686,7 +1686,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get shopEmojisHelp => 'Animerede emojis til chatten. Køb et sæt og send dem til venner.';
 
   @override
-  String get shopCollectionsHelp => 'Saml et sæt genstande: de vises i profilens montre og kan gives eller sælges. En komplet samling giver ekstra mønter hver dag.';
+  String get shopCollectionsHelp => 'Saml et sæt genstande: de vises i profilens montre og kan gives eller sælges. En komplet samling giver ekstra mønter hver dag.\n\nTilstanden afhænger af, hvor længe du har haft samlingen. Ny — de første 7 dage, salg 80 %. Slidt — fra dag 8 til 2 måneder, salg 60 %. Træt — fra 2 til 6 måneder, salg 40 %. Forfalden — fra 6 måneder til 1 år, salg 100 %. Vintage — fra 1 år, salg 300 %.';
 
   @override
   String get shopStakesHelp => 'Lås op for højere indsatser. Jo højere indsats, desto større pot og gevinst.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsDa extends AppLocalizations {
   String get shopBuyOnce => 'Engangskøb';
 
   @override
-  String get shopSellRefund => 'Salg returnerer 80% af prisen';
+  String get shopSellRefund => 'Salget afhænger af samlingens tilstand';
+
+  @override
+  String get shopCollectionConditionInfo => 'Tilstanden afhænger af, hvor længe du har haft samlingen. Ny — de første 7 dage, salg 80 %. Slidt — fra dag 8 til 2 måneder, salg 60 %. Træt — fra 2 til 6 måneder, salg 40 %. Forfalden — fra 6 måneder til 1 år, salg 100 %. Vintage — fra 1 år, salg 300 %.';
+
+  @override
+  String get collectionConditionNew => 'Ny';
+
+  @override
+  String get collectionConditionWorn => 'Slidt';
+
+  @override
+  String get collectionConditionTired => 'Træt';
+
+  @override
+  String get collectionConditionShabby => 'Forfalden';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Salg $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

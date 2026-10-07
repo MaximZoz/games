@@ -1686,7 +1686,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shopEmojisHelp => 'Emojis animados para el chat. Compra un set y envíalos en mensajes a tus amigos.';
 
   @override
-  String get shopCollectionsHelp => 'Reúne un conjunto de objetos: aparecen en el escaparate del perfil y se pueden regalar o vender. Una colección completa da monedas extra cada día.';
+  String get shopCollectionsHelp => 'Reúne un conjunto de objetos: aparecen en el escaparate del perfil y se pueden regalar o vender. Una colección completa da monedas extra cada día.\n\nEl estado depende de cuánto tiempo llevas la colección. Nuevo — los primeros 7 días, venta 80%. Gastado — del día 8 a 2 meses, venta 60%. Cansado — de 2 a 6 meses, venta 40%. Deteriorado — de 6 meses a 1 año, venta 100%. Vintage — a partir de 1 año, venta 300%.';
 
   @override
   String get shopStakesHelp => 'Desbloquea apuestas más altas. Cuanto mayor sea la apuesta, mayor será el bote y el premio.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shopBuyOnce => 'Compra única';
 
   @override
-  String get shopSellRefund => 'Vender devuelve el 80% del coste';
+  String get shopSellRefund => 'La venta depende del estado de la colección';
+
+  @override
+  String get shopCollectionConditionInfo => 'El estado depende de cuánto tiempo llevas la colección. Nuevo — los primeros 7 días, venta 80%. Gastado — del día 8 a 2 meses, venta 60%. Cansado — de 2 a 6 meses, venta 40%. Deteriorado — de 6 meses a 1 año, venta 100%. Vintage — a partir de 1 año, venta 300%.';
+
+  @override
+  String get collectionConditionNew => 'Nuevo';
+
+  @override
+  String get collectionConditionWorn => 'Gastado';
+
+  @override
+  String get collectionConditionTired => 'Cansado';
+
+  @override
+  String get collectionConditionShabby => 'Deteriorado';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Venta $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

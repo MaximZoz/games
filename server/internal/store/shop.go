@@ -44,6 +44,8 @@ type ShopItemView struct {
 	StockRemaining *int
 	Owned          bool
 	SortOrder      int
+	// AcquiredAt — момент появления в инвентаре, если предмет уже куплен.
+	AcquiredAt string
 }
 
 type InventoryItemView struct {
@@ -69,7 +71,12 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		       EXISTS (
 		         SELECT 1 FROM user_inventory u
 		         WHERE u.user_id = $1 AND u.item_code = s.code
-		       ) AS owned
+		       ) AS owned,
+		       COALESCE((
+		         SELECT to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), '')
 		FROM shop_items s
 		WHERE s.active = TRUE
 		ORDER BY s.sort_order, s.code`, userID)
@@ -84,7 +91,7 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		var payload []byte
 		if err := rows.Scan(
 			&it.Code, &it.Kind, &it.Title, &it.Description, &it.PriceBronze, &payload,
-			&it.StockRemaining, &it.SortOrder, &it.Owned,
+			&it.StockRemaining, &it.SortOrder, &it.Owned, &it.AcquiredAt,
 		); err != nil {
 			return nil, err
 		}
@@ -490,7 +497,9 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 	return out, rows.Err()
 }
 
-// SellCollection refunds 80% of shop price and removes the item.
+// SellCollection возвращает долю цены каталога по состоянию коллекции
+// и удаляет предмет. Новое 80%, потрепанное 60%, уставшее 40%,
+// ветхое 100%, винтаж 300%.
 func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (balance int, refund int, err error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -500,12 +509,13 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 
 	var kind string
 	var price int
+	var acquiredAt time.Time
 	err = tx.QueryRow(ctx, `
-		SELECT s.kind, s.price_bronze
+		SELECT s.kind, s.price_bronze, u.acquired_at
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND u.item_code = $2
-		FOR UPDATE OF u`, userID, code).Scan(&kind, &price)
+		FOR UPDATE OF u`, userID, code).Scan(&kind, &price, &acquiredAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, 0, ErrEmojiNotOwned
@@ -515,10 +525,7 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 	if kind != "collection" {
 		return 0, 0, ErrNotCollection
 	}
-	refund = (price * 80) / 100
-	if refund < 0 {
-		refund = 0
-	}
+	refund = CollectionRefundBronze(price, acquiredAt, time.Now().UTC())
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
 		return 0, 0, err
@@ -640,13 +647,13 @@ func EncodeGiftCollectionMessage(code, title, emoji, animatedName string) string
 }
 
 type CollectionIncomeInfo struct {
-	Available       bool
-	AmountBronze    int
-	ItemsBronze     int
-	SetBonusBronze  int
-	CompletedSets   int
-	NextClaimAt     *string // RFC3339 UTC, if not available
-	OwnedCount      int
+	Available      bool
+	AmountBronze   int
+	ItemsBronze    int
+	SetBonusBronze int
+	CompletedSets  int
+	NextClaimAt    *string // RFC3339 UTC, if not available
+	OwnedCount     int
 }
 
 type collectionCatalogRow struct {

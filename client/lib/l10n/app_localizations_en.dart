@@ -1686,7 +1686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopEmojisHelp => 'Animated emojis for chat. Buy a set and send them in messages to friends.';
 
   @override
-  String get shopCollectionsHelp => 'Collect a set of items: they appear in your profile showcase and can be gifted or sold. A complete collection pays extra coins every day.';
+  String get shopCollectionsHelp => 'Collect a set of items: they appear in your profile showcase and can be gifted or sold. A complete collection pays extra coins every day.\n\nCondition depends on how long you have owned the collection. New — the first 7 days, sell for 80%. Worn — from day 8 until 2 months, sell for 60%. Tired — from 2 to 6 months, sell for 40%. Shabby — from 6 months until 1 year, sell for 100%. Vintage — after 1 year, sell for 300%.';
 
   @override
   String get shopStakesHelp => 'Unlock higher stakes in games. The higher the stake, the bigger the pot and the payout.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopBuyOnce => 'One-time purchase';
 
   @override
-  String get shopSellRefund => 'Selling returns 80% of the cost';
+  String get shopSellRefund => 'Selling depends on the collection\'s condition';
+
+  @override
+  String get shopCollectionConditionInfo => 'Condition depends on how long you have owned the collection. New — the first 7 days, sell for 80%. Worn — from day 8 until 2 months, sell for 60%. Tired — from 2 to 6 months, sell for 40%. Shabby — from 6 months until 1 year, sell for 100%. Vintage — after 1 year, sell for 300%.';
+
+  @override
+  String get collectionConditionNew => 'New';
+
+  @override
+  String get collectionConditionWorn => 'Worn';
+
+  @override
+  String get collectionConditionTired => 'Tired';
+
+  @override
+  String get collectionConditionShabby => 'Shabby';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Sell for $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

@@ -11,6 +11,7 @@ import 'package:multigames_client/friends/gift_friend_picker.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/shop/animated_emoji_util.dart';
+import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
@@ -51,6 +52,7 @@ class InventoryScreen extends ConsumerStatefulWidget {
 
 class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   bool _claimBusy = false;
+
   /// Копии непрочитанных подарков на момент открытия экрана (для бейджа на плитке).
   Set<String> _highlightGifts = const {};
   bool _clearedUnread = false;
@@ -117,7 +119,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   }
 
   Future<void> _sell(InventoryItem item) async {
-    final refund = (await _catalogPrice(item.code) * 80) ~/ 100;
+    final refund = collectionRefundBronze(
+      priceBronze: await _catalogPrice(item.code),
+      acquiredAt: item.acquiredAt,
+    );
     if (!mounted) return;
     final l10n = context.l10n;
     final ok = await showDialog<bool>(
@@ -227,7 +232,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         return AlertDialog(
           title: Text(l10n.inventoryGiftTitle),
           content: Text(
-            l10n.inventoryGiftDesc(catalogTitle(item.code, fallback: item.title, l10n: l10n), friendName),
+            l10n.inventoryGiftDesc(
+                catalogTitle(item.code, fallback: item.title, l10n: l10n),
+                friendName),
           ),
           actions: [
             TextButton(
@@ -253,7 +260,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: context.l10n.inventoryGifted(catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
+        message: context.l10n.inventoryGifted(
+            catalogTitle(item.code, fallback: item.title, l10n: context.l10n)),
         kind: AppSnackKind.success,
       );
     } catch (e) {
@@ -292,7 +300,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
     final isOffline = ref.watch(isOfflineProvider);
     final items = async.valueOrNull ?? const <InventoryItem>[];
-    final catalog = ref.watch(shopCatalogProvider).valueOrNull ?? const <ShopItem>[];
+    final catalog =
+        ref.watch(shopCatalogProvider).valueOrNull ?? const <ShopItem>[];
     final emojis =
         items.where((e) => e.kind == 'emoji' && e.quantity > 0).toList();
     final frames = items.where((e) => e.kind == 'frame').toList();
@@ -300,7 +309,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         ? const <InventoryItem>[]
         : items.where((e) => e.kind == 'stake_unlock').toList();
     final collections = items
-        .where((e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
+        .where(
+            (e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))
         .toList();
     final income = incomeAsync.valueOrNull;
     final incomeAvailable = income?.available == true;
@@ -425,78 +435,81 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   : DesktopContentFrame(
                       maxWidth: 1080,
                       child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: ClampingScrollPhysics(),
-                      ),
-                      children: [
-                        // Группы коллекций — колонка на всю ширину (не Wrap
-                        // «кривых» плиток). Внутри группы карточки — плиткой.
-                        _CollectionsBlock(
-                          income: income,
-                          claimIncomeKey: _claimIncomeKey,
-                          claimBusy: _claimBusy,
-                          onClaimIncome: _claimIncome,
-                          collectionsEmpty: collections.isEmpty,
-                          collectionSetKeys: collectionSetKeys,
-                          collectionsBySet: collectionsBySet,
-                          catalogBySet: catalogBySet,
-                          highlightGifts: _highlightGifts,
-                          sellKeyFor: _sellKeyFor,
-                          onGift: _gift,
-                          onSell: _sell,
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: ClampingScrollPhysics(),
                         ),
-                        const SizedBox(height: 16),
-                        _EmojisBlock(
-                          groupOrder: groupOrder,
-                          grouped: grouped,
-                          groupTitles: _groupTitles,
-                        ),
-                        const SizedBox(height: 16),
-                        _Section(
-                          title: context.l10n.inventoryFrames,
-                          empty: context.l10n.inventoryNoFrames,
-                          children: [
-                            for (final it in frames)
-                              _InvTile(
-                                leading: FramePreviewBadge(
-                                  frameCode: it.code,
-                                  size: 36,
-                                ),
-                                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                subtitle: catalogDescription(it.code, fallback: it.description, l10n: context.l10n),
-                              ),
-                          ],
-                        ),
-                        if (!isOffline) ...[
+                        children: [
+                          // Группы коллекций — колонка на всю ширину (не Wrap
+                          // «кривых» плиток). Внутри группы карточки — плиткой.
+                          _CollectionsBlock(
+                            income: income,
+                            claimIncomeKey: _claimIncomeKey,
+                            claimBusy: _claimBusy,
+                            onClaimIncome: _claimIncome,
+                            collectionsEmpty: collections.isEmpty,
+                            collectionSetKeys: collectionSetKeys,
+                            collectionsBySet: collectionsBySet,
+                            catalogBySet: catalogBySet,
+                            highlightGifts: _highlightGifts,
+                            sellKeyFor: _sellKeyFor,
+                            onGift: _gift,
+                            onSell: _sell,
+                          ),
+                          const SizedBox(height: 16),
+                          _EmojisBlock(
+                            groupOrder: groupOrder,
+                            grouped: grouped,
+                            groupTitles: _groupTitles,
+                          ),
                           const SizedBox(height: 16),
                           _Section(
-                            title: context.l10n.shopStakes,
-                            empty: context.l10n.inventoryNoStakes,
+                            title: context.l10n.inventoryFrames,
+                            empty: context.l10n.inventoryNoFrames,
                             children: [
-                              for (final it in stakes)
+                              for (final it in frames)
                                 _InvTile(
-                                  leading: CoinIcon(
-                                    coinType: it.stakeGold != null
-                                        ? CoinType.gold
-                                        : CoinType.silver,
-                                    size: 26,
+                                  leading: FramePreviewBadge(
+                                    frameCode: it.code,
+                                    size: 36,
                                   ),
                                   title: catalogTitle(it.code,
                                       fallback: it.title, l10n: context.l10n),
-                                  subtitle: it.stakeGold != null
-                                      ? context.l10n.inventoryStakeGold(
-                                          '${it.stakeGold}',
-                                        )
-                                      : context.l10n.inventoryStakeSilver(
-                                          '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
-                                        ),
+                                  subtitle: catalogDescription(it.code,
+                                      fallback: it.description,
+                                      l10n: context.l10n),
                                 ),
                             ],
                           ),
+                          if (!isOffline) ...[
+                            const SizedBox(height: 16),
+                            _Section(
+                              title: context.l10n.shopStakes,
+                              empty: context.l10n.inventoryNoStakes,
+                              children: [
+                                for (final it in stakes)
+                                  _InvTile(
+                                    leading: CoinIcon(
+                                      coinType: it.stakeGold != null
+                                          ? CoinType.gold
+                                          : CoinType.silver,
+                                      size: 26,
+                                    ),
+                                    title: catalogTitle(it.code,
+                                        fallback: it.title, l10n: context.l10n),
+                                    subtitle: it.stakeGold != null
+                                        ? context.l10n.inventoryStakeGold(
+                                            '${it.stakeGold}',
+                                          )
+                                        : context.l10n.inventoryStakeSilver(
+                                            '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
+                                          ),
+                                  ),
+                              ],
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
                     ),
         ),
       ),
@@ -568,6 +581,7 @@ class _CollectionsBlock extends StatelessWidget {
                       animatedName: it.animatedName ?? 'sparkles',
                       fallback: it.emoji,
                       subtitle: null,
+                      condition: collectionConditionOf(it.acquiredAt),
                     ),
                     onGift: () => onGift(it),
                     onSell: () => onSell(it),
@@ -590,9 +604,7 @@ class _CollectionsBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        if (!collectionsEmpty &&
-            income != null &&
-            income!.amountBronze > 0)
+        if (!collectionsEmpty && income != null && income!.amountBronze > 0)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Row(
@@ -641,7 +653,8 @@ class _CollectionsBlock extends StatelessWidget {
         if (collectionsEmpty)
           Text(
             context.l10n.inventoryNoCollections,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           )
         else if (tileSets && isTablet(context))
           // Планшет: группы коллекций плиткой (2 в ряд).
@@ -766,7 +779,8 @@ class _CollectionSetFrame extends StatelessWidget {
                 onTap: onOpenShop,
                 borderRadius: BorderRadius.circular(10),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                   child: header,
                 ),
               ),
@@ -833,117 +847,119 @@ class _CollectionInvTile extends StatelessWidget {
       radius: 14,
       onActivate: onOpen,
       child: Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: highlightGift
-              ? AppColors.accentStart.withValues(alpha: 0.55)
-              : Colors.black.withValues(alpha: 0.06),
-          width: highlightGift ? 1.4 : 1,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: highlightGift
+                ? AppColors.accentStart.withValues(alpha: 0.55)
+                : Colors.black.withValues(alpha: 0.06),
+            width: highlightGift ? 1.4 : 1,
+          ),
         ),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-      child: Row(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              InkWell(
-                onTap: onOpen,
-                borderRadius: BorderRadius.circular(10),
-                child: ShopAnimatedEmoji(
-                  animatedName: item.animatedName ?? 'sparkles',
-                  size: 36,
-                  fallback: item.emoji,
-                ),
-              ),
-              if (highlightGift)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentStart,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.surfaceCard, width: 1.5),
-                    ),
+        padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+        child: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                InkWell(
+                  onTap: onOpen,
+                  borderRadius: BorderRadius.circular(10),
+                  child: ShopAnimatedEmoji(
+                    animatedName: item.animatedName ?? 'sparkles',
+                    size: 36,
+                    fallback: item.emoji,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: InkWell(
-              onTap: onOpen,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                if (highlightGift)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentStart,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppColors.surfaceCard, width: 1.5),
                       ),
-                      if (highlightGift)
-                        Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: InkWell(
+                onTap: onOpen,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                            context.l10n.chatGift,
+                            catalogTitle(item.code,
+                                fallback: item.title, l10n: context.l10n),
                             style: const TextStyle(
-                              fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.accentStart,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  BalanceDisplay(
-                    bronze: item.dailyBronze,
-                    prefix: '+',
-                    perDay: true,
-                    coinSize: 14,
-                    fontSize: 12,
-                    spacing: 4,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
+                        if (highlightGift)
+                          Container(
+                            margin: const EdgeInsets.only(left: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentSoft,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              context.l10n.chatGift,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.accentStart,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    BalanceDisplay(
+                      bronze: item.dailyBronze,
+                      prefix: '+',
+                      perDay: true,
+                      coinSize: 14,
+                      fontSize: 12,
+                      spacing: 4,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: context.l10n.inventoryGift,
-            onPressed: onGift,
-            icon: const Icon(Icons.card_giftcard_outlined),
-          ),
-          KeyedSubtree(
-            key: sellSourceKey,
-            child: IconButton(
-              tooltip: context.l10n.inventorySell,
-              onPressed: onSell,
-              icon: const Icon(Icons.sell_outlined),
+            IconButton(
+              tooltip: context.l10n.inventoryGift,
+              onPressed: onGift,
+              icon: const Icon(Icons.card_giftcard_outlined),
             ),
-          ),
-        ],
-      ),
+            KeyedSubtree(
+              key: sellSourceKey,
+              child: IconButton(
+                tooltip: context.l10n.inventorySell,
+                onPressed: onSell,
+                icon: const Icon(Icons.sell_outlined),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -979,7 +995,8 @@ class _EmojisBlock extends StatelessWidget {
                   size: 32,
                   fallback: it.emoji,
                 ),
-                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
+                title: catalogTitle(it.code,
+                    fallback: it.title, l10n: context.l10n),
                 subtitle: context.l10n.inventoryEmojiLeft(it.quantity),
                 onTap: () => showCollectionFullscreen(
                   context,
@@ -1012,7 +1029,8 @@ class _EmojisBlock extends StatelessWidget {
         if (sections.isEmpty)
           Text(
             context.l10n.inventoryNoEmojis,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           )
         else
           for (var i = 0; i < sections.length; i++) ...[
@@ -1054,7 +1072,8 @@ class _Section extends StatelessWidget {
         if (children.isEmpty)
           Text(
             empty,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           )
         else if (useDesktopTiles(context))
           LayoutBuilder(
@@ -1065,8 +1084,9 @@ class _Section extends StatelessWidget {
                   ? 180.0
                   : (isTablet(context) ? 200.0 : 240.0);
               final maxCols = shopTileColumns(context);
-              final cols =
-                  (constraints.maxWidth / (maxCell + gap)).floor().clamp(1, maxCols);
+              final cols = (constraints.maxWidth / (maxCell + gap))
+                  .floor()
+                  .clamp(1, maxCols);
               final itemWidth =
                   (constraints.maxWidth - gap * (cols - 1)) / cols;
               return Wrap(
@@ -1079,13 +1099,12 @@ class _Section extends StatelessWidget {
               );
             },
           )
-        else
-          ...[
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              children[i],
-            ],
+        else ...[
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            children[i],
           ],
+        ],
       ],
     );
   }
@@ -1110,40 +1129,40 @@ class _InvTile extends StatelessWidget {
       radius: 14,
       onActivate: onTap,
       child: Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Row(
-        children: [
-          leading,
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          children: [
+            leading,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

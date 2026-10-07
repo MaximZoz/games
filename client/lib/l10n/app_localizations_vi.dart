@@ -1686,7 +1686,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.';
 
   @override
-  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.';
+  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.\n\nTrạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.';
 
   @override
   String get shopStakesHelp => 'Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopBuyOnce => 'Mua một lần';
 
   @override
-  String get shopSellRefund => 'Bán sẽ hoàn lại 80% chi phí';
+  String get shopSellRefund => 'Giá bán phụ thuộc trạng thái bộ sưu tập';
+
+  @override
+  String get shopCollectionConditionInfo => 'Trạng thái phụ thuộc bạn giữ bộ sưu tập bao lâu. Mới — 7 ngày đầu, bán 80%. Sờn — từ ngày 8 đến 2 tháng, bán 60%. Mệt — từ 2 đến 6 tháng, bán 40%. Cũ nát — từ 6 tháng đến 1 năm, bán 100%. Cổ điển — từ 1 năm, bán 300%.';
+
+  @override
+  String get collectionConditionNew => 'Mới';
+
+  @override
+  String get collectionConditionWorn => 'Sờn';
+
+  @override
+  String get collectionConditionTired => 'Mệt';
+
+  @override
+  String get collectionConditionShabby => 'Cũ nát';
+
+  @override
+  String get collectionConditionVintage => 'Cổ điển';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Bán $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {

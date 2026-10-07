@@ -1686,7 +1686,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopEmojisHelp => 'Animoidut emojit chattiin. Osta setti ja lähetä niitä ystäville.';
 
   @override
-  String get shopCollectionsHelp => 'Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Täysi kokoelma tuo lisäkolikoita joka päivä.';
+  String get shopCollectionsHelp => 'Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Täysi kokoelma tuo lisäkolikoita joka päivä.\n\nTila riippuu siitä, kuinka kauan kokoelma on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 %. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 %. Väsynyt — 2–6 kuukautta, myynti 40 %. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 %. Vintage — vuodesta eteenpäin, myynti 300 %.';
 
   @override
   String get shopStakesHelp => 'Avaa korkeammat panokset. Mitä korkeampi panos, sitä suurempi potti ja voitto.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopBuyOnce => 'Kertaluonteinen osto';
 
   @override
-  String get shopSellRefund => 'Myynti palauttaa 80% hinnasta';
+  String get shopSellRefund => 'Myynti riippuu kokoelman tilasta';
+
+  @override
+  String get shopCollectionConditionInfo => 'Tila riippuu siitä, kuinka kauan kokoelma on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 %. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 %. Väsynyt — 2–6 kuukautta, myynti 40 %. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 %. Vintage — vuodesta eteenpäin, myynti 300 %.';
+
+  @override
+  String get collectionConditionNew => 'Uusi';
+
+  @override
+  String get collectionConditionWorn => 'Kulunut';
+
+  @override
+  String get collectionConditionTired => 'Väsynyt';
+
+  @override
+  String get collectionConditionShabby => 'Rähjäinen';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Myynti $percent %';
+  }
 
   @override
   String shopCollectionAdded(String title) {

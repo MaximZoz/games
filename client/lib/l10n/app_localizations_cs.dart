@@ -1686,7 +1686,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopEmojisHelp => 'Animované smajlíky do chatu. Kupte sadu a posílejte je přátelům.';
 
   @override
-  String get shopCollectionsHelp => 'Sesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat a prodat. Kompletní kolekce denně přináší extra mince.';
+  String get shopCollectionsHelp => 'Sesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat a prodat. Kompletní kolekce denně přináší extra mince.\n\nStav záleží na tom, jak dlouho kolekci máte. Nová — prvních 7 dní, prodej 80 %. Ohmataná — od 8. dne do 2 měsíců, prodej 60 %. Unavená — od 2 do 6 měsíců, prodej 40 %. Zchátralá — od 6 měsíců do roku, prodej 100 %. Vintage — od roku, prodej 300 %.';
 
   @override
   String get shopStakesHelp => 'Odemkněte vyšší sázky. Čím vyšší sázka, tím větší pot a výhra.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopBuyOnce => 'Jednorázový nákup';
 
   @override
-  String get shopSellRefund => 'Prodej vrátí 80% ceny';
+  String get shopSellRefund => 'Prodej závisí na stavu kolekce';
+
+  @override
+  String get shopCollectionConditionInfo => 'Stav záleží na tom, jak dlouho kolekci máte. Nová — prvních 7 dní, prodej 80 %. Ohmataná — od 8. dne do 2 měsíců, prodej 60 %. Unavená — od 2 do 6 měsíců, prodej 40 %. Zchátralá — od 6 měsíců do roku, prodej 100 %. Vintage — od roku, prodej 300 %.';
+
+  @override
+  String get collectionConditionNew => 'Nová';
+
+  @override
+  String get collectionConditionWorn => 'Ohmataná';
+
+  @override
+  String get collectionConditionTired => 'Unavená';
+
+  @override
+  String get collectionConditionShabby => 'Zchátralá';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Prodej $percent %';
+  }
 
   @override
   String shopCollectionAdded(String title) {

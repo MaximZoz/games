@@ -1686,7 +1686,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji animate per la chat. Compra un set e inviale agli amici.';
 
   @override
-  String get shopCollectionsHelp => 'Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Una collezione completa dà monete extra ogni giorno.';
+  String get shopCollectionsHelp => 'Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Una collezione completa dà monete extra ogni giorno.\n\nLo stato dipende da quanto tempo hai la collezione. Nuovo — i primi 7 giorni, vendita 80%. Logoro — dall’8º giorno a 2 mesi, vendita 60%. Stanco — da 2 a 6 mesi, vendita 40%. Consunto — da 6 mesi a 1 anno, vendita 100%. Vintage — da 1 anno, vendita 300%.';
 
   @override
   String get shopStakesHelp => 'Sblocca puntate più alte. Più alta è la puntata, più grandi sono il piatto e la vincita.';
@@ -2036,7 +2036,30 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shopBuyOnce => 'Acquisto una tantum';
 
   @override
-  String get shopSellRefund => 'La vendita rimborsa l\'80% del costo';
+  String get shopSellRefund => 'La vendita dipende dallo stato della collezione';
+
+  @override
+  String get shopCollectionConditionInfo => 'Lo stato dipende da quanto tempo hai la collezione. Nuovo — i primi 7 giorni, vendita 80%. Logoro — dall’8º giorno a 2 mesi, vendita 60%. Stanco — da 2 a 6 mesi, vendita 40%. Consunto — da 6 mesi a 1 anno, vendita 100%. Vintage — da 1 anno, vendita 300%.';
+
+  @override
+  String get collectionConditionNew => 'Nuovo';
+
+  @override
+  String get collectionConditionWorn => 'Logoro';
+
+  @override
+  String get collectionConditionTired => 'Stanco';
+
+  @override
+  String get collectionConditionShabby => 'Consunto';
+
+  @override
+  String get collectionConditionVintage => 'Vintage';
+
+  @override
+  String collectionConditionSell(int percent) {
+    return 'Vendita $percent%';
+  }
 
   @override
   String shopCollectionAdded(String title) {
