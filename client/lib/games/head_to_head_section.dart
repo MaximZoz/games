@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
-import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
-import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_dismiss.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart';
 import 'package:multigames_client/l10n/l10n.dart';
@@ -379,7 +378,7 @@ class _ScoreDigit extends StatelessWidget {
 /// Стик и стрелки только скроллят; любая кнопка закрывает, как крестик.
 @visibleForTesting
 bool statsPopupActionCloses(GamepadAction action) {
-  return !action.isDirection && !action.isScroll;
+  return gamepadScrollDismissCloses(action);
 }
 
 /// Всплывашка статистики: без рамки на крестике, стик не ходит по кнопкам.
@@ -395,23 +394,7 @@ class StatsPopupGamepadScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GamepadScope(
-      exclusive: true,
-      onAction: (action) {
-        if (action.isDirection || action.isScroll) {
-          handleGamepadUiAction(context, action);
-          final back = action == GamepadAction.up ||
-              action == GamepadAction.left ||
-              action == GamepadAction.scrollUp ||
-              action == GamepadAction.scrollLeft;
-          scrollGamepadByPage(back ? -1 : 1, context: context);
-          return true;
-        }
-        onClose();
-        return true;
-      },
-      child: child,
-    );
+    return GamepadScrollDismissScope(onClose: onClose, child: child);
   }
 }
 

@@ -1386,7 +1386,13 @@ class _GamesTabSwitcher extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop = isWide(context);
     final gradient = AppGradients.borderAt(0.22);
-    return Container(
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      descendantsAreFocusable: false,
+      descendantsAreTraversable: false,
+      child: GamepadTabSticks(
+      child: Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         gradient: gradient,
@@ -1417,6 +1423,8 @@ class _GamesTabSwitcher extends StatelessWidget {
           ],
         ),
       ),
+    ),
+    ),
     );
   }
 }

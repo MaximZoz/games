@@ -22,6 +22,13 @@ import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
 import 'package:multigames_client/games/game_navigation.dart';
 import 'package:multigames_client/games/offline_session_hold.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_dismiss.dart';
+import 'package:multigames_client/core/gamepad/gamepad_tab_sticks.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
+import 'package:multigames_client/games/games_gamepad.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/games/game_stake.dart';
 import 'package:multigames_client/games/games_provider.dart';
@@ -219,6 +226,43 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
     }
     if (_selectedTab == tab) return;
     _applySelectedTab(tab);
+    scheduleFocusEdgeGamepadTarget(last: false);
+  }
+
+  bool _onGamepad(GamepadAction action) {
+    if (action == GamepadAction.shoulderL ||
+        action == GamepadAction.shoulderR) {
+      return false;
+    }
+    if (!action.isScroll) return false;
+    final route = ModalRoute.of(context);
+    if (!gamesGamepadAllowsHubScroll(
+      popupOpen: isGamepadPopupOpen(context),
+      exclusive: GamepadDispatcher.hasExclusive,
+      routeCovered: route != null && !route.isCurrent,
+    )) {
+      return true;
+    }
+    if (gamesHubScrollSwitchesTab(action)) {
+      if (ref.read(isOfflineProvider) || _hubTabs.length <= 1) return true;
+      final next = gamesHubTabIndexAfterScroll(
+        index: _hubTabs.index,
+        length: _hubTabs.length,
+        action: action,
+      );
+      if (next != _hubTabs.index) {
+        _onTabChanged(next == 0 ? _GamesTab.games : _GamesTab.lobbies);
+      }
+      return true;
+    }
+    if (gamesHubScrollPagesCards(action)) {
+      scrollGamepadByPage(
+        action == GamepadAction.scrollUp ? -1 : 1,
+        context: context,
+      );
+      return true;
+    }
+    return false;
   }
 
   void _applySelectedTab(_GamesTab tab) {
@@ -350,7 +394,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       context.go(uri.toString());
     }
 
-    return Scaffold(
+    return GamepadScope(
+      onAction: _onGamepad,
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
@@ -474,6 +520,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -969,7 +1016,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       context: context,
       builder: (ctx) {
         final isDesktop = MediaQuery.sizeOf(ctx).width >= 700;
-        return Dialog(
+        return wrapGamepadScrollDismissDialog(
+          dialogContext: ctx,
+          child: Dialog(
           insetPadding: EdgeInsets.symmetric(
             horizontal: isDesktop ? 80 : 14,
             vertical: isDesktop ? 40 : 20,
@@ -1013,6 +1062,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
               ),
             ),
           ),
+        ),
         );
       },
     );
@@ -1466,7 +1516,9 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
             stakeBronze: lobby.stakeBronze,
           );
         }
-        return AlertDialog(
+        return wrapGamepadScrollDismissDialog(
+          dialogContext: ctx,
+          child: AlertDialog(
           insetPadding: EdgeInsets.symmetric(
             horizontal: isDesktop ? 80 : 24,
             vertical: isDesktop ? 40 : 24,
@@ -1483,6 +1535,7 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
               child: Text(context.l10n.commonClose),
             ),
           ],
+        ),
         );
       },
     );
