@@ -1683,6 +1683,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get shopStakesSubtitle => 'פתיחת הימורים גבוהים יותר';
 
   @override
+  String get shopEmojisHelp => 'אימוג\'ים מונפשים לצ\'אט. קנו סט ושלחו אותם לחברים.';
+
+  @override
+  String get shopCollectionsHelp => 'אספו סט פריטים: הם מופיעים בחלון הראווה של הפרופיל, אפשר לתת במתנה או למכור. אוסף מלא מעניק מטבעות נוספים בכל יום.';
+
+  @override
+  String get shopStakesHelp => 'פתחו הימורים גבוהים יותר. ככל שההימור גבוה יותר, כך הקופה והזכייה גדולים יותר.';
+
+  @override
   String get inventoryTitle => 'פריטים';
 
   @override

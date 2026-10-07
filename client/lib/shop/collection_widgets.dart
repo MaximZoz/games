@@ -17,13 +17,32 @@ import 'package:multigames_client/ui/widgets/coin_icon.dart';
 bool isRetiredCollectionItem(String code) => code == 'coll_fireworks';
 
 const collectionSetOrder = [
-  'legends',
-  'cosmic',
-  'jewels',
   'celebration',
   'nature',
+  'cosmic',
   'adventure',
+  'legends',
+  'jewels',
 ];
+
+/// Дневной бонус за полностью собранную группу (как на сервере).
+int collectionSetBonusBronze(String set) {
+  switch (set) {
+    case 'celebration':
+    case 'nature':
+      return 50;
+    case 'cosmic':
+      return 100;
+    case 'adventure':
+      return 200;
+    case 'legends':
+      return 500;
+    case 'jewels':
+      return 5000;
+    default:
+      return 0;
+  }
+}
 
 /// Группы коллекций: доход/день по возрастанию, затем фиксированный порядок.
 int compareCollectionSetsByDaily(

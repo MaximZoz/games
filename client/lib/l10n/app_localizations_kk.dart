@@ -1683,6 +1683,15 @@ class AppLocalizationsKk extends AppLocalizations {
   String get shopStakesSubtitle => 'Жоғары ставкаларды ашу';
 
   @override
+  String get shopEmojisHelp => 'Чатқа арналған анимациялық смайликтер. Жиынтықты сатып алып, достарыңызға жіберіңіз.';
+
+  @override
+  String get shopCollectionsHelp => 'Заттар жиынтығын жинаңыз: олар профиль сөресінде көрінеді, сыйлауға және сатуға болады. Толық коллекция күн сайын қосымша тиын әкеледі.';
+
+  @override
+  String get shopStakesHelp => 'Ойындарда жоғары ставкаларды ашыңыз. Ставка неғұрлым жоғары болса, банк пен ұтыс соғұрлым үлкен.';
+
+  @override
   String get inventoryTitle => 'Заттар';
 
   @override

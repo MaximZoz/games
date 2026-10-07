@@ -19,6 +19,7 @@ import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/l10n/catalog_l10n.dart';
@@ -45,6 +46,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTarget();
     });
   }
 
@@ -100,7 +102,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
       ..sort((a, b) => compareCollectionSetsByDaily(
             a,
             b,
-            (set) => bySet[set]!.fold<int>(0, (s, e) => s + e.dailyBronze),
+            collectionSetBonusBronze,
           ));
 
     return SwipeBackScope(
@@ -177,10 +179,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
   ) {
     final groupItems = bySet[set]!;
     final preview = groupItems.first;
-    final setDaily = groupItems.fold<int>(
-      0,
-      (sum, e) => sum + e.dailyBronze,
-    );
+    final setDaily = collectionSetBonusBronze(set);
     final ownedCount = groupItems.where((e) => e.owned).length;
     Future<void> openSet() async {
       await context.push('/shop/collections/$set');
@@ -315,6 +314,7 @@ class _ShopCollectionGroupScreenState
         setState(() => _items = cached);
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTarget();
     });
   }
 
@@ -417,8 +417,7 @@ class _ShopCollectionGroupScreenState
             b.sortOrder,
           ));
 
-    final setDaily =
-        groupItems.fold<int>(0, (sum, e) => sum + e.dailyBronze);
+    final setDaily = collectionSetBonusBronze(widget.set);
     final ownedCount = groupItems.where((e) => e.owned).length;
     final complete =
         ownedCount == groupItems.length && groupItems.isNotEmpty;

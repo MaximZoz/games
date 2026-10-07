@@ -9,6 +9,7 @@ import 'package:multigames_client/games/games_hub_tabs.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
@@ -139,50 +140,60 @@ class GameCardHeader extends StatelessWidget {
               ),
               if (stakeBronze != null && stakeBronze! > 0) ...[
                 SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: busy ? null : onStakeTap,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 2),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            stakeLabel ?? '$stakeBronze',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                GamepadFocusBlock(
+                  radius: 10,
+                  onActivate: busy ? null : onStakeTap,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      canRequestFocus: false,
+                      onTap: busy ? null : onStakeTap,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              stakeLabel ?? '$stakeBronze',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          CoinIcon(
-                            coinType: stakeCoinType,
-                            size: 20,
-                            showBorder: true,
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            CoinIcon(
+                              coinType: stakeCoinType,
+                              size: 20,
+                              showBorder: true,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
               if (onInfoTap != null)
-                IconButton(
-                  // Не отключать при busy: IconButton с onPressed == null
-                  // уходит в disabled и анимирует цвет — иконка «моргает».
-                  onPressed: onInfoTap,
-                  icon: const Icon(
-                    Icons.info_outline_rounded,
-                    size: 22,
-                    color: AppColors.textSecondary,
-                  ),
-                  style: IconButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    minimumSize: const Size(32, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.all(4),
+                GamepadFocusBlock(
+                  radius: 16,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: onInfoTap,
+                  child: IconButton(
+                    // Не отключать при busy: IconButton с onPressed == null
+                    // уходит в disabled и анимирует цвет — иконка «моргает».
+                    onPressed: onInfoTap,
+                    icon: const Icon(
+                      Icons.info_outline_rounded,
+                      size: 22,
+                      color: AppColors.textSecondary,
+                    ),
+                    style: IconButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: const Size(32, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.all(4),
+                    ),
                   ),
                 ),
             ],
@@ -236,9 +247,13 @@ class GameCardChip extends StatelessWidget {
       isDesktop: isDesktop,
       isMedium: isMedium,
     );
-    return Material(
+    return GamepadFocusBlock(
+      radius: 10,
+      onActivate: onTap,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
+        canRequestFocus: false,
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         splashColor: AppColors.accentStart.withValues(alpha: 0.2),
@@ -277,6 +292,7 @@ class GameCardChip extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -334,12 +350,15 @@ class GameCardActionsRow extends StatelessWidget {
     if (inDevelopment) {
       return SizedBox(
         height: _height,
-        child: FramedButton(
-          onPressed: null,
-          icon: Icons.construction_rounded,
-          label: context.l10n.gamesInDevelopment,
-          expanded: true,
-          minHeight: _height,
+        child: GamepadFocusBlock(
+          radius: AppRadius.button,
+          child: FramedButton(
+            onPressed: null,
+            icon: Icons.construction_rounded,
+            label: context.l10n.gamesInDevelopment,
+            expanded: true,
+            minHeight: _height,
+          ),
         ),
       );
     }
@@ -347,12 +366,16 @@ class GameCardActionsRow extends StatelessWidget {
     if (offline) {
       return SizedBox(
         height: _height,
-        child: FramedButton(
-          onPressed: onOfflinePlay,
-          icon: Icons.play_arrow_rounded,
-          label: offlinePlayLabel ?? context.l10n.gamesPlay,
-          expanded: true,
-          minHeight: _height,
+        child: GamepadFocusBlock(
+          radius: AppRadius.button,
+          onActivate: onOfflinePlay,
+          child: FramedButton(
+            onPressed: onOfflinePlay,
+            icon: Icons.play_arrow_rounded,
+            label: offlinePlayLabel ?? context.l10n.gamesPlay,
+            expanded: true,
+            minHeight: _height,
+          ),
         ),
       );
     }
@@ -366,16 +389,20 @@ class GameCardActionsRow extends StatelessWidget {
       return Expanded(
         child: SizedBox(
           height: _height,
-          child: FramedButton(
-            onPressed: onPressed,
-            icon: icon,
-            label: label,
-            loading: loading,
-            expanded: true,
-            minHeight: _height,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            fontSize: 13.5,
-            iconSize: 18,
+          child: GamepadFocusBlock(
+            radius: AppRadius.button,
+            onActivate: loading ? null : onPressed,
+            child: FramedButton(
+              onPressed: onPressed,
+              icon: icon,
+              label: label,
+              loading: loading,
+              expanded: true,
+              minHeight: _height,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              fontSize: 13.5,
+              iconSize: 18,
+            ),
           ),
         ),
       );

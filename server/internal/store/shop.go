@@ -655,6 +655,24 @@ type collectionCatalogRow struct {
 	WeeklyBronze int
 }
 
+// CollectionSetBonusBronze — дневной бонус за полностью собранную группу.
+func CollectionSetBonusBronze(set string) int {
+	switch set {
+	case "celebration", "nature":
+		return 50
+	case "cosmic":
+		return 100
+	case "adventure":
+		return 200
+	case "legends":
+		return 500
+	case "jewels":
+		return 5000
+	default:
+		return 0
+	}
+}
+
 func loadActiveCollectionCatalog(ctx context.Context, q interface {
 	Query(context.Context, string, ...any) (pgx.Rows, error)
 }) ([]collectionCatalogRow, error) {
@@ -702,8 +720,8 @@ func ownedCollectionCodes(ctx context.Context, q interface {
 	return owned, rows.Err()
 }
 
-// calcCollectionWeeklyIncome: сумма daily по владеемым + бонус за каждую
-// полностью собранную группу (= сумма daily всех предметов группы).
+// calcCollectionWeeklyIncome: сумма daily по владеемым + фиксированный
+// бонус за каждую полностью собранную группу (CollectionSetBonusBronze).
 // Поле payload остаётся weekly_bronze (историческое имя), смысл — дневной бонус.
 func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]struct{}) (items, setBonus, ownedCount, completedSets int) {
 	bySet := map[string][]collectionCatalogRow{}
@@ -716,22 +734,21 @@ func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string
 			}
 		}
 	}
-	for _, group := range bySet {
+	for set, group := range bySet {
 		if len(group) == 0 {
 			continue
 		}
 		complete := true
-		sum := 0
 		for _, r := range group {
-			sum += r.WeeklyBronze
 			if _, ok := owned[r.Code]; !ok {
 				complete = false
+				break
 			}
 		}
 		if complete {
 			completedSets++
-			if sum > 0 {
-				setBonus += sum
+			if bonus := CollectionSetBonusBronze(set); bonus > 0 {
+				setBonus += bonus
 			}
 		}
 	}

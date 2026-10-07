@@ -1683,6 +1683,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shopStakesSubtitle => '더 높은 배팅 잠금 해제';
 
   @override
+  String get shopEmojisHelp => '채팅용 애니메이션 이모지. 세트를 사서 친구에게 보내세요.';
+
+  @override
+  String get shopCollectionsHelp => '아이템 세트를 모으세요. 프로필 진열장에 나타나며 선물하거나 팔 수 있습니다. 세트를 완성하면 매일 추가 코인을 받습니다.';
+
+  @override
+  String get shopStakesHelp => '더 높은 판돈을 잠금 해제하세요. 판돈이 클수록 팟과 배당이 커집니다.';
+
+  @override
   String get inventoryTitle => '아이템';
 
   @override
@@ -2866,7 +2875,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String adminCoinsDebited(int amount) {
-    return '브론즈 ${amount}을 차감했습니다';
+    return '브론즈 $amount을 차감했습니다';
   }
 
   @override

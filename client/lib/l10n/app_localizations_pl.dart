@@ -1683,6 +1683,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shopStakesSubtitle => 'Odblokuj wyższe stawki';
 
   @override
+  String get shopEmojisHelp => 'Animowane emotikony do czatu. Kup zestaw i wysyłaj je znajomym.';
+
+  @override
+  String get shopCollectionsHelp => 'Zbierz zestaw przedmiotów: pojawiają się w witrynie profilu, można je dawać i sprzedawać. Kompletna kolekcja codziennie daje dodatkowe monety.';
+
+  @override
+  String get shopStakesHelp => 'Odblokuj wyższe stawki. Im wyższa stawka, tym większa pula i wygrana.';
+
+  @override
   String get inventoryTitle => 'Przedmioty';
 
   @override

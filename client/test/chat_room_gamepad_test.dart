@@ -105,7 +105,10 @@ void main() {
     expect(chatRoomHorizontalIsReply(GamepadAction.left), isTrue);
     expect(chatRoomHorizontalIsReply(GamepadAction.scrollRight), isTrue);
     expect(chatRoomActionMenuKeepsOpen(GamepadAction.confirm), isTrue);
+    expect(chatRoomActionMenuKeepsOpen(GamepadAction.down), isTrue);
+    expect(chatRoomActionMenuKeepsOpen(GamepadAction.scrollDown), isTrue);
     expect(chatRoomActionMenuKeepsOpen(GamepadAction.cancel), isFalse);
+    expect(chatRoomActionMenuKeepsOpen(GamepadAction.actionX), isFalse);
   });
 
   test('правый стик раскрывает и сужает панель смайлов', () {

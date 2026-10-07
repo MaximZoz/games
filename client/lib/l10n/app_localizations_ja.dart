@@ -1683,6 +1683,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shopStakesSubtitle => 'より高い賭け金を解除';
 
   @override
+  String get shopEmojisHelp => 'チャット用のアニメ絵文字。セットを買って友達に送れます。';
+
+  @override
+  String get shopCollectionsHelp => 'アイテムセットを集めましょう。プロフィールのショーケースに表示され、贈ったり売ったりできます。揃えると毎日追加コインが入ります。';
+
+  @override
+  String get shopStakesHelp => 'より高い賭け金を解除。賭け金が高いほどポットと配当が大きくなります。';
+
+  @override
   String get inventoryTitle => 'アイテム';
 
   @override

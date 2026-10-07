@@ -1683,6 +1683,15 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopStakesSubtitle => 'Avaa korkeammat panokset';
 
   @override
+  String get shopEmojisHelp => 'Animoidut emojit chattiin. Osta setti ja lähetä niitä ystäville.';
+
+  @override
+  String get shopCollectionsHelp => 'Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Täysi kokoelma tuo lisäkolikoita joka päivä.';
+
+  @override
+  String get shopStakesHelp => 'Avaa korkeammat panokset. Mitä korkeampi panos, sitä suurempi potti ja voitto.';
+
+  @override
   String get inventoryTitle => 'Esineet';
 
   @override

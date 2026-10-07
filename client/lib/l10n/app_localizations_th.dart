@@ -1683,6 +1683,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get shopStakesSubtitle => 'ปลดล็อกเดิมพันที่สูงขึ้น';
 
   @override
+  String get shopEmojisHelp => 'อิโมจิเคลื่อนไหวสำหรับแชท ซื้อชุดแล้วส่งให้เพื่อนได้';
+
+  @override
+  String get shopCollectionsHelp => 'สะสมชุดไอเท็ม: แสดงในตู้โปรไฟล์ ให้เป็นของขวัญหรือขายได้ ชุดครบให้เหรียญเพิ่มทุกวัน';
+
+  @override
+  String get shopStakesHelp => 'ปลดล็อกเดิมพันที่สูงขึ้น เดิมพันยิ่งสูง เงินกองกลางและรางวัลยิ่งใหญ่';
+
+  @override
   String get inventoryTitle => 'ไอเท็ม';
 
   @override

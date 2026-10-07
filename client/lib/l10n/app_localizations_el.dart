@@ -1683,6 +1683,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get shopStakesSubtitle => 'Ξεκλείδωμα υψηλότερων πονταρισμάτων';
 
   @override
+  String get shopEmojisHelp => 'Κινούμενα emoji για τη συνομιλία. Αγοράστε ένα σετ και στείλτε τα σε φίλους.';
+
+  @override
+  String get shopCollectionsHelp => 'Συλλέξτε ένα σετ αντικειμένων: εμφανίζονται στη βιτρίνα προφίλ και μπορούν να χαριστούν ή να πουληθούν. Μια πλήρης συλλογή δίνει επιπλέον νομίσματα κάθε μέρα.';
+
+  @override
+  String get shopStakesHelp => 'Ξεκλειδώστε υψηλότερα πονταρίσματα. Όσο υψηλότερο το ποντάρισμα, τόσο μεγαλύτερο το pot και το κέρδος.';
+
+  @override
   String get inventoryTitle => 'Αντικείμενα';
 
   @override

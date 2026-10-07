@@ -20,8 +20,9 @@ class GamepadBackButton extends StatelessWidget {
         height: 40,
         child: GamepadFocusBlock(
           radius: 20,
-          borderWidth: 2,
+          borderWidth: 2.2,
           shape: GamepadHighlightShape.circle,
+          includeInEdgeFocus: false,
           onActivate: onPressed,
           child: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),

@@ -308,13 +308,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final headerBadge = (incomeAvailable ? 1 : 0) + unreadGiftCount;
 
     final catalogBySet = <String, int>{};
-    final catalogDailyBySet = <String, int>{};
     for (final e in catalog.where(
         (e) => e.kind == 'collection' && !isRetiredCollectionItem(e.code))) {
       final s = (e.collectionSet ?? 'other').trim();
       if (s.isEmpty) continue;
       catalogBySet[s] = (catalogBySet[s] ?? 0) + 1;
-      catalogDailyBySet[s] = (catalogDailyBySet[s] ?? 0) + e.dailyBronze;
     }
     final collectionsBySet = <String, List<InventoryItem>>{};
     for (final it in collections) {
@@ -333,10 +331,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ..sort((a, b) => compareCollectionSetsByDaily(
             a,
             b,
-            (set) =>
-                catalogDailyBySet[set] ??
-                (collectionsBySet[set] ?? const [])
-                    .fold<int>(0, (s, e) => s + e.dailyBronze),
+            collectionSetBonusBronze,
           ));
 
     final grouped = <String, List<InventoryItem>>{};
@@ -446,51 +441,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           collectionSetKeys: collectionSetKeys,
                           collectionsBySet: collectionsBySet,
                           catalogBySet: catalogBySet,
-                          catalogDailyBySet: catalogDailyBySet,
                           highlightGifts: _highlightGifts,
                           sellKeyFor: _sellKeyFor,
                           onGift: _gift,
                           onSell: _sell,
                         ),
                         const SizedBox(height: 16),
-                        for (final g in groupOrder)
-                          if (grouped[g]?.isNotEmpty == true) ...[
-                            _Section(
-                              title: _groupTitles[g] ?? context.l10n.shopEmojis,
-                              empty: '',
-                              children: [
-                                for (final it in grouped[g]!)
-                                  _InvTile(
-                                    leading: ShopAnimatedEmoji(
-                                      animatedName: it.animatedName ?? 'smile',
-                                      size: 32,
-                                      fallback: it.emoji,
-                                    ),
-                                    title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
-                                    subtitle: context.l10n
-                                        .inventoryEmojiLeft(it.quantity),
-                                    onTap: () => showCollectionFullscreen(
-                                      context,
-                                      title: catalogTitle(
-                                        it.code,
-                                        fallback: it.title,
-                                        l10n: context.l10n,
-                                      ),
-                                      animatedName: it.animatedName ?? 'smile',
-                                      fallback: it.emoji,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        if (emojis.isEmpty)
-                          _Section(
-                            title: context.l10n.shopEmojis,
-                            empty: context.l10n.inventoryNoEmojis,
-                            children: const [],
-                          ),
-                        if (emojis.isEmpty) const SizedBox(height: 16),
+                        _EmojisBlock(
+                          groupOrder: groupOrder,
+                          grouped: grouped,
+                          groupTitles: _groupTitles,
+                        ),
+                        const SizedBox(height: 16),
                         _Section(
                           title: context.l10n.inventoryFrames,
                           empty: context.l10n.inventoryNoFrames,
@@ -552,7 +514,6 @@ class _CollectionsBlock extends StatelessWidget {
     required this.collectionSetKeys,
     required this.collectionsBySet,
     required this.catalogBySet,
-    required this.catalogDailyBySet,
     required this.highlightGifts,
     required this.sellKeyFor,
     required this.onGift,
@@ -567,7 +528,6 @@ class _CollectionsBlock extends StatelessWidget {
   final List<String> collectionSetKeys;
   final Map<String, List<InventoryItem>> collectionsBySet;
   final Map<String, int> catalogBySet;
-  final Map<String, int> catalogDailyBySet;
   final Set<String> highlightGifts;
   final GlobalKey Function(String code) sellKeyFor;
   final void Function(InventoryItem item) onGift;
@@ -582,9 +542,7 @@ class _CollectionsBlock extends StatelessWidget {
           builder: (context) {
             final ownedCount = collectionsBySet[set]?.length ?? 0;
             final totalCount = catalogBySet[set] ?? ownedCount;
-            final setBonus = catalogDailyBySet[set] ??
-                (collectionsBySet[set] ?? const [])
-                    .fold<int>(0, (s, e) => s + e.dailyBronze);
+            final setBonus = collectionSetBonusBronze(set);
             return _CollectionSetFrame(
               title: collectionSetTitle(set),
               owned: ownedCount,
@@ -991,16 +949,93 @@ class _CollectionInvTile extends StatelessWidget {
   }
 }
 
+class _EmojisBlock extends StatelessWidget {
+  const _EmojisBlock({
+    required this.groupOrder,
+    required this.grouped,
+    required this.groupTitles,
+  });
+
+  final List<String> groupOrder;
+  final Map<String, List<InventoryItem>> grouped;
+  final Map<String, String> groupTitles;
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = <Widget>[];
+    for (final g in groupOrder) {
+      final items = grouped[g];
+      if (items == null || items.isEmpty) continue;
+      sections.add(
+        _Section(
+          title: groupTitles[g] ?? context.l10n.shopEmojis,
+          empty: '',
+          nested: true,
+          children: [
+            for (final it in items)
+              _InvTile(
+                leading: ShopAnimatedEmoji(
+                  animatedName: it.animatedName ?? 'smile',
+                  size: 32,
+                  fallback: it.emoji,
+                ),
+                title: catalogTitle(it.code, fallback: it.title, l10n: context.l10n),
+                subtitle: context.l10n.inventoryEmojiLeft(it.quantity),
+                onTap: () => showCollectionFullscreen(
+                  context,
+                  title: catalogTitle(
+                    it.code,
+                    fallback: it.title,
+                    l10n: context.l10n,
+                  ),
+                  animatedName: it.animatedName ?? 'smile',
+                  fallback: it.emoji,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.l10n.shopEmojis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (sections.isEmpty)
+          Text(
+            context.l10n.inventoryNoEmojis,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          )
+        else
+          for (var i = 0; i < sections.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            sections[i],
+          ],
+      ],
+    );
+  }
+}
+
 class _Section extends StatelessWidget {
   const _Section({
     required this.title,
     required this.empty,
     required this.children,
+    this.nested = false,
   });
 
   final String title;
   final String empty;
   final List<Widget> children;
+  final bool nested;
 
   @override
   Widget build(BuildContext context) {
@@ -1009,10 +1044,10 @@ class _Section extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: AppColors.textPrimary,
+            fontSize: nested ? 14 : 16,
+            color: nested ? AppColors.textSecondary : AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),

@@ -31,20 +31,32 @@ func TestCalcCollectionWeeklyIncomeEmpty(t *testing.T) {
 	}
 }
 
+func TestCollectionSetBonusBronze(t *testing.T) {
+	if CollectionSetBonusBronze("celebration") != 50 ||
+		CollectionSetBonusBronze("nature") != 50 ||
+		CollectionSetBonusBronze("cosmic") != 100 ||
+		CollectionSetBonusBronze("adventure") != 200 ||
+		CollectionSetBonusBronze("legends") != 500 ||
+		CollectionSetBonusBronze("jewels") != 5000 ||
+		CollectionSetBonusBronze("other") != 0 {
+		t.Fatal("set bonuses")
+	}
+}
+
 func TestCalcCollectionWeeklyIncomePartialAndCompleteSet(t *testing.T) {
 	catalog := []collectionCatalogRow{
 		{Code: "a1", Set: "legends", WeeklyBronze: 10},
 		{Code: "a2", Set: "legends", WeeklyBronze: 20},
-		{Code: "b1", Set: "other", WeeklyBronze: 5},
+		{Code: "b1", Set: "nature", WeeklyBronze: 5},
 	}
 	owned := map[string]struct{}{"a1": {}, "b1": {}}
 	items, bonus, ownedCount, sets := calcCollectionWeeklyIncome(catalog, owned)
 	if items != 15 {
 		t.Fatalf("items=%d want 15", items)
 	}
-	// "other" состоит из одного предмета — при владении b1 сет уже полный.
-	if sets != 1 || bonus != 5 {
-		t.Fatalf("other set complete: bonus=%d sets=%d", bonus, sets)
+	// nature из одного предмета — сет полный, бонус 50 бронзы/день.
+	if sets != 1 || bonus != 50 {
+		t.Fatalf("nature set complete: bonus=%d sets=%d", bonus, sets)
 	}
 	if ownedCount != 2 {
 		t.Fatalf("owned=%d", ownedCount)
@@ -58,8 +70,8 @@ func TestCalcCollectionWeeklyIncomePartialAndCompleteSet(t *testing.T) {
 	if sets != 2 {
 		t.Fatalf("sets=%d want 2", sets)
 	}
-	if bonus != 35 { // legends 30 + other 5
-		t.Fatalf("bonus=%d want 35", bonus)
+	if bonus != 550 { // legends 500 + nature 50
+		t.Fatalf("bonus=%d want 550", bonus)
 	}
 	if ownedCount != 3 {
 		t.Fatalf("owned=%d", ownedCount)
@@ -68,12 +80,12 @@ func TestCalcCollectionWeeklyIncomePartialAndCompleteSet(t *testing.T) {
 
 func TestCalcCollectionWeeklyIncomeAllSetsComplete(t *testing.T) {
 	catalog := []collectionCatalogRow{
-		{Code: "a1", Set: "s1", WeeklyBronze: 1},
-		{Code: "b1", Set: "s2", WeeklyBronze: 2},
+		{Code: "a1", Set: "celebration", WeeklyBronze: 1},
+		{Code: "b1", Set: "cosmic", WeeklyBronze: 2},
 	}
 	owned := map[string]struct{}{"a1": {}, "b1": {}}
 	items, bonus, _, sets := calcCollectionWeeklyIncome(catalog, owned)
-	if items != 3 || bonus != 3 || sets != 2 {
+	if items != 3 || bonus != 150 || sets != 2 {
 		t.Fatalf("items=%d bonus=%d sets=%d", items, bonus, sets)
 	}
 }

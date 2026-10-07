@@ -1683,6 +1683,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopStakesSubtitle => 'Odemknutí vyšších sázek';
 
   @override
+  String get shopEmojisHelp => 'Animované smajlíky do chatu. Kupte sadu a posílejte je přátelům.';
+
+  @override
+  String get shopCollectionsHelp => 'Sesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat a prodat. Kompletní kolekce denně přináší extra mince.';
+
+  @override
+  String get shopStakesHelp => 'Odemkněte vyšší sázky. Čím vyšší sázka, tím větší pot a výhra.';
+
+  @override
   String get inventoryTitle => 'Předměty';
 
   @override

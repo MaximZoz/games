@@ -13,6 +13,7 @@ class HomeActionCard extends StatelessWidget {
     required this.onTap,
     this.badgeCount = 0,
     this.dense = false,
+    this.onInfoTap,
   });
 
   final IconData icon;
@@ -22,6 +23,8 @@ class HomeActionCard extends StatelessWidget {
   final int badgeCount;
   /// Компактный вид (телефон landscape на главной).
   final bool dense;
+  /// Иконка справки справа, как на карточках игр.
+  final VoidCallback? onInfoTap;
 
   @override
   Widget build(BuildContext context) {
@@ -108,11 +111,33 @@ class HomeActionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textSecondary,
-                  size: dense ? 20 : 24,
-                ),
+                if (onInfoTap != null)
+                  GamepadFocusBlock(
+                    radius: 16,
+                    shape: GamepadHighlightShape.circle,
+                    onActivate: onInfoTap,
+                    child: IconButton(
+                      onPressed: onInfoTap,
+                      tooltip: title,
+                      icon: const Icon(
+                        Icons.info_outline_rounded,
+                        size: 22,
+                        color: AppColors.textSecondary,
+                      ),
+                      style: IconButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size(32, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.all(4),
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                    size: dense ? 20 : 24,
+                  ),
               ],
             ),
           ),

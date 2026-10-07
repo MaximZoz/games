@@ -69,9 +69,12 @@ bool chatRoomHorizontalIsReply(GamepadAction action) {
       action == GamepadAction.scrollRight;
 }
 
-/// В меню сообщения стик и A листают/выбирают; любая другая кнопка закрывает.
+/// В меню сообщения и «⋯» стик/стрелки и A листают/выбирают;
+/// любая другая кнопка закрывает.
 bool chatRoomActionMenuKeepsOpen(GamepadAction action) {
-  return action == GamepadAction.confirm || action.isDirection;
+  return action == GamepadAction.confirm ||
+      action.isDirection ||
+      action.isScroll;
 }
 
 const double kChatRoomEmojiSheetCollapsed = 0.14;

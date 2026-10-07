@@ -1569,6 +1569,48 @@ void main() {
     expect(back, 1);
   });
 
+  testWidgets('после страницы фокус на карточке, не на назад', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    GamepadFocusRegistry.reset();
+    addTearDown(GamepadFocusRegistry.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: GamepadBackButton(onPressed: () {}),
+              ),
+              body: GamepadFocusBlock(
+                radius: 12,
+                onActivate: () {},
+                child: const SizedBox(width: 200, height: 80, child: Text('tile')),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    expect(find.text('tile'), findsOneWidget);
+    final focused = FocusManager.instance.primaryFocus;
+    expect(focused?.debugLabel, 'GamepadFocusBlock');
+    final ctx = focused?.context;
+    expect(ctx, isNotNull);
+    expect(
+      find.ancestor(of: find.text('tile'), matching: find.byType(GamepadFocusBlock)),
+      findsOneWidget,
+    );
+    expect(
+      GamepadFocusBlock.maybeOf(ctx!)?.includeInEdgeFocus,
+      isTrue,
+    );
+  });
+
   testWidgets('эксклюзивный диалог: A подтверждает, B и LB не трогают фон',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

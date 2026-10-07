@@ -21,6 +21,7 @@ import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/ui/widgets/vertical_paged_slider.dart';
 import 'package:multigames_client/core/locale_provider.dart';
@@ -67,6 +68,7 @@ class _ShopEmojisScreenState extends ConsumerState<ShopEmojisScreen> {
         });
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTarget();
     });
   }
 
@@ -312,6 +314,7 @@ class _ShopEmojiGroupScreenState extends ConsumerState<ShopEmojiGroupScreen> {
         });
       }
       unawaited(_reloadSilent());
+      scheduleFocusFirstVisibleGamepadTarget();
     });
   }
 

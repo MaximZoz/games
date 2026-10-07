@@ -1683,6 +1683,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get shopStakesSubtitle => 'Buka taruhan lebih tinggi';
 
   @override
+  String get shopEmojisHelp => 'Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.';
+
+  @override
+  String get shopCollectionsHelp => 'Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.';
+
+  @override
+  String get shopStakesHelp => 'Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.';
+
+  @override
   String get inventoryTitle => 'Item';
 
   @override

@@ -1683,6 +1683,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shopStakesSubtitle => 'उच्च दाँव अनलॉक करें';
 
   @override
+  String get shopEmojisHelp => 'चैट के लिए एनिमेटेड इमोजी। सेट खरीदें और दोस्तों को भेजें।';
+
+  @override
+  String get shopCollectionsHelp => 'वस्तुओं का सेट इकट्ठा करें: वे प्रोफ़ाइल शोकेस में दिखते हैं, उपहार या बेचे जा सकते हैं। पूरी कलेक्शन हर दिन अतिरिक्त सिक्के देती है।';
+
+  @override
+  String get shopStakesHelp => 'ऊँची बाज़ियाँ अनलॉक करें। बाज़ी जितनी बड़ी, पॉट और जीत उतनी बड़ी।';
+
+  @override
   String get inventoryTitle => 'आइटम';
 
   @override

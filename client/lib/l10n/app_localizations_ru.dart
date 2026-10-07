@@ -1683,6 +1683,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shopStakesSubtitle => 'Разблокировка повышенных ставок';
 
   @override
+  String get shopEmojisHelp => 'Анимированные смайлики для чата. Купите набор — и отправляйте его в сообщениях друзьям.';
+
+  @override
+  String get shopCollectionsHelp => 'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.';
+
+  @override
+  String get shopStakesHelp => 'Разблокируйте более высокие ставки в играх. Чем выше ставка, тем больше банк и выигрыш.';
+
+  @override
   String get inventoryTitle => 'Предметы';
 
   @override

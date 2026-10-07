@@ -1683,6 +1683,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shopStakesSubtitle => 'فتح رهانات أعلى';
 
   @override
+  String get shopEmojisHelp => 'رموز تعبيرية متحركة للدردشة. اشترِ مجموعة وأرسلها إلى الأصدقاء.';
+
+  @override
+  String get shopCollectionsHelp => 'اجمع مجموعة من العناصر: تظهر في واجهة الملف الشخصي ويمكن إهداؤها أو بيعها. المجموعة الكاملة تمنح عملات إضافية كل يوم.';
+
+  @override
+  String get shopStakesHelp => 'افتح رهانات أعلى. كلما ارتفع الرهان زادت الجائزة والربح.';
+
+  @override
   String get inventoryTitle => 'العناصر';
 
   @override

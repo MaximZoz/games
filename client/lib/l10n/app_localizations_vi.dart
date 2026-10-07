@@ -1683,6 +1683,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopStakesSubtitle => 'Mở khóa cược cao hơn';
 
   @override
+  String get shopEmojisHelp => 'Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.';
+
+  @override
+  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.';
+
+  @override
+  String get shopStakesHelp => 'Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.';
+
+  @override
   String get inventoryTitle => 'Vật phẩm';
 
   @override
