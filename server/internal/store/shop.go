@@ -14,18 +14,21 @@ import (
 )
 
 var (
-	ErrShopItemUnknown  = errors.New("unknown shop item")
-	ErrShopItemInactive = errors.New("shop item inactive")
-	ErrShopOutOfStock   = errors.New("out of stock")
-	ErrShopAlreadyOwned = errors.New("already owned")
-	ErrStakeNotAllowed  = errors.New("stake not allowed")
-	ErrEmojiNotOwned    = errors.New("emoji not owned")
-	ErrEmojiDepleted    = errors.New("emoji depleted")
-	ErrNotCollection    = errors.New("not a collection item")
-	ErrGiftSelf         = errors.New("cannot gift to self")
-	ErrGiftTargetOwned  = errors.New("target already owns item")
-	ErrIncomeNotReady   = errors.New("collection income not ready")
-	ErrNoCollections    = errors.New("no collections")
+	ErrShopItemUnknown     = errors.New("unknown shop item")
+	ErrShopItemInactive    = errors.New("shop item inactive")
+	ErrShopOutOfStock      = errors.New("out of stock")
+	ErrShopAlreadyOwned    = errors.New("already owned")
+	ErrStakeNotAllowed     = errors.New("stake not allowed")
+	ErrEmojiNotOwned       = errors.New("emoji not owned")
+	ErrEmojiDepleted       = errors.New("emoji depleted")
+	ErrNotCollection       = errors.New("not a collection item")
+	ErrGiftSelf            = errors.New("cannot gift to self")
+	ErrGiftTargetOwned     = errors.New("target already owns item")
+	ErrIncomeNotReady      = errors.New("collection income not ready")
+	ErrNoCollections       = errors.New("no collections")
+	ErrElixirNotOwned      = errors.New("elixir not owned")
+	ErrElixirNotApplicable = errors.New("elixir not applicable")
+	ErrElixirWrongSet      = errors.New("elixir wrong set")
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
@@ -46,16 +49,21 @@ type ShopItemView struct {
 	SortOrder      int
 	// AcquiredAt — момент появления в инвентаре, если предмет уже куплен.
 	AcquiredAt string
+	// ConditionShift и VintageAt — эликсиры на коллекции (0 и пусто у остальных).
+	ConditionShift int
+	VintageAt      string
 }
 
 type InventoryItemView struct {
-	Code        string
-	Kind        string
-	Title       string
-	Description string
-	Payload     json.RawMessage
-	AcquiredAt  string
-	Quantity    int
+	Code           string
+	Kind           string
+	Title          string
+	Description    string
+	Payload        json.RawMessage
+	AcquiredAt     string
+	Quantity       int
+	ConditionShift int
+	VintageAt      string
 }
 
 type BuyResult struct {
@@ -76,6 +84,16 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		         SELECT to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 		         FROM user_inventory u
 		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), ''),
+		       COALESCE((
+		         SELECT u.condition_shift
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
+		       ), 0),
+		       COALESCE((
+		         SELECT to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+		         FROM user_inventory u
+		         WHERE u.user_id = $1 AND u.item_code = s.code
 		       ), '')
 		FROM shop_items s
 		WHERE s.active = TRUE
@@ -92,6 +110,7 @@ func ListShopItems(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 		if err := rows.Scan(
 			&it.Code, &it.Kind, &it.Title, &it.Description, &it.PriceBronze, &payload,
 			&it.StockRemaining, &it.SortOrder, &it.Owned, &it.AcquiredAt,
+			&it.ConditionShift, &it.VintageAt,
 		); err != nil {
 			return nil, err
 		}
@@ -106,7 +125,9 @@ func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.payload,
 		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-		       u.quantity
+		       u.quantity,
+		       u.condition_shift,
+		       COALESCE(to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1
@@ -120,7 +141,7 @@ func ListInventory(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) ([
 	for rows.Next() {
 		var it InventoryItemView
 		var payload []byte
-		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt, &it.Quantity); err != nil {
+		if err := rows.Scan(&it.Code, &it.Kind, &it.Title, &it.Description, &payload, &it.AcquiredAt, &it.Quantity, &it.ConditionShift, &it.VintageAt); err != nil {
 			return nil, err
 		}
 		it.Payload = json.RawMessage(payload)
@@ -234,7 +255,7 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 		return nil, err
 	}
 	// Смайлики можно докупать (стекируются по quantity); рамки/ставки — один раз.
-	if owned && kind != "emoji" {
+	if owned && kind != "emoji" && kind != "elixir" {
 		return nil, ErrShopAlreadyOwned
 	}
 
@@ -264,6 +285,15 @@ func BuyShopItem(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code
 			ON CONFLICT (user_id, item_code) DO UPDATE
 			SET quantity = user_inventory.quantity + EXCLUDED.quantity`,
 			userID, code, qty); err != nil {
+			return nil, err
+		}
+	case "elixir":
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_inventory (user_id, item_code, quantity)
+			VALUES ($1, $2, 1)
+			ON CONFLICT (user_id, item_code) DO UPDATE
+			SET quantity = user_inventory.quantity + 1`,
+			userID, code); err != nil {
 			return nil, err
 		}
 	case "emoji_pack":
@@ -471,7 +501,9 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 	rows, err := pool.Query(ctx, `
 		SELECT s.code, s.kind, s.title, s.description, s.payload,
 		       to_char(u.acquired_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-		       u.quantity
+		       u.quantity,
+		       u.condition_shift,
+		       COALESCE(to_char(u.vintage_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '')
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE
@@ -487,7 +519,7 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 		var payload []byte
 		if err := rows.Scan(
 			&it.Code, &it.Kind, &it.Title, &it.Description, &payload,
-			&it.AcquiredAt, &it.Quantity,
+			&it.AcquiredAt, &it.Quantity, &it.ConditionShift, &it.VintageAt,
 		); err != nil {
 			return nil, err
 		}
@@ -510,12 +542,14 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 	var kind string
 	var price int
 	var acquiredAt time.Time
+	var shift int
+	var vintageAt *time.Time
 	err = tx.QueryRow(ctx, `
-		SELECT s.kind, s.price_bronze, u.acquired_at
+		SELECT s.kind, s.price_bronze, u.acquired_at, u.condition_shift, u.vintage_at
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND u.item_code = $2
-		FOR UPDATE OF u`, userID, code).Scan(&kind, &price, &acquiredAt)
+		FOR UPDATE OF u`, userID, code).Scan(&kind, &price, &acquiredAt, &shift, &vintageAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, 0, ErrEmojiNotOwned
@@ -525,7 +559,7 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 	if kind != "collection" {
 		return 0, 0, ErrNotCollection
 	}
-	refund = CollectionRefundBronze(price, acquiredAt, time.Now().UTC())
+	refund = CollectionRefundAged(price, acquiredAt, time.Now().UTC(), shift, vintageAt)
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
 		return 0, 0, err

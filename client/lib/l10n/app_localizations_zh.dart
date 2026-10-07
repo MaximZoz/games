@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -808,7 +810,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get gamesChessModeAntichess => '反象棋';
 
-
   @override
   String get rulesCheckersPlayers => '玩家：2 人。';
 
@@ -889,7 +890,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesChessDrawAntichess => '和棋：三次重复，或双方在同一回合都失去最后一子。';
-
 
   @override
   String get checkersDrawRepetition => '和棋 — 同一局面三次';
@@ -2964,4 +2964,165 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get apiErrMoveConflict => '着法冲突，请重试。';
+
+  @override
+  String get shopElixirs => '灵药';
+
+  @override
+  String get shopElixirsSubtitle => '让藏品回春、老化或加速';
+
+  @override
+  String get shopElixirsHelp => '三层货架：回春、老化和加速。每层六瓶，每个藏品套装一瓶。灵药只对所属套装生效。\n\n回春让藏品年轻一步，不会比全新更年轻。老化让它老一步，不会比破旧更老。加速只用于破旧：距离古董还剩 3 个月，只能用一次。灵药本身不会变成古董。\n\n买下的灵药放在物品里。可以从藏品卡片或灵药卡片使用。每次消耗一瓶。';
+
+  @override
+  String get elixirGroupRejuvenate => '回春';
+
+  @override
+  String get elixirGroupAge => '老化';
+
+  @override
+  String get elixirGroupAccelerate => '加速';
+
+  @override
+  String get elixirEffectRejuvenate => '回春';
+
+  @override
+  String get elixirEffectAge => '老化';
+
+  @override
+  String get elixirEffectAccelerate => '加速';
+
+  @override
+  String get elixirAdjCelebration => '节日';
+
+  @override
+  String get elixirAdjNature => '自然';
+
+  @override
+  String get elixirAdjLegends => '传说';
+
+  @override
+  String get elixirAdjCosmic => '宇宙';
+
+  @override
+  String get elixirAdjAdventure => '冒险';
+
+  @override
+  String get elixirAdjJewels => '宝石';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return '$adjective$effect灵药';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => '让藏品年轻一步。不会比全新更年轻。';
+
+  @override
+  String get elixirHelpAge => '让藏品老一步。不会比破旧更老。';
+
+  @override
+  String get elixirHelpAccelerate => '仅限破旧。距离古董还剩 3 个月，只能用一次。';
+
+  @override
+  String get elixirUseRejuvenate => '回春';
+
+  @override
+  String get elixirUseAge => '老化';
+
+  @override
+  String get elixirUseAccelerate => '加速';
+
+  @override
+  String get elixirUse => '使用';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count天',
+      one: '$count天',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count小时',
+      one: '$count小时',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count分钟',
+      one: '$count分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return '仅限「$set」套装。';
+  }
+
+  @override
+  String get elixirPickCollection => '选择藏品';
+
+  @override
+  String get elixirNoTarget => '这套藏品里没有能用这瓶灵药的';
+
+  @override
+  String get elixirApplied => '已使用灵药';
+
+  @override
+  String get elixirConfirmTitle => '使用这瓶灵药？';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => '没有灵药 — 去商店购买';
+
+  @override
+  String get elixirNotApplicable => '这瓶灵药现在不能用在这件藏品上';
+
+  @override
+  String get elixirWrongSet => '这瓶灵药属于另一套';
+
+  @override
+  String get elixirNotOwned => '没有这瓶灵药';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return '距$state还有 $left';
+  }
+
+  @override
+  String get collectionLeftSoon => '不到一分钟';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }

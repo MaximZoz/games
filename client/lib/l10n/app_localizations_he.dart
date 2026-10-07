@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -808,7 +810,6 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get gamesChessModeAntichess => 'אנטי-שחמט';
 
-
   @override
   String get rulesCheckersPlayers => 'שחקנים: 2.';
 
@@ -889,7 +890,6 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesChessDrawAntichess => 'תיקו בחזרה משולשת או אם שני הצדדים נשארו בלי כלים באותו מהלך.';
-
 
   @override
   String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';
@@ -2964,4 +2964,165 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get apiErrMoveConflict => 'התנגשות מהלך. נסו שוב.';
+
+  @override
+  String get shopElixirs => 'Elixirs';
+
+  @override
+  String get shopElixirsSubtitle => 'Rejuvenate, age, or speed up collections';
+
+  @override
+  String get shopElixirsHelp => 'Three shelves: rejuvenation, aging, and acceleration. Each has six elixirs, one per collection set. An elixir works only on its own set.\n\nRejuvenation makes a collection one step newer, and never newer than new. Aging makes it one step older, and never older than shabby. Acceleration is only for a shabby item: three months left until vintage, once. An elixir never grants vintage by itself.\n\nA bought elixir stays in Items. Use it from the collection card or from the elixir card. Each use spends one.';
+
+  @override
+  String get elixirGroupRejuvenate => 'הצערה';
+
+  @override
+  String get elixirGroupAge => 'הזדקנות';
+
+  @override
+  String get elixirGroupAccelerate => 'האצה';
+
+  @override
+  String get elixirEffectRejuvenate => 'הצערה';
+
+  @override
+  String get elixirEffectAge => 'הזדקנות';
+
+  @override
+  String get elixirEffectAccelerate => 'האצה';
+
+  @override
+  String get elixirAdjCelebration => 'חגיגי';
+
+  @override
+  String get elixirAdjNature => 'טבעי';
+
+  @override
+  String get elixirAdjLegends => 'אגדי';
+
+  @override
+  String get elixirAdjCosmic => 'קוסמי';
+
+  @override
+  String get elixirAdjAdventure => 'הרפתקה';
+
+  @override
+  String get elixirAdjJewels => 'יקר';
+
+  @override
+  String elixirName(String adjective, String effect) {
+    return 'שיקוי $effect $adjective';
+  }
+
+  @override
+  String get elixirHelpRejuvenate => 'Makes the collection one step newer. Not newer than new.';
+
+  @override
+  String get elixirHelpAge => 'Makes the collection one step older. Not older than shabby.';
+
+  @override
+  String get elixirHelpAccelerate => 'Shabby only. Three months left until vintage, once.';
+
+  @override
+  String get elixirUseRejuvenate => 'הצעיר';
+
+  @override
+  String get elixirUseAge => 'הזדקן';
+
+  @override
+  String get elixirUseAccelerate => 'האץ';
+
+  @override
+  String get elixirUse => 'השתמש';
+
+  @override
+  String collectionLeftDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ימים',
+      one: 'יום $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count שעות',
+      one: 'שעה $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionLeftMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count דקות',
+      one: 'דקה $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String elixirSetOnly(String set) {
+    return 'Only the $set set.';
+  }
+
+  @override
+  String get elixirPickCollection => 'Choose a collection';
+
+  @override
+  String get elixirNoTarget => 'No collection in this set can take this elixir';
+
+  @override
+  String get elixirApplied => 'Elixir applied';
+
+  @override
+  String get elixirConfirmTitle => 'Use this elixir?';
+
+  @override
+  String elixirConfirmBody(String elixir, String collection) {
+    return '$elixir\n$collection';
+  }
+
+  @override
+  String get inventoryNoElixirs => 'No elixirs — buy them in the shop';
+
+  @override
+  String get elixirNotApplicable => 'This elixir cannot change that collection right now';
+
+  @override
+  String get elixirWrongSet => 'This elixir is for another set';
+
+  @override
+  String get elixirNotOwned => 'You do not have this elixir';
+
+  @override
+  String collectionUntil(String state, String left) {
+    return 'Until $state: $left';
+  }
+
+  @override
+  String get collectionLeftSoon => 'less than a minute';
+
+  @override
+  String get collectionCondGenNew => 'new';
+
+  @override
+  String get collectionCondGenWorn => 'worn';
+
+  @override
+  String get collectionCondGenTired => 'tired';
+
+  @override
+  String get collectionCondGenShabby => 'shabby';
+
+  @override
+  String get collectionCondGenVintage => 'vintage';
 }
