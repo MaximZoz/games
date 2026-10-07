@@ -72,6 +72,42 @@ int? friendsActionIndexAfterMove({
   return current - 1;
 }
 
+/// Правый стик по краям вкладок друзей — как LB/RB у нижнего меню.
+class FriendsGamepadTabSticks extends StatelessWidget {
+  const FriendsGamepadTabSticks({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: GamepadService.instance.devices,
+      builder: (context, _) {
+        if (!gamepadConnected()) return child;
+        return Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 2, right: 4),
+              child: GamepadGlyph(
+                action: GamepadAction.scrollLeft,
+                size: 18,
+              ),
+            ),
+            Expanded(child: child),
+            const Padding(
+              padding: EdgeInsets.only(left: 4, right: 2),
+              child: GamepadGlyph(
+                action: GamepadAction.scrollRight,
+                size: 18,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 /// LT-подпись у поиска, как глиф у баланса монет.
 class FriendsGamepadLtHint extends StatelessWidget {
   const FriendsGamepadLtHint({

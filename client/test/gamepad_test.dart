@@ -240,6 +240,13 @@ void main() {
           .label,
       'B',
     );
+    expect(
+      gamepadButtonLook(
+        GamepadAction.scrollRight,
+        family: GamepadFamily.xbox,
+      ).label,
+      'RS',
+    );
   });
 
   test('cycleIndex ходит по кругу', () {

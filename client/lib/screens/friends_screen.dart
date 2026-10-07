@@ -2498,7 +2498,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           skipTraversal: true,
                           descendantsAreFocusable: false,
                           descendantsAreTraversable: false,
-                          child: TabBar(
+                          child: FriendsGamepadTabSticks(
+                            child: TabBar(
                           controller: _tabController,
                           isScrollable: false,
                           tabAlignment: TabAlignment.fill,
@@ -2529,6 +2530,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                               ),
                           ],
                         ),
+                          ),
                         ),
                       ),
                       Expanded(

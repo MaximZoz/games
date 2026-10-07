@@ -140,6 +140,21 @@ void main() {
     );
   });
 
+  testWidgets('без геймпада глифы правого стика на вкладках скрыты',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FriendsGamepadTabSticks(
+            child: Text('вкладки'),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('вкладки'), findsOneWidget);
+    expect(find.byType(GamepadGlyph), findsNothing);
+  });
+
   testWidgets('без геймпада LT-подпись скрыта', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
