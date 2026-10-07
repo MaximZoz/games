@@ -1683,6 +1683,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopStakesSubtitle => 'Yuqori stavkalarni ochish';
 
   @override
+  String get shopEmojisHelp => 'Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.';
+
+  @override
+  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.';
+
+  @override
+  String get shopStakesHelp => 'O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.';
+
+  @override
   String get inventoryTitle => 'Buyumlar';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get shopOwned => 'Sotib olingan';
+
+  @override
+  String get shopHave => 'Bor';
 
   @override
   String get shopEmpty => 'Hali bo‘sh';

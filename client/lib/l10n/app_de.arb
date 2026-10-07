@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Profilvitrine, Geschenke und Ertrag",
   "shopStakes": "Einsätze",
   "shopStakesSubtitle": "Höhere Einsätze freischalten",
+  "shopEmojisHelp": "Animierte Emojis für den Chat. Kaufe ein Set und sende sie in Nachrichten an Freunde.",
+  "shopCollectionsHelp": "Sammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt oder verkauft werden. Eine vollständige Sammlung bringt jeden Tag extra Münzen.",
+  "shopStakesHelp": "Schalte höhere Einsätze in Spielen frei. Je höher der Einsatz, desto größer sind Pot und Gewinn.",
   "inventoryTitle": "Gegenstände",
   "inventoryEmpty": "Noch nichts hier — schau im Shop vorbei",
   "inventoryFrames": "Rahmen",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Gekauft",
+  "shopHave": "Vorhanden",
   "shopEmpty": "Noch leer",
   "shopPurchased": "{title} gekauft",
   "@shopPurchased": {

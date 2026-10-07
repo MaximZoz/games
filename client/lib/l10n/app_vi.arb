@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Trưng bày hồ sơ, quà tặng và thu nhập",
   "shopStakes": "Cược",
   "shopStakesSubtitle": "Mở khóa cược cao hơn",
+  "shopEmojisHelp": "Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.",
+  "shopCollectionsHelp": "Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Bộ sưu tập đủ trả thêm xu mỗi ngày.",
+  "shopStakesHelp": "Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.",
   "inventoryTitle": "Vật phẩm",
   "inventoryEmpty": "Chưa có gì ở đây — xem cửa hàng",
   "inventoryFrames": "Khung",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Đã mua",
+  "shopHave": "Có",
   "shopEmpty": "Vẫn trống",
   "shopPurchased": "Đã mua {title}",
   "@shopPurchased": {

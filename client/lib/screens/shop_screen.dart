@@ -8,6 +8,7 @@ import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/desktop_tile_grid.dart';
 import 'package:multigames_client/ui/widgets/home_action_card.dart';
 import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 
 /// Хаб магазина — три раздела, как на экране монет.
@@ -29,6 +30,11 @@ class ShopScreen extends ConsumerWidget {
         subtitle: l10n.shopEmojisSubtitle,
         onTap: () => context.push('/shop/emojis'),
         dense: dense,
+        onInfoTap: () => showShopSectionHelp(
+          context: context,
+          title: l10n.shopEmojis,
+          body: l10n.shopEmojisHelp,
+        ),
       ),
       HomeActionCard(
         icon: Icons.auto_awesome_outlined,
@@ -36,6 +42,11 @@ class ShopScreen extends ConsumerWidget {
         subtitle: l10n.shopCollectionsSubtitle,
         onTap: () => context.push('/shop/collections'),
         dense: dense,
+        onInfoTap: () => showShopSectionHelp(
+          context: context,
+          title: l10n.shopCollections,
+          body: l10n.shopCollectionsHelp,
+        ),
       ),
       if (!isOffline)
         HomeActionCard(
@@ -44,6 +55,11 @@ class ShopScreen extends ConsumerWidget {
           subtitle: l10n.shopStakesSubtitle,
           onTap: () => context.push('/shop/stakes'),
           dense: dense,
+          onInfoTap: () => showShopSectionHelp(
+            context: context,
+            title: l10n.shopStakes,
+            body: l10n.shopStakesHelp,
+          ),
         ),
     ];
 

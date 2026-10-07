@@ -1683,6 +1683,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shopStakesSubtitle => 'Розблокування підвищених ставок';
 
   @override
+  String get shopEmojisHelp => 'Анімовані смайлики для чату. Купіть набір і надсилайте їх у повідомленнях друзям.';
+
+  @override
+  String get shopCollectionsHelp => 'Зберіть набір предметів: вони з’являються у вітрині профілю, їх можна дарувати й продавати. Повна колекція щодня дає додатковий дохід монетами.';
+
+  @override
+  String get shopStakesHelp => 'Розблокуйте вищі ставки в іграх. Що вища ставка, то більший банк і виграш.';
+
+  @override
   String get inventoryTitle => 'Предмети';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get shopOwned => 'Куплено';
+
+  @override
+  String get shopHave => 'Є';
 
   @override
   String get shopEmpty => 'Поки порожньо';

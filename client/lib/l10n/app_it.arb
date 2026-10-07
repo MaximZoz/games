@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Vetrina del profilo, regali e entrate",
   "shopStakes": "Puntate",
   "shopStakesSubtitle": "Sblocca le puntate più alte",
+  "shopEmojisHelp": "Emoji animate per la chat. Compra un set e inviale agli amici.",
+  "shopCollectionsHelp": "Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Una collezione completa dà monete extra ogni giorno.",
+  "shopStakesHelp": "Sblocca puntate più alte. Più alta è la puntata, più grandi sono il piatto e la vincita.",
   "inventoryTitle": "Oggetti",
   "inventoryEmpty": "Ancora niente qui — dai un’occhiata al negozio",
   "inventoryFrames": "Cornici",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Acquistato",
+  "shopHave": "Ce l'hai",
   "shopEmpty": "Ancora vuoto",
   "shopPurchased": "{title} acquistato",
   "@shopPurchased": {

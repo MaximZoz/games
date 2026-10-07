@@ -1683,6 +1683,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopStakesSubtitle => 'Daha yüksek bahisleri açın';
 
   @override
+  String get shopEmojisHelp => 'Sohbet için animasyonlu emojiler. Bir set alın ve arkadaşlarınıza gönderin.';
+
+  @override
+  String get shopCollectionsHelp => 'Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Tam koleksiyon her gün ekstra jeton kazandırır.';
+
+  @override
+  String get shopStakesHelp => 'Daha yüksek bahislerin kilidini açın. Bahis ne kadar yüksekse pot ve kazanç o kadar büyük olur.';
+
+  @override
   String get inventoryTitle => 'Eşyalar';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shopOwned => 'Satın alındı';
+
+  @override
+  String get shopHave => 'Var';
 
   @override
   String get shopEmpty => 'Henüz boş';

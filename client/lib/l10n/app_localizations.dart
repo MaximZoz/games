@@ -3341,6 +3341,24 @@ abstract class AppLocalizations {
   /// **'Разблокировка повышенных ставок'**
   String get shopStakesSubtitle;
 
+  /// No description provided for @shopEmojisHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Анимированные смайлики для чата. Купите набор — и отправляйте его в сообщениях друзьям.'**
+  String get shopEmojisHelp;
+
+  /// No description provided for @shopCollectionsHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соберите набор предметов: они появляются в витрине профиля, их можно дарить и продавать. Полная коллекция каждый день приносит дополнительный доход монетами.'**
+  String get shopCollectionsHelp;
+
+  /// No description provided for @shopStakesHelp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разблокируйте более высокие ставки в играх. Чем выше ставка, тем больше банк и выигрыш.'**
+  String get shopStakesHelp;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In ru, this message translates to:
@@ -3886,6 +3904,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Куплено'**
   String get shopOwned;
+
+  /// No description provided for @shopHave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть'**
+  String get shopHave;
 
   /// No description provided for @shopEmpty.
   ///

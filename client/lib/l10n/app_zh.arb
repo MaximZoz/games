@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "资料展示、礼物与收益",
   "shopStakes": "赌注",
   "shopStakesSubtitle": "解锁更高赌注",
+  "shopEmojisHelp": "聊天用动态表情。购买一套后即可发给好友。",
+  "shopCollectionsHelp": "收集一套物品：它们会显示在个人橱窗，可以赠送或出售。集齐后每天额外获得金币。",
+  "shopStakesHelp": "解锁更高赌注。赌注越高，奖池和收益越大。",
   "inventoryTitle": "物品",
   "inventoryEmpty": "这里还是空的 — 去商店看看吧",
   "inventoryFrames": "边框",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "已购买",
+  "shopHave": "已有",
   "shopEmpty": "暂无内容",
   "shopPurchased": "已购买 {title}",
   "@shopPurchased": {

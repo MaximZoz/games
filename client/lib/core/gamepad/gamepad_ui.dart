@@ -155,10 +155,24 @@ void scheduleFocusFirstVisibleGamepadTarget() {
   scheduleFocusEdgeGamepadTarget(last: false);
 }
 
+List<FocusNode> _edgeGamepadFocusBlocks(List<FocusNode> blocks) {
+  final content = [
+    for (final node in blocks)
+      if (_includeInEdgeFocus(node)) node,
+  ];
+  return content.isNotEmpty ? content : blocks;
+}
+
+bool _includeInEdgeFocus(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null) return true;
+  return GamepadFocusBlock.maybeOf(ctx)?.includeInEdgeFocus ?? true;
+}
+
 /// После перелистывания страницы — первый или последний видимый блок.
 void scheduleFocusEdgeGamepadTarget({required bool last}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    final blocks = _visibleGamepadFocusBlocks();
+    final blocks = _edgeGamepadFocusBlocks(_visibleGamepadFocusBlocks());
     if (blocks.isEmpty) {
       focusFirstVisibleGamepadTarget();
       return;
@@ -170,7 +184,7 @@ void scheduleFocusEdgeGamepadTarget({required bool last}) {
 }
 
 bool focusFirstVisibleGamepadTarget() {
-  final blocks = _visibleGamepadFocusBlocks();
+  final blocks = _edgeGamepadFocusBlocks(_visibleGamepadFocusBlocks());
   if (blocks.isNotEmpty) {
     blocks.first.requestFocus();
     _ensureVisible(blocks.first);

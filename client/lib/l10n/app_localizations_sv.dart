@@ -1683,6 +1683,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopStakesSubtitle => 'Lås upp högre insatser';
 
   @override
+  String get shopEmojisHelp => 'Animerade emojis för chatten. Köp ett set och skicka dem till vänner.';
+
+  @override
+  String get shopCollectionsHelp => 'Samla ett set föremål: de syns i profilens monter och kan ges bort eller säljas. En komplett samling ger extra mynt varje dag.';
+
+  @override
+  String get shopStakesHelp => 'Lås upp högre insatser. Ju högre insats, desto större pott och vinst.';
+
+  @override
   String get inventoryTitle => 'Föremål';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get shopOwned => 'Köpt';
+
+  @override
+  String get shopHave => 'Har';
 
   @override
   String get shopEmpty => 'Tomt än så länge';

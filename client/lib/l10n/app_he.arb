@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "תצוגת פרופיל, מתנות והכנסה",
   "shopStakes": "הימורים",
   "shopStakesSubtitle": "פתיחת הימורים גבוהים יותר",
+  "shopEmojisHelp": "אימוג'ים מונפשים לצ'אט. קנו סט ושלחו אותם לחברים.",
+  "shopCollectionsHelp": "אספו סט פריטים: הם מופיעים בחלון הראווה של הפרופיל, אפשר לתת במתנה או למכור. אוסף מלא מעניק מטבעות נוספים בכל יום.",
+  "shopStakesHelp": "פתחו הימורים גבוהים יותר. ככל שההימור גבוה יותר, כך הקופה והזכייה גדולים יותר.",
   "inventoryTitle": "פריטים",
   "inventoryEmpty": "עדיין אין כאן כלום — בדקו את החנות",
   "inventoryFrames": "מסגרות",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "נרכש",
+  "shopHave": "יש",
   "shopEmpty": "עדיין ריק",
   "shopPurchased": "{title} נרכש",
   "@shopPurchased": {

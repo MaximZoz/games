@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Pameran profil, hadiah, dan pendapatan",
   "shopStakes": "Taruhan",
   "shopStakesSubtitle": "Buka taruhan lebih tinggi",
+  "shopEmojisHelp": "Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.",
+  "shopCollectionsHelp": "Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.",
+  "shopStakesHelp": "Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.",
   "inventoryTitle": "Item",
   "inventoryEmpty": "Belum ada apa pun — cek toko",
   "inventoryFrames": "Bingkai",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Dibeli",
+  "shopHave": "Punya",
   "shopEmpty": "Masih kosong",
   "shopPurchased": "{title} dibeli",
   "@shopPurchased": {

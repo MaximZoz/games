@@ -1683,6 +1683,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shopStakesSubtitle => 'Höhere Einsätze freischalten';
 
   @override
+  String get shopEmojisHelp => 'Animierte Emojis für den Chat. Kaufe ein Set und sende sie in Nachrichten an Freunde.';
+
+  @override
+  String get shopCollectionsHelp => 'Sammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt oder verkauft werden. Eine vollständige Sammlung bringt jeden Tag extra Münzen.';
+
+  @override
+  String get shopStakesHelp => 'Schalte höhere Einsätze in Spielen frei. Je höher der Einsatz, desto größer sind Pot und Gewinn.';
+
+  @override
   String get inventoryTitle => 'Gegenstände';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shopOwned => 'Gekauft';
+
+  @override
+  String get shopHave => 'Vorhanden';
 
   @override
   String get shopEmpty => 'Noch leer';

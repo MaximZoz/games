@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Profilutstilling, gaver og inntekt",
   "shopStakes": "Innsatser",
   "shopStakesSubtitle": "Lås opp høyere innsatser",
+  "shopEmojisHelp": "Animerte emojier for chatten. Kjøp et sett og send dem til venner.",
+  "shopCollectionsHelp": "Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. En komplett samling gir ekstra mynter hver dag.",
+  "shopStakesHelp": "Lås opp høyere innsatser. Jo høyere innsats, desto større pott og gevinst.",
   "inventoryTitle": "Gjenstander",
   "inventoryEmpty": "Ingenting her ennå — sjekk butikken",
   "inventoryFrames": "Rammer",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Kjøpt",
+  "shopHave": "Har",
   "shopEmpty": "Tomt foreløpig",
   "shopPurchased": "{title} kjøpt",
   "@shopPurchased": {

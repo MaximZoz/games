@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Profil vitrini, hediyeler ve gelir",
   "shopStakes": "Bahisler",
   "shopStakesSubtitle": "Daha yüksek bahisleri açın",
+  "shopEmojisHelp": "Sohbet için animasyonlu emojiler. Bir set alın ve arkadaşlarınıza gönderin.",
+  "shopCollectionsHelp": "Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Tam koleksiyon her gün ekstra jeton kazandırır.",
+  "shopStakesHelp": "Daha yüksek bahislerin kilidini açın. Bahis ne kadar yüksekse pot ve kazanç o kadar büyük olur.",
   "inventoryTitle": "Eşyalar",
   "inventoryEmpty": "Henüz bir şey yok — mağazaya bakın",
   "inventoryFrames": "Çerçeveler",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Satın alındı",
+  "shopHave": "Var",
   "shopEmpty": "Henüz boş",
   "shopPurchased": "{title} satın alındı",
   "@shopPurchased": {

@@ -1683,6 +1683,15 @@ class AppLocalizationsBe extends AppLocalizations {
   String get shopStakesSubtitle => 'Разблакоўка павышаных ставак';
 
   @override
+  String get shopEmojisHelp => 'Анімаваныя смайлікі для чата. Купіце набор і адпраўляйце іх у паведамленнях сябрам.';
+
+  @override
+  String get shopCollectionsHelp => 'Збярыце набор прадметаў: яны з’яўляюцца ў вітрыне профілю, іх можна дарыць і прадаваць. Поўная калекцыя штодня дае дадатковы прыбытак манетамі.';
+
+  @override
+  String get shopStakesHelp => 'Разблакуйце вышэйшыя стаўкі ў гульнях. Чым вышэйшая стаўка, тым большы банк і выйгрыш.';
+
+  @override
   String get inventoryTitle => 'Прадметы';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get shopOwned => 'Куплена';
+
+  @override
+  String get shopHave => 'Ёсць';
 
   @override
   String get shopEmpty => 'Пакуль пуста';

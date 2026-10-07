@@ -18,6 +18,7 @@ import 'package:multigames_client/utils/user_error.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -139,8 +140,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
 
   /// Кнопка «Отправить» снаружи поля — зона keep-keyboard на web/iOS.
   final GlobalKey _sendButtonKey = GlobalKey();
-  final GlobalKey<PopupMenuButtonState<_RoomAction>> _roomMenuKey =
-      GlobalKey<PopupMenuButtonState<_RoomAction>>();
   final Set<String> _messageIDs = <String>{};
 
   bool _loading = true;
@@ -499,32 +498,209 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
     required String title,
     required String description,
     required String confirmText,
-    bool destructive = false,
   }) async {
-    final result = await showDialog<bool>(
+    return showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(description),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(context.l10n.commonCancel),
+      title: title,
+      message: description,
+      confirmLabel: confirmText,
+    );
+  }
+
+  Future<void> _showRoomActionsMenu({
+    required ChatPreviewItem? chat,
+    required ChatUserItem? peerUser,
+  }) async {
+    if (_roomActionInFlight) return;
+    final isGroup = chat?.isGroup == true;
+    final peerId = (peerUser?.id ?? '').trim();
+    final isSupport = peerUser?.isSupport == true ||
+        peerUser?.displayName?.trim() == 'Поддержка';
+    final snapshot = ref.read(friendsSnapshotProvider).valueOrNull;
+    final isFriend = peerId.isNotEmpty &&
+        snapshot?.friends.any((f) => f.user.id == peerId) == true;
+    final hasOutgoing = peerId.isNotEmpty &&
+        snapshot?.outgoing.any((r) => r.user.id == peerId) == true;
+    final hasIncoming = peerId.isNotEmpty &&
+        snapshot?.incoming.any((r) => r.user.id == peerId) == true;
+    String? incomingRequestId;
+    if (snapshot != null && peerId.isNotEmpty) {
+      for (final r in snapshot.incoming) {
+        if (r.user.id == peerId) {
+          incomingRequestId = r.requestId;
+          break;
+        }
+      }
+    }
+
+    final entries = <({_RoomAction action, String label, bool enabled})>[];
+    if (isGroup) {
+      entries.add((
+        action: _RoomAction.sendFriendRequest,
+        label: context.l10n.friendsAdd,
+        enabled: true,
+      ));
+    } else {
+      if (!isSupport && isFriend) {
+        entries.add((
+          action: _RoomAction.removeFriend,
+          label: context.l10n.friendsRemove,
+          enabled: true,
+        ));
+      } else if (!isSupport && peerId.isNotEmpty && snapshot != null) {
+        if (hasIncoming) {
+          entries.add((
+            action: _RoomAction.acceptFriendRequest,
+            label: context.l10n.friendsAcceptRequest,
+            enabled: true,
+          ));
+        } else if (hasOutgoing) {
+          entries.add((
+            action: _RoomAction.sendFriendRequest,
+            label: context.l10n.friendsRequestAlreadySent,
+            enabled: false,
+          ));
+        } else {
+          entries.add((
+            action: _RoomAction.sendFriendRequest,
+            label: context.l10n.friendsSendRequest,
+            enabled: true,
+          ));
+        }
+      }
+      entries.add((
+        action: _RoomAction.clearChat,
+        label: context.l10n.chatsClearConfirm,
+        enabled: true,
+      ));
+      if (!isSupport) {
+        entries.add((
+          action: _RoomAction.blockUser,
+          label: context.l10n.chatsBlockConfirm,
+          enabled: peerId.isNotEmpty,
+        ));
+      }
+    }
+    if (entries.isEmpty) return;
+
+    const menuWidth = 260.0;
+    final future = showGeneralDialog<_RoomAction>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black26,
+      transitionDuration: const Duration(milliseconds: 120),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        var closed = false;
+        void close([_RoomAction? value]) {
+          if (closed) return;
+          closed = true;
+          final nav = Navigator.of(ctx);
+          if (nav.canPop()) nav.pop(value);
+        }
+
+        return GamepadScope(
+          exclusive: true,
+          onAction: (pad) {
+            if (chatRoomActionMenuKeepsOpen(pad)) {
+              final nav = pad == GamepadAction.scrollUp
+                  ? GamepadAction.up
+                  : pad == GamepadAction.scrollDown
+                      ? GamepadAction.down
+                      : pad;
+              return handleGamepadUiAction(ctx, nav);
+            }
+            close();
+            return true;
+          },
+          child: GamepadNavGroup(
+            name: 'chat-room-actions',
+            exclusive: true,
+            child: Stack(
+              children: [
+                Positioned(
+                  right: 12,
+                  top: MediaQuery.paddingOf(ctx).top + 48,
+                  child: FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOut,
+                    ),
+                    child: Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                      elevation: 8,
+                      clipBehavior: Clip.antiAlias,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 168,
+                          maxWidth: menuWidth,
+                        ),
+                        child: IntrinsicWidth(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (var i = 0; i < entries.length; i++)
+                                GamepadFocusBlock(
+                                  autofocus: i == 0,
+                                  focusable: entries[i].enabled,
+                                  radius: AppRadius.input,
+                                  onActivate: entries[i].enabled
+                                      ? () => close(entries[i].action)
+                                      : null,
+                                  child: InkWell(
+                                    onTap: entries[i].enabled
+                                        ? () => close(entries[i].action)
+                                        : null,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 12,
+                                      ),
+                                      child: Text(
+                                        entries[i].label,
+                                        style: TextStyle(
+                                          color: entries[i].enabled
+                                              ? (entries[i].action ==
+                                                      _RoomAction.blockUser
+                                                  ? Colors.red.shade700
+                                                  : AppColors.textPrimary)
+                                              : AppColors.textSecondary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            FilledButton(
-              style: AppButtonStyles.of(
-                foregroundColor:
-                    destructive ? Colors.red.shade800 : AppColors.textPrimary,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(confirmText),
-            ),
-          ],
+          ),
         );
       },
     );
-    return result == true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusFirstVisibleGamepadTarget();
+    });
+    final action = await future;
+    if (!mounted || action == null) return;
+    if (isGroup && action == _RoomAction.sendFriendRequest) {
+      unawaited(_showGroupMembersFriendSheet(chat));
+      return;
+    }
+    unawaited(_runRoomAction(
+      action,
+      peerUserID: peerUser?.id,
+      incomingRequestId: incomingRequestId,
+    ));
   }
 
   Future<void> _runRoomAction(
@@ -612,7 +788,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         title: context.l10n.friendsRemoveTitle,
         description: LocaleService.l10n.friendsRemoveConfirm(peerName),
         confirmText: LocaleService.l10n.friendsRemoveConfirmAction,
-        destructive: true,
       );
       if (!confirmed) return;
 
@@ -664,7 +839,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
         title: context.l10n.chatsBlockTitle,
         description: context.l10n.chatsBlockDesc,
         confirmText: context.l10n.chatsBlockConfirm,
-        destructive: true,
       );
       if (!confirmed) return;
 
@@ -700,7 +874,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
       title: context.l10n.chatsClearTitle,
       description: context.l10n.chatsClearDesc,
       confirmText: context.l10n.chatsClearConfirm,
-      destructive: true,
     );
     if (!confirmed) return;
 
@@ -1033,7 +1206,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
           exclusive: true,
           onAction: (pad) {
             if (chatRoomActionMenuKeepsOpen(pad)) {
-              return handleGamepadUiAction(ctx, pad);
+              final nav = pad == GamepadAction.scrollUp
+                  ? GamepadAction.up
+                  : pad == GamepadAction.scrollDown
+                      ? GamepadAction.down
+                      : pad;
+              return handleGamepadUiAction(ctx, nav);
             }
             close();
             return true;
@@ -2375,96 +2553,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen>
                   shape: GamepadHighlightShape.circle,
                   onActivate: _roomActionInFlight
                       ? null
-                      : () => _roomMenuKey.currentState?.showButtonMenu(),
-                  child: PopupMenuButton<_RoomAction>(
-                    key: _roomMenuKey,
-                    enabled: !_roomActionInFlight,
-                    tooltip: context.l10n.chatActions,
-                    onSelected: (action) {
-                      if (isGroup && action == _RoomAction.sendFriendRequest) {
-                        unawaited(_showGroupMembersFriendSheet(chat));
-                        return;
-                      }
-                      final snapshot =
-                          ref.read(friendsSnapshotProvider).valueOrNull;
-                      final peerId = (peerUser?.id ?? '').trim();
-                      String? incomingRequestId;
-                      if (snapshot != null && peerId.isNotEmpty) {
-                        for (final r in snapshot.incoming) {
-                          if (r.user.id == peerId) {
-                            incomingRequestId = r.requestId;
-                            break;
-                          }
-                        }
-                      }
-                      unawaited(_runRoomAction(
-                        action,
-                        peerUserID: peerUser?.id,
-                        incomingRequestId: incomingRequestId,
-                      ));
-                    },
-                    itemBuilder: (context) {
-                      final peerId = (peerUser?.id ?? '').trim();
-                      final isSupport = peerUser?.isSupport == true ||
-                          peerUser?.displayName?.trim() == 'Поддержка';
-                      if (isGroup) {
-                        return <PopupMenuEntry<_RoomAction>>[
-                          PopupMenuItem<_RoomAction>(
-                            value: _RoomAction.sendFriendRequest,
-                            child: Text(context.l10n.friendsAdd),
-                          ),
-                        ];
-                      }
-                      final snapshot =
-                          ref.read(friendsSnapshotProvider).valueOrNull;
-                      final isFriend = peerId.isNotEmpty &&
-                          snapshot?.friends.any((f) => f.user.id == peerId) ==
-                              true;
-                      final hasOutgoing = peerId.isNotEmpty &&
-                          snapshot?.outgoing.any((r) => r.user.id == peerId) ==
-                              true;
-                      final hasIncoming = peerId.isNotEmpty &&
-                          snapshot?.incoming.any((r) => r.user.id == peerId) ==
-                              true;
-
-                      return <PopupMenuEntry<_RoomAction>>[
-                        if (!isSupport && isFriend)
-                          PopupMenuItem<_RoomAction>(
-                            value: _RoomAction.removeFriend,
-                            child: Text(context.l10n.friendsRemove),
-                          )
-                        else if (!isSupport &&
-                            peerId.isNotEmpty &&
-                            snapshot != null)
-                          if (hasIncoming)
-                            PopupMenuItem<_RoomAction>(
-                              value: _RoomAction.acceptFriendRequest,
-                              child: Text(context.l10n.friendsAcceptRequest),
-                            )
-                          else if (hasOutgoing)
-                            PopupMenuItem<_RoomAction>(
-                              enabled: false,
-                              value: _RoomAction.sendFriendRequest,
-                              child:
-                                  Text(context.l10n.friendsRequestAlreadySent),
-                            )
-                          else
-                            PopupMenuItem<_RoomAction>(
-                              value: _RoomAction.sendFriendRequest,
-                              child: Text(context.l10n.friendsSendRequest),
+                      : () => unawaited(
+                            _showRoomActionsMenu(
+                              chat: chat,
+                              peerUser: peerUser,
                             ),
-                        PopupMenuItem<_RoomAction>(
-                          value: _RoomAction.clearChat,
-                          child: Text(context.l10n.chatsClearConfirm),
-                        ),
-                        if (!isSupport)
-                          PopupMenuItem<_RoomAction>(
-                            value: _RoomAction.blockUser,
-                            enabled: peerId.isNotEmpty,
-                            child: Text(context.l10n.chatsBlockConfirm),
                           ),
-                      ];
-                    },
+                  child: IconButton(
+                    tooltip: context.l10n.chatActions,
+                    onPressed: _roomActionInFlight
+                        ? null
+                        : () => unawaited(
+                              _showRoomActionsMenu(
+                                chat: chat,
+                                peerUser: peerUser,
+                              ),
+                            ),
                     icon: const Icon(Icons.more_vert_rounded),
                   ),
                 ),

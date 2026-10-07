@@ -33,7 +33,7 @@ class GamepadFocusBlock extends StatefulWidget {
     required this.child,
     this.onActivate,
     this.radius = 22,
-    this.borderWidth = 2,
+    this.borderWidth = 2.2,
     this.autofocus = false,
     this.focusable = true,
     this.outlined = true,
@@ -42,6 +42,7 @@ class GamepadFocusBlock extends StatefulWidget {
     this.inputFocus,
     this.shape = GamepadHighlightShape.roundedRect,
     this.chrome,
+    this.includeInEdgeFocus = true,
   });
 
   final Widget child;
@@ -54,6 +55,10 @@ class GamepadFocusBlock extends StatefulWidget {
   /// Рисовать фиолетовую обводку поверх ребёнка.
   /// Для [FilledButton] лучше `false` и [buttonSide] — рамка самой кнопки.
   final bool outlined;
+
+  /// После перелистывания страницы не ставить фокус на этот блок
+  /// (кнопка «Назад» в AppBar), если есть контент.
+  final bool includeInEdgeFocus;
 
   /// Поле ввода внутри блока может получить фокус (клавиатура геймпада).
   final bool descendantsFocusable;
@@ -188,6 +193,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
           onActivate: widget.onActivate,
           highlighted: show,
           focusNode: _focus,
+          includeInEdgeFocus: widget.includeInEdgeFocus,
           child: Focus(
             focusNode: _focus,
             autofocus: widget.autofocus,
@@ -235,6 +241,12 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final glow = Paint()
+      ..color = AppColors.accentStart.withValues(alpha: 0.38)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth + 4
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
+      ..isAntiAlias = true;
     final paint = Paint()
       ..color = AppColors.accentStart
       ..style = PaintingStyle.stroke
@@ -244,7 +256,9 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
     final inset = borderWidth / 2;
     if (shape == GamepadHighlightShape.circle) {
       final r = math.max(0.0, math.min(size.width, size.height) / 2 - inset);
-      canvas.drawCircle(Offset(size.width / 2, size.height / 2), r, paint);
+      final center = Offset(size.width / 2, size.height / 2);
+      canvas.drawCircle(center, r, glow);
+      canvas.drawCircle(center, r, paint);
       return;
     }
     final corner = math.max(0.0, radius - inset);
@@ -255,6 +269,7 @@ class _GamepadFocusOutlinePainter extends CustomPainter {
       size.height - inset,
       Radius.circular(corner),
     );
+    canvas.drawRRect(rrect, glow);
     canvas.drawRRect(rrect, paint);
   }
 
@@ -319,16 +334,19 @@ class GamepadFocusScope extends InheritedWidget {
     required this.highlighted,
     required this.focusNode,
     required super.child,
+    this.includeInEdgeFocus = true,
   });
 
   final VoidCallback? onActivate;
   final bool highlighted;
   final FocusNode focusNode;
+  final bool includeInEdgeFocus;
 
   @override
   bool updateShouldNotify(GamepadFocusScope oldWidget) {
     return onActivate != oldWidget.onActivate ||
         highlighted != oldWidget.highlighted ||
-        focusNode != oldWidget.focusNode;
+        focusNode != oldWidget.focusNode ||
+        includeInEdgeFocus != oldWidget.includeInEdgeFocus;
   }
 }

@@ -1683,6 +1683,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopStakesSubtitle => 'Unlock higher stakes';
 
   @override
+  String get shopEmojisHelp => 'Animated emojis for chat. Buy a set and send them in messages to friends.';
+
+  @override
+  String get shopCollectionsHelp => 'Collect a set of items: they appear in your profile showcase and can be gifted or sold. A complete collection pays extra coins every day.';
+
+  @override
+  String get shopStakesHelp => 'Unlock higher stakes in games. The higher the stake, the bigger the pot and the payout.';
+
+  @override
   String get inventoryTitle => 'Items';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shopOwned => 'Owned';
+
+  @override
+  String get shopHave => 'Have';
 
   @override
   String get shopEmpty => 'Nothing here yet';

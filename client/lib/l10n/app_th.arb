@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "โชว์โปรไฟล์ ของขวัญ และรายได้",
   "shopStakes": "เดิมพัน",
   "shopStakesSubtitle": "ปลดล็อกเดิมพันที่สูงขึ้น",
+  "shopEmojisHelp": "อิโมจิเคลื่อนไหวสำหรับแชท ซื้อชุดแล้วส่งให้เพื่อนได้",
+  "shopCollectionsHelp": "สะสมชุดไอเท็ม: แสดงในตู้โปรไฟล์ ให้เป็นของขวัญหรือขายได้ ชุดครบให้เหรียญเพิ่มทุกวัน",
+  "shopStakesHelp": "ปลดล็อกเดิมพันที่สูงขึ้น เดิมพันยิ่งสูง เงินกองกลางและรางวัลยิ่งใหญ่",
   "inventoryTitle": "ไอเท็ม",
   "inventoryEmpty": "ยังไม่มีอะไรที่นี่ — ไปดูที่ร้านค้า",
   "inventoryFrames": "กรอบ",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "ซื้อแล้ว",
+  "shopHave": "มีแล้ว",
   "shopEmpty": "ยังว่างอยู่",
   "shopPurchased": "ซื้อ {title} แล้ว",
   "@shopPurchased": {

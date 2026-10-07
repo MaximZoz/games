@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Profil vitrinasi, sovg‘alar va daromad",
   "shopStakes": "Stavkalar",
   "shopStakesSubtitle": "Yuqori stavkalarni ochish",
+  "shopEmojisHelp": "Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.",
+  "shopCollectionsHelp": "Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. To‘liq kolleksiya har kuni qo‘shimcha tanga beradi.",
+  "shopStakesHelp": "O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.",
   "inventoryTitle": "Buyumlar",
   "inventoryEmpty": "Hali hech narsa yo‘q — do‘konga qarang",
   "inventoryFrames": "Ramkalar",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Sotib olingan",
+  "shopHave": "Bor",
   "shopEmpty": "Hali bo‘sh",
   "shopPurchased": "{title} sotib olindi",
   "@shopPurchased": {

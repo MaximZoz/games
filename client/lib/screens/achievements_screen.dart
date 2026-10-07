@@ -345,11 +345,10 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
           ] else if (item.isClaimed)
-            _actionButton(
-              label: item.hasFrameReward
+            _claimedLabel(
+              item.hasFrameReward
                   ? l10n.achievementsFrameClaimed
                   : l10n.achievementsClaimed,
-              foreground: Colors.green.shade700,
             )
           else
             _actionButton(
@@ -369,6 +368,24 @@ class _AchievementCard extends StatelessWidget {
       );
     }
     return card;
+  }
+
+  Widget _claimedLabel(String label) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+            color: Colors.green.shade700,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _actionButton({

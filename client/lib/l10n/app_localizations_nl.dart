@@ -1683,6 +1683,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopStakesSubtitle => 'Hogere inzetten ontgrendelen';
 
   @override
+  String get shopEmojisHelp => 'Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.';
+
+  @override
+  String get shopCollectionsHelp => 'Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.';
+
+  @override
+  String get shopStakesHelp => 'Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.';
+
+  @override
   String get inventoryTitle => 'Items';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get shopOwned => 'Gekocht';
+
+  @override
+  String get shopHave => 'In bezit';
 
   @override
   String get shopEmpty => 'Nog leeg';

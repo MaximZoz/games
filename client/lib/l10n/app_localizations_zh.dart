@@ -1683,6 +1683,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopStakesSubtitle => '解锁更高赌注';
 
   @override
+  String get shopEmojisHelp => '聊天用动态表情。购买一套后即可发给好友。';
+
+  @override
+  String get shopCollectionsHelp => '收集一套物品：它们会显示在个人橱窗，可以赠送或出售。集齐后每天额外获得金币。';
+
+  @override
+  String get shopStakesHelp => '解锁更高赌注。赌注越高，奖池和收益越大。';
+
+  @override
   String get inventoryTitle => '物品';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shopOwned => '已购买';
+
+  @override
+  String get shopHave => '已有';
 
   @override
   String get shopEmpty => '暂无内容';

@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Vitrine do perfil, presentes e rendimento",
   "shopStakes": "Apostas",
   "shopStakesSubtitle": "Desbloquear apostas mais altas",
+  "shopEmojisHelp": "Emojis animados para o chat. Compre um conjunto e envie nas mensagens aos amigos.",
+  "shopCollectionsHelp": "Reúna um conjunto de itens: eles aparecem na vitrine do perfil e podem ser presentes ou vendidos. Uma coleção completa rende moedas extras todos os dias.",
+  "shopStakesHelp": "Desbloqueie apostas mais altas. Quanto maior a aposta, maior o pot e o prêmio.",
   "inventoryTitle": "Itens",
   "inventoryEmpty": "Ainda não há nada aqui — veja a loja",
   "inventoryFrames": "Molduras",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Comprado",
+  "shopHave": "Tens",
   "shopEmpty": "Ainda vazio",
   "shopPurchased": "{title} comprado",
   "@shopPurchased": {

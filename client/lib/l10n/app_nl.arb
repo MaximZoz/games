@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Profielvitrine, cadeaus en inkomsten",
   "shopStakes": "Inzetten",
   "shopStakesSubtitle": "Hogere inzetten ontgrendelen",
+  "shopEmojisHelp": "Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.",
+  "shopCollectionsHelp": "Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Een complete collectie levert elke dag extra munten op.",
+  "shopStakesHelp": "Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.",
   "inventoryTitle": "Items",
   "inventoryEmpty": "Nog niets hier — bekijk de winkel",
   "inventoryFrames": "Kaders",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Gekocht",
+  "shopHave": "In bezit",
   "shopEmpty": "Nog leeg",
   "shopPurchased": "{title} gekocht",
   "@shopPurchased": {

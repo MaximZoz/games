@@ -623,6 +623,9 @@
   "shopCollectionsSubtitle": "Escaparate del perfil, regalos e ingresos",
   "shopStakes": "Apuestas",
   "shopStakesSubtitle": "Desbloquear apuestas más altas",
+  "shopEmojisHelp": "Emojis animados para el chat. Compra un set y envíalos en mensajes a tus amigos.",
+  "shopCollectionsHelp": "Reúne un conjunto de objetos: aparecen en el escaparate del perfil y se pueden regalar o vender. Una colección completa da monedas extra cada día.",
+  "shopStakesHelp": "Desbloquea apuestas más altas. Cuanto mayor sea la apuesta, mayor será el bote y el premio.",
   "inventoryTitle": "Objetos",
   "inventoryEmpty": "Aún no hay nada aquí: mira la tienda",
   "inventoryFrames": "Marcos",
@@ -852,6 +855,7 @@
     }
   },
   "shopOwned": "Comprado",
+  "shopHave": "Tienes",
   "shopEmpty": "Aún vacío",
   "shopPurchased": "{title} comprado",
   "@shopPurchased": {

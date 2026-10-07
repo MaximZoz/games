@@ -1683,6 +1683,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopStakesSubtitle => 'Débloquer les mises plus élevées';
 
   @override
+  String get shopEmojisHelp => 'Emojis animés pour le chat. Achetez un lot et envoyez-les à vos amis.';
+
+  @override
+  String get shopCollectionsHelp => 'Rassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts ou vendus. Une collection complète rapporte des pièces chaque jour.';
+
+  @override
+  String get shopStakesHelp => 'Débloquez des mises plus élevées. Plus la mise est haute, plus le pot et le gain sont importants.';
+
+  @override
   String get inventoryTitle => 'Objets';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shopOwned => 'Acheté';
+
+  @override
+  String get shopHave => 'En possession';
 
   @override
   String get shopEmpty => 'Rien pour l’instant';

@@ -1683,6 +1683,15 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shopStakesSubtitle => 'Lås opp høyere innsatser';
 
   @override
+  String get shopEmojisHelp => 'Animerte emojier for chatten. Kjøp et sett og send dem til venner.';
+
+  @override
+  String get shopCollectionsHelp => 'Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. En komplett samling gir ekstra mynter hver dag.';
+
+  @override
+  String get shopStakesHelp => 'Lås opp høyere innsatser. Jo høyere innsats, desto større pott og gevinst.';
+
+  @override
   String get inventoryTitle => 'Gjenstander';
 
   @override
@@ -1990,6 +1999,9 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get shopOwned => 'Kjøpt';
+
+  @override
+  String get shopHave => 'Har';
 
   @override
   String get shopEmpty => 'Tomt foreløpig';
