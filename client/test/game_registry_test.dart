@@ -11,8 +11,10 @@ void main() {
     expect(gameRegistry.contains('uno'), isTrue);
     expect(gameRegistry.contains('nardy'), isTrue);
     expect(gameRegistry.contains('checkers'), isTrue);
+    expect(gameRegistry.contains('chess'), isTrue);
+    expect(gameRegistry['chess']!.comingSoon, isTrue);
+    expect(gameRegistry['chess']!.supportsOffline, isFalse);
     expect(gameRegistry.contains('connect4'), isFalse);
-    expect(gameRegistry.contains('chess'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
     expect(
         gameRegistry.all.map((g) => g.id).toList(),
@@ -24,6 +26,7 @@ void main() {
           'poker',
           'nardy',
           'checkers',
+          'chess',
         ]));
   });
 
@@ -64,6 +67,7 @@ void main() {
     expect(gameRegistry['uno']!.supportsDrawOffer(2), isFalse);
     expect(gameRegistry['nardy']!.supportsDrawOffer(2), isFalse);
     expect(gameRegistry['checkers']!.supportsDrawOffer(2), isTrue);
+    expect(gameRegistry['chess']!.supportsDrawOffer(2), isTrue);
   });
 
   test('offline supported for tictactoe, durak, battleship, poker', () {

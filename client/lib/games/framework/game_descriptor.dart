@@ -36,6 +36,9 @@ abstract class GameDescriptor {
   /// Есть оффлайн-режим против бота.
   bool get supportsOffline;
 
+  /// Карточка и правила есть, партии ещё нет — инвайты и создание выключены.
+  bool get comingSoon => false;
+
   /// Предложить/принять ничью (обычно только 1×1).
   bool supportsDrawOffer(int playerCount) => playerCount == 2;
 

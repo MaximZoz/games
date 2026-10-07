@@ -797,6 +797,19 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Hörn';
 
   @override
+  String get gamesChess => 'Schack';
+
+  @override
+  String get gamesChessModeClassic => 'Klassiskt';
+
+  @override
+  String get gamesChessMode960 => 'Schack960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antischack';
+
+
+  @override
   String get rulesCheckersPlayers => 'Spelare: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remi vid trefaldig upprepning eller 25 drag per sida utan extra bricka i målhörnet.';
+
+  @override
+  String get rulesChessPlayers => 'Spelare: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Läge: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassiskt: bräde 8×8. Varje sida har kung, dam, två torn, två löpare, två springare och åtta bönder. Vit börjar. Vanliga drag, en passant, promotion och rockad. Vinst genom matt eller uppgivet.';
+
+  @override
+  String get rulesChessPlay960 => 'Schack960: vanliga drag. Sista raden blandas enligt Fischer: kungen mellan tornen, löpare på olika färger. Rockad till c och g. Matt eller uppgivet.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antischack: vanliga drag, slag är obligatoriskt. Ingen schack — kungen får slås. Ingen rockad. Den som ger bort alla pjäser eller inte kan dra vinner.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remi vid patt, trefaldig upprepning, 50-dragsregeln, otillräckligt material eller överenskommelse.';
+
+  @override
+  String get rulesChessDraw960 => 'Remi vid patt, trefaldig upprepning, 50-dragsregeln, otillräckligt material eller överenskommelse.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remi vid trefaldig upprepning eller om båda blir pjäs-lösa i samma drag.';
+
 
   @override
   String get checkersDrawRepetition => 'Remi — ställningen upprepades tre gånger';

@@ -797,6 +797,19 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesCheckersModeCorners => 'פינות';
 
   @override
+  String get gamesChess => 'שחמט';
+
+  @override
+  String get gamesChessModeClassic => 'קלאסי';
+
+  @override
+  String get gamesChessMode960 => 'שחמט 960';
+
+  @override
+  String get gamesChessModeAntichess => 'אנטי-שחמט';
+
+
+  @override
   String get rulesCheckersPlayers => 'שחקנים: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'תיקו בחזרה משולשת או 25 מהלכים לכל צד בלי עוד חייל בפינת היעד.';
+
+  @override
+  String get rulesChessPlayers => 'שחקנים: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'מצב: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'קלאסי: לוח 8×8. לכל צד מלך, מלכה, שני צריחים, שני רצים, שני פרשים ושמונה רגלים. הלבן מתחיל. מהלכים רגילים, הכאה דרך הילוכו, הכתרה והצרחה. ניצחון במט או בפרישה.';
+
+  @override
+  String get rulesChessPlay960 => 'שחמט 960: מהלכים רגילים. השורה האחורית מעורבבת לפי פישר: מלך בין הצריחים, רצים בצבעים שונים. הצרחה ל-c ו-g. מט או פרישה.';
+
+  @override
+  String get rulesChessPlayAntichess => 'אנטי-שחמט: מהלכים רגילים, חובה להכות. אין שח, אפשר לקחת את המלך. בלי הצרחה. מנצח מי שמוסר את כל הכלים או נשאר בלי מהלך.';
+
+  @override
+  String get rulesChessDrawClassic => 'תיקו בפאט, חזרה משולשת, כלל 50 המהלכים, חוסר חומר או הסכמה.';
+
+  @override
+  String get rulesChessDraw960 => 'תיקו בפאט, חזרה משולשת, כלל 50 המהלכים, חוסר חומר או הסכמה.';
+
+  @override
+  String get rulesChessDrawAntichess => 'תיקו בחזרה משולשת או אם שני הצדדים נשארו בלי כלים באותו מהלך.';
+
 
   @override
   String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';

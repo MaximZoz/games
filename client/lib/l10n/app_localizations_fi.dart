@@ -797,6 +797,19 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Kulmat';
 
   @override
+  String get gamesChess => 'Shakki';
+
+  @override
+  String get gamesChessModeClassic => 'Klassinen';
+
+  @override
+  String get gamesChessMode960 => 'Shakki 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antishakki';
+
+
+  @override
   String get rulesCheckersPlayers => 'Pelaajat: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Tasapeli kolminkertaisesta toistosta tai jos 25 siirtoa kummaltakin ei lisää nappuloita maalikulmaan.';
+
+  @override
+  String get rulesChessPlayers => 'Pelaajat: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Tila: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klassinen: lauta 8×8. Kummallakin on kuningas, kuningatar, kaksi tornia, kaksi lähettiä, kaksi ratsua ja kahdeksan sotilasta. Valkoinen aloittaa. Tavalliset siirrot, ohestalyönti, korotus ja linnoitus. Voitto matilla tai luovutuksella.';
+
+  @override
+  String get rulesChessPlay960 => 'Shakki 960: tavalliset siirrot. Viimeinen rivi sekoitetaan Fischerin mukaan: kuningas tornien välissä, lähetit eri väreillä. Linnoitus c- ja g-ruutuihin. Matti tai luovutus.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antishakki: tavalliset siirrot, lyönti on pakollinen. Shakkia ei ole, kuninkaan voi lyödä. Ei linnoitusta. Voittaa se, joka luovuttaa kaikki nappulat tai jää ilman siirtoa.';
+
+  @override
+  String get rulesChessDrawClassic => 'Tasapeli patissa, kolminkertaisessa toistossa, 50 siirron säännössä, materiaalin puutteessa tai sopimuksella.';
+
+  @override
+  String get rulesChessDraw960 => 'Tasapeli patissa, kolminkertaisessa toistossa, 50 siirron säännössä, materiaalin puutteessa tai sopimuksella.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Tasapeli kolminkertaisesta toistosta tai jos molemmat jäävät ilman nappuloita samassa siirrossa.';
+
 
   @override
   String get checkersDrawRepetition => 'Tasapeli — asema toistui kolmesti';

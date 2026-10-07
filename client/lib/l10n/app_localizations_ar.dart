@@ -797,6 +797,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesCheckersModeCorners => 'الزوايا';
 
   @override
+  String get gamesChess => 'شطرنج';
+
+  @override
+  String get gamesChessModeClassic => 'كلاسيكي';
+
+  @override
+  String get gamesChessMode960 => 'شطرنج 960';
+
+  @override
+  String get gamesChessModeAntichess => 'الشطرنج العكسي';
+
+
+  @override
   String get rulesCheckersPlayers => 'اللاعبون: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'تعادل إذا تكرر الوضع ثلاثًا أو لم تُضف 25 نقلة لكل جانب حجارة إلى الركن الهدف.';
+
+  @override
+  String get rulesChessPlayers => 'اللاعبون: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'الوضع: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'كلاسيكي: رقعة 8×8. لكل جانب ملك ووزير وقلعتان وفيلان وحصانان وثمانية بيادق. الأبيض يبدأ. حركات معتادة، الأخذ بالمرور، الترقية والتبييت. الفوز بالكش مات أو استسلام الخصم.';
+
+  @override
+  String get rulesChessPlay960 => 'شطرنج 960: الحركات معتادة. الصف الأخير عشوائي حسب فيشر: الملك بين القلعتين والفيلان على لونين مختلفين. التبييت إلى c وg. مات أو استسلام.';
+
+  @override
+  String get rulesChessPlayAntichess => 'الشطرنج العكسي: الحركات معتادة والأسر إلزامي. لا كش ويمكن أسر الملك. بلا تبييت. يفوز من يفقد كل قطعه أو يبقى بلا نقلة.';
+
+  @override
+  String get rulesChessDrawClassic => 'تعادل بالاختناق أو التكرار الثلاثي أو قاعدة 50 نقلة أو نقص القطع أو الاتفاق.';
+
+  @override
+  String get rulesChessDraw960 => 'تعادل بالاختناق أو التكرار الثلاثي أو قاعدة 50 نقلة أو نقص القطع أو الاتفاق.';
+
+  @override
+  String get rulesChessDrawAntichess => 'تعادل بالتكرار الثلاثي أو إذا بقي الطرفان بلا قطع في النقلة نفسها.';
+
 
   @override
   String get checkersDrawRepetition => 'تعادل — تكرر الوضع ثلاث مرات';

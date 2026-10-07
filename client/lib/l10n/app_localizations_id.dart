@@ -797,6 +797,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Sudut';
 
   @override
+  String get gamesChess => 'Catur';
+
+  @override
+  String get gamesChessModeClassic => 'Klasik';
+
+  @override
+  String get gamesChessMode960 => 'Catur 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Anticatur';
+
+
+  @override
   String get rulesCheckersPlayers => 'Pemain: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Seri jika posisi tiga kali atau 25 langkah tiap sisi tak menambah buah di sudut tujuan.';
+
+  @override
+  String get rulesChessPlayers => 'Pemain: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klasik: papan 8×8. Setiap sisi punya raja, menteri, dua benteng, dua gajah, dua kuda, dan delapan pion. Putih jalan dulu. Langkah biasa, en passant, promosi, dan rokade. Menang dengan skakmat atau lawan menyerah.';
+
+  @override
+  String get rulesChessPlay960 => 'Catur 960: langkah biasa. Baris belakang diacak aturan Fischer: raja di antara benteng, gajah di warna berbeda. Rokade ke c dan g. Skakmat atau menyerah.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Anticatur: langkah biasa, makan wajib. Tidak ada skak, raja boleh dimakan. Tanpa rokade. Menang jika menyerahkan semua buah atau kehabisan langkah.';
+
+  @override
+  String get rulesChessDrawClassic => 'Seri karena pat, pengulangan tiga kali, aturan 50 langkah, material kurang, atau kesepakatan.';
+
+  @override
+  String get rulesChessDraw960 => 'Seri karena pat, pengulangan tiga kali, aturan 50 langkah, material kurang, atau kesepakatan.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Seri jika pengulangan tiga kali atau keduanya kehabisan buah pada langkah yang sama.';
+
 
   @override
   String get checkersDrawRepetition => 'Seri — posisi terulang tiga kali';

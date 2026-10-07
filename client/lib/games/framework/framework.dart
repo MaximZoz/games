@@ -15,3 +15,5 @@ export 'uno_game.dart';
 export 'poker_game.dart';
 export 'tictactoe_game.dart';
 export 'nardy_game.dart';
+export 'chess_game.dart';
+export 'game_coming_soon_screen.dart';

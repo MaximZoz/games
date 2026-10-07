@@ -17,6 +17,7 @@ import 'package:multigames_client/games/uno/uno_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
+import 'package:multigames_client/games/chess/chess_rules.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
@@ -39,6 +40,7 @@ import 'package:multigames_client/shop/shop_provider.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/ui/widgets/checkers_game_icon.dart';
+import 'package:multigames_client/ui/widgets/chess_game_icon.dart';
 import 'package:multigames_client/ui/widgets/nardy_game_icon.dart';
 import 'package:multigames_client/ui/widgets/game_card_widgets.dart';
 import 'package:multigames_client/ui/widgets/poker_game_icon.dart';
@@ -1597,6 +1599,7 @@ class _GamesPageContent extends ConsumerWidget {
         context.l10n.gamesUno,
         context.l10n.gamesNardy,
         context.l10n.gamesCheckers,
+        context.l10n.gamesChess,
       ];
       final cols = gamesHubTileColumns(
         maxWidth: maxWidth,
@@ -1650,6 +1653,10 @@ class _GamesPageContent extends ConsumerWidget {
           stakeOptionsList: stakeOptionsList,
         ),
         _CheckersGameCard(
+          isOffline: isOffline,
+          stakeOptionsList: stakeOptionsList,
+        ),
+        _ChessGameCard(
           isOffline: isOffline,
           stakeOptionsList: stakeOptionsList,
         ),

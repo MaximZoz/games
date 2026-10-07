@@ -797,6 +797,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Rohy';
 
   @override
+  String get gamesChess => 'Šachy';
+
+  @override
+  String get gamesChessModeClassic => 'Klasika';
+
+  @override
+  String get gamesChessMode960 => 'Šachy 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antišachy';
+
+
+  @override
   String get rulesCheckersPlayers => 'Hráči: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remíza při trojím opakování nebo 25 tazích každé strany bez dalšího kamene v cílovém rohu.';
+
+  @override
+  String get rulesChessPlayers => 'Hráči: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Režim: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klasika: šachovnice 8×8. Každá strana má krále, dámu, dvě věže, dva střelce, dva jezdce a osm pěšců. Bílý začíná. Běžné tahy, braní mimochodem, proměna a rošáda. Výhra matem nebo vzdáním.';
+
+  @override
+  String get rulesChessPlay960 => 'Šachy 960: běžné tahy. Poslední řada podle Fischera: král mezi věžemi, střelci na různých barvách. Rošáda na c a g. Mat nebo vzdání.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antišachy: běžné tahy, braní je povinné. Není šach, krále lze vzít. Bez rošády. Vyhrává, kdo odevzdá všechny figury nebo nemá tah.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remíza patem, trojím opakováním, pravidlem 50 tahů, nedostatkem materiálu nebo dohodou.';
+
+  @override
+  String get rulesChessDraw960 => 'Remíza patem, trojím opakováním, pravidlem 50 tahů, nedostatkem materiálu nebo dohodou.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remíza při trojím opakování nebo když obě strany zůstanou bez figur v témže tahu.';
+
 
   @override
   String get checkersDrawRepetition => 'Remíza — pozice se třikrát opakovala';

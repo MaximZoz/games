@@ -119,6 +119,23 @@ void main() {
       }
     });
 
+    test('toJson chess roundtrip сохраняет режимы', () {
+      for (final mode in ['classic', 'chess960', 'antichess']) {
+        final original = UserGameSettings(
+          gameType: 'chess',
+          turnTimeSec: 60,
+          variant: mode,
+          gridSize: 8,
+          stakeBronze: 10,
+          maxPlayers: 2,
+          gameMode: mode,
+        );
+        final again = UserGameSettings.fromJson(original.toJson());
+        expect(again.gameMode, mode, reason: mode);
+        expect(again.variant, mode, reason: mode);
+      }
+    });
+
     test('fromJson checkers читает english и corners из variant', () {
       final english = UserGameSettings.fromJson({
         'game_type': 'checkers',

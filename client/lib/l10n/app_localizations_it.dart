@@ -797,6 +797,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Angoli';
 
   @override
+  String get gamesChess => 'Scacchi';
+
+  @override
+  String get gamesChessModeClassic => 'Classico';
+
+  @override
+  String get gamesChessMode960 => 'Scacchi 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antiscacchi';
+
+
+  @override
   String get rulesCheckersPlayers => 'Giocatori: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Patta se la posizione si ripete tre volte o se 25 mosse per parte non aggiungono pedine all’angolo obiettivo.';
+
+  @override
+  String get rulesChessPlayers => 'Giocatori: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Modalità: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Classico: scacchiera 8×8. Ogni lato ha re, donna, due torri, due alfieri, due cavalli e otto pedoni. Muovono i bianchi. Mosse abituali, en passant, promozione e arrocco. Vince lo scacco matto o l’abbandono.';
+
+  @override
+  String get rulesChessPlay960 => 'Scacchi 960: mosse abituali. L’ultima traversa è mescolata secondo Fischer: re tra le torri, alfieri su colori opposti. Arrocco su c e g. Matto o abbandono.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antiscacchi: mosse abituali, la cattura è obbligatoria. Non c’è scacco: il re si può catturare. Niente arrocco. Vince chi cede tutti i pezzi o non ha mosse.';
+
+  @override
+  String get rulesChessDrawClassic => 'Patta per stallo, triplice ripetizione, regola delle 50 mosse, materiale insufficiente o accordo.';
+
+  @override
+  String get rulesChessDraw960 => 'Patta per stallo, triplice ripetizione, regola delle 50 mosse, materiale insufficiente o accordo.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Patta per triplice ripetizione o se entrambi restano senza pezzi nella stessa mossa.';
+
 
   @override
   String get checkersDrawRepetition => 'Patta — posizione ripetuta tre volte';

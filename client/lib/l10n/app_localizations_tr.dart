@@ -797,6 +797,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Köşeler';
 
   @override
+  String get gamesChess => 'Satranç';
+
+  @override
+  String get gamesChessModeClassic => 'Klasik';
+
+  @override
+  String get gamesChessMode960 => 'Satranç 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antisatranç';
+
+
+  @override
   String get rulesCheckersPlayers => 'Oyuncular: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 25 hamlesi hedef köşeye taş eklemezse beraberlik.';
+
+  @override
+  String get rulesChessPlayers => 'Oyuncular: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mod: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klasik: tahta 8×8. Her tarafta şah, vezir, iki kale, iki fil, iki at ve sekiz piyon. Beyaz başlar. Normal hamleler, geçerken alma, terfi ve rok var. Mat veya terk — kazanç.';
+
+  @override
+  String get rulesChessPlay960 => 'Satranç 960: hamleler normal. Son sıra Fischer kuralıyla karışık: şah kalelerin arasında, filler farklı renkte. Rok c ve g. Mat veya terk.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antisatranç: hamleler normal, alma zorunlu. Şah yok, şah alınabilir. Rok yok. Tüm taşlarını veren veya hamlesi kalmayan kazanır.';
+
+  @override
+  String get rulesChessDrawClassic => 'Beraberlik: pat, üç kez tekrar, 50 hamle, yetersiz taş veya anlaşma.';
+
+  @override
+  String get rulesChessDraw960 => 'Beraberlik: pat, üç kez tekrar, 50 hamle, yetersiz taş veya anlaşma.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Beraberlik: üç kez tekrar veya ikisi de aynı hamlede taşsız kalırsa.';
+
 
   @override
   String get checkersDrawRepetition => 'Beraberlik — pozisyon üç kez tekrarlandı';

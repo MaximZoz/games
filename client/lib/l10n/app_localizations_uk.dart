@@ -797,6 +797,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Кутки';
 
   @override
+  String get gamesChess => 'Шахи';
+
+  @override
+  String get gamesChessModeClassic => 'Класика';
+
+  @override
+  String get gamesChessMode960 => 'Шахи-960';
+
+  @override
+  String get gamesChessModeAntichess => 'Антишахи';
+
+
+  @override
   String get rulesCheckersPlayers => 'Гравці: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Нічия, якщо позиція повторилася тричі або 25 ходів кожної сторони не додали шашок у цільовий кут.';
+
+  @override
+  String get rulesChessPlayers => 'Гравці: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Режим: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Класика: дошка 8×8. У кожного король, ферзь, дві тури, два слони, два коні та вісім пішаків. Білі ходять першими. Фігури ходять звичними ходами; є взяття на проході, перетворення і рокірування. Перемагає той, хто поставив мат або суперник здався.';
+
+  @override
+  String get rulesChessPlay960 => 'Шахи-960: дошка 8×8, ходи як звичайно. Остання лінія розставляється випадково за правилами Фішера: король між турами, слони на різних кольорах. Рокірування на клітини c і g. Мат або здавання — перемога.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Антишахи: ходи як звичайно, взяття обов’язкове. Шаху немає, короля можна брати. Рокірування немає. Перемагає той, хто віддав усі фігури або лишився без ходу.';
+
+  @override
+  String get rulesChessDrawClassic => 'Нічия при паті, потрійному повторенні, правилі 50 ходів, нестачі фігур для мата або за згодою.';
+
+  @override
+  String get rulesChessDraw960 => 'Нічия при паті, потрійному повторенні, правилі 50 ходів, нестачі фігур для мата або за згодою.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Нічия при потрійному повторенні або якщо обидва лишилися без фігур одним ходом.';
+
 
   @override
   String get checkersDrawRepetition => 'Нічия — позиція повторилася тричі';

@@ -797,6 +797,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Kąciki';
 
   @override
+  String get gamesChess => 'Szachy';
+
+  @override
+  String get gamesChessModeClassic => 'Klasyka';
+
+  @override
+  String get gamesChessMode960 => 'Szachy 960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antyszachy';
+
+
+  @override
   String get rulesCheckersPlayers => 'Gracze: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'Remis przy trzykrotnym powtórzeniu albo 25 ruchach każdej strony bez nowej figury w docelowym rogu.';
+
+  @override
+  String get rulesChessPlayers => 'Gracze: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Tryb: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Klasyka: szachownica 8×8. Każda strona ma króla, hetmana, dwie wieże, dwa gońce, dwa skoczki i osiem pionów. Białe zaczynają. Zwykłe ruchy, bicie w przelocie, przemiana i roszada. Wygrana matem lub poddaniem.';
+
+  @override
+  String get rulesChessPlay960 => 'Szachy 960: zwykłe ruchy. Ostatnia linia losowana według Fischera: król między wieżami, gońce na różnych kolorach. Roszada na c i g. Mat lub poddanie.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antyszachy: zwykłe ruchy, bicie obowiązkowe. Nie ma szacha — króla można zbić. Bez roszady. Wygrywa, kto odda wszystkie figury albo nie ma ruchu.';
+
+  @override
+  String get rulesChessDrawClassic => 'Remis przy patu, trzykrotnym powtórzeniu, regule 50 posunięć, braku materiału lub porozumieniu.';
+
+  @override
+  String get rulesChessDraw960 => 'Remis przy patu, trzykrotnym powtórzeniu, regule 50 posunięć, braku materiału lub porozumieniu.';
+
+  @override
+  String get rulesChessDrawAntichess => 'Remis przy trzykrotnym powtórzeniu albo gdy obie strony zostają bez figur w tym samym ruchu.';
+
 
   @override
   String get checkersDrawRepetition => 'Remis — pozycja powtórzyła się trzykrotnie';

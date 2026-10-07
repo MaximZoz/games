@@ -797,6 +797,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesCheckersModeCorners => 'Corners';
 
   @override
+  String get gamesChess => 'Chess';
+
+  @override
+  String get gamesChessModeClassic => 'Classic';
+
+  @override
+  String get gamesChessMode960 => 'Chess960';
+
+  @override
+  String get gamesChessModeAntichess => 'Antichess';
+
+
+  @override
   String get rulesCheckersPlayers => 'Players: 2.';
 
   @override
@@ -850,6 +863,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesCheckersDrawCorners => 'A draw if the same position occurs three times, or if 25 moves by each side add no extra pieces to the target corner.';
+
+  @override
+  String get rulesChessPlayers => 'Players: 2.';
+
+  @override
+  String rulesChessMode(String mode) {
+    return 'Mode: $mode.';
+  }
+
+  @override
+  String get rulesChessPlayClassic => 'Classic: an 8×8 board. Each side has a king, queen, two rooks, two bishops, two knights and eight pawns. White moves first. The king moves one square, the queen along ranks, files and diagonals, the rook along ranks and files, the bishop on diagonals, the knight in an L. A pawn steps forward one square (two from its start), captures diagonally; en passant and promotion apply. Castling is allowed if the king and rook have not moved and the path is clear. Win by checkmate or if the opponent resigns.';
+
+  @override
+  String get rulesChessPlay960 => 'Chess960: an 8×8 board with standard piece moves. The back rank is shuffled by Fischer rules: the king between the rooks, bishops on opposite colors. White moves first. Castling is allowed: the king and rook finish on the c and g files. Win by checkmate or if the opponent resigns.';
+
+  @override
+  String get rulesChessPlayAntichess => 'Antichess: an 8×8 board with standard piece moves. Captures are mandatory when available. There is no check — the king may be captured. No castling. Win by giving away all your pieces or having no legal move.';
+
+  @override
+  String get rulesChessDrawClassic => 'A draw on stalemate, threefold repetition, the 50-move rule with no capture or pawn move, insufficient mating material, or by agreement.';
+
+  @override
+  String get rulesChessDraw960 => 'A draw on stalemate, threefold repetition, the 50-move rule with no capture or pawn move, insufficient mating material, or by agreement.';
+
+  @override
+  String get rulesChessDrawAntichess => 'A draw on threefold repetition, or if both sides lose their last pieces on the same move.';
+
 
   @override
   String get checkersDrawRepetition => 'Draw — the position repeated three times';
