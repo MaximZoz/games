@@ -10,6 +10,7 @@ import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/coin_icon.dart';
 import 'package:multigames_client/ui/widgets/durak_game_icon.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_dismiss.dart';
 import 'package:multigames_client/ui/widgets/framed_button.dart';
 import 'package:multigames_client/ui/widgets/gradient_card.dart';
 
@@ -141,7 +142,11 @@ class GameCardHeader extends StatelessWidget {
               if (stakeBronze != null && stakeBronze! > 0) ...[
                 SizedBox(width: isMedium ? 8 : (isDesktop ? 16 : 12)),
                 GamepadFocusBlock(
-                  radius: 10,
+                  radius: 12,
+                  outlinePadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                   onActivate: busy ? null : onStakeTap,
                   child: Material(
                     color: Colors.transparent,
@@ -368,6 +373,7 @@ class GameCardActionsRow extends StatelessWidget {
         height: _height,
         child: GamepadFocusBlock(
           radius: AppRadius.button,
+          pageAnchor: true,
           onActivate: onOfflinePlay,
           child: FramedButton(
             onPressed: onOfflinePlay,
@@ -385,12 +391,14 @@ class GameCardActionsRow extends StatelessWidget {
       required String label,
       required VoidCallback? onPressed,
       required bool loading,
+      bool pageAnchor = false,
     }) {
       return Expanded(
         child: SizedBox(
           height: _height,
           child: GamepadFocusBlock(
             radius: AppRadius.button,
+            pageAnchor: pageAnchor,
             onActivate: loading ? null : onPressed,
             child: FramedButton(
               onPressed: onPressed,
@@ -415,6 +423,7 @@ class GameCardActionsRow extends StatelessWidget {
           label: isCreating ? creatingLabel : createLabel,
           onPressed: isCreating || isFinding ? null : onCreate,
           loading: isCreating,
+          pageAnchor: true,
         ),
         const SizedBox(width: 10),
         action(
@@ -438,15 +447,18 @@ Future<void> showGameRulesDialog({
   final resolvedClose = closeLabel ?? context.l10n.commonClose;
   return showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(context.l10n.gamesRulesTitle),
-      content: SingleChildScrollView(child: content),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(resolvedClose),
-        ),
-      ],
+    builder: (ctx) => wrapGamepadScrollDismissDialog(
+      dialogContext: ctx,
+      child: AlertDialog(
+        title: Text(context.l10n.gamesRulesTitle),
+        content: SingleChildScrollView(child: content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(resolvedClose),
+          ),
+        ],
+      ),
     ),
   );
 }

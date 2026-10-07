@@ -209,14 +209,33 @@ void _scheduleFocusEdgeGamepadTarget({
     }
     // Пока плиток нет — не прыгаем на «Назад»; её выделяют только вверх.
     if (content.isEmpty) return;
-    final node = last ? content.last : content.first;
+    final anchors = _pageAnchorGamepadFocusBlocks(content);
+    final pool = anchors.isNotEmpty ? anchors : content;
+    final node = last ? pool.last : pool.first;
     node.requestFocus();
     _ensureVisible(node);
   });
 }
 
+bool _isPageAnchor(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null) return false;
+  return GamepadFocusBlock.maybeOf(ctx)?.pageAnchor ?? false;
+}
+
+List<FocusNode> _pageAnchorGamepadFocusBlocks(List<FocusNode> blocks) {
+  return [
+    for (final node in blocks)
+      if (_isPageAnchor(node)) node,
+  ];
+}
+
 bool focusFirstVisibleGamepadTarget() {
-  final blocks = _edgeGamepadFocusBlocks(_visibleGamepadFocusBlocks());
+  final visible = _visibleGamepadFocusBlocks();
+  final content = _contentGamepadFocusBlocks(visible);
+  final anchors = _pageAnchorGamepadFocusBlocks(content);
+  final blocks =
+      anchors.isNotEmpty ? anchors : _edgeGamepadFocusBlocks(visible);
   if (blocks.isNotEmpty) {
     blocks.first.requestFocus();
     _ensureVisible(blocks.first);

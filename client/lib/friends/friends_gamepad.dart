@@ -3,6 +3,7 @@ import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_glyph.dart';
 import 'package:multigames_client/core/gamepad/gamepad_service.dart';
+import 'package:multigames_client/core/gamepad/gamepad_tab_sticks.dart';
 
 /// Попап перехватывает стик: вкладки друзей не листаем.
 bool friendsGamepadAllowsTabScroll({
@@ -73,39 +74,8 @@ int? friendsActionIndexAfterMove({
 }
 
 /// Правый стик по краям вкладок друзей — как LB/RB у нижнего меню.
-class FriendsGamepadTabSticks extends StatelessWidget {
-  const FriendsGamepadTabSticks({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: GamepadService.instance.devices,
-      builder: (context, _) {
-        if (!gamepadConnected()) return child;
-        return Row(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 2, right: 4),
-              child: GamepadGlyph(
-                action: GamepadAction.scrollLeft,
-                size: 18,
-              ),
-            ),
-            Expanded(child: child),
-            const Padding(
-              padding: EdgeInsets.only(left: 4, right: 2),
-              child: GamepadGlyph(
-                action: GamepadAction.scrollRight,
-                size: 18,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+class FriendsGamepadTabSticks extends GamepadTabSticks {
+  const FriendsGamepadTabSticks({super.key, required super.child});
 }
 
 /// LT-подпись у поиска, как глиф у баланса монет.

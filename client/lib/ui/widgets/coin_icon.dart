@@ -719,6 +719,7 @@ class ToolbarBalanceChip extends StatelessWidget {
       chrome: GamepadChromeSlot.balance,
       radius: 999,
       borderWidth: 2.2,
+      outlinePadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       onActivate: () => _showBalancePopup(context, bronze),
       child: Material(
         color: Colors.transparent,

@@ -43,6 +43,8 @@ class GamepadFocusBlock extends StatefulWidget {
     this.shape = GamepadHighlightShape.roundedRect,
     this.chrome,
     this.includeInEdgeFocus = true,
+    this.pageAnchor = false,
+    this.outlinePadding = EdgeInsets.zero,
   });
 
   final Widget child;
@@ -59,6 +61,12 @@ class GamepadFocusBlock extends StatefulWidget {
   /// После перелистывания страницы не ставить фокус на этот блок
   /// (кнопка «Назад» в AppBar), если есть контент.
   final bool includeInEdgeFocus;
+
+  /// После страницы скролла предпочесть этот блок (кнопка «Создать игру»).
+  final bool pageAnchor;
+
+  /// Зазор между содержимым и обводкой (монеты не впритык).
+  final EdgeInsets outlinePadding;
 
   /// Поле ввода внутри блока может получить фокус (клавиатура геймпада).
   final bool descendantsFocusable;
@@ -107,6 +115,11 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   /// «Назад» не в обходе Flutter: иначе AppBar забирает фокус раньше плиток.
   bool get _skipTraversal =>
       !widget.focusable || !widget.includeInEdgeFocus;
+
+  Widget get _paddedChild {
+    if (widget.outlinePadding == EdgeInsets.zero) return widget.child;
+    return Padding(padding: widget.outlinePadding, child: widget.child);
+  }
 
   void _syncKeyboard(bool show) {
     if (!widget.attachKeyboard) return;
@@ -198,6 +211,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
           highlighted: show,
           focusNode: _focus,
           includeInEdgeFocus: widget.includeInEdgeFocus,
+          pageAnchor: widget.pageAnchor,
           child: Focus(
             focusNode: _focus,
             autofocus: widget.autofocus,
@@ -206,11 +220,11 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
             descendantsAreFocusable: widget.descendantsFocusable,
             descendantsAreTraversable: false,
             child: !widget.outlined || !show
-                ? widget.child
+                ? _paddedChild
                 : Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      widget.child,
+                      _paddedChild,
                       Positioned.fill(
                         child: IgnorePointer(
                           child: CustomPaint(
@@ -339,18 +353,21 @@ class GamepadFocusScope extends InheritedWidget {
     required this.focusNode,
     required super.child,
     this.includeInEdgeFocus = true,
+    this.pageAnchor = false,
   });
 
   final VoidCallback? onActivate;
   final bool highlighted;
   final FocusNode focusNode;
   final bool includeInEdgeFocus;
+  final bool pageAnchor;
 
   @override
   bool updateShouldNotify(GamepadFocusScope oldWidget) {
     return onActivate != oldWidget.onActivate ||
         highlighted != oldWidget.highlighted ||
         focusNode != oldWidget.focusNode ||
-        includeInEdgeFocus != oldWidget.includeInEdgeFocus;
+        includeInEdgeFocus != oldWidget.includeInEdgeFocus ||
+        pageAnchor != oldWidget.pageAnchor;
   }
 }
