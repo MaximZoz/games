@@ -72,5 +72,11 @@ ChessGameView chessViewAfterMove(ChessGameView g, ChessMove mv) {
     isForfeit: g.isForfeit,
     isTimeout: g.isTimeout,
     drawOfferBy: null,
+    hasClock: g.hasClock,
+    clockMs0: g.clockMs0,
+    clockMs1: g.clockMs1,
+    clockIncMs: g.clockIncMs,
+    // Я сходил — мой таймер встаёт, у соперника начинает идти.
+    clockRunning: g.hasClock && !g.isOver ? nextTurn : -1,
   );
 }
