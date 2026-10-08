@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Ingen venner online. Del spil-linket ovenfor, eller vent til venner kommer online.",
   "gameBot": "Bot",
   "gameOpponent": "Modstander",
+  "gameYou": "Dig",
   "gameYouWon": "Du vandt!",
   "gameYouLost": "Du tabte",
   "gameYouWonOpponentLeft": "Du vandt — modstanderen forlod",

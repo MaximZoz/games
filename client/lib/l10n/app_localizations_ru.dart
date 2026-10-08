@@ -1462,6 +1462,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gameOpponent => 'Соперник';
 
   @override
+  String get gameYou => 'Вы';
+
+  @override
   String get gameYouWon => 'Вы победили!';
 
   @override

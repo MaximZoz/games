@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Κανένας φίλος σε σύνδεση. Κοινοποιήστε τον σύνδεσμο παραπάνω ή περιμένετε να συνδεθούν φίλοι.",
   "gameBot": "Bot",
   "gameOpponent": "Αντίπαλος",
+  "gameYou": "Εσείς",
   "gameYouWon": "Κερδίσατε!",
   "gameYouLost": "Χάσατε",
   "gameYouWonOpponentLeft": "Κερδίσατε — ο αντίπαλος αποχώρησε",

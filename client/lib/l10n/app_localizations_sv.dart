@@ -1462,6 +1462,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameOpponent => 'Motståndare';
 
   @override
+  String get gameYou => 'Du';
+
+  @override
   String get gameYouWon => 'Du vann!';
 
   @override

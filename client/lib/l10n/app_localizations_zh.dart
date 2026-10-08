@@ -1462,6 +1462,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameOpponent => '对手';
 
   @override
+  String get gameYou => '你';
+
+  @override
   String get gameYouWon => '你赢了！';
 
   @override

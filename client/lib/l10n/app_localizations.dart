@@ -2891,6 +2891,12 @@ abstract class AppLocalizations {
   /// **'Соперник'**
   String get gameOpponent;
 
+  /// No description provided for @gameYou.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы'**
+  String get gameYou;
+
   /// No description provided for @gameYouWon.
   ///
   /// In ru, this message translates to:

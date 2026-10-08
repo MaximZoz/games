@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "لا يوجد أصدقاء متصلون. شارك رابط اللعبة أعلاه أو انتظر حتى يتصل الأصدقاء.",
   "gameBot": "Bot",
   "gameOpponent": "المنافس",
+  "gameYou": "أنت",
   "gameYouWon": "لقد فزت!",
   "gameYouLost": "لقد خسرت",
   "gameYouWonOpponentLeft": "لقد فزت — غادر المنافس",

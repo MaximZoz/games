@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "オンラインのフレンドがいません。上のリンクを共有するか、フレンドのオンラインを待ってください。",
   "gameBot": "Bot",
   "gameOpponent": "相手",
+  "gameYou": "あなた",
   "gameYouWon": "勝ちました！",
   "gameYouLost": "負けました",
   "gameYouWonOpponentLeft": "勝ちました — 相手が退出しました",

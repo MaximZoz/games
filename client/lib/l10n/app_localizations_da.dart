@@ -1462,6 +1462,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gameOpponent => 'Modstander';
 
   @override
+  String get gameYou => 'Dig';
+
+  @override
   String get gameYouWon => 'Du vandt!';
 
   @override

@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Ei kavereita paikalla. Jaa yllä oleva pelilinkki tai odota, että kaverit tulevat paikalle.",
   "gameBot": "Bot",
   "gameOpponent": "Vastustaja",
+  "gameYou": "Sinä",
   "gameYouWon": "Voitit!",
   "gameYouLost": "Hävisit",
   "gameYouWonOpponentLeft": "Voitit — vastustaja lähti",

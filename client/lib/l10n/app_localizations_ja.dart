@@ -1462,6 +1462,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameOpponent => '相手';
 
   @override
+  String get gameYou => 'あなた';
+
+  @override
   String get gameYouWon => '勝ちました！';
 
   @override

@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Ningún amigo en línea. Comparte el enlace de arriba o espera a que se conecten.",
   "gameBot": "Bot",
   "gameOpponent": "Rival",
+  "gameYou": "Tú",
   "gameYouWon": "¡Ganaste!",
   "gameYouLost": "Perdiste",
   "gameYouWonOpponentLeft": "Ganaste: el rival abandonó",

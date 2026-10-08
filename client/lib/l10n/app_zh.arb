@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "暂无好友在线。可分享上方对局链接，或等待好友上线。",
   "gameBot": "Bot",
   "gameOpponent": "对手",
+  "gameYou": "你",
   "gameYouWon": "你赢了！",
   "gameYouLost": "你输了",
   "gameYouWonOpponentLeft": "你赢了 — 对手已离开",

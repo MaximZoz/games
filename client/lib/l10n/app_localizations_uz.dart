@@ -1462,6 +1462,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gameOpponent => 'Raqib';
 
   @override
+  String get gameYou => 'Siz';
+
+  @override
   String get gameYouWon => 'Siz yutdingiz!';
 
   @override

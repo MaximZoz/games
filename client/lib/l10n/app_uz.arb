@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Onlayn do‘stlar yo‘q. Yuqoridagi o‘yin havolasini ulashing yoki do‘stlaringiz onlayn bo‘lishini kuting.",
   "gameBot": "Bot",
   "gameOpponent": "Raqib",
+  "gameYou": "Siz",
   "gameYouWon": "Siz yutdingiz!",
   "gameYouLost": "Yutqazdingiz",
   "gameYouWonOpponentLeft": "Siz yutdingiz — raqib chiqib ketdi",

@@ -558,6 +558,7 @@
   "lobbyNoFriendsOnline": "Немає друзів онлайн. Надішліть посилання на гру вище або зачекайте, поки друзі з’являться в мережі.",
   "gameBot": "Бот",
   "gameOpponent": "Суперник",
+  "gameYou": "Ви",
   "gameYouWon": "Ви перемогли!",
   "gameYouLost": "Ви програли",
   "gameYouWonOpponentLeft": "Ви перемогли — суперник вийшов",
