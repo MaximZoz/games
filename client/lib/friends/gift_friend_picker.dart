@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multigames_client/core/gamepad/gamepad_action.dart';
+import 'package:multigames_client/core/gamepad/gamepad_auth.dart';
+import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
+import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_family.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_pager.dart';
+import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/presence_provider.dart';
 import 'package:multigames_client/core/presence_repository.dart';
 import 'package:multigames_client/core/presence_sort.dart';
@@ -46,22 +54,20 @@ class _GiftFriendPickerDialogState
   ];
 
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocus = FocusNode();
   int _visibleCount = _pageSize;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -69,15 +75,23 @@ class _GiftFriendPickerDialogState
     setState(() => _visibleCount = _pageSize);
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final pos = _scrollController.position;
-    if (pos.extentAfter > 120) return;
+  void _maybeLoadMore(double extentAfter) {
+    if (extentAfter > 120) return;
     final total = _filteredSorted().length;
     if (_visibleCount >= total) return;
     setState(() {
       _visibleCount = (_visibleCount + _pageSize).clamp(0, total);
     });
+  }
+
+  void _pick(String userId) {
+    dismissGamepadKeyboard();
+    Navigator.of(context).pop(userId);
+  }
+
+  void _close() {
+    dismissGamepadKeyboard();
+    Navigator.of(context).pop();
   }
 
   String _displayName(FriendUserItem user) {
@@ -104,11 +118,10 @@ class _GiftFriendPickerDialogState
   List<FriendItem> _filteredSorted() {
     final friends =
         ref.read(friendsSnapshotProvider).valueOrNull?.friends ?? const [];
-    final presence =
-        ref.read(presenceMapProvider).valueOrNull ?? const <String, PresenceEntry>{};
+    final presence = ref.read(presenceMapProvider).valueOrNull ??
+        const <String, PresenceEntry>{};
     final query = _searchController.text.trim();
-    final list =
-        friends.where((f) => _matchesSearch(f.user, query)).toList();
+    final list = friends.where((f) => _matchesSearch(f.user, query)).toList();
     sortByPresenceOnlineFirst(list, (f) => f.user.id, presence);
     return list;
   }
@@ -224,25 +237,28 @@ class _GiftFriendPickerDialogState
   }
 
   Widget _friendTile(FriendItem item, PresenceEntry? presence) {
-    final statusText =
-        presence == null ? null : formatPresenceStatus(presence);
+    final statusText = presence == null ? null : formatPresenceStatus(presence);
     return GradientCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(14),
       animate: false,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.of(context).pop(item.user.id),
+      child: GamepadNavGroup(
+        name: 'gift-friend-${item.user.id}',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               children: [
-                _buildAvatar(
-                  item.user,
-                  isOnline: presence?.online,
-                  onTap: () => _showUserInfo(item.user, presence),
+                GamepadFocusBlock(
+                  radius: 22,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: () => _showUserInfo(item.user, presence),
+                  child: _buildAvatar(
+                    item.user,
+                    isOnline: presence?.online,
+                    onTap: () => _showUserInfo(item.user, presence),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -274,12 +290,17 @@ class _GiftFriendPickerDialogState
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: LocaleService.l10n.inventoryGift,
-                  onPressed: () => Navigator.of(context).pop(item.user.id),
-                  icon: const Icon(
-                    Icons.card_giftcard_rounded,
-                    color: AppColors.accentStart,
+                GamepadFocusBlock(
+                  radius: 20,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: () => _pick(item.user.id),
+                  child: IconButton(
+                    tooltip: LocaleService.l10n.inventoryGift,
+                    onPressed: () => _pick(item.user.id),
+                    icon: const Icon(
+                      Icons.card_giftcard_rounded,
+                      color: AppColors.accentStart,
+                    ),
                   ),
                 ),
               ],
@@ -302,105 +323,155 @@ class _GiftFriendPickerDialogState
   Widget build(BuildContext context) {
     ref.watch(friendsSnapshotProvider);
     ref.watch(presenceMapProvider);
-    final presence =
-        ref.watch(presenceMapProvider).valueOrNull ??
-            const <String, PresenceEntry>{};
+    final presence = ref.watch(presenceMapProvider).valueOrNull ??
+        const <String, PresenceEntry>{};
     final items = _filteredSorted();
     final visibleCount =
         _visibleCount > items.length ? items.length : _visibleCount;
     final visible = items.take(visibleCount).toList();
     final hasMore = visibleCount < items.length;
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 420,
-          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
-        ),
-        child: GradientCard(
-          animate: false,
-          margin: EdgeInsets.zero,
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.giftFriendTitle,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+    return GamepadScope(
+      exclusive: true,
+      onAction: (action) {
+        if (action == GamepadAction.cancel) {
+          if (GamepadKeyboardController.instance.visible) {
+            dismissGamepadKeyboard();
+            return true;
+          }
+          _close();
+          return true;
+        }
+        if (action.isScroll) {
+          return scrollGamepadByPage(
+            action == GamepadAction.scrollUp ||
+                    action == GamepadAction.scrollLeft
+                ? -1
+                : 1,
+            context: context,
+          );
+        }
+        return handleGamepadUiAction(context, action);
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 420,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.78,
+          ),
+          child: GradientCard(
+            animate: false,
+            margin: EdgeInsets.zero,
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.giftFriendTitle,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.commonClose,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              TextField(
-                controller: _searchController,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: context.l10n.friendsSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: context.l10n.commonClear,
-                          onPressed: () {
-                            _searchController.clear();
-                          },
-                          icon: const Icon(Icons.close_rounded, size: 18),
-                        ),
-                  isDense: true,
+                    GamepadFocusBlock(
+                      radius: 20,
+                      shape: GamepadHighlightShape.circle,
+                      includeInEdgeFocus: false,
+                      onActivate: _close,
+                      child: IconButton(
+                        tooltip: context.l10n.commonClose,
+                        onPressed: _close,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: visible.isEmpty
-                    ? Center(
-                        child: Text(
-                          context.l10n.chatsFriendsNotFound,
-                          style: const TextStyle(color: AppColors.textSecondary),
-                        ),
-                      )
-                    : ListView.separated(
-                        controller: _scrollController,
-                        itemCount: visible.length + (hasMore ? 1 : 0),
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          if (index >= visible.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: Center(
-                                child: SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
+                const SizedBox(height: 4),
+                GamepadFieldBlock(
+                  inputFocus: _searchFocus,
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocus,
+                    readOnly: gamepadConnected(),
+                    showCursor: true,
+                    autofillHints: null,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.friendsSearchHint,
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: _searchController.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: context.l10n.commonClear,
+                              onPressed: () {
+                                _searchController.clear();
+                              },
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                            ),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: visible.isEmpty
+                      ? Center(
+                          child: Text(
+                            context.l10n.chatsFriendsNotFound,
+                            style:
+                                const TextStyle(color: AppColors.textSecondary),
+                          ),
+                        )
+                      : GamepadScrollPager(
+                          builder: (context, controller) {
+                            return NotificationListener<ScrollNotification>(
+                              onNotification: (n) {
+                                _maybeLoadMore(n.metrics.extentAfter);
+                                return false;
+                              },
+                              child: ListView.separated(
+                                controller: controller,
+                                itemCount: visible.length + (hasMore ? 1 : 0),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 10),
+                                itemBuilder: (context, index) {
+                                  if (index >= visible.length) {
+                                    return const Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 12),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final item = visible[index];
+                                  return _friendTile(
+                                    item,
+                                    presence[item.user.id],
+                                  );
+                                },
                               ),
                             );
-                          }
-                          final item = visible[index];
-                          return _friendTile(
-                            item,
-                            presence[item.user.id],
-                          );
-                        },
-                      ),
-              ),
-            ],
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

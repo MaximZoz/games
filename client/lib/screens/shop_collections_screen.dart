@@ -352,8 +352,12 @@ class _ShopCollectionGroupScreenState
     } catch (_) {}
   }
 
-  Future<void> _buy(ShopItem item, {bool confirm = true}) async {
-    if (_buyInFlight.contains(item.code) || item.owned) return;
+  Future<bool> _buy(
+    ShopItem item, {
+    bool confirm = true,
+    bool announceOwned = true,
+  }) async {
+    if (_buyInFlight.contains(item.code) || item.owned) return false;
     final l10n = context.l10n;
     if (confirm) {
       final ok = await showGamepadConfirmDialog(
@@ -366,7 +370,7 @@ class _ShopCollectionGroupScreenState
             '${l10n.shopBuyOnce}',
         confirmLabel: l10n.shopBuy,
       );
-      if (!ok || !mounted) return;
+      if (!ok || !mounted) return false;
     }
 
     _buyInFlight.add(item.code);
@@ -388,17 +392,23 @@ class _ShopCollectionGroupScreenState
           if (mounted) setState(() => _items = fresh);
         } catch (_) {}
       }
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: wasOffline
-            ? context.l10n.shopPurchaseQueued
-            : context.l10n.shopCollectionAdded(catalogTitle(item.code,
-                fallback: item.title, l10n: context.l10n)),
-        kind: AppSnackKind.success,
-      );
+      if (!mounted) return false;
+      if (wasOffline) {
+        showAppSnackBar(
+          context,
+          message: context.l10n.shopPurchaseQueued,
+          kind: AppSnackKind.success,
+        );
+      } else if (announceOwned) {
+        await showGamepadOwnedDialog(
+          context: context,
+          message:
+              catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
+        );
+      }
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _items = [
           for (final it in _items)
@@ -410,6 +420,7 @@ class _ShopCollectionGroupScreenState
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
         kind: AppSnackKind.error,
       );
+      return false;
     } finally {
       _buyInFlight.remove(item.code);
       if (mounted) setState(() {});
@@ -536,7 +547,20 @@ class _ShopCollectionGroupScreenState
             item.owned ? parseCollectionAcquiredAt(item.acquiredAt) : null,
         conditionShift: item.conditionShift,
         vintageAt: parseCollectionAcquiredAt(item.vintageAt),
-        onBuy: item.owned ? null : () => unawaited(_buy(item)),
+        onBuy: item.owned
+            ? null
+            : () async {
+                final bought =
+                    await _buy(item, confirm: true, announceOwned: false);
+                if (!bought || !mounted) return;
+                Navigator.of(context).pop();
+                if (!mounted) return;
+                await showGamepadOwnedDialog(
+                  context: context,
+                  message: catalogTitle(item.code,
+                      fallback: item.title, l10n: context.l10n),
+                );
+              },
         buyLabel: context.l10n.shopBuy,
       ),
     );

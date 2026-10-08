@@ -32,6 +32,7 @@ import 'package:multigames_client/core/gamepad/gamepad_back_button.dart';
 import 'package:multigames_client/core/gamepad/gamepad_confirm_dialog.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/ui/widgets/swipe_back.dart';
 import 'package:multigames_client/utils/user_error.dart';
@@ -134,24 +135,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
     if (!mounted) return;
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
+    final ok = await showGamepadChoiceDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.inventorySellTitle),
-        content: Text(
+      title: l10n.inventorySellTitle,
+      message:
           '${catalogTitle(item.code, fallback: item.title, l10n: l10n)}\n${l10n.inventorySellDesc(formatRewardBronze(refund))}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.inventorySell),
-          ),
-        ],
-      ),
+      confirmLabel: l10n.inventorySell,
     );
     if (ok != true || !mounted) return;
     try {
@@ -235,28 +224,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       return l10n.commonUser;
     }();
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGamepadChoiceDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.inventoryGiftTitle),
-          content: Text(
-            l10n.inventoryGiftDesc(
-                catalogTitle(item.code, fallback: item.title, l10n: l10n),
-                friendName),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.inventoryGift),
-            ),
-          ],
-        );
-      },
+      title: l10n.inventoryGiftTitle,
+      message: l10n.inventoryGiftDesc(
+        catalogTitle(item.code, fallback: item.title, l10n: l10n),
+        friendName,
+      ),
+      confirmLabel: l10n.inventoryGift,
     );
     if (confirmed != true || !mounted) return;
 
@@ -638,87 +613,94 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     )
                   : DesktopContentFrame(
                       maxWidth: 1080,
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        physics: const AlwaysScrollableScrollPhysics(
-                          parent: ClampingScrollPhysics(),
-                        ),
-                        children: [
-                          // Группы коллекций — колонка на всю ширину (не Wrap
-                          // «кривых» плиток). Внутри группы карточки — плиткой.
-                          _CollectionsBlock(
-                            income: income,
-                            claimIncomeKey: _claimIncomeKey,
-                            claimBusy: _claimBusy,
-                            onClaimIncome: _claimIncome,
-                            collectionsEmpty: collections.isEmpty,
-                            collectionSetKeys: collectionSetKeys,
-                            collectionsBySet: collectionsBySet,
-                            catalogBySet: catalogBySet,
-                            highlightGifts: _highlightGifts,
-                            sellKeyFor: _sellKeyFor,
-                            onGift: _gift,
-                            onSell: _sell,
-                            onOpen: (it) => _openCollection(it, elixirs),
-                          ),
-                          const SizedBox(height: 16),
-                          _ElixirsBlock(
-                            elixirs: elixirs,
-                            onOpen: (it) => _openElixir(it, collections),
-                          ),
-                          const SizedBox(height: 16),
-                          _EmojisBlock(
-                            groupOrder: groupOrder,
-                            grouped: grouped,
-                            groupTitles: _groupTitles,
-                          ),
-                          const SizedBox(height: 16),
-                          _Section(
-                            title: context.l10n.inventoryFrames,
-                            empty: context.l10n.inventoryNoFrames,
-                            children: [
-                              for (final it in frames)
-                                _InvTile(
-                                  leading: FramePreviewBadge(
-                                    frameCode: it.code,
-                                    size: 36,
-                                  ),
-                                  title: catalogTitle(it.code,
-                                      fallback: it.title, l10n: context.l10n),
-                                  subtitle: catalogDescription(it.code,
-                                      fallback: it.description,
-                                      l10n: context.l10n),
-                                ),
-                            ],
-                          ),
-                          if (!isOffline) ...[
-                            const SizedBox(height: 16),
-                            _Section(
-                              title: context.l10n.shopStakes,
-                              empty: context.l10n.inventoryNoStakes,
-                              children: [
-                                for (final it in stakes)
-                                  _InvTile(
-                                    leading: CoinIcon(
-                                      coinType: it.stakeGold != null
-                                          ? CoinType.gold
-                                          : CoinType.silver,
-                                      size: 26,
-                                    ),
-                                    title: catalogTitle(it.code,
-                                        fallback: it.title, l10n: context.l10n),
-                                    subtitle: it.stakeGold != null
-                                        ? context.l10n.inventoryStakeGold(
-                                            '${it.stakeGold}',
-                                          )
-                                        : context.l10n.inventoryStakeSilver(
-                                            '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
-                                          ),
-                                  ),
-                              ],
+                      child: GamepadScrollPager(
+                        builder: (context, controller) {
+                          return ListView(
+                            controller: controller,
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: ClampingScrollPhysics(),
                             ),
-                          ],
-                        ],
+                            children: [
+                              // Группы коллекций — колонка на всю ширину (не Wrap
+                              // «кривых» плиток). Внутри группы карточки — плиткой.
+                              _CollectionsBlock(
+                                income: income,
+                                claimIncomeKey: _claimIncomeKey,
+                                claimBusy: _claimBusy,
+                                onClaimIncome: _claimIncome,
+                                collectionsEmpty: collections.isEmpty,
+                                collectionSetKeys: collectionSetKeys,
+                                collectionsBySet: collectionsBySet,
+                                catalogBySet: catalogBySet,
+                                highlightGifts: _highlightGifts,
+                                sellKeyFor: _sellKeyFor,
+                                onGift: _gift,
+                                onSell: _sell,
+                                onOpen: (it) => _openCollection(it, elixirs),
+                              ),
+                              const SizedBox(height: 16),
+                              _ElixirsBlock(
+                                elixirs: elixirs,
+                                onOpen: (it) => _openElixir(it, collections),
+                              ),
+                              const SizedBox(height: 16),
+                              _EmojisBlock(
+                                groupOrder: groupOrder,
+                                grouped: grouped,
+                                groupTitles: _groupTitles,
+                              ),
+                              const SizedBox(height: 16),
+                              _Section(
+                                title: context.l10n.inventoryFrames,
+                                empty: context.l10n.inventoryNoFrames,
+                                children: [
+                                  for (final it in frames)
+                                    _InvTile(
+                                      leading: FramePreviewBadge(
+                                        frameCode: it.code,
+                                        size: 36,
+                                      ),
+                                      title: catalogTitle(it.code,
+                                          fallback: it.title,
+                                          l10n: context.l10n),
+                                      subtitle: catalogDescription(it.code,
+                                          fallback: it.description,
+                                          l10n: context.l10n),
+                                    ),
+                                ],
+                              ),
+                              if (!isOffline) ...[
+                                const SizedBox(height: 16),
+                                _Section(
+                                  title: context.l10n.shopStakes,
+                                  empty: context.l10n.inventoryNoStakes,
+                                  children: [
+                                    for (final it in stakes)
+                                      _InvTile(
+                                        leading: CoinIcon(
+                                          coinType: it.stakeGold != null
+                                              ? CoinType.gold
+                                              : CoinType.silver,
+                                          size: 26,
+                                        ),
+                                        title: catalogTitle(it.code,
+                                            fallback: it.title,
+                                            l10n: context.l10n),
+                                        subtitle: it.stakeGold != null
+                                            ? context.l10n.inventoryStakeGold(
+                                                '${it.stakeGold}',
+                                              )
+                                            : context.l10n.inventoryStakeSilver(
+                                                '${it.stakeSilver ?? (it.stakeBronze ?? 0) ~/ 100}',
+                                              ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          );
+                        },
                       ),
                     ),
         ),
@@ -861,10 +843,14 @@ class _CollectionsBlock extends StatelessWidget {
                   ),
                 ),
                 if (income!.available)
-                  FilledButton(
-                    onPressed: claimBusy ? null : onClaimIncome,
-                    child: Text(
-                      claimBusy ? '…' : context.l10n.inventoryClaim,
+                  GamepadFocusBlock(
+                    radius: AppRadius.button,
+                    onActivate: claimBusy ? null : onClaimIncome,
+                    child: FilledButton(
+                      onPressed: claimBusy ? null : onClaimIncome,
+                      child: Text(
+                        claimBusy ? '…' : context.l10n.inventoryClaim,
+                      ),
                     ),
                   ),
               ],
@@ -992,21 +978,26 @@ class _CollectionSetFrame extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (onOpenShop != null)
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onOpenShop,
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                  child: header,
-                ),
-              ),
-            )
-          else
-            header,
+          GamepadFocusBlock(
+            radius: 10,
+            onActivate: onOpenShop,
+            child: onOpenShop != null
+                ? Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onOpenShop,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 2,
+                        ),
+                        child: header,
+                      ),
+                    ),
+                  )
+                : header,
+          ),
           if (children.isNotEmpty) ...[
             const SizedBox(height: 10),
             if (useDesktopTiles(context))
@@ -1063,122 +1054,144 @@ class _CollectionInvTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GamepadFocusBlock(
-      radius: 14,
-      onActivate: onOpen,
-      child: Material(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onOpen,
+    final title =
+        catalogTitle(item.code, fallback: item.title, l10n: context.l10n);
+    return Material(
+      color: AppColors.surfaceCard,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: highlightGift
-                    ? AppColors.accentStart.withValues(alpha: 0.55)
-                    : Colors.black.withValues(alpha: 0.06),
-                width: highlightGift ? 1.4 : 1,
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-            child: Row(
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    ShopAnimatedEmoji(
-                      animatedName: item.animatedName ?? 'sparkles',
-                      size: 36,
-                      fallback: item.emoji,
-                    ),
-                    if (highlightGift)
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: AppColors.accentStart,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppColors.surfaceCard, width: 1.5),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              catalogTitle(item.code,
-                                  fallback: item.title, l10n: context.l10n),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
+          border: Border.all(
+            color: highlightGift
+                ? AppColors.accentStart.withValues(alpha: 0.55)
+                : Colors.black.withValues(alpha: 0.06),
+            width: highlightGift ? 1.4 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+        child: GamepadNavGroup(
+          name: 'inv-col-${item.code}',
+          child: Row(
+            children: [
+              Expanded(
+                child: GamepadFocusBlock(
+                  radius: 12,
+                  onActivate: onOpen,
+                  child: InkWell(
+                    onTap: onOpen,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ShopAnimatedEmoji(
+                              animatedName: item.animatedName ?? 'sparkles',
+                              size: 36,
+                              fallback: item.emoji,
                             ),
-                          ),
-                          if (highlightGift)
-                            Container(
-                              margin: const EdgeInsets.only(left: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.accentSoft,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                context.l10n.chatGift,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.accentStart,
+                            if (highlightGift)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentStart,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: AppColors.surfaceCard,
+                                        width: 1.5),
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      BalanceDisplay(
-                        bronze: collectionDailyIncomeBronze(
-                          baseBronze: item.dailyBronze,
-                          acquiredAt: item.acquiredAt,
-                          conditionShift: item.conditionShift,
-                          vintageAt: item.vintageAt,
+                          ],
                         ),
-                        prefix: '+',
-                        perDay: true,
-                        coinSize: 14,
-                        fontSize: 12,
-                        spacing: 4,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (highlightGift)
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accentSoft,
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        context.l10n.chatGift,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.accentStart,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              BalanceDisplay(
+                                bronze: collectionDailyIncomeBronze(
+                                  baseBronze: item.dailyBronze,
+                                  acquiredAt: item.acquiredAt,
+                                  conditionShift: item.conditionShift,
+                                  vintageAt: item.vintageAt,
+                                ),
+                                prefix: '+',
+                                perDay: true,
+                                coinSize: 14,
+                                fontSize: 12,
+                                spacing: 4,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                IconButton(
+              ),
+              GamepadFocusBlock(
+                radius: 20,
+                shape: GamepadHighlightShape.circle,
+                onActivate: onGift,
+                child: IconButton(
                   tooltip: context.l10n.inventoryGift,
                   onPressed: onGift,
                   icon: const Icon(Icons.card_giftcard_outlined),
                 ),
-                if (collectionCanSell(
-                  acquiredAt: item.acquiredAt,
-                  conditionShift: item.conditionShift,
-                  vintageAt: item.vintageAt,
-                ))
-                  KeyedSubtree(
+              ),
+              if (collectionCanSell(
+                acquiredAt: item.acquiredAt,
+                conditionShift: item.conditionShift,
+                vintageAt: item.vintageAt,
+              ))
+                GamepadFocusBlock(
+                  radius: 20,
+                  shape: GamepadHighlightShape.circle,
+                  onActivate: onSell,
+                  child: KeyedSubtree(
                     key: sellSourceKey,
                     child: IconButton(
                       tooltip: context.l10n.inventorySell,
@@ -1186,8 +1199,8 @@ class _CollectionInvTile extends StatelessWidget {
                       icon: const Icon(Icons.sell_outlined),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
