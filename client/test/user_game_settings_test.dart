@@ -120,7 +120,7 @@ void main() {
     });
 
     test('toJson chess roundtrip сохраняет режимы', () {
-      for (final mode in ['classic', 'chess960', 'antichess']) {
+      for (final mode in ['classic', 'rapid', 'blitz', 'bullet']) {
         final original = UserGameSettings(
           gameType: 'chess',
           turnTimeSec: 60,
@@ -134,6 +134,19 @@ void main() {
         expect(again.gameMode, mode, reason: mode);
         expect(again.variant, mode, reason: mode);
       }
+    });
+
+    test('fromJson chess старые 960/антишахматы и 10 мин сбрасываются', () {
+      final legacy = UserGameSettings.fromJson({
+        'game_type': 'chess',
+        'game_mode': 'chess960',
+        'variant': 'antichess',
+        'turn_time_sec': 600,
+        'stake_bronze': 10,
+      });
+      expect(legacy.gameMode, 'classic');
+      expect(legacy.variant, 'classic');
+      expect(legacy.turnTimeSec, 60);
     });
 
     test('fromJson checkers читает english и corners из variant', () {

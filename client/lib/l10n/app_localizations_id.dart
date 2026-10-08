@@ -805,10 +805,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesChessModeClassic => 'Klasik';
 
   @override
-  String get gamesChessMode960 => 'Catur 960';
+  String get gamesChessModeRapid => 'Cepat';
 
   @override
-  String get gamesChessModeAntichess => 'Anticatur';
+  String get gamesChessModeBlitz => 'Kilat';
+
+  @override
+  String get gamesChessModeBullet => 'Peluru';
 
   @override
   String get rulesCheckersPlayers => 'Pemain: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klasik: papan 8×8. Setiap sisi punya raja, menteri, dua benteng, dua gajah, dua kuda, dan delapan pion. Putih jalan dulu. Langkah biasa, en passant, promosi, dan rokade. Menang dengan skakmat atau lawan menyerah.';
-
-  @override
-  String get rulesChessPlay960 => 'Catur 960: langkah biasa. Baris belakang diacak aturan Fischer: raja di antara benteng, gajah di warna berbeda. Rokade ke c dan g. Skakmat atau menyerah.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Anticatur: langkah biasa, makan wajib. Tidak ada skak, raja boleh dimakan. Tanpa rokade. Menang jika menyerahkan semua buah atau kehabisan langkah.';
+  String get rulesChessPlayClassic => 'Papan 8×8. Setiap sisi punya raja, menteri, dua benteng, dua gajah, dua kuda, dan delapan pion. Putih jalan dulu. Langkah biasa, en passant, promosi, dan rokade. Menang dengan skakmat atau lawan menyerah.';
 
   @override
   String get rulesChessDrawClassic => 'Seri karena pat, pengulangan tiga kali, aturan 50 langkah, material kurang, atau kesepakatan.';
 
   @override
-  String get rulesChessDraw960 => 'Seri karena pat, pengulangan tiga kali, aturan 50 langkah, material kurang, atau kesepakatan.';
+  String get rulesChessClockClassic => 'Jam: 60+0 — 60 menit untuk seluruh partai, tanpa tambahan.';
 
   @override
-  String get rulesChessDrawAntichess => 'Seri jika pengulangan tiga kali atau keduanya kehabisan buah pada langkah yang sama.';
+  String get rulesChessClockRapid => 'Jam: 10+0 — 10 menit untuk seluruh partai, tanpa tambahan.';
+
+  @override
+  String get rulesChessClockBlitz => 'Jam: 5+0 — 5 menit untuk seluruh partai, tanpa tambahan.';
+
+  @override
+  String get rulesChessClockBullet => 'Jam: 3+2 — 3 menit plus 2 detik per langkah.';
 
   @override
   String get checkersDrawRepetition => 'Seri — posisi terulang tiga kali';

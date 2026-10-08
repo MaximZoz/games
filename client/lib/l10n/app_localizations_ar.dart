@@ -805,10 +805,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesChessModeClassic => 'كلاسيكي';
 
   @override
-  String get gamesChessMode960 => 'شطرنج 960';
+  String get gamesChessModeRapid => 'سريع';
 
   @override
-  String get gamesChessModeAntichess => 'الشطرنج العكسي';
+  String get gamesChessModeBlitz => 'برق';
+
+  @override
+  String get gamesChessModeBullet => 'رصاصة';
 
   @override
   String get rulesCheckersPlayers => 'اللاعبون: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'كلاسيكي: رقعة 8×8. لكل جانب ملك ووزير وقلعتان وفيلان وحصانان وثمانية بيادق. الأبيض يبدأ. حركات معتادة، الأخذ بالمرور، الترقية والتبييت. الفوز بالكش مات أو استسلام الخصم.';
-
-  @override
-  String get rulesChessPlay960 => 'شطرنج 960: الحركات معتادة. الصف الأخير عشوائي حسب فيشر: الملك بين القلعتين والفيلان على لونين مختلفين. التبييت إلى c وg. مات أو استسلام.';
-
-  @override
-  String get rulesChessPlayAntichess => 'الشطرنج العكسي: الحركات معتادة والأسر إلزامي. لا كش ويمكن أسر الملك. بلا تبييت. يفوز من يفقد كل قطعه أو يبقى بلا نقلة.';
+  String get rulesChessPlayClassic => 'رقعة 8×8. لكل جانب ملك ووزير وقلعتان وفيلان وحصانان وثمانية بيادق. الأبيض يبدأ. حركات معتادة، الأخذ بالمرور، الترقية والتبييت. الفوز بالكش مات أو استسلام الخصم.';
 
   @override
   String get rulesChessDrawClassic => 'تعادل بالاختناق أو التكرار الثلاثي أو قاعدة 50 نقلة أو نقص القطع أو الاتفاق.';
 
   @override
-  String get rulesChessDraw960 => 'تعادل بالاختناق أو التكرار الثلاثي أو قاعدة 50 نقلة أو نقص القطع أو الاتفاق.';
+  String get rulesChessClockClassic => 'ساعة اللعب: 60+0 — 60 دقيقة للحزب كاملًا دون إضافة.';
 
   @override
-  String get rulesChessDrawAntichess => 'تعادل بالتكرار الثلاثي أو إذا بقي الطرفان بلا قطع في النقلة نفسها.';
+  String get rulesChessClockRapid => 'ساعة اللعب: 10+0 — 10 دقائق للحزب كاملًا دون إضافة.';
+
+  @override
+  String get rulesChessClockBlitz => 'ساعة اللعب: 5+0 — 5 دقائق للحزب كاملًا دون إضافة.';
+
+  @override
+  String get rulesChessClockBullet => 'ساعة اللعب: 3+2 — 3 دقائق مع ثانيتين عن كل نقلة.';
 
   @override
   String get checkersDrawRepetition => 'تعادل — تكرر الوضع ثلاث مرات';

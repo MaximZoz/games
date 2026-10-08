@@ -55,8 +55,20 @@ void main() {
         t.gamesChessModeClassic);
     expect(
         localizedGameModeLabel(
+            gameType: 'chess', gameMode: 'rapid', l10n: t),
+        t.gamesChessModeRapid);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'chess', gameMode: 'blitz', l10n: t),
+        t.gamesChessModeBlitz);
+    expect(
+        localizedGameModeLabel(
+            gameType: 'chess', gameMode: 'bullet', l10n: t),
+        t.gamesChessModeBullet);
+    expect(
+        localizedGameModeLabel(
             gameType: 'chess', gameMode: 'chess960', l10n: t),
-        t.gamesChessMode960);
+        t.gamesChessModeClassic);
     expect(
         localizedGameModeLabel(
             gameType: 'go', variant: 'classic', l10n: t),

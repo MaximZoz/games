@@ -805,10 +805,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesChessModeClassic => 'クラシック';
 
   @override
-  String get gamesChessMode960 => 'チェス960';
+  String get gamesChessModeRapid => 'ラピッド';
 
   @override
-  String get gamesChessModeAntichess => 'アンチチェス';
+  String get gamesChessModeBlitz => 'ブリッツ';
+
+  @override
+  String get gamesChessModeBullet => 'ブレット';
 
   @override
   String get rulesCheckersPlayers => 'プレイヤー: 2。';
@@ -874,22 +877,22 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'クラシック: 盤は8×8。各方にキング、クイーン、ルーク2、ビショップ2、ナイト2、ポーン8。白が先手。通常の動き、アンパッサン、昇格、キャスリング。チェックメイトか投了で勝ち。';
-
-  @override
-  String get rulesChessPlay960 => 'チェス960: 動きは通常。最下段はフィッシャー式で乱数：キングはルークの間、ビショップは違う色。キャスリングはcとg。メイトか投了。';
-
-  @override
-  String get rulesChessPlayAntichess => 'アンチチェス: 動きは通常、取れるときは必須。チェックはなくキングを取れる。キャスリングなし。全駒を渡すか指せなくなれば勝ち。';
+  String get rulesChessPlayClassic => '盤は8×8。各方にキング、クイーン、ルーク2、ビショップ2、ナイト2、ポーン8。白が先手。通常の動き、アンパッサン、昇格、キャスリング。チェックメイトか投了で勝ち。';
 
   @override
   String get rulesChessDrawClassic => '引き分け: ステイルメイト、同形3回、50手、詰み駒不足、合意。';
 
   @override
-  String get rulesChessDraw960 => '引き分け: ステイルメイト、同形3回、50手、詰み駒不足、合意。';
+  String get rulesChessClockClassic => '対局時計：60+0 — 対局全体で60分、加算なし。';
 
   @override
-  String get rulesChessDrawAntichess => '引き分け: 同形3回、または同じ手で双方が駒なし。';
+  String get rulesChessClockRapid => '対局時計：10+0 — 対局全体で10分、加算なし。';
+
+  @override
+  String get rulesChessClockBlitz => '対局時計：5+0 — 対局全体で5分、加算なし。';
+
+  @override
+  String get rulesChessClockBullet => '対局時計：3+2 — 3分＋1手ごとに2秒。';
 
   @override
   String get checkersDrawRepetition => '引き分け — 同一局面が3回';

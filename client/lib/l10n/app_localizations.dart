@@ -1685,17 +1685,23 @@ abstract class AppLocalizations {
   /// **'Классика'**
   String get gamesChessModeClassic;
 
-  /// No description provided for @gamesChessMode960.
+  /// No description provided for @gamesChessModeRapid.
   ///
   /// In ru, this message translates to:
-  /// **'Шахматы-960'**
-  String get gamesChessMode960;
+  /// **'Рапид'**
+  String get gamesChessModeRapid;
 
-  /// No description provided for @gamesChessModeAntichess.
+  /// No description provided for @gamesChessModeBlitz.
   ///
   /// In ru, this message translates to:
-  /// **'Антишахматы'**
-  String get gamesChessModeAntichess;
+  /// **'Блиц'**
+  String get gamesChessModeBlitz;
+
+  /// No description provided for @gamesChessModeBullet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пуля'**
+  String get gamesChessModeBullet;
 
   /// No description provided for @rulesCheckersPlayers.
   ///
@@ -1814,20 +1820,8 @@ abstract class AppLocalizations {
   /// No description provided for @rulesChessPlayClassic.
   ///
   /// In ru, this message translates to:
-  /// **'Классика: доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.'**
+  /// **'Доска 8×8. У каждого король, ферзь, две ладьи, два слона, два коня и восемь пешек. Белые ходят первыми. Король — на одну клетку, ферзь — по вертикали, горизонтали и диагонали, ладья — по прямым, слон — по диагонали, конь — буквой «Г». Пешка идёт вперёд на одну клетку (с начальной — на две), бьёт по диагонали; есть взятие на проходе и превращение на последней линии. Рокировка — если король и ладья не ходили и путь свободен. Побеждает тот, кто поставил мат или соперник сдался.'**
   String get rulesChessPlayClassic;
-
-  /// No description provided for @rulesChessPlay960.
-  ///
-  /// In ru, this message translates to:
-  /// **'Шахматы-960: доска 8×8, фигуры ходят как обычно. На последней линии они стоят в случайном порядке по правилам Фишера: король между ладьями, слоны на клетках разного цвета. Белые ходят первыми. Рокировка есть: король и ладья заканчивают на клетках c и g. Побеждает тот, кто поставил мат или соперник сдался.'**
-  String get rulesChessPlay960;
-
-  /// No description provided for @rulesChessPlayAntichess.
-  ///
-  /// In ru, this message translates to:
-  /// **'Антишахматы: доска 8×8, фигуры ходят как обычно. Взятие обязательно, если оно есть. Шаха нет — короля можно брать. Рокировки нет. Побеждает тот, кто отдал все свои фигуры или остался без хода.'**
-  String get rulesChessPlayAntichess;
 
   /// No description provided for @rulesChessDrawClassic.
   ///
@@ -1835,17 +1829,29 @@ abstract class AppLocalizations {
   /// **'Ничья при пате, троекратном повторении позиции, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.'**
   String get rulesChessDrawClassic;
 
-  /// No description provided for @rulesChessDraw960.
+  /// No description provided for @rulesChessClockClassic.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья при пате, троекратном повторении, правиле 50 ходов без взятия и хода пешки, недостатке фигур для мата или по соглашению.'**
-  String get rulesChessDraw960;
+  /// **'Контроль партии: 60+0 — 60 минут на всю партию, без добавления.'**
+  String get rulesChessClockClassic;
 
-  /// No description provided for @rulesChessDrawAntichess.
+  /// No description provided for @rulesChessClockRapid.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья при троекратном повторении позиции или если оба остались без фигур в один ход.'**
-  String get rulesChessDrawAntichess;
+  /// **'Контроль партии: 10+0 — 10 минут на всю партию, без добавления.'**
+  String get rulesChessClockRapid;
+
+  /// No description provided for @rulesChessClockBlitz.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 5+0 — 5 минут на всю партию, без добавления.'**
+  String get rulesChessClockBlitz;
+
+  /// No description provided for @rulesChessClockBullet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контроль партии: 3+2 — 3 минуты на партию плюс 2 секунды за каждый ход.'**
+  String get rulesChessClockBullet;
 
   /// No description provided for @checkersDrawRepetition.
   ///

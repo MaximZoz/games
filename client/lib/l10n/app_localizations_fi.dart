@@ -805,10 +805,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassinen';
 
   @override
-  String get gamesChessMode960 => 'Shakki 960';
+  String get gamesChessModeRapid => 'Nopea';
 
   @override
-  String get gamesChessModeAntichess => 'Antishakki';
+  String get gamesChessModeBlitz => 'Salama';
+
+  @override
+  String get gamesChessModeBullet => 'Luoti';
 
   @override
   String get rulesCheckersPlayers => 'Pelaajat: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsFi extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassinen: lauta 8×8. Kummallakin on kuningas, kuningatar, kaksi tornia, kaksi lähettiä, kaksi ratsua ja kahdeksan sotilasta. Valkoinen aloittaa. Tavalliset siirrot, ohestalyönti, korotus ja linnoitus. Voitto matilla tai luovutuksella.';
-
-  @override
-  String get rulesChessPlay960 => 'Shakki 960: tavalliset siirrot. Viimeinen rivi sekoitetaan Fischerin mukaan: kuningas tornien välissä, lähetit eri väreillä. Linnoitus c- ja g-ruutuihin. Matti tai luovutus.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antishakki: tavalliset siirrot, lyönti on pakollinen. Shakkia ei ole, kuninkaan voi lyödä. Ei linnoitusta. Voittaa se, joka luovuttaa kaikki nappulat tai jää ilman siirtoa.';
+  String get rulesChessPlayClassic => 'Lauta 8×8. Kummallakin on kuningas, kuningatar, kaksi tornia, kaksi lähettiä, kaksi ratsua ja kahdeksan sotilasta. Valkoinen aloittaa. Tavalliset siirrot, ohestalyönti, korotus ja linnoitus. Voitto matilla tai luovutuksella.';
 
   @override
   String get rulesChessDrawClassic => 'Tasapeli patissa, kolminkertaisessa toistossa, 50 siirron säännössä, materiaalin puutteessa tai sopimuksella.';
 
   @override
-  String get rulesChessDraw960 => 'Tasapeli patissa, kolminkertaisessa toistossa, 50 siirron säännössä, materiaalin puutteessa tai sopimuksella.';
+  String get rulesChessClockClassic => 'Kello: 60+0 — 60 minuuttia koko peliin, ilman lisäystä.';
 
   @override
-  String get rulesChessDrawAntichess => 'Tasapeli kolminkertaisesta toistosta tai jos molemmat jäävät ilman nappuloita samassa siirrossa.';
+  String get rulesChessClockRapid => 'Kello: 10+0 — 10 minuuttia koko peliin, ilman lisäystä.';
+
+  @override
+  String get rulesChessClockBlitz => 'Kello: 5+0 — 5 minuuttia koko peliin, ilman lisäystä.';
+
+  @override
+  String get rulesChessClockBullet => 'Kello: 3+2 — 3 minuuttia plus 2 sekuntia siirtoa kohti.';
 
   @override
   String get checkersDrawRepetition => 'Tasapeli — asema toistui kolmesti';

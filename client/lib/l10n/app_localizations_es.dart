@@ -805,10 +805,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesChessModeClassic => 'Clásico';
 
   @override
-  String get gamesChessMode960 => 'Ajedrez 960';
+  String get gamesChessModeRapid => 'Rápidas';
 
   @override
-  String get gamesChessModeAntichess => 'Antiajedrez';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bala';
 
   @override
   String get rulesCheckersPlayers => 'Jugadores: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Clásico: tablero 8×8. Cada bando tiene rey, dama, dos torres, dos alfiles, dos caballos y ocho peones. Blancas empiezan. Movimientos habituales, al paso, coronación y enroque. Gana el mate o la retirada.';
-
-  @override
-  String get rulesChessPlay960 => 'Ajedrez 960: movimientos habituales. La última fila se baraja según Fischer: rey entre las torres, alfiles en colores opuestos. Enroque a c y g. Mate o retirada.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antiajedrez: movimientos habituales, capturar es obligatorio. No hay jaque: se puede capturar el rey. Sin enroque. Gana quien entrega todas las piezas o no puede mover.';
+  String get rulesChessPlayClassic => 'Tablero 8×8. Cada bando tiene rey, dama, dos torres, dos alfiles, dos caballos y ocho peones. Blancas empiezan. Movimientos habituales, al paso, coronación y enroque. Gana el mate o la retirada.';
 
   @override
   String get rulesChessDrawClassic => 'Tablas por ahogado, triple repetición, regla de 50 jugadas, material insuficiente o acuerdo.';
 
   @override
-  String get rulesChessDraw960 => 'Tablas por ahogado, triple repetición, regla de 50 jugadas, material insuficiente o acuerdo.';
+  String get rulesChessClockClassic => 'Reloj: 60+0 — 60 minutos para toda la partida, sin incremento.';
 
   @override
-  String get rulesChessDrawAntichess => 'Tablas por triple repetición o si ambos se quedan sin piezas en la misma jugada.';
+  String get rulesChessClockRapid => 'Reloj: 10+0 — 10 minutos para toda la partida, sin incremento.';
+
+  @override
+  String get rulesChessClockBlitz => 'Reloj: 5+0 — 5 minutos para toda la partida, sin incremento.';
+
+  @override
+  String get rulesChessClockBullet => 'Reloj: 3+2 — 3 minutos más 2 segundos por jugada.';
 
   @override
   String get checkersDrawRepetition => 'Tablas — la posición se repitió tres veces';

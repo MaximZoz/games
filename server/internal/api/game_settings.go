@@ -282,10 +282,12 @@ func normalizeCheckersSettings(body gameSettingsBody) (store.UserGameSettings, s
 
 func normalizeChessMode(raw string) string {
 	switch strings.TrimSpace(strings.ToLower(raw)) {
-	case "chess960":
-		return "chess960"
-	case "antichess":
-		return "antichess"
+	case "rapid":
+		return "rapid"
+	case "blitz":
+		return "blitz"
+	case "bullet":
+		return "bullet"
 	default:
 		return "classic"
 	}
@@ -294,6 +296,10 @@ func normalizeChessMode(raw string) string {
 func normalizeChessSettings(body gameSettingsBody) (store.UserGameSettings, string) {
 	if !validTurnTimeSec[body.TurnTimeSec] {
 		return store.UserGameSettings{}, "invalid turn_time_sec"
+	}
+	turn := body.TurnTimeSec
+	if turn == 600 {
+		turn = 60
 	}
 	mode := normalizeChessMode(body.GameMode)
 	if mode == "classic" {
@@ -305,7 +311,7 @@ func normalizeChessSettings(body gameSettingsBody) (store.UserGameSettings, stri
 	}
 	return store.UserGameSettings{
 		GameType:             store.GameTypeChess,
-		TurnTimeSec:          body.TurnTimeSec,
+		TurnTimeSec:          turn,
 		GridSize:             8,
 		Variant:              mode,
 		SwapRule:             false,

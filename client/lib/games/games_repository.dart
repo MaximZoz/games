@@ -271,7 +271,7 @@ class UserGameSettings {
       final mode = chessNormalizeMode(rawMode);
       return UserGameSettings(
         gameType: 'chess',
-        turnTimeSec: turnTimeOptions.contains(turn) ? turn : 60,
+        turnTimeSec: chessNormalizeTurnTime(turn),
         variant: mode,
         gridSize: 8,
         stakeBronze: stake < 2 ? 2 : stake,

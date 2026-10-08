@@ -805,10 +805,13 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassisk';
 
   @override
-  String get gamesChessMode960 => 'Skak960';
+  String get gamesChessModeRapid => 'Hurtig';
 
   @override
-  String get gamesChessModeAntichess => 'Antiskak';
+  String get gamesChessModeBlitz => 'Lyn';
+
+  @override
+  String get gamesChessModeBullet => 'Kugle';
 
   @override
   String get rulesCheckersPlayers => 'Spillere: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsDa extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassisk: bræt 8×8. Hver side har konge, dronning, to tårne, to løbere, to springere og otte bønder. Hvid starter. Almindelige træk, en passant, forvandling og rokade. Sejr ved mat eller opgivelse.';
-
-  @override
-  String get rulesChessPlay960 => 'Skak960: almindelige træk. Sidste række blandes efter Fischer: kongen mellem tårnene, løbere på forskellige farver. Rokade til c og g. Mat eller opgivelse.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antiskak: almindelige træk, slag er tvunget. Ingen skak — kongen må slås. Ingen rokade. Den der afgiver alle brikker eller ikke kan trække vinder.';
+  String get rulesChessPlayClassic => 'Bræt 8×8. Hver side har konge, dronning, to tårne, to løbere, to springere og otte bønder. Hvid starter. Almindelige træk, en passant, forvandling og rokade. Sejr ved mat eller opgivelse.';
 
   @override
   String get rulesChessDrawClassic => 'Remis ved pat, tredobbelt gentagelse, 50-træksreglen, for lidt materiale eller aftale.';
 
   @override
-  String get rulesChessDraw960 => 'Remis ved pat, tredobbelt gentagelse, 50-træksreglen, for lidt materiale eller aftale.';
+  String get rulesChessClockClassic => 'Ur: 60+0 — 60 minutter til hele partiet, uden tillæg.';
 
   @override
-  String get rulesChessDrawAntichess => 'Remis ved tredobbelt gentagelse eller hvis begge står uden brikker i samme træk.';
+  String get rulesChessClockRapid => 'Ur: 10+0 — 10 minutter til hele partiet, uden tillæg.';
+
+  @override
+  String get rulesChessClockBlitz => 'Ur: 5+0 — 5 minutter til hele partiet, uden tillæg.';
+
+  @override
+  String get rulesChessClockBullet => 'Ur: 3+2 — 3 minutter plus 2 sekunder pr. træk.';
 
   @override
   String get checkersDrawRepetition => 'Remis — stillingen gentaget tre gange';

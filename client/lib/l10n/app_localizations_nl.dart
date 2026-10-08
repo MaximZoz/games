@@ -805,10 +805,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassiek';
 
   @override
-  String get gamesChessMode960 => 'Chess960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antischaken';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Kogel';
 
   @override
   String get rulesCheckersPlayers => 'Spelers: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassiek: bord 8×8. Elke kant heeft koning, dame, twee torens, twee lopers, twee paarden en acht pionnen. Wit begint. Gewone zetten, en passant, promotie en rokade. Winst door mat of opgave.';
-
-  @override
-  String get rulesChessPlay960 => 'Chess960: gewone zetten. De achterste rij is geschud volgens Fischer: koning tussen de torens, lopers op verschillende kleuren. Rokade naar c en g. Mat of opgave.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antischaken: gewone zetten, slaan is verplicht. Geen schaak — de koning mag geslagen. Geen rokade. Wint wie alle stukken weggeeft of geen zet heeft.';
+  String get rulesChessPlayClassic => 'Bord 8×8. Elke kant heeft koning, dame, twee torens, twee lopers, twee paarden en acht pionnen. Wit begint. Gewone zetten, en passant, promotie en rokade. Winst door mat of opgave.';
 
   @override
   String get rulesChessDrawClassic => 'Remise bij pat, drievoudige herhaling, 50-zettenregel, onvoldoende materiaal of afspraak.';
 
   @override
-  String get rulesChessDraw960 => 'Remise bij pat, drievoudige herhaling, 50-zettenregel, onvoldoende materiaal of afspraak.';
+  String get rulesChessClockClassic => 'Klok: 60+0 — 60 minuten voor de hele partij, zonder increment.';
 
   @override
-  String get rulesChessDrawAntichess => 'Remise bij drievoudige herhaling of als beide in dezelfde zet zonder stukken staan.';
+  String get rulesChessClockRapid => 'Klok: 10+0 — 10 minuten voor de hele partij, zonder increment.';
+
+  @override
+  String get rulesChessClockBlitz => 'Klok: 5+0 — 5 minuten voor de hele partij, zonder increment.';
+
+  @override
+  String get rulesChessClockBullet => 'Klok: 3+2 — 3 minuten plus 2 seconden per zet.';
 
   @override
   String get checkersDrawRepetition => 'Remise — stelling driemaal herhaald';

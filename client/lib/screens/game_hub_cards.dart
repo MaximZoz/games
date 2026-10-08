@@ -2301,8 +2301,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
     if (saved == null) return;
     _settingsHydrated = true;
     setState(() {
-      _turnTimeSec =
-          turnTimeOptions.contains(saved.turnTimeSec) ? saved.turnTimeSec : 60;
+      _turnTimeSec = chessNormalizeTurnTime(saved.turnTimeSec);
       _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
       _gameMode = chessNormalizeMode(saved.gameMode);
     });
@@ -2320,10 +2319,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
   }
 
   void _cycleTurnTime() {
-    setState(() {
-      const arr = [20, 60, 600, 0];
-      _turnTimeSec = arr[(arr.indexOf(_turnTimeSec) + 1) % arr.length];
-    });
+    setState(() => _turnTimeSec = chessNextTurnTime(_turnTimeSec));
     _persistSettings();
   }
 
@@ -2350,9 +2346,7 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
       if (saved == null || _settingsHydrated) return;
       _settingsHydrated = true;
       setState(() {
-        _turnTimeSec = turnTimeOptions.contains(saved.turnTimeSec)
-            ? saved.turnTimeSec
-            : 60;
+        _turnTimeSec = chessNormalizeTurnTime(saved.turnTimeSec);
         _stakeBronze = saved.stakeBronze < 2 ? 2 : saved.stakeBronze;
         _gameMode = chessNormalizeMode(saved.gameMode);
       });

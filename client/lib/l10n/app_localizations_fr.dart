@@ -805,10 +805,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gamesChessModeClassic => 'Classique';
 
   @override
-  String get gamesChessMode960 => 'Échecs 960';
+  String get gamesChessModeRapid => 'Rapide';
 
   @override
-  String get gamesChessModeAntichess => 'Antiéchecs';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
 
   @override
   String get rulesCheckersPlayers => 'Joueurs : 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Classique : plateau 8×8. Chaque camp a roi, dame, deux tours, deux fous, deux cavaliers et huit pions. Les blancs commencent. Coups habituels, prise en passant, promotion et roque. On gagne par mat ou abandon.';
-
-  @override
-  String get rulesChessPlay960 => 'Échecs 960 : coups habituels. La dernière rangée est tirée selon Fischer : roi entre les tours, fous de couleurs opposées. Roque vers c et g. Mat ou abandon.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antiéchecs : coups habituels, la prise est obligatoire. Pas d’échec : le roi peut être pris. Pas de roque. Gagne qui donne toutes ses pièces ou n’a plus de coup.';
+  String get rulesChessPlayClassic => 'Plateau 8×8. Chaque camp a roi, dame, deux tours, deux fous, deux cavaliers et huit pions. Les blancs commencent. Coups habituels, prise en passant, promotion et roque. On gagne par mat ou abandon.';
 
   @override
   String get rulesChessDrawClassic => 'Nulle par pat, triple répétition, règle des 50 coups, matériel insuffisant ou accord.';
 
   @override
-  String get rulesChessDraw960 => 'Nulle par pat, triple répétition, règle des 50 coups, matériel insuffisant ou accord.';
+  String get rulesChessClockClassic => 'Pendule : 60+0 — 60 minutes pour toute la partie, sans incrément.';
 
   @override
-  String get rulesChessDrawAntichess => 'Nulle par triple répétition ou si les deux restent sans pièces au même coup.';
+  String get rulesChessClockRapid => 'Pendule : 10+0 — 10 minutes pour toute la partie, sans incrément.';
+
+  @override
+  String get rulesChessClockBlitz => 'Pendule : 5+0 — 5 minutes pour toute la partie, sans incrément.';
+
+  @override
+  String get rulesChessClockBullet => 'Pendule : 3+2 — 3 minutes plus 2 secondes par coup.';
 
   @override
   String get checkersDrawRepetition => 'Nulle — position répétée trois fois';

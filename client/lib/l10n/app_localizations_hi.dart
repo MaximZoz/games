@@ -805,10 +805,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesChessModeClassic => 'क्लासिक';
 
   @override
-  String get gamesChessMode960 => 'शतरंज-960';
+  String get gamesChessModeRapid => 'रैपिड';
 
   @override
-  String get gamesChessModeAntichess => 'एंटीचेस';
+  String get gamesChessModeBlitz => 'ब्लिट्ज';
+
+  @override
+  String get gamesChessModeBullet => 'बुलेट';
 
   @override
   String get rulesCheckersPlayers => 'खिलाड़ी: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'क्लासिक: बोर्ड 8×8. प्रत्येक पक्ष के पास राजा, वज़ीर, दो हाथी, दो ऊँट, दो घोड़े और आठ प्यादे। सफ़ेद पहले चलता है। सामान्य चालें, एन पासॉं, प्रमोशन और कैसलिंग। मात या हार मानना जीत है।';
-
-  @override
-  String get rulesChessPlay960 => 'शतरंज-960: चालें सामान्य। आख़िरी पंक्ति फ़िशर नियम से यादृच्छिक: राजा हाथियों के बीच, ऊँट अलग रंग पर। कैसलिंग c और g. मात या हार मानना।';
-
-  @override
-  String get rulesChessPlayAntichess => 'एंटीचेस: चालें सामान्य, मारना अनिवार्य। शह नहीं, राजा मारा जा सकता है। कैसलिंग नहीं। सब मोहरे दे देना या चाल न होना जीत है।';
+  String get rulesChessPlayClassic => 'बोर्ड 8×8. प्रत्येक पक्ष के पास राजा, वज़ीर, दो हाथी, दो ऊँट, दो घोड़े और आठ प्यादे। सफ़ेद पहले चलता है। सामान्य चालें, एन पासॉं, प्रमोशन और कैसलिंग। मात या हार मानना जीत है।';
 
   @override
   String get rulesChessDrawClassic => 'ड्रॉ: स्टेलमेट, तीन बार दोहराव, 50 चाल, मात के लिए मोहरे कम, या सहमति।';
 
   @override
-  String get rulesChessDraw960 => 'ड्रॉ: स्टेलमेट, तीन बार दोहराव, 50 चाल, मात के लिए मोहरे कम, या सहमति।';
+  String get rulesChessClockClassic => 'घड़ी: 60+0 — पूरी पार्टी के लिए 60 मिनट, कोई जोड़ नहीं.';
 
   @override
-  String get rulesChessDrawAntichess => 'ड्रॉ: तीन बार दोहराव, या एक ही चाल में दोनों के मोहरे खत्म।';
+  String get rulesChessClockRapid => 'घड़ी: 10+0 — पूरी पार्टी के लिए 10 मिनट, कोई जोड़ नहीं.';
+
+  @override
+  String get rulesChessClockBlitz => 'घड़ी: 5+0 — पूरी पार्टी के लिए 5 मिनट, कोई जोड़ नहीं.';
+
+  @override
+  String get rulesChessClockBullet => 'घड़ी: 3+2 — 3 मिनट और हर चाल पर 2 सेकंड.';
 
   @override
   String get checkersDrawRepetition => 'ड्रॉ — स्थिति तीन बार दोहराई गई';

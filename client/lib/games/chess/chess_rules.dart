@@ -3,25 +3,38 @@ import 'package:multigames_client/games/games_repository.dart'
     show formatTurnTime, rulesStakeLine;
 import 'package:multigames_client/l10n/app_localizations.dart';
 
-/// Классические шахматы.
+/// Классика — контроль партии 60+0.
 const String chessModeClassic = 'classic';
 
-/// Шахматы-960 (Фишер).
-const String chessMode960 = 'chess960';
+/// Рапид — контроль партии 10+0.
+const String chessModeRapid = 'rapid';
 
-/// Антишахматы (взятие обязательно, цель — отдать фигуры).
-const String chessModeAntichess = 'antichess';
+/// Блиц — контроль партии 5+0 (5 минут).
+const String chessModeBlitz = 'blitz';
+
+/// Пуля — контроль партии 3+2.
+const String chessModeBullet = 'bullet';
 
 const List<String> chessAllModes = [
   chessModeClassic,
-  chessMode960,
-  chessModeAntichess,
+  chessModeRapid,
+  chessModeBlitz,
+  chessModeBullet,
 ];
+
+/// Лимит на ход: 20 с, 1 мин, без лимита.
+const List<int> chessTurnTimeOptions = [20, 60, 0];
+
+int chessNormalizeTurnTime(int? raw) {
+  if (raw != null && chessTurnTimeOptions.contains(raw)) return raw;
+  return 60;
+}
 
 String chessNormalizeMode(String? raw) {
   switch (raw) {
-    case chessMode960:
-    case chessModeAntichess:
+    case chessModeRapid:
+    case chessModeBlitz:
+    case chessModeBullet:
       return raw!;
     default:
       return chessModeClassic;
@@ -33,24 +46,54 @@ String chessNextMode(String? raw) {
   return chessAllModes[(chessAllModes.indexOf(cur) + 1) % chessAllModes.length];
 }
 
+int chessNextTurnTime(int? raw) {
+  final cur = chessNormalizeTurnTime(raw);
+  return chessTurnTimeOptions[
+      (chessTurnTimeOptions.indexOf(cur) + 1) % chessTurnTimeOptions.length];
+}
+
 String chessModeLabel(String mode, [AppLocalizations? l10n]) {
   final t = l10n ?? LocaleService.l10n;
   switch (chessNormalizeMode(mode)) {
-    case chessMode960:
-      return t.gamesChessMode960;
-    case chessModeAntichess:
-      return t.gamesChessModeAntichess;
+    case chessModeRapid:
+      return t.gamesChessModeRapid;
+    case chessModeBlitz:
+      return t.gamesChessModeBlitz;
+    case chessModeBullet:
+      return t.gamesChessModeBullet;
     default:
       return t.gamesChessModeClassic;
   }
 }
 
+String chessClockNotation(String mode) {
+  switch (chessNormalizeMode(mode)) {
+    case chessModeRapid:
+      return '10+0';
+    case chessModeBlitz:
+      return '5+0';
+    case chessModeBullet:
+      return '3+2';
+    default:
+      return '60+0';
+  }
+}
+
+String chessClockLine(String mode, AppLocalizations l10n) {
+  switch (chessNormalizeMode(mode)) {
+    case chessModeRapid:
+      return l10n.rulesChessClockRapid;
+    case chessModeBlitz:
+      return l10n.rulesChessClockBlitz;
+    case chessModeBullet:
+      return l10n.rulesChessClockBullet;
+    default:
+      return l10n.rulesChessClockClassic;
+  }
+}
+
 String chessPlayLine(String mode, AppLocalizations l10n) {
   switch (chessNormalizeMode(mode)) {
-    case chessMode960:
-      return l10n.rulesChessPlay960;
-    case chessModeAntichess:
-      return l10n.rulesChessPlayAntichess;
     default:
       return l10n.rulesChessPlayClassic;
   }
@@ -58,16 +101,12 @@ String chessPlayLine(String mode, AppLocalizations l10n) {
 
 String chessDrawLine(String mode, AppLocalizations l10n) {
   switch (chessNormalizeMode(mode)) {
-    case chessMode960:
-      return l10n.rulesChessDraw960;
-    case chessModeAntichess:
-      return l10n.rulesChessDrawAntichess;
     default:
       return l10n.rulesChessDrawClassic;
   }
 }
 
-/// Строки правил только выбранного режима.
+/// Строки правил только выбранного контроля времени.
 List<String> chessRuleLines({
   required String gameMode,
   required int turnTimeSec,
@@ -79,6 +118,7 @@ List<String> chessRuleLines({
   return [
     l10n.rulesChessPlayers,
     l10n.rulesChessMode(chessModeLabel(mode, l10n)),
+    if (!offline) chessClockLine(mode, l10n),
     if (offline)
       l10n.rulesNoTimeLimit
     else if (turnTimeSec == 0)

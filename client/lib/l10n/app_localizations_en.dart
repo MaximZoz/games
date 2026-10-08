@@ -805,10 +805,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesChessModeClassic => 'Classic';
 
   @override
-  String get gamesChessMode960 => 'Chess960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antichess';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
 
   @override
   String get rulesCheckersPlayers => 'Players: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Classic: an 8×8 board. Each side has a king, queen, two rooks, two bishops, two knights and eight pawns. White moves first. The king moves one square, the queen along ranks, files and diagonals, the rook along ranks and files, the bishop on diagonals, the knight in an L. A pawn steps forward one square (two from its start), captures diagonally; en passant and promotion apply. Castling is allowed if the king and rook have not moved and the path is clear. Win by checkmate or if the opponent resigns.';
-
-  @override
-  String get rulesChessPlay960 => 'Chess960: an 8×8 board with standard piece moves. The back rank is shuffled by Fischer rules: the king between the rooks, bishops on opposite colors. White moves first. Castling is allowed: the king and rook finish on the c and g files. Win by checkmate or if the opponent resigns.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antichess: an 8×8 board with standard piece moves. Captures are mandatory when available. There is no check — the king may be captured. No castling. Win by giving away all your pieces or having no legal move.';
+  String get rulesChessPlayClassic => 'An 8×8 board. Each side has a king, queen, two rooks, two bishops, two knights and eight pawns. White moves first. The king moves one square, the queen along ranks, files and diagonals, the rook along ranks and files, the bishop on diagonals, the knight in an L. A pawn steps forward one square (two from its start), captures diagonally; en passant and promotion apply. Castling is allowed if the king and rook have not moved and the path is clear. Win by checkmate or if the opponent resigns.';
 
   @override
   String get rulesChessDrawClassic => 'A draw on stalemate, threefold repetition, the 50-move rule with no capture or pawn move, insufficient mating material, or by agreement.';
 
   @override
-  String get rulesChessDraw960 => 'A draw on stalemate, threefold repetition, the 50-move rule with no capture or pawn move, insufficient mating material, or by agreement.';
+  String get rulesChessClockClassic => 'Game clock: 60+0 — 60 minutes for the whole game, no increment.';
 
   @override
-  String get rulesChessDrawAntichess => 'A draw on threefold repetition, or if both sides lose their last pieces on the same move.';
+  String get rulesChessClockRapid => 'Game clock: 10+0 — 10 minutes for the whole game, no increment.';
+
+  @override
+  String get rulesChessClockBlitz => 'Game clock: 5+0 — 5 minutes for the whole game, no increment.';
+
+  @override
+  String get rulesChessClockBullet => 'Game clock: 3+2 — 3 minutes plus 2 seconds per move.';
 
   @override
   String get checkersDrawRepetition => 'Draw — the position repeated three times';
