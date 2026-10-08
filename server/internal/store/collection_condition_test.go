@@ -58,6 +58,31 @@ func TestCollectionRefundBronze(t *testing.T) {
 	}
 }
 
+func TestCollectionDailyIncomeBronze(t *testing.T) {
+	acquired := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(0, 0, 1), 0, nil); got != 100 {
+		t.Fatalf("new: got %d", got)
+	}
+	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(0, 0, 20), 0, nil); got != 60 {
+		t.Fatalf("worn: got %d", got)
+	}
+	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(0, 3, 0), 0, nil); got != 40 {
+		t.Fatalf("tired: got %d", got)
+	}
+	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(0, 8, 0), 0, nil); got != 100 {
+		t.Fatalf("shabby: got %d", got)
+	}
+	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(1, 1, 0), 0, nil); got != 200 {
+		t.Fatalf("vintage: got %d", got)
+	}
+	if got := CollectionSetBonusAged(50, false); got != 50 {
+		t.Fatalf("set: got %d", got)
+	}
+	if got := CollectionSetBonusAged(50, true); got != 150 {
+		t.Fatalf("vintage set: got %d", got)
+	}
+}
+
 func TestCollectionConditionEffective(t *testing.T) {
 	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
 	now := acquired.AddDate(0, 0, 1) // новое

@@ -71,6 +71,43 @@ CollectionCondition collectionConditionOf(String? acquiredAt, [DateTime? now]) {
   return collectionConditionAt(parsed, now ?? DateTime.now());
 }
 
+/// Доля обычного дневного дохода: новое и ветхое 100%, потрепанное 60%,
+/// уставшее 40%, винтажный предмет 200%.
+int collectionIncomePercent(CollectionCondition condition) {
+  switch (condition) {
+    case CollectionCondition.worn:
+      return 60;
+    case CollectionCondition.tired:
+      return 40;
+    case CollectionCondition.vintage:
+      return 200;
+    case CollectionCondition.fresh:
+    case CollectionCondition.shabby:
+      return 100;
+  }
+}
+
+/// Дневной доход предмета с учётом состояния. Пустая дата — как новое.
+int collectionDailyIncomeBronze({
+  required int baseBronze,
+  required String? acquiredAt,
+  DateTime? now,
+  int conditionShift = 0,
+  String? vintageAt,
+}) {
+  if (baseBronze <= 0) return 0;
+  final parsed = parseCollectionAcquiredAt(acquiredAt);
+  final condition = parsed == null
+      ? CollectionCondition.fresh
+      : collectionConditionEffective(
+          acquired: parsed,
+          now: now ?? DateTime.now(),
+          shift: conditionShift,
+          vintageAt: parseCollectionAcquiredAt(vintageAt),
+        );
+  return baseBronze * collectionIncomePercent(condition) ~/ 100;
+}
+
 int collectionRefundBronze({
   required int priceBronze,
   required String? acquiredAt,

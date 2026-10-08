@@ -636,7 +636,7 @@
   "shopStakes": "Taruhan",
   "shopStakesSubtitle": "Buka taruhan lebih tinggi",
   "shopEmojisHelp": "Emoji animasi untuk obrolan. Beli satu set dan kirim ke teman.",
-  "shopCollectionsHelp": "Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Koleksi lengkap memberi koin ekstra setiap hari.\n\nKondisi tergantung sudah berapa lama koleksi ada padamu. Baru — 7 hari pertama, jual 80% dari harga. Usang — hari ke-8 sampai 2 bulan, jual 60% dari harga. Lelah — 2 sampai 6 bulan, jual 40% dari harga. Lapuk — 6 bulan sampai 1 tahun, jual 100% dari harga. Vintage — setelah 1 tahun, jual 300% dari harga.",
+  "shopCollectionsHelp": "Kumpulkan set item: muncul di etalase profil, bisa dihadiahkan atau dijual. Setiap item memberi koin setiap hari, dan set lengkap menambah bonus terpisah.\n\nPendapatan harian item bergantung pada kondisi dan merupakan bagian dari jumlah biasa. Baru memberi 100%. Usang memberi 60%. Lelah memberi 40%. Lapuk memberi 100%. Item vintage memberi 200%, dua kali pendapatan harian biasa.\n\nBonus set lengkap tetap sama sampai set itu sendiri vintage. Set vintage bila setiap item di dalamnya vintage: bonusnya menjadi 300%, tiga kali jumlah biasa.\n\nKondisi bergantung sudah berapa lama item ada padamu. Baru — 7 hari pertama, jual 80% dari harga. Usang — hari ke-8 sampai 2 bulan, jual 60% dari harga. Lelah — 2 sampai 6 bulan, jual 40% dari harga. Lapuk — 6 bulan sampai 1 tahun, jual 100% dari harga. Vintage — setelah 1 tahun, jual 300% dari harga.",
   "shopStakesHelp": "Buka taruhan lebih tinggi. Semakin tinggi taruhan, semakin besar pot dan kemenangan.",
   "inventoryTitle": "Item",
   "inventoryEmpty": "Belum ada apa pun — cek toko",

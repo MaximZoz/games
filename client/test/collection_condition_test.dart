@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
 import 'package:multigames_client/shop/collection_condition.dart';
+import 'package:multigames_client/shop/collection_widgets.dart';
 
 void main() {
   final acquired = DateTime.utc(2024, 1, 15, 12);
@@ -138,5 +139,24 @@ void main() {
     expect(l10n.shopCollectionsHelp, contains('продажа 80% от стоимости'));
     expect(l10n.shopCollectionsHelp, contains('продажа 300% от стоимости'));
     expect(l10n.shopCollectionsHelp, contains('Винтаж'));
+    expect(l10n.shopCollectionsHelp, contains('200%'));
+    expect(l10n.shopCollectionsHelp, contains('300%'));
+  });
+
+  test('дневной доход зависит от состояния', () {
+    final acquired = DateTime.utc(2024, 3, 1);
+    int income(DateTime at) => collectionDailyIncomeBronze(
+          baseBronze: 100,
+          acquiredAt: acquired.toIso8601String(),
+          now: at,
+        );
+    expect(income(acquired.add(const Duration(days: 1))), 100);
+    expect(income(acquired.add(const Duration(days: 20))), 60);
+    expect(income(DateTime.utc(2024, 6, 1)), 40);
+    expect(income(DateTime.utc(2024, 11, 1)), 100);
+    expect(income(DateTime.utc(2025, 4, 1)), 200);
+    expect(collectionSetIncomeBronze('nature', allVintage: false), 50);
+    expect(collectionSetIncomeBronze('nature', allVintage: true), 150);
+    expect(collectionSetIncomeBronze('jewels', allVintage: true), 15000);
   });
 }

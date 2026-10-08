@@ -29,6 +29,30 @@ const collectionSetOrder = [
   'jewels',
 ];
 
+/// Бонус полного набора. Винтажный набор — 300% обычного бонуса.
+int collectionSetIncomeBronze(String set, {required bool allVintage}) {
+  final base = collectionSetBonusBronze(set);
+  if (!allVintage) return base;
+  return base * 3;
+}
+
+bool collectionOwnedIsVintage({
+  required String? acquiredAt,
+  int conditionShift = 0,
+  String? vintageAt,
+  DateTime? now,
+}) {
+  final acquired = parseCollectionAcquiredAt(acquiredAt);
+  if (acquired == null) return false;
+  return collectionConditionEffective(
+        acquired: acquired,
+        now: now ?? DateTime.now(),
+        shift: conditionShift,
+        vintageAt: parseCollectionAcquiredAt(vintageAt),
+      ) ==
+      CollectionCondition.vintage;
+}
+
 /// Дневной бонус за полностью собранную группу (как на сервере).
 int collectionSetBonusBronze(String set) {
   switch (set) {
@@ -93,6 +117,32 @@ String collectionItemSubtitle(int dailyBronze) =>
     LocaleService.l10n.collectionCardMeta(
       formatRewardBronzePerDay(dailyBronze),
     );
+
+/// Доход предмета в магазине: у купленного — по текущему состоянию.
+int shopCollectionDaily(ShopItem item) {
+  if (!item.owned) return item.dailyBronze;
+  return collectionDailyIncomeBronze(
+    baseBronze: item.dailyBronze,
+    acquiredAt: item.acquiredAt,
+    conditionShift: item.conditionShift,
+    vintageAt: item.vintageAt,
+  );
+}
+
+/// Бонус набора в магазине. Утроение только если набор собран и весь винтажный.
+int shopSetDaily(String set, List<ShopItem> items) {
+  if (items.isEmpty || items.any((e) => !e.owned)) {
+    return collectionSetBonusBronze(set);
+  }
+  final allVintage = items.every(
+    (e) => collectionOwnedIsVintage(
+      acquiredAt: e.acquiredAt,
+      conditionShift: e.conditionShift,
+      vintageAt: e.vintageAt,
+    ),
+  );
+  return collectionSetIncomeBronze(set, allVintage: allVintage);
+}
 
 /// Кнопка эликсира на полноэкранной коллекции.
 class CollectionElixirButton {

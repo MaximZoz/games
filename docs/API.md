@@ -470,7 +470,7 @@ POST /api/inventory/elixir              // {"elixir_code","collection_code"} —
 POST /api/inventory/gift                // подарок другу (создаёт системное сообщение в чате)
 
 GET  /api/inventory/collections?user_id=<uuid>      // витрина коллекций
-GET  /api/inventory/collection-income              // доход с коллекций
+GET  /api/inventory/collection-income              // доход: предмет 100/60/40/100/200% по состоянию, винтажный набор 300% бонуса
 POST /api/inventory/claim-collection-income        // забрать дневной доход
 ```
 
