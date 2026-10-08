@@ -814,6 +814,36 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesChessModeBullet => 'Σφαίρα';
 
   @override
+  String get chessPieceQueen => 'Βασίλισσα';
+
+  @override
+  String get chessPieceRook => 'Πύργος';
+
+  @override
+  String get chessPieceBishop => 'Αξιωματικός';
+
+  @override
+  String get chessPieceKnight => 'Ίππος';
+
+  @override
+  String get chessPromotionTitle => 'Προαγωγή πιονιού';
+
+  @override
+  String get chessDrawStalemate => 'Ισοπαλία: πατ';
+
+  @override
+  String get chessDrawInsufficient => 'Ισοπαλία: ανεπαρκές υλικό';
+
+  @override
+  String get chessDrawRepetition => 'Ισοπαλία: τριπλή επανάληψη θέσης';
+
+  @override
+  String get chessDrawFiftyMove => 'Ισοπαλία: κανόνας 50 κινήσεων';
+
+  @override
+  String get chessCheck => 'Σαχ';
+
+  @override
   String get rulesCheckersPlayers => 'Παίκτες: 2.';
 
   @override

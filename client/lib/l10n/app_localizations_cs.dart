@@ -814,6 +814,36 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gamesChessModeBullet => 'Kulka';
 
   @override
+  String get chessPieceQueen => 'Dáma';
+
+  @override
+  String get chessPieceRook => 'Věž';
+
+  @override
+  String get chessPieceBishop => 'Střelec';
+
+  @override
+  String get chessPieceKnight => 'Jezdec';
+
+  @override
+  String get chessPromotionTitle => 'Proměna pěšce';
+
+  @override
+  String get chessDrawStalemate => 'Remíza: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Remíza: nedostatek materiálu';
+
+  @override
+  String get chessDrawRepetition => 'Remíza: trojí opakování pozice';
+
+  @override
+  String get chessDrawFiftyMove => 'Remíza: pravidlo 50 tahů';
+
+  @override
+  String get chessCheck => 'Šach';
+
+  @override
   String get rulesCheckersPlayers => 'Hráči: 2.';
 
   @override

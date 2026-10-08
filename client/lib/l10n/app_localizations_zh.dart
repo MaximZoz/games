@@ -814,6 +814,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gamesChessModeBullet => '子弹';
 
   @override
+  String get chessPieceQueen => '皇后';
+
+  @override
+  String get chessPieceRook => '车';
+
+  @override
+  String get chessPieceBishop => '象';
+
+  @override
+  String get chessPieceKnight => '马';
+
+  @override
+  String get chessPromotionTitle => '兵的升变';
+
+  @override
+  String get chessDrawStalemate => '和棋：逼和';
+
+  @override
+  String get chessDrawInsufficient => '和棋：子力不足';
+
+  @override
+  String get chessDrawRepetition => '和棋：三次重复局面';
+
+  @override
+  String get chessDrawFiftyMove => '和棋：50回合规则';
+
+  @override
+  String get chessCheck => '将军';
+
+  @override
   String get rulesCheckersPlayers => '玩家：2 人。';
 
   @override

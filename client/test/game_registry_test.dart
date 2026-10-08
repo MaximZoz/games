@@ -12,8 +12,8 @@ void main() {
     expect(gameRegistry.contains('nardy'), isTrue);
     expect(gameRegistry.contains('checkers'), isTrue);
     expect(gameRegistry.contains('chess'), isTrue);
-    expect(gameRegistry['chess']!.comingSoon, isTrue);
-    expect(gameRegistry['chess']!.supportsOffline, isFalse);
+    expect(gameRegistry['chess']!.comingSoon, isFalse);
+    expect(gameRegistry['chess']!.supportsOffline, isTrue);
     expect(gameRegistry.contains('connect4'), isFalse);
     expect(gameRegistry.contains(null), isFalse);
     expect(
@@ -83,5 +83,7 @@ void main() {
     expect(gameRegistry['nardy']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.supportsOffline, isTrue);
     expect(gameRegistry['checkers']!.offlinePath, '/games/checkers/offline');
+    expect(gameRegistry['chess']!.supportsOffline, isTrue);
+    expect(gameRegistry['chess']!.offlinePath, '/games/chess/offline');
   });
 }

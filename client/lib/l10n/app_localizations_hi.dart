@@ -814,6 +814,36 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gamesChessModeBullet => 'बुलेट';
 
   @override
+  String get chessPieceQueen => 'वज़ीर';
+
+  @override
+  String get chessPieceRook => 'हाथी';
+
+  @override
+  String get chessPieceBishop => 'ऊँट';
+
+  @override
+  String get chessPieceKnight => 'घोड़ा';
+
+  @override
+  String get chessPromotionTitle => 'प्यादे का प्रमोशन';
+
+  @override
+  String get chessDrawStalemate => 'ड्रॉ: गतिरोध';
+
+  @override
+  String get chessDrawInsufficient => 'ड्रॉ: अपर्याप्त सामग्री';
+
+  @override
+  String get chessDrawRepetition => 'ड्रॉ: तीन बार पुनरावृत्ति';
+
+  @override
+  String get chessDrawFiftyMove => 'ड्रॉ: 50-चाल नियम';
+
+  @override
+  String get chessCheck => 'शह';
+
+  @override
   String get rulesCheckersPlayers => 'खिलाड़ी: 2.';
 
   @override

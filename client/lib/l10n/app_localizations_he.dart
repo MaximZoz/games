@@ -814,6 +814,36 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesChessModeBullet => 'כדור';
 
   @override
+  String get chessPieceQueen => 'מלכה';
+
+  @override
+  String get chessPieceRook => 'צריח';
+
+  @override
+  String get chessPieceBishop => 'רץ';
+
+  @override
+  String get chessPieceKnight => 'פרש';
+
+  @override
+  String get chessPromotionTitle => 'הכתרת רגלי';
+
+  @override
+  String get chessDrawStalemate => 'תיקו: פט';
+
+  @override
+  String get chessDrawInsufficient => 'תיקו: חומר לא מספיק';
+
+  @override
+  String get chessDrawRepetition => 'תיקו: חזרה משולשת';
+
+  @override
+  String get chessDrawFiftyMove => 'תיקו: חוק 50 המסעים';
+
+  @override
+  String get chessCheck => 'שח';
+
+  @override
   String get rulesCheckersPlayers => 'שחקנים: 2.';
 
   @override

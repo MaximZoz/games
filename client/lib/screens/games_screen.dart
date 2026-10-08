@@ -18,6 +18,7 @@ import 'package:multigames_client/games/checkers/checkers_engine.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
+import 'package:multigames_client/games/chess/chess_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_provider.dart';
 import 'package:multigames_client/games/nardy/nardy_rules.dart';
 import 'package:multigames_client/games/framework/framework.dart';
@@ -862,6 +863,43 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
       }
       return;
     }
+    if (inv.gameType == 'chess') {
+      try {
+        final res = await ref.read(chessRepositoryProvider).joinLobby(lobbyId);
+        ref.read(gameInvitesProvider.notifier).resolveJoined(lobbyId);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'chess',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'chess');
+          if (context.mounted) {
+            context.go('/games/chess/game/$gameId');
+          }
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'chess',
+                ),
+              );
+          if (context.mounted) {
+            context.go('/games/chess/lobby/$lobbyId?mode=invite');
+          }
+        }
+      } catch (e) {
+        ref.read(gameInvitesProvider.notifier).remove(lobbyId);
+        _showInviteError(e);
+      }
+      return;
+    }
     try {
       final repo = ref.read(gamesRepositoryProvider);
       final result = await repo.joinLobby(lobbyId);
@@ -985,6 +1023,14 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         l10n: context.l10n,
       ));
     }
+    if (inv.isChess) {
+      return rulesTextLines(chessRuleLines(
+        gameMode: inv.durakMode,
+        turnTimeSec: inv.turnTimeSec,
+        stakeBronze: inv.stakeBronze,
+        l10n: context.l10n,
+      ));
+    }
     return buildTictactoeRulesTextWidget(
       variant: inv.variant,
       gridSize: inv.gridSize,
@@ -1087,6 +1133,8 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
         await ref.read(nardyRepositoryProvider).declineLobby(lobbyId);
       } else if (gameType == 'checkers') {
         await ref.read(checkersRepositoryProvider).declineLobby(lobbyId);
+      } else if (gameType == 'chess') {
+        await ref.read(chessRepositoryProvider).declineLobby(lobbyId);
       } else {
         await ref.read(gamesRepositoryProvider).declineLobby(lobbyId);
       }
@@ -1381,6 +1429,56 @@ class _GamesScreenState extends ConsumerState<GamesScreen>
                 ),
               );
           context.go('/games/checkers/lobby/$lobbyId?mode=invite');
+        }
+      } on GamesException catch (error) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: isFinishCurrentGameError(error)
+              ? finishCurrentGameMessage
+              : formatUserError(error),
+          kind: AppSnackKind.error,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          showAppSnackBar(
+            context,
+            message: formatUserError(error),
+            kind: AppSnackKind.error,
+          );
+        }
+      }
+      return;
+    }
+    if (gameType == 'chess') {
+      try {
+        ref.read(openLobbiesProvider.notifier).removeLocal(lobbyId);
+        final res =
+            await ref.read(chessRepositoryProvider).joinLobby(lobbyId);
+        if (!context.mounted) return;
+        ref.invalidate(openLobbiesProvider);
+        final gameId = res.gameId?.trim() ?? '';
+        if (res.joined && gameId.isNotEmpty) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'game',
+                  gameId: gameId,
+                  gameType: 'chess',
+                ),
+              );
+          pinBlockingGame(ref, gameId, gameType: 'chess');
+          context.go('/games/chess/game/$gameId');
+          return;
+        }
+        if (res.joined) {
+          ref.read(activeGameProvider.notifier).setLocal(
+                ActiveGameItem(
+                  type: 'lobby',
+                  lobbyId: lobbyId,
+                  gameType: 'chess',
+                ),
+              );
+          context.go('/games/chess/lobby/$lobbyId?mode=invite');
         }
       } on GamesException catch (error) {
         if (!context.mounted) return;

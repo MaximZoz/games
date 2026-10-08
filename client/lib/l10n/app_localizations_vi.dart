@@ -814,6 +814,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesChessModeBullet => 'Đạn';
 
   @override
+  String get chessPieceQueen => 'Hậu';
+
+  @override
+  String get chessPieceRook => 'Xe';
+
+  @override
+  String get chessPieceBishop => 'Tượng';
+
+  @override
+  String get chessPieceKnight => 'Mã';
+
+  @override
+  String get chessPromotionTitle => 'Phong cấp tốt';
+
+  @override
+  String get chessDrawStalemate => 'Hòa: hết nước đi';
+
+  @override
+  String get chessDrawInsufficient => 'Hòa: không đủ quân chiếu hết';
+
+  @override
+  String get chessDrawRepetition => 'Hòa: lặp lại ba lần';
+
+  @override
+  String get chessDrawFiftyMove => 'Hòa: luật 50 nước';
+
+  @override
+  String get chessCheck => 'Chiếu';
+
+  @override
   String get rulesCheckersPlayers => 'Người chơi: 2.';
 
   @override

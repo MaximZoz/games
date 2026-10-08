@@ -814,6 +814,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesChessModeBullet => 'Bullet';
 
   @override
+  String get chessPieceQueen => 'Vezir';
+
+  @override
+  String get chessPieceRook => 'Kale';
+
+  @override
+  String get chessPieceBishop => 'Fil';
+
+  @override
+  String get chessPieceKnight => 'At';
+
+  @override
+  String get chessPromotionTitle => 'Piyon terfisi';
+
+  @override
+  String get chessDrawStalemate => 'Beraberlik: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Beraberlik: yetersiz materyal';
+
+  @override
+  String get chessDrawRepetition => 'Beraberlik: üç kez tekrar';
+
+  @override
+  String get chessDrawFiftyMove => 'Beraberlik: 50 hamle kuralı';
+
+  @override
+  String get chessCheck => 'Şah';
+
+  @override
   String get rulesCheckersPlayers => 'Oyuncular: 2.';
 
   @override

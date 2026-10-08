@@ -814,6 +814,36 @@ class AppLocalizationsId extends AppLocalizations {
   String get gamesChessModeBullet => 'Peluru';
 
   @override
+  String get chessPieceQueen => 'Menteri';
+
+  @override
+  String get chessPieceRook => 'Benteng';
+
+  @override
+  String get chessPieceBishop => 'Gajah';
+
+  @override
+  String get chessPieceKnight => 'Kuda';
+
+  @override
+  String get chessPromotionTitle => 'Promosi pion';
+
+  @override
+  String get chessDrawStalemate => 'Seri: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Seri: materi tidak cukup';
+
+  @override
+  String get chessDrawRepetition => 'Seri: pengulangan tiga kali';
+
+  @override
+  String get chessDrawFiftyMove => 'Seri: aturan 50 langkah';
+
+  @override
+  String get chessCheck => 'Sekak';
+
+  @override
   String get rulesCheckersPlayers => 'Pemain: 2.';
 
   @override

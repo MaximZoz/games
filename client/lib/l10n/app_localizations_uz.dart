@@ -814,6 +814,36 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesChessModeBullet => 'O‘q';
 
   @override
+  String get chessPieceQueen => 'Farzin';
+
+  @override
+  String get chessPieceRook => 'Rux';
+
+  @override
+  String get chessPieceBishop => 'Fil';
+
+  @override
+  String get chessPieceKnight => 'Ot';
+
+  @override
+  String get chessPromotionTitle => 'Piyodani almashtirish';
+
+  @override
+  String get chessDrawStalemate => 'Durrang: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Durrang: mat uchun material yetarli emas';
+
+  @override
+  String get chessDrawRepetition => 'Durrang: pozitsiyaning uch marta takrorlanishi';
+
+  @override
+  String get chessDrawFiftyMove => 'Durrang: 50 yurish qoidasi';
+
+  @override
+  String get chessCheck => 'Shoh';
+
+  @override
   String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
 
   @override
