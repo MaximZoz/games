@@ -1625,6 +1625,143 @@ List<Widget> buildGameAppBarActions({
   ];
 }
 
+/// Форматирует остаток времени в `M:SS` (или `H:MM:SS` при >= часа).
+String formatClockMs(int ms) {
+  if (ms < 0) ms = 0;
+  final totalSec = (ms / 1000).ceil();
+  final h = totalSec ~/ 3600;
+  final m = (totalSec % 3600) ~/ 60;
+  final s = totalSec % 60;
+  String two(int v) => v.toString().padLeft(2, '0');
+  if (h > 0) return '$h:${two(m)}:${two(s)}';
+  return '$m:${two(s)}';
+}
+
+/// Часы игрока: общий остаток времени (формат `M:SS`), для активного игрока
+/// локально тикает вниз. Общий для настольных игр с контролем времени.
+class GameClock extends StatefulWidget {
+  const GameClock({
+    super.key,
+    required this.remainingMs,
+    required this.running,
+    this.label,
+    this.compact = false,
+  });
+
+  /// Остаток времени на момент снимка сервера, мс.
+  final int remainingMs;
+
+  /// Идут ли сейчас часы этого игрока (тикаем локально).
+  final bool running;
+
+  /// Подпись слева (например, «Вы» / имя соперника).
+  final String? label;
+
+  final bool compact;
+
+  @override
+  State<GameClock> createState() => _GameClockState();
+}
+
+class _GameClockState extends State<GameClock> {
+  final Stopwatch _sw = Stopwatch();
+  int _baseMs = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _reset();
+  }
+
+  void _reset() {
+    _baseMs = widget.remainingMs;
+    _sw
+      ..reset()
+      ..stop();
+    _timer?.cancel();
+    if (widget.running) {
+      _sw.start();
+      _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant GameClock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.remainingMs != widget.remainingMs ||
+        oldWidget.running != widget.running) {
+      _reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _currentMs {
+    final ms = widget.running ? _baseMs - _sw.elapsedMilliseconds : _baseMs;
+    return ms < 0 ? 0 : ms;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ms = _currentMs;
+    final low = widget.running && ms <= 20000;
+    final bg = widget.running
+        ? (low
+            ? const Color(0x33E53935)
+            : AppColors.accentStart.withValues(alpha: 0.18))
+        : Colors.white.withValues(alpha: 0.06);
+    final border = widget.running
+        ? (low ? const Color(0xFFE53935) : AppColors.accentStart)
+        : Colors.white24;
+    final fg = low ? const Color(0xFFFF8A80) : Colors.white;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.compact ? 8 : 10,
+        vertical: widget.compact ? 3 : 5,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border, width: widget.running ? 1.4 : 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.schedule_rounded,
+              size: widget.compact ? 13 : 15, color: fg.withValues(alpha: 0.8)),
+          const SizedBox(width: 4),
+          if (widget.label != null && widget.label!.isNotEmpty) ...[
+            Text(
+              widget.label!,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: widget.compact ? 11 : 12,
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            formatClockMs(ms),
+            style: TextStyle(
+              color: fg,
+              fontSize: widget.compact ? 14 : 16,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Панель просмотра партии (как на lichess): кнопка переворота доски и
 /// стрелки перемотки ходов (в начало / назад / вперёд / в конец).
 ///

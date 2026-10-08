@@ -899,13 +899,13 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   ) {
     return Column(
       children: [
-        _buildOpponentCard(live, me),
+        _opponentRow(live, me),
         const SizedBox(height: 6),
         _buildStatusLine(live, myTurn),
         const SizedBox(height: 6),
         Expanded(child: _buildBoard(live, display)),
         const SizedBox(height: 6),
-        _buildReviewBar(live),
+        _bottomBar(live),
         if (live.isOver) ...[
           const SizedBox(height: 8),
           _buildFinishRow(live, me),
@@ -929,7 +929,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             children: [
               Expanded(child: _buildBoard(live, display)),
               const SizedBox(height: 6),
-              _buildReviewBar(live),
+              _bottomBar(live),
             ],
           ),
         ),
@@ -941,7 +941,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpponentCard(live, me),
+                _opponentRow(live, me),
                 const SizedBox(height: 8),
                 _buildStatusLine(live, myTurn),
                 if (live.isOver) ...[
@@ -960,16 +960,72 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     final cur = _reviewIndex ?? (_history.isEmpty ? 0 : _history.length - 1);
     final canBack = _history.length > 1 && cur > 0;
     final canFwd = _reviewIndex != null;
-    return Center(
-      child: GameReviewBar(
-        onFlip: () => _toggleFlip(game),
-        flipTooltip: context.l10n.gameFlipBoard,
-        reviewing: _isReviewing,
-        onFirst: canBack ? _reviewFirst : null,
-        onPrev: canBack ? _reviewPrev : null,
-        onNext: canFwd ? _reviewNext : null,
-        onLast: canFwd ? _reviewLast : null,
-      ),
+    return GameReviewBar(
+      onFlip: () => _toggleFlip(game),
+      flipTooltip: context.l10n.gameFlipBoard,
+      reviewing: _isReviewing,
+      onFirst: canBack ? _reviewFirst : null,
+      onPrev: canBack ? _reviewPrev : null,
+      onNext: canFwd ? _reviewNext : null,
+      onLast: canFwd ? _reviewLast : null,
+    );
+  }
+
+  int _clockMsFor(ChessGameView g, int seat) =>
+      seat == 0 ? g.clockMs0 : g.clockMs1;
+
+  Widget? _clockFor(ChessGameView g, int seat, String label) {
+    if (!g.hasClock || seat < 0) return null;
+    return GameClock(
+      remainingMs: _clockMsFor(g, seat),
+      running: !g.isOver && g.clockRunning == seat,
+      label: label,
+      compact: true,
+    );
+  }
+
+  Widget? _oppClock(ChessGameView g) {
+    if (g.myIndex < 0) return null;
+    final opp = g.myIndex == 0 ? 1 : 0;
+    final name = g.opponent?.displayName.trim();
+    return _clockFor(
+      g,
+      opp,
+      (name != null && name.isNotEmpty) ? name : context.l10n.gameOpponent,
+    );
+  }
+
+  Widget? _myClock(ChessGameView g) =>
+      _clockFor(g, g.myIndex, context.l10n.gameYou);
+
+  Widget _opponentRow(ChessGameView g, String? me) {
+    final clock = _oppClock(g);
+    final card = _buildOpponentCard(g, me);
+    if (clock == null) return card;
+    return Row(
+      children: [
+        Expanded(child: card),
+        const SizedBox(width: 8),
+        clock,
+      ],
+    );
+  }
+
+  /// Нижняя строка: мои часы слева, панель перемотки/переворота по центру.
+  Widget _bottomBar(ChessGameView g) {
+    final clock = _myClock(g);
+    final bar = _buildReviewBar(g);
+    return Row(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: clock ?? const SizedBox.shrink(),
+          ),
+        ),
+        bar,
+        const Expanded(child: SizedBox.shrink()),
+      ],
     );
   }
 
