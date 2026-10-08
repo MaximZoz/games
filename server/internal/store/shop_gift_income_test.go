@@ -1,6 +1,9 @@
 package store
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestEncodeGiftCollectionMessage(t *testing.T) {
 	got := EncodeGiftCollectionMessage("c1", "Title", "🎁", "sparkles")
@@ -25,7 +28,7 @@ func TestEncodeGiftCollectionMessageTrims(t *testing.T) {
 }
 
 func TestCalcCollectionWeeklyIncomeEmpty(t *testing.T) {
-	items, bonus, owned, sets := calcCollectionWeeklyIncome(nil, nil)
+	items, bonus, owned, sets := calcCollectionWeeklyIncome(nil, nil, time.Time{})
 	if items != 0 || bonus != 0 || owned != 0 || sets != 0 {
 		t.Fatalf("%d %d %d %d", items, bonus, owned, sets)
 	}
@@ -49,8 +52,12 @@ func TestCalcCollectionWeeklyIncomePartialAndCompleteSet(t *testing.T) {
 		{Code: "a2", Set: "legends", WeeklyBronze: 20},
 		{Code: "b1", Set: "nature", WeeklyBronze: 5},
 	}
-	owned := map[string]struct{}{"a1": {}, "b1": {}}
-	items, bonus, ownedCount, sets := calcCollectionWeeklyIncome(catalog, owned)
+	now := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
+	owned := map[string]ownedCollectionState{
+		"a1": {Acquired: now},
+		"b1": {Acquired: now},
+	}
+	items, bonus, ownedCount, sets := calcCollectionWeeklyIncome(catalog, owned, now)
 	if items != 15 {
 		t.Fatalf("items=%d want 15", items)
 	}
@@ -62,8 +69,8 @@ func TestCalcCollectionWeeklyIncomePartialAndCompleteSet(t *testing.T) {
 		t.Fatalf("owned=%d", ownedCount)
 	}
 
-	owned["a2"] = struct{}{}
-	items, bonus, ownedCount, sets = calcCollectionWeeklyIncome(catalog, owned)
+	owned["a2"] = ownedCollectionState{Acquired: now}
+	items, bonus, ownedCount, sets = calcCollectionWeeklyIncome(catalog, owned, now)
 	if items != 35 {
 		t.Fatalf("items=%d want 35", items)
 	}
@@ -83,10 +90,44 @@ func TestCalcCollectionWeeklyIncomeAllSetsComplete(t *testing.T) {
 		{Code: "a1", Set: "celebration", WeeklyBronze: 1},
 		{Code: "b1", Set: "cosmic", WeeklyBronze: 2},
 	}
-	owned := map[string]struct{}{"a1": {}, "b1": {}}
-	items, bonus, _, sets := calcCollectionWeeklyIncome(catalog, owned)
+	now := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
+	owned := map[string]ownedCollectionState{
+		"a1": {Acquired: now},
+		"b1": {Acquired: now},
+	}
+	items, bonus, _, sets := calcCollectionWeeklyIncome(catalog, owned, now)
 	if items != 3 || bonus != 150 || sets != 2 {
 		t.Fatalf("items=%d bonus=%d sets=%d", items, bonus, sets)
+	}
+}
+
+func TestCalcCollectionWeeklyIncomeByCondition(t *testing.T) {
+	acquired := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
+	catalog := []collectionCatalogRow{
+		{Code: "n1", Set: "nature", WeeklyBronze: 10},
+		{Code: "n2", Set: "nature", WeeklyBronze: 20},
+	}
+	// Потрепанное: 60% от 10 и 20.
+	worn := acquired.AddDate(0, 0, 20)
+	owned := map[string]ownedCollectionState{
+		"n1": {Acquired: acquired},
+		"n2": {Acquired: acquired},
+	}
+	items, bonus, _, sets := calcCollectionWeeklyIncome(catalog, owned, worn)
+	if items != 18 || bonus != 50 || sets != 1 {
+		t.Fatalf("worn items=%d bonus=%d sets=%d", items, bonus, sets)
+	}
+	// Винтаж предмета — 200%, винтажный набор — 300% бонуса.
+	vintage := acquired.AddDate(2, 0, 0)
+	items, bonus, _, sets = calcCollectionWeeklyIncome(catalog, owned, vintage)
+	if items != 60 || bonus != 150 || sets != 1 {
+		t.Fatalf("vintage items=%d bonus=%d sets=%d", items, bonus, sets)
+	}
+	// Один предмет только что куплен: бонус набора без утроения.
+	owned["n2"] = ownedCollectionState{Acquired: vintage.AddDate(0, 0, -1)}
+	items, bonus, _, sets = calcCollectionWeeklyIncome(catalog, owned, vintage)
+	if items != 40 || bonus != 50 || sets != 1 {
+		t.Fatalf("mixed items=%d bonus=%d sets=%d", items, bonus, sets)
 	}
 }
 

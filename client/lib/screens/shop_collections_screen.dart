@@ -11,6 +11,7 @@ import 'package:multigames_client/shop/collection_condition.dart';
 import 'package:multigames_client/shop/collection_widgets.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
@@ -126,6 +127,12 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
           ),
+          actions: [
+            ShopSectionHelpButton(
+              title: context.l10n.shopCollections,
+              body: context.l10n.shopCollectionsHelp,
+            ),
+          ],
         ),
         body: SafeArea(
           child: orderedSets.isEmpty
@@ -181,7 +188,7 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
   ) {
     final groupItems = bySet[set]!;
     final preview = groupItems.first;
-    final setDaily = collectionSetBonusBronze(set);
+    final setDaily = shopSetDaily(set, groupItems);
     final ownedCount = groupItems.where((e) => e.owned).length;
     Future<void> openSet() async {
       await context.push('/shop/collections/$set');
@@ -277,6 +284,10 @@ class _ShopCollectionsScreenState extends ConsumerState<ShopCollectionsScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    ShopSectionHelpButton(
+                      title: collectionSetTitle(set),
+                      body: context.l10n.shopCollectionsHelp,
                     ),
                     const Icon(
                       Icons.chevron_right_rounded,
@@ -422,7 +433,7 @@ class _ShopCollectionGroupScreenState
             b.sortOrder,
           ));
 
-    final setDaily = collectionSetBonusBronze(widget.set);
+    final setDaily = shopSetDaily(widget.set, groupItems);
     final ownedCount = groupItems.where((e) => e.owned).length;
     final complete = ownedCount == groupItems.length && groupItems.isNotEmpty;
 
@@ -444,6 +455,12 @@ class _ShopCollectionGroupScreenState
                   fontWeight: FontWeight.w600,
                 ),
           ),
+          actions: [
+            ShopSectionHelpButton(
+              title: collectionSetTitle(widget.set),
+              body: context.l10n.shopCollectionsHelp,
+            ),
+          ],
         ),
         body: SafeArea(
           child: groupItems.isEmpty
@@ -513,7 +530,7 @@ class _ShopCollectionGroupScreenState
             catalogTitle(item.code, fallback: item.title, l10n: context.l10n),
         animatedName: item.animatedName ?? 'sparkles',
         fallback: item.emoji,
-        subtitle: collectionItemSubtitle(item.dailyBronze),
+        subtitle: collectionItemSubtitle(shopCollectionDaily(item)),
         condition: item.owned ? null : CollectionCondition.fresh,
         acquiredAt:
             item.owned ? parseCollectionAcquiredAt(item.acquiredAt) : null,
@@ -635,7 +652,7 @@ class _CollectionShopCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            collectionItemSubtitle(item.dailyBronze),
+                            collectionItemSubtitle(shopCollectionDaily(item)),
                             style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,

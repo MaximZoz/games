@@ -738,11 +738,17 @@ func loadActiveCollectionCatalog(ctx context.Context, q interface {
 	return out, rows.Err()
 }
 
-func ownedCollectionCodes(ctx context.Context, q interface {
+type ownedCollectionState struct {
+	Acquired time.Time
+	Shift    int
+	Vintage  *time.Time
+}
+
+func ownedCollectionStates(ctx context.Context, q interface {
 	Query(context.Context, string, ...any) (pgx.Rows, error)
-}, userID uuid.UUID) (map[string]struct{}, error) {
+}, userID uuid.UUID) (map[string]ownedCollectionState, error) {
 	rows, err := q.Query(ctx, `
-		SELECT u.item_code
+		SELECT u.item_code, u.acquired_at, u.condition_shift, u.vintage_at
 		FROM user_inventory u
 		JOIN shop_items s ON s.code = u.item_code
 		WHERE u.user_id = $1 AND s.kind = 'collection' AND s.active = TRUE`, userID)
@@ -750,29 +756,33 @@ func ownedCollectionCodes(ctx context.Context, q interface {
 		return nil, err
 	}
 	defer rows.Close()
-	owned := map[string]struct{}{}
+	owned := map[string]ownedCollectionState{}
 	for rows.Next() {
 		var code string
-		if err := rows.Scan(&code); err != nil {
+		var st ownedCollectionState
+		if err := rows.Scan(&code, &st.Acquired, &st.Shift, &st.Vintage); err != nil {
 			return nil, err
 		}
-		owned[code] = struct{}{}
+		owned[code] = st
 	}
 	return owned, rows.Err()
 }
 
-// calcCollectionWeeklyIncome: сумма daily по владеемым + фиксированный
-// бонус за каждую полностью собранную группу (CollectionSetBonusBronze).
-// Поле payload остаётся weekly_bronze (историческое имя), смысл — дневной бонус.
-func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]struct{}) (items, setBonus, ownedCount, completedSets int) {
+// calcCollectionWeeklyIncome: дневной доход предметов с учётом состояния
+// плюс бонус полного набора. Винтажный набор (каждый предмет винтажный)
+// получает 300% бонуса. Поле payload остаётся weekly_bronze.
+func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string]ownedCollectionState, now time.Time) (items, setBonus, ownedCount, completedSets int) {
+	now = now.UTC()
 	bySet := map[string][]collectionCatalogRow{}
 	for _, r := range catalog {
 		bySet[r.Set] = append(bySet[r.Set], r)
-		if _, ok := owned[r.Code]; ok {
-			ownedCount++
-			if r.WeeklyBronze > 0 {
-				items += r.WeeklyBronze
-			}
+		st, ok := owned[r.Code]
+		if !ok {
+			continue
+		}
+		ownedCount++
+		if r.WeeklyBronze > 0 {
+			items += CollectionDailyIncomeBronze(r.WeeklyBronze, st.Acquired, now, st.Shift, st.Vintage)
 		}
 	}
 	for set, group := range bySet {
@@ -780,15 +790,21 @@ func calcCollectionWeeklyIncome(catalog []collectionCatalogRow, owned map[string
 			continue
 		}
 		complete := true
+		allVintage := true
 		for _, r := range group {
-			if _, ok := owned[r.Code]; !ok {
+			st, ok := owned[r.Code]
+			if !ok {
 				complete = false
+				allVintage = false
 				break
+			}
+			if CollectionConditionEffective(st.Acquired, now, st.Shift, st.Vintage) != CollectionCondVintage {
+				allVintage = false
 			}
 		}
 		if complete {
 			completedSets++
-			if bonus := CollectionSetBonusBronze(set); bonus > 0 {
+			if bonus := CollectionSetBonusAged(CollectionSetBonusBronze(set), allVintage); bonus > 0 {
 				setBonus += bonus
 			}
 		}
@@ -802,11 +818,12 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 	if err != nil {
 		return nil, err
 	}
-	owned, err := ownedCollectionCodes(ctx, pool, userID)
+	owned, err := ownedCollectionStates(ctx, pool, userID)
 	if err != nil {
 		return nil, err
 	}
-	items, setBonus, ownedCount, completedSets := calcCollectionWeeklyIncome(catalog, owned)
+	now := time.Now().UTC()
+	items, setBonus, ownedCount, completedSets := calcCollectionWeeklyIncome(catalog, owned, now)
 	total := items + setBonus
 	info := &CollectionIncomeInfo{
 		OwnedCount:     ownedCount,
@@ -824,7 +841,6 @@ func GetCollectionIncomeInfo(ctx context.Context, pool *pgxpool.Pool, userID uui
 		SELECT collection_income_claimed_at FROM users WHERE id = $1`, userID).Scan(&claimedAt); err != nil {
 		return nil, err
 	}
-	now := time.Now().UTC()
 	if claimedAt == nil || !utcDate(*claimedAt).Equal(utcDate(now)) {
 		info.Available = true
 		return info, nil
@@ -857,11 +873,11 @@ func ClaimCollectionIncome(ctx context.Context, pool *pgxpool.Pool, userID uuid.
 	if err != nil {
 		return 0, 0, err
 	}
-	owned, err := ownedCollectionCodes(ctx, tx, userID)
+	owned, err := ownedCollectionStates(ctx, tx, userID)
 	if err != nil {
 		return 0, 0, err
 	}
-	items, setBonus, _, _ := calcCollectionWeeklyIncome(catalog, owned)
+	items, setBonus, _, _ := calcCollectionWeeklyIncome(catalog, owned, now)
 	amount = items + setBonus
 	if amount <= 0 {
 		return 0, 0, ErrNoCollections

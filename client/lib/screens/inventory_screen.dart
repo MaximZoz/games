@@ -17,6 +17,7 @@ import 'package:multigames_client/shop/elixir_icon.dart';
 import 'package:multigames_client/shop/elixir_labels.dart';
 import 'package:multigames_client/shop/flag_emojis.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/shop/shop_repository.dart';
 import 'package:multigames_client/shop/unread_gifted_collections.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -764,9 +765,20 @@ class _CollectionsBlock extends StatelessWidget {
       for (final set in collectionSetKeys)
         Builder(
           builder: (context) {
-            final ownedCount = collectionsBySet[set]?.length ?? 0;
+            final ownedItems = collectionsBySet[set] ?? const <InventoryItem>[];
+            final ownedCount = ownedItems.length;
             final totalCount = catalogBySet[set] ?? ownedCount;
-            final setBonus = collectionSetBonusBronze(set);
+            final complete = totalCount > 0 && ownedCount >= totalCount;
+            final allVintage = complete &&
+                ownedItems.every(
+                  (it) => collectionOwnedIsVintage(
+                    acquiredAt: it.acquiredAt,
+                    conditionShift: it.conditionShift,
+                    vintageAt: it.vintageAt,
+                  ),
+                );
+            final setBonus =
+                collectionSetIncomeBronze(set, allVintage: allVintage);
             return _CollectionSetFrame(
               title: collectionSetTitle(set),
               owned: ownedCount,
@@ -795,13 +807,21 @@ class _CollectionsBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.shopCollections,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: AppColors.textPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              context.l10n.shopCollections,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            ShopSectionHelpButton(
+              title: context.l10n.shopCollections,
+              body: context.l10n.shopCollectionsHelp,
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         if (!collectionsEmpty && income != null && income!.amountBronze > 0)
@@ -1131,7 +1151,12 @@ class _CollectionInvTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       BalanceDisplay(
-                        bronze: item.dailyBronze,
+                        bronze: collectionDailyIncomeBronze(
+                          baseBronze: item.dailyBronze,
+                          acquiredAt: item.acquiredAt,
+                          conditionShift: item.conditionShift,
+                          vintageAt: item.vintageAt,
+                        ),
                         prefix: '+',
                         perDay: true,
                         coinSize: 14,

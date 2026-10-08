@@ -77,6 +77,41 @@ func CollectionRefundAged(price int, acquired, now time.Time, shift int, vintage
 	return price * CollectionSellPercent(cond) / 100
 }
 
+// CollectionIncomePercent — доля обычного дневного дохода предмета.
+// Новое и ветхое — 100%, потрепанное — 60%, уставшее — 40%, винтаж — 200%.
+func CollectionIncomePercent(condition string) int {
+	switch condition {
+	case CollectionCondWorn:
+		return 60
+	case CollectionCondTired:
+		return 40
+	case CollectionCondVintage:
+		return 200
+	default:
+		return 100
+	}
+}
+
+// CollectionDailyIncomeBronze — дневной доход предмета с учётом состояния.
+func CollectionDailyIncomeBronze(base int, acquired, now time.Time, shift int, vintageAt *time.Time) int {
+	if base <= 0 {
+		return 0
+	}
+	cond := CollectionConditionEffective(acquired, now, shift, vintageAt)
+	return base * CollectionIncomePercent(cond) / 100
+}
+
+// CollectionSetBonusAged — бонус полного набора. 300%, если винтажный каждый предмет.
+func CollectionSetBonusAged(base int, allVintage bool) int {
+	if base <= 0 {
+		return 0
+	}
+	if allVintage {
+		return base * 300 / 100
+	}
+	return base
+}
+
 func conditionIndex(condition string) int {
 	switch condition {
 	case CollectionCondWorn:

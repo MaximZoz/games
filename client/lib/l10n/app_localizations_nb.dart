@@ -1726,7 +1726,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shopEmojisHelp => 'Animerte emojier for chatten. Kjøp et sett og send dem til venner.';
 
   @override
-  String get shopCollectionsHelp => 'Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. En komplett samling gir ekstra mynter hver dag.\n\nTilstanden avhenger av hvor lenge du har hatt samlingen. Ny — de første 7 dagene, salg 80 % av prisen. Slitt — fra dag 8 til 2 måneder, salg 60 % av prisen. Trett — fra 2 til 6 måneder, salg 40 % av prisen. Falleferdig — fra 6 måneder til 1 år, salg 100 % av prisen. Vintage — fra 1 år, salg 300 % av prisen.';
+  String get shopCollectionsHelp => 'Samle et sett gjenstander: de vises i profilens monter og kan gis bort eller selges. Hver gjenstand gir mynter hver dag, og et komplett sett gir også en egen bonus.\n\nDen daglige inntekten til en gjenstand avhenger av tilstanden og er en andel av det vanlige beløpet. Ny gir 100 %. Slitt gir 60 %. Trett gir 40 %. Falleferdig gir 100 %. En vintagegjenstand gir 200 %, altså dobbelt så mye som den vanlige daglige inntekten.\n\nBonusen for et komplett sett er uendret til settet selv er vintage. Et sett er vintage når hver gjenstand i det er vintage: bonusen blir da 300 %, tre ganger det vanlige.\n\nTilstanden avhenger av hvor lenge du har hatt gjenstanden. Ny — de første 7 dagene, salg 80 % av prisen. Slitt — fra dag 8 til 2 måneder, salg 60 % av prisen. Trett — fra 2 til 6 måneder, salg 40 % av prisen. Falleferdig — fra 6 måneder til 1 år, salg 100 % av prisen. Vintage — fra 1 år, salg 300 % av prisen.';
 
   @override
   String get shopStakesHelp => 'Lås opp høyere innsatser. Jo høyere innsats, desto større pott og gevinst.';

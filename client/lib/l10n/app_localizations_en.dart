@@ -1726,7 +1726,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopEmojisHelp => 'Animated emojis for chat. Buy a set and send them in messages to friends.';
 
   @override
-  String get shopCollectionsHelp => 'Collect a set of items: they appear in your profile showcase and can be gifted or sold. A complete collection pays extra coins every day.\n\nCondition depends on how long you have owned the collection. New — the first 7 days, sell for 80% of the price. Worn — from day 8 until 2 months, sell for 60% of the price. Tired — from 2 to 6 months, sell for 40% of the price. Shabby — from 6 months until 1 year, sell for 100% of the price. Vintage — after 1 year, sell for 300% of the price.';
+  String get shopCollectionsHelp => 'Collect a set of items: they appear in your profile showcase and can be gifted or sold. Each item pays coins every day, and a complete set also pays a separate bonus.\n\nAn item\'s daily income depends on its condition and is a share of the usual amount. New pays 100%. Worn pays 60%. Tired pays 40%. Shabby pays 100%. A vintage item pays 200%, twice the usual daily income.\n\nThe complete-set bonus stays the same until the set is vintage. A set is vintage when every item in it is vintage: the bonus is then 300%, three times the usual amount.\n\nCondition depends on how long you have owned the item. New — the first 7 days, sell for 80% of the price. Worn — from day 8 until 2 months, sell for 60% of the price. Tired — from 2 to 6 months, sell for 40% of the price. Shabby — from 6 months until 1 year, sell for 100% of the price. Vintage — after 1 year, sell for 300% of the price.';
 
   @override
   String get shopStakesHelp => 'Unlock higher stakes in games. The higher the stake, the bigger the pot and the payout.';
