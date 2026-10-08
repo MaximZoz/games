@@ -903,9 +903,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         const SizedBox(height: 6),
         _buildStatusLine(live, myTurn),
         const SizedBox(height: 6),
-        _buildReviewBar(live),
-        const SizedBox(height: 6),
         Expanded(child: _buildBoard(live, display)),
+        const SizedBox(height: 6),
+        _buildReviewBar(live),
         if (live.isOver) ...[
           const SizedBox(height: 8),
           _buildFinishRow(live, me),
@@ -923,10 +923,19 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(flex: 7, child: _buildBoard(live, display)),
+        Expanded(
+          flex: 7,
+          child: Column(
+            children: [
+              Expanded(child: _buildBoard(live, display)),
+              const SizedBox(height: 6),
+              _buildReviewBar(live),
+            ],
+          ),
+        ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 210,
+          width: 220,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -935,11 +944,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                 _buildOpponentCard(live, me),
                 const SizedBox(height: 8),
                 _buildStatusLine(live, myTurn),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _buildReviewBar(live),
-                ),
                 if (live.isOver) ...[
                   const SizedBox(height: 10),
                   _buildFinishRow(live, me),

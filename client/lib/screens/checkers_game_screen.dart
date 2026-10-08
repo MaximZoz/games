@@ -757,9 +757,9 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
         const SizedBox(height: 6),
         _buildStatusLine(game, myTurn),
         const SizedBox(height: 6),
-        _buildReviewBar(game),
-        const SizedBox(height: 6),
         Expanded(child: _buildBoard(game)),
+        const SizedBox(height: 6),
+        _buildReviewBar(game),
         if (game.isOver) ...[
           const SizedBox(height: 8),
           _buildFinishRow(game, me),
@@ -772,10 +772,19 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(flex: 7, child: _buildBoard(game)),
+        Expanded(
+          flex: 7,
+          child: Column(
+            children: [
+              Expanded(child: _buildBoard(game)),
+              const SizedBox(height: 6),
+              _buildReviewBar(game),
+            ],
+          ),
+        ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 210,
+          width: 220,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -784,11 +793,6 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
                 _buildOpponentCard(game, me),
                 const SizedBox(height: 8),
                 _buildStatusLine(game, myTurn),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _buildReviewBar(game),
-                ),
                 if (game.isOver) ...[
                   const SizedBox(height: 10),
                   _buildFinishRow(game, me),
