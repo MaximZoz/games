@@ -25,6 +25,7 @@ dependencies:
   flutter_animate: ^4.5.2
   web: ^1.1.1
   image: ^4.3.0
+  flutter_svg: ^2.0.10
   material_symbols_icons: ^4.2960.0
   # Google Sign-In на Android/iOS (аккаунт устройства / Play).
   google_sign_in: ^6.2.2
@@ -60,3 +61,4 @@ flutter:
     - assets/emojis/static/
     - assets/emojis/unicode.json
     - assets/sfx/
+    - assets/chess/pieces/

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
 import 'package:multigames_client/games/chess/chess_repository.dart';
 import 'package:multigames_client/ui/app_theme.dart';
@@ -278,65 +279,51 @@ class _ChessBoardPainter extends CustomPainter {
       !old.targets.containsAll(targets);
 }
 
-/// Фигура глифом Unicode: заливка + контрастный контур для чёткости.
+/// Фигура — векторный SVG-ассет набора Cburnett (как на lichess/Wikipedia).
+/// SVG рисуется из viewBox 45×45, вписывается в клетку целиком и всегда стоит
+/// по центру клетки одинаково во всех браузерах и ОС, без зависимости от
+/// системного шрифта. Поля клетки небольшие, чтобы фигура заполняла её почти
+/// целиком, как в референсе.
 class ChessPieceGlyph extends StatelessWidget {
   const ChessPieceGlyph({super.key, required this.piece});
 
   final int piece;
 
-  static const _glyphs = {
-    ChessEngine.whitePawn: '♟',
-    ChessEngine.whiteKnight: '♞',
-    ChessEngine.whiteBishop: '♝',
-    ChessEngine.whiteRook: '♜',
-    ChessEngine.whiteQueen: '♛',
-    ChessEngine.whiteKing: '♚',
-    ChessEngine.blackPawn: '♟',
-    ChessEngine.blackKnight: '♞',
-    ChessEngine.blackBishop: '♝',
-    ChessEngine.blackRook: '♜',
-    ChessEngine.blackQueen: '♛',
-    ChessEngine.blackKing: '♚',
+  static const Map<int, String> _asset = {
+    ChessEngine.whitePawn: 'assets/chess/pieces/w_pawn.svg',
+    ChessEngine.whiteKnight: 'assets/chess/pieces/w_knight.svg',
+    ChessEngine.whiteBishop: 'assets/chess/pieces/w_bishop.svg',
+    ChessEngine.whiteRook: 'assets/chess/pieces/w_rook.svg',
+    ChessEngine.whiteQueen: 'assets/chess/pieces/w_queen.svg',
+    ChessEngine.whiteKing: 'assets/chess/pieces/w_king.svg',
+    ChessEngine.blackPawn: 'assets/chess/pieces/b_pawn.svg',
+    ChessEngine.blackKnight: 'assets/chess/pieces/b_knight.svg',
+    ChessEngine.blackBishop: 'assets/chess/pieces/b_bishop.svg',
+    ChessEngine.blackRook: 'assets/chess/pieces/b_rook.svg',
+    ChessEngine.blackQueen: 'assets/chess/pieces/b_queen.svg',
+    ChessEngine.blackKing: 'assets/chess/pieces/b_king.svg',
   };
 
   @override
   Widget build(BuildContext context) {
-    final glyph = _glyphs[piece] ?? '';
-    if (glyph.isEmpty) return const SizedBox.shrink();
-    final white = ChessEngine.colorOf(piece) == 0;
-    final fill = white ? const Color(0xFFFAFAFA) : const Color(0xFF1A1A1A);
-    final stroke = white ? const Color(0xFF2A2A2A) : const Color(0xFFE8E8E8);
+    final asset = _asset[piece];
+    if (asset == null) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
         final s = constraints.biggest.shortestSide;
-        final fontSize = s * 0.82;
+        // Небольшие поля: фигура заполняет клетку почти целиком, оставаясь
+        // по центру.
+        final size = s * 0.9;
         return Center(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
-                glyph,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  height: 1.0,
-                  foreground: Paint()
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = s * 0.045
-                    ..color = stroke,
-                ),
-              ),
-              Text(
-                glyph,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  height: 1.0,
-                  color: fill,
-                  shadows: const [
-                    Shadow(color: Color(0x55000000), blurRadius: 1.5, offset: Offset(0, 1)),
-                  ],
-                ),
-              ),
-            ],
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: SvgPicture.asset(
+              asset,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+            ),
           ),
         );
       },
