@@ -7,8 +7,8 @@ import (
 
 const (
 	botWinScore     = 100000
-	botSearchDepth  = 4
-	botCornersDepth = 3
+	botSearchDepth  = 6
+	botCornersDepth = 5
 )
 
 // PickMove выбирает ход поиском с оценкой всей позиции.
@@ -31,8 +31,11 @@ func PickMove(g *Game, rng *rand.Rand) (Move, bool) {
 	if g.Mode == ModeCorners {
 		depth = botCornersDepth
 	}
-	if len(legal) > 36 {
-		depth = 2
+	if len(legal) > 28 {
+		depth = 4
+	}
+	if len(legal) > 40 {
+		depth = 3
 	}
 	best := legal[0]
 	bestScore := math.MinInt32 / 4
@@ -80,6 +83,11 @@ func alphabeta(g *Game, depth, alpha, beta, rootSeat int) int {
 		}
 	}
 	if depth <= 0 {
+		if depth > -2 {
+			if captures := captureMoves(g); len(captures) > 0 {
+				return alphabetaCaptures(g, depth-1, alpha, beta, rootSeat, captures)
+			}
+		}
 		return evaluate(g, rootSeat)
 	}
 	legal := g.LegalMoves()
@@ -87,6 +95,7 @@ func alphabeta(g *Game, depth, alpha, beta, rootSeat int) int {
 		return evaluate(g, rootSeat)
 	}
 	maximizing := g.Turn == rootSeat
+	legal = orderMoves(g, legal)
 	if maximizing {
 		best := math.MinInt32 / 4
 		for _, mv := range legal {
@@ -114,6 +123,61 @@ func alphabeta(g *Game, depth, alpha, beta, rootSeat int) int {
 			continue
 		}
 		s := alphabeta(child, depth-1, alpha, beta, rootSeat)
+		if s < best {
+			best = s
+		}
+		if best < beta {
+			beta = best
+		}
+		if alpha >= beta {
+			break
+		}
+	}
+	return best
+}
+
+func captureMoves(g *Game) []Move {
+	if g == nil {
+		return nil
+	}
+	var out []Move
+	for _, mv := range g.LegalMoves() {
+		if len(mv.Jumped) > 0 {
+			out = append(out, mv)
+		}
+	}
+	return out
+}
+
+func alphabetaCaptures(g *Game, depth, alpha, beta, rootSeat int, captures []Move) int {
+	maximizing := g.Turn == rootSeat
+	if maximizing {
+		best := math.MinInt32 / 4
+		for _, mv := range orderMoves(g, captures) {
+			child := g.Clone()
+			if err := child.Apply(g.Turn, mv); err != nil {
+				continue
+			}
+			s := alphabeta(child, depth, alpha, beta, rootSeat)
+			if s > best {
+				best = s
+			}
+			if best > alpha {
+				alpha = best
+			}
+			if alpha >= beta {
+				break
+			}
+		}
+		return best
+	}
+	best := math.MaxInt32 / 4
+	for _, mv := range orderMoves(g, captures) {
+		child := g.Clone()
+		if err := child.Apply(g.Turn, mv); err != nil {
+			continue
+		}
+		s := alphabeta(child, depth, alpha, beta, rootSeat)
 		if s < best {
 			best = s
 		}
@@ -199,7 +263,15 @@ func evalDraughts(g *Game, seat int) int {
 				}
 			}
 			if dark(r, c) && r >= 2 && r <= 5 && c >= 2 && c <= 5 {
-				val += 3
+				val += 8
+			}
+			if !isKing(p) {
+				if own == 0 && r == 0 {
+					val += 18
+				}
+				if own == 1 && r == Size-1 {
+					val += 18
+				}
 			}
 			if own == seat {
 				score += val
@@ -208,7 +280,23 @@ func evalDraughts(g *Game, seat int) int {
 			}
 		}
 	}
+	score += maxCapture(g, seat)*28 - maxCapture(g, 1-seat)*55
 	return score
+}
+
+func maxCapture(g *Game, attacker int) int {
+	if g == nil || g.IsOver() {
+		return 0
+	}
+	child := g.Clone()
+	child.Turn = attacker
+	best := 0
+	for _, mv := range child.LegalMoves() {
+		if n := len(mv.Jumped); n > best {
+			best = n
+		}
+	}
+	return best
 }
 
 func evalCorners(g *Game, seat int) int {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -1056,6 +1057,9 @@ func pokerBotHasCallStrength(state *poker.Game, idx int) bool {
 		if v, err := poker.EvaluateBest(cards); err == nil && v.Rank >= poker.OnePair {
 			return true
 		}
+		if pokerBotDrawScore(cards) >= 8 {
+			return true
+		}
 	}
 	return false
 }
@@ -1072,27 +1076,72 @@ func pokerBotStrength(state *poker.Game, idx int) int {
 			if len(v.Tie) > 0 {
 				kick = v.Tie[0]
 			}
-			return int(v.Rank)*16 + kick
+			return int(v.Rank)*20 + kick + pokerBotDrawScore(cards)
 		}
 	}
 	a, b := int(p.Hole[0].Rank), int(p.Hole[1].Rank)
 	if a < b {
 		a, b = b, a
 	}
-	score := a + b
+	score := a*2 + b
 	if a == b {
-		score += 42
+		score += 50
 	}
 	if p.Hole[0].Suit == p.Hole[1].Suit {
-		score += 8
+		score += 14
 	}
 	if a-b <= 2 {
-		score += 6
+		score += 10
+	}
+	if a >= 12 && b >= 10 {
+		score += 12
 	}
 	return score
 }
 
-// pokerBotAction — сила руки: чек/рейз, колл по силе, фолд мусора.
+func pokerBotDrawScore(cards []poker.Card) int {
+	if len(cards) < 4 {
+		return 0
+	}
+	suits := map[poker.Suit]int{}
+	ranks := map[int]int{}
+	for _, c := range cards {
+		suits[c.Suit]++
+		ranks[int(c.Rank)]++
+	}
+	score := 0
+	for _, n := range suits {
+		if n == 4 {
+			score += 10
+		}
+		if n >= 5 {
+			score += 18
+		}
+	}
+	uniq := make([]int, 0, len(ranks))
+	for r := range ranks {
+		uniq = append(uniq, r)
+		if r == 14 {
+			uniq = append(uniq, 1)
+		}
+	}
+	sort.Ints(uniq)
+	run, last := 1, -99
+	for _, r := range uniq {
+		if r == last+1 {
+			run++
+		} else if r != last {
+			run = 1
+		}
+		last = r
+		if run >= 4 {
+			score += 8
+		}
+	}
+	return score
+}
+
+// pokerBotAction — сильная рука: рейз/колл по силе и пот-оддсам, фолд мусора.
 func pokerBotAction(state *poker.Game) poker.Action {
 	idx := state.ActingIndex
 	legal := state.LegalActions(idx)
@@ -1119,11 +1168,15 @@ func pokerBotAction(state *poker.Game) poker.Action {
 			}
 		}
 	}
-	wantRaise := strength >= 58 && has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2
+	pot := state.Pot
+	if pot <= 0 {
+		pot = state.BigBlind * 3
+	}
+	wantRaise := strength >= 52 && has(string(poker.ActionRaise)) && p.Chips > state.BigBlind*2
 	if has(string(poker.ActionCheck)) {
-		if wantRaise && rand.Intn(3) != 0 {
+		if wantRaise {
 			to := state.CurrentBet + state.MinRaise
-			if strength >= 80 && p.Chips > state.MinRaise*3 {
+			if strength >= 78 && p.Chips > state.MinRaise*3 {
 				to = state.CurrentBet + state.MinRaise*2
 			}
 			if to <= p.Bet+p.Chips {
@@ -1132,9 +1185,10 @@ func pokerBotAction(state *poker.Game) poker.Action {
 		}
 		return poker.Action{Type: poker.ActionCheck}
 	}
-	cheapCall := callAmount > 0 && callAmount < p.Chips && callAmount <= p.Chips/3 && !facingAllIn
-	if has(string(poker.ActionCall)) && cheapCall && strength >= 24 {
-		if wantRaise && strength >= 70 && p.Chips > state.BigBlind*4 {
+	cheapCall := callAmount > 0 && callAmount < p.Chips &&
+		(callAmount*4 <= pot || callAmount <= p.Chips/4) && !facingAllIn
+	if has(string(poker.ActionCall)) && cheapCall && strength >= 20 {
+		if wantRaise && strength >= 64 && p.Chips > state.BigBlind*4 {
 			to := state.CurrentBet + state.MinRaise
 			if to <= p.Bet+p.Chips {
 				return poker.Action{Type: poker.ActionRaise, Amount: to}
@@ -1144,6 +1198,11 @@ func pokerBotAction(state *poker.Game) poker.Action {
 	}
 	if (has(string(poker.ActionCall)) || has(string(poker.ActionAllIn))) &&
 		callAmount > 0 && pokerBotHasCallStrength(state, idx) {
+		if facingAllIn && strength < 40 && callAmount*2 > p.Chips {
+			if has(string(poker.ActionFold)) {
+				return poker.Action{Type: poker.ActionFold}
+			}
+		}
 		if has(string(poker.ActionCall)) && callAmount < p.Chips {
 			return poker.Action{Type: poker.ActionCall}
 		}

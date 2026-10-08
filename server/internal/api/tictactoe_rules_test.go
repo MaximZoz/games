@@ -237,6 +237,15 @@ func TestBotPickCellSmartWinsAndBlocks(t *testing.T) {
 	if botPickCellSmart(board3("x", "o", "x", "x", "o", "o", "o", "x", "x"), 3, "o", false) != -1 {
 		t.Fatal("full board → -1")
 	}
+	forkBoard := board3("x", "", "", "", "o", "x", "", "", "")
+	if cell := botPickCellSmart(forkBoard, 3, "x", false); cell != 2 {
+		t.Fatalf("bot should take fork at 2, got %d", cell)
+	}
+	multi := make([]string, 64)
+	multi[0], multi[1], multi[2] = "t", "t", "t"
+	if cell := botPickCellSmartAt(multi, 8, "o", false, 4); cell != 3 {
+		t.Fatalf("multi bot should block 4-in-row at 3, got %d", cell)
+	}
 }
 
 func TestAttachTttIdentity(t *testing.T) {

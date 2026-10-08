@@ -1232,39 +1232,117 @@ func cellCompletesWin(board []string, cell int, mark string, gridSize int) bool 
 }
 
 // botPickCellSmart — осмысленный ход: победа > блок > минимакс (3x3) > центр > случайный.
+func botOpponents(board []string, turn string) []string {
+	seen := map[string]bool{"x": true, "o": true}
+	for _, c := range board {
+		if c != "" && c != turn {
+			seen[c] = true
+		}
+	}
+	var out []string
+	for _, m := range []string{"x", "o", "t", "s"} {
+		if m != turn && seen[m] {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
 func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestriction bool) int {
+	return botPickCellSmartAt(board, gridSize, turn, firstMoveRestriction, winLength(gridSize))
+}
+
+func botCellWins(board []string, cell int, mark string, gridSize, winLen int) bool {
+	cp := append([]string(nil), board...)
+	if cell < 0 || cell >= len(cp) {
+		return false
+	}
+	cp[cell] = mark
+	return boardHasWin(cp, mark, gridSize, winLen)
+}
+
+func boardHasWin(board []string, mark string, gridSize, winLen int) bool {
+	if winLen <= 0 || gridSize <= 0 || winLen > gridSize {
+		return false
+	}
+	n := gridSize * gridSize
+	if len(board) < n {
+		return false
+	}
+	dirs := [][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+	for r := 0; r < gridSize; r++ {
+		for c := 0; c < gridSize; c++ {
+			for _, d := range dirs {
+				ok := true
+				for k := 0; k < winLen; k++ {
+					rr, cc := r+d[0]*k, c+d[1]*k
+					if rr < 0 || cc < 0 || rr >= gridSize || cc >= gridSize ||
+						board[rr*gridSize+cc] != mark {
+						ok = false
+						break
+					}
+				}
+				if ok {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func botPickCellSmartAt(board []string, gridSize int, turn string, firstMoveRestriction bool, winLen int) int {
 	moves := validMoves(board, gridSize, turn, firstMoveRestriction)
 	if len(moves) == 0 {
 		return -1
 	}
-	opponent := "o"
-	if turn == "o" {
-		opponent = "x"
+	opponents := botOpponents(board, turn)
+	if winLen <= 0 {
+		winLen = winLength(gridSize)
 	}
 	// 1. Победа в один ход
 	for _, cell := range moves {
-		if cellCompletesWin(board, cell, turn, gridSize) {
+		if botCellWins(board, cell, turn, gridSize, winLen) {
 			return cell
 		}
 	}
-	// 2. Блокировать победу соперника
-	for _, cell := range moves {
-		if cellCompletesWin(board, cell, opponent, gridSize) {
-			return cell
+	// 2. Блокировать победу любого соперника
+	for _, opponent := range opponents {
+		for _, cell := range moves {
+			if botCellWins(board, cell, opponent, gridSize, winLen) {
+				return cell
+			}
 		}
 	}
-	// 3. Для 3x3 — минимакс
+	// 3. Вилка: две угрозы сразу, затем блок чужой вилки.
+	if fork := botBestFork(board, moves, turn, gridSize, winLen); fork >= 0 {
+		return fork
+	}
+	for _, opponent := range opponents {
+		if fork := botBestFork(board, moves, opponent, gridSize, winLen); fork >= 0 {
+			return fork
+		}
+	}
+	// 4. Для 3x3 — минимакс
 	if gridSize == 3 {
 		if cell := botMinimax(board, turn, firstMoveRestriction); cell >= 0 {
 			return cell
 		}
 	}
-	// 4. Своя угроза (winLen-1), затем блок чужой.
-	if threat := botBestThreat(board, moves, turn, gridSize); threat >= 0 {
+	// 5. Поиск на больших досках (два игрока).
+	if gridSize >= 4 && gridSize <= 8 && len(opponents) == 1 {
+		if cell := botSearchBoard(board, moves, turn, opponents[0], gridSize, winLen, firstMoveRestriction); cell >= 0 {
+			return cell
+		}
+	}
+	// 6. Своя угроза (winLen-1), затем блок чужой.
+	if threat := botBestThreat(board, moves, turn, gridSize, winLen); threat >= 0 {
 		return threat
 	}
-	if threat := botBestThreat(board, moves, opponent, gridSize); threat >= 0 {
-		return threat
+	for _, opponent := range opponents {
+		if threat := botBestThreat(board, moves, opponent, gridSize, winLen); threat >= 0 {
+			return threat
+		}
 	}
 	// 5. Предпочтение центру (для нечётных сеток)
 	centerIdxs := centerCellIndices(gridSize)
@@ -1287,14 +1365,13 @@ func botPickCellSmart(board []string, gridSize int, turn string, firstMoveRestri
 	return bestCell
 }
 
-func botBestThreat(board []string, moves []int, mark string, gridSize int) int {
-	wl := winLength(gridSize)
+func botBestThreat(board []string, moves []int, mark string, gridSize, winLen int) int {
 	best, bestScore := -1, 0
 	for _, cell := range moves {
 		cp := make([]string, len(board))
 		copy(cp, board)
 		cp[cell] = mark
-		n := countOpenThreats(cp, mark, gridSize, wl)
+		n := countOpenThreats(cp, mark, gridSize, winLen)
 		if n > bestScore {
 			bestScore = n
 			best = cell
@@ -1337,6 +1414,210 @@ func countOpenThreats(board []string, mark string, gridSize, winLen int) int {
 		}
 	}
 	return n
+}
+
+func botBestFork(board []string, moves []int, mark string, gridSize, winLen int) int {
+	best, bestScore := -1, 1
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = mark
+		n := countOpenThreats(cp, mark, gridSize, winLen)
+		if n > bestScore {
+			bestScore = n
+			best = cell
+		}
+	}
+	return best
+}
+
+func botSearchBoard(board []string, moves []int, botMark, opponent string, gridSize, winLen int, firstMoveRestriction bool) int {
+	depth := 2
+	switch gridSize {
+	case 4:
+		depth = 4
+	case 5:
+		depth = 3
+	}
+	bestCell, bestScore := -1, -1<<30
+	for _, cell := range moves {
+		cp := make([]string, len(board))
+		copy(cp, board)
+		cp[cell] = botMark
+		score := botNegamax(cp, opponent, botMark, opponent, gridSize, winLen, depth-1, -1<<30, 1<<30, firstMoveRestriction)
+		if score > bestScore {
+			bestScore = score
+			bestCell = cell
+		}
+	}
+	return bestCell
+}
+
+func botNegamax(board []string, toMove, botMark, opponent string, gridSize, winLen, depth, alpha, beta int, firstMoveRestriction bool) int {
+	if boardHasWin(board, botMark, gridSize, winLen) {
+		return 1000 + depth
+	}
+	if boardHasWin(board, opponent, gridSize, winLen) {
+		return -1000 - depth
+	}
+	if isDraw(board, gridSize) || depth <= 0 {
+		return botBoardEval(board, botMark, opponent, gridSize, winLen)
+	}
+	moves := validMoves(board, gridSize, toMove, firstMoveRestriction)
+	if len(moves) == 0 {
+		return 0
+	}
+	next := opponent
+	if toMove == opponent {
+		next = botMark
+	}
+	if toMove == botMark {
+		best := -1 << 30
+		for _, cell := range moves {
+			cp := append([]string(nil), board...)
+			cp[cell] = toMove
+			s := botNegamax(cp, next, botMark, opponent, gridSize, winLen, depth-1, alpha, beta, firstMoveRestriction)
+			if s > best {
+				best = s
+			}
+			if s > alpha {
+				alpha = s
+			}
+			if alpha >= beta {
+				break
+			}
+		}
+		return best
+	}
+	best := 1 << 30
+	for _, cell := range moves {
+		cp := append([]string(nil), board...)
+		cp[cell] = toMove
+		s := botNegamax(cp, next, botMark, opponent, gridSize, winLen, depth-1, alpha, beta, firstMoveRestriction)
+		if s < best {
+			best = s
+		}
+		if s < beta {
+			beta = s
+		}
+		if alpha >= beta {
+			break
+		}
+	}
+	return best
+}
+
+func botBoardEval(board []string, botMark, opponent string, gridSize, winLen int) int {
+	return countOpenThreats(board, botMark, gridSize, winLen)*30 -
+		countOpenThreats(board, opponent, gridSize, winLen)*40
+}
+
+func botPickUltimate(st gameengine.State, legal []int) int {
+	if len(legal) == 0 {
+		return -1
+	}
+	meta := st.MetaBoard
+	if meta == nil {
+		meta = make([]string, 9)
+	}
+	bot := st.Turn
+	opp := "o"
+	if bot == "o" {
+		opp = "x"
+	}
+	scoreCell := func(cell int) int {
+		board := append([]string(nil), st.Board...)
+		board[cell] = bot
+		sub := cell / 9
+		local := cell % 9
+		nextMeta := append([]string(nil), meta...)
+		subBoard := make([]string, 9)
+		base := sub * 9
+		for i := 0; i < 9; i++ {
+			subBoard[i] = board[base+i]
+		}
+		wonSub := len(gameengineWinLine(subBoard, bot)) == 3
+		if wonSub {
+			nextMeta[sub] = bot
+		}
+		if len(gameengineWinLine(metaMarks(nextMeta), bot)) == 3 {
+			return 10000
+		}
+		score := 0
+		if wonSub {
+			score += 400
+		}
+		if wouldWinSub(st.Board, meta, cell, opp) {
+			score += 350
+		}
+		if local == 4 {
+			score += 18
+		} else if local%2 == 0 {
+			score += 8
+		}
+		if sub == 4 {
+			score += 12
+		}
+		forced := local
+		if forced < 9 && (metaFilled(nextMeta, forced) || subFull(board, forced)) {
+			score += 40
+		} else if forced == 4 {
+			score -= 15
+		}
+		return score
+	}
+	best, bestScore := legal[0], -1<<30
+	for _, cell := range legal {
+		s := scoreCell(cell)
+		if s > bestScore {
+			bestScore = s
+			best = cell
+		}
+	}
+	return best
+}
+
+func gameengineWinLine(board []string, mark string) []int {
+	return checkWinLine(board, mark, 3)
+}
+
+func metaMarks(meta []string) []string {
+	out := make([]string, 9)
+	for i, m := range meta {
+		if m == "x" || m == "o" {
+			out[i] = m
+		}
+	}
+	return out
+}
+
+func metaFilled(meta []string, sub int) bool {
+	return sub >= 0 && sub < len(meta) && meta[sub] != ""
+}
+
+func subFull(board []string, sub int) bool {
+	base := sub * 9
+	for i := 0; i < 9; i++ {
+		if board[base+i] == "" {
+			return false
+		}
+	}
+	return true
+}
+
+func wouldWinSub(board, meta []string, cell int, mark string) bool {
+	sub := cell / 9
+	if sub < len(meta) && meta[sub] != "" {
+		return false
+	}
+	cp := append([]string(nil), board...)
+	cp[cell] = mark
+	subBoard := make([]string, 9)
+	base := sub * 9
+	for i := 0; i < 9; i++ {
+		subBoard[i] = cp[base+i]
+	}
+	return len(checkWinLine(subBoard, mark, 3)) == 3
 }
 
 func botCellLineScore(gridSize, cell int) int {
@@ -1472,8 +1753,10 @@ func (h *GamesHandler) applyBotMove(ctx context.Context, key string, m map[strin
 		return false
 	}
 	cell := -1
-	if variant != gameengine.VariantUltimate {
-		cell = botPickCellSmart(st.Board, cfg.GridSize, st.Turn, false)
+	if variant == gameengine.VariantUltimate {
+		cell = botPickUltimate(st, legal)
+	} else {
+		cell = botPickCellSmartAt(st.Board, cfg.GridSize, st.Turn, false, cfg.WinLength)
 	}
 	if cell < 0 || !intInSlice(legal, cell) {
 		cell = legal[rand.Intn(len(legal))]

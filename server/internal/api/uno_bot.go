@@ -211,7 +211,9 @@ func unoNextHandSize(state *uno.Game, playerIndex int) int {
 func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
 	next := unoNextHandSize(state, playerIndex)
 	colorCounts := map[uno.Color]int{}
+	handLen := 0
 	if state != nil && playerIndex >= 0 && playerIndex < len(state.Players) {
+		handLen = len(state.Players[playerIndex].Hand)
 		for _, c := range state.Players[playerIndex].Hand {
 			if c.Color == uno.ColorRed || c.Color == uno.ColorYellow ||
 				c.Color == uno.ColorGreen || c.Color == uno.ColorBlue {
@@ -220,29 +222,35 @@ func unoCardScore(state *uno.Game, playerIndex int, card uno.Card) int {
 		}
 	}
 	score := card.Points()
+	if next <= 2 {
+		score += card.Points()
+	}
 	switch card.Kind {
 	case uno.KindSkip, uno.KindReverse, uno.KindDrawTwo:
 		if next <= 2 {
-			score += 70
+			score += 90
 		} else if next <= 4 {
-			score += 25
+			score += 35
 		} else {
-			score += 8
+			score += 6
 		}
 	case uno.KindWild:
-		if next <= 2 {
-			score += 40
+		if next <= 2 || handLen <= 2 {
+			score += 50
 		} else {
-			score -= 25
+			score -= 40
 		}
 	case uno.KindWildDrawFour:
 		if next <= 2 {
-			score += 90
+			score += 110
 		} else {
-			score -= 45
+			score -= 70
 		}
 	default:
-		score += colorCounts[card.Color] * 10
+		score += colorCounts[card.Color] * 14
+		if state != nil && card.Color == state.CurrentColor {
+			score += 8
+		}
 	}
 	return score
 }
