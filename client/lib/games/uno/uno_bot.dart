@@ -114,24 +114,27 @@ int _unoCardScore(UnoEngine game, int index, UnoCard card) {
       counts[c.color] = (counts[c.color] ?? 0) + 1;
     }
   }
+  final handLen = game.players[index].hand.length;
   var score = card.points;
+  if (next <= 2) score += card.points;
   switch (card.kind) {
     case UnoCardKind.skip:
     case UnoCardKind.reverse:
     case UnoCardKind.drawTwo:
       if (next <= 2) {
-        score += 70;
+        score += 90;
       } else if (next <= 4) {
-        score += 25;
+        score += 35;
       } else {
-        score += 8;
+        score += 6;
       }
     case UnoCardKind.wild:
-      score += next <= 2 ? 40 : -25;
+      score += (next <= 2 || handLen <= 2) ? 50 : -40;
     case UnoCardKind.wildDrawFour:
-      score += next <= 2 ? 90 : -45;
+      score += next <= 2 ? 110 : -70;
     case UnoCardKind.number:
-      score += (counts[card.color] ?? 0) * 10;
+      score += (counts[card.color] ?? 0) * 14;
+      if (card.color == game.currentColor) score += 8;
   }
   return score;
 }

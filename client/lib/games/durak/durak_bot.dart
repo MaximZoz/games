@@ -1,12 +1,8 @@
 import 'card.dart';
 import 'durak_engine.dart';
 
-/// Простой бот «средней» силы для офлайна (2–4 игрока, подкидной/переводной):
-/// - атакует младшей не-козырной картой (или минимальным козырем);
-/// - защищается минимально; в переводном — переводит дешёвой картой, если выгодно;
-/// - подкидывает только некозырные ранги;
-/// - «берёт», если не может отбить;
-/// - «бито»/«готово» — когда нечего подкинуть.
+/// Сильный офлайн-бот: считает колоду, бережёт козыри, давит на короткого
+/// защитника и не отдаёт дорогие карты без нужды.
 class DurakBot {
   const DurakBot({required this.index});
 
@@ -20,7 +16,6 @@ class DurakBot {
       return _stepDefender(game);
     }
 
-    // Подкид / атака / бито / готово — только текущий thrower/attacker.
     if (game.turn == DurakTurn.attacker && index == game.attackerIndex) {
       return _stepFirstAttack(game);
     }
@@ -34,7 +29,6 @@ class DurakBot {
     if (game.turn == DurakTurn.takeFollowUp && index == game.throwerIndex) {
       return _stepThrowOrPass(game);
     }
-    // Пока защитник бьёт — атакующий может подкинуть.
     if (game.turn == DurakTurn.defender &&
         index == game.attackerIndex &&
         game.canThrowIn(index)) {
@@ -45,7 +39,7 @@ class DurakBot {
 
   bool _stepFirstAttack(DurakGame game) {
     if (game.table.isNotEmpty) return false;
-    final card = _pickAttackCard(game.hands[index], game.trump);
+    final card = _pickAttackCard(game);
     if (card == null) return false;
     game.attack(card, playerIndex: index);
     return true;
@@ -73,18 +67,15 @@ class DurakBot {
     final hand = List<PlayingCard>.from(game.hands[index]);
     final deckLeft = game.deck.cards.length;
     final defenderCards = game.hands[game.defenderIndex].length;
-    hand.sort((a, b) {
-      final at = a.suit == game.trump ? 1 : 0;
-      final bt = b.suit == game.trump ? 1 : 0;
-      if (at != bt) return at.compareTo(bt);
-      return a.rank.compareTo(b.rank);
-    });
+    final endgame = deckLeft == 0 || defenderCards <= 2;
+    hand.sort((a, b) => _cardCost(a, game.trump).compareTo(_cardCost(b, game.trump)));
     final maxToss = game.maxAttacksThisRound - game.table.length;
     if (maxToss <= 0) return false;
     for (final c in hand) {
       if (!ranks.contains(c.rank.value)) continue;
       final isTrump = c.suit == game.trump;
-      if (isTrump && (deckLeft > 6 || defenderCards > 3)) continue;
+      if (isTrump && !endgame && c.rank.value >= Rank.jack.value) continue;
+      if (isTrump && deckLeft > 8 && defenderCards > 3) continue;
       if (game.canAttackWith(c, index)) {
         game.attack(c, playerIndex: index);
         return true;
@@ -94,26 +85,21 @@ class DurakBot {
   }
 
   bool _stepDefender(DurakGame game) {
-    // Переводной: дешёвый перевод предпочтительнее слабой защиты козырем.
     if (game.isPerevodnoi) {
       final transfers = game.legalTransferCards(index);
       if (transfers.isNotEmpty) {
         final cheap = List<PlayingCard>.from(transfers)
-          ..sort((a, b) {
-            final at = a.suit == game.trump ? 1 : 0;
-            final bt = b.suit == game.trump ? 1 : 0;
-            if (at != bt) return at.compareTo(bt);
-            return a.rank.compareTo(b.rank);
-          });
+          ..sort((a, b) =>
+              _cardCost(a, game.trump).compareTo(_cardCost(b, game.trump)));
         final pick = cheap.first;
-        // Переводим, если карта не козырь или бить всё равно только козырем.
         final needTrumpToBeat = game.table.any((p) {
           if (p.defense != null) return false;
           return !game.hands[index].any(
             (c) => c.suit != game.trump && c.beats(p.attack, game.trump),
           );
         });
-        if (pick.suit != game.trump || needTrumpToBeat) {
+        final nextHasFew = game.hands[_nextAlive(game, game.defenderIndex)].length <= 2;
+        if (!nextHasFew && (pick.suit != game.trump || needTrumpToBeat)) {
           game.transfer(pick, playerIndex: index);
           return true;
         }
@@ -128,19 +114,19 @@ class DurakBot {
     PlayingCard? best;
     for (final c in hand) {
       if (!c.beats(attack, game.trump)) continue;
-      if (best == null) {
+      if (best == null || _cardCost(c, game.trump) < _cardCost(best, game.trump)) {
         best = c;
-        continue;
-      }
-      final bestTrump = best.suit == game.trump;
-      final cTrump = c.suit == game.trump;
-      if (bestTrump && !cTrump) {
-        best = c;
-      } else if (bestTrump == cTrump) {
-        if (c.rank.value < best.rank.value) best = c;
       }
     }
     if (best != null) {
+      final expensiveTrump = best.suit == game.trump && best.rank.value >= Rank.queen.value;
+      final moreAttacksComing = game.table.length < game.maxAttacksThisRound &&
+          game.deck.cards.length > 4 &&
+          game.hands[game.attackerIndex].length > 2;
+      if (expensiveTrump && moreAttacksComing && game.canDefenderTake) {
+        game.take();
+        return true;
+      }
       game.defend(best, playerIndex: index, pairIndex: undefendedIndex);
       return true;
     }
@@ -151,22 +137,54 @@ class DurakBot {
     return false;
   }
 
-  PlayingCard? _pickAttackCard(List<PlayingCard> hand, Suit trump) {
+  PlayingCard? _pickAttackCard(DurakGame game) {
+    final hand = game.hands[index];
     if (hand.isEmpty) return null;
     final counts = <int, int>{};
     for (final c in hand) {
       counts[c.rank.value] = (counts[c.rank.value] ?? 0) + 1;
     }
+    final deckLeft = game.deck.cards.length;
+    final defenderCards = game.hands[game.defenderIndex].length;
     final ranked = List<PlayingCard>.from(hand)
       ..sort((a, b) {
-        final at = a.suit == trump ? 1 : 0;
-        final bt = b.suit == trump ? 1 : 0;
-        if (at != bt) return at.compareTo(bt);
-        final ac = counts[a.rank.value] ?? 0;
-        final bc = counts[b.rank.value] ?? 0;
-        if (ac != bc) return bc.compareTo(ac);
-        return a.rank.compareTo(b.rank);
+        final ac = _attackScore(a, game.trump, counts, deckLeft, defenderCards);
+        final bc = _attackScore(b, game.trump, counts, deckLeft, defenderCards);
+        return ac.compareTo(bc);
       });
     return ranked.first;
+  }
+
+  int _attackScore(
+    PlayingCard card,
+    Suit trump,
+    Map<int, int> counts,
+    int deckLeft,
+    int defenderCards,
+  ) {
+    var score = _cardCost(card, trump);
+    score -= (counts[card.rank.value] ?? 0) * 6;
+    if (card.suit == trump && deckLeft > 4 && defenderCards > 2) {
+      score += 40;
+    }
+    if (defenderCards <= 1) {
+      score -= card.rank.value;
+    }
+    return score;
+  }
+
+  int _cardCost(PlayingCard card, Suit trump) {
+    var cost = card.rank.value;
+    if (card.suit == trump) cost += 20;
+    return cost;
+  }
+
+  int _nextAlive(DurakGame game, int from) {
+    final n = game.hands.length;
+    for (var step = 1; step <= n; step++) {
+      final i = (from + step) % n;
+      if (game.isAlive(i)) return i;
+    }
+    return (from + 1) % n;
   }
 }

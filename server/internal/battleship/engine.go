@@ -400,23 +400,31 @@ func BotPickShot(ships Ships, shots []int, rng *rand.Rand) (int, error) {
 	if cands := BotNeighborCandidates(ships, shots); len(cands) > 0 {
 		return cands[rng.Intn(len(cands))], nil
 	}
-	minLen := botMinUnsunkLen(ships, shots)
-	parity := 0
-	if minLen > 1 {
-		parity = minLen % 2
+	return botHuntCell(ships, shots, hitSet, rng)
+}
+
+func botHuntCell(ships Ships, shots []int, hitSet map[int]struct{}, rng *rand.Rand) (int, error) {
+	remaining := botRemainingLens(ships, shots)
+	scores := make([]int, CellCount)
+	bestScore := 0
+	for _, length := range remaining {
+		addShipPlacements(scores, hitSet, length)
 	}
-	var preferred, free []int
+	var best, free []int
 	for i := 0; i < CellCount; i++ {
 		if _, ok := hitSet[i]; ok {
 			continue
 		}
 		free = append(free, i)
-		if minLen > 1 && (i/BoardSize+i%BoardSize)%2 == parity {
-			preferred = append(preferred, i)
+		if scores[i] > bestScore {
+			bestScore = scores[i]
+			best = []int{i}
+		} else if scores[i] == bestScore && bestScore > 0 {
+			best = append(best, i)
 		}
 	}
-	if len(preferred) > 0 {
-		return preferred[rng.Intn(len(preferred))], nil
+	if len(best) > 0 {
+		return best[rng.Intn(len(best))], nil
 	}
 	if len(free) == 0 {
 		return 0, ErrInvalidCell
@@ -424,9 +432,9 @@ func BotPickShot(ships Ships, shots []int, rng *rand.Rand) (int, error) {
 	return free[rng.Intn(len(free))], nil
 }
 
-func botMinUnsunkLen(ships Ships, shots []int) int {
+func botRemainingLens(ships Ships, shots []int) []int {
 	hitSet := ShotsToHitSet(shots)
-	minLen := 0
+	var out []int
 	for _, ship := range ships {
 		sunk := true
 		for _, c := range ship {
@@ -435,17 +443,48 @@ func botMinUnsunkLen(ships Ships, shots []int) int {
 				break
 			}
 		}
-		if sunk {
-			continue
-		}
-		if minLen == 0 || len(ship) < minLen {
-			minLen = len(ship)
+		if !sunk {
+			out = append(out, len(ship))
 		}
 	}
-	if minLen == 0 {
-		return 1
+	if len(out) == 0 {
+		return []int{1}
 	}
-	return minLen
+	return out
+}
+
+func addShipPlacements(scores []int, blocked map[int]struct{}, length int) {
+	if length <= 0 {
+		return
+	}
+	place := func(cells []int) {
+		for _, cell := range cells {
+			if _, ok := blocked[cell]; ok {
+				return
+			}
+		}
+		for _, cell := range cells {
+			scores[cell]++
+		}
+	}
+	for r := 0; r < BoardSize; r++ {
+		for c := 0; c <= BoardSize-length; c++ {
+			cells := make([]int, length)
+			for k := 0; k < length; k++ {
+				cells[k] = r*BoardSize + c + k
+			}
+			place(cells)
+		}
+	}
+	for c := 0; c < BoardSize; c++ {
+		for r := 0; r <= BoardSize-length; r++ {
+			cells := make([]int, length)
+			for k := 0; k < length; k++ {
+				cells[k] = (r+k)*BoardSize + c
+			}
+			place(cells)
+		}
+	}
 }
 
 func botLineCandidates(ships Ships, shots []int) []int {

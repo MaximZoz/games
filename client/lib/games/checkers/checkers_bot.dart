@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:multigames_client/games/checkers/checkers_engine.dart';
 
 const int _botWinScore = 100000;
-const int _botSearchDepth = 4;
-const int _botCornersDepth = 3;
+const int _botSearchDepth = 6;
+const int _botCornersDepth = 5;
 
 /// Лучший ход: поиск с оценкой всей позиции, не одной шашки.
 CheckersMove? checkersPickMove(CheckersEngine g, [Random? rng]) {
@@ -14,7 +14,8 @@ CheckersMove? checkersPickMove(CheckersEngine g, [Random? rng]) {
   rng ??= Random(1);
   final rootSeat = g.turn;
   var depth = g.isCorners ? _botCornersDepth : _botSearchDepth;
-  if (legal.length > 36) depth = 2;
+  if (legal.length > 28) depth = 4;
+  if (legal.length > 40) depth = 3;
   var best = legal.first;
   var bestScore = -1 << 30;
   var ties = 0;
@@ -56,8 +57,23 @@ int _alphabeta(
     }
     return -_botWinScore - depth;
   }
-  if (depth <= 0) return checkersEvaluate(g, rootSeat);
-  final legal = g.legalMoves();
+  if (depth <= 0) {
+    if (depth > -2) {
+      final captures = _captureMoves(g);
+      if (captures.isNotEmpty) {
+        return _alphabetaCaptures(
+          g,
+          depth - 1,
+          alpha,
+          beta,
+          rootSeat,
+          captures,
+        );
+      }
+    }
+    return checkersEvaluate(g, rootSeat);
+  }
+  final legal = _orderMoves(g, g.legalMoves());
   if (legal.isEmpty) return checkersEvaluate(g, rootSeat);
   final maximizing = g.turn == rootSeat;
   if (maximizing) {
@@ -135,12 +151,72 @@ int _evalDraughts(CheckersEngine g, int seat) {
         if (r <= 2) val += 12;
       }
       if (CheckersEngine.dark(r, c) && r >= 2 && r <= 5 && c >= 2 && c <= 5) {
-        val += 3;
+        val += 8;
+      }
+      if (!CheckersEngine.isKing(p)) {
+        if (own == 0 && r == 0) val += 18;
+        if (own == 1 && r == CheckersEngine.size - 1) val += 18;
       }
       score += own == seat ? val : -val;
     }
   }
+  score += _maxCapture(g, seat) * 28 - _maxCapture(g, 1 - seat) * 55;
   return score;
+}
+
+List<CheckersMove> _captureMoves(CheckersEngine g) =>
+    g.legalMoves().where((mv) => mv.jumped.isNotEmpty).toList();
+
+int _alphabetaCaptures(
+  CheckersEngine g,
+  int depth,
+  int alpha,
+  int beta,
+  int rootSeat,
+  List<CheckersMove> captures,
+) {
+  final maximizing = g.turn == rootSeat;
+  if (maximizing) {
+    var best = -1 << 30;
+    for (final mv in _orderMoves(g, captures)) {
+      final child = g.clone();
+      try {
+        child.apply(g.turn, mv);
+      } catch (_) {
+        continue;
+      }
+      final s = _alphabeta(child, depth, alpha, beta, rootSeat);
+      if (s > best) best = s;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+  var best = 1 << 30;
+  for (final mv in _orderMoves(g, captures)) {
+    final child = g.clone();
+    try {
+      child.apply(g.turn, mv);
+    } catch (_) {
+      continue;
+    }
+    final s = _alphabeta(child, depth, alpha, beta, rootSeat);
+    if (s < best) best = s;
+    if (best < beta) beta = best;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+int _maxCapture(CheckersEngine g, int attacker) {
+  if (g.isOver) return 0;
+  final child = g.clone();
+  child.turn = attacker;
+  var best = 0;
+  for (final mv in child.legalMoves()) {
+    if (mv.jumped.length > best) best = mv.jumped.length;
+  }
+  return best;
 }
 
 int _evalCorners(CheckersEngine g, int seat) {

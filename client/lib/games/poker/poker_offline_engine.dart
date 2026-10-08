@@ -929,7 +929,7 @@ class PokerEngine {
   }
 }
 
-/// Есть ли у бота «сильная» карта: карманная пара, валет+, или уже пара+ по борду.
+/// Есть ли у бота «сильная» карта: карманная пара, валет+, пара+ по борду или дро.
 bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
   if (p.hole.length < 2) return false;
   final first = p.hole[0];
@@ -937,17 +937,20 @@ bool pokerBotHasCallStrength(PokerEngine g, PokerEnginePlayer p) {
   if (first.rank.value == second.rank.value) return true;
   if (first.rank.value >= 11 || second.rank.value >= 11) return true;
   if (g.community.length >= 3) {
-    final best = evaluateBestHand([...p.hole, ...g.community]);
+    final cards = [...p.hole, ...g.community];
+    final best = evaluateBestHand(cards);
     if (best.rank.index >= PokerHandRank.onePair.index) return true;
+    if (_pokerBotDrawScore(cards) >= 8) return true;
   }
   return false;
 }
 
 int pokerBotStrength(PokerEngine g, PokerEnginePlayer p) {
   if (g.community.length >= 3 && p.hole.length >= 2) {
-    final best = evaluateBestHand([...p.hole, ...g.community]);
+    final cards = [...p.hole, ...g.community];
+    final best = evaluateBestHand(cards);
     final kick = best.tie.isEmpty ? 0 : best.tie.first;
-    return best.rank.index * 16 + kick;
+    return best.rank.index * 20 + kick + _pokerBotDrawScore(cards);
   }
   if (p.hole.length < 2) return 0;
   var a = p.hole[0].rank.value;
@@ -957,14 +960,45 @@ int pokerBotStrength(PokerEngine g, PokerEnginePlayer p) {
     a = b;
     b = t;
   }
-  var score = a + b;
-  if (a == b) score += 42;
-  if (p.hole[0].suit == p.hole[1].suit) score += 8;
-  if (a - b <= 2) score += 6;
+  var score = a * 2 + b;
+  if (a == b) score += 50;
+  if (p.hole[0].suit == p.hole[1].suit) score += 14;
+  if (a - b <= 2) score += 10;
+  if (a >= 12 && b >= 10) score += 12;
   return score;
 }
 
-/// Сила руки: чек/рейз, колл по силе, олл-ин только с сильной картой.
+int _pokerBotDrawScore(List<PlayingCard> cards) {
+  if (cards.length < 4) return 0;
+  final suits = <Suit, int>{};
+  final ranks = <int, int>{};
+  for (final c in cards) {
+    suits[c.suit] = (suits[c.suit] ?? 0) + 1;
+    ranks[c.rank.value] = (ranks[c.rank.value] ?? 0) + 1;
+  }
+  var score = 0;
+  for (final n in suits.values) {
+    if (n == 4) score += 10;
+    if (n >= 5) score += 18;
+  }
+  final uniq = <int>[...ranks.keys];
+  if (ranks.containsKey(14)) uniq.add(1);
+  uniq.sort();
+  var run = 1;
+  var last = -99;
+  for (final r in uniq) {
+    if (r == last + 1) {
+      run++;
+    } else if (r != last) {
+      run = 1;
+    }
+    last = r;
+    if (run >= 4) score += 8;
+  }
+  return score;
+}
+
+/// Сильная рука: рейз/колл по силе и пот-оддсам, фолд мусора.
 PokerAction pokerBotAction(PokerEngine g) {
   final idx = g.actingIndex;
   final legal = g.legalActions(idx);
@@ -972,19 +1006,19 @@ PokerAction pokerBotAction(PokerEngine g) {
   final p = g.players[idx];
   var callAmount = g.currentBet - p.bet;
   if (callAmount < 0) callAmount = 0;
-  final rng = Random();
   final facingAllIn = callAmount >= p.chips ||
       g.players.any((other) =>
           other.seat != p.seat && !other.folded && other.allIn);
   final strength = pokerBotStrength(g, p);
-  final wantRaise = strength >= 58 &&
+  final wantRaise = strength >= 52 &&
       has(PokerActionType.raise) &&
       p.chips > g.bigBlind * 2;
+  final pot = g.pot <= 0 ? g.bigBlind * 3 : g.pot;
 
   if (has(PokerActionType.check)) {
-    if (wantRaise && rng.nextInt(3) != 0) {
+    if (wantRaise) {
       var to = g.currentBet + g.minRaise;
-      if (strength >= 80 && p.chips > g.minRaise * 3) {
+      if (strength >= 78 && p.chips > g.minRaise * 3) {
         to = g.currentBet + g.minRaise * 2;
       }
       if (to <= p.bet + p.chips) {
@@ -995,10 +1029,10 @@ PokerAction pokerBotAction(PokerEngine g) {
   }
   final cheapCall = callAmount > 0 &&
       callAmount < p.chips &&
-      callAmount <= p.chips ~/ 3 &&
+      (callAmount * 4 <= pot || callAmount <= p.chips ~/ 4) &&
       !facingAllIn;
-  if (has(PokerActionType.call) && cheapCall && strength >= 24) {
-    if (wantRaise && strength >= 70 && p.chips > g.bigBlind * 4) {
+  if (has(PokerActionType.call) && cheapCall && strength >= 20) {
+    if (wantRaise && strength >= 64 && p.chips > g.bigBlind * 4) {
       final to = g.currentBet + g.minRaise;
       if (to <= p.bet + p.chips) {
         return PokerAction(PokerActionType.raise, amount: to);
@@ -1009,6 +1043,9 @@ PokerAction pokerBotAction(PokerEngine g) {
   if ((has(PokerActionType.call) || has(PokerActionType.allIn)) &&
       callAmount > 0 &&
       pokerBotHasCallStrength(g, p)) {
+    if (facingAllIn && strength < 40 && callAmount * 2 > p.chips) {
+      return const PokerAction(PokerActionType.fold);
+    }
     if (has(PokerActionType.call) && callAmount < p.chips) {
       return const PokerAction(PokerActionType.call);
     }
