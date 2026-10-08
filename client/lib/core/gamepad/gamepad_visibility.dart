@@ -59,6 +59,17 @@ bool isIndexedStackChildDisplayed(
   return identical(displayed, child);
 }
 
+/// Виджет реально в кадре, а не на соседней странице `TabBarView`.
+bool isGamepadContextOnscreen(BuildContext ctx) {
+  if (!isGamepadContextOnstage(ctx)) return false;
+  final ro = ctx.findRenderObject();
+  if (ro is! RenderBox || !ro.hasSize || !ro.attached) return false;
+  final mq = MediaQuery.maybeOf(ctx);
+  if (mq == null) return true;
+  final rect = ro.localToGlobal(Offset.zero) & ro.size;
+  return rect.overlaps((Offset.zero & mq.size).deflate(8));
+}
+
 /// Скрытая ветка IndexedStack может оставить primaryFocus на поле чата.
 void unfocusOffstagePrimaryFocus() {
   final node = FocusManager.instance.primaryFocus;
