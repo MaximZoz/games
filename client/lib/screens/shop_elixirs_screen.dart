@@ -16,6 +16,7 @@ import 'package:multigames_client/shop/elixir_icon.dart';
 import 'package:multigames_client/shop/elixir_labels.dart';
 import 'package:multigames_client/shop/pending_purchases.dart';
 import 'package:multigames_client/shop/shop_provider.dart';
+import 'package:multigames_client/shop/shop_section_help.dart';
 import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/responsive.dart';
 import 'package:multigames_client/ui/widgets/app_snack_bar.dart';
@@ -89,6 +90,12 @@ class _ShopElixirsScreenState extends ConsumerState<ShopElixirsScreen> {
           leading:
               GamepadBackButton(onPressed: goBack, tooltip: l10n.commonBack),
           title: Text(l10n.shopElixirs),
+          actions: [
+            ShopSectionHelpButton(
+              title: l10n.shopElixirs,
+              body: l10n.shopElixirsHelp,
+            ),
+          ],
         ),
         body: SafeArea(
           child: elixirs.isEmpty
@@ -215,8 +222,8 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
     return items;
   }
 
-  Future<void> _buy(ShopItem item) async {
-    if (_buyInFlight.contains(item.code)) return;
+  Future<bool> _buy(ShopItem item) async {
+    if (_buyInFlight.contains(item.code)) return false;
     final l10n = context.l10n;
     final title = elixirTitle(l10n, item.collectionSet, item.elixirEffect);
     final ok = await showGamepadConfirmDialog(
@@ -225,7 +232,7 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
       message: l10n.shopPrice(formatRewardBronze(item.priceBronze)),
       confirmLabel: l10n.shopBuy,
     );
-    if (!ok || !mounted) return;
+    if (!ok || !mounted) return false;
     setState(() => _buyInFlight.add(item.code));
     try {
       await ref.read(pendingPurchasesProvider.notifier).buyOrQueue(item.code);
@@ -233,16 +240,33 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
       ref.invalidate(shopCatalogProvider);
       final fresh = await ref.read(shopCatalogProvider.future);
       if (mounted) setState(() => _items = fresh);
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       showAppSnackBar(
         context,
         message: e.toString().replaceFirst(RegExp(r'^[^:]+:\s*'), ''),
         kind: AppSnackKind.error,
       );
+      return false;
     } finally {
       if (mounted) setState(() => _buyInFlight.remove(item.code));
     }
+  }
+
+  Future<void> _afterBuy(ShopItem item, {required bool closePreview}) async {
+    final bought = await _buy(item);
+    if (!bought || !mounted) return;
+    if (closePreview) Navigator.of(context).pop();
+    if (!mounted) return;
+    await showGamepadOwnedDialog(
+      context: context,
+      message: elixirTitle(
+        context.l10n,
+        item.collectionSet,
+        item.elixirEffect,
+      ),
+    );
   }
 
   void _preview(ShopItem item) {
@@ -259,7 +283,7 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
       ),
       subtitle:
           '${elixirEffectHelp(l10n, item.elixirEffect)}\n${l10n.elixirSetOnly(collectionSetTitle(set))}',
-      onBuy: () => _buy(item),
+      onBuy: () => _afterBuy(item, closePreview: true),
       buyLabel: l10n.shopBuy,
     );
   }
@@ -371,7 +395,8 @@ class _ShopElixirGroupScreenState extends ConsumerState<ShopElixirGroupScreen> {
                   ),
                 ),
                 FilledButton(
-                  onPressed: busy ? null : () => _buy(item),
+                  onPressed:
+                      busy ? null : () => _afterBuy(item, closePreview: false),
                   child: Text(busy ? '…' : l10n.shopBuy),
                 ),
               ],

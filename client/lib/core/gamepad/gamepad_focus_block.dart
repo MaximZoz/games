@@ -44,6 +44,7 @@ class GamepadFocusBlock extends StatefulWidget {
     this.chrome,
     this.includeInEdgeFocus = true,
     this.pageAnchor = false,
+    this.stickSideTarget = false,
     this.outlinePadding = EdgeInsets.zero,
   });
 
@@ -61,6 +62,9 @@ class GamepadFocusBlock extends StatefulWidget {
   /// После перелистывания страницы не ставить фокус на этот блок
   /// (кнопка «Назад» в AppBar), если есть контент.
   final bool includeInEdgeFocus;
+
+  /// Влево/вправо с карточки (иконка «i» в магазине). Вверх/вниз не берёт.
+  final bool stickSideTarget;
 
   /// После страницы скролла предпочесть этот блок (кнопка «Создать игру»).
   final bool pageAnchor;
@@ -113,8 +117,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
   bool _keyboardAttached = false;
 
   /// «Назад» не в обходе Flutter: иначе AppBar забирает фокус раньше плиток.
-  bool get _skipTraversal =>
-      !widget.focusable || !widget.includeInEdgeFocus;
+  bool get _skipTraversal => !widget.focusable || !widget.includeInEdgeFocus;
 
   Widget get _paddedChild {
     if (widget.outlinePadding == EdgeInsets.zero) return widget.child;
@@ -212,6 +215,7 @@ class _GamepadFocusBlockState extends State<GamepadFocusBlock> {
           focusNode: _focus,
           includeInEdgeFocus: widget.includeInEdgeFocus,
           pageAnchor: widget.pageAnchor,
+          stickSideTarget: widget.stickSideTarget,
           child: Focus(
             focusNode: _focus,
             autofocus: widget.autofocus,
@@ -354,6 +358,7 @@ class GamepadFocusScope extends InheritedWidget {
     required super.child,
     this.includeInEdgeFocus = true,
     this.pageAnchor = false,
+    this.stickSideTarget = false,
   });
 
   final VoidCallback? onActivate;
@@ -361,6 +366,7 @@ class GamepadFocusScope extends InheritedWidget {
   final FocusNode focusNode;
   final bool includeInEdgeFocus;
   final bool pageAnchor;
+  final bool stickSideTarget;
 
   @override
   bool updateShouldNotify(GamepadFocusScope oldWidget) {
@@ -368,6 +374,7 @@ class GamepadFocusScope extends InheritedWidget {
         highlighted != oldWidget.highlighted ||
         focusNode != oldWidget.focusNode ||
         includeInEdgeFocus != oldWidget.includeInEdgeFocus ||
-        pageAnchor != oldWidget.pageAnchor;
+        pageAnchor != oldWidget.pageAnchor ||
+        stickSideTarget != oldWidget.stickSideTarget;
   }
 }

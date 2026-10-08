@@ -130,6 +130,7 @@ class ShopSectionHelpButton extends StatelessWidget {
         borderWidth: 2.2,
         shape: GamepadHighlightShape.circle,
         includeInEdgeFocus: false,
+        stickSideTarget: true,
         onActivate: () => showShopSectionHelp(
           context: context,
           title: title,

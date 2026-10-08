@@ -191,6 +191,12 @@ bool _includeInEdgeFocus(FocusNode node) {
   return GamepadFocusBlock.maybeOf(ctx)?.includeInEdgeFocus ?? true;
 }
 
+bool _isStickSideTarget(FocusNode node) {
+  final ctx = node.context;
+  if (ctx == null) return false;
+  return GamepadFocusBlock.maybeOf(ctx)?.stickSideTarget ?? false;
+}
+
 const _focusEdgeRetryLimit = 6;
 
 /// После перелистывания страницы — первый или последний видимый блок.
@@ -543,6 +549,15 @@ bool _moveGamepadBlock(
         groupNeighbor,
         axis: horizontal ? Axis.horizontal : Axis.vertical,
       );
+      return true;
+    }
+    if (horizontal) {
+      for (final node in blocks) {
+        if (!_isStickSideTarget(node)) continue;
+        node.requestFocus();
+        _ensureVisible(node, axis: Axis.horizontal);
+        return true;
+      }
     }
     return true;
   }
@@ -562,32 +577,11 @@ bool _moveGamepadBlock(
     // Сфокусированный блок мог выпасть из «видимых» — не прыгаем на первый.
     if (_isContentGamepadBlock(current)) return true;
     final content = _contentGamepadFocusBlocks(blocks);
-    // Вниз/вбок с пустого фокуса — сразу на контент, не на «Назад».
-    if (direction != TraversalDirection.up) {
-      if (content.isEmpty) return false;
-      content.first.requestFocus();
-      _ensureVisible(
-        content.first,
-        axis: horizontal ? Axis.horizontal : Axis.vertical,
-      );
-      return true;
-    }
-    FocusNode? back;
-    for (final node in blocks) {
-      if (!_includeInEdgeFocus(node)) {
-        back = node;
-        break;
-      }
-    }
-    if (back != null) {
-      back.requestFocus();
-      _ensureVisible(back);
-      return true;
-    }
+    // Пустой фокус — на контент. «Назад» только по B.
     if (content.isEmpty) return false;
-    content.last.requestFocus();
+    content.first.requestFocus();
     _ensureVisible(
-      content.last,
+      content.first,
       axis: horizontal ? Axis.horizontal : Axis.vertical,
     );
     return true;
@@ -684,25 +678,35 @@ FocusNode? _neighborGamepadBlock(
   final current = blocks[index];
   final curRect = _focusRect(current);
   if (curRect == null) return null;
+  final horizontal = direction == TraversalDirection.left ||
+      direction == TraversalDirection.right;
   FocusNode? best;
   var bestScore = double.infinity;
   for (final node in blocks) {
     if (identical(node, current)) continue;
+    // «Назад» только по B. Иконка «i» — влево/вправо с карточки.
+    if (!_includeInEdgeFocus(node) &&
+        !(horizontal && _isStickSideTarget(node))) {
+      continue;
+    }
     final rect = _focusRect(node);
     if (rect == null) continue;
     final dx = rect.center.dx - curRect.center.dx;
     final dy = rect.center.dy - curRect.center.dy;
-    final horizontal = direction == TraversalDirection.left ||
-        direction == TraversalDirection.right;
     final currentGroup = GamepadNavGroup.ofNode(current);
     final currentExclusive = GamepadNavGroup.exclusiveOfNode(current);
     if (currentGroup != null && !currentGroup.exclusive && horizontal) {
-      if (!identical(GamepadNavGroup.ofNode(node), currentGroup)) continue;
+      if (!_isStickSideTarget(node) &&
+          !identical(GamepadNavGroup.ofNode(node), currentGroup)) {
+        continue;
+      }
     } else if (currentExclusive != null) {
       if (!identical(GamepadNavGroup.exclusiveOfNode(node), currentExclusive)) {
         continue;
       }
-    } else if (horizontal) {
+    } else if (horizontal &&
+        !_isStickSideTarget(node) &&
+        !_isStickSideTarget(current)) {
       final currentStrip = _horizontalScrollable(current);
       if (currentStrip != null) {
         if (!identical(_horizontalScrollable(node), currentStrip)) continue;
@@ -713,8 +717,8 @@ FocusNode? _neighborGamepadBlock(
     final ok = switch (direction) {
       TraversalDirection.down => dy > 8,
       TraversalDirection.up => dy < -8,
-      TraversalDirection.right => dx > 8,
-      TraversalDirection.left => dx < -8,
+      TraversalDirection.right => dx > 8 || _isStickSideTarget(node),
+      TraversalDirection.left => dx < -8 || _isStickSideTarget(node),
     };
     if (!ok) continue;
     final primary = direction == TraversalDirection.down ||
