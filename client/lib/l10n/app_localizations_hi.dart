@@ -2156,6 +2156,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'केवल नया या विंटेज संग्रह बेचा जा सकता है।';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'बेचा नहीं जा सकता';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'केवल नया या विंटेज आइटम बेचा जा सकता है। अवस्था बदलने के लिए अमृत का उपयोग करें।';
+
+  @override
   String inventorySold(String amount) {
     return 'बेचा गया: +$amount';
   }

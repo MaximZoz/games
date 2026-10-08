@@ -2156,6 +2156,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Тек жаңа немесе винтаж коллекцияны сатуға болады.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Сатуға болмайды';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Тек жаңа немесе винтаж затты сатуға болады. Күйін өзгерту үшін эликсирді пайдаланыңыз.';
+
+  @override
   String inventorySold(String amount) {
     return 'Сатылды: +$amount';
   }

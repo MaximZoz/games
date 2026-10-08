@@ -127,6 +127,20 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   }
 
   Future<void> _sell(InventoryItem item) async {
+    if (!collectionCanSell(
+      acquiredAt: item.acquiredAt,
+      conditionShift: item.conditionShift,
+      vintageAt: item.vintageAt,
+    )) {
+      if (!mounted) return;
+      final l10n = context.l10n;
+      await showGamepadMessageDialog(
+        context: context,
+        title: l10n.inventoryCollectionNotSellableTitle,
+        message: l10n.inventoryCollectionNotSellableHint,
+      );
+      return;
+    }
     final refund = collectionRefundBronze(
       priceBronze: await _catalogPrice(item.code),
       acquiredAt: item.acquiredAt,
@@ -1182,24 +1196,19 @@ class _CollectionInvTile extends StatelessWidget {
                   icon: const Icon(Icons.card_giftcard_outlined),
                 ),
               ),
-              if (collectionCanSell(
-                acquiredAt: item.acquiredAt,
-                conditionShift: item.conditionShift,
-                vintageAt: item.vintageAt,
-              ))
-                GamepadFocusBlock(
-                  radius: 20,
-                  shape: GamepadHighlightShape.circle,
-                  onActivate: onSell,
-                  child: KeyedSubtree(
-                    key: sellSourceKey,
-                    child: IconButton(
-                      tooltip: context.l10n.inventorySell,
-                      onPressed: onSell,
-                      icon: const Icon(Icons.sell_outlined),
-                    ),
+              GamepadFocusBlock(
+                radius: 20,
+                shape: GamepadHighlightShape.circle,
+                onActivate: onSell,
+                child: KeyedSubtree(
+                  key: sellSourceKey,
+                  child: IconButton(
+                    tooltip: context.l10n.inventorySell,
+                    onPressed: onSell,
+                    icon: const Icon(Icons.sell_outlined),
                   ),
                 ),
+              ),
             ],
           ),
         ),

@@ -952,6 +952,8 @@
   "inventorySellTitle": "Sat?",
   "inventorySellDesc": "{amount} alacaksınız",
   "inventoryCollectionNotSellable": "Yalnızca yeni veya vintage bir koleksiyon satılabilir.",
+  "inventoryCollectionNotSellableTitle": "Satılamaz",
+  "inventoryCollectionNotSellableHint": "Yalnızca yeni veya vintage bir eşya satılabilir. Durumunu değiştirmek için iksir kullanın.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -145,6 +145,50 @@ void main() {
     expect(help, 1);
   });
 
+  testWidgets('всплышка продажи закрывается кнопкой геймпада', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GamepadHost(
+            child: Builder(
+              builder: (context) {
+                return TextButton(
+                  onPressed: () {
+                    final l10n = context.l10n;
+                    showGamepadMessageDialog(
+                      context: context,
+                      title: l10n.inventoryCollectionNotSellableTitle,
+                      message: l10n.inventoryCollectionNotSellableHint,
+                    );
+                  },
+                  child: const Text('sell-blocked'),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('sell-blocked'));
+    await tester.pumpAndSettle();
+    expect(find.text('Нельзя продать'), findsOneWidget);
+    expect(find.textContaining('эликсир'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.cancel);
+    await tester.pumpAndSettle();
+    expect(find.text('Нельзя продать'), findsNothing);
+
+    await tester.tap(find.text('sell-blocked'));
+    await tester.pumpAndSettle();
+    expect(find.text('Закрыть'), findsOneWidget);
+    GamepadService.instance.emit(GamepadAction.confirm);
+    await tester.pumpAndSettle();
+    expect(find.text('Нельзя продать'), findsNothing);
+  });
+
   testWidgets('всплышка куплено закрывается кнопкой', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(

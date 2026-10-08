@@ -952,6 +952,8 @@
   "inventorySellTitle": "売却しますか？",
   "inventorySellDesc": "{amount} を受け取ります",
   "inventoryCollectionNotSellable": "売れるのは新品かヴィンテージのコレクションだけです。",
+  "inventoryCollectionNotSellableTitle": "売れません",
+  "inventoryCollectionNotSellableHint": "売れるのは新品かヴィンテージのアイテムだけです。エリクサーで状態を変えてください。",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

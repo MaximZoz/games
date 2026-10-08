@@ -952,6 +952,8 @@
   "inventorySellTitle": "Selge?",
   "inventorySellDesc": "Du får {amount}",
   "inventoryCollectionNotSellable": "Bare en ny eller vintage samling kan selges.",
+  "inventoryCollectionNotSellableTitle": "Kan ikke selges",
+  "inventoryCollectionNotSellableHint": "Bare en ny eller vintage gjenstand kan selges. Bruk en eliksir for å endre tilstanden.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

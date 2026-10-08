@@ -952,6 +952,8 @@
   "inventorySellTitle": "판매할까요?",
   "inventorySellDesc": "{amount}을(를) 받습니다",
   "inventoryCollectionNotSellable": "새것이나 빈티지 컬렉션만 팔 수 있습니다.",
+  "inventoryCollectionNotSellableTitle": "판매할 수 없습니다",
+  "inventoryCollectionNotSellableHint": "새것이나 빈티지 아이템만 팔 수 있습니다. 엘릭서로 상태를 바꾸세요.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -952,6 +952,8 @@
   "inventorySellTitle": "Πώληση;",
   "inventorySellDesc": "Θα λάβετε {amount}",
   "inventoryCollectionNotSellable": "Μπορείς να πουλήσεις μόνο καινούργια ή vintage συλλογή.",
+  "inventoryCollectionNotSellableTitle": "Δεν πωλείται",
+  "inventoryCollectionNotSellableHint": "Μπορείς να πουλήσεις μόνο καινούργιο ή vintage αντικείμενο. Χρησιμοποίησε ένα ελιξίριο για να αλλάξεις την κατάσταση.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

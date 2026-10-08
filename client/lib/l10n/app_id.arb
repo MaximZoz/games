@@ -952,6 +952,8 @@
   "inventorySellTitle": "Jual?",
   "inventorySellDesc": "Anda akan menerima {amount}",
   "inventoryCollectionNotSellable": "Hanya koleksi baru atau vintage yang bisa dijual.",
+  "inventoryCollectionNotSellableTitle": "Tidak bisa dijual",
+  "inventoryCollectionNotSellableHint": "Hanya item baru atau vintage yang bisa dijual. Gunakan elixir untuk mengubah kondisinya.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -952,6 +952,8 @@
   "inventorySellTitle": "ขาย?",
   "inventorySellDesc": "คุณจะได้รับ {amount}",
   "inventoryCollectionNotSellable": "ขายได้เฉพาะคอลเลกชันใหม่หรือวินเทจ",
+  "inventoryCollectionNotSellableTitle": "ขายไม่ได้",
+  "inventoryCollectionNotSellableHint": "ขายได้เฉพาะของใหม่หรือวินเทจ ใช้ elixir เพื่อเปลี่ยนสภาพ",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

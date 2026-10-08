@@ -2156,6 +2156,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Prodat lze jen novou nebo vintage kolekci.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Nelze prodat';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Prodat lze jen nový nebo vintage předmět. Použijte elixír a změňte stav.';
+
+  @override
   String inventorySold(String amount) {
     return 'Prodáno: +$amount';
   }

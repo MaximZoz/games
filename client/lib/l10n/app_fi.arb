@@ -952,6 +952,8 @@
   "inventorySellTitle": "Myydäänkö?",
   "inventorySellDesc": "Saat {amount}",
   "inventoryCollectionNotSellable": "Vain uuden tai vintage-kokoelman voi myydä.",
+  "inventoryCollectionNotSellableTitle": "Ei voi myydä",
+  "inventoryCollectionNotSellableHint": "Vain uuden tai vintage-esineen voi myydä. Käytä eliksiiriä ja muuta kuntoa.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

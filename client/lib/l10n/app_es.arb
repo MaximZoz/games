@@ -952,6 +952,8 @@
   "inventorySellTitle": "¿Vender?",
   "inventorySellDesc": "Recibirás {amount}",
   "inventoryCollectionNotSellable": "Solo se puede vender una colección nueva o vintage.",
+  "inventoryCollectionNotSellableTitle": "No se puede vender",
+  "inventoryCollectionNotSellableHint": "Solo se puede vender un objeto nuevo o vintage. Usa un elixir para cambiar su estado.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

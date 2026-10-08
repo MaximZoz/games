@@ -2156,6 +2156,12 @@ class AppLocalizationsFi extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Vain uuden tai vintage-kokoelman voi myydä.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Ei voi myydä';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Vain uuden tai vintage-esineen voi myydä. Käytä eliksiiriä ja muuta kuntoa.';
+
+  @override
   String inventorySold(String amount) {
     return 'Myyty: +$amount';
   }

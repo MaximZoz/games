@@ -2156,6 +2156,12 @@ class AppLocalizationsBe extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Прадаць можна толькі новую або вінтажную калекцыю.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Нельга прадаць';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Прадаць можна толькі новы прадмет або вінтажны. Скарыстайцеся эліксірам, каб змяніць стан.';
+
+  @override
   String inventorySold(String amount) {
     return 'Прадана: +$amount';
   }

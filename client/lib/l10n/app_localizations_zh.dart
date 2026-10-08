@@ -2156,6 +2156,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inventoryCollectionNotSellable => '只能出售崭新或古旧的收藏。';
 
   @override
+  String get inventoryCollectionNotSellableTitle => '无法出售';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '只能出售崭新或古旧的物品。请用灵药改变状态。';
+
+  @override
   String inventorySold(String amount) {
     return '已出售：+$amount';
   }

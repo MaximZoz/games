@@ -952,6 +952,8 @@
   "inventorySellTitle": "Прадаць?",
   "inventorySellDesc": "Вы атрымаеце {amount}",
   "inventoryCollectionNotSellable": "Прадаць можна толькі новую або вінтажную калекцыю.",
+  "inventoryCollectionNotSellableTitle": "Нельга прадаць",
+  "inventoryCollectionNotSellableHint": "Прадаць можна толькі новы прадмет або вінтажны. Скарыстайцеся эліксірам, каб змяніць стан.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

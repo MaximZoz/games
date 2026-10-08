@@ -135,6 +135,42 @@ Future<bool> showGamepadChoiceDialog({
   return (await future) == true;
 }
 
+/// Информационная всплышка: любая кнопка геймпада закрывает.
+Future<void> showGamepadMessageDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      void close() {
+        final nav = Navigator.of(dialogContext);
+        if (nav.canPop()) nav.pop();
+      }
+
+      return wrapGamepadDismissDialog(
+        onDismiss: close,
+        child: AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            GamepadFocusBlock(
+              autofocus: true,
+              radius: AppRadius.button,
+              onActivate: close,
+              child: TextButton(
+                onPressed: close,
+                child: Text(dialogContext.l10n.commonClose),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 /// Всплышка «Куплено»: любая кнопка закрывает.
 Future<void> showGamepadOwnedDialog({
   required BuildContext context,

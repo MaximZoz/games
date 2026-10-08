@@ -2156,6 +2156,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Bara en ny eller vintage samling kan säljas.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Kan inte säljas';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Bara ett nytt eller vintage föremål kan säljas. Använd en elixir för att ändra skicket.';
+
+  @override
   String inventorySold(String amount) {
     return 'Sålt: +$amount';
   }
