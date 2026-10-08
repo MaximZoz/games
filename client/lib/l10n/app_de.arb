@@ -637,7 +637,7 @@
   "shopStakes": "Einsätze",
   "shopStakesSubtitle": "Höhere Einsätze freischalten",
   "shopEmojisHelp": "Animierte Emojis für den Chat. Kaufe ein Set und sende sie in Nachrichten an Freunde.",
-  "shopCollectionsHelp": "Sammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt oder verkauft werden. Jeder Gegenstand bringt jeden Tag Münzen, und ein vollständiger Satz zusätzlich einen eigenen Bonus.\n\nDas tägliche Einkommen eines Gegenstands hängt vom Zustand ab und ist ein Anteil der üblichen Summe. Neu bringt 100 %. Abgenutzt bringt 60 %. Müde bringt 40 %. Schäbig bringt 100 %. Ein Vintage-Gegenstand bringt 200 %, also doppelt so viel wie üblich.\n\nDer Bonus eines vollständigen Satzes bleibt gleich, bis der Satz selbst Vintage ist. Ein Satz ist Vintage, wenn jeder Gegenstand darin Vintage ist: der Bonus beträgt dann 300 %, das Dreifache des Üblichen.\n\nDer Zustand hängt davon ab, wie lange der Gegenstand bei dir ist. Neu — die ersten 7 Tage, Verkauf 80 % des Preises. Abgenutzt — vom 8. Tag bis 2 Monate, Verkauf 60 % des Preises. Müde — von 2 bis 6 Monaten, Verkauf 40 % des Preises. Schäbig — von 6 Monaten bis 1 Jahr, Verkauf 100 % des Preises. Vintage — ab 1 Jahr, Verkauf 300 % des Preises.",
+  "shopCollectionsHelp": "Verkaufen kannst du nur eine neue oder Vintage-Sammlung: 80 % des Preises, wenn sie neu ist, und 300 % des Preises, wenn sie Vintage ist. Abgenutzte, müde und schäbige Sammlungen lassen sich nicht verkaufen.\n\nSammle einen Satz Gegenstände: Sie erscheinen in deiner Profilvitrine und können verschenkt werden. Jeder Gegenstand bringt jeden Tag Münzen, und ein vollständiger Satz zusätzlich einen eigenen Bonus.\n\nDas tägliche Einkommen eines Gegenstands hängt vom Zustand ab und ist ein Anteil der üblichen Summe. Neu bringt 100 %. Abgenutzt bringt 60 %. Müde bringt 40 %. Schäbig bringt 100 %. Ein Vintage-Gegenstand bringt 200 %, also doppelt so viel wie üblich.\n\nDer Bonus eines vollständigen Satzes bleibt gleich, bis der Satz selbst Vintage ist. Ein Satz ist Vintage, wenn jeder Gegenstand darin Vintage ist: der Bonus beträgt dann 300 %, das Dreifache des Üblichen.\n\nDer Zustand hängt davon ab, wie lange der Gegenstand bei dir ist. Neu — die ersten 7 Tage. Abgenutzt — vom 8. Tag bis 2 Monate. Müde — von 2 bis 6 Monaten. Schäbig — von 6 Monaten bis 1 Jahr. Vintage — ab 1 Jahr.",
   "shopStakesHelp": "Schalte höhere Einsätze in Spielen frei. Je höher der Einsatz, desto größer sind Pot und Gewinn.",
   "inventoryTitle": "Gegenstände",
   "inventoryEmpty": "Noch nichts hier — schau im Shop vorbei",
@@ -941,6 +941,7 @@
   },
   "inventorySellTitle": "Verkaufen?",
   "inventorySellDesc": "Sie erhalten {amount}",
+  "inventoryCollectionNotSellable": "Verkaufen kannst du nur eine neue oder Vintage-Sammlung.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

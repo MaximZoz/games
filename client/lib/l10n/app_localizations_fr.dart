@@ -1729,7 +1729,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopEmojisHelp => 'Emojis animés pour le chat. Achetez un lot et envoyez-les à vos amis.';
 
   @override
-  String get shopCollectionsHelp => 'Rassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts ou vendus. Chaque objet rapporte des pièces chaque jour, et un ensemble complet ajoute un bonus à part.\n\nLe revenu quotidien d’un objet dépend de son état et se calcule sur la somme habituelle. Neuf rapporte 100 %. Usé rapporte 60 %. Fatigué rapporte 40 %. Vétuste rapporte 100 %. Un objet vintage rapporte 200 %, soit le double du revenu habituel.\n\nLe bonus d’un ensemble complet ne change pas tant que l’ensemble n’est pas vintage. Un ensemble est vintage lorsque chaque objet l’est : le bonus passe alors à 300 %, le triple de l’habituel.\n\nL’état dépend depuis combien de temps l’objet est à vous. Neuf — les 7 premiers jours, vente à 80 % du prix. Usé — du 8e jour à 2 mois, vente à 60 % du prix. Fatigué — de 2 à 6 mois, vente à 40 % du prix. Vétuste — de 6 mois à 1 an, vente à 100 % du prix. Vintage — à partir d’1 an, vente à 300 % du prix.';
+  String get shopCollectionsHelp => 'On ne peut vendre qu’une collection neuve ou vintage : 80 % du prix si elle est neuve, et 300 % du prix si elle est vintage. Une collection usée, fatiguée ou vétuste ne se vend pas.\n\nRassemblez un ensemble d’objets : ils apparaissent dans la vitrine du profil et peuvent être offerts. Chaque objet rapporte des pièces chaque jour, et un ensemble complet ajoute un bonus à part.\n\nLe revenu quotidien d’un objet dépend de son état et se calcule sur la somme habituelle. Neuf rapporte 100 %. Usé rapporte 60 %. Fatigué rapporte 40 %. Vétuste rapporte 100 %. Un objet vintage rapporte 200 %, soit le double du revenu habituel.\n\nLe bonus d’un ensemble complet ne change pas tant que l’ensemble n’est pas vintage. Un ensemble est vintage lorsque chaque objet l’est : le bonus passe alors à 300 %, le triple de l’habituel.\n\nL’état dépend depuis combien de temps l’objet est à vous. Neuf — les 7 premiers jours. Usé — du 8e jour à 2 mois. Fatigué — de 2 à 6 mois. Vétuste — de 6 mois à 1 an. Vintage — à partir d’1 an.';
 
   @override
   String get shopStakesHelp => 'Débloquez des mises plus élevées. Plus la mise est haute, plus le pot et le gain sont importants.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Vous recevrez $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'On ne peut vendre qu’une collection neuve ou vintage.';
 
   @override
   String inventorySold(String amount) {

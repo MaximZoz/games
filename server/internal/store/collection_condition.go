@@ -20,6 +20,11 @@ const (
 	CollectionCondVintage = "vintage"
 )
 
+// CollectionCanSell — продать можно только новое или винтаж.
+func CollectionCanSell(condition string) bool {
+	return condition == CollectionCondNew || condition == CollectionCondVintage
+}
+
 // CollectionSellPercent — доля цены каталога, которую вернёт продажа.
 func CollectionSellPercent(condition string) int {
 	switch condition {

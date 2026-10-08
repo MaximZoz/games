@@ -1729,7 +1729,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get shopEmojisHelp => 'Animované smajlíky do chatu. Kupte sadu a posílejte je přátelům.';
 
   @override
-  String get shopCollectionsHelp => 'Sesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat a prodat. Každý předmět denně přináší mince a kompletní sada ještě samostatný bonus.\n\nDenní příjem předmětu záleží na stavu a počítá se z obvyklé částky. Nová přináší 100 %. Ohmataná 60 %. Unavená 40 %. Zchátralá 100 %. Vintage předmět přináší 200 %, tedy dvojnásobek obvyklého příjmu.\n\nBonus kompletní sady se nemění, dokud se sada sama nestane vintage. Sada je vintage, když je vintage každý její předmět: bonus je pak 300 %, trojnásobek obvyklého.\n\nStav záleží na tom, jak dlouho předmět máte. Nová — prvních 7 dní, prodej 80 % ceny. Ohmataná — od 8. dne do 2 měsíců, prodej 60 % ceny. Unavená — od 2 do 6 měsíců, prodej 40 % ceny. Zchátralá — od 6 měsíců do roku, prodej 100 % ceny. Vintage — od roku, prodej 300 % ceny.';
+  String get shopCollectionsHelp => 'Prodat lze jen novou nebo vintage kolekci: 80 % ceny, když je nová, a 300 % ceny, když je vintage. Ohmatanou, unavenou a zchátralou prodat nelze.\n\nSesbírejte sadu předmětů: objeví se ve výloze profilu, lze je darovat. Každý předmět denně přináší mince a kompletní sada ještě samostatný bonus.\n\nDenní příjem předmětu záleží na stavu a počítá se z obvyklé částky. Nová přináší 100 %. Ohmataná 60 %. Unavená 40 %. Zchátralá 100 %. Vintage předmět přináší 200 %, tedy dvojnásobek obvyklého příjmu.\n\nBonus kompletní sady se nemění, dokud se sada sama nestane vintage. Sada je vintage, když je vintage každý její předmět: bonus je pak 300 %, trojnásobek obvyklého.\n\nStav záleží na tom, jak dlouho předmět máte. Nová — prvních 7 dní. Ohmataná — od 8. dne do 2 měsíců. Unavená — od 2 do 6 měsíců. Zchátralá — od 6 měsíců do roku. Vintage — od roku.';
 
   @override
   String get shopStakesHelp => 'Odemkněte vyšší sázky. Čím vyšší sázka, tím větší pot a výhra.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Získáte $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Prodat lze jen novou nebo vintage kolekci.';
 
   @override
   String inventorySold(String amount) {

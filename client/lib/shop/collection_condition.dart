@@ -5,15 +5,35 @@ import 'package:multigames_client/l10n/app_localizations.dart';
 
 /// Состояние коллекции по времени владения.
 ///
-/// Первые 7 дней — новое (80%). До 2 месяцев — потрепанное (60%).
-/// До 6 месяцев — уставшее (40%). До года — ветхое (100%).
-/// Дальше — винтаж (300%). Месяц после покупки попадает в потрепанное.
+/// Первые 7 дней — новое. До 2 месяцев — потрепанное.
+/// До 6 месяцев — уставшее. До года — ветхое. Дальше — винтаж.
+/// Продать можно только новое (80%) или винтаж (300%).
 enum CollectionCondition {
   fresh,
   worn,
   tired,
   shabby,
   vintage,
+}
+
+/// Продать можно только новое или винтаж. Пустая дата считается новым.
+bool collectionCanSell({
+  required String? acquiredAt,
+  DateTime? now,
+  int conditionShift = 0,
+  String? vintageAt,
+}) {
+  final parsed = parseCollectionAcquiredAt(acquiredAt);
+  final condition = parsed == null
+      ? CollectionCondition.fresh
+      : collectionConditionEffective(
+          acquired: parsed,
+          now: now ?? DateTime.now(),
+          shift: conditionShift,
+          vintageAt: parseCollectionAcquiredAt(vintageAt),
+        );
+  return condition == CollectionCondition.fresh ||
+      condition == CollectionCondition.vintage;
 }
 
 int collectionSellPercent(CollectionCondition condition) {

@@ -159,4 +159,26 @@ void main() {
     expect(collectionSetIncomeBronze('nature', allVintage: true), 150);
     expect(collectionSetIncomeBronze('jewels', allVintage: true), 15000);
   });
+
+  test('продать можно только новое или винтаж', () {
+    final acquired = DateTime.utc(2024, 3, 1);
+    bool can(DateTime at) => collectionCanSell(
+          acquiredAt: acquired.toIso8601String(),
+          now: at,
+        );
+    expect(can(acquired.add(const Duration(days: 1))), isTrue);
+    expect(can(acquired.add(const Duration(days: 20))), isFalse);
+    expect(can(DateTime.utc(2024, 6, 1)), isFalse);
+    expect(can(DateTime.utc(2024, 11, 1)), isFalse);
+    expect(can(DateTime.utc(2025, 4, 1)), isTrue);
+    expect(collectionCanSell(acquiredAt: null), isTrue);
+    final l10n = lookupAppLocalizations(const Locale('ru'));
+    expect(
+      l10n.shopCollectionsHelp.startsWith(
+        'Продать можно только новую или винтажную коллекцию',
+      ),
+      isTrue,
+    );
+    expect(l10n.inventoryCollectionNotSellable, contains('винтаж'));
+  });
 }

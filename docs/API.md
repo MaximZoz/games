@@ -465,7 +465,7 @@ POST /api/shop/buy                      // { "item_code": "...", "quantity": 1 }
 GET  /api/inventory                     // инвентарь пользователя
 GET  /api/inventory/capabilities        // доступные ставки/возможности
 POST /api/inventory/consume             // { "item_code": "..." }
-POST /api/inventory/sell                // продажа коллекции: 80/60/40/100/300% по состоянию (с учётом эликсиров)
+POST /api/inventory/sell                // продажа только новой (80%) или винтажной (300%) коллекции
 POST /api/inventory/elixir              // {"elixir_code","collection_code"} — применить эликсир
 POST /api/inventory/gift                // подарок другу (создаёт системное сообщение в чате)
 

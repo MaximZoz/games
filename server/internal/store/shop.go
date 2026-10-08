@@ -14,21 +14,22 @@ import (
 )
 
 var (
-	ErrShopItemUnknown     = errors.New("unknown shop item")
-	ErrShopItemInactive    = errors.New("shop item inactive")
-	ErrShopOutOfStock      = errors.New("out of stock")
-	ErrShopAlreadyOwned    = errors.New("already owned")
-	ErrStakeNotAllowed     = errors.New("stake not allowed")
-	ErrEmojiNotOwned       = errors.New("emoji not owned")
-	ErrEmojiDepleted       = errors.New("emoji depleted")
-	ErrNotCollection       = errors.New("not a collection item")
-	ErrGiftSelf            = errors.New("cannot gift to self")
-	ErrGiftTargetOwned     = errors.New("target already owns item")
-	ErrIncomeNotReady      = errors.New("collection income not ready")
-	ErrNoCollections       = errors.New("no collections")
-	ErrElixirNotOwned      = errors.New("elixir not owned")
-	ErrElixirNotApplicable = errors.New("elixir not applicable")
-	ErrElixirWrongSet      = errors.New("elixir wrong set")
+	ErrShopItemUnknown       = errors.New("unknown shop item")
+	ErrShopItemInactive      = errors.New("shop item inactive")
+	ErrShopOutOfStock        = errors.New("out of stock")
+	ErrShopAlreadyOwned      = errors.New("already owned")
+	ErrStakeNotAllowed       = errors.New("stake not allowed")
+	ErrEmojiNotOwned         = errors.New("emoji not owned")
+	ErrEmojiDepleted         = errors.New("emoji depleted")
+	ErrNotCollection         = errors.New("not a collection item")
+	ErrGiftSelf              = errors.New("cannot gift to self")
+	ErrGiftTargetOwned       = errors.New("target already owns item")
+	ErrIncomeNotReady        = errors.New("collection income not ready")
+	ErrNoCollections         = errors.New("no collections")
+	ErrElixirNotOwned        = errors.New("elixir not owned")
+	ErrElixirNotApplicable   = errors.New("elixir not applicable")
+	ErrElixirWrongSet        = errors.New("elixir wrong set")
+	ErrCollectionNotSellable = errors.New("collection not sellable")
 )
 
 // FreeStakeBronze — бронзовые ставки без покупки в магазине.
@@ -529,9 +530,8 @@ func ListCollections(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) 
 	return out, rows.Err()
 }
 
-// SellCollection возвращает долю цены каталога по состоянию коллекции
-// и удаляет предмет. Новое 80%, потрепанное 60%, уставшее 40%,
-// ветхое 100%, винтаж 300%.
+// SellCollection возвращает долю цены каталога и удаляет предмет.
+// Продать можно только новое (80%) или винтаж (300%).
 func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, code string) (balance int, refund int, err error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -559,7 +559,12 @@ func SellCollection(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, c
 	if kind != "collection" {
 		return 0, 0, ErrNotCollection
 	}
-	refund = CollectionRefundAged(price, acquiredAt, time.Now().UTC(), shift, vintageAt)
+	now := time.Now().UTC()
+	cond := CollectionConditionEffective(acquiredAt, now, shift, vintageAt)
+	if !CollectionCanSell(cond) {
+		return 0, 0, ErrCollectionNotSellable
+	}
+	refund = CollectionRefundAged(price, acquiredAt, now, shift, vintageAt)
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM user_inventory WHERE user_id = $1 AND item_code = $2`, userID, code); err != nil {
 		return 0, 0, err

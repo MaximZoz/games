@@ -1729,7 +1729,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get shopEmojisHelp => 'Animerade emojis för chatten. Köp ett set och skicka dem till vänner.';
 
   @override
-  String get shopCollectionsHelp => 'Samla ett set föremål: de syns i profilens monter och kan ges bort eller säljas. Varje föremål ger mynt varje dag, och ett komplett set ger också en egen bonus.\n\nEtt föremåls dagliga inkomst beror på tillståndet och är en andel av den vanliga summan. Ny ger 100 %. Sliten ger 60 %. Trött ger 40 %. Skröplig ger 100 %. Ett vintageföremål ger 200 %, alltså dubbelt mot den vanliga dagliga inkomsten.\n\nBonusen för ett komplett set är oförändrad tills setet själv är vintage. Ett set är vintage när varje föremål i det är vintage: bonusen blir då 300 %, tre gånger det vanliga.\n\nTillståndet beror på hur länge du har haft föremålet. Ny — de första 7 dagarna, försäljning 80 % av priset. Sliten — från dag 8 till 2 månader, försäljning 60 % av priset. Trött — från 2 till 6 månader, försäljning 40 % av priset. Skröplig — från 6 månader till 1 år, försäljning 100 % av priset. Vintage — från 1 år, försäljning 300 % av priset.';
+  String get shopCollectionsHelp => 'Bara en ny eller vintage samling kan säljas: 80 % av priset när den är ny och 300 % av priset när den är vintage. Sliten, trött och skröplig kan inte säljas.\n\nSamla ett set föremål: de syns i profilens monter och kan ges bort. Varje föremål ger mynt varje dag, och ett komplett set ger också en egen bonus.\n\nEtt föremåls dagliga inkomst beror på tillståndet och är en andel av den vanliga summan. Ny ger 100 %. Sliten ger 60 %. Trött ger 40 %. Skröplig ger 100 %. Ett vintageföremål ger 200 %, alltså dubbelt mot den vanliga dagliga inkomsten.\n\nBonusen för ett komplett set är oförändrad tills setet själv är vintage. Ett set är vintage när varje föremål i det är vintage: bonusen blir då 300 %, tre gånger det vanliga.\n\nTillståndet beror på hur länge du har haft föremålet. Ny — de första 7 dagarna. Sliten — från dag 8 till 2 månader. Trött — från 2 till 6 månader. Skröplig — från 6 månader till 1 år. Vintage — från 1 år.';
 
   @override
   String get shopStakesHelp => 'Lås upp högre insatser. Ju högre insats, desto större pott och vinst.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Du får $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Bara en ny eller vintage samling kan säljas.';
 
   @override
   String inventorySold(String amount) {

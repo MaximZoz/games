@@ -1729,7 +1729,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopEmojisHelp => 'Geanimeerde emoji’s voor de chat. Koop een set en stuur ze naar vrienden.';
 
   @override
-  String get shopCollectionsHelp => 'Verzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen of verkopen. Elk item levert elke dag munten op, en een complete set geeft ook een aparte bonus.\n\nHet dagelijkse inkomen van een item hangt af van de staat en is een deel van het gebruikelijke bedrag. Nieuw levert 100% op. Versleten levert 60% op. Vermoeid levert 40% op. Verval levert 100% op. Een vintage item levert 200% op, twee keer het gebruikelijke daginkomen.\n\nDe bonus van een complete set blijft gelijk tot de set zelf vintage is. Een set is vintage als elk item erin vintage is: de bonus is dan 300%, drie keer het gebruikelijke bedrag.\n\nDe staat hangt af van hoe lang het item al van jou is. Nieuw — de eerste 7 dagen, verkoop 80% van de prijs. Versleten — van dag 8 tot 2 maanden, verkoop 60% van de prijs. Vermoeid — van 2 tot 6 maanden, verkoop 40% van de prijs. Verval — van 6 maanden tot 1 jaar, verkoop 100% van de prijs. Vintage — vanaf 1 jaar, verkoop 300% van de prijs.';
+  String get shopCollectionsHelp => 'Je kunt alleen een nieuwe of vintage collectie verkopen: 80% van de prijs als ze nieuw is en 300% van de prijs als ze vintage is. Versleten, vermoeid en vervallen kun je niet verkopen.\n\nVerzamel een set items: ze verschijnen in je profielvitrine en kun je cadeau doen. Elk item levert elke dag munten op, en een complete set geeft ook een aparte bonus.\n\nHet dagelijkse inkomen van een item hangt af van de staat en is een deel van het gebruikelijke bedrag. Nieuw levert 100% op. Versleten levert 60% op. Vermoeid levert 40% op. Verval levert 100% op. Een vintage item levert 200% op, twee keer het gebruikelijke daginkomen.\n\nDe bonus van een complete set blijft gelijk tot de set zelf vintage is. Een set is vintage als elk item erin vintage is: de bonus is dan 300%, drie keer het gebruikelijke bedrag.\n\nDe staat hangt af van hoe lang het item al van jou is. Nieuw — de eerste 7 dagen. Versleten — van dag 8 tot 2 maanden. Vermoeid — van 2 tot 6 maanden. Verval — van 6 maanden tot 1 jaar. Vintage — vanaf 1 jaar.';
 
   @override
   String get shopStakesHelp => 'Ontgrendel hogere inzetten. Hoe hoger de inzet, hoe groter de pot en de winst.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Je ontvangt $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Je kunt alleen een nieuwe of vintage collectie verkopen.';
 
   @override
   String inventorySold(String amount) {
