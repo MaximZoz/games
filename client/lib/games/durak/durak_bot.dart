@@ -67,15 +67,18 @@ class DurakBot {
     final hand = List<PlayingCard>.from(game.hands[index]);
     final deckLeft = game.deck.cards.length;
     final defenderCards = game.hands[game.defenderIndex].length;
-    final endgame = deckLeft == 0 || defenderCards <= 2;
+    final dumpingOnTake = game.turn == DurakTurn.takeFollowUp;
+    final endgame = deckLeft == 0 || (defenderCards <= 1 && deckLeft <= 4);
     hand.sort((a, b) => _cardCost(a, game.trump).compareTo(_cardCost(b, game.trump)));
     final maxToss = game.maxAttacksThisRound - game.table.length;
     if (maxToss <= 0) return false;
     for (final c in hand) {
       if (!ranks.contains(c.rank.value)) continue;
       final isTrump = c.suit == game.trump;
-      if (isTrump && !endgame && c.rank.value >= Rank.jack.value) continue;
-      if (isTrump && deckLeft > 8 && defenderCards > 3) continue;
+      if (isTrump && !endgame && !dumpingOnTake) continue;
+      if (isTrump && dumpingOnTake && c.rank.value >= Rank.jack.value && deckLeft > 0) {
+        continue;
+      }
       if (game.canAttackWith(c, index)) {
         game.attack(c, playerIndex: index);
         return true;
