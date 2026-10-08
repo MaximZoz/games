@@ -6,6 +6,11 @@ const int _botWinScore = 1000000;
 const int _botSearchDepth = 3;
 const int _botQuiesceCap = 4;
 
+/// Граница окна поиска. Намеренно НЕ степень двойки и далеко от 2^31, иначе
+/// на web (dart2js, 32-битные битовые операции) значения вида `1 << 30`
+/// переполняются в поиске и все ходы получают одинаковую «мусорную» оценку.
+const int _inf = 100000000;
+
 const List<int> _pieceValue = [0, 100, 320, 330, 500, 900, 20000];
 
 const List<int> _pawnPST = [
@@ -102,9 +107,9 @@ ChessMove? chessPickMove(ChessEngine g, [Random? rng]) {
   var depth = _botSearchDepth;
   if (legal.length > 34) depth = 2;
   var best = legal.first;
-  var bestScore = -1 << 30;
+  var bestScore = -_inf;
   var ties = 0;
-  const wide = 1 << 30;
+  const wide = _inf;
   for (final mv in _orderMoves(g, legal)) {
     final child = g.clone();
     try {
@@ -134,7 +139,7 @@ int _alphabeta(ChessEngine g, int depth, int alpha, int beta, int rootSeat) {
   if (depth <= 0) return _quiesce(g, alpha, beta, _botQuiesceCap);
   final legal = g.legalMoves();
   if (legal.isEmpty) return _evaluateSide(g, g.turn);
-  var best = -1 << 30;
+  var best = -_inf;
   for (final mv in _orderMoves(g, legal)) {
     final child = g.clone();
     try {
@@ -206,5 +211,8 @@ int _evaluateSide(ChessEngine g, int seat) {
       score -= val;
     }
   }
+  final mine = g.pseudoMobility(seat);
+  final theirs = g.pseudoMobility(1 - seat);
+  score += (mine - theirs) * 2;
   return score;
 }

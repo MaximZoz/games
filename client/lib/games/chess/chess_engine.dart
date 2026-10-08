@@ -206,6 +206,9 @@ class ChessEngine {
     return _legalMovesFor(turn);
   }
 
+  /// Число псевдоходов стороны — дешёвая оценка подвижности для бота.
+  int pseudoMobility(int seat) => _pseudoMoves(seat).length;
+
   List<ChessMove> _legalMovesFor(int seat) {
     final out = <ChessMove>[];
     for (final mv in _pseudoMoves(seat)) {
