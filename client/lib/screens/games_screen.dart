@@ -28,6 +28,7 @@ import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scope.dart';
 import 'package:multigames_client/core/gamepad/gamepad_scroll_dismiss.dart';
 import 'package:multigames_client/core/gamepad/gamepad_tab_sticks.dart';
+import 'package:multigames_client/core/gamepad/gamepad_scroll_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/games/games_gamepad.dart';
 import 'package:multigames_client/games/games_hub_tabs.dart';
@@ -1676,20 +1677,26 @@ class _GamesPageContent extends ConsumerWidget {
     // «уезжают» в пустоту и визуально пропадают.
     return LayoutBuilder(
       builder: (context, constraints) {
-        return ListView(
-          primary: false,
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            contentPadding,
-            isOffline ? 12 : 8,
-            contentPadding,
-            isDesktop || phoneLandscape ? 24 : 48,
-          ),
-          children: [
-            gameCards(
-              (constraints.maxWidth - contentPadding * 2).clamp(0.0, 2000.0),
-            ),
-          ],
+        return GamepadScrollPager(
+          builder: (context, controller) {
+            return ListView(
+              controller: controller,
+              primary: false,
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                contentPadding,
+                isOffline ? 12 : 8,
+                contentPadding,
+                isDesktop || phoneLandscape ? 24 : 48,
+              ),
+              children: [
+                gameCards(
+                  (constraints.maxWidth - contentPadding * 2)
+                      .clamp(0.0, 2000.0),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1788,11 +1795,14 @@ class _LobbiesPageContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final obs = observation;
-    return ListView(
-      primary: false,
-      physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
-      children: [
+    return GamepadScrollPager(
+      builder: (context, controller) {
+        return ListView(
+          controller: controller,
+          primary: false,
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(contentPadding, 8, contentPadding, 48),
+          children: [
         if (obs != null) ...[
           GameObservationCard(
             observation: obs,
@@ -2029,6 +2039,8 @@ class _LobbiesPageContent extends ConsumerWidget {
           ),
         ),
       ],
+        );
+      },
     );
   }
 }

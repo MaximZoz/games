@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Вертикальные страницы (смайлы), которые листает правый стик.
+/// Вертикальные страницы (смайлы, карточки игр), которые листает правый стик.
 class GamepadPagerRegistry {
   GamepadPagerRegistry._();
 
@@ -23,4 +23,20 @@ class GamepadPagerRegistry {
 
 abstract class GamepadPager {
   bool page(int delta);
+}
+
+/// Следующий offset на целый экран. `null` — уже у края, без круга.
+double? gamepadPageOffset({
+  required double pixels,
+  required double minExtent,
+  required double maxExtent,
+  required double viewport,
+  required int direction,
+}) {
+  if (viewport <= 0 || direction == 0) return null;
+  if (direction > 0 && pixels >= maxExtent - 1) return null;
+  if (direction < 0 && pixels <= minExtent + 1) return null;
+  final next = (pixels + viewport * direction).clamp(minExtent, maxExtent);
+  if ((next - pixels).abs() < 1) return null;
+  return next;
 }

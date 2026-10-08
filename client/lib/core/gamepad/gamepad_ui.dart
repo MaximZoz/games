@@ -39,8 +39,8 @@ bool scrollGamepadHorizontalStrip(
   BuildContext? context,
 }) {
   if (!action.isScroll) return false;
-  final left = action == GamepadAction.scrollLeft ||
-      action == GamepadAction.scrollUp;
+  final left =
+      action == GamepadAction.scrollLeft || action == GamepadAction.scrollUp;
   final position = _horizontalScrollPosition(context);
   if (position == null ||
       !position.hasPixels ||
@@ -80,13 +80,11 @@ void syncGamepadKeyboardForFocus() {
 /// Навигация по фокусу Material, когда партия не перехватила ввод.
 bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
   unfocusOffstagePrimaryFocus();
-  if (action == GamepadAction.shoulderL ||
-      action == GamepadAction.shoulderR) {
+  if (action == GamepadAction.shoulderL || action == GamepadAction.shoulderR) {
     return _switchTab(action == GamepadAction.shoulderL ? -1 : 1);
   }
   if (action.isScroll) {
-    if (GamepadKeyboardController.instance.visible ||
-        isEditableTextFocused()) {
+    if (GamepadKeyboardController.instance.visible || isEditableTextFocused()) {
       return GamepadTextEditing.moveByScroll(action);
     }
     if (action == GamepadAction.scrollLeft ||
@@ -207,14 +205,19 @@ void _scheduleFocusEdgeGamepadTarget({
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final visible = _visibleGamepadFocusBlocks();
     final content = _contentGamepadFocusBlocks(visible);
-    if (content.isEmpty && attempt < _focusEdgeRetryLimit) {
+    final inView = [
+      for (final node in content)
+        if (_isFocusGeometricallyInView(node)) node,
+    ];
+    if (inView.isEmpty && attempt < _focusEdgeRetryLimit) {
       _scheduleFocusEdgeGamepadTarget(last: last, attempt: attempt + 1);
       return;
     }
     // Пока плиток нет — не прыгаем на «Назад»; её выделяют только вверх.
-    if (content.isEmpty) return;
-    final anchors = _pageAnchorGamepadFocusBlocks(content);
-    final pool = anchors.isNotEmpty ? anchors : content;
+    // Не берём primaryFocus вне кадра: иначе страница откатывается к старой карточке.
+    if (inView.isEmpty) return;
+    final anchors = _pageAnchorGamepadFocusBlocks(inView);
+    final pool = anchors.isNotEmpty ? anchors : inView;
     final node = last ? pool.last : pool.first;
     node.requestFocus();
     _ensureVisible(node);
@@ -302,6 +305,14 @@ bool _switchTab(int delta) {
   return true;
 }
 
+bool _isVerticalContentScroll(ScrollPosition pos) {
+  if (pos.axis != Axis.vertical) return false;
+  if (!pos.hasPixels || !pos.hasContentDimensions) return false;
+  if (pos.maxScrollExtent <= pos.minScrollExtent) return false;
+  if (pos is PageMetrics) return false;
+  return true;
+}
+
 bool _scrollPage(
   int direction, {
   BuildContext? context,
@@ -309,27 +320,19 @@ bool _scrollPage(
 }) {
   if (moveFocus && GamepadPagerRegistry.page(direction)) return true;
   final local = _verticalScrollPositionNear(context);
-  if (local != null &&
-      _animateScrollPage(local, direction, moveFocus: moveFocus)) {
-    return true;
+  if (local != null) {
+    return _animateScrollPage(local, direction, moveFocus: moveFocus);
   }
   final ctx = FocusManager.instance.primaryFocus?.context;
   final pos = ctx == null ? null : Scrollable.maybeOf(ctx)?.position;
-  final focused = (pos != null &&
-          pos.axis == Axis.vertical &&
-          pos.hasPixels &&
-          pos.hasContentDimensions)
-      ? pos
-      : null;
-  if (focused != null &&
-      _animateScrollPage(focused, direction, moveFocus: moveFocus)) {
-    return true;
+  final focused = (pos != null && _isVerticalContentScroll(pos)) ? pos : null;
+  if (focused != null) {
+    return _animateScrollPage(focused, direction, moveFocus: moveFocus);
   }
   if (!moveFocus) return false;
   final fallback = _nearestScrollPosition();
-  if (fallback != null &&
-      _animateScrollPage(fallback, direction, moveFocus: moveFocus)) {
-    return true;
+  if (fallback != null) {
+    return _animateScrollPage(fallback, direction, moveFocus: moveFocus);
   }
   return false;
 }
@@ -339,24 +342,23 @@ bool _animateScrollPage(
   int direction, {
   bool moveFocus = true,
 }) {
-  if (!position.hasPixels || !position.hasContentDimensions) {
-    return false;
-  }
-  final viewport = position.viewportDimension;
-  if (viewport <= 0) return false;
-  final delta = viewport * 0.72 * direction;
-  final next = (position.pixels + delta).clamp(
-    position.minScrollExtent,
-    position.maxScrollExtent,
+  final next = gamepadPageOffset(
+    pixels: position.pixels,
+    minExtent: position.minScrollExtent,
+    maxExtent: position.maxScrollExtent,
+    viewport: position.viewportDimension,
+    direction: direction,
   );
-  if ((next - position.pixels).abs() < 1) return false;
-  position.animateTo(
+  if (next == null) return false;
+  final animation = position.animateTo(
     next,
-    duration: const Duration(milliseconds: 160),
-    curve: Curves.easeOut,
+    duration: const Duration(milliseconds: 260),
+    curve: Curves.easeOutCubic,
   );
   if (moveFocus) {
-    scheduleFocusEdgeGamepadTarget(last: direction < 0);
+    animation.whenComplete(() {
+      scheduleFocusEdgeGamepadTarget(last: direction < 0);
+    });
   }
   return true;
 }
@@ -366,9 +368,7 @@ ScrollPosition? _verticalScrollPositionNear(BuildContext? context) {
   var scrollable = Scrollable.maybeOf(context);
   while (scrollable != null) {
     final pos = scrollable.position;
-    if (pos.axis == Axis.vertical &&
-        pos.hasContentDimensions &&
-        pos.maxScrollExtent > pos.minScrollExtent) {
+    if (_isVerticalContentScroll(pos)) {
       return pos;
     }
     final parentCtx = scrollable.context;
@@ -380,9 +380,7 @@ ScrollPosition? _verticalScrollPositionNear(BuildContext? context) {
     if (found != null) return;
     if (el is StatefulElement && el.state is ScrollableState) {
       final pos = (el.state as ScrollableState).position;
-      if (pos.axis == Axis.vertical &&
-          pos.hasContentDimensions &&
-          pos.maxScrollExtent > pos.minScrollExtent) {
+      if (_isVerticalContentScroll(pos)) {
         found = pos;
         return;
       }
@@ -403,7 +401,7 @@ ScrollPosition? _nearestScrollPosition() {
       final ctx = el;
       if (isGamepadContextOnstage(ctx)) {
         final pos = Scrollable.maybeOf(ctx)?.position;
-        if (pos != null && pos.maxScrollExtent > pos.minScrollExtent) {
+        if (pos != null && _isVerticalContentScroll(pos)) {
           found = pos;
           return;
         }
@@ -840,7 +838,8 @@ ScrollPosition? _horizontalPositionOf(BuildContext ctx) {
 ScrollPosition? _horizontalScrollPosition(BuildContext? context) {
   final scoped = context != null && context.mounted;
   final focusCtx = FocusManager.instance.primaryFocus?.context;
-  if (focusCtx != null && (!scoped || _isDescendantContext(context, focusCtx))) {
+  if (focusCtx != null &&
+      (!scoped || _isDescendantContext(context, focusCtx))) {
     final focused = _horizontalPositionOf(focusCtx);
     if (focused != null) return focused;
   }
@@ -880,6 +879,10 @@ bool _isSameFormScrollable(FocusNode node) {
 
 bool _isFocusInView(FocusNode node) {
   if (identical(node, FocusManager.instance.primaryFocus)) return true;
+  return _isFocusGeometricallyInView(node);
+}
+
+bool _isFocusGeometricallyInView(FocusNode node) {
   final rect = _focusRect(node);
   if (rect == null) return false;
   final ctx = node.context;
@@ -908,9 +911,8 @@ void _ensureVisible(FocusNode? node, {Axis? axis}) {
   final ctx = node.context;
   if (ctx == null) return;
   var scrollable = Scrollable.maybeOf(ctx);
-  while (scrollable != null &&
-      axis != null &&
-      scrollable.position.axis != axis) {
+  while (
+      scrollable != null && axis != null && scrollable.position.axis != axis) {
     scrollable = Scrollable.maybeOf(scrollable.context);
   }
   scrollable ??= Scrollable.maybeOf(ctx);
