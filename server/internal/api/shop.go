@@ -264,7 +264,7 @@ func (h *ShopHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	balance, refund, err := store.SellCollection(r.Context(), h.Pool, userID, code)
 	if err != nil {
 		switch err {
-		case store.ErrEmojiNotOwned, store.ErrNotCollection:
+		case store.ErrEmojiNotOwned, store.ErrNotCollection, store.ErrCollectionNotSellable:
 			WriteErr(w, r, http.StatusConflict, err.Error())
 		default:
 			WriteErr(w, r, http.StatusInternalServerError, "server error")

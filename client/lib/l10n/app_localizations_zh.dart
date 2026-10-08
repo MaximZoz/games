@@ -1729,7 +1729,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shopEmojisHelp => '聊天用动态表情。购买一套后即可发给好友。';
 
   @override
-  String get shopCollectionsHelp => '收集一套物品：它们会显示在个人橱窗，可以赠送或出售。每件物品每天带来金币，集齐的一套还会额外给一笔奖励。\n\n物品的每日收入取决于状态，按平时的数额计算。崭新为 100%。破旧为 60%。疲倦为 40%。残旧为 100%。古旧物品为 200%，也就是平时收入的两倍。\n\n整套奖励保持不变，直到整套都成为古旧。当套装里的每件物品都是古旧时，套装奖励为 300%，即平时的三倍。\n\n状态取决于物品在你这里多久。崭新——前 7 天，按价格的 80% 出售。破旧——第 8 天到 2 个月，按价格的 60% 出售。疲倦——2 到 6 个月，按价格的 40% 出售。残旧——6 个月到 1 年，按价格的 100% 出售。古旧——满 1 年，按价格的 300% 出售。';
+  String get shopCollectionsHelp => '收集一套物品：它们会显示在个人橱窗，可以赠送或出售。每件物品每天带来金币，集齐的一套还会额外给一笔奖励。\n\n物品的每日收入取决于状态，按平时的数额计算。崭新为 100%。破旧为 60%。疲倦为 40%。残旧为 100%。古旧物品为 200%，也就是平时收入的两倍。\n\n整套奖励保持不变，直到整套都成为古旧。当套装里的每件物品都是古旧时，套装奖励为 300%，即平时的三倍。\n\n状态取决于物品在你这里多久。崭新——前 7 天。破旧——第 8 天到 2 个月。疲倦——2 到 6 个月。残旧——6 个月到 1 年。古旧——满 1 年。\n\n只能出售崭新或古旧：崭新按价格的 80% 出售，古旧按价格的 300% 出售。破旧、疲倦和残旧不能出售。';
 
   @override
   String get shopStakesHelp => '解锁更高赌注。赌注越高，奖池和收益越大。';
@@ -2121,6 +2121,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '您将获得 $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => '只能出售崭新或古旧的收藏。';
 
   @override
   String inventorySold(String amount) {

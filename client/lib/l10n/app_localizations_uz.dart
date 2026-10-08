@@ -1729,7 +1729,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get shopEmojisHelp => 'Chat uchun animatsion smayliklar. To‘plamni sotib oling va do‘stlaringizga yuboring.';
 
   @override
-  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. Har bir buyum har kuni tanga beradi, to‘liq to‘plam esa alohida bonus ham beradi.\n\nBuyumning kunlik daromadi holatiga bog‘liq va odatdagi summadan hisoblanadi. Yangi 100% beradi. Yeyilgan — 60%. Charchagan — 40%. Eski — 100%. Vintaj buyum 200% beradi, ya’ni odatdagi kunlik daromaddan ikki baravar ko‘p.\n\nTo‘liq to‘plam bonusi to‘plamning o‘zi vintaj bo‘lguncha o‘zgarmaydi. To‘plam vintaj, agar undagi har bir buyum vintaj bo‘lsa: bonus shunda 300%, odatdagidan uch baravar ko‘p.\n\nHolat buyum sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun, narxning 80%iga sotish. Yeyilgan — 8-kundan 2 oygacha, narxning 60%iga sotish. Charchagan — 2 oydan 6 oygacha, narxning 40%iga sotish. Eski — 6 oydan 1 yilgacha, narxning 100%iga sotish. Vintaj — 1 yildan keyin, narxning 300%iga sotish.';
+  String get shopCollectionsHelp => 'Buyumlar to‘plamini yig‘ing: ular profil vitrinasida ko‘rinadi, sovg‘a qilish va sotish mumkin. Har bir buyum har kuni tanga beradi, to‘liq to‘plam esa alohida bonus ham beradi.\n\nBuyumning kunlik daromadi holatiga bog‘liq va odatdagi summadan hisoblanadi. Yangi 100% beradi. Yeyilgan — 60%. Charchagan — 40%. Eski — 100%. Vintaj buyum 200% beradi, ya’ni odatdagi kunlik daromaddan ikki baravar ko‘p.\n\nTo‘liq to‘plam bonusi to‘plamning o‘zi vintaj bo‘lguncha o‘zgarmaydi. To‘plam vintaj, agar undagi har bir buyum vintaj bo‘lsa: bonus shunda 300%, odatdagidan uch baravar ko‘p.\n\nHolat buyum sizda qancha bo‘lganiga bog‘liq. Yangi — dastlabki 7 kun. Yeyilgan — 8-kundan 2 oygacha. Charchagan — 2 oydan 6 oygacha. Eski — 6 oydan 1 yilgacha. Vintaj — 1 yildan keyin.\n\nFaqat yangi yoki vintajni sotish mumkin: yangi narxning 80%iga, vintaj narxning 300%iga. Yeyilgan, charchagan va eskisini sotib bo‘lmaydi.';
 
   @override
   String get shopStakesHelp => 'O‘yinlarda yuqori stavkalarni oching. Stavka qanchalik yuqori bo‘lsa, bank va yutuq shunchalik katta.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Siz $amount olasiz';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Faqat yangi yoki vintaj kolleksiyani sotish mumkin.';
 
   @override
   String inventorySold(String amount) {

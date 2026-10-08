@@ -58,6 +58,17 @@ func TestCollectionRefundBronze(t *testing.T) {
 	}
 }
 
+func TestCollectionCanSell(t *testing.T) {
+	if !CollectionCanSell(CollectionCondNew) || !CollectionCanSell(CollectionCondVintage) {
+		t.Fatal("новое и винтаж продаются")
+	}
+	for _, cond := range []string{CollectionCondWorn, CollectionCondTired, CollectionCondShabby, "other"} {
+		if CollectionCanSell(cond) {
+			t.Fatalf("%s не должно продаваться", cond)
+		}
+	}
+}
+
 func TestCollectionDailyIncomeBronze(t *testing.T) {
 	acquired := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
 	if got := CollectionDailyIncomeBronze(100, acquired, acquired.AddDate(0, 0, 1), 0, nil); got != 100 {

@@ -1729,7 +1729,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shopEmojisHelp => 'Emojis animados para el chat. Compra un set y envíalos en mensajes a tus amigos.';
 
   @override
-  String get shopCollectionsHelp => 'Reúne un conjunto de objetos: aparecen en el escaparate del perfil y se pueden regalar o vender. Cada objeto da monedas cada día, y un conjunto completo da además un bono aparte.\n\nEl ingreso diario de un objeto depende del estado y es una parte de la suma habitual. Nuevo da el 100 %. Gastado da el 60 %. Cansado da el 40 %. Deteriorado da el 100 %. Un objeto vintage da el 200 %, el doble del ingreso habitual.\n\nEl bono del conjunto completo no cambia hasta que el conjunto sea vintage. Un conjunto es vintage cuando cada objeto lo es: el bono pasa a ser el 300 %, el triple de lo habitual.\n\nEl estado depende de cuánto tiempo llevas el objeto. Nuevo — los primeros 7 días, venta al 80 % del precio. Gastado — del día 8 a 2 meses, venta al 60 % del precio. Cansado — de 2 a 6 meses, venta al 40 % del precio. Deteriorado — de 6 meses a 1 año, venta al 100 % del precio. Vintage — a partir de 1 año, venta al 300 % del precio.';
+  String get shopCollectionsHelp => 'Reúne un conjunto de objetos: aparecen en el escaparate del perfil y se pueden regalar o vender. Cada objeto da monedas cada día, y un conjunto completo da además un bono aparte.\n\nEl ingreso diario de un objeto depende del estado y es una parte de la suma habitual. Nuevo da el 100 %. Gastado da el 60 %. Cansado da el 40 %. Deteriorado da el 100 %. Un objeto vintage da el 200 %, el doble del ingreso habitual.\n\nEl bono del conjunto completo no cambia hasta que el conjunto sea vintage. Un conjunto es vintage cuando cada objeto lo es: el bono pasa a ser el 300 %, el triple de lo habitual.\n\nEl estado depende de cuánto tiempo llevas el objeto. Nuevo — los primeros 7 días. Gastado — del día 8 a 2 meses. Cansado — de 2 a 6 meses. Deteriorado — de 6 meses a 1 año. Vintage — a partir de 1 año.\n\nSolo se puede vender lo nuevo o lo vintage: venta al 80 % del precio si es nuevo y venta al 300 % del precio si es vintage. Gastado, cansado y deteriorado no se pueden vender.';
 
   @override
   String get shopStakesHelp => 'Desbloquea apuestas más altas. Cuanto mayor sea la apuesta, mayor será el bote y el premio.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Recibirás $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Solo se puede vender una colección nueva o vintage.';
 
   @override
   String inventorySold(String amount) {

@@ -342,6 +342,9 @@ class ShopRepository {
     if (key == 'elixir not owned') return l10n.elixirNotOwned;
     if (key == 'elixir not applicable') return l10n.elixirNotApplicable;
     if (key == 'elixir wrong set') return l10n.elixirWrongSet;
+    if (key == 'collection not sellable') {
+      return l10n.inventoryCollectionNotSellable;
+    }
     return message;
   }
 

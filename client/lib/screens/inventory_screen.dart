@@ -1173,14 +1173,19 @@ class _CollectionInvTile extends StatelessWidget {
                   onPressed: onGift,
                   icon: const Icon(Icons.card_giftcard_outlined),
                 ),
-                KeyedSubtree(
-                  key: sellSourceKey,
-                  child: IconButton(
-                    tooltip: context.l10n.inventorySell,
-                    onPressed: onSell,
-                    icon: const Icon(Icons.sell_outlined),
+                if (collectionCanSell(
+                  acquiredAt: item.acquiredAt,
+                  conditionShift: item.conditionShift,
+                  vintageAt: item.vintageAt,
+                ))
+                  KeyedSubtree(
+                    key: sellSourceKey,
+                    child: IconButton(
+                      tooltip: context.l10n.inventorySell,
+                      onPressed: onSell,
+                      icon: const Icon(Icons.sell_outlined),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

@@ -1729,7 +1729,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji động cho trò chuyện. Mua bộ và gửi cho bạn bè.';
 
   @override
-  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Mỗi vật phẩm mang xu mỗi ngày, và bộ đủ còn thêm một khoản thưởng riêng.\n\nThu nhập hằng ngày của vật phẩm phụ thuộc trạng thái và là một phần của mức thường. Mới mang 100%. Sờn mang 60%. Mệt mang 40%. Cũ nát mang 100%. Vật phẩm cổ điển mang 200%, gấp đôi thu nhập hằng ngày thường.\n\nThưởng của bộ đủ không đổi cho đến khi cả bộ trở thành cổ điển. Bộ là cổ điển khi mọi vật phẩm trong đó đều cổ điển: thưởng khi ấy là 300%, gấp ba mức thường.\n\nTrạng thái phụ thuộc bạn giữ vật phẩm bao lâu. Mới — 7 ngày đầu, bán 80% giá. Sờn — từ ngày 8 đến 2 tháng, bán 60% giá. Mệt — từ 2 đến 6 tháng, bán 40% giá. Cũ nát — từ 6 tháng đến 1 năm, bán 100% giá. Cổ điển — từ 1 năm, bán 300% giá.';
+  String get shopCollectionsHelp => 'Thu thập bộ vật phẩm: chúng hiện trên tủ trưng bày hồ sơ, có thể tặng hoặc bán. Mỗi vật phẩm mang xu mỗi ngày, và bộ đủ còn thêm một khoản thưởng riêng.\n\nThu nhập hằng ngày của vật phẩm phụ thuộc trạng thái và là một phần của mức thường. Mới mang 100%. Sờn mang 60%. Mệt mang 40%. Cũ nát mang 100%. Vật phẩm cổ điển mang 200%, gấp đôi thu nhập hằng ngày thường.\n\nThưởng của bộ đủ không đổi cho đến khi cả bộ trở thành cổ điển. Bộ là cổ điển khi mọi vật phẩm trong đó đều cổ điển: thưởng khi ấy là 300%, gấp ba mức thường.\n\nTrạng thái phụ thuộc bạn giữ vật phẩm bao lâu. Mới — 7 ngày đầu. Sờn — từ ngày 8 đến 2 tháng. Mệt — từ 2 đến 6 tháng. Cũ nát — từ 6 tháng đến 1 năm. Cổ điển — từ 1 năm.\n\nChỉ bán được đồ mới hoặc cổ điển: bán 80% giá khi mới và bán 300% giá khi cổ điển. Sờn, mệt và cũ nát không bán được.';
 
   @override
   String get shopStakesHelp => 'Mở khóa mức cược cao hơn. Cược càng cao, pot và phần thắng càng lớn.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Bạn sẽ nhận $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Chỉ bán được bộ sưu tập mới hoặc cổ điển.';
 
   @override
   String inventorySold(String amount) {

@@ -1729,7 +1729,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get shopEmojisHelp => 'Animerede emojis til chatten. Køb et sæt og send dem til venner.';
 
   @override
-  String get shopCollectionsHelp => 'Saml et sæt genstande: de vises i profilens montre og kan gives eller sælges. Hver genstand giver mønter hver dag, og et komplet sæt giver også en særskilt bonus.\n\nEn genstands daglige indtægt afhænger af tilstanden og er en andel af det sædvanlige beløb. Ny giver 100 %. Slidt giver 60 %. Træt giver 40 %. Forfalden giver 100 %. En vintagegenstand giver 200 %, altså det dobbelte af den sædvanlige daglige indtægt.\n\nBonussen for et komplet sæt er uændret, indtil sættet selv er vintage. Et sæt er vintage, når hver genstand i det er vintage: bonussen er da 300 %, tre gange det sædvanlige.\n\nTilstanden afhænger af, hvor længe du har haft genstanden. Ny — de første 7 dage, salg 80 % af prisen. Slidt — fra dag 8 til 2 måneder, salg 60 % af prisen. Træt — fra 2 til 6 måneder, salg 40 % af prisen. Forfalden — fra 6 måneder til 1 år, salg 100 % af prisen. Vintage — fra 1 år, salg 300 % af prisen.';
+  String get shopCollectionsHelp => 'Saml et sæt genstande: de vises i profilens montre og kan gives eller sælges. Hver genstand giver mønter hver dag, og et komplet sæt giver også en særskilt bonus.\n\nEn genstands daglige indtægt afhænger af tilstanden og er en andel af det sædvanlige beløb. Ny giver 100 %. Slidt giver 60 %. Træt giver 40 %. Forfalden giver 100 %. En vintagegenstand giver 200 %, altså det dobbelte af den sædvanlige daglige indtægt.\n\nBonussen for et komplet sæt er uændret, indtil sættet selv er vintage. Et sæt er vintage, når hver genstand i det er vintage: bonussen er da 300 %, tre gange det sædvanlige.\n\nTilstanden afhænger af, hvor længe du har haft genstanden. Ny — de første 7 dage. Slidt — fra dag 8 til 2 måneder. Træt — fra 2 til 6 måneder. Forfalden — fra 6 måneder til 1 år. Vintage — fra 1 år.\n\nKun en ny eller vintagegenstand kan sælges: salg 80 % af prisen når den er ny og salg 300 % af prisen når den er vintage. Slidt, træt og forfalden kan ikke sælges.';
 
   @override
   String get shopStakesHelp => 'Lås op for højere indsatser. Jo højere indsats, desto større pot og gevinst.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Du får $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Kun en ny eller vintage samling kan sælges.';
 
   @override
   String inventorySold(String amount) {

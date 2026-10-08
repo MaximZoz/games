@@ -1729,7 +1729,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shopEmojisHelp => 'Emoji animate per la chat. Compra un set e inviale agli amici.';
 
   @override
-  String get shopCollectionsHelp => 'Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Ogni oggetto dà monete ogni giorno, e un set completo aggiunge un bonus a parte.\n\nIl reddito giornaliero di un oggetto dipende dallo stato ed è una quota della somma abituale. Nuovo dà il 100%. Logoro dà il 60%. Stanco dà il 40%. Consunto dà il 100%. Un oggetto vintage dà il 200%, il doppio del reddito abituale.\n\nIl bonus del set completo resta uguale finché il set non è vintage. Un set è vintage quando lo è ogni oggetto: il bonus diventa allora il 300%, il triplo del solito.\n\nLo stato dipende da quanto tempo hai l’oggetto. Nuovo — i primi 7 giorni, vendita all’80% del prezzo. Logoro — dall’8º giorno a 2 mesi, vendita al 60% del prezzo. Stanco — da 2 a 6 mesi, vendita al 40% del prezzo. Consunto — da 6 mesi a 1 anno, vendita al 100% del prezzo. Vintage — da 1 anno, vendita al 300% del prezzo.';
+  String get shopCollectionsHelp => 'Raccogli un set di oggetti: compaiono in vetrina sul profilo e si possono regalare o vendere. Ogni oggetto dà monete ogni giorno, e un set completo aggiunge un bonus a parte.\n\nIl reddito giornaliero di un oggetto dipende dallo stato ed è una quota della somma abituale. Nuovo dà il 100%. Logoro dà il 60%. Stanco dà il 40%. Consunto dà il 100%. Un oggetto vintage dà il 200%, il doppio del reddito abituale.\n\nIl bonus del set completo resta uguale finché il set non è vintage. Un set è vintage quando lo è ogni oggetto: il bonus diventa allora il 300%, il triplo del solito.\n\nLo stato dipende da quanto tempo hai l’oggetto. Nuovo — i primi 7 giorni. Logoro — dall’8º giorno a 2 mesi. Stanco — da 2 a 6 mesi. Consunto — da 6 mesi a 1 anno. Vintage — da 1 anno.\n\nSi può vendere solo un oggetto nuovo o vintage: vendita all’80% del prezzo se è nuovo e vendita al 300% del prezzo se è vintage. Logoro, stanco e consunto non si possono vendere.';
 
   @override
   String get shopStakesHelp => 'Sblocca puntate più alte. Più alta è la puntata, più grandi sono il piatto e la vincita.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Riceverai $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Si può vendere solo una collezione nuova o vintage.';
 
   @override
   String inventorySold(String amount) {

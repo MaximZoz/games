@@ -1729,7 +1729,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shopEmojisHelp => 'Emojis animados para o chat. Compre um conjunto e envie nas mensagens aos amigos.';
 
   @override
-  String get shopCollectionsHelp => 'Reúna um conjunto de itens: eles aparecem na vitrine do perfil e podem ser presentes ou vendidos. Cada item rende moedas todos os dias, e um conjunto completo ainda paga um bônus à parte.\n\nA renda diária de um item depende do estado e é uma parte do valor habitual. Novo rende 100%. Gasto rende 60%. Cansado rende 40%. Gasto pelo tempo rende 100%. Um item vintage rende 200%, o dobro da renda habitual.\n\nO bônus do conjunto completo não muda até o conjunto ficar vintage. Um conjunto é vintage quando cada item é vintage: o bônus passa a 300%, o triplo do habitual.\n\nO estado depende de há quanto tempo o item é seu. Novo — os primeiros 7 dias, venda por 80% do preço. Gasto — do 8.º dia até 2 meses, venda por 60% do preço. Cansado — de 2 a 6 meses, venda por 40% do preço. Gasto pelo tempo — de 6 meses a 1 ano, venda por 100% do preço. Vintage — a partir de 1 ano, venda por 300% do preço.';
+  String get shopCollectionsHelp => 'Reúna um conjunto de itens: eles aparecem na vitrine do perfil e podem ser presentes ou vendidos. Cada item rende moedas todos os dias, e um conjunto completo ainda paga um bônus à parte.\n\nA renda diária de um item depende do estado e é uma parte do valor habitual. Novo rende 100%. Gasto rende 60%. Cansado rende 40%. Gasto pelo tempo rende 100%. Um item vintage rende 200%, o dobro da renda habitual.\n\nO bônus do conjunto completo não muda até o conjunto ficar vintage. Um conjunto é vintage quando cada item é vintage: o bônus passa a 300%, o triplo do habitual.\n\nO estado depende de há quanto tempo o item é seu. Novo — os primeiros 7 dias. Gasto — do 8.º dia até 2 meses. Cansado — de 2 a 6 meses. Gasto pelo tempo — de 6 meses a 1 ano. Vintage — a partir de 1 ano.\n\nSó é possível vender o novo ou o vintage: venda por 80% do preço se for novo e venda por 300% do preço se for vintage. Gasto, cansado e gasto pelo tempo não podem ser vendidos.';
 
   @override
   String get shopStakesHelp => 'Desbloqueie apostas mais altas. Quanto maior a aposta, maior o pot e o prêmio.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Receberá $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Só é possível vender uma coleção nova ou vintage.';
 
   @override
   String inventorySold(String amount) {

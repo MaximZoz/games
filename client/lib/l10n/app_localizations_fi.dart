@@ -1729,7 +1729,7 @@ class AppLocalizationsFi extends AppLocalizations {
   String get shopEmojisHelp => 'Animoidut emojit chattiin. Osta setti ja lähetä niitä ystäville.';
 
   @override
-  String get shopCollectionsHelp => 'Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Jokainen esine tuo kolikoita joka päivä, ja täysi setti tuo vielä erillisen bonuksen.\n\nEsineen päivittäinen tulo riippuu tilasta ja on osuus tavallisesta summasta. Uusi tuo 100 %. Kulunut tuo 60 %. Väsynyt tuo 40 %. Rähjäinen tuo 100 %. Vintage-esine tuo 200 %, siis kaksinkertaisen tavalliseen päivittäiseen tuloon verrattuna.\n\nTäyden setin bonus pysyy samana, kunnes setti itse on vintage. Setti on vintage, kun jokainen sen esine on vintage: bonus on silloin 300 %, kolminkertainen tavalliseen verrattuna.\n\nTila riippuu siitä, kuinka kauan esine on ollut sinulla. Uusi — ensimmäiset 7 päivää, myynti 80 % hinnasta. Kulunut — 8. päivästä 2 kuukauteen, myynti 60 % hinnasta. Väsynyt — 2–6 kuukautta, myynti 40 % hinnasta. Rähjäinen — 6 kuukaudesta vuoteen, myynti 100 % hinnasta. Vintage — vuodesta eteenpäin, myynti 300 % hinnasta.';
+  String get shopCollectionsHelp => 'Kerää esineiden setti: ne näkyvät profiilin vitriinissä, niitä voi lahjoittaa ja myydä. Jokainen esine tuo kolikoita joka päivä, ja täysi setti tuo vielä erillisen bonuksen.\n\nEsineen päivittäinen tulo riippuu tilasta ja on osuus tavallisesta summasta. Uusi tuo 100 %. Kulunut tuo 60 %. Väsynyt tuo 40 %. Rähjäinen tuo 100 %. Vintage-esine tuo 200 %, siis kaksinkertaisen tavalliseen päivittäiseen tuloon verrattuna.\n\nTäyden setin bonus pysyy samana, kunnes setti itse on vintage. Setti on vintage, kun jokainen sen esine on vintage: bonus on silloin 300 %, kolminkertainen tavalliseen verrattuna.\n\nTila riippuu siitä, kuinka kauan esine on ollut sinulla. Uusi — ensimmäiset 7 päivää. Kulunut — 8. päivästä 2 kuukauteen. Väsynyt — 2–6 kuukautta. Rähjäinen — 6 kuukaudesta vuoteen. Vintage — vuodesta eteenpäin.\n\nVain uuden tai vintagen voi myydä: myynti 80 % hinnasta, jos se on uusi, ja myynti 300 % hinnasta, jos se on vintage. Kulunutta, väsynyttä ja rähjäistä ei voi myydä.';
 
   @override
   String get shopStakesHelp => 'Avaa korkeammat panokset. Mitä korkeampi panos, sitä suurempi potti ja voitto.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return 'Saat $amount';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Vain uuden tai vintage-kokoelman voi myydä.';
 
   @override
   String inventorySold(String amount) {

@@ -1729,7 +1729,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopEmojisHelp => 'Sohbet için animasyonlu emojiler. Bir set alın ve arkadaşlarınıza gönderin.';
 
   @override
-  String get shopCollectionsHelp => 'Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Her eşya her gün jeton getirir, tam set ayrıca ayrı bir bonus verir.\n\nBir eşyanın günlük geliri duruma bağlıdır ve olağan tutarın payıdır. Yeni %100 getirir. Yıpranmış %60 getirir. Yorgun %40 getirir. Eskimiş %100 getirir. Vintage bir eşya %200 getirir, yani olağan günlük gelirin iki katı.\n\nTam set bonusu, setin kendisi vintage olana kadar değişmez. Set, içindeki her eşya vintage olduğunda vintage sayılır: bonus o zaman %300 olur, olağanın üç katı.\n\nDurum, eşyanın sende ne kadar süredir olduğuna bağlıdır. Yeni — ilk 7 gün, fiyatın %80’i. Yıpranmış — 8. günden 2 aya kadar, fiyatın %60’ı. Yorgun — 2 aydan 6 aya kadar, fiyatın %40’ı. Eskimiş — 6 aydan 1 yıla kadar, fiyatın %100’ü. Vintage — 1 yıldan sonra, fiyatın %300’ü.';
+  String get shopCollectionsHelp => 'Bir eşya seti toplayın: profil vitrininde görünür, hediye edilebilir ve satılabilir. Her eşya her gün jeton getirir, tam set ayrıca ayrı bir bonus verir.\n\nBir eşyanın günlük geliri duruma bağlıdır ve olağan tutarın payıdır. Yeni %100 getirir. Yıpranmış %60 getirir. Yorgun %40 getirir. Eskimiş %100 getirir. Vintage bir eşya %200 getirir, yani olağan günlük gelirin iki katı.\n\nTam set bonusu, setin kendisi vintage olana kadar değişmez. Set, içindeki her eşya vintage olduğunda vintage sayılır: bonus o zaman %300 olur, olağanın üç katı.\n\nDurum, eşyanın sende ne kadar süredir olduğuna bağlıdır. Yeni — ilk 7 gün. Yıpranmış — 8. günden 2 aya kadar. Yorgun — 2 aydan 6 aya kadar. Eskimiş — 6 aydan 1 yıla kadar. Vintage — 1 yıldan sonra.\n\nYalnızca yeni veya vintage satılabilir: yeni, fiyatın %80’ine; vintage, fiyatın %300’üne. Yıpranmış, yorgun ve eskimiş satılamaz.';
 
   @override
   String get shopStakesHelp => 'Daha yüksek bahislerin kilidini açın. Bahis ne kadar yüksekse pot ve kazanç o kadar büyük olur.';
@@ -2121,6 +2121,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String inventorySellDesc(String amount) {
     return '$amount alacaksınız';
   }
+
+  @override
+  String get inventoryCollectionNotSellable => 'Yalnızca yeni veya vintage bir koleksiyon satılabilir.';
 
   @override
   String inventorySold(String amount) {
