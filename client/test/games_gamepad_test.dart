@@ -257,6 +257,11 @@ void main() {
       'правый стик листает карточки экраном и фокусирует создать на новой странице',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     late ScrollController controller;
     await tester.pumpWidget(
       ProviderScope(
@@ -265,27 +270,31 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: GamepadHost(
             child: Scaffold(
-              body: SizedBox(
-                height: 400,
-                child: GamepadScrollPager(
-                  builder: (context, scrollController) {
-                    controller = scrollController;
-                    return ListView(
-                      controller: scrollController,
-                      children: [
-                        for (var i = 0; i < 4; i++)
-                          SizedBox(
-                            height: 400,
-                            child: GamepadFocusBlock(
-                              pageAnchor: true,
-                              onActivate: () {},
-                              child: Text('create-$i'),
+              body: GamepadScrollPager(
+                builder: (context, scrollController) {
+                  controller = scrollController;
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final page = constraints.maxHeight;
+                      return ListView(
+                        controller: scrollController,
+                        padding: EdgeInsets.zero,
+                        cacheExtent: page * 4,
+                        children: [
+                          for (var i = 0; i < 4; i++)
+                            SizedBox(
+                              height: page,
+                              child: GamepadFocusBlock(
+                                pageAnchor: true,
+                                onActivate: () {},
+                                child: Text('create-$i'),
+                              ),
                             ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -302,84 +311,52 @@ void main() {
       isTrue,
     );
     expect(controller.offset, 0);
+    final viewport = controller.position.viewportDimension;
+    final maxExtent = controller.position.maxScrollExtent;
+    expect(viewport, greaterThan(0));
+    expect(maxExtent, closeTo(viewport * 3, 1));
 
-    GamepadService.instance.emit(GamepadAction.scrollDown);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    expect(controller.offset, closeTo(400, 1));
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-1')))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
-    );
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-0')))
-          ?.focusNode
-          .hasFocus,
-      isFalse,
-    );
+    Future<void> pageStick(int direction) async {
+      expect(scrollGamepadByPage(direction), isTrue);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 320));
+      await tester.pumpAndSettle();
+    }
 
-    GamepadService.instance.emit(GamepadAction.scrollDown);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    expect(controller.offset, closeTo(800, 1));
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-2')))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
-    );
+    bool createFocused(int index) {
+      final found = find.text('create-$index');
+      if (found.evaluate().isEmpty) return false;
+      return GamepadFocusBlock.maybeOf(tester.element(found))
+              ?.focusNode
+              .hasFocus ==
+          true;
+    }
 
-    GamepadService.instance.emit(GamepadAction.scrollDown);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    expect(controller.offset, closeTo(1200, 1));
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-3')))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
-    );
+    await pageStick(1);
+    expect(controller.offset, closeTo(viewport, 1));
+    expect(createFocused(1), isTrue);
 
-    final atEnd = controller.offset;
-    GamepadService.instance.emit(GamepadAction.scrollDown);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    expect(controller.offset, closeTo(atEnd, 1));
-    expect(controller.offset, closeTo(controller.position.maxScrollExtent, 1));
+    await pageStick(1);
+    expect(controller.offset, closeTo(viewport * 2, 1));
+    expect(createFocused(2), isTrue);
 
-    GamepadService.instance.emit(GamepadAction.scrollUp);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    expect(controller.offset, closeTo(800, 1));
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-2')))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
-    );
+    await pageStick(1);
+    expect(controller.offset, closeTo(maxExtent, 1));
+    expect(createFocused(3), isTrue);
 
-    GamepadService.instance.emit(GamepadAction.scrollUp);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    expect(scrollGamepadByPage(1), isFalse);
     await tester.pumpAndSettle();
-    GamepadService.instance.emit(GamepadAction.scrollUp);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
+    expect(controller.offset, closeTo(maxExtent, 1));
+    expect(createFocused(3), isTrue);
+
+    await pageStick(-1);
+    expect(controller.offset, closeTo(viewport * 2, 1));
+    expect(createFocused(2), isTrue);
+
+    await pageStick(-1);
+    await pageStick(-1);
     expect(controller.offset, 0);
-    expect(
-      GamepadFocusBlock.maybeOf(tester.element(find.text('create-0')))
-          ?.focusNode
-          .hasFocus,
-      isTrue,
-    );
+    expect(createFocused(0), isTrue);
   });
 
   test('кнопка закрывает правила, стик — нет', () {
