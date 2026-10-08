@@ -952,6 +952,8 @@
   "inventorySellTitle": "Sotasizmi?",
   "inventorySellDesc": "Siz {amount} olasiz",
   "inventoryCollectionNotSellable": "Faqat yangi yoki vintaj kolleksiyani sotish mumkin.",
+  "inventoryCollectionNotSellableTitle": "Sotib bo‘lmaydi",
+  "inventoryCollectionNotSellableHint": "Faqat yangi yoki vintaj buyumni sotish mumkin. Holatini o‘zgartirish uchun eliksirdan foydalaning.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

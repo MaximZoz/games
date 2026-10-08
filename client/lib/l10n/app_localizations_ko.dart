@@ -2156,6 +2156,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get inventoryCollectionNotSellable => '새것이나 빈티지 컬렉션만 팔 수 있습니다.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => '판매할 수 없습니다';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '새것이나 빈티지 아이템만 팔 수 있습니다. 엘릭서로 상태를 바꾸세요.';
+
+  @override
   String inventorySold(String amount) {
     return '판매됨: +$amount';
   }

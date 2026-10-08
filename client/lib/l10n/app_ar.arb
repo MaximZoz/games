@@ -952,6 +952,8 @@
   "inventorySellTitle": "بيع؟",
   "inventorySellDesc": "ستحصل على {amount}",
   "inventoryCollectionNotSellable": "يمكن بيع مجموعة جديدة أو عتيقة فقط.",
+  "inventoryCollectionNotSellableTitle": "لا يمكن البيع",
+  "inventoryCollectionNotSellableHint": "يمكن بيع غرض جديد أو عتيق فقط. استخدم إكسيراً لتغيير حالته.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

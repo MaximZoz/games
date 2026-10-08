@@ -952,6 +952,8 @@
   "inventorySellTitle": "Verkopen?",
   "inventorySellDesc": "Je ontvangt {amount}",
   "inventoryCollectionNotSellable": "Je kunt alleen een nieuwe of vintage collectie verkopen.",
+  "inventoryCollectionNotSellableTitle": "Kan niet verkopen",
+  "inventoryCollectionNotSellableHint": "Je kunt alleen een nieuw of vintage voorwerp verkopen. Gebruik een elixer om de staat te veranderen.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

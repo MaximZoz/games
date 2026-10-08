@@ -1164,6 +1164,8 @@
   "inventorySellTitle": "Продать?",
   "inventorySellDesc": "Вы получите {amount}",
   "inventoryCollectionNotSellable": "Продать можно только новую или винтажную коллекцию.",
+  "inventoryCollectionNotSellableTitle": "Нельзя продать",
+  "inventoryCollectionNotSellableHint": "Продать можно только новый предмет или винтажный. Воспользуйтесь эликсиром, чтобы изменить состояние.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

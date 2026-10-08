@@ -952,6 +952,8 @@
   "inventorySellTitle": "Сату?",
   "inventorySellDesc": "Сіз {amount} аласыз",
   "inventoryCollectionNotSellable": "Тек жаңа немесе винтаж коллекцияны сатуға болады.",
+  "inventoryCollectionNotSellableTitle": "Сатуға болмайды",
+  "inventoryCollectionNotSellableHint": "Тек жаңа немесе винтаж затты сатуға болады. Күйін өзгерту үшін эликсирді пайдаланыңыз.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

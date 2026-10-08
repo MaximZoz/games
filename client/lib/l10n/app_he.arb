@@ -952,6 +952,8 @@
   "inventorySellTitle": "למכור?",
   "inventorySellDesc": "תקבלו {amount}",
   "inventoryCollectionNotSellable": "אפשר למכור רק אוסף חדש או וינטאג׳.",
+  "inventoryCollectionNotSellableTitle": "אי אפשר למכור",
+  "inventoryCollectionNotSellableHint": "אפשר למכור רק פריט חדש או וינטאג׳. השתמש בשיקוי כדי לשנות את המצב.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -2156,6 +2156,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Si può vendere solo una collezione nuova o vintage.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Non si può vendere';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Si può vendere solo un oggetto nuovo o vintage. Usa un elisir per cambiarne lo stato.';
+
+  @override
   String inventorySold(String amount) {
     return 'Venduto: +$amount';
   }

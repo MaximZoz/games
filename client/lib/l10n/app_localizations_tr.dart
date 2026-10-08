@@ -2156,6 +2156,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Yalnızca yeni veya vintage bir koleksiyon satılabilir.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Satılamaz';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Yalnızca yeni veya vintage bir eşya satılabilir. Durumunu değiştirmek için iksir kullanın.';
+
+  @override
   String inventorySold(String amount) {
     return 'Satıldı: +$amount';
   }

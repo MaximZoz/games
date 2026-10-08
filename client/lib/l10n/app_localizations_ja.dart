@@ -2156,6 +2156,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get inventoryCollectionNotSellable => '売れるのは新品かヴィンテージのコレクションだけです。';
 
   @override
+  String get inventoryCollectionNotSellableTitle => '売れません';
+
+  @override
+  String get inventoryCollectionNotSellableHint => '売れるのは新品かヴィンテージのアイテムだけです。エリクサーで状態を変えてください。';
+
+  @override
   String inventorySold(String amount) {
     return '売却済み: +$amount';
   }

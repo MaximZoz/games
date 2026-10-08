@@ -952,6 +952,8 @@
   "inventorySellTitle": "Prodat?",
   "inventorySellDesc": "Získáte {amount}",
   "inventoryCollectionNotSellable": "Prodat lze jen novou nebo vintage kolekci.",
+  "inventoryCollectionNotSellableTitle": "Nelze prodat",
+  "inventoryCollectionNotSellableHint": "Prodat lze jen nový nebo vintage předmět. Použijte elixír a změňte stav.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

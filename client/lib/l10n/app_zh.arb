@@ -952,6 +952,8 @@
   "inventorySellTitle": "出售？",
   "inventorySellDesc": "您将获得 {amount}",
   "inventoryCollectionNotSellable": "只能出售崭新或古旧的收藏。",
+  "inventoryCollectionNotSellableTitle": "无法出售",
+  "inventoryCollectionNotSellableHint": "只能出售崭新或古旧的物品。请用灵药改变状态。",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

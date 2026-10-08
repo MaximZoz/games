@@ -4175,6 +4175,18 @@ abstract class AppLocalizations {
   /// **'Продать можно только новую или винтажную коллекцию.'**
   String get inventoryCollectionNotSellable;
 
+  /// No description provided for @inventoryCollectionNotSellableTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя продать'**
+  String get inventoryCollectionNotSellableTitle;
+
+  /// No description provided for @inventoryCollectionNotSellableHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продать можно только новый предмет или винтажный. Воспользуйтесь эликсиром, чтобы изменить состояние.'**
+  String get inventoryCollectionNotSellableHint;
+
   /// No description provided for @inventorySold.
   ///
   /// In ru, this message translates to:

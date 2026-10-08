@@ -2156,6 +2156,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'אפשר למכור רק אוסף חדש או וינטאג׳.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'אי אפשר למכור';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'אפשר למכור רק פריט חדש או וינטאג׳. השתמש בשיקוי כדי לשנות את המצב.';
+
+  @override
   String inventorySold(String amount) {
     return 'נמכר: +$amount';
   }

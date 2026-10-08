@@ -2156,6 +2156,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'ขายได้เฉพาะคอลเลกชันใหม่หรือวินเทจ';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'ขายไม่ได้';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'ขายได้เฉพาะของใหม่หรือวินเทจ ใช้ elixir เพื่อเปลี่ยนสภาพ';
+
+  @override
   String inventorySold(String amount) {
     return 'ขายแล้ว: +$amount';
   }

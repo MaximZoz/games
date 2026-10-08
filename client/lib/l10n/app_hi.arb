@@ -952,6 +952,8 @@
   "inventorySellTitle": "बेचें?",
   "inventorySellDesc": "आपको {amount} मिलेगा",
   "inventoryCollectionNotSellable": "केवल नया या विंटेज संग्रह बेचा जा सकता है।",
+  "inventoryCollectionNotSellableTitle": "बेचा नहीं जा सकता",
+  "inventoryCollectionNotSellableHint": "केवल नया या विंटेज आइटम बेचा जा सकता है। अवस्था बदलने के लिए अमृत का उपयोग करें।",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -2156,6 +2156,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'يمكن بيع مجموعة جديدة أو عتيقة فقط.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'لا يمكن البيع';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'يمكن بيع غرض جديد أو عتيق فقط. استخدم إكسيراً لتغيير حالته.';
+
+  @override
   String inventorySold(String amount) {
     return 'تم البيع: +$amount';
   }

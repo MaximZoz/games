@@ -952,6 +952,8 @@
   "inventorySellTitle": "Bán?",
   "inventorySellDesc": "Bạn sẽ nhận {amount}",
   "inventoryCollectionNotSellable": "Chỉ bán được bộ sưu tập mới hoặc cổ điển.",
+  "inventoryCollectionNotSellableTitle": "Không bán được",
+  "inventoryCollectionNotSellableHint": "Chỉ bán được vật phẩm mới hoặc cổ điển. Hãy dùng thuốc tiên để đổi trạng thái.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {

@@ -2156,6 +2156,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Chỉ bán được bộ sưu tập mới hoặc cổ điển.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Không bán được';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Chỉ bán được vật phẩm mới hoặc cổ điển. Hãy dùng thuốc tiên để đổi trạng thái.';
+
+  @override
   String inventorySold(String amount) {
     return 'Đã bán: +$amount';
   }

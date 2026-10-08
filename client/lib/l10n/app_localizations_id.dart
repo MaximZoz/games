@@ -2156,6 +2156,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Hanya koleksi baru atau vintage yang bisa dijual.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Tidak bisa dijual';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Hanya item baru atau vintage yang bisa dijual. Gunakan elixir untuk mengubah kondisinya.';
+
+  @override
   String inventorySold(String amount) {
     return 'Terjual: +$amount';
   }

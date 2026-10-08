@@ -2156,6 +2156,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'You can sell only a new or vintage collection.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Can\'t sell';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'You can sell only a new or vintage item. Use an elixir to change its condition.';
+
+  @override
   String inventorySold(String amount) {
     return 'Sold: +$amount';
   }

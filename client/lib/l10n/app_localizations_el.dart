@@ -2156,6 +2156,12 @@ class AppLocalizationsEl extends AppLocalizations {
   String get inventoryCollectionNotSellable => 'Μπορείς να πουλήσεις μόνο καινούργια ή vintage συλλογή.';
 
   @override
+  String get inventoryCollectionNotSellableTitle => 'Δεν πωλείται';
+
+  @override
+  String get inventoryCollectionNotSellableHint => 'Μπορείς να πουλήσεις μόνο καινούργιο ή vintage αντικείμενο. Χρησιμοποίησε ένα ελιξίριο για να αλλάξεις την κατάσταση.';
+
+  @override
   String inventorySold(String amount) {
     return 'Πουλήθηκε: +$amount';
   }

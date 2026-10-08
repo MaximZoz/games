@@ -180,5 +180,14 @@ void main() {
       isTrue,
     );
     expect(l10n.inventoryCollectionNotSellable, contains('винтаж'));
+    expect(l10n.inventoryCollectionNotSellableTitle, 'Нельзя продать');
+    expect(
+      l10n.inventoryCollectionNotSellableHint,
+      contains('эликсир'),
+    );
+    expect(
+      l10n.inventoryCollectionNotSellableHint,
+      contains('новый предмет или винтажный'),
+    );
   });
 }

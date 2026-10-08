@@ -952,6 +952,8 @@
   "inventorySellTitle": "Sälj?",
   "inventorySellDesc": "Du får {amount}",
   "inventoryCollectionNotSellable": "Bara en ny eller vintage samling kan säljas.",
+  "inventoryCollectionNotSellableTitle": "Kan inte säljas",
+  "inventoryCollectionNotSellableHint": "Bara ett nytt eller vintage föremål kan säljas. Använd en elixir för att ändra skicket.",
   "@inventorySellDesc": {
     "placeholders": {
       "amount": {
