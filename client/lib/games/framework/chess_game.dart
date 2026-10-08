@@ -1,10 +1,13 @@
 import 'package:flutter/widgets.dart';
+import 'package:multigames_client/games/chess/chess_engine.dart';
 import 'package:multigames_client/games/chess/chess_rules.dart';
-import 'package:multigames_client/games/framework/game_coming_soon_screen.dart';
 import 'package:multigames_client/games/framework/game_descriptor.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/screens/chess_game_screen.dart';
+import 'package:multigames_client/screens/chess_lobby_screen.dart';
+import 'package:multigames_client/screens/chess_offline_screen.dart';
 
-/// Дескриптор «Шахматы» — карточка, режимы и правила; партии ещё нет.
+/// Дескриптор «Шахматы».
 class ChessGame extends GameDescriptor {
   @override
   String get id => 'chess';
@@ -28,10 +31,7 @@ class ChessGame extends GameDescriptor {
   int get sortOrder => 80;
 
   @override
-  bool get supportsOffline => false;
-
-  @override
-  bool get comingSoon => true;
+  bool get supportsOffline => true;
 
   @override
   bool supportsDrawOffer(int playerCount) => playerCount == 2;
@@ -42,9 +42,15 @@ class ChessGame extends GameDescriptor {
     String? initialMode,
     String? fromMessageId,
   }) =>
-      GameComingSoonScreen(titleOf: (l10n) => l10n.gamesChess);
+      ChessLobbyScreen(lobbyId: lobbyId, initialMode: initialMode);
 
   @override
   Widget buildGameScreen({required String gameId}) =>
-      GameComingSoonScreen(titleOf: (l10n) => l10n.gamesChess);
+      ChessGameScreen(gameId: gameId);
+
+  @override
+  Widget? buildOfflineScreen({Map<String, String> query = const {}}) =>
+      ChessOfflineScreen(
+        gameMode: ChessEngine.normalizeMode(query['mode']),
+      );
 }

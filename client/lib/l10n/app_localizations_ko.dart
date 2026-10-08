@@ -814,6 +814,36 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamesChessModeBullet => '불릿';
 
   @override
+  String get chessPieceQueen => '퀸';
+
+  @override
+  String get chessPieceRook => '룩';
+
+  @override
+  String get chessPieceBishop => '비숍';
+
+  @override
+  String get chessPieceKnight => '나이트';
+
+  @override
+  String get chessPromotionTitle => '폰 승격';
+
+  @override
+  String get chessDrawStalemate => '무승부: 스테일메이트';
+
+  @override
+  String get chessDrawInsufficient => '무승부: 기물 부족';
+
+  @override
+  String get chessDrawRepetition => '무승부: 3회 동형 반복';
+
+  @override
+  String get chessDrawFiftyMove => '무승부: 50수 규칙';
+
+  @override
+  String get chessCheck => '체크';
+
+  @override
   String get rulesCheckersPlayers => '플레이어: 2.';
 
   @override

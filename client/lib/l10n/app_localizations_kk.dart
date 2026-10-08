@@ -814,6 +814,36 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesChessModeBullet => 'Оқ';
 
   @override
+  String get chessPieceQueen => 'Ферзь';
+
+  @override
+  String get chessPieceRook => 'Ладья';
+
+  @override
+  String get chessPieceBishop => 'Піл';
+
+  @override
+  String get chessPieceKnight => 'Ат';
+
+  @override
+  String get chessPromotionTitle => 'Пешканы түрлендіру';
+
+  @override
+  String get chessDrawStalemate => 'Тең ойын: пат';
+
+  @override
+  String get chessDrawInsufficient => 'Тең ойын: мат үшін материал жеткіліксіз';
+
+  @override
+  String get chessDrawRepetition => 'Тең ойын: позицияның үш рет қайталануы';
+
+  @override
+  String get chessDrawFiftyMove => 'Тең ойын: 50 жүріс ережесі';
+
+  @override
+  String get chessCheck => 'Шах';
+
+  @override
   String get rulesCheckersPlayers => 'Ойыншылар: 2.';
 
   @override

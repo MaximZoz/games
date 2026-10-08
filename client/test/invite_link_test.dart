@@ -79,7 +79,7 @@ void main() {
 
   test('parseInviteLobbyShareUrl rejects unregistered game type', () {
     expect(
-      parseInviteLobbyShareUrl('/games/chess/lobby/abc-123?mode=invite'),
+      parseInviteLobbyShareUrl('/games/connect4/lobby/abc-123?mode=invite'),
       isNull,
     );
   });

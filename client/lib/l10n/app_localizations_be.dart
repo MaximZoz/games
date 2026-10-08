@@ -814,6 +814,36 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesChessModeBullet => 'Куля';
 
   @override
+  String get chessPieceQueen => 'Ферзь';
+
+  @override
+  String get chessPieceRook => 'Ладдзя';
+
+  @override
+  String get chessPieceBishop => 'Слон';
+
+  @override
+  String get chessPieceKnight => 'Конь';
+
+  @override
+  String get chessPromotionTitle => 'Ператварэнне пешкі';
+
+  @override
+  String get chessDrawStalemate => 'Нічыя: пат';
+
+  @override
+  String get chessDrawInsufficient => 'Нічыя: недастаткова матэрыялу для мата';
+
+  @override
+  String get chessDrawRepetition => 'Нічыя: трохразовае паўтарэнне пазіцыі';
+
+  @override
+  String get chessDrawFiftyMove => 'Нічыя: правіла 50 хадоў';
+
+  @override
+  String get chessCheck => 'Шах';
+
+  @override
   String get rulesCheckersPlayers => 'Гульцы: 2.';
 
   @override

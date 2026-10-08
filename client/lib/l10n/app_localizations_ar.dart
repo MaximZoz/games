@@ -814,6 +814,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesChessModeBullet => 'رصاصة';
 
   @override
+  String get chessPieceQueen => 'الوزير';
+
+  @override
+  String get chessPieceRook => 'الرخ';
+
+  @override
+  String get chessPieceBishop => 'الفيل';
+
+  @override
+  String get chessPieceKnight => 'الحصان';
+
+  @override
+  String get chessPromotionTitle => 'ترقية البيدق';
+
+  @override
+  String get chessDrawStalemate => 'تعادل: جمود';
+
+  @override
+  String get chessDrawInsufficient => 'تعادل: مواد غير كافية';
+
+  @override
+  String get chessDrawRepetition => 'تعادل: تكرار ثلاثي';
+
+  @override
+  String get chessDrawFiftyMove => 'تعادل: قاعدة الخمسين نقلة';
+
+  @override
+  String get chessCheck => 'كش';
+
+  @override
   String get rulesCheckersPlayers => 'اللاعبون: 2.';
 
   @override

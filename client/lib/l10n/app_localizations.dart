@@ -1703,6 +1703,66 @@ abstract class AppLocalizations {
   /// **'Пуля'**
   String get gamesChessModeBullet;
 
+  /// No description provided for @chessPieceQueen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ферзь'**
+  String get chessPieceQueen;
+
+  /// No description provided for @chessPieceRook.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ладья'**
+  String get chessPieceRook;
+
+  /// No description provided for @chessPieceBishop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слон'**
+  String get chessPieceBishop;
+
+  /// No description provided for @chessPieceKnight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Конь'**
+  String get chessPieceKnight;
+
+  /// No description provided for @chessPromotionTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Превращение пешки'**
+  String get chessPromotionTitle;
+
+  /// No description provided for @chessDrawStalemate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: пат'**
+  String get chessDrawStalemate;
+
+  /// No description provided for @chessDrawInsufficient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: недостаточно материала для мата'**
+  String get chessDrawInsufficient;
+
+  /// No description provided for @chessDrawRepetition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: троекратное повторение позиции'**
+  String get chessDrawRepetition;
+
+  /// No description provided for @chessDrawFiftyMove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничья: правило 50 ходов'**
+  String get chessDrawFiftyMove;
+
+  /// No description provided for @chessCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шах'**
+  String get chessCheck;
+
   /// No description provided for @rulesCheckersPlayers.
   ///
   /// In ru, this message translates to:

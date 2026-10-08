@@ -814,6 +814,36 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gamesChessModeBullet => 'Kugle';
 
   @override
+  String get chessPieceQueen => 'Dronning';
+
+  @override
+  String get chessPieceRook => 'Tårn';
+
+  @override
+  String get chessPieceBishop => 'Løber';
+
+  @override
+  String get chessPieceKnight => 'Springer';
+
+  @override
+  String get chessPromotionTitle => 'Bondeforvandling';
+
+  @override
+  String get chessDrawStalemate => 'Remis: pat';
+
+  @override
+  String get chessDrawInsufficient => 'Remis: utilstrækkeligt materiale';
+
+  @override
+  String get chessDrawRepetition => 'Remis: tredobbelt stillingsgentagelse';
+
+  @override
+  String get chessDrawFiftyMove => 'Remis: 50-træks-reglen';
+
+  @override
+  String get chessCheck => 'Skak';
+
+  @override
   String get rulesCheckersPlayers => 'Spillere: 2.';
 
   @override

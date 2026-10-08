@@ -814,6 +814,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gamesChessModeBullet => 'Bala';
 
   @override
+  String get chessPieceQueen => 'Dama';
+
+  @override
+  String get chessPieceRook => 'Torre';
+
+  @override
+  String get chessPieceBishop => 'Alfil';
+
+  @override
+  String get chessPieceKnight => 'Caballo';
+
+  @override
+  String get chessPromotionTitle => 'Promoción de peón';
+
+  @override
+  String get chessDrawStalemate => 'Tablas: ahogado';
+
+  @override
+  String get chessDrawInsufficient => 'Tablas: material insuficiente';
+
+  @override
+  String get chessDrawRepetition => 'Tablas: triple repetición';
+
+  @override
+  String get chessDrawFiftyMove => 'Tablas: regla de los 50 movimientos';
+
+  @override
+  String get chessCheck => 'Jaque';
+
+  @override
   String get rulesCheckersPlayers => 'Jugadores: 2.';
 
   @override

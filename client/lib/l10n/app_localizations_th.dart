@@ -814,6 +814,36 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesChessModeBullet => 'กระสุน';
 
   @override
+  String get chessPieceQueen => 'ควีน';
+
+  @override
+  String get chessPieceRook => 'เรือ';
+
+  @override
+  String get chessPieceBishop => 'บิชอป';
+
+  @override
+  String get chessPieceKnight => 'อัศวิน';
+
+  @override
+  String get chessPromotionTitle => 'การเลื่อนขั้นเบี้ย';
+
+  @override
+  String get chessDrawStalemate => 'เสมอ: อับ';
+
+  @override
+  String get chessDrawInsufficient => 'เสมอ: หมากไม่พอรุกจน';
+
+  @override
+  String get chessDrawRepetition => 'เสมอ: ตำแหน่งซ้ำสามครั้ง';
+
+  @override
+  String get chessDrawFiftyMove => 'เสมอ: กฎ 50 ตา';
+
+  @override
+  String get chessCheck => 'รุก';
+
+  @override
   String get rulesCheckersPlayers => 'ผู้เล่น: 2';
 
   @override

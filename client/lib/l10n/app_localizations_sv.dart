@@ -814,6 +814,36 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesChessModeBullet => 'Kula';
 
   @override
+  String get chessPieceQueen => 'Dam';
+
+  @override
+  String get chessPieceRook => 'Torn';
+
+  @override
+  String get chessPieceBishop => 'Löpare';
+
+  @override
+  String get chessPieceKnight => 'Springare';
+
+  @override
+  String get chessPromotionTitle => 'Bondeförvandling';
+
+  @override
+  String get chessDrawStalemate => 'Remi: patt';
+
+  @override
+  String get chessDrawInsufficient => 'Remi: otillräckligt material';
+
+  @override
+  String get chessDrawRepetition => 'Remi: trefaldig ställningsupprepning';
+
+  @override
+  String get chessDrawFiftyMove => 'Remi: 50-dragsregeln';
+
+  @override
+  String get chessCheck => 'Schack';
+
+  @override
   String get rulesCheckersPlayers => 'Spelare: 2.';
 
   @override

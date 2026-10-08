@@ -2286,6 +2286,8 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
   int _stakeBronze = 2;
   String _gameMode = chessModeClassic;
   bool _settingsHydrated = false;
+  bool _creating = false;
+  bool _finding = false;
 
   @override
   void initState() {
@@ -2338,6 +2340,74 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
     _persistSettings();
   }
 
+  Future<void> _create(String mode) async {
+    if (_creating || _finding) return;
+    setState(() {
+      _creating = mode == 'invite';
+      _finding = mode == 'matchmake';
+    });
+    try {
+      final result = await ref.read(chessRepositoryProvider).createLobby(
+            mode: mode,
+            gameMode: _gameMode,
+            turnTimeSec: _turnTimeSec,
+            stakeBronze: _stakeBronze,
+          );
+      if (!mounted) return;
+      final gameId = result.gameId?.trim() ?? '';
+      final lobbyId = result.lobbyId.trim();
+      if (gameId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'game',
+                gameId: gameId,
+                lobbyId: lobbyId.isEmpty ? null : lobbyId,
+                gameType: 'chess',
+              ),
+            );
+        pinBlockingGame(ref, gameId, gameType: 'chess');
+        context.push('/games/chess/game/$gameId');
+      } else if (lobbyId.isNotEmpty) {
+        ref.read(activeGameProvider.notifier).setLocal(
+              ActiveGameItem(
+                type: 'lobby',
+                lobbyId: lobbyId,
+                gameType: 'chess',
+              ),
+            );
+        context.push('/games/chess/lobby/$lobbyId?mode=$mode');
+      } else {
+        throw GamesException(503, context.l10n.commonTryLater);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: isFinishCurrentGameError(error)
+            ? finishCurrentGameMessage
+            : formatUserError(error),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _creating = false;
+          _finding = false;
+        });
+      }
+    }
+  }
+
+  void _playOffline() {
+    disposeAllOfflineGameSessions();
+    context.push(
+      Uri(
+        path: '/games/chess/offline',
+        queryParameters: {'mode': _gameMode},
+      ).toString(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<UserGameSettings>>(
@@ -2387,11 +2457,12 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
           selected: true,
           icon: Icons.timer_outlined,
           label: formatTurnTime(_turnTimeSec),
-          onTap: _cycleTurnTime,
+          onTap: _creating || _finding ? null : _cycleTurnTime,
           isDesktop: isDesktop,
           isMedium: isMedium,
         ),
     ];
+    final busy = _creating || _finding;
 
     return GameCardShell(
       isDesktop: isDesktop,
@@ -2403,9 +2474,9 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
         stakeBronze: widget.isOffline ? null : _stakeBronze,
         stakeLabel: formatStakeAmount(_stakeBronze),
         stakeCoinType: stakeCoinType(_stakeBronze),
-        onStakeTap: widget.isOffline ? null : _cycleStake,
-        onInfoTap: () => _showRules(context),
-        busy: false,
+        onStakeTap: widget.isOffline || busy ? null : _cycleStake,
+        onInfoTap: busy ? null : () => _showRules(context),
+        busy: busy,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),
@@ -2413,12 +2484,15 @@ class _ChessGameCardState extends ConsumerState<_ChessGameCard> {
       actions: GameCardActionsRow(
         createLabel: context.l10n.gamesCreate,
         creatingLabel: context.l10n.commonCreating,
-        onCreate: null,
+        isCreating: _creating,
+        onCreate: () => _create('invite'),
         findLabel: context.l10n.lobbySearchPlayers,
         findingLabel: context.l10n.commonSearching,
-        onFind: null,
-        inDevelopment: true,
+        isFinding: _finding,
+        onFind: () => _create('matchmake'),
         offline: widget.isOffline,
+        offlinePlayLabel: context.l10n.gamesPlay,
+        onOfflinePlay: _playOffline,
         isDesktop: isDesktop,
         isMedium: isMedium,
       ),

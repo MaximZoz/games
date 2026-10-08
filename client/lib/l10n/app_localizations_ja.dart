@@ -814,6 +814,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gamesChessModeBullet => 'ブレット';
 
   @override
+  String get chessPieceQueen => 'クイーン';
+
+  @override
+  String get chessPieceRook => 'ルーク';
+
+  @override
+  String get chessPieceBishop => 'ビショップ';
+
+  @override
+  String get chessPieceKnight => 'ナイト';
+
+  @override
+  String get chessPromotionTitle => 'ポーンの昇格';
+
+  @override
+  String get chessDrawStalemate => '引き分け：ステイルメイト';
+
+  @override
+  String get chessDrawInsufficient => '引き分け：駒不足';
+
+  @override
+  String get chessDrawRepetition => '引き分け：同一局面3回';
+
+  @override
+  String get chessDrawFiftyMove => '引き分け：50手ルール';
+
+  @override
+  String get chessCheck => 'チェック';
+
+  @override
   String get rulesCheckersPlayers => 'プレイヤー: 2。';
 
   @override

@@ -814,6 +814,36 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gamesChessModeBullet => 'Kule';
 
   @override
+  String get chessPieceQueen => 'Dronning';
+
+  @override
+  String get chessPieceRook => 'Tårn';
+
+  @override
+  String get chessPieceBishop => 'Løper';
+
+  @override
+  String get chessPieceKnight => 'Springer';
+
+  @override
+  String get chessPromotionTitle => 'Bondeforvandling';
+
+  @override
+  String get chessDrawStalemate => 'Remis: patt';
+
+  @override
+  String get chessDrawInsufficient => 'Remis: utilstrekkelig materiale';
+
+  @override
+  String get chessDrawRepetition => 'Remis: trippel stillingsgjentakelse';
+
+  @override
+  String get chessDrawFiftyMove => 'Remis: 50-trekksregelen';
+
+  @override
+  String get chessCheck => 'Sjakk';
+
+  @override
   String get rulesCheckersPlayers => 'Spillere: 2.';
 
   @override

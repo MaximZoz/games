@@ -69,6 +69,8 @@ class GameInvite {
 
   bool get isCheckers => gameType == 'checkers';
 
+  bool get isChess => gameType == 'chess';
+
   /// Тот же инвайт на экране — не пересоздавать карточку (иначе мигает).
   bool sameVisibleCard(GameInvite other) =>
       lobbyId == other.lobbyId &&

@@ -814,6 +814,36 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gamesChessModeBullet => 'Luoti';
 
   @override
+  String get chessPieceQueen => 'Kuningatar';
+
+  @override
+  String get chessPieceRook => 'Torni';
+
+  @override
+  String get chessPieceBishop => 'Lähetti';
+
+  @override
+  String get chessPieceKnight => 'Ratsu';
+
+  @override
+  String get chessPromotionTitle => 'Sotilaan korotus';
+
+  @override
+  String get chessDrawStalemate => 'Tasapeli: patti';
+
+  @override
+  String get chessDrawInsufficient => 'Tasapeli: riittämätön materiaali';
+
+  @override
+  String get chessDrawRepetition => 'Tasapeli: kolminkertainen toisto';
+
+  @override
+  String get chessDrawFiftyMove => 'Tasapeli: 50 siirron sääntö';
+
+  @override
+  String get chessCheck => 'Shakki';
+
+  @override
   String get rulesCheckersPlayers => 'Pelaajat: 2.';
 
   @override

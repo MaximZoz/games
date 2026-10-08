@@ -814,6 +814,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gamesChessModeBullet => 'Пуля';
 
   @override
+  String get chessPieceQueen => 'Ферзь';
+
+  @override
+  String get chessPieceRook => 'Ладья';
+
+  @override
+  String get chessPieceBishop => 'Слон';
+
+  @override
+  String get chessPieceKnight => 'Конь';
+
+  @override
+  String get chessPromotionTitle => 'Превращение пешки';
+
+  @override
+  String get chessDrawStalemate => 'Ничья: пат';
+
+  @override
+  String get chessDrawInsufficient => 'Ничья: недостаточно материала для мата';
+
+  @override
+  String get chessDrawRepetition => 'Ничья: троекратное повторение позиции';
+
+  @override
+  String get chessDrawFiftyMove => 'Ничья: правило 50 ходов';
+
+  @override
+  String get chessCheck => 'Шах';
+
+  @override
   String get rulesCheckersPlayers => 'Игроки: 2.';
 
   @override

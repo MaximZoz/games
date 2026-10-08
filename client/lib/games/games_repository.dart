@@ -707,6 +707,8 @@ class LobbyItem {
 
   bool get isCheckers => gameType == 'checkers';
 
+  bool get isChess => gameType == 'chess';
+
   /// Режим для чипа на карточке лобби — из реестра, без фейковой «Классики».
   String modeLabel([AppLocalizations? l10n]) => localizedGameModeLabel(
         gameType: gameType,

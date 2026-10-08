@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"multigames/server/internal/chess"
 	"multigames/server/internal/durak"
 	"multigames/server/internal/gameengine"
 	"multigames/server/internal/gameregistry"
@@ -340,6 +341,10 @@ func (h *GamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/games/checkers/") {
 		h.serveCheckers(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/games/chess/") {
+		h.serveChess(w, r)
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/games/tictactoe/")
@@ -4777,6 +4782,8 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 				h.applyUnoTurnTimeout(ctx, gameID, m)
 			} else if m["game_type"] == nardyGameType {
 				h.applyNardyTurnTimeout(ctx, gameID, m)
+			} else if m["game_type"] == store.GameTypeChess {
+				h.applyChessTimeout(ctx, gameID, m)
 			} else if h.applyGameTimeout(ctx, key, m) {
 				// applied
 			}
@@ -4919,6 +4926,27 @@ func (h *GamesHandler) GetActive(w http.ResponseWriter, r *http.Request) {
 						"game_id":   gameID,
 						"lobby_id":  m["lobby_id"],
 						"game_type": nardyGameType,
+					}
+				}
+			} else if m["game_type"] == store.GameTypeChess {
+				players := parsePlayerIDsCSV(m["player_ids"])
+				if !stringSliceContains(players, userID.String()) {
+					clearUserActiveGame(ctx, h.Rdb, userID)
+				} else if state, decodeErr := chess.Decode(m["state"]); decodeErr == nil {
+					seat := simple1v1SeatOf(players, userID.String())
+					active = map[string]any{
+						"type":       "game",
+						"game_id":    gameID,
+						"lobby_id":   m["lobby_id"],
+						"game_type":  store.GameTypeChess,
+						"is_my_turn": seat >= 0 && seat == state.Turn && !state.IsOver(),
+					}
+				} else {
+					active = map[string]any{
+						"type":      "game",
+						"game_id":   gameID,
+						"lobby_id":  m["lobby_id"],
+						"game_type": store.GameTypeChess,
 					}
 				}
 			} else {
