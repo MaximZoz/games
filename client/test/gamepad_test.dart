@@ -1675,7 +1675,8 @@ void main() {
     expect(tile, 1);
   });
 
-  testWidgets('вверх с первой карточки выделяет назад', (tester) async {
+  testWidgets('вверх с первой карточки не выделяет назад, B выходит',
+      (tester) async {
     SharedPreferences.setMockInitialValues({});
     GamepadFocusRegistry.reset();
     addTearDown(GamepadFocusRegistry.reset);
@@ -1712,8 +1713,8 @@ void main() {
     await tester.pump();
     GamepadService.instance.emit(GamepadAction.confirm);
     await tester.pump();
-    expect(tile, 0);
-    expect(back, 1);
+    expect(back, 0);
+    expect(tile, 1);
   });
 
   testWidgets('вход ждёт плитку и не подсвечивает назад', (tester) async {
