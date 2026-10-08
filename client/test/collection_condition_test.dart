@@ -173,7 +173,12 @@ void main() {
     expect(can(DateTime.utc(2025, 4, 1)), isTrue);
     expect(collectionCanSell(acquiredAt: null), isTrue);
     final l10n = lookupAppLocalizations(const Locale('ru'));
-    expect(l10n.shopCollectionsHelp, contains('Продать можно только'));
+    expect(
+      l10n.shopCollectionsHelp.startsWith(
+        'Продать можно только новую или винтажную коллекцию',
+      ),
+      isTrue,
+    );
     expect(l10n.inventoryCollectionNotSellable, contains('винтаж'));
   });
 }
