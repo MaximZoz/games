@@ -1501,6 +1501,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gameOfferDraw => 'Offri patta';
 
   @override
+  String get gameFlipBoard => 'Gira la scacchiera';
+
+  @override
+  String get gameReviewStart => 'All\'inizio della partita';
+
+  @override
+  String get gameReviewPrev => 'Mossa indietro';
+
+  @override
+  String get gameReviewNext => 'Mossa avanti';
+
+  @override
+  String get gameReviewEnd => 'Alla posizione attuale';
+
+  @override
   String get gameOfferDrawTitle => 'Offrire patta?';
 
   @override

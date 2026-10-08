@@ -1501,6 +1501,21 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameOfferDraw => 'Προσφορά ισοπαλίας';
 
   @override
+  String get gameFlipBoard => 'Αναστροφή σκακιέρας';
+
+  @override
+  String get gameReviewStart => 'Στην αρχή της παρτίδας';
+
+  @override
+  String get gameReviewPrev => 'Κίνηση πίσω';
+
+  @override
+  String get gameReviewNext => 'Κίνηση μπροστά';
+
+  @override
+  String get gameReviewEnd => 'Στην τρέχουσα θέση';
+
+  @override
   String get gameOfferDrawTitle => 'Προσφορά ισοπαλίας;';
 
   @override

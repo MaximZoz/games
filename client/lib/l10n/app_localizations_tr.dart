@@ -1501,6 +1501,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gameOfferDraw => 'Beraberlik teklif et';
 
   @override
+  String get gameFlipBoard => 'Tahtayı çevir';
+
+  @override
+  String get gameReviewStart => 'Oyunun başına';
+
+  @override
+  String get gameReviewPrev => 'Bir hamle geri';
+
+  @override
+  String get gameReviewNext => 'Bir hamle ileri';
+
+  @override
+  String get gameReviewEnd => 'Mevcut konuma';
+
+  @override
   String get gameOfferDrawTitle => 'Beraberlik teklif edilsin mi?';
 
   @override

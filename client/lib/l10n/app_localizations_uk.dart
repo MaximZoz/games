@@ -1501,6 +1501,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gameOfferDraw => 'Запропонувати нічию';
 
   @override
+  String get gameFlipBoard => 'Перевернути дошку';
+
+  @override
+  String get gameReviewStart => 'На початок партії';
+
+  @override
+  String get gameReviewPrev => 'Хід назад';
+
+  @override
+  String get gameReviewNext => 'Хід уперед';
+
+  @override
+  String get gameReviewEnd => 'До поточної позиції';
+
+  @override
   String get gameOfferDrawTitle => 'Запропонувати нічию?';
 
   @override

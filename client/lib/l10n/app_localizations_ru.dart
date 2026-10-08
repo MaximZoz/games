@@ -1501,6 +1501,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gameOfferDraw => 'Предложить ничью';
 
   @override
+  String get gameFlipBoard => 'Перевернуть доску';
+
+  @override
+  String get gameReviewStart => 'К началу партии';
+
+  @override
+  String get gameReviewPrev => 'Ход назад';
+
+  @override
+  String get gameReviewNext => 'Ход вперёд';
+
+  @override
+  String get gameReviewEnd => 'К текущей позиции';
+
+  @override
   String get gameOfferDrawTitle => 'Предложить ничью?';
 
   @override

@@ -1501,6 +1501,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameOfferDraw => '무승부 제안';
 
   @override
+  String get gameFlipBoard => '보드 뒤집기';
+
+  @override
+  String get gameReviewStart => '게임 시작으로';
+
+  @override
+  String get gameReviewPrev => '한 수 뒤로';
+
+  @override
+  String get gameReviewNext => '한 수 앞으로';
+
+  @override
+  String get gameReviewEnd => '현재 위치로';
+
+  @override
   String get gameOfferDrawTitle => '무승부를 제안하시겠습니까?';
 
   @override

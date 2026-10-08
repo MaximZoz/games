@@ -1501,6 +1501,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gameOfferDraw => 'Remise aanbieden';
 
   @override
+  String get gameFlipBoard => 'Bord omdraaien';
+
+  @override
+  String get gameReviewStart => 'Naar begin van de partij';
+
+  @override
+  String get gameReviewPrev => 'Zet terug';
+
+  @override
+  String get gameReviewNext => 'Zet vooruit';
+
+  @override
+  String get gameReviewEnd => 'Naar huidige stelling';
+
+  @override
   String get gameOfferDrawTitle => 'Remise aanbieden?';
 
   @override

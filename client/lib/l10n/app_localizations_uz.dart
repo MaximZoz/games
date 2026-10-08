@@ -1501,6 +1501,21 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gameOfferDraw => 'Durrang taklif qilish';
 
   @override
+  String get gameFlipBoard => 'Taxtani aylantirish';
+
+  @override
+  String get gameReviewStart => 'O\'yin boshiga';
+
+  @override
+  String get gameReviewPrev => 'Bir yurish orqaga';
+
+  @override
+  String get gameReviewNext => 'Bir yurish oldinga';
+
+  @override
+  String get gameReviewEnd => 'Joriy holatga';
+
+  @override
   String get gameOfferDrawTitle => 'Durrang taklif qilinsinmi?';
 
   @override

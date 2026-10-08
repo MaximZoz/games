@@ -1501,6 +1501,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameOfferDraw => 'Offer draw';
 
   @override
+  String get gameFlipBoard => 'Flip board';
+
+  @override
+  String get gameReviewStart => 'To game start';
+
+  @override
+  String get gameReviewPrev => 'Move back';
+
+  @override
+  String get gameReviewNext => 'Move forward';
+
+  @override
+  String get gameReviewEnd => 'To current position';
+
+  @override
   String get gameOfferDrawTitle => 'Offer a draw?';
 
   @override

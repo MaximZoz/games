@@ -1501,6 +1501,21 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gameOfferDraw => 'Прапанаваць нічыю';
 
   @override
+  String get gameFlipBoard => 'Перавярнуць дошку';
+
+  @override
+  String get gameReviewStart => 'У пачатак партыі';
+
+  @override
+  String get gameReviewPrev => 'Ход назад';
+
+  @override
+  String get gameReviewNext => 'Ход наперад';
+
+  @override
+  String get gameReviewEnd => 'Да бягучай пазіцыі';
+
+  @override
   String get gameOfferDrawTitle => 'Прапанаваць нічыю?';
 
   @override

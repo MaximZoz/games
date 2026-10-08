@@ -1501,6 +1501,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gameOfferDraw => 'הצע תיקו';
 
   @override
+  String get gameFlipBoard => 'הפוך את הלוח';
+
+  @override
+  String get gameReviewStart => 'לתחילת המשחק';
+
+  @override
+  String get gameReviewPrev => 'מהלך אחורה';
+
+  @override
+  String get gameReviewNext => 'מהלך קדימה';
+
+  @override
+  String get gameReviewEnd => 'למצב הנוכחי';
+
+  @override
   String get gameOfferDrawTitle => 'להציע תיקו?';
 
   @override

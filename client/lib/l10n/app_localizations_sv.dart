@@ -1501,6 +1501,21 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gameOfferDraw => 'Erbjud remi';
 
   @override
+  String get gameFlipBoard => 'Vänd brädet';
+
+  @override
+  String get gameReviewStart => 'Till partiets början';
+
+  @override
+  String get gameReviewPrev => 'Ett drag bakåt';
+
+  @override
+  String get gameReviewNext => 'Ett drag framåt';
+
+  @override
+  String get gameReviewEnd => 'Till aktuell ställning';
+
+  @override
   String get gameOfferDrawTitle => 'Erbjud remi?';
 
   @override

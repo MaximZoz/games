@@ -1501,6 +1501,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get gameOfferDraw => 'Tawarkan seri';
 
   @override
+  String get gameFlipBoard => 'Balik papan';
+
+  @override
+  String get gameReviewStart => 'Ke awal permainan';
+
+  @override
+  String get gameReviewPrev => 'Langkah mundur';
+
+  @override
+  String get gameReviewNext => 'Langkah maju';
+
+  @override
+  String get gameReviewEnd => 'Ke posisi saat ini';
+
+  @override
   String get gameOfferDrawTitle => 'Tawarkan seri?';
 
   @override

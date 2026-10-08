@@ -1501,6 +1501,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameOfferDraw => '提议和棋';
 
   @override
+  String get gameFlipBoard => '翻转棋盘';
+
+  @override
+  String get gameReviewStart => '回到开局';
+
+  @override
+  String get gameReviewPrev => '后退一步';
+
+  @override
+  String get gameReviewNext => '前进一步';
+
+  @override
+  String get gameReviewEnd => '回到当前局面';
+
+  @override
   String get gameOfferDrawTitle => '提议和棋？';
 
   @override

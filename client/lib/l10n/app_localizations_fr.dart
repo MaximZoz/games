@@ -1501,6 +1501,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gameOfferDraw => 'Proposer nulle';
 
   @override
+  String get gameFlipBoard => 'Retourner l\'échiquier';
+
+  @override
+  String get gameReviewStart => 'Au début de la partie';
+
+  @override
+  String get gameReviewPrev => 'Coup précédent';
+
+  @override
+  String get gameReviewNext => 'Coup suivant';
+
+  @override
+  String get gameReviewEnd => 'À la position actuelle';
+
+  @override
   String get gameOfferDrawTitle => 'Proposer nulle ?';
 
   @override

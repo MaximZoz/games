@@ -1501,6 +1501,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameOfferDraw => 'Đề nghị hòa';
 
   @override
+  String get gameFlipBoard => 'Lật bàn cờ';
+
+  @override
+  String get gameReviewStart => 'Về đầu ván';
+
+  @override
+  String get gameReviewPrev => 'Lùi một nước';
+
+  @override
+  String get gameReviewNext => 'Tiến một nước';
+
+  @override
+  String get gameReviewEnd => 'Về vị trí hiện tại';
+
+  @override
   String get gameOfferDrawTitle => 'Đề nghị hòa?';
 
   @override

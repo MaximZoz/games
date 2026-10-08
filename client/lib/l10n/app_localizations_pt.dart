@@ -1501,6 +1501,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gameOfferDraw => 'Oferecer empate';
 
   @override
+  String get gameFlipBoard => 'Virar o tabuleiro';
+
+  @override
+  String get gameReviewStart => 'Para o início da partida';
+
+  @override
+  String get gameReviewPrev => 'Lance anterior';
+
+  @override
+  String get gameReviewNext => 'Lance seguinte';
+
+  @override
+  String get gameReviewEnd => 'Para a posição atual';
+
+  @override
   String get gameOfferDrawTitle => 'Oferecer empate?';
 
   @override

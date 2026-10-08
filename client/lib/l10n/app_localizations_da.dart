@@ -1501,6 +1501,21 @@ class AppLocalizationsDa extends AppLocalizations {
   String get gameOfferDraw => 'Tilbyd remis';
 
   @override
+  String get gameFlipBoard => 'Vend brættet';
+
+  @override
+  String get gameReviewStart => 'Til partiets start';
+
+  @override
+  String get gameReviewPrev => 'Et træk tilbage';
+
+  @override
+  String get gameReviewNext => 'Et træk frem';
+
+  @override
+  String get gameReviewEnd => 'Til nuværende stilling';
+
+  @override
   String get gameOfferDrawTitle => 'Tilbyd remis?';
 
   @override

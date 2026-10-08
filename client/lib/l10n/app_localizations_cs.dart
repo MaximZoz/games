@@ -1501,6 +1501,21 @@ class AppLocalizationsCs extends AppLocalizations {
   String get gameOfferDraw => 'Nabídnout remízu';
 
   @override
+  String get gameFlipBoard => 'Otočit šachovnici';
+
+  @override
+  String get gameReviewStart => 'Na začátek partie';
+
+  @override
+  String get gameReviewPrev => 'O tah zpět';
+
+  @override
+  String get gameReviewNext => 'O tah vpřed';
+
+  @override
+  String get gameReviewEnd => 'Na aktuální pozici';
+
+  @override
   String get gameOfferDrawTitle => 'Nabídnout remízu?';
 
   @override

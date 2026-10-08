@@ -1501,6 +1501,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gameOfferDraw => 'Ofrecer tablas';
 
   @override
+  String get gameFlipBoard => 'Girar tablero';
+
+  @override
+  String get gameReviewStart => 'Al inicio de la partida';
+
+  @override
+  String get gameReviewPrev => 'Jugada atrás';
+
+  @override
+  String get gameReviewNext => 'Jugada adelante';
+
+  @override
+  String get gameReviewEnd => 'A la posición actual';
+
+  @override
   String get gameOfferDrawTitle => '¿Ofrecer tablas?';
 
   @override

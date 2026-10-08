@@ -1501,6 +1501,21 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gameOfferDraw => 'Тең ойын ұсыну';
 
   @override
+  String get gameFlipBoard => 'Тақтаны аудару';
+
+  @override
+  String get gameReviewStart => 'Ойын басына';
+
+  @override
+  String get gameReviewPrev => 'Бір жүріс артқа';
+
+  @override
+  String get gameReviewNext => 'Бір жүріс алға';
+
+  @override
+  String get gameReviewEnd => 'Ағымдағы жағдайға';
+
+  @override
   String get gameOfferDrawTitle => 'Тең ойын ұсыну керек пе?';
 
   @override

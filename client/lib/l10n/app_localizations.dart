@@ -2969,6 +2969,36 @@ abstract class AppLocalizations {
   /// **'Предложить ничью'**
   String get gameOfferDraw;
 
+  /// No description provided for @gameFlipBoard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевернуть доску'**
+  String get gameFlipBoard;
+
+  /// No description provided for @gameReviewStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'К началу партии'**
+  String get gameReviewStart;
+
+  /// No description provided for @gameReviewPrev.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход назад'**
+  String get gameReviewPrev;
+
+  /// No description provided for @gameReviewNext.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ход вперёд'**
+  String get gameReviewNext;
+
+  /// No description provided for @gameReviewEnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'К текущей позиции'**
+  String get gameReviewEnd;
+
   /// No description provided for @gameOfferDrawTitle.
   ///
   /// In ru, this message translates to:

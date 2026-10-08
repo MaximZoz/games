@@ -1501,6 +1501,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gameOfferDraw => 'Remis anbieten';
 
   @override
+  String get gameFlipBoard => 'Brett drehen';
+
+  @override
+  String get gameReviewStart => 'Zum Partiestart';
+
+  @override
+  String get gameReviewPrev => 'Zug zurück';
+
+  @override
+  String get gameReviewNext => 'Zug vor';
+
+  @override
+  String get gameReviewEnd => 'Zur aktuellen Stellung';
+
+  @override
   String get gameOfferDrawTitle => 'Remis anbieten?';
 
   @override
