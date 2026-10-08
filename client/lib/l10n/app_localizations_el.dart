@@ -805,10 +805,13 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gamesChessModeClassic => 'Κλασικό';
 
   @override
-  String get gamesChessMode960 => 'Σκάκι 960';
+  String get gamesChessModeRapid => 'Ράπιντ';
 
   @override
-  String get gamesChessModeAntichess => 'Αντισκάκι';
+  String get gamesChessModeBlitz => 'Μπλιτς';
+
+  @override
+  String get gamesChessModeBullet => 'Σφαίρα';
 
   @override
   String get rulesCheckersPlayers => 'Παίκτες: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsEl extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Κλασικό: σκακιέρα 8×8. Κάθε πλευρά έχει βασιλιά, βασίλισσα, δύο πύργους, δύο αξιωματικούς, δύο ίππους και οκτώ πιόνια. Παίζουν τα λευκά. Συνήθεις κινήσεις, πάρσιμο εν διελεύσει, προαγωγή και ροκέ. Νίκη με ματ ή εγκατάλειψη.';
-
-  @override
-  String get rulesChessPlay960 => 'Σκάκι 960: συνήθεις κινήσεις. Η τελευταία γραμμή τυχαία κατά Φίσερ: βασιλιάς ανάμεσα στους πύργους, αξιωματικοί σε διαφορετικά χρώματα. Ροκέ στα c και g. Ματ ή εγκατάλειψη.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Αντισκάκι: συνήθεις κινήσεις, το πάρσιμο είναι υποχρεωτικό. Δεν υπάρχει σαχ, ο βασιλιάς πιάνεται. Χωρίς ροκέ. Κερδίζει όποιος χάσει όλα τα κομμάτια ή μείνει χωρίς κίνηση.';
+  String get rulesChessPlayClassic => 'Σκακιέρα 8×8. Κάθε πλευρά έχει βασιλιά, βασίλισσα, δύο πύργους, δύο αξιωματικούς, δύο ίππους και οκτώ πιόνια. Παίζουν τα λευκά. Συνήθεις κινήσεις, πάρσιμο εν διελεύσει, προαγωγή και ροκέ. Νίκη με ματ ή εγκατάλειψη.';
 
   @override
   String get rulesChessDrawClassic => 'Ισοπαλία σε πατ, τριπλή επανάληψη, κανόνα 50 κινήσεων, έλλειψη υλικού ή συμφωνία.';
 
   @override
-  String get rulesChessDraw960 => 'Ισοπαλία σε πατ, τριπλή επανάληψη, κανόνα 50 κινήσεων, έλλειψη υλικού ή συμφωνία.';
+  String get rulesChessClockClassic => 'Ρολόι: 60+0 — 60 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
 
   @override
-  String get rulesChessDrawAntichess => 'Ισοπαλία σε τριπλή επανάληψη ή αν μείνουν και οι δύο χωρίς κομμάτια στην ίδια κίνηση.';
+  String get rulesChessClockRapid => 'Ρολόι: 10+0 — 10 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
+
+  @override
+  String get rulesChessClockBlitz => 'Ρολόι: 5+0 — 5 λεπτά για όλη την παρτίδα, χωρίς προσαύξηση.';
+
+  @override
+  String get rulesChessClockBullet => 'Ρολόι: 3+2 — 3 λεπτά συν 2 δευτερόλεπτα ανά κίνηση.';
 
   @override
   String get checkersDrawRepetition => 'Ισοπαλία — η θέση επαναλήφθηκε τρεις φορές';

@@ -805,10 +805,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gamesChessModeClassic => 'Cổ điển';
 
   @override
-  String get gamesChessMode960 => 'Cờ 960';
+  String get gamesChessModeRapid => 'Cờ nhanh';
 
   @override
-  String get gamesChessModeAntichess => 'Phản cờ vua';
+  String get gamesChessModeBlitz => 'Chớp';
+
+  @override
+  String get gamesChessModeBullet => 'Đạn';
 
   @override
   String get rulesCheckersPlayers => 'Người chơi: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Cổ điển: bàn 8×8. Mỗi bên có vua, hậu, hai xe, hai tượng, hai mã và tám tốt. Trắng đi trước. Nước đi thường, bắt tốt qua đường, phong cấp và nhập thành. Thắng bằng chiếu hết hoặc đối thủ đầu hàng.';
-
-  @override
-  String get rulesChessPlay960 => 'Cờ 960: nước đi thường. Hàng cuối xáo theo Fischer: vua giữa hai xe, tượng khác màu. Nhập thành về c và g. Chiếu hết hoặc đầu hàng.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Phản cờ vua: nước đi thường, bắt quân là bắt buộc. Không chiếu, có thể bắt vua. Không nhập thành. Thắng khi bỏ hết quân hoặc hết nước đi.';
+  String get rulesChessPlayClassic => 'Bàn 8×8. Mỗi bên có vua, hậu, hai xe, hai tượng, hai mã và tám tốt. Trắng đi trước. Nước đi thường, bắt tốt qua đường, phong cấp và nhập thành. Thắng bằng chiếu hết hoặc đối thủ đầu hàng.';
 
   @override
   String get rulesChessDrawClassic => 'Hòa vì hết nước, lặp ba lần, luật 50 nước, thiếu quân hoặc thỏa thuận.';
 
   @override
-  String get rulesChessDraw960 => 'Hòa vì hết nước, lặp ba lần, luật 50 nước, thiếu quân hoặc thỏa thuận.';
+  String get rulesChessClockClassic => 'Đồng hồ: 60+0 — 60 phút cho cả ván, không cộng thêm.';
 
   @override
-  String get rulesChessDrawAntichess => 'Hòa khi lặp ba lần hoặc cả hai hết quân trong cùng một nước.';
+  String get rulesChessClockRapid => 'Đồng hồ: 10+0 — 10 phút cho cả ván, không cộng thêm.';
+
+  @override
+  String get rulesChessClockBlitz => 'Đồng hồ: 5+0 — 5 phút cho cả ván, không cộng thêm.';
+
+  @override
+  String get rulesChessClockBullet => 'Đồng hồ: 3+2 — 3 phút cộng 2 giây mỗi nước.';
 
   @override
   String get checkersDrawRepetition => 'Hòa — thế cờ lặp ba lần';

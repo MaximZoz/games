@@ -805,10 +805,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassiskt';
 
   @override
-  String get gamesChessMode960 => 'Schack960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antischack';
+  String get gamesChessModeBlitz => 'Blixt';
+
+  @override
+  String get gamesChessModeBullet => 'Kula';
 
   @override
   String get rulesCheckersPlayers => 'Spelare: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassiskt: bräde 8×8. Varje sida har kung, dam, två torn, två löpare, två springare och åtta bönder. Vit börjar. Vanliga drag, en passant, promotion och rockad. Vinst genom matt eller uppgivet.';
-
-  @override
-  String get rulesChessPlay960 => 'Schack960: vanliga drag. Sista raden blandas enligt Fischer: kungen mellan tornen, löpare på olika färger. Rockad till c och g. Matt eller uppgivet.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antischack: vanliga drag, slag är obligatoriskt. Ingen schack — kungen får slås. Ingen rockad. Den som ger bort alla pjäser eller inte kan dra vinner.';
+  String get rulesChessPlayClassic => 'Bräde 8×8. Varje sida har kung, dam, två torn, två löpare, två springare och åtta bönder. Vit börjar. Vanliga drag, en passant, promotion och rockad. Vinst genom matt eller uppgivet.';
 
   @override
   String get rulesChessDrawClassic => 'Remi vid patt, trefaldig upprepning, 50-dragsregeln, otillräckligt material eller överenskommelse.';
 
   @override
-  String get rulesChessDraw960 => 'Remi vid patt, trefaldig upprepning, 50-dragsregeln, otillräckligt material eller överenskommelse.';
+  String get rulesChessClockClassic => 'Klocka: 60+0 — 60 minuter för hela partiet, utan tillägg.';
 
   @override
-  String get rulesChessDrawAntichess => 'Remi vid trefaldig upprepning eller om båda blir pjäs-lösa i samma drag.';
+  String get rulesChessClockRapid => 'Klocka: 10+0 — 10 minuter för hela partiet, utan tillägg.';
+
+  @override
+  String get rulesChessClockBlitz => 'Klocka: 5+0 — 5 minuter för hela partiet, utan tillägg.';
+
+  @override
+  String get rulesChessClockBullet => 'Klocka: 3+2 — 3 minuter plus 2 sekunder per drag.';
 
   @override
   String get checkersDrawRepetition => 'Remi — ställningen upprepades tre gånger';

@@ -805,10 +805,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassisch';
 
   @override
-  String get gamesChessMode960 => 'Chess960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antischach';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
 
   @override
   String get rulesCheckersPlayers => 'Spieler: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassisch: Brett 8×8. Jede Seite hat König, Dame, zwei Türme, zwei Läufer, zwei Springer und acht Bauern. Weiß zieht zuerst. Übliche Züge, en passant, Umwandlung und Rochade. Gewinn durch Matt oder Aufgabe.';
-
-  @override
-  String get rulesChessPlay960 => 'Chess960: übliche Züge. Die Grundreihe wird nach Fischer gemischt: König zwischen den Türmen, Läufer auf verschiedenen Farben. Rochade auf c und g. Matt oder Aufgabe.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antischach: übliche Züge, Schlagen ist Pflicht. Es gibt kein Schach — der König darf geschlagen werden. Keine Rochade. Es gewinnt, wer alle Steine abgibt oder keinen Zug hat.';
+  String get rulesChessPlayClassic => 'Brett 8×8. Jede Seite hat König, Dame, zwei Türme, zwei Läufer, zwei Springer und acht Bauern. Weiß zieht zuerst. Übliche Züge, en passant, Umwandlung und Rochade. Gewinn durch Matt oder Aufgabe.';
 
   @override
   String get rulesChessDrawClassic => 'Remis bei Patt, dreifacher Wiederholung, 50-Züge-Regel, fehlendem Mattmaterial oder Einigung.';
 
   @override
-  String get rulesChessDraw960 => 'Remis bei Patt, dreifacher Wiederholung, 50-Züge-Regel, fehlendem Mattmaterial oder Einigung.';
+  String get rulesChessClockClassic => 'Partieuhr: 60+0 — 60 Minuten für die ganze Partie, ohne Zusatz.';
 
   @override
-  String get rulesChessDrawAntichess => 'Remis bei dreifacher Wiederholung oder wenn beide in einem Zug ohne Steine dastehen.';
+  String get rulesChessClockRapid => 'Partieuhr: 10+0 — 10 Minuten für die ganze Partie, ohne Zusatz.';
+
+  @override
+  String get rulesChessClockBlitz => 'Partieuhr: 5+0 — 5 Minuten für die ganze Partie, ohne Zusatz.';
+
+  @override
+  String get rulesChessClockBullet => 'Partieuhr: 3+2 — 3 Minuten plus 2 Sekunden pro Zug.';
 
   @override
   String get checkersDrawRepetition => 'Remis — Stellung dreimal wiederholt';

@@ -805,10 +805,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String get gamesChessModeClassic => 'Klassika';
 
   @override
-  String get gamesChessMode960 => 'Shaxmat-960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antishaxmat';
+  String get gamesChessModeBlitz => 'Blits';
+
+  @override
+  String get gamesChessModeBullet => 'O‘q';
 
   @override
   String get rulesCheckersPlayers => 'O‘yinchilar: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klassika: doska 8×8. Har tomonda shoh, vazir, ikki rux, ikki fil, ikki ot va sakkiz piyoda. Oqlar boshlaydi. Oddiy yurishlar, o‘tishda olish, o‘girish va rokirovka bor. Mat yoki taslim — g‘alaba.';
-
-  @override
-  String get rulesChessPlay960 => 'Shaxmat-960: yurishlar oddiy. Oxirgi qator Fisher qoidasi bilan tasodifiy: shoh ruxlar orasida, fillar turli rangda. Rokirovka c va g. Mat yoki taslim.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antishaxmat: yurishlar oddiy, olish majburiy. Shox yo‘q, shohni olish mumkin. Rokirovka yo‘q. Barcha donani bergan yoki yurishsiz qolgan yutadi.';
+  String get rulesChessPlayClassic => 'Doska 8×8. Har tomonda shoh, vazir, ikki rux, ikki fil, ikki ot va sakkiz piyoda. Oqlar boshlaydi. Oddiy yurishlar, o‘tishda olish, o‘girish va rokirovka bor. Mat yoki taslim — g‘alaba.';
 
   @override
   String get rulesChessDrawClassic => 'Durang: pat, uch marta takror, 50 yurish, mat uchun dona yetmasa yoki kelishuv.';
 
   @override
-  String get rulesChessDraw960 => 'Durang: pat, uch marta takror, 50 yurish, mat uchun dona yetmasa yoki kelishuv.';
+  String get rulesChessClockClassic => 'Partiya nazorati: 60+0 — butun o‘yinga 60 daqiqa, qo‘shimcha yo‘q.';
 
   @override
-  String get rulesChessDrawAntichess => 'Durang: uch marta takror yoki ikkisi ham bir yurishda donasiz qolsa.';
+  String get rulesChessClockRapid => 'Partiya nazorati: 10+0 — butun o‘yinga 10 daqiqa, qo‘shimcha yo‘q.';
+
+  @override
+  String get rulesChessClockBlitz => 'Partiya nazorati: 5+0 — butun o‘yinga 5 daqiqa, qo‘shimcha yo‘q.';
+
+  @override
+  String get rulesChessClockBullet => 'Partiya nazorati: 3+2 — 3 daqiqa plus har yurishga 2 soniya.';
 
   @override
   String get checkersDrawRepetition => 'Durang — pozitsiya uch marta takrorlandi';

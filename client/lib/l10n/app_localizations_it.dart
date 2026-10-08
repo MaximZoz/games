@@ -805,10 +805,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gamesChessModeClassic => 'Classico';
 
   @override
-  String get gamesChessMode960 => 'Scacchi 960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antiscacchi';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
 
   @override
   String get rulesCheckersPlayers => 'Giocatori: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Classico: scacchiera 8×8. Ogni lato ha re, donna, due torri, due alfieri, due cavalli e otto pedoni. Muovono i bianchi. Mosse abituali, en passant, promozione e arrocco. Vince lo scacco matto o l’abbandono.';
-
-  @override
-  String get rulesChessPlay960 => 'Scacchi 960: mosse abituali. L’ultima traversa è mescolata secondo Fischer: re tra le torri, alfieri su colori opposti. Arrocco su c e g. Matto o abbandono.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antiscacchi: mosse abituali, la cattura è obbligatoria. Non c’è scacco: il re si può catturare. Niente arrocco. Vince chi cede tutti i pezzi o non ha mosse.';
+  String get rulesChessPlayClassic => 'Scacchiera 8×8. Ogni lato ha re, donna, due torri, due alfieri, due cavalli e otto pedoni. Muovono i bianchi. Mosse abituali, en passant, promozione e arrocco. Vince lo scacco matto o l’abbandono.';
 
   @override
   String get rulesChessDrawClassic => 'Patta per stallo, triplice ripetizione, regola delle 50 mosse, materiale insufficiente o accordo.';
 
   @override
-  String get rulesChessDraw960 => 'Patta per stallo, triplice ripetizione, regola delle 50 mosse, materiale insufficiente o accordo.';
+  String get rulesChessClockClassic => 'Orologio: 60+0 — 60 minuti per tutta la partita, senza incremento.';
 
   @override
-  String get rulesChessDrawAntichess => 'Patta per triplice ripetizione o se entrambi restano senza pezzi nella stessa mossa.';
+  String get rulesChessClockRapid => 'Orologio: 10+0 — 10 minuti per tutta la partita, senza incremento.';
+
+  @override
+  String get rulesChessClockBlitz => 'Orologio: 5+0 — 5 minuti per tutta la partita, senza incremento.';
+
+  @override
+  String get rulesChessClockBullet => 'Orologio: 3+2 — 3 minuti più 2 secondi a mossa.';
 
   @override
   String get checkersDrawRepetition => 'Patta — posizione ripetuta tre volte';

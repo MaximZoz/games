@@ -805,10 +805,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gamesChessModeClassic => 'קלאסי';
 
   @override
-  String get gamesChessMode960 => 'שחמט 960';
+  String get gamesChessModeRapid => 'רפיד';
 
   @override
-  String get gamesChessModeAntichess => 'אנטי-שחמט';
+  String get gamesChessModeBlitz => 'בליץ';
+
+  @override
+  String get gamesChessModeBullet => 'כדור';
 
   @override
   String get rulesCheckersPlayers => 'שחקנים: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'קלאסי: לוח 8×8. לכל צד מלך, מלכה, שני צריחים, שני רצים, שני פרשים ושמונה רגלים. הלבן מתחיל. מהלכים רגילים, הכאה דרך הילוכו, הכתרה והצרחה. ניצחון במט או בפרישה.';
-
-  @override
-  String get rulesChessPlay960 => 'שחמט 960: מהלכים רגילים. השורה האחורית מעורבבת לפי פישר: מלך בין הצריחים, רצים בצבעים שונים. הצרחה ל-c ו-g. מט או פרישה.';
-
-  @override
-  String get rulesChessPlayAntichess => 'אנטי-שחמט: מהלכים רגילים, חובה להכות. אין שח, אפשר לקחת את המלך. בלי הצרחה. מנצח מי שמוסר את כל הכלים או נשאר בלי מהלך.';
+  String get rulesChessPlayClassic => 'לוח 8×8. לכל צד מלך, מלכה, שני צריחים, שני רצים, שני פרשים ושמונה רגלים. הלבן מתחיל. מהלכים רגילים, הכאה דרך הילוכו, הכתרה והצרחה. ניצחון במט או בפרישה.';
 
   @override
   String get rulesChessDrawClassic => 'תיקו בפאט, חזרה משולשת, כלל 50 המהלכים, חוסר חומר או הסכמה.';
 
   @override
-  String get rulesChessDraw960 => 'תיקו בפאט, חזרה משולשת, כלל 50 המהלכים, חוסר חומר או הסכמה.';
+  String get rulesChessClockClassic => 'שעון: 60+0 — 60 דקות לכל המשחק, בלי תוספת.';
 
   @override
-  String get rulesChessDrawAntichess => 'תיקו בחזרה משולשת או אם שני הצדדים נשארו בלי כלים באותו מהלך.';
+  String get rulesChessClockRapid => 'שעון: 10+0 — 10 דקות לכל המשחק, בלי תוספת.';
+
+  @override
+  String get rulesChessClockBlitz => 'שעון: 5+0 — 5 דקות לכל המשחק, בלי תוספת.';
+
+  @override
+  String get rulesChessClockBullet => 'שעון: 3+2 — 3 דקות ועוד 2 שניות לכל מהלך.';
 
   @override
   String get checkersDrawRepetition => 'תיקו — העמדה חזרה שלוש פעמים';

@@ -805,10 +805,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gamesChessModeClassic => 'Klasyka';
 
   @override
-  String get gamesChessMode960 => 'Szachy 960';
+  String get gamesChessModeRapid => 'Szybkie';
 
   @override
-  String get gamesChessModeAntichess => 'Antyszachy';
+  String get gamesChessModeBlitz => 'Błyskawiczne';
+
+  @override
+  String get gamesChessModeBullet => 'Kula';
 
   @override
   String get rulesCheckersPlayers => 'Gracze: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klasyka: szachownica 8×8. Każda strona ma króla, hetmana, dwie wieże, dwa gońce, dwa skoczki i osiem pionów. Białe zaczynają. Zwykłe ruchy, bicie w przelocie, przemiana i roszada. Wygrana matem lub poddaniem.';
-
-  @override
-  String get rulesChessPlay960 => 'Szachy 960: zwykłe ruchy. Ostatnia linia losowana według Fischera: król między wieżami, gońce na różnych kolorach. Roszada na c i g. Mat lub poddanie.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antyszachy: zwykłe ruchy, bicie obowiązkowe. Nie ma szacha — króla można zbić. Bez roszady. Wygrywa, kto odda wszystkie figury albo nie ma ruchu.';
+  String get rulesChessPlayClassic => 'Szachownica 8×8. Każda strona ma króla, hetmana, dwie wieże, dwa gońce, dwa skoczki i osiem pionów. Białe zaczynają. Zwykłe ruchy, bicie w przelocie, przemiana i roszada. Wygrana matem lub poddaniem.';
 
   @override
   String get rulesChessDrawClassic => 'Remis przy patu, trzykrotnym powtórzeniu, regule 50 posunięć, braku materiału lub porozumieniu.';
 
   @override
-  String get rulesChessDraw960 => 'Remis przy patu, trzykrotnym powtórzeniu, regule 50 posunięć, braku materiału lub porozumieniu.';
+  String get rulesChessClockClassic => 'Zegar: 60+0 — 60 minut na całą partię, bez dodawania.';
 
   @override
-  String get rulesChessDrawAntichess => 'Remis przy trzykrotnym powtórzeniu albo gdy obie strony zostają bez figur w tym samym ruchu.';
+  String get rulesChessClockRapid => 'Zegar: 10+0 — 10 minut na całą partię, bez dodawania.';
+
+  @override
+  String get rulesChessClockBlitz => 'Zegar: 5+0 — 5 minut na całą partię, bez dodawania.';
+
+  @override
+  String get rulesChessClockBullet => 'Zegar: 3+2 — 3 minuty plus 2 sekundy za ruch.';
 
   @override
   String get checkersDrawRepetition => 'Remis — pozycja powtórzyła się trzykrotnie';

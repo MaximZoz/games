@@ -805,10 +805,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gamesChessModeClassic => 'Klasik';
 
   @override
-  String get gamesChessMode960 => 'Satranç 960';
+  String get gamesChessModeRapid => 'Rapid';
 
   @override
-  String get gamesChessModeAntichess => 'Antisatranç';
+  String get gamesChessModeBlitz => 'Blitz';
+
+  @override
+  String get gamesChessModeBullet => 'Bullet';
 
   @override
   String get rulesCheckersPlayers => 'Oyuncular: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Klasik: tahta 8×8. Her tarafta şah, vezir, iki kale, iki fil, iki at ve sekiz piyon. Beyaz başlar. Normal hamleler, geçerken alma, terfi ve rok var. Mat veya terk — kazanç.';
-
-  @override
-  String get rulesChessPlay960 => 'Satranç 960: hamleler normal. Son sıra Fischer kuralıyla karışık: şah kalelerin arasında, filler farklı renkte. Rok c ve g. Mat veya terk.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Antisatranç: hamleler normal, alma zorunlu. Şah yok, şah alınabilir. Rok yok. Tüm taşlarını veren veya hamlesi kalmayan kazanır.';
+  String get rulesChessPlayClassic => 'Tahta 8×8. Her tarafta şah, vezir, iki kale, iki fil, iki at ve sekiz piyon. Beyaz başlar. Normal hamleler, geçerken alma, terfi ve rok var. Mat veya terk — kazanç.';
 
   @override
   String get rulesChessDrawClassic => 'Beraberlik: pat, üç kez tekrar, 50 hamle, yetersiz taş veya anlaşma.';
 
   @override
-  String get rulesChessDraw960 => 'Beraberlik: pat, üç kez tekrar, 50 hamle, yetersiz taş veya anlaşma.';
+  String get rulesChessClockClassic => 'Tempo: 60+0 — tüm oyun için 60 dakika, ek yok.';
 
   @override
-  String get rulesChessDrawAntichess => 'Beraberlik: üç kez tekrar veya ikisi de aynı hamlede taşsız kalırsa.';
+  String get rulesChessClockRapid => 'Tempo: 10+0 — tüm oyun için 10 dakika, ek yok.';
+
+  @override
+  String get rulesChessClockBlitz => 'Tempo: 5+0 — tüm oyun için 5 dakika, ek yok.';
+
+  @override
+  String get rulesChessClockBullet => 'Tempo: 3+2 — 3 dakika artı her hamlede 2 saniye.';
 
   @override
   String get checkersDrawRepetition => 'Beraberlik — pozisyon üç kez tekrarlandı';

@@ -805,10 +805,13 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gamesChessModeClassic => 'Класіка';
 
   @override
-  String get gamesChessMode960 => 'Шахматы-960';
+  String get gamesChessModeRapid => 'Рапід';
 
   @override
-  String get gamesChessModeAntichess => 'Антышахматы';
+  String get gamesChessModeBlitz => 'Бліц';
+
+  @override
+  String get gamesChessModeBullet => 'Куля';
 
   @override
   String get rulesCheckersPlayers => 'Гульцы: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsBe extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Класіка: дошка 8×8. У кожнага кароль, ферзь, дзве вежы, два сланы, два коні і восем пешак. Белыя ходзяць першымі. Ёсць узяцце на праходзе, пераўтварэнне і ракіроўка. Перамагае мат або здача суперніка.';
-
-  @override
-  String get rulesChessPlay960 => 'Шахматы-960: ходы звычайныя, апошняя лінія выпадковая па Фішэру: кароль між вежамі, сланы на розных колерах. Ракіроўка на c і g. Мат або здача.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Антышахматы: ходы звычайныя, узяцце абавязковае. Шаха няма, караля можна браць. Ракіроўкі няма. Перамагае той, хто аддаў усе фігуры або застаўся без ходу.';
+  String get rulesChessPlayClassic => 'Дошка 8×8. У кожнага кароль, ферзь, дзве вежы, два сланы, два коні і восем пешак. Белыя ходзяць першымі. Ёсць узяцце на праходзе, пераўтварэнне і ракіроўка. Перамагае мат або здача суперніка.';
 
   @override
   String get rulesChessDrawClassic => 'Нічыя пры паце, патройным паўторы, правіле 50 хадоў, недахопе фігур або па згодзе.';
 
   @override
-  String get rulesChessDraw960 => 'Нічыя пры паце, патройным паўторы, правіле 50 хадоў, недахопе фігур або па згодзе.';
+  String get rulesChessClockClassic => 'Кантроль партыі: 60+0 — 60 хвілін на ўсю партыю, без дадавання.';
 
   @override
-  String get rulesChessDrawAntichess => 'Нічыя пры патройным паўторы або калі абодва засталіся без фігур адным ходам.';
+  String get rulesChessClockRapid => 'Кантроль партыі: 10+0 — 10 хвілін на ўсю партыю, без дадавання.';
+
+  @override
+  String get rulesChessClockBlitz => 'Кантроль партыі: 5+0 — 5 хвілін на ўсю партыю, без дадавання.';
+
+  @override
+  String get rulesChessClockBullet => 'Кантроль партыі: 3+2 — 3 хвіліны на партыю плюс 2 секунды за кожны ход.';
 
   @override
   String get checkersDrawRepetition => 'Нічыя — пазіцыя паўтарылася тройчы';

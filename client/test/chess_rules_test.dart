@@ -11,23 +11,44 @@ void main() {
 
   AppLocalizations l10n() => lookupAppLocalizations(const Locale('ru'));
 
-  test('режимы шахмат нормализуются и подписываются', () {
+  test('режимы шахмат — контроль времени, старые варианты в классику', () {
     final t = l10n();
     expect(chessNormalizeMode(null), chessModeClassic);
-    expect(chessNormalizeMode('chess960'), chessMode960);
-    expect(chessNormalizeMode('antichess'), chessModeAntichess);
-    expect(chessNextMode(chessModeClassic), chessMode960);
-    expect(chessNextMode(chessMode960), chessModeAntichess);
-    expect(chessNextMode(chessModeAntichess), chessModeClassic);
+    expect(chessNormalizeMode('chess960'), chessModeClassic);
+    expect(chessNormalizeMode('antichess'), chessModeClassic);
+    expect(chessNormalizeMode('unknown'), chessModeClassic);
+    expect(chessNextMode(chessModeClassic), chessModeRapid);
+    expect(chessNextMode(chessModeRapid), chessModeBlitz);
+    expect(chessNextMode(chessModeBlitz), chessModeBullet);
+    expect(chessNextMode(chessModeBullet), chessModeClassic);
     expect(chessModeLabel(chessModeClassic, t), t.gamesChessModeClassic);
-    expect(chessModeLabel(chessMode960, t), t.gamesChessMode960);
-    expect(chessModeLabel(chessModeAntichess, t), t.gamesChessModeAntichess);
+    expect(chessModeLabel(chessModeRapid, t), t.gamesChessModeRapid);
+    expect(chessModeLabel(chessModeBlitz, t), t.gamesChessModeBlitz);
+    expect(chessModeLabel(chessModeBullet, t), t.gamesChessModeBullet);
+    expect(chessClockNotation(chessModeClassic), '60+0');
+    expect(chessClockNotation(chessModeRapid), '10+0');
+    expect(chessClockNotation(chessModeBlitz), '5+0');
+    expect(chessClockNotation(chessModeBullet), '3+2');
     expect(t.gamesChess, 'Шахматы');
-    expect(t.gamesChessMode960, 'Шахматы-960');
-    expect(t.gamesChessModeAntichess, 'Антишахматы');
+    expect(t.gamesChessModeRapid, 'Рапид');
+    expect(t.gamesChessModeBlitz, 'Блиц');
+    expect(t.gamesChessModeBullet, 'Пуля');
   });
 
-  test('правила каждого режима не смешивают чужие ходы и ничью', () {
+  test('лимит хода: 20 с, 1 мин, без лимита', () {
+    expect(chessTurnTimeOptions, [20, 60, 0]);
+    expect(chessNormalizeTurnTime(20), 20);
+    expect(chessNormalizeTurnTime(60), 60);
+    expect(chessNormalizeTurnTime(0), 0);
+    expect(chessNormalizeTurnTime(600), 60);
+    expect(chessNormalizeTurnTime(null), 60);
+    expect(chessNextTurnTime(20), 60);
+    expect(chessNextTurnTime(60), 0);
+    expect(chessNextTurnTime(0), 20);
+    expect(chessNextTurnTime(600), 0);
+  });
+
+  test('правила каждого режима показывают свой контроль и общие ходы', () {
     final t = l10n();
     for (final mode in chessAllModes) {
       final lines = chessRuleLines(
@@ -38,18 +59,21 @@ void main() {
       );
       expect(lines, contains(t.rulesChessPlayers));
       expect(lines, contains(t.rulesChessMode(chessModeLabel(mode, t))));
+      expect(lines, contains(chessClockLine(mode, t)));
       expect(lines, contains(chessPlayLine(mode, t)));
       expect(lines, contains(chessDrawLine(mode, t)));
+      expect(lines, contains(t.rulesTurnTime('1 мин')));
+      expect(lines.join('\n'), contains(chessClockNotation(mode)));
       for (final other in chessAllModes.where((m) => m != mode)) {
-        expect(lines, isNot(contains(chessPlayLine(other, t))),
-            reason: '$mode не должен содержать игру $other');
-        expect(lines, isNot(contains(chessDrawLine(other, t))),
-            reason: '$mode не должен содержать ничью $other');
+        expect(lines, isNot(contains(chessClockLine(other, t))),
+            reason: '$mode не должен содержать контроль $other');
       }
+      expect(lines.join('\n'), isNot(contains('Шахматы-960')));
+      expect(lines.join('\n'), isNot(contains('Антишахматы')));
     }
   });
 
-  testWidgets('диалог правил классики без 960 и антишахмат', (tester) async {
+  testWidgets('диалог правил блица показывает 5+0 и без 960', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ru'),
@@ -63,8 +87,8 @@ void main() {
                   context: context,
                   content: rulesTextLines(
                     chessRuleLines(
-                      gameMode: chessModeClassic,
-                      turnTimeSec: 60,
+                      gameMode: chessModeBlitz,
+                      turnTimeSec: 20,
                       stakeBronze: 0,
                       l10n: context.l10n,
                     ),
@@ -81,9 +105,48 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Правила игры'), findsOneWidget);
-    expect(find.textContaining('Режим: Классика.'), findsOneWidget);
+    expect(find.textContaining('Режим: Блиц.'), findsOneWidget);
+    expect(find.textContaining('5+0'), findsOneWidget);
+    expect(find.textContaining('20 с'), findsOneWidget);
     expect(find.textContaining('Шахматы-960:'), findsNothing);
     expect(find.textContaining('Антишахматы:'), findsNothing);
+  });
+
+  testWidgets('диалог пули показывает 3+2 и без лимита хода', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: TextButton(
+                onPressed: () => showGameRulesDialog(
+                  context: context,
+                  content: rulesTextLines(
+                    chessRuleLines(
+                      gameMode: chessModeBullet,
+                      turnTimeSec: 0,
+                      stakeBronze: 0,
+                      l10n: context.l10n,
+                    ),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Режим: Пуля.'), findsOneWidget);
+    expect(find.textContaining('3+2'), findsOneWidget);
+    expect(find.textContaining('Без ограничения по времени на ход.'),
+        findsOneWidget);
   });
 
   testWidgets('карточка шахмат показывает плашку «В разработке»',

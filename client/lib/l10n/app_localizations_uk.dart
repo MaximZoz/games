@@ -805,10 +805,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gamesChessModeClassic => 'Класика';
 
   @override
-  String get gamesChessMode960 => 'Шахи-960';
+  String get gamesChessModeRapid => 'Рапід';
 
   @override
-  String get gamesChessModeAntichess => 'Антишахи';
+  String get gamesChessModeBlitz => 'Бліц';
+
+  @override
+  String get gamesChessModeBullet => 'Куля';
 
   @override
   String get rulesCheckersPlayers => 'Гравці: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Класика: дошка 8×8. У кожного король, ферзь, дві тури, два слони, два коні та вісім пішаків. Білі ходять першими. Фігури ходять звичними ходами; є взяття на проході, перетворення і рокірування. Перемагає той, хто поставив мат або суперник здався.';
-
-  @override
-  String get rulesChessPlay960 => 'Шахи-960: дошка 8×8, ходи як звичайно. Остання лінія розставляється випадково за правилами Фішера: король між турами, слони на різних кольорах. Рокірування на клітини c і g. Мат або здавання — перемога.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Антишахи: ходи як звичайно, взяття обов’язкове. Шаху немає, короля можна брати. Рокірування немає. Перемагає той, хто віддав усі фігури або лишився без ходу.';
+  String get rulesChessPlayClassic => 'Дошка 8×8. У кожного король, ферзь, дві тури, два слони, два коні та вісім пішаків. Білі ходять першими. Фігури ходять звичними ходами; є взяття на проході, перетворення і рокірування. Перемагає той, хто поставив мат або суперник здався.';
 
   @override
   String get rulesChessDrawClassic => 'Нічия при паті, потрійному повторенні, правилі 50 ходів, нестачі фігур для мата або за згодою.';
 
   @override
-  String get rulesChessDraw960 => 'Нічия при паті, потрійному повторенні, правилі 50 ходів, нестачі фігур для мата або за згодою.';
+  String get rulesChessClockClassic => 'Контроль партії: 60+0 — 60 хвилин на всю партію, без додавання.';
 
   @override
-  String get rulesChessDrawAntichess => 'Нічия при потрійному повторенні або якщо обидва лишилися без фігур одним ходом.';
+  String get rulesChessClockRapid => 'Контроль партії: 10+0 — 10 хвилин на всю партію, без додавання.';
+
+  @override
+  String get rulesChessClockBlitz => 'Контроль партії: 5+0 — 5 хвилин на всю партію, без додавання.';
+
+  @override
+  String get rulesChessClockBullet => 'Контроль партії: 3+2 — 3 хвилини на партію плюс 2 секунди за кожен хід.';
 
   @override
   String get checkersDrawRepetition => 'Нічия — позиція повторилася тричі';

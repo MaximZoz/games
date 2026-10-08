@@ -805,10 +805,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gamesChessModeClassic => 'คลาสสิก';
 
   @override
-  String get gamesChessMode960 => 'หมากรุก 960';
+  String get gamesChessModeRapid => 'ราปิด';
 
   @override
-  String get gamesChessModeAntichess => 'แอนตีเชส';
+  String get gamesChessModeBlitz => 'บลิทซ์';
+
+  @override
+  String get gamesChessModeBullet => 'กระสุน';
 
   @override
   String get rulesCheckersPlayers => 'ผู้เล่น: 2';
@@ -874,22 +877,22 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'คลาสสิก: กระดาน 8×8 แต่ละฝ่ายมีคิง ควีน เรือ 2 บิชอป 2 ม้า 2 และเบี้ย 8 ขาวเดินก่อน เดินตามปกติ มีการกินผ่าน โปรโมต และเข้าปราสาท ชนะด้วยรุกฆาตหรือคู่ต่อสู้ยอมแพ้';
-
-  @override
-  String get rulesChessPlay960 => 'หมากรุก 960: เดินตามปกติ แถวหลังสุ่มตามฟิชเชอร์ คิงอยู่ระหว่างเรือ บิชอปคนละสี เข้าปราสาทไป c และ g รุกฆาตหรือยอมแพ้';
-
-  @override
-  String get rulesChessPlayAntichess => 'แอนตีเชส: เดินตามปกติ ต้องกินถ้ากินได้ ไม่มีรุก กินคิงได้ ไม่เข้าปราสาท ผู้ที่สละหมากทั้งหมดหรือเดินไม่ได้เป็นฝ่ายชนะ';
+  String get rulesChessPlayClassic => 'กระดาน 8×8 แต่ละฝ่ายมีคิง ควีน เรือ 2 บิชอป 2 ม้า 2 และเบี้ย 8 ขาวเดินก่อน เดินตามปกติ มีการกินผ่าน โปรโมต และเข้าปราสาท ชนะด้วยรุกฆาตหรือคู่ต่อสู้ยอมแพ้';
 
   @override
   String get rulesChessDrawClassic => 'เสมอเมื่อแพต ซ้ำสามครั้ง กติกา 50 ตา หมากไม่พอรุกฆาต หรือตกลงกัน';
 
   @override
-  String get rulesChessDraw960 => 'เสมอเมื่อแพต ซ้ำสามครั้ง กติกา 50 ตา หมากไม่พอรุกฆาต หรือตกลงกัน';
+  String get rulesChessClockClassic => 'นาฬิกา: 60+0 — 60 นาทีทั้งเกม ไม่มีบวกเวลา';
 
   @override
-  String get rulesChessDrawAntichess => 'เสมอเมื่อซ้ำสามครั้ง หรือทั้งสองหมดหมากในตาเดียวกัน';
+  String get rulesChessClockRapid => 'นาฬิกา: 10+0 — 10 นาทีทั้งเกม ไม่มีบวกเวลา';
+
+  @override
+  String get rulesChessClockBlitz => 'นาฬิกา: 5+0 — 5 นาทีทั้งเกม ไม่มีบวกเวลา';
+
+  @override
+  String get rulesChessClockBullet => 'นาฬิกา: 3+2 — 3 นาที บวก 2 วินาทีต่อตา';
 
   @override
   String get checkersDrawRepetition => 'เสมอ — ตำแหน่งซ้ำสามครั้ง';

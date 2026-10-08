@@ -805,10 +805,13 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gamesChessModeClassic => 'Классика';
 
   @override
-  String get gamesChessMode960 => 'Шахмат-960';
+  String get gamesChessModeRapid => 'Рапид';
 
   @override
-  String get gamesChessModeAntichess => 'Антишахмат';
+  String get gamesChessModeBlitz => 'Блиц';
+
+  @override
+  String get gamesChessModeBullet => 'Оқ';
 
   @override
   String get rulesCheckersPlayers => 'Ойыншылар: 2.';
@@ -874,22 +877,22 @@ class AppLocalizationsKk extends AppLocalizations {
   }
 
   @override
-  String get rulesChessPlayClassic => 'Классика: тақта 8×8. Әр жақта патша, уәзір, екі тура, екі піл, екі ат және сегіз пешка. Ақтар бастайды. Қалыпты жүрістер, өтуде алу, айналдыру және рокировка бар. Мат немесе берілу — жеңіс.';
-
-  @override
-  String get rulesChessPlay960 => 'Шахмат-960: жүрістер қалыпты. Соңғы қатар Фишер бойынша кездейсоқ: патша туралардың арасында, пілдер әртүрлі түсте. Рокировка c және g. Мат немесе берілу.';
-
-  @override
-  String get rulesChessPlayAntichess => 'Антишахмат: жүрістер қалыпты, алу міндетті. Шах жоқ, патшаны алуға болады. Рокировка жоқ. Барлық фигураны берген немесе жүріссіз қалған жеңеді.';
+  String get rulesChessPlayClassic => 'Тақта 8×8. Әр жақта патша, уәзір, екі тура, екі піл, екі ат және сегіз пешка. Ақтар бастайды. Қалыпты жүрістер, өтуде алу, айналдыру және рокировка бар. Мат немесе берілу — жеңіс.';
 
   @override
   String get rulesChessDrawClassic => 'Ничья: пат, үш рет қайталау, 50 жүріс, матқа фигура жетпесе немесе келісім.';
 
   @override
-  String get rulesChessDraw960 => 'Ничья: пат, үш рет қайталау, 50 жүріс, матқа фигура жетпесе немесе келісім.';
+  String get rulesChessClockClassic => 'Партия контролі: 60+0 — бүкіл партияға 60 минут, қосымша жоқ.';
 
   @override
-  String get rulesChessDrawAntichess => 'Ничья: үш рет қайталау немесе екеуі де бір жүрісте фигурасыз қалса.';
+  String get rulesChessClockRapid => 'Партия контролі: 10+0 — бүкіл партияға 10 минут, қосымша жоқ.';
+
+  @override
+  String get rulesChessClockBlitz => 'Партия контролі: 5+0 — бүкіл партияға 5 минут, қосымша жоқ.';
+
+  @override
+  String get rulesChessClockBullet => 'Партия контролі: 3+2 — партияға 3 минут плюс әр жүріске 2 секунд.';
 
   @override
   String get checkersDrawRepetition => 'Ничья — позиция үш рет қайталанды';
