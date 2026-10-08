@@ -1625,6 +1625,105 @@ List<Widget> buildGameAppBarActions({
   ];
 }
 
+/// Панель просмотра партии (как на lichess): кнопка переворота доски и
+/// стрелки перемотки ходов (в начало / назад / вперёд / в конец).
+///
+/// Общая для настольных игр: достаточно передать колбэки. `null` — кнопка
+/// недоступна (например, нет истории ходов или уже первый/последний ход).
+class GameReviewBar extends StatelessWidget {
+  const GameReviewBar({
+    super.key,
+    this.onFlip,
+    this.flipTooltip,
+    this.onFirst,
+    this.onPrev,
+    this.onNext,
+    this.onLast,
+    this.reviewing = false,
+    this.showNavigation = true,
+  });
+
+  /// Перевернуть доску (белые ↔ чёрные снизу). `null` — кнопки нет.
+  final VoidCallback? onFlip;
+  final String? flipTooltip;
+  final VoidCallback? onFirst;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final VoidCallback? onLast;
+
+  /// Сейчас смотрим не последнюю позицию — подсвечиваем панель.
+  final bool reviewing;
+
+  /// Показывать стрелки перемотки (для игр с историей ходов).
+  final bool showNavigation;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = reviewing ? AppColors.accentStart : Colors.white70;
+    Widget btn(IconData icon, VoidCallback? onTap, String? tip) => IconButton(
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          iconSize: 22,
+          icon: Icon(icon),
+          color: Colors.white,
+          disabledColor: Colors.white24,
+          tooltip: tip,
+          onPressed: onTap,
+        );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: reviewing ? 0.12 : 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: reviewing
+              ? AppColors.accentStart.withValues(alpha: 0.6)
+              : Colors.white12,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (onFlip != null)
+            IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              iconSize: 22,
+              icon: const Icon(Icons.cached_rounded),
+              color: Colors.white,
+              tooltip: flipTooltip,
+              onPressed: onFlip,
+            ),
+          if (showNavigation) ...[
+            if (onFlip != null)
+              const SizedBox(
+                height: 22,
+                child: VerticalDivider(width: 10, color: Colors.white12),
+              ),
+            btn(Icons.first_page_rounded, onFirst,
+                context.l10n.gameReviewStart),
+            btn(Icons.chevron_left_rounded, onPrev, context.l10n.gameReviewPrev),
+            IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              iconSize: 22,
+              icon: const Icon(Icons.chevron_right_rounded),
+              color: active,
+              disabledColor: Colors.white24,
+              tooltip: context.l10n.gameReviewNext,
+              onPressed: onNext,
+            ),
+            btn(Icons.last_page_rounded, onLast, context.l10n.gameReviewEnd),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// Диалог подтверждения (сдаться / выйти / ничья) — общий стиль.
 Future<bool> confirmGameActionDialog({
   required BuildContext context,
