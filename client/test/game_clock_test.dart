@@ -8,7 +8,8 @@ void main() {
     expect(formatClockMs(5000), '0:05');
     expect(formatClockMs(65000), '1:05');
     expect(formatClockMs(600000), '10:00');
-    expect(formatClockMs(3600000), '1:00:00');
+    expect(formatClockMs(3600000), '60:00');
+    expect(formatClockMs(100 * 60 * 1000), '1:40:00');
     // Округление вверх: 4.2с -> 5с (пока не истекло, показываем «5»).
     expect(formatClockMs(4200), '0:05');
     // Отрицательное значение не уходит в минус.
@@ -23,6 +24,18 @@ void main() {
     ));
     expect(find.text('3:05'), findsOneWidget);
     expect(find.text('Вы'), findsOneWidget);
+  });
+
+  testWidgets('GameClock prominent — крупная плашка без подписи',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: GameClock(remainingMs: 3600000, running: false, prominent: true),
+      ),
+    ));
+    expect(find.text('60:00'), findsOneWidget);
+    final text = tester.widget<Text>(find.text('60:00'));
+    expect(text.style?.fontSize, 26);
   });
 
   testWidgets('GameClock активного игрока показывает идущее время',

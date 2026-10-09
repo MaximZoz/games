@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -899,13 +900,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   ) {
     return Column(
       children: [
-        _opponentRow(live, me),
+        _buildOpponentCard(live, me),
         const SizedBox(height: 6),
         _buildStatusLine(live, myTurn),
         const SizedBox(height: 6),
-        Expanded(child: _buildBoard(live, display)),
-        const SizedBox(height: 6),
-        _bottomBar(live),
+        Expanded(child: _buildBoardColumn(live, display)),
         if (live.isOver) ...[
           const SizedBox(height: 8),
           _buildFinishRow(live, me),
@@ -925,13 +924,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       children: [
         Expanded(
           flex: 7,
-          child: Column(
-            children: [
-              Expanded(child: _buildBoard(live, display)),
-              const SizedBox(height: 6),
-              _bottomBar(live),
-            ],
-          ),
+          child: _buildBoardColumn(live, display),
         ),
         const SizedBox(width: 10),
         SizedBox(
@@ -941,7 +934,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _opponentRow(live, me),
+                _buildOpponentCard(live, me),
                 const SizedBox(height: 8),
                 _buildStatusLine(live, myTurn),
                 if (live.isOver) ...[
@@ -974,58 +967,94 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   int _clockMsFor(ChessGameView g, int seat) =>
       seat == 0 ? g.clockMs0 : g.clockMs1;
 
-  Widget? _clockFor(ChessGameView g, int seat, String label) {
-    if (!g.hasClock || seat < 0) return null;
-    return GameClock(
-      remainingMs: _clockMsFor(g, seat),
-      running: !g.isOver && g.clockRunning == seat,
-      label: label,
-      compact: true,
-    );
+  String _opponentClockName(ChessGameView game) {
+    final name = game.opponent?.displayName.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    if (game.hasBotOpponent) return context.l10n.gameBot;
+    return context.l10n.gameOpponent;
   }
 
-  Widget? _oppClock(ChessGameView g) {
-    if (g.myIndex < 0) return null;
-    final opp = g.myIndex == 0 ? 1 : 0;
-    final name = g.opponent?.displayName.trim();
-    return _clockFor(
-      g,
-      opp,
-      (name != null && name.isNotEmpty) ? name : context.l10n.gameOpponent,
-    );
-  }
-
-  Widget? _myClock(ChessGameView g) =>
-      _clockFor(g, g.myIndex, context.l10n.gameYou);
-
-  Widget _opponentRow(ChessGameView g, String? me) {
-    final clock = _oppClock(g);
-    final card = _buildOpponentCard(g, me);
-    if (clock == null) return card;
-    return Row(
-      children: [
-        Expanded(child: card),
-        const SizedBox(width: 8),
-        clock,
-      ],
-    );
-  }
-
-  /// Нижняя строка: мои часы слева, панель перемотки/переворота по центру.
-  Widget _bottomBar(ChessGameView g) {
-    final clock = _myClock(g);
-    final bar = _buildReviewBar(g);
-    return Row(
-      children: [
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: clock ?? const SizedBox.shrink(),
+  /// Доска на ширину клетки, часы — крупные плашки по её верхнему и нижнему
+  /// краю (имя слева, время справа), как на lichess.
+  Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hasClock = live.hasClock && live.myIndex >= 0;
+        const clockRow = 48.0;
+        const gap = 6.0;
+        const reviewRow = 40.0;
+        final chrome = (hasClock ? (clockRow + gap) * 2 : 0) + reviewRow + gap;
+        final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
+        final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
+        var side = math.min(maxW, math.max(0.0, maxH - chrome));
+        if (side < 64) side = math.min(maxW, maxH);
+        final oppSeat = live.myIndex == 0 ? 1 : 0;
+        return Center(
+          child: SizedBox(
+            width: side,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasClock) ...[
+                  _clockEdge(
+                    name: _opponentClockName(live),
+                    seat: oppSeat,
+                    game: live,
+                  ),
+                  const SizedBox(height: gap),
+                ],
+                SizedBox(
+                  width: side,
+                  height: side,
+                  child: _buildBoard(live, display),
+                ),
+                if (hasClock) ...[
+                  const SizedBox(height: gap),
+                  _clockEdge(
+                    name: context.l10n.gameYou,
+                    seat: live.myIndex,
+                    game: live,
+                  ),
+                ],
+                const SizedBox(height: gap),
+                _buildReviewBar(live),
+              ],
+            ),
           ),
-        ),
-        bar,
-        const Expanded(child: SizedBox.shrink()),
-      ],
+        );
+      },
+    );
+  }
+
+  Widget _clockEdge({
+    required String name,
+    required int seat,
+    required ChessGameView game,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GameClock(
+            remainingMs: _clockMsFor(game, seat),
+            running: !game.isOver && game.clockRunning == seat,
+            prominent: true,
+          ),
+        ],
+      ),
     );
   }
 

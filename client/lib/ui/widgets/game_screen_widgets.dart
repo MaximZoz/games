@@ -1625,7 +1625,8 @@ List<Widget> buildGameAppBarActions({
   ];
 }
 
-/// Форматирует остаток времени в `M:SS` (или `H:MM:SS` при >= часа).
+/// Форматирует остаток времени в `MM:SS` (60:00, 17:14).
+/// Часы появляются только от 100 минут: `1:40:00`.
 String formatClockMs(int ms) {
   if (ms < 0) ms = 0;
   final totalSec = (ms / 1000).ceil();
@@ -1633,8 +1634,10 @@ String formatClockMs(int ms) {
   final m = (totalSec % 3600) ~/ 60;
   final s = totalSec % 60;
   String two(int v) => v.toString().padLeft(2, '0');
-  if (h > 0) return '$h:${two(m)}:${two(s)}';
-  return '$m:${two(s)}';
+  if (h == 0 || totalSec < 100 * 60) {
+    return '${totalSec ~/ 60}:${two(s)}';
+  }
+  return '$h:${two(m)}:${two(s)}';
 }
 
 /// Часы игрока: общий остаток времени (формат `M:SS`), для активного игрока
@@ -1646,6 +1649,7 @@ class GameClock extends StatefulWidget {
     required this.running,
     this.label,
     this.compact = false,
+    this.prominent = false,
   });
 
   /// Остаток времени на момент снимка сервера, мс.
@@ -1658,6 +1662,9 @@ class GameClock extends StatefulWidget {
   final String? label;
 
   final bool compact;
+
+  /// Крупная плашка у края доски (как на lichess): большие цифры, без подписи.
+  final bool prominent;
 
   @override
   State<GameClock> createState() => _GameClockState();
@@ -1712,6 +1719,7 @@ class _GameClockState extends State<GameClock> {
   Widget build(BuildContext context) {
     final ms = _currentMs;
     final low = widget.running && ms <= 20000;
+    if (widget.prominent) return _prominentBox(ms, low);
     final bg = widget.running
         ? (low
             ? const Color(0x33E53935)
@@ -1757,6 +1765,45 @@ class _GameClockState extends State<GameClock> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Крупные часы у края доски: тёмная плашка, идущие — светлые, цейтнот — красные.
+  Widget _prominentBox(int ms, bool low) {
+    final running = widget.running;
+    final Color bg;
+    final Color fg;
+    if (low) {
+      bg = const Color(0xFFE53935);
+      fg = Colors.white;
+    } else if (running) {
+      bg = Colors.white;
+      fg = const Color(0xFF1B2430);
+    } else {
+      bg = const Color(0xFF2C3138);
+      fg = Colors.white;
+    }
+    return Container(
+      constraints: const BoxConstraints(minWidth: 104, minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: running && !low
+            ? Border.all(color: AppColors.accentStart, width: 2)
+            : null,
+      ),
+      child: Text(
+        formatClockMs(ms),
+        style: TextStyle(
+          color: fg,
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          height: 1.0,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
   }
