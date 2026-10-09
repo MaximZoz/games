@@ -79,6 +79,20 @@ String chessClockNotation(String mode) {
   }
 }
 
+/// База и прибавка на ход, мс. classic 60+0, rapid 10+0, blitz 5+0, bullet 3+2.
+(int, int) chessClockBudgetMs(String? mode) {
+  switch (chessNormalizeMode(mode)) {
+    case chessModeRapid:
+      return (10 * 60 * 1000, 0);
+    case chessModeBlitz:
+      return (5 * 60 * 1000, 0);
+    case chessModeBullet:
+      return (3 * 60 * 1000, 2 * 1000);
+    default:
+      return (60 * 60 * 1000, 0);
+  }
+}
+
 String chessClockLine(String mode, AppLocalizations l10n) {
   switch (chessNormalizeMode(mode)) {
     case chessModeRapid:
@@ -118,12 +132,10 @@ List<String> chessRuleLines({
   return [
     l10n.rulesChessPlayers,
     l10n.rulesChessMode(chessModeLabel(mode, l10n)),
-    if (!offline) chessClockLine(mode, l10n),
-    if (offline)
+    chessClockLine(mode, l10n),
+    if (!offline && turnTimeSec == 0)
       l10n.rulesNoTimeLimit
-    else if (turnTimeSec == 0)
-      l10n.rulesNoTimeLimit
-    else
+    else if (!offline)
       l10n.rulesTurnTime(formatTurnTime(turnTimeSec)),
     if (!offline && stakeBronze > 0) rulesStakeLine(stakeBronze, l10n),
     chessPlayLine(mode, l10n),
