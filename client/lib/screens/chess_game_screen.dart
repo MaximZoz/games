@@ -16,6 +16,7 @@ import 'package:multigames_client/games/active_game_guard.dart';
 import 'package:multigames_client/games/board_move_sfx.dart';
 import 'package:multigames_client/games/chess/chess_board.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
+import 'package:multigames_client/games/chess/chess_material.dart';
 import 'package:multigames_client/games/chess/chess_optimistic.dart';
 import 'package:multigames_client/games/chess/chess_offline_session.dart';
 import 'package:multigames_client/games/chess/chess_provider.dart';
@@ -355,6 +356,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         }
       }
       if (game.myIndex < 0) return l10n.gameOverNeutral;
+      if (game.isTimeout) {
+        if (game.iWon) return l10n.gameYouWonOpponentTimeout;
+        final name = game.opponent?.displayName.trim() ?? '';
+        if (name.isNotEmpty) return l10n.gameOpponentWonTimeout(name);
+      }
       if (game.iWon) {
         if (game.isForfeit) return l10n.gameYouWonOpponentForfeit;
         if (game.isTimeout) return l10n.gameYouWonOpponentTimeout;
@@ -979,11 +985,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final hasClock = live.hasClock && live.myIndex >= 0;
-        const clockRow = 48.0;
+        final showEdges = live.myIndex >= 0;
+        const edgeRow = 52.0;
         const gap = 6.0;
         const reviewRow = 48.0;
-        final chrome = (hasClock ? (clockRow + gap) * 2 : 0) + reviewRow + gap;
+        final chrome = (showEdges ? (edgeRow + gap) * 2 : 0) + reviewRow + gap;
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
         final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
         var side = math.min(maxW, math.max(0.0, maxH - chrome));
@@ -995,11 +1001,12 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (hasClock) ...[
-                  _clockEdge(
+                if (showEdges) ...[
+                  _playerEdge(
                     name: _opponentClockName(live),
                     seat: oppSeat,
-                    game: live,
+                    clockGame: live,
+                    materialBoard: display.board,
                   ),
                   const SizedBox(height: gap),
                 ],
@@ -1008,12 +1015,13 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                   height: side,
                   child: _buildBoard(live, display),
                 ),
-                if (hasClock) ...[
+                if (showEdges) ...[
                   const SizedBox(height: gap),
-                  _clockEdge(
+                  _playerEdge(
                     name: context.l10n.gameYou,
                     seat: live.myIndex,
-                    game: live,
+                    clockGame: live,
+                    materialBoard: display.board,
                   ),
                 ],
                 const SizedBox(height: gap),
@@ -1026,33 +1034,86 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  Widget _clockEdge({
+  Widget _playerEdge({
     required String name,
     required int seat,
-    required ChessGameView game,
+    required ChessGameView clockGame,
+    required List<int> materialBoard,
   }) {
+    final material = chessMaterialFor(materialBoard, seat);
     return SizedBox(
-      height: 48,
+      height: 52,
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    height: 1.1,
+                  ),
+                ),
+                if (material.captured.isNotEmpty || material.advantage > 0)
+                  _materialLine(material),
+              ],
+            ),
+          ),
+          if (clockGame.hasClock) ...[
+            const SizedBox(width: 8),
+            GameClock(
+              remainingMs: _clockMsFor(clockGame, seat),
+              running: !clockGame.isOver && clockGame.clockRunning == seat,
+              prominent: true,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Съеденные фигуры и перевес (`+N`), как на lichess.
+  Widget _materialLine(ChessMaterial material) {
+    return SizedBox(
+      height: 18,
+      child: Row(
+        children: [
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final piece in material.captured)
+                    SizedBox(
+                      width: 16,
+                      height: 18,
+                      child: ChessPieceGlyph(piece: piece),
+                    ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          GameClock(
-            remainingMs: _clockMsFor(game, seat),
-            running: !game.isOver && game.clockRunning == seat,
-            prominent: true,
-          ),
+          if (material.advantage > 0) ...[
+            const SizedBox(width: 4),
+            Text(
+              '+${material.advantage}',
+              style: const TextStyle(
+                color: Color(0xFF5C6770),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+          ],
         ],
       ),
     );
