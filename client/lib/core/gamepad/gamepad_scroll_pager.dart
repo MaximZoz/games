@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_pager.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/core/gamepad/gamepad_visibility.dart';
@@ -40,7 +41,15 @@ class _GamepadScrollPagerState extends State<GamepadScrollPager>
 
   @override
   bool page(int delta) {
-    if (!mounted || !isGamepadContextOnscreen(context)) return false;
+    if (!mounted) return false;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return false;
+    final inPopup = route is PopupRoute && route.isCurrent;
+    if (!inPopup && !isGamepadContextOnscreen(context)) return false;
+    // Попап забирает правый стик: фон (настройки, список) не листается.
+    if (!inPopup && GamepadDispatcher.hasExclusive) {
+      return false;
+    }
     if (_busy) return true;
     if (!_controller.hasClients) return false;
     final position = _controller.position;
@@ -54,7 +63,10 @@ class _GamepadScrollPagerState extends State<GamepadScrollPager>
       viewport: position.viewportDimension,
       direction: delta,
     );
-    if (next == null) return false;
+    if (next == null) {
+      scheduleFocusEdgeGamepadTarget(last: delta > 0);
+      return true;
+    }
     unawaited(_goTo(next, delta));
     return true;
   }

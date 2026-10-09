@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:multigames_client/core/gamepad/gamepad_action.dart';
 import 'package:multigames_client/core/gamepad/gamepad_chrome.dart';
+import 'package:multigames_client/core/gamepad/gamepad_dispatcher.dart';
 import 'package:multigames_client/core/gamepad/gamepad_family.dart';
 import 'package:multigames_client/core/gamepad/gamepad_focus_block.dart';
 import 'package:multigames_client/core/gamepad/gamepad_keyboard.dart';
@@ -89,9 +90,19 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     }
     if (action == GamepadAction.scrollLeft ||
         action == GamepadAction.scrollRight) {
+      if (_navGroupHasInnerControls(FocusManager.instance.primaryFocus)) {
+        return _moveFocus(
+          action == GamepadAction.scrollLeft
+              ? TraversalDirection.left
+              : TraversalDirection.right,
+        );
+      }
       return false;
     }
-    return _scrollPage(action == GamepadAction.scrollUp ? -1 : 1);
+    return _scrollPage(
+      action == GamepadAction.scrollUp ? -1 : 1,
+      context: context,
+    );
   }
   if (action == GamepadAction.triggerL) {
     return GamepadChromeRegistry.focus(GamepadChromeSlot.balance);
@@ -130,6 +141,7 @@ bool handleGamepadUiAction(BuildContext context, GamepadAction action) {
     case GamepadAction.confirm:
       return _activateFocused();
     case GamepadAction.cancel:
+      if (_focusNavGroupCard()) return true;
       return _popRoute(context);
     case GamepadAction.menu:
       if (isEditableTextFocused() || _focusTextField()) {
@@ -325,7 +337,18 @@ bool _scrollPage(
   bool moveFocus = true,
 }) {
   if (moveFocus && GamepadPagerRegistry.page(direction)) return true;
-  final local = _verticalScrollPositionNear(context);
+  final nearCtx = context ?? FocusManager.instance.primaryFocus?.context;
+  if (GamepadDispatcher.hasExclusive) {
+    final popup = _verticalScrollPositionNear(nearCtx);
+    if (popup != null) {
+      return _animateScrollPage(popup, direction, moveFocus: moveFocus);
+    }
+    if (moveFocus) {
+      scheduleFocusEdgeGamepadTarget(last: direction < 0);
+    }
+    return true;
+  }
+  final local = _verticalScrollPositionNear(nearCtx);
   if (local != null) {
     return _animateScrollPage(local, direction, moveFocus: moveFocus);
   }
@@ -355,7 +378,12 @@ bool _animateScrollPage(
     viewport: position.viewportDimension,
     direction: direction,
   );
-  if (next == null) return false;
+  if (next == null) {
+    if (moveFocus) {
+      scheduleFocusEdgeGamepadTarget(last: direction > 0);
+    }
+    return true;
+  }
   final animation = position.animateTo(
     next,
     duration: const Duration(milliseconds: 260),
@@ -620,6 +648,14 @@ bool _moveGamepadBlock(
     );
     return true;
   }
+  if (!horizontal && current != null && !_includeInEdgeFocus(current)) {
+    final card = _navGroupCardOf(current);
+    if (card != null) {
+      card.requestFocus();
+      _ensureVisible(card);
+      return true;
+    }
+  }
   final pageDelta = switch (direction) {
     TraversalDirection.down || TraversalDirection.right => 1,
     TraversalDirection.up || TraversalDirection.left => -1,
@@ -671,6 +707,46 @@ List<FocusNode> _sortedGroupMembers(bool Function(FocusNode node) match) {
     return ra.center.dx.compareTo(rb.center.dx);
   });
   return members;
+}
+
+bool _navGroupHasInnerControls(FocusNode? current) {
+  if (current == null) return false;
+  final group = GamepadNavGroup.ofNode(current);
+  if (group == null || group.exclusive) return false;
+  for (final node in GamepadFocusRegistry.nodes) {
+    if (!identical(GamepadNavGroup.ofNode(node), group)) continue;
+    if (!_includeInEdgeFocus(node) && !_isStickSideTarget(node)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+FocusNode? _navGroupCardOf(FocusNode? current) {
+  if (current == null) return null;
+  final group = GamepadNavGroup.ofNode(current);
+  if (group == null || group.exclusive) return null;
+  final members = _orderedNavGroupMembers(
+    _sortedGroupMembers(
+      (node) => identical(GamepadNavGroup.ofNode(node), group),
+    ),
+  );
+  for (final node in members) {
+    if (_includeInEdgeFocus(node)) return node;
+  }
+  return null;
+}
+
+bool _focusNavGroupCard() {
+  final current = FocusManager.instance.primaryFocus;
+  if (current == null || _includeInEdgeFocus(current)) return false;
+  if (_isStickSideTarget(current)) return false;
+  if (gamepadNodeInPopup(current)) return false;
+  final card = _navGroupCardOf(current);
+  if (card == null) return false;
+  card.requestFocus();
+  _ensureVisible(card);
+  return true;
 }
 
 /// Карточка группы первой, затем тумблеры и чекбоксы сверху вниз / слева направо.

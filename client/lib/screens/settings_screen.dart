@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multigames_client/core/api_config.dart';
@@ -632,9 +634,9 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref, {
     required Locale? selected,
   }) async {
-    // Прогрев флагов языков в memory-кэш — нужно для офлайна на Web.
-    await Future.wait(
-      appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso)),
+    // Прогрев флагов не блокирует открытие — геймпад должен сразу видеть список.
+    unawaited(
+      Future.wait(appLanguages.map((l) => FlagAssetCache.loadIso(l.flagIso))),
     );
     if (!context.mounted) return;
     final future = showModalBottomSheet<Object>(
@@ -682,6 +684,7 @@ class _PadSettingsCard extends StatelessWidget {
       child: GamepadFocusBlock(
         key: debugKey,
         radius: AppRadius.card,
+        descendantsFocusable: true,
         onActivate: onActivate,
         child: _SettingsCard(child: child),
       ),
@@ -757,42 +760,54 @@ class _LanguagePickerSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-                  child: Row(
+                ColoredBox(
+                  color: AppColors.surfaceCard,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          l10n.settingsLanguage,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.settingsLanguage,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                              ),
+                            ),
+                            GamepadFocusBlock(
+                              radius: 20,
+                              shape: GamepadHighlightShape.circle,
+                              includeInEdgeFocus: false,
+                              onActivate: () => _close(context),
+                              child: IconButton(
+                                key: const ValueKey('settings-language-close'),
+                                tooltip: l10n.commonClose,
+                                onPressed: () => _close(context),
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      GamepadFocusBlock(
-                        radius: 20,
-                        shape: GamepadHighlightShape.circle,
-                        includeInEdgeFocus: false,
-                        onActivate: () => _close(context),
-                        child: IconButton(
-                          key: const ValueKey('settings-language-close'),
-                          tooltip: l10n.commonClose,
-                          onPressed: () => _close(context),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                      ),
+                      const Divider(height: 1, color: AppColors.accentSoft),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: AppColors.accentSoft),
                 Expanded(
                   child: GamepadScrollPager(
                     builder: (context, controller) {
                       return ListView(
+                        key: const ValueKey('settings-language-list'),
                         controller: controller,
-                        clipBehavior: Clip.none,
+                        clipBehavior: Clip.hardEdge,
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           _langTile(
                             key: const ValueKey('lang-system'),
