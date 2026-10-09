@@ -541,6 +541,31 @@ bool _moveGamepadBlock(
       );
       return true;
     }
+    final nearestGroup =
+        current == null ? null : GamepadNavGroup.ofNode(current);
+    // Карточка + тумблер/чекбокс: влево/вправо по порядку группы, не по
+    // геометрии родителя (рамка карточки больше детей и «перекрывает» их).
+    if (horizontal && nearestGroup?.exclusive != true) {
+      final ordered = _orderedNavGroupMembers(groupBlocks);
+      final idx = _indexOfGamepadBlock(ordered, current);
+      if (idx >= 0) {
+        final next = direction == TraversalDirection.right
+            ? (idx + 1 < ordered.length ? ordered[idx + 1] : null)
+            : (idx - 1 >= 0 ? ordered[idx - 1] : null);
+        if (next != null) {
+          next.requestFocus();
+          _ensureVisible(next, axis: Axis.horizontal);
+          return true;
+        }
+      }
+      for (final node in blocks) {
+        if (!_isStickSideTarget(node)) continue;
+        node.requestFocus();
+        _ensureVisible(node, axis: Axis.horizontal);
+        return true;
+      }
+      return true;
+    }
     final groupNeighbor =
         _neighborGamepadBlock(groupBlocks, groupIndex, direction);
     if (groupNeighbor != null) {
@@ -648,6 +673,23 @@ List<FocusNode> _sortedGroupMembers(bool Function(FocusNode node) match) {
   return members;
 }
 
+/// Карточка группы первой, затем тумблеры и чекбоксы сверху вниз / слева направо.
+List<FocusNode> _orderedNavGroupMembers(List<FocusNode> members) {
+  final ordered = [...members];
+  ordered.sort((a, b) {
+    final aEdge = _includeInEdgeFocus(a);
+    final bEdge = _includeInEdgeFocus(b);
+    if (aEdge != bEdge) return aEdge ? -1 : 1;
+    final ra = _focusRect(a);
+    final rb = _focusRect(b);
+    if (ra == null || rb == null) return 0;
+    final dy = ra.center.dy - rb.center.dy;
+    if (dy.abs() > 8) return dy.compareTo(0);
+    return ra.center.dx.compareTo(rb.center.dx);
+  });
+  return ordered;
+}
+
 bool _isContentGamepadBlock(FocusNode? node) {
   if (node == null || GamepadChromeRegistry.isChrome(node)) return false;
   if (GamepadFocusRegistry.nodes.contains(node)) return true;
@@ -680,21 +722,24 @@ FocusNode? _neighborGamepadBlock(
   if (curRect == null) return null;
   final horizontal = direction == TraversalDirection.left ||
       direction == TraversalDirection.right;
+  final currentGroup = GamepadNavGroup.ofNode(current);
+  final currentExclusive = GamepadNavGroup.exclusiveOfNode(current);
   FocusNode? best;
   var bestScore = double.infinity;
   for (final node in blocks) {
     if (identical(node, current)) continue;
+    final sameGroup = currentGroup != null &&
+        identical(GamepadNavGroup.ofNode(node), currentGroup);
     // «Назад» только по B. Иконка «i» — влево/вправо с карточки.
+    // Тумблер/чекбокс карточки — влево/вправо в той же группе.
     if (!_includeInEdgeFocus(node) &&
-        !(horizontal && _isStickSideTarget(node))) {
+        !(horizontal && (_isStickSideTarget(node) || sameGroup))) {
       continue;
     }
     final rect = _focusRect(node);
     if (rect == null) continue;
     final dx = rect.center.dx - curRect.center.dx;
     final dy = rect.center.dy - curRect.center.dy;
-    final currentGroup = GamepadNavGroup.ofNode(current);
-    final currentExclusive = GamepadNavGroup.exclusiveOfNode(current);
     if (currentGroup != null && !currentGroup.exclusive && horizontal) {
       if (!_isStickSideTarget(node) &&
           !identical(GamepadNavGroup.ofNode(node), currentGroup)) {
