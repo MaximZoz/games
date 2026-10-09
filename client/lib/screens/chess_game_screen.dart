@@ -210,6 +210,10 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   bool _resolvedFlip(ChessGameView game) =>
       _flipOverride ?? (game.myIndex == 1);
 
+  /// Вид отличается от «мои фигуры снизу» — кнопка переворота фиолетовая.
+  bool _viewChanged(ChessGameView game) =>
+      _resolvedFlip(game) != (game.myIndex == 1);
+
   bool get _isReviewing =>
       _reviewIndex != null && _reviewIndex! < _history.length - 1;
 
@@ -874,8 +878,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
             child: landscape
-                ? _buildLandscape(live, display, me, myTurn)
-                : _buildPortrait(live, display, me, myTurn),
+                ? _buildLandscape(live, display, me)
+                : _buildPortrait(live, display, me),
           ),
           MyTurnAlert.stackLeaf(isMyTurn: myTurn),
         ],
@@ -887,14 +891,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     ChessGameView live,
     ChessGameView display,
     String? me,
-    bool myTurn,
   ) {
     return Column(
       children: [
         _buildOpponentCard(live, me),
-        const SizedBox(height: 6),
-        _buildStatusLine(live, myTurn),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Expanded(child: _buildBoardColumn(live, display)),
         if (live.isOver) ...[
           const SizedBox(height: 8),
@@ -908,7 +909,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     ChessGameView live,
     ChessGameView display,
     String? me,
-    bool myTurn,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -926,8 +926,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildOpponentCard(live, me),
-                const SizedBox(height: 8),
-                _buildStatusLine(live, myTurn),
                 if (live.isOver) ...[
                   const SizedBox(height: 10),
                   _buildFinishRow(live, me),
@@ -948,6 +946,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       onFlip: () => _toggleFlip(game),
       flipTooltip: context.l10n.gameFlipBoard,
       reviewing: _isReviewing,
+      flipped: _viewChanged(game),
       onFirst: canBack ? _reviewFirst : null,
       onPrev: canBack ? _reviewPrev : null,
       onNext: canFwd ? _reviewNext : null,
@@ -958,36 +957,27 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   int _clockMsFor(ChessGameView g, int seat) =>
       seat == 0 ? g.clockMs0 : g.clockMs1;
 
-  /// Доска на всю ширину. Съеденные фигуры, часы и перемотка — одна строка
-  /// у каждого края, без имён на поле.
+  /// Доска на всю ширину. Сверху: фигуры соперника, статус и его часы.
+  /// Снизу: мои фигуры слева, перемотка у правого края рядом с моими часами.
   Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
+    final myTurn = live.isMyTurn && !live.isOver && !_isReviewing;
     return LayoutBuilder(
       builder: (context, constraints) {
         final mine = live.myIndex >= 0;
-        const edge = 40.0;
-        final rows = mine ? 2 : 1;
+        const rowH = 40.0;
+        const topPad = 6.0;
+        final hasTurnTimer =
+            !live.isOver && live.turnTimeSec > 0 && live.turnDeadline > 0;
+        const timerH = 28.0;
+        final chrome = topPad + rowH * 2 + (hasTurnTimer ? timerH : 0);
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
         final maxH =
             constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
         final avail = maxH.isFinite
-            ? (maxH - edge * rows).clamp(0.0, maxH).toDouble()
+            ? (maxH - chrome).clamp(0.0, maxH).toDouble()
             : maxW;
         final side = avail < maxW ? avail : maxW;
         final oppSeat = live.myIndex == 0 ? 1 : 0;
-        final top = mine
-            ? _chromeRow(
-                material:
-                    _materialLine(chessMaterialFor(display.board, oppSeat)),
-                trailing: _clock(live, oppSeat),
-              )
-            : null;
-        final bottom = _chromeRow(
-          leading: _buildReviewBar(live),
-          material: mine
-              ? _materialLine(chessMaterialFor(display.board, live.myIndex))
-              : const SizedBox.shrink(),
-          trailing: mine ? _clock(live, live.myIndex) : null,
-        );
         final board = SizedBox(
           width: side,
           height: side,
@@ -995,12 +985,113 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         );
         return Column(
           children: [
-            if (top != null) top,
+            _topChrome(
+              live,
+              material: mine
+                  ? _materialLine(chessMaterialFor(display.board, oppSeat))
+                  : const SizedBox.shrink(),
+              clock: mine ? _clock(live, oppSeat) : null,
+            ),
+            if (hasTurnTimer)
+              SizedBox(
+                height: timerH,
+                child: Center(
+                  child: GameTurnCountdown(
+                    key: ValueKey('${live.turn}_${live.turnDeadline}'),
+                    turnDeadline: live.turnDeadline,
+                    isMyTurn: myTurn,
+                    turnTimeSec: live.turnTimeSec,
+                    onExpired: () =>
+                        ref.invalidate(chessGameProvider(widget.gameId)),
+                    labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
+                  ),
+                ),
+              ),
             Expanded(child: Center(child: board)),
-            bottom,
+            _bottomChrome(
+              material: mine
+                  ? _materialLine(
+                      chessMaterialFor(display.board, live.myIndex),
+                    )
+                  : const SizedBox.shrink(),
+              review: _buildReviewBar(live),
+              clock: mine ? _clock(live, live.myIndex) : null,
+            ),
           ],
         );
       },
+    );
+  }
+
+  /// Фигуры слева, статус по центру, часы соперника справа — одна линия.
+  /// Небольшой отступ сверху, слева и справа.
+  Widget _topChrome(
+    ChessGameView live, {
+    required Widget material,
+    required Widget? clock,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+      child: SizedBox(
+        height: 40,
+        width: double.infinity,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final side =
+                (constraints.maxWidth * 0.34).clamp(72.0, 160.0).toDouble();
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: side,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: material,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (clock != null) clock,
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: side),
+                  child: _buildStatusInline(live),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomChrome({
+    required Widget material,
+    required Widget review,
+    required Widget? clock,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: SizedBox(
+        height: 40,
+        child: Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: material,
+              ),
+            ),
+            review,
+            if (clock != null) ...[
+              const SizedBox(width: 4),
+              clock,
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -1011,29 +1102,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       remainingMs: _clockMsFor(game, seat),
       running: !game.isOver && game.clockRunning == seat,
       prominent: true,
+      // Щелчок блица — от часов партии, даже если лимита на ход нет.
       tickSound: mine && chessBlitzClockAudible(game.gameMode),
-    );
-  }
-
-  Widget _chromeRow({
-    Widget? leading,
-    required Widget material,
-    Widget? trailing,
-  }) {
-    return SizedBox(
-      height: 40,
-      child: Row(
-        children: [
-          if (leading != null) leading,
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: material,
-            ),
-          ),
-          if (trailing != null) trailing,
-        ],
-      ),
     );
   }
 
@@ -1077,41 +1147,24 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  Widget _buildStatusLine(ChessGameView game, bool myTurn) {
+  Widget _buildStatusInline(ChessGameView game) {
     final rewardChip = stakeFinishRewardChip(
       stakeBronze: game.stakeBronze,
       isDraw: game.isDraw,
       iWon: game.iWon,
     );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GameStatusWithReward(
-          statusText: _statusText(game),
-          showReward: stakeShowFinishReward(
-            stakeBronze: game.stakeBronze,
-            isOver: game.isOver,
-            isDraw: game.isDraw,
-            rewardChip: rewardChip,
-          ),
-          rewardBronze: rewardChip,
-          rewardKey: _rewardKey,
-          fontSize: 14,
-          wrap: true,
-        ),
-        if (!game.isOver && game.turnTimeSec > 0 && game.turnDeadline > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: GameTurnCountdown(
-              key: ValueKey('${game.turn}_${game.turnDeadline}'),
-              turnDeadline: game.turnDeadline,
-              isMyTurn: myTurn,
-              turnTimeSec: game.turnTimeSec,
-              onExpired: () => ref.invalidate(chessGameProvider(widget.gameId)),
-              labelBuilder: (s) => context.l10n.gameSecondsLeft(s),
-            ),
-          ),
-      ],
+    return GameStatusWithReward(
+      statusText: _statusText(game),
+      showReward: stakeShowFinishReward(
+        stakeBronze: game.stakeBronze,
+        isOver: game.isOver,
+        isDraw: game.isDraw,
+        rewardChip: rewardChip,
+      ),
+      rewardBronze: rewardChip,
+      rewardKey: _rewardKey,
+      fontSize: 14,
+      wrap: false,
     );
   }
 

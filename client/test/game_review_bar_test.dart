@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multigames_client/l10n/app_localizations.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
 Widget _wrap(Widget child) {
@@ -63,6 +64,45 @@ void main() {
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     await tester.tap(find.byIcon(Icons.last_page_rounded));
     expect([first, prev, next, last], [1, 1, 1, 1]);
+  });
+
+  testWidgets('перемотка не красит кнопку вида, переворот — только её',
+      (tester) async {
+    await tester.pumpWidget(_wrap(GameReviewBar(
+      onFlip: () {},
+      onFirst: () {},
+      onPrev: () {},
+      onNext: () {},
+      onLast: () {},
+      reviewing: true,
+      flipped: false,
+    )));
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.cached_rounded)).color,
+      AppColors.textPrimary,
+    );
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.chevron_left_rounded)).color,
+      AppColors.accentStart,
+    );
+
+    await tester.pumpWidget(_wrap(GameReviewBar(
+      onFlip: () {},
+      onFirst: () {},
+      onPrev: () {},
+      onNext: null,
+      onLast: null,
+      reviewing: false,
+      flipped: true,
+    )));
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.cached_rounded)).color,
+      AppColors.accentStart,
+    );
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.chevron_right_rounded)).color,
+      Colors.black38,
+    );
   });
 
   testWidgets('без стрелок рисуется только кнопка переворота', (tester) async {

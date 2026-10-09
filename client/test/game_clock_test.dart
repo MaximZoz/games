@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
 void main() {
@@ -36,6 +37,18 @@ void main() {
     expect(find.text('60:00'), findsOneWidget);
     final text = tester.widget<Text>(find.text('60:00'));
     expect(text.style?.fontSize, 20);
+    expect(text.style?.color, AppColors.textPrimary);
+  });
+
+  testWidgets('prominent: цифры красные, пока идут часы', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: GameClock(remainingMs: 300000, running: true, prominent: true),
+      ),
+    ));
+    final text = tester.widget<Text>(find.text('5:00'));
+    expect(text.style?.color, const Color(0xFFE53935));
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('GameClock активного игрока показывает идущее время',

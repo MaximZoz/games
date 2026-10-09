@@ -878,10 +878,10 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
               )
             : null;
         final bottom = _chromeRow(
-          leading: _buildReviewBar(live),
           material: mine
               ? CheckersMaterialLine(board: display.board, seat: live.myIndex)
               : const SizedBox.shrink(),
+          trailing: _buildReviewBar(live),
         );
         final board = SizedBox(
           width: side,
@@ -899,21 +899,29 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
     );
   }
 
-  Widget _chromeRow({Widget? leading, required Widget material}) {
-    return SizedBox(
-      height: 40,
-      child: Row(
-        children: [
-          if (leading != null) leading,
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: material,
+  Widget _chromeRow({Widget? trailing, required Widget material}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: SizedBox(
+        height: 40,
+        child: Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: material,
+              ),
             ),
-          ),
-        ],
+            if (trailing != null) trailing,
+          ],
+        ),
       ),
     );
+  }
+
+  bool _viewChanged(CheckersGameView game) {
+    final fallback = game.myIndex != 1;
+    return (_flipOverride ?? fallback) != fallback;
   }
 
   Widget _buildReviewBar(CheckersGameView game) {
@@ -926,6 +934,7 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       ),
       flipTooltip: context.l10n.gameFlipBoard,
       reviewing: _isReviewing,
+      flipped: _viewChanged(game),
       onFirst: canBack ? _reviewFirst : null,
       onPrev: canBack ? _reviewPrev : null,
       onNext: canFwd ? _reviewNext : null,
