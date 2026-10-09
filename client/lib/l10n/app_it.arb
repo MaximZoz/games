@@ -560,6 +560,7 @@
   "gameOpponent": "Avversario",
   "gameYou": "Tu",
   "gameYouWon": "Hai vinto!",
+  "gameYouWonShort": "Hai vinto",
   "gameYouLost": "Hai perso",
   "gameYouWonOpponentLeft": "Hai vinto — l’avversario ha lasciato",
   "gameYouWonOpponentTimeout": "Hai vinto — all’avversario è scaduto il tempo",

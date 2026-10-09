@@ -73,6 +73,28 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
       OfflineCheckersRegistry.instance.isOffline(widget.gameId);
 
   @override
+  void didUpdateWidget(covariant CheckersGameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId == widget.gameId) return;
+    _rematchPollTimer?.cancel();
+    _history.clear();
+    _reviewIndex = null;
+    _selected = null;
+    _flipOverride = null;
+    _busy = false;
+    _turnAction.release();
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchDeclined = false;
+      _iDeclinedRematch = false;
+      _isRematching = false;
+      _isAcceptingRematch = false;
+      _isFindingGame = false;
+    });
+    ref.invalidate(checkersGameProvider(widget.gameId));
+  }
+
+  @override
   void initState() {
     super.initState();
     _realtimeSubscription = ref.listenManual(
@@ -283,12 +305,6 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
         return l10n.gameYouWon;
       }
       return l10n.gameYouLost;
-    }
-    final me = ref.read(authStateProvider).valueOrNull?.id;
-    final offer = game.drawOfferBy;
-    if (offer != null && offer.isNotEmpty) {
-      if (offer == me) return l10n.gameDrawOffered;
-      return l10n.gameAcceptDrawTitle;
     }
     return game.isMyTurn ? l10n.gamesMyTurn : l10n.gamesOpponentTurn;
   }
@@ -792,6 +808,12 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
                 ? _buildLandscape(server, display, me, myTurn)
                 : _buildPortrait(server, display, me, myTurn),
           ),
+          if (server.isOver && server.iWon)
+            Positioned.fill(
+              child: GameConfettiOverlay(
+                key: ValueKey('checkers-confetti-${widget.gameId}'),
+              ),
+            ),
           MyTurnAlert.stackLeaf(isMyTurn: myTurn),
         ],
       ),

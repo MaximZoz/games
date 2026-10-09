@@ -1468,6 +1468,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get gameYouWon => 'Anda menang!';
 
   @override
+  String get gameYouWonShort => 'Anda menang';
+
+  @override
   String get gameYouLost => 'Anda kalah';
 
   @override

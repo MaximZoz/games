@@ -1468,6 +1468,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameYouWon => 'Bạn thắng!';
 
   @override
+  String get gameYouWonShort => 'Bạn thắng';
+
+  @override
   String get gameYouLost => 'Bạn thua';
 
   @override

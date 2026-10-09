@@ -762,6 +762,7 @@
   "gameOpponent": "Соперник",
   "gameYou": "Вы",
   "gameYouWon": "Вы победили!",
+  "gameYouWonShort": "Вы выиграли",
   "gameYouLost": "Вы проиграли",
   "gameYouWonOpponentLeft": "Вы победили, соперник вышел",
   "gameYouWonOpponentTimeout": "Вы победили, время соперника вышло",

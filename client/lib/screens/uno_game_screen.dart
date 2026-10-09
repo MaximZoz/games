@@ -104,6 +104,29 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
   bool get _isOffline => OfflineUnoRegistry.instance.isOffline(widget.gameId);
 
   @override
+  void didUpdateWidget(covariant UnoGameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId == widget.gameId) return;
+    _rematchPollTimer?.cancel();
+    _optimisticTopId = null;
+    _discardOverride = null;
+    _localPlayedIds.clear();
+    _hiddenHandIds.clear();
+    _pendingDrawnIds.clear();
+    _pendingOppDraw.clear();
+    _roundOverlayDismissed = false;
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchDeclined = false;
+      _iDeclinedRematch = false;
+      _isRematching = false;
+      _isAcceptingRematch = false;
+      _isFindingGame = false;
+    });
+    ref.invalidate(unoGameProvider(widget.gameId));
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_bindingsInitialized) return;

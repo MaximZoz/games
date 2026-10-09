@@ -560,6 +560,7 @@
   "gameOpponent": "Қарсылас",
   "gameYou": "Сіз",
   "gameYouWon": "Сіз жеңдіңіз!",
+  "gameYouWonShort": "Сіз жеңдіңіз",
   "gameYouLost": "Сіз жеңілдіңіз",
   "gameYouWonOpponentLeft": "Сіз жеңдіңіз — қарсылас шығып кетті",
   "gameYouWonOpponentTimeout": "Сіз жеңдіңіз — қарсыластың уақыты бітті",

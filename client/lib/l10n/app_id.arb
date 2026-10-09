@@ -560,6 +560,7 @@
   "gameOpponent": "Lawan",
   "gameYou": "Anda",
   "gameYouWon": "Anda menang!",
+  "gameYouWonShort": "Anda menang",
   "gameYouLost": "Anda kalah",
   "gameYouWonOpponentLeft": "Anda menang — lawan keluar",
   "gameYouWonOpponentTimeout": "Anda menang — lawan kehabisan waktu",

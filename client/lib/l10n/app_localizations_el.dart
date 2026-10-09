@@ -1468,6 +1468,9 @@ class AppLocalizationsEl extends AppLocalizations {
   String get gameYouWon => 'Κερδίσατε!';
 
   @override
+  String get gameYouWonShort => 'Κερδίσατε';
+
+  @override
   String get gameYouLost => 'Χάσατε';
 
   @override

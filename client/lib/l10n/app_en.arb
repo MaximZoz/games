@@ -609,6 +609,7 @@
   "gameOpponent": "Opponent",
   "gameYou": "You",
   "gameYouWon": "You won!",
+  "gameYouWonShort": "You won",
   "gameYouLost": "You lost",
   "gameYouWonOpponentLeft": "You won — opponent left",
   "gameYouWonOpponentTimeout": "You won — opponent ran out of time",

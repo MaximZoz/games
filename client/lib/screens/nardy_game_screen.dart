@@ -74,6 +74,28 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   bool get _isOffline => OfflineNardyRegistry.instance.isOffline(widget.gameId);
 
   @override
+  void didUpdateWidget(covariant NardyGameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId == widget.gameId) return;
+    _rematchPollTimer?.cancel();
+    _selectedTrack = null;
+    _optimisticGame = null;
+    _autoRollKey = '';
+    _autoEndKey = '';
+    _busy = false;
+    _turnAction.release();
+    setState(() {
+      _rematchLobbyId = null;
+      _rematchDeclined = false;
+      _iDeclinedRematch = false;
+      _isRematching = false;
+      _isAcceptingRematch = false;
+      _isFindingGame = false;
+    });
+    ref.invalidate(nardyGameProvider(widget.gameId));
+  }
+
+  @override
   void initState() {
     super.initState();
     _realtimeSubscription = ref.listenManual(
@@ -949,6 +971,12 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
               ? _buildLandscape(game, me, myTurn)
               : _buildPortrait(game, me, myTurn),
         ),
+        if (game.isOver && game.iWon)
+          Positioned.fill(
+            child: GameConfettiOverlay(
+              key: ValueKey('nardy-confetti-${widget.gameId}'),
+            ),
+          ),
         MyTurnAlert.stackLeaf(isMyTurn: myTurn),
       ],
     );

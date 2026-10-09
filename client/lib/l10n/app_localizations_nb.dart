@@ -1468,6 +1468,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gameYouWon => 'Du vant!';
 
   @override
+  String get gameYouWonShort => 'Du vant';
+
+  @override
   String get gameYouLost => 'Du tapte';
 
   @override

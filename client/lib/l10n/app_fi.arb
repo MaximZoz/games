@@ -560,6 +560,7 @@
   "gameOpponent": "Vastustaja",
   "gameYou": "Sinä",
   "gameYouWon": "Voitit!",
+  "gameYouWonShort": "Voitit",
   "gameYouLost": "Hävisit",
   "gameYouWonOpponentLeft": "Voitit — vastustaja lähti",
   "gameYouWonOpponentTimeout": "Voitit — vastustajan aika loppui",

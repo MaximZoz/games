@@ -1697,9 +1697,10 @@ int clockDisplayedSec(int ms) {
   return (ms / 1000).ceil();
 }
 
-/// Щелчок часов: первый кадр хода только запоминает секунду,
-/// дальше звук на каждой смене показанной секунды. Скачок на несколько
-/// секунд — один щелчок, без очереди.
+/// Щелчок часов. Без [playOnArm] первый кадр только запоминает секунду.
+/// Дальше звук на каждой смене показанной секунды. Скачок на несколько
+/// секунд — один щелчок, без очереди. [playOnArm] щёлкает сразу, когда
+/// часы начали идти.
 @visibleForTesting
 class GameClockTick {
   const GameClockTick({required this.play, required this.sec});
@@ -1714,11 +1715,15 @@ GameClockTick nextGameClockTick({
   required bool running,
   required int displayedSec,
   required int? lastSec,
+  bool playOnArm = false,
 }) {
   if (!enabled || !running) {
     return const GameClockTick(play: false, sec: null);
   }
-  if (lastSec == null || lastSec == displayedSec) {
+  if (lastSec == null) {
+    return GameClockTick(play: playOnArm, sec: displayedSec);
+  }
+  if (lastSec == displayedSec) {
     return GameClockTick(play: false, sec: displayedSec);
   }
   return GameClockTick(play: true, sec: displayedSec);
@@ -1750,6 +1755,7 @@ class GameClock extends StatefulWidget {
     this.compact = false,
     this.prominent = false,
     this.tickSound = false,
+    this.tickOnStart = false,
   });
 
   /// Остаток времени на момент снимка сервера, мс.
@@ -1767,8 +1773,11 @@ class GameClock extends StatefulWidget {
   /// Пока [running], цифры красные — это ход владельца часов.
   final bool prominent;
 
-  /// Щелчок раз в секунду, пока [running]. Для блица на своём ходе.
+  /// Щелчок раз в секунду, пока [running].
   final bool tickSound;
+
+  /// Щелчок сразу, когда часы начали идти, не дожидаясь смены секунды.
+  final bool tickOnStart;
 
   /// Подмена прошедшего времени в widget-тестах: [Stopwatch] там идёт
   /// в реальном времени и не совпадает с `tester.pump`.
@@ -1818,6 +1827,7 @@ class _GameClockState extends State<GameClock> {
       running: widget.running,
       displayedSec: clockDisplayedSec(_currentMs),
       lastSec: _lastTickSec,
+      playOnArm: widget.tickOnStart,
     );
     _lastTickSec = decision.sec;
     if (!decision.play) return;
@@ -1984,14 +1994,17 @@ class GameReviewBar extends StatelessWidget {
       VoidCallback? onTap,
       String? tip, {
       required bool highlighted,
+      double width = 32,
+      double iconSize = 22,
     }) {
       final color = onTap == null
           ? Colors.black38
           : (highlighted ? AppColors.accentStart : AppColors.textPrimary);
       return IconButton(
         padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 32, height: 36),
-        iconSize: 22,
+        visualDensity: VisualDensity.compact,
+        constraints: BoxConstraints.tightFor(width: width, height: 36),
+        iconSize: iconSize,
         icon: Icon(icon, color: color),
         color: color,
         disabledColor: Colors.black38,
@@ -2011,24 +2024,32 @@ class GameReviewBar extends StatelessWidget {
             onFirst,
             context.l10n.gameReviewStart,
             highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
           ),
           btn(
             Icons.chevron_left_rounded,
             onPrev,
             context.l10n.gameReviewPrev,
             highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
           ),
           btn(
             Icons.chevron_right_rounded,
             onNext,
             context.l10n.gameReviewNext,
             highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
           ),
           btn(
             Icons.last_page_rounded,
             onLast,
             context.l10n.gameReviewEnd,
             highlighted: reviewing,
+            width: 24,
+            iconSize: 20,
           ),
         ],
       ],

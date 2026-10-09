@@ -560,6 +560,7 @@
   "gameOpponent": "Супернік",
   "gameYou": "Вы",
   "gameYouWon": "Вы перамаглі!",
+  "gameYouWonShort": "Вы выйгралі",
   "gameYouLost": "Вы прайгралі",
   "gameYouWonOpponentLeft": "Вы перамаглі — супернік выйшаў",
   "gameYouWonOpponentTimeout": "Вы перамаглі — у суперніка скончыўся час",
