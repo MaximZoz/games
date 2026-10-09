@@ -760,42 +760,54 @@ class _LanguagePickerSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-                  child: Row(
+                ColoredBox(
+                  color: AppColors.surfaceCard,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          l10n.settingsLanguage,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.settingsLanguage,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                              ),
+                            ),
+                            GamepadFocusBlock(
+                              radius: 20,
+                              shape: GamepadHighlightShape.circle,
+                              includeInEdgeFocus: false,
+                              onActivate: () => _close(context),
+                              child: IconButton(
+                                key: const ValueKey('settings-language-close'),
+                                tooltip: l10n.commonClose,
+                                onPressed: () => _close(context),
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      GamepadFocusBlock(
-                        radius: 20,
-                        shape: GamepadHighlightShape.circle,
-                        includeInEdgeFocus: false,
-                        onActivate: () => _close(context),
-                        child: IconButton(
-                          key: const ValueKey('settings-language-close'),
-                          tooltip: l10n.commonClose,
-                          onPressed: () => _close(context),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                      ),
+                      const Divider(height: 1, color: AppColors.accentSoft),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: AppColors.accentSoft),
                 Expanded(
                   child: GamepadScrollPager(
                     builder: (context, controller) {
                       return ListView(
+                        key: const ValueKey('settings-language-list'),
                         controller: controller,
-                        clipBehavior: Clip.none,
+                        clipBehavior: Clip.hardEdge,
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           _langTile(
                             key: const ValueKey('lang-system'),

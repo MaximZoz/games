@@ -10,6 +10,7 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/gamepad/gamepad_ui.dart';
 import 'package:multigames_client/l10n/l10n.dart';
 import 'package:multigames_client/screens/settings_screen.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -191,6 +192,191 @@ void main() {
       ),
       isFalse,
     );
+    final focused = FocusManager.instance.primaryFocus;
+    expect(focused?.debugLabel, 'GamepadFocusBlock');
+    expect(
+      GamepadFocusBlock.maybeOf(focused!.context!)?.includeInEdgeFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('шапка языка непрозрачная, список не рисуется поверх',
+      (tester) async {
+    await _pumpSettings(tester);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    _pad(tester, GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    final list = tester.widget<ListView>(
+      find.byKey(const ValueKey('settings-language-list')),
+    );
+    expect(list.clipBehavior, Clip.hardEdge);
+    expect(
+      tester
+          .widget<ColoredBox>(
+            find
+                .ancestor(
+                  of: find.byKey(const ValueKey('settings-language-close')),
+                  matching: find.byType(ColoredBox),
+                )
+                .first,
+          )
+          .color,
+      AppColors.surfaceCard,
+    );
+  });
+
+  testWidgets('правый стик в языке не листает настройки за шитом',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 420);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpSettings(tester);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    _pad(tester, GamepadAction.confirm);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('lang-system')), findsOneWidget);
+
+    final settingsScrollable = find.descendant(
+      of: find.byType(SettingsScreen),
+      matching: find.byType(Scrollable),
+    );
+    final settingsBefore =
+        tester.state<ScrollableState>(settingsScrollable.first).position.pixels;
+    final langBefore = tester
+        .state<ScrollableState>(
+          find.descendant(
+            of: find.byKey(const ValueKey('settings-language-list')),
+            matching: find.byType(Scrollable),
+          ),
+        )
+        .position
+        .pixels;
+
+    scrollGamepadByPage(
+      1,
+      context: tester.element(find.byKey(const ValueKey('lang-system'))),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 280));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.pump();
+
+    expect(
+      tester.state<ScrollableState>(settingsScrollable.first).position.pixels,
+      settingsBefore,
+    );
+    expect(
+      tester
+          .state<ScrollableState>(
+            find.descendant(
+              of: find.byKey(const ValueKey('settings-language-list')),
+              matching: find.byType(Scrollable),
+            ),
+          )
+          .position
+          .pixels,
+      greaterThan(langBefore),
+    );
+  });
+
+  testWidgets('B с чекбокса возвращает рамку на карточку', (tester) async {
+    await _pumpSettings(tester);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    _pad(tester, GamepadAction.down);
+    await tester.pump();
+    _pad(tester, GamepadAction.right);
+    await tester.pump();
+    _pad(tester, GamepadAction.right);
+    await tester.pump();
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-games')),
+          matching: find.byType(Checkbox),
+        ),
+      ),
+      isTrue,
+    );
+    _pad(tester, GamepadAction.cancel);
+    await tester.pump();
+    expect(_blockFocused(tester, find.text('Звук')), isTrue);
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-games')),
+          matching: find.byType(Checkbox),
+        ),
+      ),
+      isFalse,
+    );
+  });
+
+  testWidgets('правый стик вправо с карточки звука — на чекбокс',
+      (tester) async {
+    await _pumpSettings(tester);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    _pad(tester, GamepadAction.down);
+    await tester.pump();
+    _pad(tester, GamepadAction.scrollRight);
+    await tester.pump();
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-switch')),
+          matching: find.byType(Switch),
+        ),
+      ),
+      isTrue,
+    );
+    _pad(tester, GamepadAction.scrollRight);
+    await tester.pump();
+    expect(
+      _blockFocused(
+        tester,
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-sound-games')),
+          matching: find.byType(Checkbox),
+        ),
+      ),
+      isTrue,
+    );
+  });
+
+  testWidgets(
+      'у края настроек правый стик оставляет фокус на первом или последнем',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpSettings(tester);
+    expect(focusFirstVisibleGamepadTarget(), isTrue);
+    await tester.pump();
+    expect(_blockFocused(tester, find.text('Язык')), isTrue);
+    scrollGamepadByPage(-1, context: tester.element(find.text('Язык')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(_blockFocused(tester, find.text('Язык')), isTrue);
+
+    for (var i = 0; i < 6; i++) {
+      scrollGamepadByPage(1, context: tester.element(find.text('Язык')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 280));
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(_blockFocused(tester, find.text('Язык')), isFalse);
     final focused = FocusManager.instance.primaryFocus;
     expect(focused?.debugLabel, 'GamepadFocusBlock');
     expect(

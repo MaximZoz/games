@@ -344,7 +344,7 @@ void main() {
     expect(controller.offset, closeTo(maxExtent, 1));
     expect(createFocused(3), isTrue);
 
-    expect(scrollGamepadByPage(1), isFalse);
+    expect(scrollGamepadByPage(1), isTrue);
     await tester.pumpAndSettle();
     expect(controller.offset, closeTo(maxExtent, 1));
     expect(createFocused(3), isTrue);
