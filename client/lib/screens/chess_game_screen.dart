@@ -1006,10 +1006,12 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
   Widget? _clock(ChessGameView game, int seat) {
     if (!game.hasClock || seat < 0) return null;
+    final mine = seat == game.myIndex;
     return GameClock(
       remainingMs: _clockMsFor(game, seat),
       running: !game.isOver && game.clockRunning == seat,
       prominent: true,
+      tickSound: mine && chessBlitzClockAudible(game.gameMode),
     );
   }
 

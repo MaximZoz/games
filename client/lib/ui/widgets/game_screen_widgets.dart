@@ -1690,11 +1690,45 @@ class _DrawOfferButtonState extends State<DrawOfferButton>
   }
 }
 
+/// Секунда, которую показывают часы (округление вверх, как [formatClockMs]).
+@visibleForTesting
+int clockDisplayedSec(int ms) {
+  if (ms < 0) ms = 0;
+  return (ms / 1000).ceil();
+}
+
+/// Щелчок часов: первый кадр хода только запоминает секунду,
+/// дальше звук на каждой смене показанной секунды. Скачок на несколько
+/// секунд — один щелчок, без очереди.
+@visibleForTesting
+class GameClockTick {
+  const GameClockTick({required this.play, required this.sec});
+
+  final bool play;
+  final int? sec;
+}
+
+@visibleForTesting
+GameClockTick nextGameClockTick({
+  required bool enabled,
+  required bool running,
+  required int displayedSec,
+  required int? lastSec,
+}) {
+  if (!enabled || !running) {
+    return const GameClockTick(play: false, sec: null);
+  }
+  if (lastSec == null || lastSec == displayedSec) {
+    return GameClockTick(play: false, sec: displayedSec);
+  }
+  return GameClockTick(play: true, sec: displayedSec);
+}
+
 /// Форматирует остаток времени в `MM:SS` (60:00, 17:14).
 /// Часы появляются только от 100 минут: `1:40:00`.
 String formatClockMs(int ms) {
   if (ms < 0) ms = 0;
-  final totalSec = (ms / 1000).ceil();
+  final totalSec = clockDisplayedSec(ms);
   final h = totalSec ~/ 3600;
   final m = (totalSec % 3600) ~/ 60;
   final s = totalSec % 60;
@@ -1715,6 +1749,7 @@ class GameClock extends StatefulWidget {
     this.label,
     this.compact = false,
     this.prominent = false,
+    this.tickSound = false,
   });
 
   /// Остаток времени на момент снимка сервера, мс.
@@ -1731,6 +1766,18 @@ class GameClock extends StatefulWidget {
   /// Крупная плашка у края доски (как на lichess): большие цифры, без подписи.
   final bool prominent;
 
+  /// Щелчок раз в секунду, пока [running]. Для блица на своём ходе.
+  final bool tickSound;
+
+  /// Подмена прошедшего времени в widget-тестах: [Stopwatch] там идёт
+  /// в реальном времени и не совпадает с `tester.pump`.
+  @visibleForTesting
+  static int Function()? debugElapsedMs;
+
+  /// Вместо [Sfx.play] в тестах.
+  @visibleForTesting
+  static void Function()? debugOnTick;
+
   @override
   State<GameClock> createState() => _GameClockState();
 }
@@ -1738,6 +1785,7 @@ class GameClock extends StatefulWidget {
 class _GameClockState extends State<GameClock> {
   final Stopwatch _sw = Stopwatch();
   int _baseMs = 0;
+  int? _lastTickSec;
   Timer? _timer;
 
   @override
@@ -1746,8 +1794,9 @@ class _GameClockState extends State<GameClock> {
     _reset();
   }
 
-  void _reset() {
+  void _reset({bool keepTickArm = false}) {
     _baseMs = widget.remainingMs;
+    if (!keepTickArm) _lastTickSec = null;
     _sw
       ..reset()
       ..stop();
@@ -1755,17 +1804,41 @@ class _GameClockState extends State<GameClock> {
     if (widget.running) {
       _sw.start();
       _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        _emitTick();
         if (mounted) setState(() {});
       });
     }
   }
 
+  void _emitTick() {
+    if (!widget.tickSound) return;
+    final decision = nextGameClockTick(
+      enabled: true,
+      running: widget.running,
+      displayedSec: clockDisplayedSec(_currentMs),
+      lastSec: _lastTickSec,
+    );
+    _lastTickSec = decision.sec;
+    if (!decision.play) return;
+    final hook = GameClock.debugOnTick;
+    if (hook != null) {
+      hook();
+      return;
+    }
+    Sfx.play(SfxId.tick);
+  }
+
   @override
   void didUpdateWidget(covariant GameClock oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final stillTicking = widget.running &&
+        widget.tickSound &&
+        oldWidget.running == widget.running &&
+        oldWidget.tickSound == widget.tickSound;
     if (oldWidget.remainingMs != widget.remainingMs ||
-        oldWidget.running != widget.running) {
-      _reset();
+        oldWidget.running != widget.running ||
+        oldWidget.tickSound != widget.tickSound) {
+      _reset(keepTickArm: stillTicking);
     }
   }
 
@@ -1775,8 +1848,11 @@ class _GameClockState extends State<GameClock> {
     super.dispose();
   }
 
+  int get _elapsedMs =>
+      GameClock.debugElapsedMs?.call() ?? _sw.elapsedMilliseconds;
+
   int get _currentMs {
-    final ms = widget.running ? _baseMs - _sw.elapsedMilliseconds : _baseMs;
+    final ms = widget.running ? _baseMs - _elapsedMs : _baseMs;
     return ms < 0 ? 0 : ms;
   }
 

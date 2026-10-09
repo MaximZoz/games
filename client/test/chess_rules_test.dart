@@ -29,6 +29,12 @@ void main() {
     expect(chessClockNotation(chessModeRapid), '10+0');
     expect(chessClockNotation(chessModeBlitz), '5+0');
     expect(chessClockNotation(chessModeBullet), '3+2');
+    expect(chessBlitzClockAudible(chessModeBlitz), isTrue);
+    expect(chessBlitzClockAudible('BLITZ'), isFalse);
+    expect(chessBlitzClockAudible(chessModeRapid), isFalse);
+    expect(chessBlitzClockAudible(chessModeBullet), isFalse);
+    expect(chessBlitzClockAudible(chessModeClassic), isFalse);
+    expect(chessBlitzClockAudible(null), isFalse);
     expect(t.gamesChess, 'Шахматы');
     expect(t.gamesChessModeRapid, 'Рапид');
     expect(t.gamesChessModeBlitz, 'Блиц');
