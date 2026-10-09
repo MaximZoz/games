@@ -1690,11 +1690,45 @@ class _DrawOfferButtonState extends State<DrawOfferButton>
   }
 }
 
+/// Секунда, которую показывают часы (округление вверх, как [formatClockMs]).
+@visibleForTesting
+int clockDisplayedSec(int ms) {
+  if (ms < 0) ms = 0;
+  return (ms / 1000).ceil();
+}
+
+/// Щелчок часов: первый кадр хода только запоминает секунду,
+/// дальше звук на каждой смене показанной секунды. Скачок на несколько
+/// секунд — один щелчок, без очереди.
+@visibleForTesting
+class GameClockTick {
+  const GameClockTick({required this.play, required this.sec});
+
+  final bool play;
+  final int? sec;
+}
+
+@visibleForTesting
+GameClockTick nextGameClockTick({
+  required bool enabled,
+  required bool running,
+  required int displayedSec,
+  required int? lastSec,
+}) {
+  if (!enabled || !running) {
+    return const GameClockTick(play: false, sec: null);
+  }
+  if (lastSec == null || lastSec == displayedSec) {
+    return GameClockTick(play: false, sec: displayedSec);
+  }
+  return GameClockTick(play: true, sec: displayedSec);
+}
+
 /// Форматирует остаток времени в `MM:SS` (60:00, 17:14).
 /// Часы появляются только от 100 минут: `1:40:00`.
 String formatClockMs(int ms) {
   if (ms < 0) ms = 0;
-  final totalSec = (ms / 1000).ceil();
+  final totalSec = clockDisplayedSec(ms);
   final h = totalSec ~/ 3600;
   final m = (totalSec % 3600) ~/ 60;
   final s = totalSec % 60;
@@ -1715,6 +1749,7 @@ class GameClock extends StatefulWidget {
     this.label,
     this.compact = false,
     this.prominent = false,
+    this.tickSound = false,
   });
 
   /// Остаток времени на момент снимка сервера, мс.
@@ -1729,7 +1764,20 @@ class GameClock extends StatefulWidget {
   final bool compact;
 
   /// Крупная плашка у края доски (как на lichess): большие цифры, без подписи.
+  /// Пока [running], цифры красные — это ход владельца часов.
   final bool prominent;
+
+  /// Щелчок раз в секунду, пока [running]. Для блица на своём ходе.
+  final bool tickSound;
+
+  /// Подмена прошедшего времени в widget-тестах: [Stopwatch] там идёт
+  /// в реальном времени и не совпадает с `tester.pump`.
+  @visibleForTesting
+  static int Function()? debugElapsedMs;
+
+  /// Вместо [Sfx.play] в тестах.
+  @visibleForTesting
+  static void Function()? debugOnTick;
 
   @override
   State<GameClock> createState() => _GameClockState();
@@ -1738,6 +1786,7 @@ class GameClock extends StatefulWidget {
 class _GameClockState extends State<GameClock> {
   final Stopwatch _sw = Stopwatch();
   int _baseMs = 0;
+  int? _lastTickSec;
   Timer? _timer;
 
   @override
@@ -1746,8 +1795,9 @@ class _GameClockState extends State<GameClock> {
     _reset();
   }
 
-  void _reset() {
+  void _reset({bool keepTickArm = false}) {
     _baseMs = widget.remainingMs;
+    if (!keepTickArm) _lastTickSec = null;
     _sw
       ..reset()
       ..stop();
@@ -1755,17 +1805,41 @@ class _GameClockState extends State<GameClock> {
     if (widget.running) {
       _sw.start();
       _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        _emitTick();
         if (mounted) setState(() {});
       });
     }
   }
 
+  void _emitTick() {
+    if (!widget.tickSound) return;
+    final decision = nextGameClockTick(
+      enabled: true,
+      running: widget.running,
+      displayedSec: clockDisplayedSec(_currentMs),
+      lastSec: _lastTickSec,
+    );
+    _lastTickSec = decision.sec;
+    if (!decision.play) return;
+    final hook = GameClock.debugOnTick;
+    if (hook != null) {
+      hook();
+      return;
+    }
+    Sfx.play(SfxId.tick);
+  }
+
   @override
   void didUpdateWidget(covariant GameClock oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final stillTicking = widget.running &&
+        widget.tickSound &&
+        oldWidget.running == widget.running &&
+        oldWidget.tickSound == widget.tickSound;
     if (oldWidget.remainingMs != widget.remainingMs ||
-        oldWidget.running != widget.running) {
-      _reset();
+        oldWidget.running != widget.running ||
+        oldWidget.tickSound != widget.tickSound) {
+      _reset(keepTickArm: stillTicking);
     }
   }
 
@@ -1775,8 +1849,11 @@ class _GameClockState extends State<GameClock> {
     super.dispose();
   }
 
+  int get _elapsedMs =>
+      GameClock.debugElapsedMs?.call() ?? _sw.elapsedMilliseconds;
+
   int get _currentMs {
-    final ms = widget.running ? _baseMs - _sw.elapsedMilliseconds : _baseMs;
+    final ms = widget.running ? _baseMs - _elapsedMs : _baseMs;
     return ms < 0 ? 0 : ms;
   }
 
@@ -1835,9 +1912,10 @@ class _GameClockState extends State<GameClock> {
   }
 
   /// Часы у края доски: та же системная рамка, что у кнопок. Без чёрной заливки
-  /// и без толстой акцентной обводки. Цейтнот — красные цифры и рамка.
+  /// и без толстой акцентной обводки. Цифры красные, пока идут эти часы.
+  /// Цейтнот дополнительно красит рамку.
   Widget _prominentBox(int ms, bool low) {
-    final fg = low ? const Color(0xFFE53935) : AppColors.textPrimary;
+    final fg = widget.running ? const Color(0xFFE53935) : AppColors.textPrimary;
     final border = low ? const Color(0xFFE53935) : AppColors.buttonBorder;
     return Container(
       constraints: const BoxConstraints(minWidth: 64, minHeight: 36),
@@ -1877,6 +1955,7 @@ class GameReviewBar extends StatelessWidget {
     this.onNext,
     this.onLast,
     this.reviewing = false,
+    this.flipped = false,
     this.showNavigation = true,
   });
 
@@ -1888,34 +1967,69 @@ class GameReviewBar extends StatelessWidget {
   final VoidCallback? onNext;
   final VoidCallback? onLast;
 
-  /// Сейчас смотрим не последнюю позицию — подсвечиваем панель.
+  /// Сейчас смотрим не последнюю позицию — фиолетовые только стрелки.
   final bool reviewing;
+
+  /// Доска перевёрнута относительно вида по умолчанию — фиолетовая кнопка вида.
+  /// Перемотка ходов это не включает.
+  final bool flipped;
 
   /// Показывать стрелки перемотки (для игр с историей ходов).
   final bool showNavigation;
 
   @override
   Widget build(BuildContext context) {
-    final liveColor = reviewing ? AppColors.accentStart : AppColors.textPrimary;
-    Widget btn(IconData icon, VoidCallback? onTap, String? tip) => IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 36),
-          iconSize: 22,
-          icon: Icon(icon),
-          color: onTap == null ? Colors.black38 : liveColor,
-          disabledColor: Colors.black38,
-          tooltip: tip,
-          onPressed: onTap,
-        );
+    Widget btn(
+      IconData icon,
+      VoidCallback? onTap,
+      String? tip, {
+      required bool highlighted,
+    }) {
+      final color = onTap == null
+          ? Colors.black38
+          : (highlighted ? AppColors.accentStart : AppColors.textPrimary);
+      return IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 36),
+        iconSize: 22,
+        icon: Icon(icon, color: color),
+        color: color,
+        disabledColor: Colors.black38,
+        tooltip: tip,
+        onPressed: onTap,
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (onFlip != null) btn(Icons.cached_rounded, onFlip, flipTooltip),
+        if (onFlip != null)
+          btn(Icons.cached_rounded, onFlip, flipTooltip, highlighted: flipped),
         if (showNavigation) ...[
-          btn(Icons.first_page_rounded, onFirst, context.l10n.gameReviewStart),
-          btn(Icons.chevron_left_rounded, onPrev, context.l10n.gameReviewPrev),
-          btn(Icons.chevron_right_rounded, onNext, context.l10n.gameReviewNext),
-          btn(Icons.last_page_rounded, onLast, context.l10n.gameReviewEnd),
+          btn(
+            Icons.first_page_rounded,
+            onFirst,
+            context.l10n.gameReviewStart,
+            highlighted: reviewing,
+          ),
+          btn(
+            Icons.chevron_left_rounded,
+            onPrev,
+            context.l10n.gameReviewPrev,
+            highlighted: reviewing,
+          ),
+          btn(
+            Icons.chevron_right_rounded,
+            onNext,
+            context.l10n.gameReviewNext,
+            highlighted: reviewing,
+          ),
+          btn(
+            Icons.last_page_rounded,
+            onLast,
+            context.l10n.gameReviewEnd,
+            highlighted: reviewing,
+          ),
         ],
       ],
     );
@@ -1963,15 +2077,49 @@ Future<bool> confirmSurrenderDialog(BuildContext context) {
 }
 
 /// Подтверждение ничьей: [accept] — принять предложение соперника.
-Future<bool> confirmDrawDialog(BuildContext context, {bool accept = false}) {
+///
+/// «Предложить ничью» и «Отмена» всегда в одну линию, с зазором между ними.
+Future<bool> confirmDrawDialog(BuildContext context, {bool accept = false}) async {
   final l10n = context.l10n;
-  return confirmGameActionDialog(
+  final ok = await showDialog<bool>(
     context: context,
-    title: accept ? l10n.gameAcceptDrawTitle : l10n.gameOfferDrawTitle,
-    message: accept ? l10n.gameAcceptDrawConfirm : l10n.gameOfferDrawConfirm,
-    cancelLabel: l10n.commonCancel,
-    confirmLabel: accept ? l10n.gameDraw : l10n.gameOfferDraw,
+    builder: (ctx) {
+      Widget action(String label, bool value) => FramedButton(
+            onPressed: () => Navigator.of(ctx).pop(value),
+            label: label,
+            expanded: true,
+            minHeight: 40,
+            fontSize: 13,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          );
+      return AlertDialog(
+        title: Text(accept ? l10n.gameAcceptDrawTitle : l10n.gameOfferDrawTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              accept ? l10n.gameAcceptDrawConfirm : l10n.gameOfferDrawConfirm,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: action(l10n.commonCancel, false)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: action(
+                    accept ? l10n.gameDraw : l10n.gameOfferDraw,
+                    true,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
   );
+  return ok == true;
 }
 
 /// Крестик / свайп «назад» на экране партии — общая логика для всех игр.

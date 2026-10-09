@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multigames_client/ui/app_theme.dart';
 import 'package:multigames_client/ui/widgets/game_screen_widgets.dart';
 
 void main() {
@@ -36,6 +37,18 @@ void main() {
     expect(find.text('60:00'), findsOneWidget);
     final text = tester.widget<Text>(find.text('60:00'));
     expect(text.style?.fontSize, 20);
+    expect(text.style?.color, AppColors.textPrimary);
+  });
+
+  testWidgets('prominent: цифры красные, пока идут часы', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: GameClock(remainingMs: 300000, running: true, prominent: true),
+      ),
+    ));
+    final text = tester.widget<Text>(find.text('5:00'));
+    expect(text.style?.color, const Color(0xFFE53935));
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('GameClock активного игрока показывает идущее время',
@@ -49,5 +62,118 @@ void main() {
     expect(find.text('3:05'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(GameClock), findsOneWidget);
+  });
+
+  test('nextGameClockTick — щелчок только на смене секунды', () {
+    expect(
+      nextGameClockTick(
+        enabled: false,
+        running: true,
+        displayedSec: 9,
+        lastSec: 10,
+      ).play,
+      isFalse,
+    );
+    expect(
+      nextGameClockTick(
+        enabled: true,
+        running: false,
+        displayedSec: 9,
+        lastSec: 10,
+      ).sec,
+      isNull,
+    );
+    final armed = nextGameClockTick(
+      enabled: true,
+      running: true,
+      displayedSec: 300,
+      lastSec: null,
+    );
+    expect(armed.play, isFalse);
+    expect(armed.sec, 300);
+    final same = nextGameClockTick(
+      enabled: true,
+      running: true,
+      displayedSec: 300,
+      lastSec: armed.sec,
+    );
+    expect(same.play, isFalse);
+    final next = nextGameClockTick(
+      enabled: true,
+      running: true,
+      displayedSec: 299,
+      lastSec: same.sec,
+    );
+    expect(next.play, isTrue);
+    expect(next.sec, 299);
+    final jumped = nextGameClockTick(
+      enabled: true,
+      running: true,
+      displayedSec: 290,
+      lastSec: next.sec,
+    );
+    expect(jumped.play, isTrue);
+    expect(jumped.sec, 290);
+    expect(clockDisplayedSec(4200), 5);
+    expect(clockDisplayedSec(4000), 4);
+  });
+
+  testWidgets('tickSound щёлкает раз в показанную секунду и замолкает',
+      (tester) async {
+    var ticks = 0;
+    var elapsed = 0;
+    GameClock.debugOnTick = () => ticks++;
+    GameClock.debugElapsedMs = () => elapsed;
+    addTearDown(() {
+      GameClock.debugOnTick = null;
+      GameClock.debugElapsedMs = null;
+    });
+
+    var running = true;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                GameClock(
+                  remainingMs: 10000,
+                  running: running,
+                  tickSound: true,
+                  prominent: true,
+                ),
+                TextButton(
+                  onPressed: () => setState(() => running = false),
+                  child: const Text('stop'),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(ticks, 0);
+    elapsed = 1000;
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(ticks, 1);
+    expect(find.text('0:09'), findsOneWidget);
+    elapsed = 2000;
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(ticks, 2);
+    await tester.tap(find.text('stop'));
+    await tester.pump();
+    elapsed = 5000;
+    await tester.pump(const Duration(seconds: 2));
+    expect(ticks, 2);
+
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: GameClock(remainingMs: 10000, running: true, prominent: true),
+      ),
+    ));
+    elapsed = 3000;
+    await tester.pump(const Duration(seconds: 1));
+    expect(ticks, 2);
   });
 }

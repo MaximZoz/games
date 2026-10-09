@@ -79,6 +79,11 @@ String chessClockNotation(String mode) {
   }
 }
 
+/// Щелчки часов — только в блице. Звук включается отдельно, пока идут
+/// часы самого игрока.
+bool chessBlitzClockAudible(String? mode) =>
+    chessNormalizeMode(mode) == chessModeBlitz;
+
 /// База и прибавка на ход, мс. classic 60+0, rapid 10+0, blitz 5+0, bullet 3+2.
 (int, int) chessClockBudgetMs(String? mode) {
   switch (chessNormalizeMode(mode)) {
