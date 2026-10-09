@@ -1843,63 +1843,38 @@ class GameReviewBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = reviewing ? AppColors.accentStart : Colors.white70;
     Widget btn(IconData icon, VoidCallback? onTap, String? tip) => IconButton(
           padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          iconSize: 22,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          iconSize: 28,
           icon: Icon(icon),
           color: Colors.white,
-          disabledColor: Colors.white24,
+          disabledColor: Colors.white38,
           tooltip: tip,
           onPressed: onTap,
         );
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: reviewing ? 0.12 : 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: reviewing
-              ? AppColors.accentStart.withValues(alpha: 0.6)
-              : Colors.white12,
-        ),
+        color: const Color(0xFF2C3138),
+        borderRadius: BorderRadius.circular(8),
+        border: reviewing
+            ? Border.all(color: AppColors.accentStart, width: 1.5)
+            : null,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: showNavigation
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.center,
         children: [
           if (onFlip != null)
-            IconButton(
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              iconSize: 22,
-              icon: const Icon(Icons.cached_rounded),
-              color: Colors.white,
-              tooltip: flipTooltip,
-              onPressed: onFlip,
-            ),
+            btn(Icons.cached_rounded, onFlip, flipTooltip),
           if (showNavigation) ...[
-            if (onFlip != null)
-              const SizedBox(
-                height: 22,
-                child: VerticalDivider(width: 10, color: Colors.white12),
-              ),
-            btn(Icons.first_page_rounded, onFirst,
-                context.l10n.gameReviewStart),
+            const Spacer(),
+            btn(Icons.first_page_rounded, onFirst, context.l10n.gameReviewStart),
             btn(Icons.chevron_left_rounded, onPrev, context.l10n.gameReviewPrev),
-            IconButton(
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              iconSize: 22,
-              icon: const Icon(Icons.chevron_right_rounded),
-              color: active,
-              disabledColor: Colors.white24,
-              tooltip: context.l10n.gameReviewNext,
-              onPressed: onNext,
-            ),
+            btn(Icons.chevron_right_rounded, onNext, context.l10n.gameReviewNext),
             btn(Icons.last_page_rounded, onLast, context.l10n.gameReviewEnd),
           ],
         ],

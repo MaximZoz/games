@@ -982,7 +982,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         final hasClock = live.hasClock && live.myIndex >= 0;
         const clockRow = 48.0;
         const gap = 6.0;
-        const reviewRow = 40.0;
+        const reviewRow = 48.0;
         final chrome = (hasClock ? (clockRow + gap) * 2 : 0) + reviewRow + gap;
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
         final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
