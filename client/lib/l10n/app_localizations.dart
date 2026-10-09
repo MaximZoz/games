@@ -1844,25 +1844,25 @@ abstract class AppLocalizations {
   /// No description provided for @rulesCheckersDrawRussian.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — в том числе когда остались по две дамки и ходы идут «ради ходов».'**
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов каждой стороны прошли без взятия, хода простой и превращения в дамку.'**
   String get rulesCheckersDrawRussian;
 
   /// No description provided for @rulesCheckersDrawEnglish.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья, если позиция повторилась трижды, если 40 ходов не было взятия и хода простой, или если осталось по одной дамке — сил для победы нет.'**
+  /// **'Ничья, если позиция повторилась трижды, если 40 ходов каждой стороны не было взятия и хода простой, или если осталось по одной дамке.'**
   String get rulesCheckersDrawEnglish;
 
   /// No description provided for @rulesCheckersDrawGiveaway.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий — ходы «ради ходов» не считаются прогрессом.'**
+  /// **'Ничья, если позиция повторилась трижды или 15 ходов каждой стороны в поддавках прошли без взятия, хода простой и превращения в дамку.'**
   String get rulesCheckersDrawGiveaway;
 
   /// No description provided for @rulesCheckersDrawCorners.
   ///
   /// In ru, this message translates to:
-  /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашек в целевой угол.'**
+  /// **'Ничья, если позиция повторилась трижды или 25 ходов каждой стороны не добавили шашку в целевой угол.'**
   String get rulesCheckersDrawCorners;
 
   /// No description provided for @rulesChessPlayers.

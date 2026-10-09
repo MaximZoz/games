@@ -887,16 +887,16 @@ class AppLocalizationsDa extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brikker, der stadig er i hjemmet, skal forlade det inden for spillerens første 25 træk.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Remis, hvis stillingen gentages tre gange, eller hvis 15 træk kun er dame-træk uden slag — også to damer mod to damer.';
+  String get rulesCheckersDrawRussian => 'Remis, hvis stillingen gentages tre gange, eller 15 træk fra hver side ikke giver fremgang: intet slag, intet bondetræk og ingen forvandling.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Remis ved tredobbelt stilling, 40 træk uden slag eller bonde-træk, eller én dame mod én dame.';
+  String get rulesCheckersDrawEnglish => 'Remis, hvis stillingen gentages tre gange, hvis 40 træk fra hver side sker uden slag og bondetræk, eller der kun er én dame på hver side.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Remis ved tredobbelt stilling eller 15 dame-træk uden slag.';
+  String get rulesCheckersDrawGiveaway => 'Remis, hvis stillingen gentages tre gange, eller 15 træk fra hver side i giv-væk ikke giver fremgang: intet slag, intet bondetræk og ingen forvandling.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Remis ved tredobbelt stilling eller 25 træk per side uden flere brikker i målhjørnet.';
+  String get rulesCheckersDrawCorners => 'Remis, hvis stillingen gentages tre gange, eller 25 træk fra hver side ikke lægger en brik i målhjørnet.';
 
   @override
   String get rulesChessPlayers => 'Spillere: 2.';

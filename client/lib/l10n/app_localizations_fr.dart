@@ -887,16 +887,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Les pions encore dans la maison doivent la quitter durant les 25 premiers coups du joueur.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté ne sont que des dames sans prise — y compris deux dames contre deux.';
+  String get rulesCheckersDrawRussian => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté n\'apportent aucun progrès : ni prise, ni coup de pion, ni promotion.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Nulle si la position se répète trois fois, après 40 coups sans prise ni pion, ou s’il reste une dame contre une dame.';
+  String get rulesCheckersDrawEnglish => 'Nulle si la position se répète trois fois, si 40 coups de chaque côté passent sans prise ni coup de pion, ou s\'il ne reste qu\'une dame de chaque côté.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Nulle si la position se répète trois fois ou après 15 coups de dames sans prise.';
+  String get rulesCheckersDrawGiveaway => 'Nulle si la position se répète trois fois, ou si 15 coups de chaque côté au jeu de la donne n\'apportent aucun progrès : ni prise, ni coup de pion, ni promotion.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Nulle si la position se répète trois fois ou si 25 coups de chaque côté n’ajoutent aucune pièce au coin cible.';
+  String get rulesCheckersDrawCorners => 'Nulle si la position se répète trois fois, ou si 25 coups de chaque côté n\'ajoutent aucun pion dans le coin cible.';
 
   @override
   String get rulesChessPlayers => 'Joueurs : 2.';

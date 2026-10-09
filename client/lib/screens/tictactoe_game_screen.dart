@@ -905,6 +905,11 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
                           onCancelWait: _cancelRematchWait,
                           onFindGame: () => _findGame(context),
                           compact: true,
+                          table: RematchTable(
+                            gameType: 'tictactoe',
+                            stakeBronze: game.stakeBronze,
+                            variant: game.variant,
+                          ),
                         ),
                     ],
                   ],
@@ -1078,23 +1083,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final mark = game.markForUser(me);
     if (mark != null && game.isEliminated(mark)) return;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.gameSurrenderTitle),
-        content: Text(context.l10n.gameSurrenderConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(context.l10n.gameStay),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(context.l10n.gameSurrender),
-          ),
-        ],
-      ),
-    ).then((ok) {
+    confirmSurrenderDialog(context).then((ok) {
       if (ok != true || !mounted || !context.mounted) return;
       final gameId = widget.gameId;
       // Не выходим из игры: после forfeit сервер завершит партию, статус
@@ -1126,23 +1115,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
     final game = ref.read(gameStateProvider(widget.gameId)).valueOrNull;
     if (game == null || game.status != 'active' || !game.isActivePvp) return;
     final l10n = context.l10n;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.gameOfferDrawTitle),
-        content: Text(l10n.gameOfferDrawConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.gameOfferDraw),
-          ),
-        ],
-      ),
-    ).then((ok) async {
+    confirmDrawDialog(context).then((ok) async {
       if (ok != true || !mounted) return;
       try {
         await ref.read(gamesRepositoryProvider).offerDraw(widget.gameId);
@@ -1167,23 +1140,7 @@ class _TicTacToeGameScreenState extends ConsumerState<TicTacToeGameScreen>
       return;
     }
     final l10n = context.l10n;
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.gameAcceptDrawTitle),
-        content: Text(l10n.gameAcceptDrawConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.gameDraw),
-          ),
-        ],
-      ),
-    ).then((ok) async {
+    confirmDrawDialog(context, accept: true).then((ok) async {
       if (ok != true || !mounted) return;
       try {
         await ref.read(gamesRepositoryProvider).acceptDraw(widget.gameId);

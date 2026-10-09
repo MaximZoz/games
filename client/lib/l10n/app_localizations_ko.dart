@@ -887,16 +887,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => '아직 집에 있는 말은 해당 플레이어의 처음 25수 안에 집을 떠나야 합니다.';
 
   @override
-  String get rulesCheckersDrawRussian => '같은 국면이 세 번이거나, 양쪽 15수가 킹만 움직이고 잡기가 없으면(2대2 포함) 무승부.';
+  String get rulesCheckersDrawRussian => '같은 국면이 세 번 나오거나, 양쪽이 15수씩 진전 없이 두면 무승부입니다. 잡기, 졸의 이동, 왕 승급이 없습니다.';
 
   @override
-  String get rulesCheckersDrawEnglish => '같은 국면 3회, 40수 동안 잡기나 졸 이동이 없거나 킹 1대1이면 무승부.';
+  String get rulesCheckersDrawEnglish => '같은 국면이 세 번 나오거나, 양쪽이 40수씩 잡기와 졸의 이동 없이 두거나, 양쪽에 킹이 하나씩만 남으면 무승부입니다.';
 
   @override
-  String get rulesCheckersDrawGiveaway => '같은 국면 3회 또는 양쪽 15수가 킹만이고 잡기가 없으면 무승부.';
+  String get rulesCheckersDrawGiveaway => '같은 국면이 세 번 나오거나, 기브어웨이에서 양쪽이 15수씩 진전 없이 두면 무승부입니다. 잡기, 졸의 이동, 왕 승급이 없습니다.';
 
   @override
-  String get rulesCheckersDrawCorners => '같은 국면 3회이거나 양쪽 25수 동안 목표 구석에 말이 늘지 않으면 무승부.';
+  String get rulesCheckersDrawCorners => '같은 국면이 세 번 나오거나, 양쪽이 25수씩 목표 귀퉁이에 말을 더하지 않으면 무승부입니다.';
 
   @override
   String get rulesChessPlayers => '플레이어: 2.';

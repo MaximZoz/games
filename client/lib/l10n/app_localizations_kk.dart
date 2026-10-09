@@ -887,16 +887,16 @@ class AppLocalizationsKk extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Үйде қалған тастар ойыншының алғашқы 25 жүрісінде шығуы тиіс.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Ничья: позиция үш рет қайталанса немесе 15 жүріс бойы тек дамка жүріп, алу болмаса — екі дамкаға екі дамка да солай.';
+  String get rulesCheckersDrawRussian => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 15 жүрісі ілгерілеусіз өтсе: алу, қарапайым жүріс және дамкаға айналу жоқ.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Ничья: позиция үш рет қайталанса, 40 жүрісте алу не қарапайым жүріс болмаса, немесе әр жақта бір дамка қалса.';
+  String get rulesCheckersDrawEnglish => 'Ничья: позиция үш рет қайталанса, әр жақтың 40 жүрісінде алу мен қарапайым жүріс болмаса, немесе әр жақта бір дамка қалса.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Ничья: позиция үш рет қайталанса немесе 15 жүріс бойы тек дамка жүріп, алу болмаса.';
+  String get rulesCheckersDrawGiveaway => 'Ничья: позиция үш рет қайталанса немесе поддавкиде әр жақтың 15 жүрісі ілгерілеусіз өтсе: алу, қарапайым жүріс және дамкаға айналу жоқ.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 25 жүрісі мақсат бұрышына тас қоспаса.';
+  String get rulesCheckersDrawCorners => 'Ничья: позиция үш рет қайталанса немесе әр жақтың 25 жүрісі мақсат бұрышына шашка қоспаса.';
 
   @override
   String get rulesChessPlayers => 'Ойыншылар: 2.';

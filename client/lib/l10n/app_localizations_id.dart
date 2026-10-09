@@ -887,16 +887,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Buah yang masih di rumah harus keluar dalam 25 langkah pertama pemain.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Seri jika posisi terulang tiga kali, atau 15 langkah tiap sisi hanya dam tanpa makan — termasuk 2 lawan 2.';
+  String get rulesCheckersDrawRussian => 'Seri jika posisi berulang tiga kali, atau 15 langkah tiap pihak tanpa kemajuan: tanpa makan, langkah pion, atau promosi.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Seri jika posisi tiga kali, 40 langkah tanpa makan atau pion, atau satu dam lawan satu dam.';
+  String get rulesCheckersDrawEnglish => 'Seri jika posisi berulang tiga kali, jika 40 langkah tiap pihak tanpa makan dan langkah pion, atau tersisa satu ratu tiap pihak.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Seri jika posisi tiga kali atau 15 langkah dam tanpa makan.';
+  String get rulesCheckersDrawGiveaway => 'Seri jika posisi berulang tiga kali, atau 15 langkah tiap pihak di giveaway tanpa kemajuan: tanpa makan, langkah pion, atau promosi.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Seri jika posisi tiga kali atau 25 langkah tiap sisi tak menambah buah di sudut tujuan.';
+  String get rulesCheckersDrawCorners => 'Seri jika posisi berulang tiga kali, atau 25 langkah tiap pihak tidak menambah bidak di sudut target.';
 
   @override
   String get rulesChessPlayers => 'Pemain: 2.';

@@ -887,16 +887,16 @@ class AppLocalizationsFi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Nappuloiden, jotka ovat vielä kotona, on poistuttava pelaajan 25 ensimmäisen siirron aikana.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin on vain kuningattaria ilman lyöntiä — myös 2 vs 2.';
+  String get rulesCheckersDrawRussian => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin ei vie peliä eteenpäin: ei syöntiä, ei sotilassiirtoa eikä korotusta.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Tasapeli kolminkertaisesta toistosta, 40 siirrosta ilman lyöntiä tai sotilasta, tai kuningatar vastaan kuningatar.';
+  String get rulesCheckersDrawEnglish => 'Tasapeli, jos asema toistuu kolmesti, jos 40 siirtoa kummaltakin menee ilman syöntiä ja sotilassiirtoa, tai kummallekin jää yksi daami.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Tasapeli kolminkertaisesta toistosta tai 15 kuningatarsiirrosta ilman lyöntiä.';
+  String get rulesCheckersDrawGiveaway => 'Tasapeli, jos asema toistuu kolmesti tai 15 siirtoa kummaltakin luovutuspelissä ei vie peliä eteenpäin: ei syöntiä, ei sotilassiirtoa eikä korotusta.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Tasapeli kolminkertaisesta toistosta tai jos 25 siirtoa kummaltakin ei lisää nappuloita maalikulmaan.';
+  String get rulesCheckersDrawCorners => 'Tasapeli, jos asema toistuu kolmesti tai 25 siirtoa kummaltakin ei tuo nappulaa maaliruutuun.';
 
   @override
   String get rulesChessPlayers => 'Pelaajat: 2.';

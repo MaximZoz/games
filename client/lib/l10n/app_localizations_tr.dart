@@ -887,13 +887,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Hâlâ evde olan taşlar, oyuncunun ilk 25 hamlesinde evden çıkmalıdır.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Pozisyon üç kez tekrarlanırsa veya her taraftan 15 hamle sadece dama ve temassızsa — iki dama iki damaya karşı dahil — beraberlik.';
+  String get rulesCheckersDrawRussian => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 15 hamlesi ilerleme getirmezse beraberlik: yeme, piyon hamlesi ve dama olma yok.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Pozisyon üç kez tekrarlanırsa, 40 hamle yeme ve piyon yoksa veya her tarafta bir dama kalırsa beraberlik.';
+  String get rulesCheckersDrawEnglish => 'Pozisyon üç kez tekrarlanırsa, her tarafın 40 hamlesi yemesiz ve piyonsuz geçerse veya her tarafta bir dama kalırsa beraberlik.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Pozisyon üç kez tekrarlanırsa veya 15 hamle sadece dama ve yemesizse beraberlik.';
+  String get rulesCheckersDrawGiveaway => 'Pozisyon üç kez tekrarlanırsa veya teslim modunda her tarafın 15 hamlesi ilerleme getirmezse beraberlik: yeme, piyon hamlesi ve dama olma yok.';
 
   @override
   String get rulesCheckersDrawCorners => 'Pozisyon üç kez tekrarlanırsa veya her tarafın 25 hamlesi hedef köşeye taş eklemezse beraberlik.';

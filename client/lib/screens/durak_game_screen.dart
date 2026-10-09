@@ -4681,13 +4681,7 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   Future<void> _confirmSurrender() async {
     final view = ref.read(durakGameProvider(widget.gameId)).valueOrNull;
     if (view == null || view.isOver || view.iAmEliminated) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -4816,26 +4810,14 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
   }
 
   Future<void> _offerDraw(DurakGameView view) async {
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameOfferDrawTitle,
-      message: context.l10n.gameOfferDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameOfferDraw,
-    );
+    final ok = await confirmDrawDialog(context);
     if (!ok || !mounted) return;
     await _act(
         () => ref.read(durakRepositoryProvider).offerDraw(widget.gameId));
   }
 
   Future<void> _acceptDraw() async {
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameAcceptDrawTitle,
-      message: context.l10n.gameAcceptDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameDraw,
-    );
+    final ok = await confirmDrawDialog(context, accept: true);
     if (!ok || !mounted) return;
     await _act(
         () => ref.read(durakRepositoryProvider).acceptDraw(widget.gameId));
@@ -5792,6 +5774,12 @@ class _DurakGameScreenState extends ConsumerState<DurakGameScreen>
         onCancelWait: _cancelRematchWait,
         onFindGame: _findGame,
         compact: true,
+        table: RematchTable(
+          gameType: 'durak',
+          stakeBronze: view.stakeBronze,
+          gameMode: view.mode,
+          deckSize: view.deckSize,
+        ),
       );
     }
 

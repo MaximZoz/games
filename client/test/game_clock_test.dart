@@ -35,7 +35,7 @@ void main() {
     ));
     expect(find.text('60:00'), findsOneWidget);
     final text = tester.widget<Text>(find.text('60:00'));
-    expect(text.style?.fontSize, 26);
+    expect(text.style?.fontSize, 20);
   });
 
   testWidgets('GameClock активного игрока показывает идущее время',

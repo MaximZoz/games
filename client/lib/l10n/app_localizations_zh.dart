@@ -887,16 +887,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => '仍留在家里的棋子必须在该玩家前 25 步内离开家。';
 
   @override
-  String get rulesCheckersDrawRussian => '同一局面出现三次，或双方各 15 步只有王且无吃子（含双王对双王）则为和棋。';
+  String get rulesCheckersDrawRussian => '同一局面出现三次，或双方各走 15 步没有进展（无吃子、无兵移动、无升变）则为和棋。';
 
   @override
-  String get rulesCheckersDrawEnglish => '同一局面三次、40 步无吃子且无兵走动，或各剩一王，则为和棋。';
+  String get rulesCheckersDrawEnglish => '同一局面出现三次，双方各走 40 步无吃子且无兵移动，或双方各剩一王，则为和棋。';
 
   @override
-  String get rulesCheckersDrawGiveaway => '同一局面三次，或双方各 15 步只有王且无吃子，则为和棋。';
+  String get rulesCheckersDrawGiveaway => '同一局面出现三次，或让子模式中双方各走 15 步没有进展（无吃子、无兵移动、无升变）则为和棋。';
 
   @override
-  String get rulesCheckersDrawCorners => '同一局面三次，或双方各 25 步未再有棋子进入目标角，则为和棋。';
+  String get rulesCheckersDrawCorners => '同一局面出现三次，或双方各走 25 步未再有棋子进入目标角，则为和棋。';
 
   @override
   String get rulesChessPlayers => '玩家：2 人。';

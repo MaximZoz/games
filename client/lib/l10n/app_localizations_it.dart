@@ -887,16 +887,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Le pedine ancora in casa devono uscirne entro i primi 25 mosse del giocatore.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Patta se la posizione si ripete tre volte o se per 15 mosse per parte muovono solo le dame senza catture, anche due dame contro due.';
+  String get rulesCheckersDrawRussian => 'Patta se la posizione si ripete tre volte, o se 15 mosse per parte non portano progresso: nessuna presa, mossa di pedina o promozione.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Patta se la posizione si ripete tre volte, dopo 40 mosse senza cattura o pedina, o con una dama contro una dama.';
+  String get rulesCheckersDrawEnglish => 'Patta se la posizione si ripete tre volte, se 40 mosse per parte passano senza presa né mossa di pedina, o resta una dama per parte.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Patta se la posizione si ripete tre volte o dopo 15 mosse di dame senza catture.';
+  String get rulesCheckersDrawGiveaway => 'Patta se la posizione si ripete tre volte, o se 15 mosse per parte nel giveaway non portano progresso: nessuna presa, mossa di pedina o promozione.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Patta se la posizione si ripete tre volte o se 25 mosse per parte non aggiungono pedine all’angolo obiettivo.';
+  String get rulesCheckersDrawCorners => 'Patta se la posizione si ripete tre volte, o se 25 mosse per parte non aggiungono una pedina all\'angolo obiettivo.';
 
   @override
   String get rulesChessPlayers => 'Giocatori: 2.';

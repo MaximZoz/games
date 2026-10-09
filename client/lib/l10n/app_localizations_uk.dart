@@ -887,16 +887,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Фішки, які ще не вийшли з дому, мають залишити його за перші 25 ходів гравця.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Нічия, якщо позиція повторилася тричі або 15 ходів поспіль ходили лише дамки без взяття — зокрема коли лишилося по дві дамки.';
+  String get rulesCheckersDrawRussian => 'Нічия, якщо позиція повторилася тричі або 15 ходів кожної сторони минули без узяття, ходу простої й перетворення на дамку.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Нічия, якщо позиція повторилася тричі, якщо 40 ходів не було взяття і ходу простої, або лишилося по одній дамці.';
+  String get rulesCheckersDrawEnglish => 'Нічия, якщо позиція повторилася тричі, якщо 40 ходів кожної сторони не було узяття і ходу простої, або лишилося по одній дамці.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Нічия, якщо позиція повторилася тричі або 15 ходів поспіль ходили лише дамки без взяття.';
+  String get rulesCheckersDrawGiveaway => 'Нічия, якщо позиція повторилася тричі або 15 ходів кожної сторони в піддавках минули без узяття, ходу простої й перетворення на дамку.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Нічия, якщо позиція повторилася тричі або 25 ходів кожної сторони не додали шашок у цільовий кут.';
+  String get rulesCheckersDrawCorners => 'Нічия, якщо позиція повторилася тричі або 25 ходів кожної сторони не додали шашку в цільовий кут.';
 
   @override
   String get rulesChessPlayers => 'Гравці: 2.';

@@ -35,6 +35,23 @@ void main() {
     expect(t.gamesChessModeBullet, 'Пуля');
   });
 
+  test('офлайн с ботом использует тот же контроль, что и онлайн', () {
+    final t = l10n();
+    final lines = chessRuleLines(
+      gameMode: chessModeBullet,
+      turnTimeSec: 0,
+      stakeBronze: 0,
+      offline: true,
+      l10n: t,
+    );
+    expect(lines, contains(chessClockLine(chessModeBullet, t)));
+    expect(lines, isNot(contains(t.rulesNoTimeLimit)));
+    expect(chessClockBudgetMs(chessModeClassic), (60 * 60 * 1000, 0));
+    expect(chessClockBudgetMs(chessModeRapid), (10 * 60 * 1000, 0));
+    expect(chessClockBudgetMs(chessModeBlitz), (5 * 60 * 1000, 0));
+    expect(chessClockBudgetMs(chessModeBullet), (3 * 60 * 1000, 2000));
+  });
+
   test('лимит хода: 20 с, 1 мин, без лимита', () {
     expect(chessTurnTimeOptions, [20, 60, 0]);
     expect(chessNormalizeTurnTime(20), 20);

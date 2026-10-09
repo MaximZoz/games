@@ -887,16 +887,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Các quân còn trong nhà phải rời đi trong 25 nước đầu của người chơi.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên chỉ đi đam mà không ăn — kể cả 2 đam đấu 2 đam.';
+  String get rulesCheckersDrawRussian => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên không tiến triển: không ăn, không đi tốt và không phong cấp.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Hòa nếu lặp thế ba lần, 40 nước không ăn và không đi tốt, hoặc mỗi bên còn một đam.';
+  String get rulesCheckersDrawEnglish => 'Hòa nếu thế cờ lặp ba lần, nếu 40 nước mỗi bên không ăn và không đi tốt, hoặc mỗi bên còn một đam.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Hòa nếu lặp thế ba lần hoặc 15 nước mỗi bên chỉ đi đam không ăn.';
+  String get rulesCheckersDrawGiveaway => 'Hòa nếu thế cờ lặp ba lần, hoặc 15 nước mỗi bên ở chế độ nhường không tiến triển: không ăn, không đi tốt và không phong cấp.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Hòa nếu lặp thế ba lần hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
+  String get rulesCheckersDrawCorners => 'Hòa nếu thế cờ lặp ba lần, hoặc 25 nước mỗi bên không thêm quân vào góc đích.';
 
   @override
   String get rulesChessPlayers => 'Người chơi: 2.';

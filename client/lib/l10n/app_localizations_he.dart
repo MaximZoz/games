@@ -887,16 +887,16 @@ class AppLocalizationsHe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'חיילים שעדיין בבית חייבים לצאת ממנו ב־25 המהלכים הראשונים של השחקן.';
 
   @override
-  String get rulesCheckersDrawRussian => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים לכל צד הם רק מלכות בלי הכאה — גם שתיים מול שתיים.';
+  String get rulesCheckersDrawRussian => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים של כל צד בלי התקדמות: בלי אכילה, בלי מהלך חייל ובלי הכתרה.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'תיקו בחזרה משולשת, אחרי 40 מהלכים בלי הכאה או חייל, או מלכה מול מלכה.';
+  String get rulesCheckersDrawEnglish => 'תיקו אם העמדה חוזרת שלוש פעמים, אם 40 מהלכים של כל צד בלי אכילה ובלי מהלך חייל, או אם נשארה מלכה אחת לכל צד.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'תיקו בחזרה משולשת או 15 מהלכי מלכות בלי הכאה.';
+  String get rulesCheckersDrawGiveaway => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 15 מהלכים של כל צד במשחק הוויתור בלי התקדמות: בלי אכילה, בלי מהלך חייל ובלי הכתרה.';
 
   @override
-  String get rulesCheckersDrawCorners => 'תיקו בחזרה משולשת או 25 מהלכים לכל צד בלי עוד חייל בפינת היעד.';
+  String get rulesCheckersDrawCorners => 'תיקו אם העמדה חוזרת שלוש פעמים, או אם 25 מהלכים של כל צד לא הוסיפו כלי לפינה היעד.';
 
   @override
   String get rulesChessPlayers => 'שחקנים: 2.';

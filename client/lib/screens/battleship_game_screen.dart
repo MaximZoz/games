@@ -795,13 +795,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Future<void> _confirmOfferDraw() async {
     final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver || game.hasBotOpponent) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameOfferDrawTitle,
-      message: context.l10n.gameOfferDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameOfferDraw,
-    );
+    final ok = await confirmDrawDialog(context);
     if (!ok || !mounted) return;
     try {
       await ref.read(battleshipRepositoryProvider).offerDraw(widget.gameId);
@@ -818,13 +812,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final offerBy = game?.drawOfferBy?.trim();
     if (game == null || me == null || offerBy == null || offerBy == me) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameAcceptDrawTitle,
-      message: context.l10n.gameAcceptDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: context.l10n.gameDraw,
-    );
+    final ok = await confirmDrawDialog(context, accept: true);
     if (!ok || !mounted) return;
     try {
       await ref.read(battleshipRepositoryProvider).acceptDraw(widget.gameId);
@@ -966,13 +954,7 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
   Future<void> _confirmSurrender() async {
     final game = ref.read(battleshipGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -1432,6 +1414,10 @@ class _BattleshipGameScreenState extends ConsumerState<BattleshipGameScreen>
                             onDecline: (id) => unawaited(_declineRematch(id)),
                             onCancelWait: () => unawaited(_cancelRematchWait()),
                             onFindGame: () => unawaited(_findGame()),
+                            table: RematchTable(
+                              gameType: 'battleship',
+                              stakeBronze: game.stakeBronze,
+                            ),
                             compact: true,
                           ),
                       ],
