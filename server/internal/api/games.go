@@ -2276,8 +2276,13 @@ func (h *GamesHandler) InviteToLobby(w http.ResponseWriter, r *http.Request, lob
 	} else if gameType == unoGameType {
 		inviteData["variant"] = "classic"
 		inviteData["game_mode"] = "classic"
+	} else if gameType == pokerGameType {
+		inviteData["game_mode"] = "holdem"
 	} else if gameType == nardyGameType {
 		mode := nardy.NormalizeMode(m["game_mode"])
+		inviteData["variant"] = mode
+		inviteData["game_mode"] = mode
+	} else if mode, ok := boardGameInviteMode(gameType, m); ok {
 		inviteData["variant"] = mode
 		inviteData["game_mode"] = mode
 	} else {
@@ -3126,8 +3131,13 @@ func (h *GamesHandler) ListPendingInvites(w http.ResponseWriter, r *http.Request
 		} else if gt == unoGameType {
 			item["variant"] = "classic"
 			item["game_mode"] = "classic"
+		} else if gt == pokerGameType {
+			item["game_mode"] = "holdem"
 		} else if gt == nardyGameType {
 			mode := nardy.NormalizeMode(m["game_mode"])
+			item["variant"] = mode
+			item["game_mode"] = mode
+		} else if mode, ok := boardGameInviteMode(gt, m); ok {
 			item["variant"] = mode
 			item["game_mode"] = mode
 		} else {

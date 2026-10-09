@@ -53,6 +53,10 @@ void main() {
     expect(
         t.rulesCheckersPlayRussian, contains('не обязательно самое длинное'));
     expect(russian, contains(t.rulesCheckersDrawRussian));
+    expect(t.rulesCheckersDrawRussian, contains('15 ходов каждой стороны'));
+    expect(t.rulesCheckersDrawEnglish, contains('40 ходов каждой стороны'));
+    expect(t.rulesCheckersDrawGiveaway, contains('15 ходов каждой стороны'));
+    expect(t.rulesCheckersDrawCorners, contains('25 ходов каждой стороны'));
 
     final giveaway = checkersRuleLines(
       gameMode: CheckersEngine.modeGiveaway,

@@ -887,16 +887,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Piony, które jeszcze nie wyszły z domu, muszą go opuścić w ciągu pierwszych 25 ruchów gracza.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Remis, gdy pozycja powtórzy się trzykrotnie albo przez 15 ruchów każdej strony chodzą tylko damki bez bicia — także 2 na 2.';
+  String get rulesCheckersDrawRussian => 'Remis, gdy pozycja powtórzy się trzykrotnie albo 15 ruchów każdej strony nie da postępu: bez bicia, ruchu pionka i promocji.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Remis przy trzykrotnym powtórzeniu, po 40 ruchach bez bicia i ruchu piona albo przy jednej damce na damkę.';
+  String get rulesCheckersDrawEnglish => 'Remis, gdy pozycja powtórzy się trzykrotnie, gdy 40 ruchów każdej strony minie bez bicia i ruchu pionka, albo zostanie po jednej damce.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Remis przy trzykrotnym powtórzeniu albo 15 ruchach damkami bez bicia.';
+  String get rulesCheckersDrawGiveaway => 'Remis, gdy pozycja powtórzy się trzykrotnie albo 15 ruchów każdej strony w poddawce nie da postępu: bez bicia, ruchu pionka i promocji.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Remis przy trzykrotnym powtórzeniu albo 25 ruchach każdej strony bez nowej figury w docelowym rogu.';
+  String get rulesCheckersDrawCorners => 'Remis, gdy pozycja powtórzy się trzykrotnie albo 25 ruchów każdej strony nie doda pionka do narożnika docelowego.';
 
   @override
   String get rulesChessPlayers => 'Gracze: 2.';

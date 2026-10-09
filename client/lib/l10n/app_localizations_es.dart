@@ -887,16 +887,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Las fichas que aún no han salido de casa deben abandonarla en los primeros 25 movimientos del jugador.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Tablas si la posición se repite tres veces o si 15 jugadas de cada lado son solo damas sin captura, también con dos damas por bando.';
+  String get rulesCheckersDrawRussian => 'Tablas si la posición se repite tres veces, o si 15 jugadas de cada lado no avanzan: sin captura, sin movimiento de peón ni coronación.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Tablas si la posición se repite tres veces, tras 40 jugadas sin captura ni peón, o con una dama contra una dama.';
+  String get rulesCheckersDrawEnglish => 'Tablas si la posición se repite tres veces, si 40 jugadas de cada lado pasan sin captura ni movimiento de peón, o si queda una dama por lado.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Tablas si la posición se repite tres veces o tras 15 jugadas de damas sin captura.';
+  String get rulesCheckersDrawGiveaway => 'Tablas si la posición se repite tres veces, o si 15 jugadas de cada lado en la entrega no avanzan: sin captura, sin movimiento de peón ni coronación.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Tablas si la posición se repite tres veces o si 25 jugadas de cada lado no añaden fichas a la esquina objetivo.';
+  String get rulesCheckersDrawCorners => 'Tablas si la posición se repite tres veces, o si 25 jugadas de cada lado no añaden una ficha a la esquina objetivo.';
 
   @override
   String get rulesChessPlayers => 'Jugadores: 2.';

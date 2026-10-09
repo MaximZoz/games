@@ -51,3 +51,28 @@ func TestApplyLobbyTypeFields_NoFakeClassic(t *testing.T) {
 		t.Fatalf("tictactoe classic is a real mode, got %q", ttt.Variant)
 	}
 }
+
+func TestBoardGameInviteMode(t *testing.T) {
+	t.Parallel()
+
+	mode, ok := boardGameInviteMode("chess", map[string]string{"game_mode": "blitz"})
+	if !ok || mode != "blitz" {
+		t.Fatalf("chess blitz: ok=%v mode=%q", ok, mode)
+	}
+	mode, ok = boardGameInviteMode("chess", map[string]string{"variant": "bullet"})
+	if !ok || mode != "bullet" {
+		t.Fatalf("chess variant: ok=%v mode=%q", ok, mode)
+	}
+	mode, ok = boardGameInviteMode("checkers", map[string]string{"game_mode": "english"})
+	if !ok || mode != "english" {
+		t.Fatalf("checkers: ok=%v mode=%q", ok, mode)
+	}
+	// Пустой режим шашек — русские, не подкидной.
+	mode, ok = boardGameInviteMode("checkers", map[string]string{})
+	if !ok || mode != "russian" {
+		t.Fatalf("checkers empty: ok=%v mode=%q", ok, mode)
+	}
+	if _, ok := boardGameInviteMode("durak", map[string]string{"game_mode": "podkidnoi"}); ok {
+		t.Fatal("durak is not a board-game invite mode")
+	}
+}

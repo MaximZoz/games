@@ -887,16 +887,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'يجب أن تغادر القطع التي ما زالت في البيت خلال أول 25 نقلة للاعب.';
 
   @override
-  String get rulesCheckersDrawRussian => 'تعادل إذا تكرر الوضع ثلاث مرات أو إذا سارت 15 نقلة لكل جانب بالدامات فقط دون أسر، بما في ذلك داميتان ضد داميتين.';
+  String get rulesCheckersDrawRussian => 'تعادل إذا تكرر الوضع ثلاث مرات، أو مرّ 15 نقلة لكل جانب دون تقدم: بلا أكل ولا حركة حجر ولا تتويج.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'تعادل إذا تكرر الوضع ثلاثًا، أو مرّت 40 نقلة دون أسر أو جندي، أو بقيت دامة ضد دامة.';
+  String get rulesCheckersDrawEnglish => 'تعادل إذا تكرر الوضع ثلاث مرات، أو مرّ 40 نقلة لكل جانب بلا أكل ولا حركة حجر، أو بقي ملك واحد لكل جانب.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'تعادل إذا تكرر الوضع ثلاثًا أو سارت 15 نقلة بالدامات دون أسر.';
+  String get rulesCheckersDrawGiveaway => 'تعادل إذا تكرر الوضع ثلاث مرات، أو مرّ 15 نقلة لكل جانب في لعبة التخلي دون تقدم: بلا أكل ولا حركة حجر ولا تتويج.';
 
   @override
-  String get rulesCheckersDrawCorners => 'تعادل إذا تكرر الوضع ثلاثًا أو لم تُضف 25 نقلة لكل جانب حجارة إلى الركن الهدف.';
+  String get rulesCheckersDrawCorners => 'تعادل إذا تكرر الوضع ثلاث مرات، أو لم تُضف 25 نقلة لكل جانب حجرًا إلى الزاوية الهدف.';
 
   @override
   String get rulesChessPlayers => 'اللاعبون: 2.';

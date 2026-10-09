@@ -887,16 +887,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Kameny, které ještě neopustily dům, musí z něj odejít během prvních 25 tahů hráče.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany jsou jen dámy bez braní — i dvě dámy proti dvěma.';
+  String get rulesCheckersDrawRussian => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany nepřinese postup: žádné braní, tah kamenem ani povýšení.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Remíza při trojím opakování, po 40 tazích bez braní a pěšce, nebo dáma proti dámě.';
+  String get rulesCheckersDrawEnglish => 'Remíza, pokud se pozice třikrát zopakuje, pokud 40 tahů každé strany mine bez braní a tahu kamenem, nebo zbude jen jedna dáma na každé straně.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Remíza při trojím opakování nebo 15 tazích dámami bez braní.';
+  String get rulesCheckersDrawGiveaway => 'Remíza, pokud se pozice třikrát zopakuje, nebo 15 tahů každé strany ve hře na odevzdání nepřinese postup: žádné braní, tah kamenem ani povýšení.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Remíza při trojím opakování nebo 25 tazích každé strany bez dalšího kamene v cílovém rohu.';
+  String get rulesCheckersDrawCorners => 'Remíza, pokud se pozice třikrát zopakuje, nebo 25 tahů každé strany nepřidá kámen do cílového rohu.';
 
   @override
   String get rulesChessPlayers => 'Hráči: 2.';

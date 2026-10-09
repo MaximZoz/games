@@ -887,16 +887,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'หมากที่ยังอยู่ในบ้านต้องออกภายใน 25 ตาแรกของผู้เล่น';
 
   @override
-  String get rulesCheckersDrawRussian => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน รวมถึงคิงสองตัวต่อสองตัว';
+  String get rulesCheckersDrawRussian => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายไม่มีความคืบหน้า: ไม่กิน ไม่เดินหมากธรรมดา และไม่เลื่อนเป็นคิง';
 
   @override
-  String get rulesCheckersDrawEnglish => 'เสมอหากซ้ำสามครั้ง ครบ 40 ตาไม่กินและไม่เดินหมากธรรมดา หรือเหลือคิงฝ่ายละตัว';
+  String get rulesCheckersDrawEnglish => 'เสมอหากตำแหน่งซ้ำสามครั้ง หาก 40 ตาต่อฝ่ายผ่านไปโดยไม่กินและไม่เดินหมากธรรมดา หรือเหลือคิงฝ่ายละตัว';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'เสมอหากซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายเดินแต่คิงโดยไม่กิน';
+  String get rulesCheckersDrawGiveaway => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 15 ตาต่อฝ่ายในโหมดยกให้ไม่มีความคืบหน้า: ไม่กิน ไม่เดินหมากธรรมดา และไม่เลื่อนเป็นคิง';
 
   @override
-  String get rulesCheckersDrawCorners => 'เสมอหากซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่เพิ่มหมากในมุมเป้าหมาย';
+  String get rulesCheckersDrawCorners => 'เสมอหากตำแหน่งซ้ำสามครั้ง หรือ 25 ตาต่อฝ่ายไม่ได้เพิ่มหมากในมุมเป้าหมาย';
 
   @override
   String get rulesChessPlayers => 'ผู้เล่น: 2.';

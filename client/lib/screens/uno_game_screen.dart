@@ -1982,6 +1982,11 @@ class _UnoGameScreenState extends ConsumerState<UnoGameScreen> {
                 onDecline: (lobbyId) => unawaited(_declineRematch(lobbyId)),
                 onCancelWait: () => unawaited(_cancelRematchWait()),
                 onFindGame: () => unawaited(_findGame()),
+                table: RematchTable(
+                  gameType: 'uno',
+                  stakeBronze: game.stakeBronze,
+                  gameMode: 'classic',
+                ),
                 compact: true,
               ),
       );

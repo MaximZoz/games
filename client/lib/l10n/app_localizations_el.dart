@@ -887,16 +887,16 @@ class AppLocalizationsEl extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Τα πούλια που είναι ακόμα στο σπίτι πρέπει να φύγουν μέσα στις πρώτες 25 κινήσεις του παίκτη.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή αν για 15 κινήσεις ανά πλευρά κινούνται μόνο ντάμες χωρίς πάρσιμο.';
+  String get rulesCheckersDrawRussian => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 15 κινήσεις κάθε πλευράς δεν δώσουν πρόοδο: χωρίς πίσιμα, κίνηση απλού ή προαγωγή.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Ισοπαλία σε τριπλή επανάληψη, μετά από 40 κινήσεις χωρίς πάρσιμο ή πιόνι, ή μία ντάμα εναντίον μίας.';
+  String get rulesCheckersDrawEnglish => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές, αν 40 κινήσεις κάθε πλευράς περάσουν χωρίς πίσιμα και κίνηση απλού, ή μείνει μία ντάμα ανά πλευρά.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Ισοπαλία σε τριπλή επανάληψη ή 15 κινήσεις ντάμας χωρίς πάρσιμο.';
+  String get rulesCheckersDrawGiveaway => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 15 κινήσεις κάθε πλευράς στο giveaway δεν δώσουν πρόοδο: χωρίς πίσιμα, κίνηση απλού ή προαγωγή.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Ισοπαλία σε τριπλή επανάληψη ή 25 κινήσεις ανά πλευρά χωρίς νέο πούλι στη γωνία-στόχο.';
+  String get rulesCheckersDrawCorners => 'Ισοπαλία αν η θέση επαναληφθεί τρεις φορές ή 25 κινήσεις κάθε πλευράς δεν προσθέσουν πιόνι στη γωνία-στόχο.';
 
   @override
   String get rulesChessPlayers => 'Παίκτες: 2.';

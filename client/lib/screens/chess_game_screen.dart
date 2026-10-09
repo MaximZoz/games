@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -386,13 +385,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   Future<void> _confirmSurrender() async {
     final game = ref.read(chessGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -411,17 +404,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     final me = ref.read(authStateProvider).valueOrNull?.id;
     final offerBy = game.drawOfferBy;
     final accept = offerBy != null && offerBy.isNotEmpty && offerBy != me;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: accept
-          ? context.l10n.gameAcceptDrawTitle
-          : context.l10n.gameOfferDrawTitle,
-      message: accept
-          ? context.l10n.gameAcceptDrawConfirm
-          : context.l10n.gameOfferDrawConfirm,
-      cancelLabel: context.l10n.commonCancel,
-      confirmLabel: accept ? context.l10n.gameDraw : context.l10n.gameOfferDraw,
-    );
+    final ok = await confirmDrawDialog(context, accept: accept);
     if (!ok || !mounted) return;
     try {
       if (accept) {
@@ -790,10 +773,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     }
     final narrow = isNarrow(context);
     final game = gameAsync.valueOrNull;
-    final canDraw = game != null &&
-        !game.isOver &&
-        !game.hasBotOpponent &&
-        (game.drawOfferBy == null || game.drawOfferBy != me);
+    final draw = drawOfferFlags(game?.drawOfferBy, me);
+    final canDraw = game != null && !game.isOver && !game.hasBotOpponent;
 
     return SwipeBackScope.gameBoard(
       onBack: _onClosePressed,
@@ -831,6 +812,10 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             surrenderTooltip: context.l10n.gameSurrender,
             onOfferDraw: canDraw ? () => unawaited(_confirmDraw()) : null,
             drawTooltip: context.l10n.gameOfferDraw,
+            iOfferedDraw: draw.iOffered,
+            opponentOfferedDraw: draw.opponentOffered,
+            acceptDrawTooltip: context.l10n.gameAcceptDrawTitle,
+            drawOfferedTooltip: context.l10n.gameDrawOffered,
             onShowRules: () => showGameRulesDialog(
               context: context,
               content: rulesTextLines(chessRuleLines(
@@ -887,7 +872,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+            padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
             child: landscape
                 ? _buildLandscape(live, display, me, myTurn)
                 : _buildPortrait(live, display, me, myTurn),
@@ -973,107 +958,78 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   int _clockMsFor(ChessGameView g, int seat) =>
       seat == 0 ? g.clockMs0 : g.clockMs1;
 
-  String _opponentClockName(ChessGameView game) {
-    final name = game.opponent?.displayName.trim() ?? '';
-    if (name.isNotEmpty) return name;
-    if (game.hasBotOpponent) return context.l10n.gameBot;
-    return context.l10n.gameOpponent;
-  }
-
-  /// Доска на ширину клетки, часы — крупные плашки по её верхнему и нижнему
-  /// краю (имя слева, время справа), как на lichess.
+  /// Доска на всю ширину. Съеденные фигуры, часы и перемотка — одна строка
+  /// у каждого края, без имён на поле.
   Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final showEdges = live.myIndex >= 0;
-        const edgeRow = 52.0;
-        const gap = 6.0;
-        const reviewRow = 48.0;
-        final chrome = (showEdges ? (edgeRow + gap) * 2 : 0) + reviewRow + gap;
+        final mine = live.myIndex >= 0;
+        const edge = 40.0;
+        final rows = mine ? 2 : 1;
         final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
-        final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
-        var side = math.min(maxW, math.max(0.0, maxH - chrome));
-        if (side < 64) side = math.min(maxW, maxH);
+        final maxH =
+            constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
+        final avail = maxH.isFinite
+            ? (maxH - edge * rows).clamp(0.0, maxH).toDouble()
+            : maxW;
+        final side = avail < maxW ? avail : maxW;
         final oppSeat = live.myIndex == 0 ? 1 : 0;
-        return Center(
-          child: SizedBox(
-            width: side,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showEdges) ...[
-                  _playerEdge(
-                    name: _opponentClockName(live),
-                    seat: oppSeat,
-                    clockGame: live,
-                    materialBoard: display.board,
-                  ),
-                  const SizedBox(height: gap),
-                ],
-                SizedBox(
-                  width: side,
-                  height: side,
-                  child: _buildBoard(live, display),
-                ),
-                if (showEdges) ...[
-                  const SizedBox(height: gap),
-                  _playerEdge(
-                    name: context.l10n.gameYou,
-                    seat: live.myIndex,
-                    clockGame: live,
-                    materialBoard: display.board,
-                  ),
-                ],
-                const SizedBox(height: gap),
-                _buildReviewBar(live),
-              ],
-            ),
-          ),
+        final top = mine
+            ? _chromeRow(
+                material:
+                    _materialLine(chessMaterialFor(display.board, oppSeat)),
+                trailing: _clock(live, oppSeat),
+              )
+            : null;
+        final bottom = _chromeRow(
+          leading: _buildReviewBar(live),
+          material: mine
+              ? _materialLine(chessMaterialFor(display.board, live.myIndex))
+              : const SizedBox.shrink(),
+          trailing: mine ? _clock(live, live.myIndex) : null,
+        );
+        final board = SizedBox(
+          width: side,
+          height: side,
+          child: _buildBoard(live, display),
+        );
+        return Column(
+          children: [
+            if (top != null) top,
+            Expanded(child: Center(child: board)),
+            bottom,
+          ],
         );
       },
     );
   }
 
-  Widget _playerEdge({
-    required String name,
-    required int seat,
-    required ChessGameView clockGame,
-    required List<int> materialBoard,
+  Widget? _clock(ChessGameView game, int seat) {
+    if (!game.hasClock || seat < 0) return null;
+    return GameClock(
+      remainingMs: _clockMsFor(game, seat),
+      running: !game.isOver && game.clockRunning == seat,
+      prominent: true,
+    );
+  }
+
+  Widget _chromeRow({
+    Widget? leading,
+    required Widget material,
+    Widget? trailing,
   }) {
-    final material = chessMaterialFor(materialBoard, seat);
     return SizedBox(
-      height: 52,
+      height: 40,
       child: Row(
         children: [
+          if (leading != null) leading,
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    height: 1.1,
-                  ),
-                ),
-                if (material.captured.isNotEmpty || material.advantage > 0)
-                  _materialLine(material),
-              ],
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: material,
             ),
           ),
-          if (clockGame.hasClock) ...[
-            const SizedBox(width: 8),
-            GameClock(
-              remainingMs: _clockMsFor(clockGame, seat),
-              running: !clockGame.isOver && clockGame.clockRunning == seat,
-              prominent: true,
-            ),
-          ],
+          if (trailing != null) trailing,
         ],
       ),
     );
@@ -1239,6 +1195,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       onCancelWait: () => unawaited(_cancelRematchWait()),
       onFindGame: () => unawaited(_findGame()),
       compact: true,
+      table: RematchTable(
+        gameType: 'chess',
+        stakeBronze: game.stakeBronze,
+        gameMode: game.gameMode,
+      ),
     );
   }
 }

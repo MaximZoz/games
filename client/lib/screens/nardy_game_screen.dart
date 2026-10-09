@@ -400,13 +400,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
   Future<void> _confirmSurrender() async {
     final game = ref.read(nardyGameProvider(widget.gameId)).valueOrNull;
     if (game == null || game.isOver) return;
-    final ok = await confirmGameActionDialog(
-      context: context,
-      title: context.l10n.gameSurrenderTitle,
-      message: context.l10n.gameSurrenderConfirm,
-      cancelLabel: context.l10n.gameStay,
-      confirmLabel: context.l10n.gameSurrender,
-    );
+    final ok = await confirmSurrenderDialog(context);
     if (!ok || !mounted) return;
     unawaited(() async {
       try {
@@ -1259,6 +1253,11 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
       onCancelWait: () => unawaited(_cancelRematchWait()),
       onFindGame: () => unawaited(_findGame()),
       compact: true,
+      table: RematchTable(
+        gameType: 'nardy',
+        stakeBronze: game.stakeBronze,
+        gameMode: game.gameMode,
+      ),
     );
   }
 }

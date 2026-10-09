@@ -887,16 +887,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Brickor som fortfarande är hemma måste lämna hörnet inom spelarens 25 första drag.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Remi om samma ställning uppstår tre gånger, eller om 15 drag per sida bara är damdrag utan slag — även två damer mot två.';
+  String get rulesCheckersDrawRussian => 'Remi om ställningen upprepas tre gånger, eller om 15 drag per sida inte ger framsteg: inget slag, inget bondedrag och ingen förvandling.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Remi vid trefaldig upprepning, 40 drag utan slag eller bondedrag, eller en dam mot en dam.';
+  String get rulesCheckersDrawEnglish => 'Remi om ställningen upprepas tre gånger, om 40 drag per sida sker utan slag och bondedrag, eller om bara en dam finns på varje sida.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Remi vid trefaldig upprepning eller 15 damdrag utan slag.';
+  String get rulesCheckersDrawGiveaway => 'Remi om ställningen upprepas tre gånger, eller om 15 drag per sida i giveaway inte ger framsteg: inget slag, inget bondedrag och ingen förvandling.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Remi vid trefaldig upprepning eller 25 drag per sida utan extra bricka i målhörnet.';
+  String get rulesCheckersDrawCorners => 'Remi om ställningen upprepas tre gånger, eller om 25 drag per sida inte lägger en bricka i målhörnet.';
 
   @override
   String get rulesChessPlayers => 'Spelare: 2.';

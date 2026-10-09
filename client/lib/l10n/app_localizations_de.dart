@@ -887,16 +887,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'Steine, die das Haus noch nicht verlassen haben, müssen es in den ersten 25 Zügen des Spielers verlassen.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Remis, wenn dieselbe Stellung dreimal entsteht oder 15 Züge lang nur Damen ohne Schlag ziehen — auch bei zwei Damen gegen zwei Damen.';
+  String get rulesCheckersDrawRussian => 'Remis, wenn die Stellung dreimal vorkommt oder 15 Züge jeder Seite keinen Fortschritt bringen: kein Schlagen, kein Steinzug und keine Umwandlung.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Remis bei dreifacher Stellungswiederholung, 40 Zügen ohne Schlag und Bauerzug, oder einer Dame gegen eine Dame.';
+  String get rulesCheckersDrawEnglish => 'Remis, wenn die Stellung dreimal vorkommt, 40 Züge jeder Seite ohne Schlagen und Steinzug vergehen oder nur noch eine Dame je Seite bleibt.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Remis bei dreifacher Wiederholung oder 15 Damen-Zügen ohne Schlag — Züge ohne Fortschritt zählen nicht.';
+  String get rulesCheckersDrawGiveaway => 'Remis, wenn die Stellung dreimal vorkommt oder 15 Züge jeder Seite im Weggeben keinen Fortschritt bringen: kein Schlagen, kein Steinzug und keine Umwandlung.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Remis bei dreifacher Wiederholung oder 25 Zügen pro Seite ohne weiteren Stein in der Zielecke.';
+  String get rulesCheckersDrawCorners => 'Remis, wenn die Stellung dreimal vorkommt oder 25 Züge jeder Seite keinen Stein in die Zielecke bringen.';
 
   @override
   String get rulesChessPlayers => 'Spieler: 2.';

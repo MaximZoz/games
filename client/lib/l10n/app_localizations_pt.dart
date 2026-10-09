@@ -887,16 +887,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rulesCheckersPlayCornersLeaveHome => 'As peças que ainda estão em casa devem sair nos primeiros 25 lances do jogador.';
 
   @override
-  String get rulesCheckersDrawRussian => 'Empate se a posição se repetir três vezes ou se 15 lances de cada lado forem só damas sem captura, inclusive duas damas contra duas.';
+  String get rulesCheckersDrawRussian => 'Empate se a posição se repetir três vezes, ou se 15 lances de cada lado não avançarem: sem captura, movimento de peão ou promoção.';
 
   @override
-  String get rulesCheckersDrawEnglish => 'Empate se a posição se repetir três vezes, após 40 lances sem captura nem peão, ou com uma dama contra uma dama.';
+  String get rulesCheckersDrawEnglish => 'Empate se a posição se repetir três vezes, se 40 lances de cada lado passarem sem captura nem movimento de peão, ou restar uma dama de cada lado.';
 
   @override
-  String get rulesCheckersDrawGiveaway => 'Empate se a posição se repetir três vezes ou após 15 lances de damas sem captura.';
+  String get rulesCheckersDrawGiveaway => 'Empate se a posição se repetir três vezes, ou se 15 lances de cada lado no giveaway não avançarem: sem captura, movimento de peão ou promoção.';
 
   @override
-  String get rulesCheckersDrawCorners => 'Empate se a posição se repetir três vezes ou se 25 lances de cada lado não acrescentarem peças ao canto alvo.';
+  String get rulesCheckersDrawCorners => 'Empate se a posição se repetir três vezes, ou se 25 lances de cada lado não acrescentarem uma peça ao canto alvo.';
 
   @override
   String get rulesChessPlayers => 'Jogadores: 2.';

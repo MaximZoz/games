@@ -880,6 +880,7 @@ func (h *GamesHandler) PokerRematch(w http.ResponseWriter, r *http.Request) {
 		"creator_id":    userID.String(),
 		"creator_name":  creatorName,
 		"game_type":     pokerGameType,
+		"game_mode":     "holdem",
 		"turn_time_sec": turnT,
 		"max_players":   maxPlayers,
 		"stake_bronze":  stake,
