@@ -23,6 +23,9 @@ type simple1v1 struct {
 	isOver        func(encoded string) bool
 	winner        func(encoded string) int
 	isBotTurn     func(encoded string, players []string) bool
+	// extraFields — дополнительные поля игрового хеша при старте партии
+	// (например, шахматные часы). Может быть nil.
+	extraFields func(gameMode string) []any
 }
 
 func (s simple1v1) lockKey(mode string, turnTimeSec, stakeBronze int) string {
@@ -340,6 +343,9 @@ func (h *GamesHandler) startSimple1v1Game(
 		"turn_deadline", strconv.FormatInt(turnDeadline, 10),
 		"turn_actor_idx", strconv.Itoa(turn),
 		"started_at", now.Format(time.RFC3339Nano),
+	}
+	if s.extraFields != nil {
+		fields = append(fields, s.extraFields(gameMode)...)
 	}
 	pipe := h.Rdb.Pipeline()
 	pipe.HSet(ctx, gameKey, fields...)

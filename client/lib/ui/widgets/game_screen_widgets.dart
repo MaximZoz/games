@@ -1625,6 +1625,264 @@ List<Widget> buildGameAppBarActions({
   ];
 }
 
+/// Форматирует остаток времени в `MM:SS` (60:00, 17:14).
+/// Часы появляются только от 100 минут: `1:40:00`.
+String formatClockMs(int ms) {
+  if (ms < 0) ms = 0;
+  final totalSec = (ms / 1000).ceil();
+  final h = totalSec ~/ 3600;
+  final m = (totalSec % 3600) ~/ 60;
+  final s = totalSec % 60;
+  String two(int v) => v.toString().padLeft(2, '0');
+  if (h == 0 || totalSec < 100 * 60) {
+    return '${totalSec ~/ 60}:${two(s)}';
+  }
+  return '$h:${two(m)}:${two(s)}';
+}
+
+/// Часы игрока: общий остаток времени (формат `M:SS`), для активного игрока
+/// локально тикает вниз. Общий для настольных игр с контролем времени.
+class GameClock extends StatefulWidget {
+  const GameClock({
+    super.key,
+    required this.remainingMs,
+    required this.running,
+    this.label,
+    this.compact = false,
+    this.prominent = false,
+  });
+
+  /// Остаток времени на момент снимка сервера, мс.
+  final int remainingMs;
+
+  /// Идут ли сейчас часы этого игрока (тикаем локально).
+  final bool running;
+
+  /// Подпись слева (например, «Вы» / имя соперника).
+  final String? label;
+
+  final bool compact;
+
+  /// Крупная плашка у края доски (как на lichess): большие цифры, без подписи.
+  final bool prominent;
+
+  @override
+  State<GameClock> createState() => _GameClockState();
+}
+
+class _GameClockState extends State<GameClock> {
+  final Stopwatch _sw = Stopwatch();
+  int _baseMs = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _reset();
+  }
+
+  void _reset() {
+    _baseMs = widget.remainingMs;
+    _sw
+      ..reset()
+      ..stop();
+    _timer?.cancel();
+    if (widget.running) {
+      _sw.start();
+      _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant GameClock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.remainingMs != widget.remainingMs ||
+        oldWidget.running != widget.running) {
+      _reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _currentMs {
+    final ms = widget.running ? _baseMs - _sw.elapsedMilliseconds : _baseMs;
+    return ms < 0 ? 0 : ms;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ms = _currentMs;
+    final low = widget.running && ms <= 20000;
+    if (widget.prominent) return _prominentBox(ms, low);
+    final bg = widget.running
+        ? (low
+            ? const Color(0x33E53935)
+            : AppColors.accentStart.withValues(alpha: 0.18))
+        : Colors.white.withValues(alpha: 0.06);
+    final border = widget.running
+        ? (low ? const Color(0xFFE53935) : AppColors.accentStart)
+        : Colors.white24;
+    final fg = low ? const Color(0xFFFF8A80) : Colors.white;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.compact ? 8 : 10,
+        vertical: widget.compact ? 3 : 5,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: border, width: widget.running ? 1.4 : 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.schedule_rounded,
+              size: widget.compact ? 13 : 15, color: fg.withValues(alpha: 0.8)),
+          const SizedBox(width: 4),
+          if (widget.label != null && widget.label!.isNotEmpty) ...[
+            Text(
+              widget.label!,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: widget.compact ? 11 : 12,
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            formatClockMs(ms),
+            style: TextStyle(
+              color: fg,
+              fontSize: widget.compact ? 14 : 16,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Крупные часы у края доски: тёмная плашка, идущие — светлые, цейтнот — красные.
+  Widget _prominentBox(int ms, bool low) {
+    final running = widget.running;
+    final Color bg;
+    final Color fg;
+    if (low) {
+      bg = const Color(0xFFE53935);
+      fg = Colors.white;
+    } else if (running) {
+      bg = Colors.white;
+      fg = const Color(0xFF1B2430);
+    } else {
+      bg = const Color(0xFF2C3138);
+      fg = Colors.white;
+    }
+    return Container(
+      constraints: const BoxConstraints(minWidth: 104, minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: running && !low
+            ? Border.all(color: AppColors.accentStart, width: 2)
+            : null,
+      ),
+      child: Text(
+        formatClockMs(ms),
+        style: TextStyle(
+          color: fg,
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          height: 1.0,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+/// Панель просмотра партии (как на lichess): кнопка переворота доски и
+/// стрелки перемотки ходов (в начало / назад / вперёд / в конец).
+///
+/// Общая для настольных игр: достаточно передать колбэки. `null` — кнопка
+/// недоступна (например, нет истории ходов или уже первый/последний ход).
+class GameReviewBar extends StatelessWidget {
+  const GameReviewBar({
+    super.key,
+    this.onFlip,
+    this.flipTooltip,
+    this.onFirst,
+    this.onPrev,
+    this.onNext,
+    this.onLast,
+    this.reviewing = false,
+    this.showNavigation = true,
+  });
+
+  /// Перевернуть доску (белые ↔ чёрные снизу). `null` — кнопки нет.
+  final VoidCallback? onFlip;
+  final String? flipTooltip;
+  final VoidCallback? onFirst;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final VoidCallback? onLast;
+
+  /// Сейчас смотрим не последнюю позицию — подсвечиваем панель.
+  final bool reviewing;
+
+  /// Показывать стрелки перемотки (для игр с историей ходов).
+  final bool showNavigation;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget btn(IconData icon, VoidCallback? onTap, String? tip) => IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          iconSize: 28,
+          icon: Icon(icon),
+          color: Colors.white,
+          disabledColor: Colors.white38,
+          tooltip: tip,
+          onPressed: onTap,
+        );
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3138),
+        borderRadius: BorderRadius.circular(8),
+        border: reviewing
+            ? Border.all(color: AppColors.accentStart, width: 1.5)
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: showNavigation
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.center,
+        children: [
+          if (onFlip != null)
+            btn(Icons.cached_rounded, onFlip, flipTooltip),
+          if (showNavigation) ...[
+            const Spacer(),
+            btn(Icons.first_page_rounded, onFirst, context.l10n.gameReviewStart),
+            btn(Icons.chevron_left_rounded, onPrev, context.l10n.gameReviewPrev),
+            btn(Icons.chevron_right_rounded, onNext, context.l10n.gameReviewNext),
+            btn(Icons.last_page_rounded, onLast, context.l10n.gameReviewEnd),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// Диалог подтверждения (сдаться / выйти / ничья) — общий стиль.
 Future<bool> confirmGameActionDialog({
   required BuildContext context,

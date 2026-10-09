@@ -1462,6 +1462,9 @@ class AppLocalizationsBe extends AppLocalizations {
   String get gameOpponent => 'Супернік';
 
   @override
+  String get gameYou => 'Вы';
+
+  @override
   String get gameYouWon => 'Вы перамаглі!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsBe extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Прапанаваць нічыю';
+
+  @override
+  String get gameFlipBoard => 'Перавярнуць дошку';
+
+  @override
+  String get gameReviewStart => 'У пачатак партыі';
+
+  @override
+  String get gameReviewPrev => 'Ход назад';
+
+  @override
+  String get gameReviewNext => 'Ход наперад';
+
+  @override
+  String get gameReviewEnd => 'Да бягучай пазіцыі';
 
   @override
   String get gameOfferDrawTitle => 'Прапанаваць нічыю?';

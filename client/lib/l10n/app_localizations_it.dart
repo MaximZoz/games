@@ -1462,6 +1462,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gameOpponent => 'Avversario';
 
   @override
+  String get gameYou => 'Tu';
+
+  @override
   String get gameYouWon => 'Hai vinto!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Offri patta';
+
+  @override
+  String get gameFlipBoard => 'Gira la scacchiera';
+
+  @override
+  String get gameReviewStart => 'All\'inizio della partita';
+
+  @override
+  String get gameReviewPrev => 'Mossa indietro';
+
+  @override
+  String get gameReviewNext => 'Mossa avanti';
+
+  @override
+  String get gameReviewEnd => 'Alla posizione attuale';
 
   @override
   String get gameOfferDrawTitle => 'Offrire patta?';

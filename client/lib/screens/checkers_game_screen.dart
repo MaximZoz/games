@@ -18,6 +18,7 @@ import 'package:multigames_client/games/checkers/checkers_offline_session.dart';
 import 'package:multigames_client/games/checkers/checkers_provider.dart';
 import 'package:multigames_client/games/checkers/checkers_repository.dart';
 import 'package:multigames_client/games/checkers/checkers_rules.dart';
+import 'package:multigames_client/games/board_move_sfx.dart';
 import 'package:multigames_client/games/game_turn_action.dart';
 import 'package:multigames_client/games/games_provider.dart';
 import 'package:multigames_client/games/games_repository.dart'
@@ -51,6 +52,9 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   CheckersSquare? _selected;
   CheckersSquare _cursor = const CheckersSquare(0, 0);
   bool _busy = false;
+
+  /// Переворот доски вручную. `null` — авто (снизу мои шашки).
+  bool? _flipOverride;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   bool _isFindingGame = false;
@@ -731,26 +735,85 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
 
   Widget _buildGame(CheckersGameView game, String? me) {
     final myTurn = game.isMyTurn && !game.isOver;
+    final landscape = isPhoneLandscape(context) ||
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     return Stack(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
-          child: Column(
-            children: [
-              _buildOpponentCard(game, me),
-              const SizedBox(height: 6),
-              _buildStatusLine(game, myTurn),
-              const SizedBox(height: 8),
-              Expanded(child: _buildBoard(game)),
-              if (game.isOver) ...[
-                const SizedBox(height: 8),
-                _buildFinishRow(game, me),
-              ],
-            ],
-          ),
+          child: landscape
+              ? _buildLandscape(game, me, myTurn)
+              : _buildPortrait(game, me, myTurn),
         ),
         MyTurnAlert.stackLeaf(isMyTurn: myTurn),
       ],
+    );
+  }
+
+  Widget _buildPortrait(CheckersGameView game, String? me, bool myTurn) {
+    return Column(
+      children: [
+        _buildOpponentCard(game, me),
+        const SizedBox(height: 6),
+        _buildStatusLine(game, myTurn),
+        const SizedBox(height: 6),
+        Expanded(child: _buildBoard(game)),
+        const SizedBox(height: 6),
+        _buildReviewBar(game),
+        if (game.isOver) ...[
+          const SizedBox(height: 8),
+          _buildFinishRow(game, me),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLandscape(CheckersGameView game, String? me, bool myTurn) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 7,
+          child: Column(
+            children: [
+              Expanded(child: _buildBoard(game)),
+              const SizedBox(height: 6),
+              _buildReviewBar(game),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 220,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildOpponentCard(game, me),
+                const SizedBox(height: 8),
+                _buildStatusLine(game, myTurn),
+                if (game.isOver) ...[
+                  const SizedBox(height: 10),
+                  _buildFinishRow(game, me),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewBar(CheckersGameView game) {
+    return Center(
+      child: GameReviewBar(
+        showNavigation: false,
+        onFlip: () => setState(
+          () => _flipOverride = !(_flipOverride ?? (game.myIndex != 1)),
+        ),
+        flipTooltip: context.l10n.gameFlipBoard,
+      ),
     );
   }
 
@@ -794,15 +857,18 @@ class _CheckersGameScreenState extends ConsumerState<CheckersGameScreen> {
   }
 
   Widget _buildBoard(CheckersGameView game) {
-    final flip = game.myIndex != 1;
-    return GamepadScope(
-      onAction: (action) => _onGamepad(game, action, flip: flip),
-      child: CheckersBoard(
-        game: game,
-        selected: _selected,
-        cursor: GamepadService.instance.isRecentlyActive ? _cursor : null,
-        flip: flip,
-        onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
+    final flip = _flipOverride ?? (game.myIndex != 1);
+    return BoardChangeSfx(
+      signature: '${game.id}:${game.seq}',
+      child: GamepadScope(
+        onAction: (action) => _onGamepad(game, action, flip: flip),
+        child: CheckersBoard(
+          game: game,
+          selected: _selected,
+          cursor: GamepadService.instance.isRecentlyActive ? _cursor : null,
+          flip: flip,
+          onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
+        ),
       ),
     );
   }

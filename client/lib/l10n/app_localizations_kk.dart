@@ -1462,6 +1462,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get gameOpponent => 'Қарсылас';
 
   @override
+  String get gameYou => 'Сіз';
+
+  @override
   String get gameYouWon => 'Сіз жеңдіңіз!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Тең ойын ұсыну';
+
+  @override
+  String get gameFlipBoard => 'Тақтаны аудару';
+
+  @override
+  String get gameReviewStart => 'Ойын басына';
+
+  @override
+  String get gameReviewPrev => 'Бір жүріс артқа';
+
+  @override
+  String get gameReviewNext => 'Бір жүріс алға';
+
+  @override
+  String get gameReviewEnd => 'Ағымдағы жағдайға';
 
   @override
   String get gameOfferDrawTitle => 'Тең ойын ұсыну керек пе?';

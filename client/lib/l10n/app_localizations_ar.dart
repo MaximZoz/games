@@ -1462,6 +1462,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gameOpponent => 'المنافس';
 
   @override
+  String get gameYou => 'أنت';
+
+  @override
   String get gameYouWon => 'لقد فزت!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'عرض التعادل';
+
+  @override
+  String get gameFlipBoard => 'اقلب الرقعة';
+
+  @override
+  String get gameReviewStart => 'إلى بداية المباراة';
+
+  @override
+  String get gameReviewPrev => 'نقلة للخلف';
+
+  @override
+  String get gameReviewNext => 'نقلة للأمام';
+
+  @override
+  String get gameReviewEnd => 'إلى الوضع الحالي';
 
   @override
   String get gameOfferDrawTitle => 'عرض التعادل؟';

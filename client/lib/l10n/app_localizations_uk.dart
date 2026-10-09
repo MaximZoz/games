@@ -1462,6 +1462,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gameOpponent => 'Суперник';
 
   @override
+  String get gameYou => 'Ви';
+
+  @override
   String get gameYouWon => 'Ви перемогли!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Запропонувати нічию';
+
+  @override
+  String get gameFlipBoard => 'Перевернути дошку';
+
+  @override
+  String get gameReviewStart => 'На початок партії';
+
+  @override
+  String get gameReviewPrev => 'Хід назад';
+
+  @override
+  String get gameReviewNext => 'Хід уперед';
+
+  @override
+  String get gameReviewEnd => 'До поточної позиції';
 
   @override
   String get gameOfferDrawTitle => 'Запропонувати нічию?';

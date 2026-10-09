@@ -141,6 +141,11 @@ class ChessGameView {
     this.isForfeit = false,
     this.isTimeout = false,
     this.drawOfferBy,
+    this.hasClock = false,
+    this.clockMs0 = 0,
+    this.clockMs1 = 0,
+    this.clockIncMs = 0,
+    this.clockRunning = -1,
   });
 
   final String id;
@@ -170,6 +175,19 @@ class ChessGameView {
   final bool isForfeit;
   final bool isTimeout;
   final String? drawOfferBy;
+
+  /// Включены ли шахматные часы (общее время партии по режиму).
+  final bool hasClock;
+
+  /// Остаток общего времени на игрока, мс (на момент снимка сервера).
+  final int clockMs0;
+  final int clockMs1;
+
+  /// Прибавка на ход, мс.
+  final int clockIncMs;
+
+  /// Чей таймер сейчас идёт (0/1), или -1 если партия окончена/часов нет.
+  final int clockRunning;
 
   bool get iWon => isOver && !isDraw && myIndex >= 0 && winnerIndex == myIndex;
   bool get hasBotOpponent => playerIds.any((id) => id.startsWith('bot:'));
@@ -229,6 +247,11 @@ class ChessGameView {
       drawOfferBy: (json['draw_offer_by'] ?? '').toString().trim().isEmpty
           ? null
           : json['draw_offer_by'].toString(),
+      hasClock: json['has_clock'] == true,
+      clockMs0: (json['clock_ms_0'] as num?)?.toInt() ?? 0,
+      clockMs1: (json['clock_ms_1'] as num?)?.toInt() ?? 0,
+      clockIncMs: (json['clock_inc_ms'] as num?)?.toInt() ?? 0,
+      clockRunning: (json['clock_running'] as num?)?.toInt() ?? -1,
     );
   }
 }

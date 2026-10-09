@@ -1462,6 +1462,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gameOpponent => 'Rakip';
 
   @override
+  String get gameYou => 'Sen';
+
+  @override
   String get gameYouWon => 'Kazandınız!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Beraberlik teklif et';
+
+  @override
+  String get gameFlipBoard => 'Tahtayı çevir';
+
+  @override
+  String get gameReviewStart => 'Oyunun başına';
+
+  @override
+  String get gameReviewPrev => 'Bir hamle geri';
+
+  @override
+  String get gameReviewNext => 'Bir hamle ileri';
+
+  @override
+  String get gameReviewEnd => 'Mevcut konuma';
 
   @override
   String get gameOfferDrawTitle => 'Beraberlik teklif edilsin mi?';

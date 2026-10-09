@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +13,10 @@ import 'package:multigames_client/core/gamepad/gamepad_service.dart';
 import 'package:multigames_client/core/realtime_events_provider.dart';
 import 'package:multigames_client/friends/friends_provider.dart';
 import 'package:multigames_client/games/active_game_guard.dart';
+import 'package:multigames_client/games/board_move_sfx.dart';
 import 'package:multigames_client/games/chess/chess_board.dart';
 import 'package:multigames_client/games/chess/chess_engine.dart';
+import 'package:multigames_client/games/chess/chess_optimistic.dart';
 import 'package:multigames_client/games/chess/chess_offline_session.dart';
 import 'package:multigames_client/games/chess/chess_provider.dart';
 import 'package:multigames_client/games/chess/chess_repository.dart';
@@ -51,6 +54,18 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   ChessSquare? _selected;
   ChessSquare _cursor = const ChessSquare(0, 0);
   bool _busy = false;
+
+  /// Оптимистично применённый ход — показываем сразу, не ждём ответа сервера.
+  ChessGameView? _optimistic;
+
+  /// Снимки позиций по ходам (авторитетные, от сервера) — для перемотки.
+  final List<ChessGameView> _history = [];
+
+  /// Индекс просматриваемой позиции в истории. `null` — следим за текущей.
+  int? _reviewIndex;
+
+  /// Переворот доски вручную. `null` — авто (снизу мой цвет).
+  bool? _flipOverride;
   bool _isRematching = false;
   bool _isAcceptingRematch = false;
   bool _isFindingGame = false;
@@ -158,8 +173,88 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     }
   }
 
+  /// Живая позиция: оптимистичная, если она новее серверной, иначе серверная.
+  ChessGameView _liveGame(ChessGameView server) {
+    final opt = _optimistic;
+    if (opt != null && opt.seq > server.seq && opt.id == server.id) return opt;
+    return server;
+  }
+
+  /// Пишем серверные снимки в историю и сбрасываем оптимизм, когда сервер
+  /// догнал. Вызывается из билда — только идемпотентные операции + отложенный
+  /// `setState`, чтобы не менять состояние во время построения дерева.
+  void _reconcile(ChessGameView server) {
+    // Новая партия / реванш (seq откатился) — чистим историю.
+    if (_history.isNotEmpty &&
+        (server.id != _history.last.id || server.seq < _history.last.seq)) {
+      _history.clear();
+    }
+    if (_history.isEmpty || server.seq > _history.last.seq) {
+      _history.add(server);
+    } else if (server.seq == _history.last.seq) {
+      _history[_history.length - 1] = server;
+    }
+    final opt = _optimistic;
+    if (opt != null && (server.seq >= opt.seq || server.id != opt.id)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final o = _optimistic;
+        final s = ref.read(chessGameProvider(widget.gameId)).valueOrNull;
+        if (o != null && s != null && (s.seq >= o.seq || s.id != o.id)) {
+          setState(() => _optimistic = null);
+        }
+      });
+    }
+  }
+
+  bool _resolvedFlip(ChessGameView game) =>
+      _flipOverride ?? (game.myIndex == 1);
+
+  bool get _isReviewing =>
+      _reviewIndex != null && _reviewIndex! < _history.length - 1;
+
+  void _reviewFirst() {
+    if (_history.isEmpty) return;
+    setState(() {
+      _reviewIndex = 0;
+      _selected = null;
+    });
+  }
+
+  void _reviewPrev() {
+    if (_history.isEmpty) return;
+    final cur = _reviewIndex ?? _history.length - 1;
+    if (cur <= 0) return;
+    setState(() {
+      _reviewIndex = cur - 1;
+      _selected = null;
+    });
+  }
+
+  void _reviewNext() {
+    if (_reviewIndex == null) return;
+    final next = _reviewIndex! + 1;
+    setState(() {
+      _reviewIndex = next >= _history.length - 1 ? null : next;
+      _selected = null;
+    });
+  }
+
+  void _reviewLast() {
+    setState(() {
+      _reviewIndex = null;
+      _selected = null;
+    });
+  }
+
+  void _toggleFlip(ChessGameView game) {
+    setState(() {
+      _flipOverride = !_resolvedFlip(game);
+    });
+  }
+
   Future<void> _onSquareTap(ChessGameView game, int r, int c) async {
-    if (_busy || !game.isMyTurn || game.isOver) return;
+    if (_busy || !game.isMyTurn || game.isOver || _isReviewing) return;
     final sq = ChessSquare(r, c);
     final fromHere = game.legalMoves.where((m) => m.from == sq).toList();
     final selected = _selected;
@@ -193,6 +288,11 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         orElse: () => matching.first,
       );
     }
+    // Оптимистично применяем ход — доска реагирует мгновенно.
+    setState(() {
+      _optimistic = chessViewAfterMove(game, chosen);
+      _reviewIndex = null;
+    });
     await _run(() => _repo.move(widget.gameId, chosen));
   }
 
@@ -767,28 +867,194 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  Widget _buildGame(ChessGameView game, String? me) {
-    final myTurn = game.isMyTurn && !game.isOver;
-    return Stack(
+  Widget _buildGame(ChessGameView server, String? me) {
+    _reconcile(server);
+    final live = _liveGame(server);
+    final display = _isReviewing
+        ? _history[_reviewIndex!.clamp(0, _history.length - 1)]
+        : live;
+    final myTurn = live.isMyTurn && !live.isOver && !_isReviewing;
+    final landscape = isPhoneLandscape(context) ||
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    return BoardChangeSfx(
+      signature: '${live.id}:${live.seq}',
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+            child: landscape
+                ? _buildLandscape(live, display, me, myTurn)
+                : _buildPortrait(live, display, me, myTurn),
+          ),
+          MyTurnAlert.stackLeaf(isMyTurn: myTurn),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortrait(
+    ChessGameView live,
+    ChessGameView display,
+    String? me,
+    bool myTurn,
+  ) {
+    return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
-          child: Column(
-            children: [
-              _buildOpponentCard(game, me),
-              const SizedBox(height: 6),
-              _buildStatusLine(game, myTurn),
-              const SizedBox(height: 8),
-              Expanded(child: _buildBoard(game)),
-              if (game.isOver) ...[
+        _buildOpponentCard(live, me),
+        const SizedBox(height: 6),
+        _buildStatusLine(live, myTurn),
+        const SizedBox(height: 6),
+        Expanded(child: _buildBoardColumn(live, display)),
+        if (live.isOver) ...[
+          const SizedBox(height: 8),
+          _buildFinishRow(live, me),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLandscape(
+    ChessGameView live,
+    ChessGameView display,
+    String? me,
+    bool myTurn,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 7,
+          child: _buildBoardColumn(live, display),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 220,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildOpponentCard(live, me),
                 const SizedBox(height: 8),
-                _buildFinishRow(game, me),
+                _buildStatusLine(live, myTurn),
+                if (live.isOver) ...[
+                  const SizedBox(height: 10),
+                  _buildFinishRow(live, me),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-        MyTurnAlert.stackLeaf(isMyTurn: myTurn),
       ],
+    );
+  }
+
+  Widget _buildReviewBar(ChessGameView game) {
+    final cur = _reviewIndex ?? (_history.isEmpty ? 0 : _history.length - 1);
+    final canBack = _history.length > 1 && cur > 0;
+    final canFwd = _reviewIndex != null;
+    return GameReviewBar(
+      onFlip: () => _toggleFlip(game),
+      flipTooltip: context.l10n.gameFlipBoard,
+      reviewing: _isReviewing,
+      onFirst: canBack ? _reviewFirst : null,
+      onPrev: canBack ? _reviewPrev : null,
+      onNext: canFwd ? _reviewNext : null,
+      onLast: canFwd ? _reviewLast : null,
+    );
+  }
+
+  int _clockMsFor(ChessGameView g, int seat) =>
+      seat == 0 ? g.clockMs0 : g.clockMs1;
+
+  String _opponentClockName(ChessGameView game) {
+    final name = game.opponent?.displayName.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    if (game.hasBotOpponent) return context.l10n.gameBot;
+    return context.l10n.gameOpponent;
+  }
+
+  /// Доска на ширину клетки, часы — крупные плашки по её верхнему и нижнему
+  /// краю (имя слева, время справа), как на lichess.
+  Widget _buildBoardColumn(ChessGameView live, ChessGameView display) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hasClock = live.hasClock && live.myIndex >= 0;
+        const clockRow = 48.0;
+        const gap = 6.0;
+        const reviewRow = 48.0;
+        final chrome = (hasClock ? (clockRow + gap) * 2 : 0) + reviewRow + gap;
+        final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
+        final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : maxW;
+        var side = math.min(maxW, math.max(0.0, maxH - chrome));
+        if (side < 64) side = math.min(maxW, maxH);
+        final oppSeat = live.myIndex == 0 ? 1 : 0;
+        return Center(
+          child: SizedBox(
+            width: side,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasClock) ...[
+                  _clockEdge(
+                    name: _opponentClockName(live),
+                    seat: oppSeat,
+                    game: live,
+                  ),
+                  const SizedBox(height: gap),
+                ],
+                SizedBox(
+                  width: side,
+                  height: side,
+                  child: _buildBoard(live, display),
+                ),
+                if (hasClock) ...[
+                  const SizedBox(height: gap),
+                  _clockEdge(
+                    name: context.l10n.gameYou,
+                    seat: live.myIndex,
+                    game: live,
+                  ),
+                ],
+                const SizedBox(height: gap),
+                _buildReviewBar(live),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _clockEdge({
+    required String name,
+    required int seat,
+    required ChessGameView game,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GameClock(
+            remainingMs: _clockMsFor(game, seat),
+            running: !game.isOver && game.clockRunning == seat,
+            prominent: true,
+          ),
+        ],
+      ),
     );
   }
 
@@ -830,16 +1096,21 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     );
   }
 
-  Widget _buildBoard(ChessGameView game) {
-    final flip = game.myIndex == 1;
+  Widget _buildBoard(ChessGameView live, ChessGameView display) {
+    final flip = _resolvedFlip(live);
+    final interactive = !_isReviewing;
     return GamepadScope(
-      onAction: (action) => _onGamepad(game, action, flip: flip),
+      onAction: (action) => _onGamepad(live, action, flip: flip),
       child: ChessBoard(
-        game: game,
-        selected: _selected,
-        cursor: GamepadService.instance.isRecentlyActive ? _cursor : null,
+        game: display,
+        selected: interactive ? _selected : null,
+        cursor: interactive && GamepadService.instance.isRecentlyActive
+            ? _cursor
+            : null,
         flip: flip,
-        onSquareTap: (r, c) => unawaited(_onSquareTap(game, r, c)),
+        onSquareTap: interactive
+            ? (r, c) => unawaited(_onSquareTap(live, r, c))
+            : (_, __) {},
       ),
     );
   }
@@ -849,7 +1120,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     GamepadAction action, {
     required bool flip,
   }) {
-    if (game.isOver) return false;
+    if (game.isOver || _isReviewing) return false;
     if (action.isDirection) {
       final cursor = GamepadGridCursor(
         columns: ChessEngine.size,

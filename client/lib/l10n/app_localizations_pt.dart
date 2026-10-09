@@ -1462,6 +1462,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gameOpponent => 'Adversário';
 
   @override
+  String get gameYou => 'Você';
+
+  @override
   String get gameYouWon => 'Você ganhou!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Oferecer empate';
+
+  @override
+  String get gameFlipBoard => 'Virar o tabuleiro';
+
+  @override
+  String get gameReviewStart => 'Para o início da partida';
+
+  @override
+  String get gameReviewPrev => 'Lance anterior';
+
+  @override
+  String get gameReviewNext => 'Lance seguinte';
+
+  @override
+  String get gameReviewEnd => 'Para a posição atual';
 
   @override
   String get gameOfferDrawTitle => 'Oferecer empate?';

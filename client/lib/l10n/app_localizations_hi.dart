@@ -1462,6 +1462,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gameOpponent => 'प्रतिद्वंद्वी';
 
   @override
+  String get gameYou => 'आप';
+
+  @override
   String get gameYouWon => 'आप जीत गए!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'ड्रॉ का प्रस्ताव';
+
+  @override
+  String get gameFlipBoard => 'बोर्ड पलटें';
+
+  @override
+  String get gameReviewStart => 'खेल की शुरुआत में';
+
+  @override
+  String get gameReviewPrev => 'एक चाल पीछे';
+
+  @override
+  String get gameReviewNext => 'एक चाल आगे';
+
+  @override
+  String get gameReviewEnd => 'वर्तमान स्थिति पर';
 
   @override
   String get gameOfferDrawTitle => 'ड्रॉ का प्रस्ताव दें?';

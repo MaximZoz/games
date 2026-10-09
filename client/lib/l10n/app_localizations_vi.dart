@@ -1462,6 +1462,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gameOpponent => 'Đối thủ';
 
   @override
+  String get gameYou => 'Bạn';
+
+  @override
   String get gameYouWon => 'Bạn thắng!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Đề nghị hòa';
+
+  @override
+  String get gameFlipBoard => 'Lật bàn cờ';
+
+  @override
+  String get gameReviewStart => 'Về đầu ván';
+
+  @override
+  String get gameReviewPrev => 'Lùi một nước';
+
+  @override
+  String get gameReviewNext => 'Tiến một nước';
+
+  @override
+  String get gameReviewEnd => 'Về vị trí hiện tại';
 
   @override
   String get gameOfferDrawTitle => 'Đề nghị hòa?';

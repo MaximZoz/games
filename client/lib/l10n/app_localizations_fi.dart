@@ -1462,6 +1462,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get gameOpponent => 'Vastustaja';
 
   @override
+  String get gameYou => 'Sinä';
+
+  @override
   String get gameYouWon => 'Voitit!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Tarjoa tasapeliä';
+
+  @override
+  String get gameFlipBoard => 'Käännä lauta';
+
+  @override
+  String get gameReviewStart => 'Pelin alkuun';
+
+  @override
+  String get gameReviewPrev => 'Siirto taaksepäin';
+
+  @override
+  String get gameReviewNext => 'Siirto eteenpäin';
+
+  @override
+  String get gameReviewEnd => 'Nykyiseen asemaan';
 
   @override
   String get gameOfferDrawTitle => 'Tarjoa tasapeliä?';

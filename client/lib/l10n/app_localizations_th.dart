@@ -1462,6 +1462,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get gameOpponent => 'คู่แข่ง';
 
   @override
+  String get gameYou => 'คุณ';
+
+  @override
   String get gameYouWon => 'คุณชนะ!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'เสนอเสมอ';
+
+  @override
+  String get gameFlipBoard => 'พลิกกระดาน';
+
+  @override
+  String get gameReviewStart => 'ไปที่จุดเริ่มเกม';
+
+  @override
+  String get gameReviewPrev => 'ย้อนกลับหนึ่งตา';
+
+  @override
+  String get gameReviewNext => 'เดินหน้าหนึ่งตา';
+
+  @override
+  String get gameReviewEnd => 'ไปที่ตำแหน่งปัจจุบัน';
 
   @override
   String get gameOfferDrawTitle => 'เสนอเสมอ?';

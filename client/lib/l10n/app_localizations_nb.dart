@@ -1462,6 +1462,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get gameOpponent => 'Motstander';
 
   @override
+  String get gameYou => 'Du';
+
+  @override
   String get gameYouWon => 'Du vant!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Tilby remis';
+
+  @override
+  String get gameFlipBoard => 'Snu brettet';
+
+  @override
+  String get gameReviewStart => 'Til partiets start';
+
+  @override
+  String get gameReviewPrev => 'Ett trekk tilbake';
+
+  @override
+  String get gameReviewNext => 'Ett trekk frem';
+
+  @override
+  String get gameReviewEnd => 'Til nåværende stilling';
 
   @override
   String get gameOfferDrawTitle => 'Tilby remis?';

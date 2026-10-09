@@ -43,7 +43,99 @@ func chessSpec() simple1v1 {
 			}
 			return isBot(players[g.Turn])
 		},
+		extraFields: chessClockInitFields,
 	}
+}
+
+// chessClockBudgetMs — контроль времени по режиму: база и прибавка на ход (мс).
+// classic 60+0, rapid 10+0, blitz 5+0, bullet 3+2.
+func chessClockBudgetMs(mode string) (base int64, inc int64) {
+	switch chess.NormalizeMode(mode) {
+	case "rapid":
+		return 10 * 60 * 1000, 0
+	case "blitz":
+		return 5 * 60 * 1000, 0
+	case "bullet":
+		return 3 * 60 * 1000, 2 * 1000
+	default:
+		return 60 * 60 * 1000, 0
+	}
+}
+
+// chessClockInitFields — поля часов в игровом хеше при старте партии.
+func chessClockInitFields(mode string) []any {
+	base, inc := chessClockBudgetMs(mode)
+	now := time.Now().UTC().UnixMilli()
+	return []any{
+		"clock_ms_0", strconv.FormatInt(base, 10),
+		"clock_ms_1", strconv.FormatInt(base, 10),
+		"clock_inc_ms", strconv.FormatInt(inc, 10),
+		"clock_ts", strconv.FormatInt(now, 10),
+	}
+}
+
+// chessClockPresent — у партии включены часы (новые партии).
+func chessClockPresent(m map[string]string) bool {
+	return m["clock_ts"] != ""
+}
+
+// chessApplyMoveClock обновляет в m часы ходившего игрока: вычитает затраченное
+// время, добавляет прибавку и переносит отметку времени на начало хода соперника.
+// Возвращает поля для записи в Redis.
+func chessApplyMoveClock(m map[string]string, mover int, now int64) []any {
+	if !chessClockPresent(m) {
+		return nil
+	}
+	ts, _ := strconv.ParseInt(m["clock_ts"], 10, 64)
+	inc, _ := strconv.ParseInt(m["clock_inc_ms"], 10, 64)
+	key := "clock_ms_" + strconv.Itoa(mover)
+	cur, _ := strconv.ParseInt(m[key], 10, 64)
+	if ts == 0 {
+		ts = now
+	}
+	rem := cur - (now - ts)
+	if rem < 0 {
+		rem = 0
+	}
+	rem += inc
+	m[key] = strconv.FormatInt(rem, 10)
+	m["clock_ts"] = strconv.FormatInt(now, 10)
+	return []any{key, m[key], "clock_ts", m["clock_ts"]}
+}
+
+// applyChessClockTimeout — поражение по общему времени: если у игрока, чей ход,
+// закончилось время, он проигрывает. Возвращает true, если партия завершена.
+func (h *GamesHandler) applyChessClockTimeout(ctx context.Context, gameID string, m map[string]string) bool {
+	if m["status"] != gameStatusActive || !chessClockPresent(m) {
+		return false
+	}
+	state, err := chess.Decode(m["state"])
+	if err != nil || state.IsOver() || state.Turn < 0 {
+		return false
+	}
+	seat := state.Turn
+	ts, _ := strconv.ParseInt(m["clock_ts"], 10, 64)
+	cur, _ := strconv.ParseInt(m["clock_ms_"+strconv.Itoa(seat)], 10, 64)
+	if ts == 0 {
+		return false
+	}
+	now := time.Now().UTC().UnixMilli()
+	if cur-(now-ts) > 0 {
+		return false
+	}
+	state.Forfeit(seat)
+	encoded, err := chess.Encode(state)
+	if err != nil {
+		return false
+	}
+	s := chessSpec()
+	m["clock_ms_"+strconv.Itoa(seat)] = "0"
+	m["timeout"] = "1"
+	h.Rdb.HSet(ctx, "game:"+gameID, "clock_ms_"+strconv.Itoa(seat), "0", "timeout", "1")
+	h.saveSimple1v1State(ctx, s, gameID, m, encoded, state.Turn, true)
+	h.broadcastChess(gameID, m)
+	h.onSimple1v1Finished(ctx, s, gameID, m, "timeout")
+	return true
 }
 
 func (h *GamesHandler) serveChess(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +210,7 @@ func (h *GamesHandler) serveChess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GamesHandler) applyChessTimeout(ctx context.Context, gameID string, m map[string]string) bool {
-	return h.applySimple1v1Timeout(ctx, chessSpec(), gameID, m, func(enc string, seat int) (string, error) {
+	done := h.applySimple1v1Timeout(ctx, chessSpec(), gameID, m, func(enc string, seat int) (string, error) {
 		g, err := chess.Decode(enc)
 		if err != nil {
 			return "", err
@@ -126,6 +218,10 @@ func (h *GamesHandler) applyChessTimeout(ctx context.Context, gameID string, m m
 		g.Forfeit(seat)
 		return chess.Encode(g)
 	})
+	if done {
+		return true
+	}
+	return h.applyChessClockTimeout(ctx, gameID, m)
 }
 
 func (h *GamesHandler) getChessGame(w http.ResponseWriter, r *http.Request, gameID string) {
@@ -229,6 +325,11 @@ func (h *GamesHandler) applyChessAction(ctx context.Context, gameID string, user
 	if err != nil {
 		return err
 	}
+	if action == "move" {
+		if fields := chessApplyMoveClock(m, seat, time.Now().UTC().UnixMilli()); fields != nil {
+			h.Rdb.HSet(ctx, key, fields...)
+		}
+	}
 	h.saveSimple1v1State(ctx, s, gameID, m, encoded, state.Turn, state.IsOver())
 	if action == "forfeit" {
 		h.Rdb.HSet(ctx, key, "forfeit", "1")
@@ -280,6 +381,7 @@ func (h *GamesHandler) scheduleChessBot(gameID string) {
 			if !ok {
 				return nil
 			}
+			botSeat := state.Turn
 			if err := state.Apply(state.Turn, mv); err != nil {
 				return nil
 			}
@@ -288,6 +390,9 @@ func (h *GamesHandler) scheduleChessBot(gameID string) {
 				return nil
 			}
 			s := chessSpec()
+			if fields := chessApplyMoveClock(m, botSeat, time.Now().UTC().UnixMilli()); fields != nil {
+				h.Rdb.HSet(ctx, "game:"+gameID, fields...)
+			}
 			h.saveSimple1v1State(ctx, s, gameID, m, encoded, state.Turn, state.IsOver())
 			h.broadcastChess(gameID, m)
 			if state.IsOver() {
@@ -345,6 +450,35 @@ func (h *GamesHandler) chessView(ctx context.Context, state *chess.Game, viewer 
 			})
 		}
 	}
+	// Шахматные часы: остаток времени на каждого игрока (мс) на момент снимка.
+	hasClock := chessClockPresent(m)
+	clock0 := int64(-1)
+	clock1 := int64(-1)
+	clockInc := int64(0)
+	clockRunning := -1
+	if hasClock {
+		clock0, _ = strconv.ParseInt(m["clock_ms_0"], 10, 64)
+		clock1, _ = strconv.ParseInt(m["clock_ms_1"], 10, 64)
+		clockInc, _ = strconv.ParseInt(m["clock_inc_ms"], 10, 64)
+		if !over && state.Turn >= 0 {
+			ts, _ := strconv.ParseInt(m["clock_ts"], 10, 64)
+			if ts > 0 {
+				elapsed := time.Now().UTC().UnixMilli() - ts
+				if state.Turn == 0 {
+					clock0 -= elapsed
+				} else {
+					clock1 -= elapsed
+				}
+			}
+			clockRunning = state.Turn
+		}
+		if clock0 < 0 {
+			clock0 = 0
+		}
+		if clock1 < 0 {
+			clock1 = 0
+		}
+	}
 	return map[string]any{
 		"id":             gameID,
 		"game_id":        gameID,
@@ -366,6 +500,11 @@ func (h *GamesHandler) chessView(ctx context.Context, state *chess.Game, viewer 
 		"is_my_turn":     seat >= 0 && seat == state.Turn && !over,
 		"turn_time_sec":  turnTimeSec,
 		"turn_deadline":  turnDeadline,
+		"has_clock":      hasClock,
+		"clock_ms_0":     clock0,
+		"clock_ms_1":     clock1,
+		"clock_inc_ms":   clockInc,
+		"clock_running":  clockRunning,
 		"stake_bronze":   stakeBronze,
 		"status":         status,
 		"is_over":        over,

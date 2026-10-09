@@ -966,6 +966,13 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
     final canBearOff =
         selected != null && _targetTo(game, selected, nardyPoints) != null;
     final homeOnRight = ref.watch(nardyHomeOnRightProvider);
+    final mySeat = game.myIndex < 0 ? 0 : game.myIndex;
+    // Моя шашка сбита на бар и сейчас мой ход — подсветить бар (её надо ввести).
+    final highlightBar = game.isMyTurn &&
+        !game.isOver &&
+        selected != nardyBarTrack &&
+        mySeat < game.bar.length &&
+        game.bar[mySeat] > 0;
     const barHeight = 26.0;
     const barGap = 6.0;
     return LayoutBuilder(
@@ -988,6 +995,7 @@ class _NardyGameScreenState extends ConsumerState<NardyGameScreen> {
                 tracker: _tracker,
                 selectedTrack: selected,
                 homeOnRight: homeOnRight,
+                highlightBar: highlightBar,
                 cursorTrack: GamepadService.instance.isRecentlyActive
                     ? _gamepadTracks(game)[_gamepadSlot.clamp(
                         0,

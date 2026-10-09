@@ -1462,6 +1462,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameOpponent => '相手';
 
   @override
+  String get gameYou => 'あなた';
+
+  @override
   String get gameYouWon => '勝ちました！';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gameOfferDraw => '引き分けを提案';
+
+  @override
+  String get gameFlipBoard => '盤を反転';
+
+  @override
+  String get gameReviewStart => '対局の最初へ';
+
+  @override
+  String get gameReviewPrev => '一手戻る';
+
+  @override
+  String get gameReviewNext => '一手進む';
+
+  @override
+  String get gameReviewEnd => '現在の局面へ';
 
   @override
   String get gameOfferDrawTitle => '引き分けを提案しますか？';

@@ -1462,6 +1462,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gameOpponent => 'Przeciwnik';
 
   @override
+  String get gameYou => 'Ty';
+
+  @override
   String get gameYouWon => 'Wygrana!';
 
   @override
@@ -1499,6 +1502,21 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get gameOfferDraw => 'Zaproponuj remis';
+
+  @override
+  String get gameFlipBoard => 'Obróć szachownicę';
+
+  @override
+  String get gameReviewStart => 'Na początek partii';
+
+  @override
+  String get gameReviewPrev => 'Ruch wstecz';
+
+  @override
+  String get gameReviewNext => 'Ruch naprzód';
+
+  @override
+  String get gameReviewEnd => 'Do bieżącej pozycji';
 
   @override
   String get gameOfferDrawTitle => 'Zaproponować remis?';
